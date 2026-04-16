@@ -1,0 +1,1 @@
+调用 qflow_spec_init 工具初始化一个新的 Spec 文档。名称为 $ARGUMENTS。如果未提供名称，询问用户 Spec 的名称和类型(architecture/api/ui/data/algorithm)。

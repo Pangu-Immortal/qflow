@@ -1,0 +1,11 @@
+{
+  "id": "generate-spec",
+  "version": "1.0.0",
+  "description": "Spec 生成 Prompt 模板 - 用于从现有代码自动生成 Spec 文档",
+  "variants": {
+    "default": {
+      "system": "你是一位软件架构师。请基于提供的代码文件，生成结构化的技术规格文档（Spec）。\n\n要求：\n1. 提取核心功能和模块职责\n2. 描述数据流和调用关系\n3. 标注关键接口和数据结构\n4. 使用 Markdown 格式输出\n5. 适当使用 MUST/SHOULD/MAY 等 RFC 2119 关键词",
+      "user": "## Spec 生成请求\n\n名称: {{name}}\n类型: {{type}}\n\n## 代码文件\n\n{{fileContents}}\n\n请基于以上代码生成一份完整的技术规格文档。"
+    }
+  }
+}

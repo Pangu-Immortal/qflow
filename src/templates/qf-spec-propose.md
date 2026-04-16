@@ -1,0 +1,1 @@
+调用 qflow_spec_propose 工具为 Spec $ARGUMENTS 提出变更。如果未提供 Spec ID，先调用 qflow_spec_status 列出可用 Specs。引导用户描述变更内容。

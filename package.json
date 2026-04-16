@@ -1,0 +1,31 @@
+{
+  "name": "qflow",
+  "version": "23.0.0",
+  "description": "Claude Code 自动化工具链 - MCP Server + CLI + Context Modules",
+  "main": "dist/mcp.js",
+  "bin": {
+    "qflow": "dist/cli.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/mcp.js",
+    "dev": "tsc && node dist/mcp.js",
+    "cli": "node dist/cli.js"
+  },
+  "author": "Pangu-Immortal",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.28.0",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

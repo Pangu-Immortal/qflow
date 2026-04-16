@@ -1,0 +1,1 @@
+调用 qflow_spec_verify 工具对 Spec $ARGUMENTS 执行三维验证（完整性、正确性、一致性）。输出评分和改进建议。

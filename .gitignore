@@ -1,0 +1,5 @@
+node_modules/
+dist/
+*.lock
+.qflow/
+.DS_Store

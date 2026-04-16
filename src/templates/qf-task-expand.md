@@ -1,0 +1,1 @@
+调用 qflow_task_expand 工具拆解任务 $ARGUMENTS 为子任务。如果未提供任务ID，先调用 qflow_task_next 获取当前推荐任务。输出生成的子任务列表。

@@ -1,0 +1,1 @@
+调用 qflow_spec_status 工具查看所有 Spec 的状态概览，包括 pending changes 和 applied changes 数量。

@@ -1,0 +1,1 @@
+调用 qflow_project_init 工具初始化当前项目的 qflow 配置。这会在项目根目录创建 .qflow/ 目录结构，包含 qflow.config.json 和 tasks.json。如果 $ARGUMENTS 提供了项目路径，使用该路径；否则使用当前工作目录。

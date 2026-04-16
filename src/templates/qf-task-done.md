@@ -1,0 +1,1 @@
+调用 qflow_task_set_status 工具，将任务 $ARGUMENTS 标记为 done。输出完成结果和下一个推荐任务。如果没有提供任务ID，先调用 qflow_task_list 查看当前 active 的任务。

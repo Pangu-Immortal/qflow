@@ -1,0 +1,1 @@
+调用 qflow_diagnostics 工具执行全系统健康检查。输出：MCP 连接状态、已加载上下文模块、任务统计、Spec 统计、AI Provider 状态。

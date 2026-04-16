@@ -1,0 +1,16 @@
+{
+  "id": "analyze-complexity",
+  "description": "AI 复杂度分析 Prompt 模板",
+  "parameters": {
+    "taskTitle": "任务标题",
+    "taskDescription": "任务描述",
+    "dependencies": "依赖列表",
+    "tags": "标签列表"
+  },
+  "prompts": {
+    "default": {
+      "system": "你是一个专业的软件工程复杂度评估专家。分析给定任务的技术复杂度，输出严格的 JSON 格式结果。",
+      "user": "请分析以下任务的复杂度：\n\n标题：{{taskTitle}}\n描述：{{taskDescription}}\n依赖：{{dependencies}}\n标签：{{tags}}\n\n请按以下 JSON 格式返回：\n{\n  \"score\": 1-10的整数,\n  \"reasoning\": \"评估理由\",\n  \"expansionPrompt\": \"如果需要拆解，给出拆解指导\",\n  \"suggestedSubtasks\": 建议子任务数量(0表示不需要拆解)\n}"
+    }
+  }
+}
