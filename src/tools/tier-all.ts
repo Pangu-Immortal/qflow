@@ -1,5 +1,5 @@
 /**
- * Tier All - 15 个精简 MCP 工具（QFLOW_MODE=all 激活）
+ * Tier All - 18 个精简 MCP 工具（QFLOW_MODE=all 激活）
  *
  * 合并工具（8 个）：
  *   qflow_review       - 合并原 21 个 review/approval/quality 工具
@@ -43,6 +43,14 @@ import { shouldRegister as _shouldRegister, wrapCallAI } from "../shared/helpers
 import path from "node:path";
 import os from "node:os";
 import { promises as fs } from "node:fs";
+import { ConfigDriftDetector } from '../core/config-drift-detector.js'; // 配置漂移检测
+import { WatchEngine } from '../core/watch-engine.js'; // 文件监控引擎
+import { listAgileWorkflows, getWorkflowByPhase, executeWorkflowStep } from '../core/workflow-presets.js'; // 敏捷工作流预设
+import { PluginManager } from '../core/plugin-manager.js'; // 插件管理器
+import { WorkflowOrchestrator } from '../core/workflow-orchestrator.js'; // DAG 工作流编排器
+
+/** WatchEngine 模块级单例（延迟启动，由 qflow_diagnostics watch_start 触发） */
+const watchEngine = new WatchEngine();
 
 export function registerAllTools(server: McpServer, allowedTools?: Set<string>): void {
   // 工具注册辅助：检查工具名是否在允许列表中（无列表时全部允许）
@@ -65,6 +73,9 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
     ['qflow_editor_rules', '编辑器规则安装与查询'],
     ['qflow_models_switch', '运行时切换指定角色的模型'],
     ['qflow_diagnostics', '全系统健康检查'],
+    ['qflow_agile', '敏捷工作流预设：list/get/step'],
+    ['qflow_plugin', '插件管理：install/remove/list/get/search/enable/disable'],
+    ['qflow_workflow', 'DAG 工作流管理：start/advance/status/list'],
   ];
   for (const [name, desc] of allMeta) registerToolMeta(name, desc, 'all'); // 注册元数据
 
@@ -821,81 +832,294 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
     }
   );
 
-  // ==================== 15. qflow_diagnostics（独立保留）====================
+  // ==================== 15. qflow_diagnostics（独立保留 + 漂移检测 + 文件监控）====================
   if (shouldRegister("qflow_diagnostics")) server.tool(
     "qflow_diagnostics",
-    "全系统健康检查：MCP 状态、上下文模块、任务统计、Spec 统计、AI Provider 状态。",
+    "全系统健康检查：status=完整诊断，drift=配置漂移检测，watch_start=启动文件监控，watch_stop=停止监控，watch_events=获取监控事件。",
     {
+      action: z.enum(['status', 'drift', 'watch_start', 'watch_stop', 'watch_events']).optional().default('status').describe("诊断操作"),
       projectRoot: z.string().optional().describe("项目根目录"),
     },
     { readOnlyHint: true },
-    async ({ projectRoot }) => {
-      const root = await resolveRoot(projectRoot);
-      const diagnostics: Record<string, unknown> = {
-        version: pkg.version,
-        mode: process.env.QFLOW_MODE || 'standard',
-        timestamp: new Date().toISOString(),
-      };
+    async ({ action, projectRoot }) => {
+      const root = await resolveRoot(projectRoot); // 解析项目根目录
 
-      // 上下文模块状态
-      diagnostics.context = await getContextStatus();
+      switch (action) {
+        // ── status: 原有完整诊断逻辑 + 末尾追加漂移检测 ──
+        case 'status': {
+          const diagnostics: Record<string, unknown> = {
+            version: pkg.version,
+            mode: process.env.QFLOW_MODE || 'standard',
+            timestamp: new Date().toISOString(),
+          };
 
-      // MCP 状态
-      diagnostics.mcp = { status: 'running', server: 'qflow' };
+          // 上下文模块状态
+          diagnostics.context = await getContextStatus();
 
-      // 项目状态
-      if (root) {
-        const tm = new TaskManager(root);
-        const tasks = await tm.getAllTasks();
-        diagnostics.tasks = {
-          total: tasks.length,
-          pending: tasks.filter(t => t.status === 'pending').length,
-          active: tasks.filter(t => t.status === 'active').length,
-          done: tasks.filter(t => t.status === 'done').length,
-          blocked: tasks.filter(t => t.status === 'blocked').length,
-        };
+          // MCP 状态
+          diagnostics.mcp = { status: 'running', server: 'qflow' };
 
-        const specMgr = new SpecManager(root);
-        diagnostics.specs = await specMgr.getStatus();
+          // 项目状态
+          if (root) {
+            const tm = new TaskManager(root);
+            const tasks = await tm.getAllTasks();
+            diagnostics.tasks = {
+              total: tasks.length,
+              pending: tasks.filter(t => t.status === 'pending').length,
+              active: tasks.filter(t => t.status === 'active').length,
+              done: tasks.filter(t => t.status === 'done').length,
+              blocked: tasks.filter(t => t.status === 'blocked').length,
+            };
 
-        try {
-          const config = await loadConfig(root);
-          diagnostics.config = { projectName: config.projectName, mode: config.mode };
-        } catch (e) { log.debug(`配置加载失败，诊断跳过: ${(e as Error).message}`); }
-      } else {
-        diagnostics.project = null;
-        diagnostics.note = "未在 qflow 项目中，部分诊断跳过";
+            const specMgr = new SpecManager(root);
+            diagnostics.specs = await specMgr.getStatus();
+
+            try {
+              const config = await loadConfig(root);
+              diagnostics.config = { projectName: config.projectName, mode: config.mode };
+            } catch (e) { log.debug(`配置加载失败，诊断跳过: ${(e as Error).message}`); }
+          } else {
+            diagnostics.project = null;
+            diagnostics.note = "未在 qflow 项目中，部分诊断跳过";
+          }
+
+          // AI Provider 状态
+          const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');
+          diagnostics.aiProvider = { settingsExists: await fileExists(settingsPath) };
+
+          // Slash 命令状态
+          const commandsDir = path.join(os.homedir(), '.claude', 'commands');
+          try {
+            const files = await fs.readdir(commandsDir);
+            const qfCommands = files.filter(f => f.startsWith('qf-') && f.endsWith('.md'));
+            diagnostics.slashCommands = { installed: qfCommands.length, commands: qfCommands };
+          } catch (e) {
+            log.debug(`slash 命令目录读取失败: ${(e as Error).message}`);
+            diagnostics.slashCommands = { installed: 0, commands: [] };
+          }
+
+          // MCPB 安装信息
+          try {
+            const mcpbConfigPath = path.join(os.homedir(), '.claude.json');
+            const mcpbExists = await fileExists(mcpbConfigPath);
+            diagnostics.mcpb = {
+              configExists: mcpbExists, configPath: mcpbConfigPath,
+              note: mcpbExists ? 'MCPB 配置已检测到' : '未检测到 MCPB 配置（~/.claude.json）',
+            };
+          } catch (e) {
+            log.debug(`MCPB 检测失败: ${(e as Error).message}`);
+            diagnostics.mcpb = { configExists: false, note: '检测失败' };
+          }
+
+          // 追加配置漂移检测结果
+          if (root) {
+            try {
+              const detector = new ConfigDriftDetector(root); // 创建漂移检测器
+              const driftWarnings = await detector.detect(); // 执行检测
+              diagnostics.drift = { warnings: driftWarnings, count: driftWarnings.length };
+            } catch (e) { log.debug(`漂移检测失败: ${(e as Error).message}`); }
+          }
+
+          return jsonResp(diagnostics);
+        }
+
+        // ── drift: 单独返回配置漂移检测结果 ──
+        case 'drift': {
+          if (!root) return errResp("drift 需要有效的 qflow 项目");
+          const detector = new ConfigDriftDetector(root); // 创建漂移检测器
+          const warnings = await detector.detect(); // 执行检测
+          return jsonResp({ warnings, count: warnings.length });
+        }
+
+        // ── watch_start: 启动文件监控 ──
+        case 'watch_start': {
+          if (!root) return errResp("watch_start 需要有效的 qflow 项目");
+          watchEngine.start(root); // 启动监控
+          log.info(`WatchEngine 已启动，监控目录: ${root}`);
+          return jsonResp({ status: 'started', root });
+        }
+
+        // ── watch_stop: 停止文件监控 ──
+        case 'watch_stop': {
+          watchEngine.stop(); // 停止监控
+          log.info('WatchEngine 已停止');
+          return jsonResp({ status: 'stopped' });
+        }
+
+        // ── watch_events: 获取监控事件列表 ──
+        case 'watch_events': {
+          const events = watchEngine.getEvents(); // 获取事件列表
+          return jsonResp({ events, count: events.length });
+        }
+
+        default:
+          return errResp(`未知的诊断操作: ${action}`);
       }
+    }
+  );
 
-      // AI Provider 状态
-      const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');
-      diagnostics.aiProvider = { settingsExists: await fileExists(settingsPath) };
-
-      // Slash 命令状态
-      const commandsDir = path.join(os.homedir(), '.claude', 'commands');
-      try {
-        const files = await fs.readdir(commandsDir);
-        const qfCommands = files.filter(f => f.startsWith('qf-') && f.endsWith('.md'));
-        diagnostics.slashCommands = { installed: qfCommands.length, commands: qfCommands };
-      } catch (e) {
-        log.debug(`slash 命令目录读取失败: ${(e as Error).message}`);
-        diagnostics.slashCommands = { installed: 0, commands: [] };
+  // ==================== 16. qflow_agile（敏捷工作流预设）====================
+  if (shouldRegister("qflow_agile")) server.tool(
+    "qflow_agile",
+    "敏捷工作流预设：list=列出所有阶段，get=获取指定阶段，step=执行步骤",
+    {
+      action: z.enum(['list', 'get', 'step']).describe("操作类型"),
+      phase: z.string().optional().describe("阶段名称（get/step 时必填）"),
+      stepIndex: z.number().optional().describe("步骤序号（step 时必填，从 0 开始）"),
+    },
+    { readOnlyHint: true },
+    async ({ action, phase, stepIndex }) => {
+      switch (action) {
+        // ── list: 列出所有敏捷工作流 ──
+        case 'list': {
+          const workflows = listAgileWorkflows(); // 获取全部工作流摘要
+          return jsonResp({ workflows, count: workflows.length });
+        }
+        // ── get: 获取指定阶段的工作流详情 ──
+        case 'get': {
+          if (!phase) return errResp("get 需要 phase 参数");
+          const workflow = getWorkflowByPhase(phase); // 按阶段名查找
+          if (!workflow) return errResp(`未找到阶段: ${phase}`);
+          return jsonResp({ workflow });
+        }
+        // ── step: 执行指定工作流的某一步骤 ──
+        case 'step': {
+          if (!phase) return errResp("step 需要 phase 参数");
+          if (stepIndex === undefined || stepIndex === null) return errResp("step 需要 stepIndex 参数");
+          const workflow = getWorkflowByPhase(phase); // 先查找工作流
+          if (!workflow) return errResp(`未找到阶段: ${phase}`);
+          const result = executeWorkflowStep(workflow.id, stepIndex); // 执行步骤
+          return jsonResp({ result });
+        }
+        default:
+          return errResp(`未知的 agile 操作: ${action}`);
       }
+    }
+  );
 
-      // MCPB 安装信息
-      try {
-        const mcpbConfigPath = path.join(os.homedir(), '.claude.json');
-        const mcpbExists = await fileExists(mcpbConfigPath);
-        diagnostics.mcpb = {
-          configExists: mcpbExists, configPath: mcpbConfigPath,
-          note: mcpbExists ? 'MCPB 配置已检测到' : '未检测到 MCPB 配置（~/.claude.json）',
-        };
-      } catch (e) {
-        log.debug(`MCPB 检测失败: ${(e as Error).message}`);
-        diagnostics.mcpb = { configExists: false, note: '检测失败' };
+  // ==================== 17. qflow_plugin（插件管理）====================
+  if (shouldRegister("qflow_plugin")) server.tool(
+    "qflow_plugin",
+    "插件管理：install=安装插件，remove=卸载，list=列表，get=详情，search=搜索，enable=启用，disable=禁用",
+    {
+      action: z.enum(['install', 'remove', 'list', 'get', 'search', 'enable', 'disable']).describe("操作类型"),
+      projectRoot: z.string().optional().describe("项目根目录"),
+      name: z.string().optional().describe("插件名称"),
+      version: z.string().optional().describe("插件版本（install 时可选）"),
+      description: z.string().optional().describe("插件描述（install 时可选）"),
+      query: z.string().optional().describe("搜索关键词（search 时必填）"),
+    },
+    async ({ action, projectRoot, name, version, description, query }) => {
+      const root = await resolveRoot(projectRoot); // 解析项目根目录
+      if (!root) return errResp("未找到 .qflow 项目");
+
+      const pm = new PluginManager(root); // 创建插件管理器
+
+      switch (action) {
+        // ── install: 安装插件 ──
+        case 'install': {
+          if (!name) return errResp("install 需要 name 参数");
+          const manifest = await pm.install({
+            name,
+            version: version || '1.0.0',
+            description: description || '',
+            author: '',       // 作者（可后续更新）
+            tools: [],        // 工具列表（安装后注册）
+            hooks: [],        // 钩子列表
+            enabled: true,    // 默认启用
+          }); // 安装插件
+          log.info(`插件已安装: ${name}@${manifest.version}`);
+          return jsonResp({ plugin: manifest });
+        }
+        // ── remove: 卸载插件 ──
+        case 'remove': {
+          if (!name) return errResp("remove 需要 name 参数");
+          await pm.remove(name); // 卸载插件
+          log.info(`插件已卸载: ${name}`);
+          return jsonResp({ removed: name });
+        }
+        // ── list: 列出所有已安装插件 ──
+        case 'list': {
+          const plugins = await pm.list(); // 获取插件列表
+          return jsonResp({ plugins, count: plugins.length });
+        }
+        // ── get: 获取插件详情 ──
+        case 'get': {
+          if (!name) return errResp("get 需要 name 参数");
+          const plugin = await pm.get(name); // 按名称查找
+          if (!plugin) return errResp(`插件 ${name} 不存在`);
+          return jsonResp({ plugin });
+        }
+        // ── search: 搜索插件 ──
+        case 'search': {
+          if (!query) return errResp("search 需要 query 参数");
+          const results = await pm.search(query); // 按关键词搜索
+          return jsonResp({ results, count: results.length });
+        }
+        // ── enable: 启用插件 ──
+        case 'enable': {
+          if (!name) return errResp("enable 需要 name 参数");
+          const plugin = await pm.enable(name); // 启用插件
+          log.info(`插件已启用: ${name}`);
+          return jsonResp({ plugin });
+        }
+        // ── disable: 禁用插件 ──
+        case 'disable': {
+          if (!name) return errResp("disable 需要 name 参数");
+          const plugin = await pm.disable(name); // 禁用插件
+          log.info(`插件已禁用: ${name}`);
+          return jsonResp({ plugin });
+        }
+        default:
+          return errResp(`未知的 plugin 操作: ${action}`);
       }
+    }
+  );
 
-      return jsonResp(diagnostics);
+  // ==================== 18. qflow_workflow（DAG 工作流管理）====================
+  if (shouldRegister("qflow_workflow")) server.tool(
+    "qflow_workflow",
+    "DAG 工作流管理：start=启动工作流，advance=推进工作流，status=查看状态，list=列出所有工作流",
+    {
+      action: z.enum(['start', 'advance', 'status', 'list']).describe("操作类型"),
+      projectRoot: z.string().optional().describe("项目根目录"),
+      workflowId: z.string().optional().describe("工作流 ID"),
+    },
+    async ({ action, projectRoot, workflowId }) => {
+      const root = await resolveRoot(projectRoot); // 解析项目根目录
+      if (!root) return errResp("未找到 .qflow 项目");
+
+      const orchestrator = new WorkflowOrchestrator(root); // 创建工作流编排器
+
+      switch (action) {
+        // ── start: 启动工作流 ──
+        case 'start': {
+          if (!workflowId) return errResp("start 需要 workflowId 参数");
+          const workflow = await orchestrator.startWorkflow(workflowId); // 启动工作流
+          log.info(`工作流已启动: ${workflowId}`);
+          return jsonResp({ workflow });
+        }
+        // ── advance: 推进工作流到下一阶段 ──
+        case 'advance': {
+          if (!workflowId) return errResp("advance 需要 workflowId 参数");
+          const result = await orchestrator.advanceWorkflow(workflowId); // 推进工作流
+          log.info(`工作流已推进: ${workflowId}, 完成: ${result.completed}`);
+          return jsonResp(result);
+        }
+        // ── status: 查看工作流状态 ──
+        case 'status': {
+          if (!workflowId) return errResp("status 需要 workflowId 参数");
+          const status = await orchestrator.getWorkflowStatus(workflowId); // 获取状态
+          return jsonResp(status);
+        }
+        // ── list: 列出所有工作流 ──
+        case 'list': {
+          const workflows = await orchestrator.listWorkflows(); // 获取全部工作流
+          return jsonResp({ workflows, count: workflows.length });
+        }
+        default:
+          return errResp(`未知的 workflow 操作: ${action}`);
+      }
     }
   );
 }

@@ -23,6 +23,7 @@ import { parsePrd } from "../core/prd-parser.js"; // PRD 解析器（parse_prd �
 import path from "node:path";
 import os from "node:os";
 import { promises as fs } from "node:fs";
+import { fileURLToPath } from 'node:url'; // ESM 环境下动态解析当前文件路径
 
 export function registerCoreTools(server: McpServer, allowedTools?: Set<string>): void {
   // 工具注册辅助：检查工具名是否在允许列表中（无列表时全部允许）
@@ -163,18 +164,22 @@ export function registerCoreTools(server: McpServer, allowedTools?: Set<string>)
         log.info('Phase 3 S-8: project.md 模板已创建'); // 日志
       }
 
-      // 安装 slash 命令
+      // 安装 slash 命令（动态解析模板路径，兼容任意安装位置）
       const commandsDir = path.join(os.homedir(), '.claude', 'commands');
-      const templatesDir = path.join(os.homedir(), '.claude', 'tools', 'qflow', 'src', 'templates');
+      const currentToolFile = fileURLToPath(import.meta.url); // dist/tools/tier-core.js
+      const qflowRoot = path.resolve(path.dirname(currentToolFile), '..', '..'); // 向上两级到项目根
+      const srcTemplatesDir = path.join(qflowRoot, 'src', 'templates'); // 优先 src/templates
+      const distTemplatesDir = path.join(qflowRoot, 'dist', 'templates'); // 备选 dist/templates
+      const actualTemplatesDir = await fileExists(srcTemplatesDir) ? srcTemplatesDir : distTemplatesDir; // 动态选择
       await ensureDir(commandsDir);
       try {
-        const files = await fs.readdir(templatesDir);
+        const files = await fs.readdir(actualTemplatesDir);
         for (const file of files) {
           if (file.endsWith('.md')) {
-            await fs.copyFile(path.join(templatesDir, file), path.join(commandsDir, file));
+            await fs.copyFile(path.join(actualTemplatesDir, file), path.join(commandsDir, file));
           }
         }
-      } catch (e) { log.debug(`模板目录读取失败，跳过命令安装: ${(e as Error).message}`); } // 模板不存在时跳过
+      } catch (e) { log.debug(`模板目录读取失败，跳过命令安装: ${(e as Error).message}`); }
 
       return jsonResp({
         status: "initialized",

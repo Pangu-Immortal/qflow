@@ -88,9 +88,21 @@ export async function loadPromptTemplate(templatePath: string): Promise<PromptTe
  */
 export function renderPrompt(template: string, variables: PromptVariables): string {
   let result = template; // 拷贝模板字符串
+
+  // 第一步：处理 {{#if varName}}...{{/if}} 条件块
+  // 变量存在且非空时保留块内容，否则移除整个块（含换行符）
+  result = result.replace(
+    /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
+    (_match: string, varName: string, content: string) => {
+      const value = variables[varName];
+      return (value !== undefined && value !== '' && value !== null) ? content : ''; // 变量有值时保留块内容，否则清空
+    }
+  );
+
+  // 第二步：简单 {{key}} 占位符替换
   for (const [key, value] of Object.entries(variables)) { // 遍历所有变量
     const placeholder = `{{${key}}}`; // 构建占位符模式
-    result = result.split(placeholder).join(String(value)); // 全局替换（比 replaceAll 兼容性更好）
+    result = result.split(placeholder).join(String(value)); // 全局替换
   }
   return result; // 返回替换后的结果
 }

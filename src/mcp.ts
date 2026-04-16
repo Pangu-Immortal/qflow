@@ -83,7 +83,7 @@ if (customTools) {
   }
 }
 
-// v23.0: Sprint/Clarification/Plugin 已合并入 tier-all（qflow_sprint/qflow_constitution），无需补丁式注入
+// v23.1: 全部 7 个废弃模块已重新接入（Clarification/Onboarding → standard, Agile/Plugin/Workflow/DriftDetector/WatchEngine → all）
 
 // 启动 stdio 传输
 async function main() {

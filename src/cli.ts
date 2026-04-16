@@ -20,6 +20,12 @@ import { createRequire } from 'node:module'; // 动态读取 package.json
 
 import { TagManager } from './core/tag-manager.js';
 import { ReportGenerator } from './core/report-generator.js';
+import { PluginManager } from './core/plugin-manager.js';
+import { ConfigDriftDetector } from './core/config-drift-detector.js';
+import { OnboardingEngine } from './core/onboarding.js';
+import { WorkflowOrchestrator } from './core/workflow-orchestrator.js';
+import { ClarificationEngine } from './core/clarification-engine.js';
+import { listAgileWorkflows, getWorkflowByPhase, executeWorkflowStep } from './core/workflow-presets.js';
 
 const require = createRequire(import.meta.url); // 构造 CommonJS require
 const pkg = require('../package.json') as { version: string }; // 读取版本号
@@ -431,6 +437,484 @@ reportCmd
     }
   });
 
+// ==================== plugin 命令组（插件管理）====================
+const pluginCmd = program.command('plugin').description('插件管理');
+
+pluginCmd
+  .command('list')
+  .description('列出已安装插件')
+  .action(async () => {
+    const root = process.cwd(); // 插件管理使用当前工作目录
+    const pm = new PluginManager(root);
+    try {
+      const plugins = await pm.list(); // 获取所有已安装插件
+      if (isJsonMode()) { console.log(JSON.stringify(plugins)); return; }
+      if (plugins.length === 0) {
+        log.info('暂无已安装插件');
+        return;
+      }
+      for (const p of plugins) {
+        const status = p.enabled ? '✅' : '⬜'; // 启用/禁用状态图标
+        console.log(`  ${status} ${p.name}@${p.version} - ${p.description || '无描述'}`);
+      }
+      console.log(`\n  共 ${plugins.length} 个插件`);
+    } catch (e) {
+      log.error(`列出插件失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+pluginCmd
+  .command('install <name>')
+  .description('安装插件')
+  .option('-v, --version <version>', '插件版本', '1.0.0')
+  .option('-d, --desc <desc>', '插件描述', '')
+  .action(async (name: string, options: { version: string; desc: string }) => {
+    const root = process.cwd();
+    const pm = new PluginManager(root);
+    try {
+      // 构造完整的 manifest 对象进行安装
+      const result = await pm.install({
+        name,
+        version: options.version || '1.0.0',
+        description: options.desc || '',
+        author: '',
+        tools: [],
+        hooks: [],
+        enabled: true,
+      });
+      if (isJsonMode()) { console.log(JSON.stringify(result)); return; }
+      log.success(`插件 ${result.name}@${result.version} 安装成功`);
+    } catch (e) {
+      log.error(`安装插件失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+pluginCmd
+  .command('remove <name>')
+  .description('卸载插件')
+  .action(async (name: string) => {
+    const root = process.cwd();
+    const pm = new PluginManager(root);
+    try {
+      await pm.remove(name); // 从插件列表中移除
+      log.success(`插件 ${name} 已卸载`);
+    } catch (e) {
+      log.error(`卸载插件失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+pluginCmd
+  .command('enable <name>')
+  .description('启用插件')
+  .action(async (name: string) => {
+    const root = process.cwd();
+    const pm = new PluginManager(root);
+    try {
+      const result = await pm.enable(name); // 设置插件为启用状态
+      if (isJsonMode()) { console.log(JSON.stringify(result)); return; }
+      log.success(`插件 ${result.name} 已启用`);
+    } catch (e) {
+      log.error(`启用插件失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+pluginCmd
+  .command('disable <name>')
+  .description('禁用插件')
+  .action(async (name: string) => {
+    const root = process.cwd();
+    const pm = new PluginManager(root);
+    try {
+      const result = await pm.disable(name); // 设置插件为禁用状态
+      if (isJsonMode()) { console.log(JSON.stringify(result)); return; }
+      log.success(`插件 ${result.name} 已禁用`);
+    } catch (e) {
+      log.error(`禁用插件失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// ==================== drift 命令（配置漂移检测）====================
+program
+  .command('drift')
+  .description('检测配置漂移')
+  .action(async () => {
+    const root = process.cwd();
+    const detector = new ConfigDriftDetector(root);
+    try {
+      const warnings = await detector.detect(); // 执行漂移检测
+      if (isJsonMode()) { console.log(JSON.stringify(warnings)); return; }
+      if (warnings.length === 0) {
+        log.success('未检测到配置漂移');
+        return;
+      }
+      log.warn(`检测到 ${warnings.length} 个配置漂移:`);
+      for (const w of warnings) {
+        console.log(`  ⚠️  [${w.type}] ${w.path}: ${w.message}`); // 按类型和路径输出漂移信息
+      }
+    } catch (e) {
+      log.error(`配置漂移检测失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// ==================== onboard 命令组（引导流程）====================
+const onboardCmd = program.command('onboard').description('项目引导流程');
+
+// 默认子命令：获取当前引导步骤
+onboardCmd
+  .action(async () => {
+    const root = process.cwd();
+    const engine = new OnboardingEngine(root);
+    try {
+      const step = await engine.getStep(); // 获取当前引导步骤
+      if (isJsonMode()) { console.log(JSON.stringify(step)); return; }
+      if (!step) {
+        log.info('引导已完成或未初始化，使用 qflow onboard init 开始');
+        return;
+      }
+      console.log(`  当前步骤: ${step.name}`);
+      console.log(`  说明: ${step.description}`);
+    } catch (e) {
+      log.error(`获取引导步骤失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+onboardCmd
+  .command('init')
+  .description('初始化引导')
+  .action(async () => {
+    const root = process.cwd();
+    const engine = new OnboardingEngine(root);
+    try {
+      const state = await engine.init(); // 初始化引导状态
+      if (isJsonMode()) { console.log(JSON.stringify(state)); return; }
+      log.success('引导流程已初始化');
+    } catch (e) {
+      log.error(`初始化引导失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+onboardCmd
+  .command('step')
+  .description('获取当前步骤')
+  .action(async () => {
+    const root = process.cwd();
+    const engine = new OnboardingEngine(root);
+    try {
+      const step = await engine.getStep(); // 获取当前引导步骤
+      if (isJsonMode()) { console.log(JSON.stringify(step)); return; }
+      if (!step) {
+        log.info('无当前步骤（引导已完成或未初始化）');
+        return;
+      }
+      console.log(`  当前步骤: ${step.name}`);
+      console.log(`  说明: ${step.description}`);
+    } catch (e) {
+      log.error(`获取步骤失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+onboardCmd
+  .command('complete')
+  .description('完成当前步骤')
+  .action(async () => {
+    const root = process.cwd();
+    const engine = new OnboardingEngine(root);
+    try {
+      const result = await engine.completeStep(); // 标记当前步骤为完成
+      if (isJsonMode()) { console.log(JSON.stringify(result)); return; }
+      log.success('当前步骤已完成');
+    } catch (e) {
+      log.error(`完成步骤失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+onboardCmd
+  .command('progress')
+  .description('查看引导进度')
+  .action(async () => {
+    const root = process.cwd();
+    const engine = new OnboardingEngine(root);
+    try {
+      const progress = await engine.getProgress(); // 获取引导进度统计
+      if (isJsonMode()) { console.log(JSON.stringify(progress)); return; }
+      console.log(`  引导进度: ${JSON.stringify(progress, null, 2)}`);
+    } catch (e) {
+      log.error(`获取进度失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+onboardCmd
+  .command('reset')
+  .description('重置引导')
+  .action(async () => {
+    const root = process.cwd();
+    const engine = new OnboardingEngine(root);
+    try {
+      await engine.reset(); // 重置引导状态为初始
+      log.success('引导已重置');
+    } catch (e) {
+      log.error(`重置引导失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+onboardCmd
+  .command('report')
+  .description('生成引导报告')
+  .action(async () => {
+    const root = process.cwd();
+    const engine = new OnboardingEngine(root);
+    try {
+      const report = await engine.generateOnboardingReport(); // 生成引导完整报告
+      if (isJsonMode()) { console.log(JSON.stringify({ report })); return; }
+      console.log(report);
+    } catch (e) {
+      log.error(`生成引导报告失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// ==================== workflow 命令组（工作流编排）====================
+const workflowCmd = program.command('workflow').description('工作流管理');
+
+workflowCmd
+  .command('list')
+  .description('列出工作流')
+  .action(async () => {
+    const root = process.cwd();
+    const wo = new WorkflowOrchestrator(root);
+    try {
+      const workflows = await wo.listWorkflows(); // 获取所有工作流
+      if (isJsonMode()) { console.log(JSON.stringify(workflows)); return; }
+      if (workflows.length === 0) {
+        log.info('暂无工作流');
+        return;
+      }
+      for (const w of workflows) {
+        console.log(`  📋 ${w.id} [${w.status}] ${w.name || w.id}`);
+      }
+      console.log(`\n  共 ${workflows.length} 个工作流`);
+    } catch (e) {
+      log.error(`列出工作流失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+workflowCmd
+  .command('start <workflowId>')
+  .description('启动工作流')
+  .action(async (workflowId: string) => {
+    const root = process.cwd();
+    const wo = new WorkflowOrchestrator(root);
+    try {
+      const workflow = await wo.startWorkflow(workflowId); // 启动指定工作流
+      if (isJsonMode()) { console.log(JSON.stringify(workflow)); return; }
+      log.success(`工作流 ${workflowId} 已启动`);
+    } catch (e) {
+      log.error(`启动工作流失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+workflowCmd
+  .command('advance <workflowId>')
+  .description('推进工作流')
+  .action(async (workflowId: string) => {
+    const root = process.cwd();
+    const wo = new WorkflowOrchestrator(root);
+    try {
+      const result = await wo.advanceWorkflow(workflowId); // 推进到下一阶段
+      if (isJsonMode()) { console.log(JSON.stringify(result)); return; }
+      if (result.completed) {
+        log.success(`工作流 ${workflowId} 已完成`);
+      } else {
+        log.success(`工作流 ${workflowId} 已推进，完成步骤: ${result.advanced.join(', ')}`);
+      }
+    } catch (e) {
+      log.error(`推进工作流失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+workflowCmd
+  .command('status <workflowId>')
+  .description('查看工作流状态')
+  .action(async (workflowId: string) => {
+    const root = process.cwd();
+    const wo = new WorkflowOrchestrator(root);
+    try {
+      const status = await wo.getWorkflowStatus(workflowId); // 获取工作流详细状态
+      if (isJsonMode()) { console.log(JSON.stringify(status)); return; }
+      console.log(`  工作流: ${workflowId}`);
+      console.log(`  状态: ${JSON.stringify(status, null, 2)}`);
+    } catch (e) {
+      log.error(`获取工作流状态失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// ==================== clarify 命令组（需求澄清）====================
+const clarifyCmd = program.command('clarify').description('需求澄清管理');
+
+clarifyCmd
+  .command('list <specId>')
+  .description('列出问题')
+  .action(async (specId: string) => {
+    const root = process.cwd();
+    const ce = new ClarificationEngine(root);
+    try {
+      const questions = await ce.listQuestions(specId); // 获取指定 Spec 的所有问题
+      if (isJsonMode()) { console.log(JSON.stringify(questions)); return; }
+      if (questions.length === 0) {
+        log.info(`Spec ${specId} 暂无问题`);
+        return;
+      }
+      for (const q of questions) {
+        const icon = q.status === 'answered' ? '✅' : '❓'; // 已回答/待回答图标
+        console.log(`  ${icon} ${q.id}: ${q.question}`);
+      }
+      console.log(`\n  共 ${questions.length} 个问题`);
+    } catch (e) {
+      log.error(`列出问题失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+clarifyCmd
+  .command('ask <specId> <question>')
+  .description('提出问题')
+  .option('-c, --context <context>', '问题上下文', '')
+  .action(async (specId: string, question: string, options: { context: string }) => {
+    const root = process.cwd();
+    const ce = new ClarificationEngine(root);
+    try {
+      const result = await ce.addQuestion(specId, question, options.context || ''); // 添加澄清问题
+      if (isJsonMode()) { console.log(JSON.stringify(result)); return; }
+      log.success(`问题已添加: ${result.id}`);
+    } catch (e) {
+      log.error(`提出问题失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+clarifyCmd
+  .command('answer <specId> <questionId> <answer>')
+  .description('回答问题')
+  .action(async (specId: string, questionId: string, answer: string) => {
+    const root = process.cwd();
+    const ce = new ClarificationEngine(root);
+    try {
+      const result = await ce.answerQuestion(specId, questionId, answer); // 回答指定问题
+      if (isJsonMode()) { console.log(JSON.stringify(result)); return; }
+      log.success(`问题 ${questionId} 已回答`);
+    } catch (e) {
+      log.error(`回答问题失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+clarifyCmd
+  .command('unanswered <specId>')
+  .description('查看未回答问题')
+  .action(async (specId: string) => {
+    const root = process.cwd();
+    const ce = new ClarificationEngine(root);
+    try {
+      const questions = await ce.getUnanswered(specId); // 获取所有未回答问题
+      if (isJsonMode()) { console.log(JSON.stringify(questions)); return; }
+      if (questions.length === 0) {
+        log.info(`Spec ${specId} 无未回答问题`);
+        return;
+      }
+      for (const q of questions) {
+        console.log(`  ❓ ${q.id}: ${q.question}`);
+      }
+      console.log(`\n  共 ${questions.length} 个未回答问题`);
+    } catch (e) {
+      log.error(`获取未回答问题失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// ==================== agile 命令组（敏捷工作流预设）====================
+const agileCmd = program.command('agile').description('敏捷工作流预设');
+
+agileCmd
+  .command('list')
+  .description('列出敏捷工作流预设')
+  .action(() => {
+    try {
+      const workflows = listAgileWorkflows(); // 获取所有敏捷工作流预设
+      if (isJsonMode()) { console.log(JSON.stringify(workflows)); return; }
+      if (workflows.length === 0) {
+        log.info('暂无敏捷工作流预设');
+        return;
+      }
+      for (const w of workflows) {
+        console.log(`  📋 ${w.id} [${w.phase}] ${w.title} (${w.stepCount} 步)`);
+      }
+      console.log(`\n  共 ${workflows.length} 个预设`);
+    } catch (e) {
+      log.error(`列出敏捷工作流失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+agileCmd
+  .command('get <phase>')
+  .description('获取指定阶段')
+  .action((phase: string) => {
+    try {
+      const workflow = getWorkflowByPhase(phase); // 根据阶段名获取工作流详情
+      if (isJsonMode()) { console.log(JSON.stringify(workflow)); return; }
+      if (!workflow) {
+        log.info(`未找到阶段 ${phase} 的工作流`);
+        return;
+      }
+      console.log(`  工作流: ${workflow.title}`);
+      console.log(`  阶段: ${workflow.phase}`);
+      console.log(`  说明: ${workflow.description}`);
+      console.log(`  步骤:`);
+      for (let i = 0; i < workflow.steps.length; i++) {
+        console.log(`    ${i + 1}. ${workflow.steps[i].title}`); // 逐步列出工作流步骤
+      }
+    } catch (e) {
+      log.error(`获取工作流失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+agileCmd
+  .command('step <phase> <index>')
+  .description('执行步骤')
+  .action((phase: string, index: string) => {
+    try {
+      const result = executeWorkflowStep(phase, parseInt(index)); // 执行指定步骤
+      if (isJsonMode()) { console.log(JSON.stringify(result)); return; }
+      log.success(`步骤执行完成: ${result.step.title}`);
+      console.log(`  进度: ${result.progress}`);
+      if (result.nextStep) {
+        console.log(`  下一步: ${result.nextStep.title}`);
+      }
+    } catch (e) {
+      log.error(`执行步骤失败: ${(e as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// ==================== install/uninstall ====================
+
 program
   .command('install')
   .description('安装 qflow 到 Claude Code')
@@ -499,9 +983,12 @@ async function installMCP(): Promise<void> {
 
   if (!config.mcpServers) config.mcpServers = {}; // 确保 mcpServers 存在
   const servers = config.mcpServers as Record<string, unknown>; // 类型断言为可索引对象
+  // 动态解析 mcp.js 路径，兼容任意安装位置（不依赖硬编码的 ~/.claude/tools/qflow 路径）
+  const currentFile = fileURLToPath(import.meta.url); // dist/cli.js 的绝对路径
+  const mcpPath = path.resolve(path.dirname(currentFile), 'mcp.js'); // cli.js 和 mcp.js 位于同一 dist/ 目录
   servers.qflow = {
     command: 'node',
-    args: [path.join(os.homedir(), '.claude', 'tools', 'qflow', 'dist', 'mcp.js')],
+    args: [mcpPath],
   };
 
   await fs.writeFile(claudeJsonPath, JSON.stringify(config, null, 2));

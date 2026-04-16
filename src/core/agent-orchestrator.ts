@@ -26,6 +26,7 @@ import { log } from '../utils/logger.js'; // 日志工具
 import path from 'node:path';                               // v19.0: 路径工具（持久化）
 import { readJSON, writeJSON } from '../utils/file-io.js'; // v19.0: 文件读写工具（持久化）
 import type { PartySession } from '../schemas/persona.js'; // v19.0: Party 会话类型
+import { QFLOW_DIR } from '../shared/tool-utils.js';       // v23.1: .qflow 目录常量，消除魔术字符串
 
 /** Agent 角色类型 */
 export type AgentRole = 'coordinator' | 'specialist' | 'verifier';
@@ -242,7 +243,7 @@ export class AgentOrchestrator {
    * @param projectRoot - 项目根目录绝对路径
    */
   async save(projectRoot: string): Promise<void> {
-    const filePath = path.join(projectRoot, '.qflow', 'agents.json'); // 持久化文件路径
+    const filePath = path.join(projectRoot, QFLOW_DIR, 'agents.json'); // 持久化文件路径
     const data = Array.from(this.agents.values()); // 转为数组（Map -> Array）
     await writeJSON(filePath, data); // 原子写入
     log.info(`AgentOrchestrator: 已保存 ${data.length} 个 Agent 到磁盘`); // 日志
@@ -257,7 +258,7 @@ export class AgentOrchestrator {
    * @param projectRoot - 项目根目录绝对路径
    */
   async load(projectRoot: string): Promise<void> {
-    const filePath = path.join(projectRoot, '.qflow', 'agents.json'); // 持久化文件路径
+    const filePath = path.join(projectRoot, QFLOW_DIR, 'agents.json'); // 持久化文件路径
     const data = await readJSON<AgentDefinition[]>(filePath); // 读取 JSON 文件
     if (data) {
       this.agents.clear(); // 清空当前内存数据
@@ -340,7 +341,7 @@ export class AgentOrchestrator {
    * @param projectRoot - 项目根目录绝对路径
    */
   async savePartySessions(projectRoot: string): Promise<void> {
-    const filePath = path.join(projectRoot, '.qflow', 'party-sessions.json'); // 持久化路径
+    const filePath = path.join(projectRoot, QFLOW_DIR, 'party-sessions.json'); // 持久化路径
     const data = Array.from(this.partySessions.values()); // Map → Array
     await writeJSON(filePath, data); // 原子写入
     log.info(`AgentOrchestrator: 已保存 ${data.length} 个 Party 会话到磁盘`); // 日志
@@ -354,7 +355,7 @@ export class AgentOrchestrator {
    * @param projectRoot - 项目根目录绝对路径
    */
   async loadPartySessions(projectRoot: string): Promise<void> {
-    const filePath = path.join(projectRoot, '.qflow', 'party-sessions.json'); // 持久化路径
+    const filePath = path.join(projectRoot, QFLOW_DIR, 'party-sessions.json'); // 持久化路径
     const data = await readJSON<PartySession[]>(filePath); // 读取 JSON
     if (data) {
       this.partySessions.clear(); // 清空当前内存数据

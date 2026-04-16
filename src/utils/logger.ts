@@ -28,7 +28,7 @@ export const log = {
    * @param msg - 日志内容
    */
   info(msg: string): void {
-    console.log(`${chalk.blue(PREFIX)} ${chalk.blue('ℹ')} ${msg}`); // 蓝色前缀 + 信息图标
+    console.error(`${chalk.blue(PREFIX)} ${chalk.blue('ℹ')} ${msg}`); // 统一输出到 stderr 避免污染 MCP stdout 传输
   },
 
   /**
@@ -52,7 +52,7 @@ export const log = {
    * @param msg - 日志内容
    */
   success(msg: string): void {
-    console.log(`${chalk.green(PREFIX)} ${chalk.green('✓')} ${msg}`); // 绿色前缀 + 成功图标
+    console.error(`${chalk.green(PREFIX)} ${chalk.green('✓')} ${msg}`); // 统一输出到 stderr 避免污染 MCP stdout 传输
   },
 
   /**
@@ -61,6 +61,6 @@ export const log = {
    */
   debug(msg: string): void {
     if (process.env.QFLOW_DEBUG !== 'true') return; // 非调试模式直接跳过
-    console.log(`${chalk.gray(PREFIX)} ${chalk.gray('●')} ${msg}`); // 灰色前缀 + 调试图标
+    console.error(`${chalk.gray(PREFIX)} ${chalk.gray('●')} ${msg}`); // 统一输出到 stderr 避免污染 MCP stdout 传输
   },
 };

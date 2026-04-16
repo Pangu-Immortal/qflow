@@ -742,7 +742,15 @@ export class ReviewManager {
   }
 
   /** v21.0 P2-2: 三层并行审查合并 */
-  async parallelReview(taskId: string): Promise<{taskId: string; layers: {adversarial: any; edgeCase: any; acceptance: any}; summary: {totalFindings: number; criticalCount: number; verdict: string}}> {
+  async parallelReview(taskId: string): Promise<{
+    taskId: string;
+    layers: {
+      adversarial: Awaited<ReturnType<ReviewManager['adversarialReview']>>; // 对抗性审查结果类型
+      edgeCase: Awaited<ReturnType<ReviewManager['edgeCaseHunter']>>;       // 边界场景发现结果类型
+      acceptance: Awaited<ReturnType<ReviewManager['acceptanceAudit']>>;   // 验收标准核查结果类型
+    };
+    summary: {totalFindings: number; criticalCount: number; verdict: string};
+  }> {
     const task = await this.taskManager.getTask(taskId); // 获取任务
     if (!task) throw new Error(`任务 ${taskId} 不存在`);
 
@@ -756,7 +764,7 @@ export class ReviewManager {
     ]);
 
     const totalFindings = (adversarial.findings?.length || 0) + (edgeCase.edgeCases?.length || 0); // 总发现数
-    const criticalCount = (adversarial.findings || []).filter((f: any) => f.severity === 'critical').length; // 严重数
+    const criticalCount = (adversarial.findings || []).filter((f: {type: string; severity: string; message: string}) => f.severity === 'critical').length; // 严重数
     const acceptVerdict = acceptance.verdict; // 验收判定
     const verdict = criticalCount > 0 ? 'BLOCK' : acceptVerdict === 'FAIL' ? 'CONCERNS' : 'PASS'; // 综合判定
 

@@ -20,6 +20,8 @@ import { resolveRoot, errResp, jsonResp, assertPathWithinRoot, registerToolMeta 
 import { shouldRegister as _shouldRegister } from "../shared/helpers.js"; // 工具注册过滤
 import { callAI, callAIWithSchema } from "../core/ai-provider.js"; // AI 调用
 import { ReportGenerator } from "../core/report-generator.js"; // 报告生成器
+import { ClarificationEngine } from '../core/clarification-engine.js'; // 需求澄清引擎
+import { OnboardingEngine } from '../core/onboarding.js'; // 新手引导引擎
 import { log } from "../utils/logger.js"; // 日志工具
 import path from "node:path";
 import { promises as fs } from "node:fs";
@@ -50,6 +52,8 @@ export function registerStandardTools(server: McpServer, allowedTools?: Set<stri
     ['qflow_spec_generate', '从代码库生成 Spec（支持 structured 模式）'],
     ['qflow_research', 'AI 研究查询'],
     ['qflow_report', '项目报告：进度/复杂度'],
+    ['qflow_clarification', '需求澄清：ask/answer/list/unanswered'],
+    ['qflow_onboarding', '新手引导：init/step/complete/progress/reset/report'],
   ];
   for (const [name, desc] of standardMeta) registerToolMeta(name, desc, 'standard'); // 注册元数据
 
@@ -941,6 +945,111 @@ export function registerStandardTools(server: McpServer, allowedTools?: Set<stri
         }
         case "complexity": {
           const report = await reporter.generateComplexityReport(); // 复杂度报告
+          return jsonResp({ report });
+        }
+      }
+    }
+  );
+
+  // 21. qflow_clarification - 需求澄清管理
+  if (shouldRegister("qflow_clarification")) server.tool(
+    "qflow_clarification",
+    "需求澄清管理：ask=提出澄清问题，answer=回答问题，list=列出问题，unanswered=获取未回答问题",
+    {
+      action: z.enum(['ask', 'answer', 'list', 'unanswered']).describe("操作类型"),
+      projectRoot: z.string().optional().describe("项目根目录"),
+      specId: z.string().describe("关联 Spec ID"),
+      question: z.string().optional().describe("澄清问题内容（ask 时必填）"),
+      context: z.string().optional().describe("问题上下文（ask 时可选）"),
+      questionId: z.string().optional().describe("问题 ID（answer 时必填）"),
+      answer: z.string().optional().describe("回答内容（answer 时必填）"),
+      status: z.enum(['pending', 'answered']).optional().describe("过滤状态（list 时可选）"),
+    },
+    async ({ action, projectRoot, specId, question, context, questionId, answer, status }) => {
+      const root = await resolveRoot(projectRoot); // 解析项目根目录
+      if (!root) return errResp("未找到 .qflow 项目");
+      const engine = new ClarificationEngine(root); // 创建澄清引擎实例
+
+      switch (action) {
+        case 'ask': {
+          // 提出澄清问题，question 必填
+          if (!question) return errResp("ask 操作需要 question 参数");
+          const result = await engine.addQuestion(specId, question, context); // 添加问题
+          log.info(`澄清工具: 新增问题 [${result.id}] -> Spec [${specId}]`);
+          return jsonResp({ question: result });
+        }
+        case 'answer': {
+          // 回答澄清问题，questionId 和 answer 必填
+          if (!questionId) return errResp("answer 操作需要 questionId 参数");
+          if (!answer) return errResp("answer 操作需要 answer 参数");
+          const result = await engine.answerQuestion(specId, questionId, answer); // 回答问题
+          log.info(`澄清工具: 回答问题 [${questionId}] -> Spec [${specId}]`);
+          return jsonResp({ question: result });
+        }
+        case 'list': {
+          // 列出问题，支持按状态过滤
+          const questions = await engine.listQuestions(specId, status); // 获取问题列表
+          log.info(`澄清工具: 列出问题 Spec [${specId}], 状态过滤=[${status ?? '全部'}], 共 ${questions.length} 条`);
+          return jsonResp({ questions, total: questions.length });
+        }
+        case 'unanswered': {
+          // 获取所有未回答问题
+          const questions = await engine.getUnanswered(specId); // 获取未回答列表
+          log.info(`澄清工具: 未回答问题 Spec [${specId}], 共 ${questions.length} 条`);
+          return jsonResp({ questions, total: questions.length });
+        }
+      }
+    }
+  );
+
+  // 22. qflow_onboarding - 新手引导教程
+  if (shouldRegister("qflow_onboarding")) server.tool(
+    "qflow_onboarding",
+    "新手引导教程：init=初始化引导，step=获取当前步骤，complete=完成当前步骤，progress=查看进度，reset=重置引导，report=生成引导报告",
+    {
+      action: z.enum(['init', 'step', 'complete', 'progress', 'reset', 'report']).describe("操作类型"),
+      projectRoot: z.string().optional().describe("项目根目录"),
+    },
+    async ({ action, projectRoot }) => {
+      const root = await resolveRoot(projectRoot); // 解析项目根目录
+      if (!root) return errResp("未找到 .qflow 项目");
+      const engine = new OnboardingEngine(root); // 创建引导引擎实例
+
+      switch (action) {
+        case 'init': {
+          // 初始化引导状态
+          const state = await engine.init(); // 创建 onboarding.json
+          log.info(`引导工具: 初始化引导状态`);
+          return jsonResp({ state });
+        }
+        case 'step': {
+          // 获取当前未完成步骤
+          const step = await engine.getStep(); // 获取当前步骤
+          log.info(`引导工具: 获取当前步骤 -> ${step ? step.name : '全部完成'}`);
+          return jsonResp({ step });
+        }
+        case 'complete': {
+          // 完成当前步骤并推进
+          const result = await engine.completeStep(); // 标记当前步骤完成
+          log.info(`引导工具: 完成步骤, 已完成=${result.completed}, 全部完成=${result.allDone}`);
+          return jsonResp(result);
+        }
+        case 'progress': {
+          // 查看整体进度
+          const progress = await engine.getProgress(); // 获取进度摘要
+          log.info(`引导工具: 进度 ${progress.current}/${progress.total} (${progress.percentage}%)`);
+          return jsonResp(progress);
+        }
+        case 'reset': {
+          // 重置引导状态
+          await engine.reset(); // 清除并重建 onboarding.json
+          log.info(`引导工具: 引导状态已重置`);
+          return jsonResp({ success: true, message: "引导状态已重置" });
+        }
+        case 'report': {
+          // 生成引导报告
+          const report = await engine.generateOnboardingReport(); // 生成 Markdown 报告
+          log.info(`引导工具: 生成引导报告`);
           return jsonResp({ report });
         }
       }
