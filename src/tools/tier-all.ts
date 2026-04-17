@@ -1,5 +1,5 @@
 /**
- * Tier All - 18 个精简 MCP 工具（QFLOW_MODE=all 激活）
+ * Tier All - 19 个精简 MCP 工具（QFLOW_MODE=all 激活，v24.0: +qflow_lottie）
  *
  * 合并工具（8 个）：
  *   qflow_review       - 合并原 21 个 review/approval/quality 工具
@@ -48,6 +48,7 @@ import { WatchEngine } from '../core/watch-engine.js'; // 文件监控引擎
 import { listAgileWorkflows, getWorkflowByPhase, executeWorkflowStep } from '../core/workflow-presets.js'; // 敏捷工作流预设
 import { PluginManager } from '../core/plugin-manager.js'; // 插件管理器
 import { WorkflowOrchestrator } from '../core/workflow-orchestrator.js'; // DAG 工作流编排器
+import { listTemplates, generateAnimation, getTemplateInfo } from '../core/lottie-engine.js'; // Lottie 动画生成引擎
 
 /** WatchEngine 模块级单例（延迟启动，由 qflow_diagnostics watch_start 触发） */
 const watchEngine = new WatchEngine();
@@ -76,6 +77,7 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
     ['qflow_agile', '敏捷工作流预设：list/get/step'],
     ['qflow_plugin', '插件管理：install/remove/list/get/search/enable/disable'],
     ['qflow_workflow', 'DAG 工作流管理：start/advance/status/list'],
+    ['qflow_lottie', 'Lottie 动画生成：从 34 种预置模板生成自定义 Lottie JSON 动画'],
   ];
   for (const [name, desc] of allMeta) registerToolMeta(name, desc, 'all'); // 注册元数据
 
@@ -1121,5 +1123,51 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
           return errResp(`未知的 workflow 操作: ${action}`);
       }
     }
+  );
+
+  // ─── qflow_lottie（Lottie 动画生成）───
+  if (shouldRegister('qflow_lottie')) server.tool(
+    'qflow_lottie',
+    'Lottie 动画生成：从 34 种预置模板生成自定义 Lottie JSON 动画，支持颜色/尺寸/帧率自定义。',
+    {
+      action: z.enum(['list', 'generate', 'info']).describe('操作类型：list=列出模板, generate=生成动画, info=模板详情'),
+      templateId: z.string().optional().describe('模板 ID（generate/info 时必填），如 spinner-circular, success-checkmark'),
+      color: z.string().optional().describe('主色 hex 值（可选），如 #6C5CE7'),
+      width: z.number().optional().describe('画布宽度（像素），默认 200'),
+      height: z.number().optional().describe('画布高度（像素），默认 200'),
+      fps: z.number().optional().describe('帧率，默认 30'),
+      outputPath: z.string().optional().describe('输出文件路径（可选），不指定则仅返回 JSON'),
+      category: z.string().optional().describe('按分类筛选（list 时可选）：导航反馈/交互动效/页面过渡/状态指示/图标变形/高级效果'),
+    },
+    async ({ action, templateId, color, width, height, fps, outputPath, category }) => {
+      switch (action) {
+        case 'list': {
+          const templates = await listTemplates(); // 获取全部模板列表
+          const filtered = category
+            ? templates.filter((t: { category: string }) => t.category === category) // 按分类筛选
+            : templates;
+          return jsonResp({ count: filtered.length, templates: filtered });
+        }
+        case 'generate': {
+          if (!templateId) return errResp('generate 操作需要指定 templateId'); // 参数校验
+          const result = await generateAnimation({ templateId, color, width, height, fps, outputPath }); // 生成动画
+          return jsonResp({
+            templateId,
+            outputPath: outputPath || '(内存返回)',
+            frames: result.op - result.ip,
+            fps: result.fr,
+            size: `${result.w}x${result.h}`,
+          });
+        }
+        case 'info': {
+          if (!templateId) return errResp('info 操作需要指定 templateId'); // 参数校验
+          const info = await getTemplateInfo(templateId); // 获取模板详情
+          if (!info) return errResp(`模板 ${templateId} 不存在`);
+          return jsonResp(info);
+        }
+        default:
+          return errResp(`未知操作: ${action}`);
+      }
+    },
   );
 }

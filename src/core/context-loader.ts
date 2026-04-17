@@ -6,7 +6,9 @@
  *
  * 模块存储: ~/.claude/tools/qflow/data/context-modules/
  * 可用模块: core, phase1, phase2, ui-constraints, context-guard,
- *          thinking-tiers, iron-rules, readme-spec, reverse
+ *          thinking-tiers, iron-rules, readme-spec, reverse,
+ *          design-web, design-app, ui-web, ui-ios, ui-android,
+ *          ui-game, pencil, ppt
  *
  * 函数列表:
  * - loadModules()      按名称加载多个模块，合并返回
@@ -34,6 +36,15 @@ const AVAILABLE_MODULES = [
   'iron-rules',       // 强制执行约束
   'readme-spec',      // README 沉淀规范
   'reverse',          // 逆向还原专用约束
+  // v24.0 新增 - Skills 沉淀模块
+  'design-web',       // Web 设计风格系统
+  'design-app',       // App 设计风格系统
+  'ui-web',           // Web/小程序 UI 铁律
+  'ui-ios',           // iOS SwiftUI UI 铁律
+  'ui-android',       // Android Compose UI 铁律
+  'ui-game',          // 游戏引擎 UI 铁律
+  'pencil',           // Pencil 设计工具参考
+  'ppt',              // PPT 生成参考
 ] as const;
 
 /** 模块名到实际文件名的映射表（对外接口不变，内部路径使用映射后的文件名） */
@@ -47,6 +58,15 @@ export const MODULE_FILE_MAP: Record<string, string> = {
   'iron-rules': 'module-iron-rules',           // 铁律模块
   'readme-spec': 'module-readme-spec',         // README 规范模块
   'reverse': 'module-reverse',                 // 逆向还原模块
+  // v24.0 新增 - Skills 沉淀模块
+  'design-web': 'module-design-web',           // Web 设计风格
+  'design-app': 'module-design-app',           // App 设计风格
+  'ui-web': 'module-ui-web',                   // Web/小程序 UI 铁律
+  'ui-ios': 'module-ui-ios',                   // iOS UI 铁律
+  'ui-android': 'module-ui-android',           // Android UI 铁律
+  'ui-game': 'module-ui-game',                 // 游戏引擎 UI 铁律
+  'pencil': 'module-pencil',                   // Pencil 设计工具
+  'ppt': 'module-ppt',                         // PPT 生成参考
 };
 
 /** 已加载模块的内存缓存: 模块名 -> 文件内容 */

@@ -1,6 +1,6 @@
 {
   "name": "qflow",
-  "version": "23.0.0",
+  "version": "24.0.0",
   "description": "Claude Code 自动化工具链 - MCP Server + CLI + Context Modules",
   "main": "dist/mcp.js",
   "bin": {

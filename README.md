@@ -14,7 +14,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-brightgreen.svg)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue.svg)](https://www.typescriptlang.org)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://modelcontextprotocol.io)
-[![Tools](https://img.shields.io/badge/MCP%20Tools-50-orange.svg)]()
+[![Tools](https://img.shields.io/badge/MCP%20Tools-51-orange.svg)]()
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Ready-success.svg)](https://claude.ai)
 [![Cursor](https://img.shields.io/badge/Cursor-Ready-success.svg)](https://cursor.sh)
 [![Windsurf](https://img.shields.io/badge/Windsurf-Ready-success.svg)](https://codeium.com/windsurf)
@@ -27,13 +27,15 @@
 
 > **qflow is an open-source MCP server for AI-powered project management, task tracking, and spec-driven development -- designed for Claude Code, Cursor, Windsurf, and any MCP-compatible AI coding tool.**
 
-qflow turns your AI coding assistant into a full project manager. With 50 MCP tools spanning task management, dependency graphs, multi-agent orchestration, complexity scoring, and automated quality gates, qflow brings structured engineering workflow to AI-assisted development. No external database required -- everything runs locally via file-based state.
+qflow turns your AI coding assistant into a full project manager. With 51 MCP tools spanning task management, dependency graphs, multi-agent orchestration, complexity scoring, Lottie animation generation, and automated quality gates, qflow brings structured engineering workflow to AI-assisted development. 17 context modules cover design systems, UI constraints, and engineering workflows. No external database required -- everything runs locally via file-based state.
 
 ---
 
 ## Features
 
-- **50 MCP Tools in 3 Tiers** -- Granular control over which tools load. Start with 10 core tools, scale to 50 for enterprise workflows.
+- **51 MCP Tools in 3 Tiers** -- Granular control over which tools load. Start with 10 core tools, scale to 51 for enterprise workflows.
+- **17 Context Modules** -- On-demand loading of design systems (Web/App/iOS/Android/Game), UI constraints, Pencil design tool reference, PPT generation guide, and engineering workflows. Token-aware with auto-compression.
+- **Lottie Animation Engine** -- Generate customizable Lottie JSON animations from 34 preset templates (loading spinners, success checkmarks, heart-like, skeleton shimmer, etc.) with color/size/fps customization.
 - **7-State Task Machine** -- Tasks flow through `pending > active > done > blocked > review > deferred > cancelled` with automatic dependency unblocking and next-task recommendation.
 - **Spec-Driven Development** -- Propose, apply, and archive specification changes with SHA-256 conflict detection and living spec propagation.
 - **5-Dimension Complexity Scoring** -- Heuristic scoring (1-10) with scale-adaptive planning tracks: Quick, Standard, and Enterprise.
@@ -50,7 +52,7 @@ How does qflow compare to other AI project management tools?
 
 | Feature | **qflow** | Task Master AI | OpenSpec | Manual Management |
 |---------|-----------|----------------|----------|-------------------|
-| MCP Tools | **50** | ~20 | ~10 | 0 |
+| MCP Tools | **51** | ~20 | ~10 | 0 |
 | Tool Tiers (load control) | **3 tiers** | None | None | N/A |
 | Task State Machine | **7 states** | 3 states | None | Ad-hoc |
 | Dependency DAG + Cycle Detection | **Yes** | Partial | No | Manual |
@@ -317,8 +319,9 @@ Set the mode via `QFLOW_MODE` environment variable or pass `QFLOW_TOOLS` for fin
 | `qflow_agile` | Agile workflow presets: list phases, get phase details, execute step |
 | `qflow_plugin` | Plugin lifecycle: install, remove, list, get, search, enable, disable |
 | `qflow_workflow` | DAG workflow orchestration: start, advance, status, list workflows |
+| `qflow_lottie` | Lottie animation generator: list 34 templates, generate with custom color/size/fps, get template info |
 
-> **Total: 50 tools** across 3 tiers (core: 10, standard: 22, all: 18).
+> **Total: 51 tools** across 3 tiers (core: 10, standard: 22, all: 19).
 
 ---
 
@@ -420,7 +423,7 @@ qflow/
 │   ├── tools/                      # MCP tool registration
 │   │   ├── tier-core.ts            # 10 core tools
 │   │   ├── tier-standard.ts        # 22 standard tools
-│   │   └── tier-all.ts             # 18 advanced tools
+│   │   └── tier-all.ts             # 19 advanced tools
 │   ├── schemas/                    # Zod data models
 │   ├── shared/                     # Constants, helpers, prompt templates
 │   └── templates/                  # Slash command .md templates
