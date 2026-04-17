@@ -40,9 +40,15 @@ export interface AIResponse {
 
 /** settings.json 中可能的结构（部分字段） */
 interface ClaudeSettings {
-  apiKey?: string;    // API 密钥
+  apiKey?: string;    // 顶层 API 密钥（旧格式兼容）
   baseUrl?: string;   // 自定义 API 地址
   model?: string;     // 模型名称
+  env?: {             // Claude Code 环境变量配置区
+    ANTHROPIC_AUTH_TOKEN?: string;  // Claude Code 自身的 API Key
+    ANTHROPIC_BASE_URL?: string;    // Claude Code 自身的 API 地址
+    ANTHROPIC_MODEL?: string;       // Claude Code 自身的模型名
+    [key: string]: unknown;
+  };
   [key: string]: unknown; // 其他未知字段
 }
 
@@ -152,10 +158,10 @@ export async function loadAIConfig(): Promise<{ apiKey: string; baseUrl: string;
     }
   }
 
-  // fallback: 从 ~/.claude/settings.json 读取
+  // fallback 1: 从 ~/.claude/settings.json 顶层读取（旧格式兼容）
   const settings = await readJSON<ClaudeSettings>(SETTINGS_PATH); // 读取 settings
-  if (settings?.apiKey) { // 有 API key
-    log.debug('从 ~/.claude/settings.json 加载 AI 配置'); // 调试日志
+  if (settings?.apiKey) { // 有顶层 API key
+    log.debug('从 ~/.claude/settings.json (apiKey) 加载 AI 配置'); // 调试日志
     return {
       apiKey: settings.apiKey, // API 密钥
       baseUrl: settings.baseUrl ?? DEFAULT_BASE_URL, // 基础地址
@@ -164,13 +170,28 @@ export async function loadAIConfig(): Promise<{ apiKey: string; baseUrl: string;
     };
   }
 
-  // 都没找到，抛出明确错误
+  // fallback 2: 自动复用 Claude Code 的 ANTHROPIC_AUTH_TOKEN（零配置方案）
+  // Claude Code 将 API key 存储在 ~/.claude/settings.json 的 env.ANTHROPIC_AUTH_TOKEN 字段中
+  // 自动读取此 key，让用户无需任何额外配置即可使用 qflow 的 AI 功能
+  if (settings?.env?.ANTHROPIC_AUTH_TOKEN) {
+    log.debug('自动复用 Claude Code 的 ANTHROPIC_AUTH_TOKEN（零配置）'); // 调试日志
+    return {
+      apiKey: settings.env.ANTHROPIC_AUTH_TOKEN, // 复用 Claude Code 的 key
+      baseUrl: settings.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com/v1', // Claude API 默认地址
+      model: settings.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL, // 模型名
+      provider: 'anthropic', // Claude Code 使用 Anthropic API
+    };
+  }
+
+  // 都没找到，抛出明确错误（含解决步骤）
   throw new Error(
-    'AI API Key 未配置。请在以下位置之一设置:\n' +
-    '  0. 环境变量 QFLOW_API_KEY + QFLOW_BASE_URL + QFLOW_MODEL\n' +
-    '  1. {projectRoot}/.qflow/qflow.config.json 的 ai.apiKey 字段\n' +
-    `  2. ${SETTINGS_PATH} 的 apiKey 字段\n` +
-    '  3. 环境变量 QFLOW_PROJECT_ROOT 指向的项目配置',
+    'AI API Key 未配置。qflow 的 AI 功能（任务拆解、Spec 生成、研究）需要 API Key。\n' +
+    '其他 47 个工具无需 Key 即可正常使用。\n\n' +
+    '配置方式（任选其一）：\n' +
+    '  方式 A（推荐）: 如果你已安装 Claude Code，qflow 会自动读取其 API Key，无需额外配置\n' +
+    '  方式 B: 设置环境变量 QFLOW_API_KEY=你的key QFLOW_BASE_URL=API地址 QFLOW_MODEL=模型名\n' +
+    '  方式 C: 在 .qflow/qflow.config.json 的 ai.apiKey 字段中配置\n' +
+    '  方式 D: 使用 Ollama 等本地模型（QFLOW_PROVIDER=ollama QFLOW_BASE_URL=http://localhost:11434/v1）',
   );
 }
 

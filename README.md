@@ -181,9 +181,9 @@ How does qflow compare to other AI project management tools? This is the most co
 
 ---
 
-## Quick Start
+## Quick Start (3 Steps to Running)
 
-### One-Line Install
+### Step 1: Install
 
 ```bash
 git clone https://github.com/Pangu-Immortal/qflow.git
@@ -191,28 +191,90 @@ cd qflow
 bash setup.sh
 ```
 
-`setup.sh` will:
-1. Verify Node.js >= 18
-2. Run `npm install` and `npm run build`
-3. Auto-register qflow as an MCP server in Claude Code (`~/.claude.json`), Cursor (`.cursor/mcp.json`), and Windsurf (`~/.codeium/windsurf/mcp_config.json`)
+`setup.sh` automatically:
+1. Verifies Node.js >= 18
+2. Runs `npm install && npm run build`
+3. Registers qflow as MCP server in Claude Code, Cursor, and Windsurf
 
-> **Important:** After setup, **restart your AI editor** for qflow to appear in the tool list.
+> **Important:** After setup, **restart your AI editor** for qflow to appear.
 
-### Manual Install
+<details>
+<summary>Manual install (without setup.sh)</summary>
 
 ```bash
-# Step 1 -- Install dependencies
-npm install
+npm install && npm run build
+node dist/cli.js install   # Registers MCP in Claude Code + Cursor + Windsurf
+```
+</details>
 
-# Step 2 -- Build
-npm run build
+### Step 2: API Key Configuration (Choose One)
 
-# Step 3 -- Configure your AI editor (see MCP Configuration below)
+qflow's AI-enhanced features (task expansion, spec generation, research, complexity scoring) need an API key. **47 out of 51 tools work without any key.**
+
+| Mode | Setup Required | Best For |
+|------|---------------|----------|
+| **A. Auto (recommended)** | None -- zero config | Claude Code users |
+| **B. Own API key** | Set env vars or edit config | Cursor / Windsurf / custom provider |
+| **C. No key** | None | Task management only (no AI features) |
+
+#### Mode A: Zero Config (Claude Code users)
+
+**If you already use Claude Code, you're done.** qflow automatically reads your Claude Code API key from `~/.claude/settings.json`. No extra configuration needed.
+
+#### Mode B: Your Own API Key
+
+Set environment variables in your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "qflow": {
+      "command": "node",
+      "args": ["/absolute/path/to/qflow/dist/mcp.js"],
+      "env": {
+        "QFLOW_MODE": "standard",
+        "QFLOW_API_KEY": "sk-your-api-key",
+        "QFLOW_BASE_URL": "https://api.openai.com/v1",
+        "QFLOW_MODEL": "gpt-4o",
+        "QFLOW_PROVIDER": "openai"
+      }
+    }
+  }
+}
 ```
 
-### Initialize a Project
+Or create `.qflow/qflow.config.json` in your project (this file is auto-gitignored):
 
-After setup, open your AI editor and say:
+```json
+{
+  "ai": {
+    "provider": "openai",
+    "apiKey": "sk-your-api-key",
+    "model": "gpt-4o",
+    "baseUrl": "https://api.openai.com/v1"
+  }
+}
+```
+
+> **Security:** `.qflow/` is in `.gitignore` by default. Never commit API keys. The MCP config env vars are local to your machine and never uploaded.
+
+#### Mode C: No Key (Graceful Degradation)
+
+Skip API key configuration entirely. qflow still provides full functionality for 47 tools:
+
+| Feature | With API Key | Without API Key |
+|---------|-------------|-----------------|
+| Task CRUD, dependencies, status | Full | Full |
+| Spec propose, apply, verify, archive | Full | Full |
+| Sprint, TDD, autopilot, review | Full | Full |
+| `qflow_task_expand` | AI subtask generation | Phase-based templates |
+| `qflow_spec_generate` | AI content generation | Placeholder templates |
+| `qflow_research` | AI research with sources | Template with placeholders |
+| `qflow_complexity_score` | AI 5-dimension scoring | Heuristic keyword analysis |
+
+### Step 3: Initialize Your Project
+
+Open your AI editor and say:
 
 ```
 Initialize qflow for this project
@@ -224,7 +286,12 @@ Or use the CLI:
 node dist/cli.js init /path/to/your/project
 ```
 
-This creates a `.qflow/` directory with project config and task storage.
+This creates a `.qflow/` directory with project config and task storage. You're ready to go!
+
+**Try it now:**
+```
+Create a task: Set up user authentication with JWT
+```
 
 ### MCP Configuration
 
@@ -280,43 +347,10 @@ Add qflow to your editor's MCP config. Replace `/absolute/path/to/qflow` with th
 
 ---
 
-## AI Provider Configuration
+## Supported AI Providers
 
-> **This is the most important configuration step.** qflow uses AI for task expansion, spec generation, research, and complexity scoring. Without a key, these features fall back to heuristics and templates automatically -- the tool still works, just with reduced intelligence.
-
-### Option A -- Environment Variables
-
-Set these before launching your AI editor:
-
-```bash
-export QFLOW_API_KEY="sk-..."                        # Your API key
-export QFLOW_BASE_URL="https://api.openai.com/v1"    # OpenAI-compatible endpoint
-export QFLOW_MODEL="gpt-4o"                          # Model name
-export QFLOW_PROVIDER="openai"                       # Provider name (see table below)
-```
-
-### Option B -- Project Config File
-
-Create or edit `.qflow/qflow.config.json` in your project:
-
-```json
-{
-  "ai": {
-    "provider": "openai",
-    "apiKey": "sk-...",
-    "model": "gpt-4o",
-    "baseUrl": "https://api.openai.com/v1",
-    "researchModel": "o3-mini",
-    "fallbackModel": "gpt-4o-mini"
-  }
-}
-```
-
-> **Security:** Never commit `.qflow/qflow.config.json` with a real API key. Add it to `.gitignore`.
-
-### Supported Providers
-
-qflow supports **16 providers** via OpenAI-compatible adapters:
+<details>
+<summary>qflow supports 16 AI providers via OpenAI-compatible adapters (click to expand)</summary>
 
 | Provider | `QFLOW_PROVIDER` Value | Notes |
 |----------|------------------------|-------|
@@ -337,17 +371,7 @@ qflow supports **16 providers** via OpenAI-compatible adapters:
 | Together AI | `together` | Open-source model hosting |
 | Any OpenAI-compatible | `openai` | Set custom `baseUrl` |
 
-### Graceful Degradation (No API Key Required)
-
-When no API key is configured, qflow still works:
-
-| Feature | With API Key | Without API Key |
-|---------|-------------|-----------------|
-| `qflow_complexity_score` | AI-powered multi-dimension scoring | Heuristic scoring (keyword + structure analysis) |
-| `qflow_task_expand` | AI generates contextual subtasks | Phase-based templates (Analysis > Implementation > Testing > Optimization > Deployment) |
-| `qflow_spec_generate` | AI generates spec content | Template with placeholders |
-| `qflow_research` | AI-powered research with sources | Template with placeholders |
-| All other 46 tools | Full functionality | Full functionality (no AI dependency) |
+</details>
 
 ---
 
