@@ -37,7 +37,7 @@ export const TaskSchema = z.object({
   parentId: z.string().optional(),                                        // 父任务 ID
   tags: z.array(z.string()),                                              // 标签列表
   testStrategy: z.string().optional(),                                    // 测试策略
-  // === 吸收 Task Master AI 的 TaskImplementationMetadata ===
+  // === 实现元数据（工作量/类别/相关文件） ===
   effort: z.number().optional(),                                          // 预估工作量（人时）
   actualEffort: z.number().optional(),                                    // 实际工作量（人时）
   category: z.enum(['research', 'design', 'development', 'testing', 'documentation', 'review']).optional(), // 任务类别

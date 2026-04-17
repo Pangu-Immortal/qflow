@@ -2,7 +2,7 @@
  * 动态指令装配器 - 运行时组装 AI 调用指令
  *
  * 根据任务上下文自动组装 Context（项目信息）+ Rules（约束规则）+ Templates（Prompt 模板），
- * 输出完整的 AI 调用指令字符串。灵感来源于 OpenSpec 的指令装配模式。
+ * 输出完整的 AI 调用指令字符串。
  *
  * 函数列表:
  * - assembleContext()   加载项目上下文 + 任务上下文 + 活跃 Spec 摘要

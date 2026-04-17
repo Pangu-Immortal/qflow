@@ -120,7 +120,7 @@ bash setup.sh
 
 ## 📊 同类产品对比
 
-> **qflow 是目前唯一的 All-in-one 方案** —— 任务管理 + Spec 驱动 + 多角色评审 + 设计系统 + 动画引擎，一个工具全搞定。Task Master 只管任务，OpenSpec 只管 Spec。
+> **qflow 是目前唯一的 All-in-one 方案** —— 任务管理 + Spec 驱动 + 多角色评审 + 设计系统 + 动画引擎，一个工具全搞定。其他同类工具通常只覆盖其中一个方向。
 
 | 维度 | **qflow** | Task Master AI | OpenSpec |
 |------|-----------|----------------|----------|

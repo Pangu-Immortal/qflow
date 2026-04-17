@@ -120,7 +120,7 @@ Template management, plugin system, DAG workflow orchestration, persistent memor
 
 ## 📊 How qflow Compares
 
-> **qflow is the only All-in-one solution available today** — task management + Spec-driven development + multi-persona review + design systems + animation engine, all in one tool. Task Master only handles tasks. OpenSpec only handles Specs.
+> **qflow is the only All-in-one solution available today** — task management + Spec-driven development + multi-persona review + design systems + animation engine, all in one tool. Other tools in this space typically cover only one of these areas.
 
 | Dimension | **qflow** | Task Master AI | OpenSpec |
 |-----------|-----------|----------------|----------|
