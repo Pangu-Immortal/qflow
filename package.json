@@ -6,6 +6,13 @@
   "bin": {
     "qflow": "dist/cli.js"
   },
+  "keywords": [
+    "mcp", "mcp-server", "model-context-protocol",
+    "ai-project-management", "task-management",
+    "claude-code", "cursor", "windsurf", "codex",
+    "spec-driven-development", "lottie", "design-system",
+    "typescript", "cli", "all-in-one"
+  ],
   "type": "module",
   "scripts": {
     "build": "tsc",
