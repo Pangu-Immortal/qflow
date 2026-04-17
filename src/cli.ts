@@ -917,11 +917,13 @@ agileCmd
 
 program
   .command('install')
-  .description('安装 qflow 到 Claude Code')
+  .description('安装 qflow MCP 服务器到 Claude Code / Cursor / Windsurf')
   .action(async () => {
-    await installMCP();
+    await installMCP();               // Claude Code (~/.claude.json)
+    await installMCPCursor();         // Cursor (.cursor/mcp.json)
+    await installMCPWindsurf();       // Windsurf (~/.codeium/windsurf/mcp_config.json)
     await installSlashCommands();
-    log.success('qflow 安装完成');
+    log.success('qflow 安装完成（Claude Code + Cursor + Windsurf）');
   });
 
 program
@@ -989,10 +991,77 @@ async function installMCP(): Promise<void> {
   servers.qflow = {
     command: 'node',
     args: [mcpPath],
+    env: { QFLOW_MODE: 'standard' }, // 默认标准模式，加载 core + standard 共 32 个工具
   };
 
   await fs.writeFile(claudeJsonPath, JSON.stringify(config, null, 2));
   log.success('MCP 服务器已注册到 ~/.claude.json');
+}
+
+/**
+ * 注册 qflow MCP 到 Cursor 配置（.cursor/mcp.json，项目级）
+ *
+ * Cursor 使用项目目录下的 .cursor/mcp.json 配置 MCP 服务器。
+ * 注册到 qflow 项目本身的 .cursor/ 目录，用户如需在其他项目使用需手动复制。
+ */
+async function installMCPCursor(): Promise<void> {
+  const currentFile = fileURLToPath(import.meta.url); // dist/cli.js 绝对路径
+  const mcpPath = path.resolve(path.dirname(currentFile), 'mcp.js'); // mcp.js 绝对路径
+  const qflowRoot = path.resolve(path.dirname(currentFile), '..'); // 项目根目录
+  const cursorDir = path.join(qflowRoot, '.cursor'); // .cursor/ 目录
+  const cursorJsonPath = path.join(cursorDir, 'mcp.json'); // 配置文件路径
+
+  let config: Record<string, unknown> = {}; // 默认空配置
+  try {
+    await fs.mkdir(cursorDir, { recursive: true }); // 确保 .cursor/ 存在
+    const content = await fs.readFile(cursorJsonPath, 'utf-8');
+    config = JSON.parse(content);
+  } catch {
+    // 目录或文件不存在，使用空配置
+  }
+
+  if (!config.mcpServers) config.mcpServers = {};
+  const servers = config.mcpServers as Record<string, unknown>;
+  servers.qflow = {
+    command: 'node',
+    args: [mcpPath],
+    env: { QFLOW_MODE: 'standard' },
+  };
+
+  await fs.writeFile(cursorJsonPath, JSON.stringify(config, null, 2));
+  log.success('MCP 服务器已注册到 .cursor/mcp.json');
+}
+
+/**
+ * 注册 qflow MCP 到 Windsurf 全局配置
+ *
+ * Windsurf 使用 ~/.codeium/windsurf/mcp_config.json 作为全局 MCP 配置。
+ */
+async function installMCPWindsurf(): Promise<void> {
+  const currentFile = fileURLToPath(import.meta.url); // dist/cli.js 绝对路径
+  const mcpPath = path.resolve(path.dirname(currentFile), 'mcp.js'); // mcp.js 绝对路径
+  const windsurfDir = path.join(os.homedir(), '.codeium', 'windsurf'); // Windsurf 配置目录
+  const windsurfJsonPath = path.join(windsurfDir, 'mcp_config.json'); // 配置文件路径
+
+  let config: Record<string, unknown> = {}; // 默认空配置
+  try {
+    await fs.mkdir(windsurfDir, { recursive: true }); // 确保目录存在
+    const content = await fs.readFile(windsurfJsonPath, 'utf-8');
+    config = JSON.parse(content);
+  } catch {
+    // 目录或文件不存在，使用空配置
+  }
+
+  if (!config.mcpServers) config.mcpServers = {};
+  const servers = config.mcpServers as Record<string, unknown>;
+  servers.qflow = {
+    command: 'node',
+    args: [mcpPath],
+    env: { QFLOW_MODE: 'standard' },
+  };
+
+  await fs.writeFile(windsurfJsonPath, JSON.stringify(config, null, 2));
+  log.success('MCP 服务器已注册到 ~/.codeium/windsurf/mcp_config.json');
 }
 
 async function uninstallMCP(): Promise<void> {

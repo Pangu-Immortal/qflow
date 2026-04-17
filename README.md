@@ -196,6 +196,8 @@ bash setup.sh
 2. Run `npm install` and `npm run build`
 3. Auto-register qflow as an MCP server in Claude Code (`~/.claude.json`), Cursor (`.cursor/mcp.json`), and Windsurf (`~/.codeium/windsurf/mcp_config.json`)
 
+> **Important:** After setup, **restart your AI editor** for qflow to appear in the tool list.
+
 ### Manual Install
 
 ```bash
@@ -566,6 +568,7 @@ qflow/
 | `QFLOW_MODEL` | AI model name | `gpt-4o` |
 | `QFLOW_PROVIDER` | Provider name (openai / anthropic / google / azure / groq / ollama / ...) | `openai` |
 | `QFLOW_PROJECT_ROOT` | Override project root directory detection | auto-detected |
+| `QFLOW_DEBUG` | Enable debug logging (`true` to enable) | -- |
 
 ---
 

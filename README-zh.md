@@ -239,6 +239,8 @@ bash setup.sh
 2. 执行 `npm install` 和 `npm run build`
 3. 自动将 qflow 注册为 MCP 服务器——Claude Code（`~/.claude.json`）、Cursor（`.cursor/mcp.json`）和 Windsurf（`~/.codeium/windsurf/mcp_config.json`）
 
+> **重要提示：** 安装完成后，请**重启你的 AI 编辑器**，qflow 才会出现在工具列表中。
+
 ### 手动安装
 
 ```bash
@@ -608,6 +610,7 @@ qflow/
 | `QFLOW_MODEL` | AI 模型名称 | `gpt-4o` |
 | `QFLOW_PROVIDER` | 供应商名称（openai / anthropic / google / azure / groq / ollama / ...） | `openai` |
 | `QFLOW_PROJECT_ROOT` | 覆盖项目根目录自动检测 | 自动检测 |
+| `QFLOW_DEBUG` | 启用调试日志（设为 `true` 开启） | -- |
 
 ---
 
