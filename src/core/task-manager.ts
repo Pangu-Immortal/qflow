@@ -51,7 +51,7 @@ import { log } from '../utils/logger.js'; // 日志工具
 import { validateTransition, getValidTransitions } from './state-machine.js'; // 状态机校验工具
 import { QFLOW_DIR, sanitizeId } from '../shared/tool-utils.js'; // .qflow 目录常量 + ID 清洗工具
 import { MEMORY_CACHE_TTL, DEFAULT_PRIORITY, HOOK_TIMEOUT, SCOPE_STRENGTH_MIN, SCOPE_STRENGTH_MAX, SCOPE_STRENGTH_DEFAULT, MAX_LOOP_DEPTH, UNDO_LOG_MAX, ARCHIVE_BATCH_SIZE, OVERDUE_SCAN_LIMIT } from '../shared/constants.js'; // v15.0 R-5: 全局常量 + v22.0 新增常量
-import { callAI } from './ai-provider.js'; // v22.0 P1-11: AI 重写支持
+// v23.0: 移除 callAI 导入，任务重写不再调用 AI，改为模板标记方式
 
 /** 任务树节点结构 - 用于递归展示任务及其所有子任务 */
 export interface TaskTreeNode {
@@ -1629,20 +1629,13 @@ export class TaskManager {
           }
         }
 
-        // v22.0 P1-11: AI 实装 — 优先使用 AI 重写，降级到模板
+        // v23.0: 移除 AI 调用，使用标记方式让宿主 LLM 处理重写
         const original = task.description;
-        try {
-          const aiPrompt = prompt
-            ? `请根据以下指导重写任务描述:\n指导: ${prompt}\n原始描述: ${original}\n只输出重写后的描述，不要其他内容。`
-            : `请优化以下任务描述，使其更清晰具体:\n${original}\n只输出优化后的描述，不要其他内容。`;
-          const result = await callAI(aiPrompt, { maxTokens: 500 });
-          task.description = result.content.trim();
-          log.info(`任务 ${task.id} AI 重写成功`);
-        } catch {
-          const prefix = prompt ? `[根据指导重写] ${prompt}\n\n` : '[待 AI 重写] ';
-          task.description = `${prefix}原始描述: ${original}`;
-          log.warn(`任务 ${task.id} AI 重写失败，降级到模板`);
-        }
+        const markedDesc = prompt
+          ? `[待重写] 指导: ${prompt}\n\n原始描述: ${original}` // 有指导时附带指导信息
+          : `[待优化] 原始描述: ${original}`; // 无指导时标记为待优化
+        task.description = markedDesc; // 替换描述为标记版本
+        log.info(`任务 ${task.id} 已标记为待重写（由宿主 LLM 处理）`); // 记录日志
         task.updatedAt = now; // 刷新更新时间
         rewritten.push(task.id); // 记录已重写
       }

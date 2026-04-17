@@ -17,8 +17,7 @@ import { resolveRoot, errResp, jsonResp, registerToolMeta } from "../shared/tool
 import { shouldRegister as _shouldRegister } from "../shared/helpers.js"; // 工具注册过滤
 import { heuristicScore } from "../algorithms/complexity-scorer.js"; // 复杂度评分（task_create 使用）
 import { bigramSimilarity } from "../algorithms/fuzzy-search.js"; // 模糊搜索（task_list 使用）
-import { callAI } from "../core/ai-provider.js"; // AI 文本调用（task_expand 使用）
-import { loadPromptTemplate, renderPrompt, selectVariant } from "../shared/prompt-templates.js"; // Prompt 模板系统（task_expand 使用）
+// [重构] 已移除 callAI 和 prompt-templates 导入，task_expand 改为纯模板拆解 + hint 提示宿主 LLM
 import { parsePrd } from "../core/prd-parser.js"; // PRD 解析器（parse_prd 使用）
 import path from "node:path";
 import os from "node:os";
@@ -375,7 +374,7 @@ export function registerCoreTools(server: McpServer, allowedTools?: Set<string>)
   // 6. qflow_task_expand - 拆解任务为子任务（从 standard 搬入）
   if (shouldRegister("qflow_task_expand")) server.tool(
     "qflow_task_expand",
-    "将任务拆解为子任务。优先使用 AI 生成有意义的子任务，失败时降级到固定模板。",
+    "将任务拆解为子任务（5 阶段模板），返回 hint 供宿主 LLM 进一步细化。",
     {
       taskId: z.string().describe("要拆解的任务ID"),
       numSubtasks: z.number().min(2).max(10).optional().describe("子任务数量，默认3"),
@@ -390,66 +389,18 @@ export function registerCoreTools(server: McpServer, allowedTools?: Set<string>)
       const task = await tm.getTask(taskId);
       if (!task) return errResp(`任务 ${taskId} 不存在`);
 
-      const num = numSubtasks || 3;
+      const num = numSubtasks || 3; // 子任务数量，默认 3
 
-      // 研究阶段：当 research=true 时，先调用 AI 研究任务拆解策略
-      let researchContext = ''; // 研究结果上下文
-      if (research) {
-        try {
-          log.debug(`执行拆解前研究: ${taskId}`); // 调试日志
-          const researchPrompt = `研究任务 "${task.title}" 的最佳拆解策略: ${task.description}`; // 研究提示词
-          const researchResult = await callAI(researchPrompt, { role: 'research' }); // 调用 AI 研究
-          researchContext = researchResult.content; // 保存研究结果
-          log.debug(`研究完成，结果长度: ${researchContext.length}`); // 调试日志
-        } catch (err) {
-          log.warn(`拆解前研究失败，继续拆解: ${(err as Error).message}`); // 研究失败不阻断流程
-        }
-      }
+      // 使用 5 阶段固定模板拆解任务（不再调用 AI）
+      const phases = ['分析与设计', '核心实现', '集成与测试', '优化与文档', '验收与部署']; // 5 阶段模板
+      const created = []; // 已创建子任务列表
+      let prevId: string | undefined; // 前一个子任务 ID（用于链式依赖）
 
-      // 尝试 AI 生成子任务
-      let aiSubtasks: Array<{ title: string; description: string }> | null = null; // AI 生成的子任务列表
-      try {
-        log.debug(`尝试 AI 拆解任务: ${taskId}`); // 调试日志
-        const template = await loadPromptTemplate('expand-task.json'); // 加载拆解模板
-        if (template) { // 模板加载成功
-          const variables = { // 模板变量
-            taskTitle: task.title, // 任务标题
-            taskDescription: task.description, // 任务描述
-            numSubtasks: String(num), // 子任务数量
-            expansionPrompt: (task.expansionPrompt || '') + (researchContext ? `\n\n研究分析:\n${researchContext}` : ''), // 拆解引导词 + 研究上下文
-          };
-          const variant = selectVariant(template, variables); // 选择变体
-          const systemPrompt = renderPrompt(variant.system, variables); // 渲染系统提示词
-          const userPrompt = renderPrompt(variant.user, variables); // 渲染用户提示词
-
-          const aiResp = await callAI(userPrompt, { systemPrompt }); // 调用 AI
-          const cleaned = aiResp.content.trim() // 清理 AI 响应
-            .replace(/^```json?\n?/i, '') // 移除开头代码块标记
-            .replace(/\n?```$/i, ''); // 移除结尾代码块标记
-          const parsed = JSON.parse(cleaned); // 解析 JSON
-
-          // 校验返回格式：必须是数组，每项需有 title 和 description
-          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].title) { // 格式正确
-            aiSubtasks = parsed.slice(0, num); // 截取指定数量
-            log.debug(`AI 拆解成功: ${aiSubtasks.length} 个子任务`); // 调试日志
-          }
-        }
-      } catch (err) { // AI 调用失败
-        log.warn(`AI 拆解失败，降级到固定模板: ${(err as Error).message}`); // 警告日志
-      }
-
-      // 创建子任务（AI 结果或固定模板）
-      const phases = ['分析与设计', '核心实现', '集成与测试', '优化与文档', '验收与部署']; // fallback 固定阶段
-      const created = [];
-      let prevId: string | undefined;
+      log.debug(`模板拆解任务 ${taskId}: ${num} 个子任务`); // 调试日志
 
       for (let i = 0; i < num; i++) {
-        const subTitle = aiSubtasks // 使用 AI 结果或 fallback
-          ? aiSubtasks[i]?.title || `${task.title} - 子任务${i + 1}` // AI 标题
-          : `${task.title} - ${phases[i % phases.length]}`; // 固定阶段标题
-        const subDesc = aiSubtasks // 使用 AI 结果或 fallback
-          ? aiSubtasks[i]?.description || `${task.description}\n\n子任务 ${i + 1}/${num}` // AI 描述
-          : `${task.description}\n\n子任务 ${i + 1}/${num}: ${phases[i % phases.length]}`; // 固定阶段描述
+        const subTitle = `${task.title} - ${phases[i % phases.length]}`; // 阶段标题
+        const subDesc = `${task.description}\n\n子任务 ${i + 1}/${num}: ${phases[i % phases.length]}`; // 阶段描述
 
         const sub = await tm.createTask(
           subTitle, // 子任务标题
@@ -461,14 +412,15 @@ export function registerCoreTools(server: McpServer, allowedTools?: Set<string>)
             deps: prevId ? [prevId] : task.dependencies, // 链式依赖
           }
         );
-        created.push(sub);
-        prevId = sub.id; // 记录前一个子任务 ID
+        created.push(sub); // 记录已创建子任务
+        prevId = sub.id; // 更新前一个子任务 ID
       }
 
       return jsonResp({
-        parentTask: task,
-        subtasks: created,
-        source: aiSubtasks ? 'ai' : 'template', // 标注子任务来源
+        parentTask: task, // 父任务信息
+        subtasks: created, // 已创建子任务列表
+        source: 'template', // 标注子任务来源为模板
+        hint: `已用模板创建 ${created.length} 个子任务。你可以根据任务描述进一步细化：\n任务: ${task.title}\n描述: ${task.description || '无'}`, // 提示宿主 LLM 进一步处理
       });
     }
   );

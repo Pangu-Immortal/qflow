@@ -8,7 +8,6 @@
  * - loadConfig()              从项目根目录加载配置文件
  * - saveConfig()              保存配置到项目根目录
  * - getDefaultConfig()        生成带默认值的配置对象
- * - saveProviderToConfig()    持久化 Provider 选择
  * - setConfigField()          原子更新单个配置字段（v16.0 C-4）
  * - getMode()                 获取当前运行模式（环境变量优先）
  * - invalidateConfigCache()   手动失效配置缓存（v16.0 Q-4）
@@ -114,25 +113,8 @@ export function getDefaultConfig(projectRoot: string, projectName?: string): Qfl
   return QflowConfigSchema.parse({ // 通过 Zod schema parse 填充默认值
     projectName: name, // 项目名称
     projectRoot, // 项目根目录
-    ai: { provider: 'anthropic' }, // AI 配置默认 Anthropic
     responseLanguage: 'zh-CN', // 默认响应语言为中文
   });
-}
-
-/**
- * 将 AI Provider 选择持久化到配置文件
- *
- * v13.0 F-6: 新增方法，供 provider_switch 工具调用。
- * 仅修改 ai.provider 字段，不影响其他配置项。
- *
- * @param projectRoot - 项目根目录绝对路径
- * @param provider    - 目标 provider 名称
- */
-export async function saveProviderToConfig(projectRoot: string, provider: string): Promise<void> {
-  const config = await loadConfig(projectRoot); // 加载现有配置
-  config.ai = { ...config.ai, provider: provider as QflowConfig['ai']['provider'] }; // 更新 provider 字段
-  await saveConfig(projectRoot, config); // 写入磁盘
-  log.info(`saveProviderToConfig: provider 已更新为 ${provider}`); // 记录更新日志
 }
 
 /**
@@ -375,10 +357,9 @@ export async function interactiveSetup(projectRoot: string): Promise<{ steps: Ar
   // 定义引导步骤列表，completed 字段反映当前实际状态
   const steps = [
     { step: 1, title: '初始化项目', description: '创建 .qflow/ 目录和配置文件', tool: 'qflow_project_init', required: true, completed: configExists },
-    { step: 2, title: '配置 AI Provider', description: '设置 AI 模型和 API 密钥', tool: 'qflow_provider_switch', required: false, completed: false }, // 无法自动检测 key 是否有效，始终为 false
-    { step: 3, title: '创建 Spec 文档', description: '描述项目需求或架构规格', tool: 'qflow_spec_init', required: false, completed: specsExists },
-    { step: 4, title: '创建任务', description: '从 Spec 或 PRD 创建任务列表', tool: 'qflow_task_create', required: true, completed: tasksExists },
-    { step: 5, title: '配置工作流', description: '选择 Agile 工作流模板（可选）', tool: 'qflow_agile_workflows', required: false, completed: false }, // 工作流模板无法自动检测
+    { step: 2, title: '创建 Spec 文档', description: '描述项目需求或架构规格', tool: 'qflow_spec_init', required: false, completed: specsExists },
+    { step: 3, title: '创建任务', description: '从 Spec 或 PRD 创建任务列表', tool: 'qflow_task_create', required: true, completed: tasksExists },
+    { step: 4, title: '配置工作流', description: '选择 Agile 工作流模板（可选）', tool: 'qflow_agile_workflows', required: false, completed: false }, // 工作流模板无法自动检测
   ];
 
   log.info(`interactiveSetup: 已完成 ${steps.filter(s => s.completed).length}/${steps.length} 步`); // 记录完成进度
@@ -441,7 +422,6 @@ export async function generateMcpbBundle(projectRoot: string): Promise<Record<st
     projectRoot, // 项目根目录
     contextModules: config.contextModules || [], // 上下文模块
     generatedAt: new Date().toISOString(), // 生成时间
-    ai: { provider: config.ai.provider, model: config.ai.model }, // AI 配置（不含密钥）
   };
 
   // 如果有 profiles，也包含进来

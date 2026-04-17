@@ -95,7 +95,7 @@ if (!config.mcpServers) config.mcpServers = {};
 config.mcpServers.qflow = {
   command: 'node',
   args: [mcpPath],
-  env: { QFLOW_MODE: 'standard' }
+  env: { QFLOW_MODE: 'all' }
 };
 
 const dir = path.dirname(configFile);
@@ -112,7 +112,7 @@ info "Registering qflow in Claude Code ($CLAUDE_JSON)..."
 if $HAS_JQ; then
   # 使用 jq 合并（保留已有配置）
   TEMP_FILE=$(mktemp)
-  NEW_ENTRY="{\"command\":\"node\",\"args\":[\"$MCP_PATH\"],\"env\":{\"QFLOW_MODE\":\"standard\"}}"
+  NEW_ENTRY="{\"command\":\"node\",\"args\":[\"$MCP_PATH\"],\"env\":{\"QFLOW_MODE\":\"all\"}}"
 
   if [ -f "$CLAUDE_JSON" ]; then
     jq --argjson entry "$NEW_ENTRY" '.mcpServers.qflow = $entry' "$CLAUDE_JSON" > "$TEMP_FILE" \
@@ -140,7 +140,7 @@ info "Registering qflow in Cursor ($CURSOR_MCP)..."
 
 if $HAS_JQ; then
   TEMP_FILE=$(mktemp)
-  NEW_ENTRY="{\"command\":\"node\",\"args\":[\"$MCP_PATH\"],\"env\":{\"QFLOW_MODE\":\"standard\"}}"
+  NEW_ENTRY="{\"command\":\"node\",\"args\":[\"$MCP_PATH\"],\"env\":{\"QFLOW_MODE\":\"all\"}}"
 
   if [ -f "$CURSOR_MCP" ]; then
     jq --argjson entry "$NEW_ENTRY" '.mcpServers.qflow = $entry' "$CURSOR_MCP" > "$TEMP_FILE" \
@@ -168,7 +168,7 @@ info "Registering qflow in Windsurf ($WINDSURF_MCP)..."
 
 if $HAS_JQ; then
   TEMP_FILE=$(mktemp)
-  NEW_ENTRY="{\"command\":\"node\",\"args\":[\"$MCP_PATH\"],\"env\":{\"QFLOW_MODE\":\"standard\"}}"
+  NEW_ENTRY="{\"command\":\"node\",\"args\":[\"$MCP_PATH\"],\"env\":{\"QFLOW_MODE\":\"all\"}}"
 
   if [ -f "$WINDSURF_MCP" ]; then
     jq --argjson entry "$NEW_ENTRY" '.mcpServers.qflow = $entry' "$WINDSURF_MCP" > "$TEMP_FILE" \
@@ -193,43 +193,16 @@ fi
 # ==================== 10. 完成提示 ====================
 echo ""
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  qflow setup complete!${NC}"
+echo -e "${GREEN}  qflow v25.0 安装完成！${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 echo -e "  MCP Server: ${BLUE}$MCP_PATH${NC}"
-echo -e "  Default mode: ${BLUE}standard${NC} (30 tools)"
+echo -e "  Default mode: ${BLUE}all${NC} (51 tools)"
 echo ""
-echo -e "${YELLOW}NEXT STEP — Configure your AI Provider:${NC}"
+echo -e "${BLUE}开始使用:${NC}"
+echo "  1. 重启你的编辑器 (Claude Code / Cursor / Windsurf)"
+echo "  2. 在任意项目中告诉 AI: '用 qflow 初始化这个项目'"
+echo "  3. 或运行: node dist/cli.js init /path/to/your/project"
 echo ""
-echo "  qflow requires an AI API key to enable smart features"
-echo "  (task expansion, spec generation, complexity scoring, etc.)"
-echo ""
-echo "  Option A — Environment variables:"
-echo "    export QFLOW_API_KEY=your_api_key"
-echo "    export QFLOW_BASE_URL=https://api.openai.com/v1  # or any OpenAI-compatible endpoint"
-echo "    export QFLOW_MODEL=gpt-4o"
-echo "    export QFLOW_PROVIDER=openai  # openai / anthropic / google / azure / perplexity / vertex"
-echo ""
-echo "  Option B — Project config file (.qflow/qflow.config.json):"
-echo "    {"
-echo "      \"ai\": {"
-echo "        \"provider\": \"openai\","
-echo "        \"apiKey\": \"sk-...\","
-echo "        \"model\": \"gpt-4o\","
-echo "        \"baseUrl\": \"https://api.openai.com/v1\""
-echo "      }"
-echo "    }"
-echo ""
-echo "  Supported providers: OpenAI, Anthropic, Google Gemini, Azure OpenAI,"
-echo "  Perplexity, Vertex AI, Groq, OpenRouter, xAI, Ollama, Codex CLI, Gemini CLI..."
-echo ""
-echo "  NOTE: Without an API key, qflow still works — AI calls fall back to"
-echo "  heuristic scoring and template-based generation automatically."
-echo ""
-echo -e "${BLUE}Getting started:${NC}"
-echo "  1. Restart your AI editor (Claude Code / Cursor / Windsurf)"
-echo "  2. Open any project and tell your AI: 'Initialize qflow for this project'"
-echo "  3. Or run: node dist/cli.js init /path/to/your/project"
-echo ""
-echo -e "  Full docs: ${BLUE}https://github.com/Pangu-Immortal/qflow${NC}"
+echo -e "  文档: ${BLUE}https://github.com/Pangu-Immortal/qflow${NC}"
 echo ""

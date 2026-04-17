@@ -991,7 +991,7 @@ async function installMCP(): Promise<void> {
   servers.qflow = {
     command: 'node',
     args: [mcpPath],
-    env: { QFLOW_MODE: 'standard' }, // 默认标准模式，加载 core + standard 共 32 个工具
+    env: { QFLOW_MODE: 'all' }, // 全量模式，加载全部工具
   };
 
   await fs.writeFile(claudeJsonPath, JSON.stringify(config, null, 2));
@@ -1025,7 +1025,7 @@ async function installMCPCursor(): Promise<void> {
   servers.qflow = {
     command: 'node',
     args: [mcpPath],
-    env: { QFLOW_MODE: 'standard' },
+    env: { QFLOW_MODE: 'all' },
   };
 
   await fs.writeFile(cursorJsonPath, JSON.stringify(config, null, 2));
@@ -1057,7 +1057,7 @@ async function installMCPWindsurf(): Promise<void> {
   servers.qflow = {
     command: 'node',
     args: [mcpPath],
-    env: { QFLOW_MODE: 'standard' },
+    env: { QFLOW_MODE: 'all' },
   };
 
   await fs.writeFile(windsurfJsonPath, JSON.stringify(config, null, 2));

@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * qflow MCP 服务器入口
+ * qflow v25.0 MCP 服务器入口
  *
  * 通过 StdioServerTransport 与 Claude Code 通信。
  * 按 Tier 分层注册工具，使用表驱动 MODE_TIER_MAP 声明式映射。
  * 支持 QFLOW_TOOLS 环境变量：预设模式名或逗号分隔的工具名列表。
+ * v25.0: 去 AI 化，所有工具为纯数据工具，默认加载全部 51 个。
  *
  * 环境变量:
- *   - QFLOW_MODE: 工具层级（minimal/core/standard/all/autopilot/review/extra），默认 standard
+ *   - QFLOW_MODE: 工具层级（minimal/core/standard/all/autopilot/review/extra），默认 all
  *   - QFLOW_TOOLS: 预设模式名或逗号分隔的工具名列表（可选）
  */
 import { createRequire } from 'node:module'; // 动态读取 package.json
@@ -48,13 +49,13 @@ const server = new McpServer({
 });
 
 // 获取当前模式（安全解析，无效值降级为 'standard'）
-const rawMode = process.env.QFLOW_MODE || 'standard'; // 原始环境变量
+const rawMode = process.env.QFLOW_MODE || 'all'; // 原始环境变量（v25.0: 默认全量模式）
 const modeResult = ModeSchema.safeParse(rawMode); // Zod safeParse 校验
-const mode: Mode = modeResult.success ? modeResult.data : 'standard'; // 无效值降级
+const mode: Mode = modeResult.success ? modeResult.data : 'all'; // 无效值降级为全量模式
 
 // 解析 QFLOW_TOOLS 环境变量
 let allowedTools: Set<string> | undefined; // 允许的工具名集合
-let effectiveTiers: string[] = MODE_TIER_MAP[mode] || MODE_TIER_MAP.standard; // 实际生效的 tier 列表（默认按 mode 决定）
+let effectiveTiers: string[] = MODE_TIER_MAP[mode] || MODE_TIER_MAP.all; // 实际生效的 tier 列表（默认按 mode 决定）
 const customTools = process.env.QFLOW_TOOLS; // 读取环境变量
 if (customTools) {
   // 检查是否为预设模式名

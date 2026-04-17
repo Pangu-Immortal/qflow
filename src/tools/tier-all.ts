@@ -39,7 +39,7 @@ import { estimateTokens, formatTokens } from "../utils/token-counter.js";
 import { selectNextTask } from "../algorithms/next-task.js";
 import { installEditorRules, listSupportedEditors } from "../core/editor-rules.js";
 import { MAX_ENGINE_CACHE } from "../shared/constants.js";
-import { shouldRegister as _shouldRegister, wrapCallAI } from "../shared/helpers.js"; // 公共辅助函数
+import { shouldRegister as _shouldRegister } from "../shared/helpers.js"; // 公共辅助函数（已移除 wrapCallAI，引擎不再注入 AI）
 import path from "node:path";
 import os from "node:os";
 import { promises as fs } from "node:fs";
@@ -317,13 +317,13 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
         case "loop_start": {
           if (!params.taskId) return errResp("loop_start 需要 taskId");
           const { LoopEngine } = await import('../core/loop-engine.js');
-          const engine = new LoopEngine(root, wrapCallAI);
+          const engine = new LoopEngine(root);
           const state = await engine.start({ taskId: params.taskId, presetName: params.presetName });
           return jsonResp(state as unknown as Record<string, unknown>);
         }
         case "loop_stop": {
           const { LoopEngine } = await import('../core/loop-engine.js');
-          const engine = new LoopEngine(root, wrapCallAI);
+          const engine = new LoopEngine(root);
           const loopStatus = await engine.getStatus();
           if (!loopStatus) return { content: [{ type: 'text' as const, text: '无运行中的循环' }] };
           const state = await engine.stop();
@@ -331,7 +331,7 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
         }
         case "loop_status": {
           const { LoopEngine } = await import('../core/loop-engine.js');
-          const engine = new LoopEngine(root, wrapCallAI);
+          const engine = new LoopEngine(root);
           const loopStatus = await engine.getStatus();
           return loopStatus
             ? jsonResp(loopStatus as unknown as Record<string, unknown>)
@@ -648,7 +648,7 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
         case "step": {
           if (!params.testCommand || !params.taskId) return errResp("step 需要 testCommand/taskId");
           try {
-            const engine = new TddEngine(root, wrapCallAI);
+            const engine = new TddEngine(root);
             await engine.loadState();
             const result = await engine.tddStep({ testCommand: params.testCommand, taskId: params.taskId, autoCommit: params.autoCommit });
             return jsonResp({ ...result, state: engine.getState() });
@@ -657,21 +657,21 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
         case "loop": {
           if (!params.testCommand || !params.taskId) return errResp("loop 需要 testCommand/taskId");
           try {
-            const engine = new TddEngine(root, wrapCallAI);
+            const engine = new TddEngine(root);
             const result = await engine.tddLoop({ testCommand: params.testCommand, taskId: params.taskId, maxIterations: params.maxIterations, autoCommit: params.autoCommit });
             return jsonResp(result);
           } catch (err) { return errResp((err as Error).message); }
         }
         case "status": {
           try {
-            const engine = new TddEngine(root, wrapCallAI);
+            const engine = new TddEngine(root);
             const state = await engine.loadState();
             return jsonResp(state);
           } catch (err) { return errResp((err as Error).message); }
         }
         case "reset": {
           try {
-            const engine = new TddEngine(root, wrapCallAI);
+            const engine = new TddEngine(root);
             await engine.reset();
             return jsonResp({ reset: true, message: "TDD 状态已重置" });
           } catch (err) { return errResp((err as Error).message); }
@@ -826,11 +826,9 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
       projectRoot: z.string().optional().describe("项目根目录"),
     },
     async ({ role, modelId, projectRoot }) => {
-      const root = await resolveRoot(projectRoot);
-      if (!root) return errResp("未找到 .qflow 项目");
-      const { switchModelRuntime } = await import('../core/provider-adapter.js');
-      const result = await switchModelRuntime(root, role, modelId);
-      return jsonResp(result);
+      // v25.0: AI 基础设施已移除，模型切换功能不再可用
+      log.warn(`[models_switch] AI 基础设施已移除，模型切换不可用 (role=${role}, model=${modelId})`);
+      return errResp("AI 基础设施已移除（v25.0 去 AI 化），模型切换功能不再可用");
     }
   );
 

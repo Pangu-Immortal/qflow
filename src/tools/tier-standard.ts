@@ -18,7 +18,7 @@ import { validateDependencies, cleanupCycles } from "../algorithms/dependency-va
 import { heuristicScore, buildScoringPrompt } from "../algorithms/complexity-scorer.js";
 import { resolveRoot, errResp, jsonResp, assertPathWithinRoot, registerToolMeta } from "../shared/tool-utils.js";
 import { shouldRegister as _shouldRegister } from "../shared/helpers.js"; // 工具注册过滤
-import { callAI, callAIWithSchema } from "../core/ai-provider.js"; // AI 调用
+// [重构] 已移除 callAI/callAIWithSchema 导入，research/spec_generate 改为纯数据返回 + hint 提示宿主 LLM
 import { ReportGenerator } from "../core/report-generator.js"; // 报告生成器
 import { ClarificationEngine } from '../core/clarification-engine.js'; // 需求澄清引擎
 import { OnboardingEngine } from '../core/onboarding.js'; // 新手引导引擎
@@ -318,7 +318,13 @@ export function registerStandardTools(server: McpServer, allowedTools?: Set<stri
         const tm = new TaskManager(root); // 创建任务管理器
         const task = await tm.getTask(taskId); // 获取任务
         if (!task) return errResp(`任务 ${taskId} 不存在`);
-        return jsonResp({ taskId, complexity: heuristicScore(task), prompt: buildScoringPrompt(task) });
+        const score = heuristicScore(task); // 启发式评分
+        return jsonResp({
+          taskId,
+          complexity: score,
+          prompt: buildScoringPrompt(task),
+          hint: `启发式评分结果: ${score.score}/10。你可以基于 prompt 字段的内容进一步分析此任务的复杂度。`, // 提示宿主 LLM
+        });
       }
       if (description) {
         const tmpTask = {
@@ -326,7 +332,11 @@ export function registerStandardTools(server: McpServer, allowedTools?: Set<stri
           status: 'pending' as const, priority: 5, dependencies: [], subtasks: [],
           tags: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
         };
-        return jsonResp({ complexity: heuristicScore(tmpTask) });
+        const score = heuristicScore(tmpTask); // 启发式评分
+        return jsonResp({
+          complexity: score,
+          hint: `启发式评分结果: ${score.score}/10。你可以基于任务描述进一步分析复杂度。`, // 提示宿主 LLM
+        });
       }
       return errResp("请提供 taskId 或 description");
     }
@@ -803,14 +813,40 @@ export function registerStandardTools(server: McpServer, allowedTools?: Set<stri
       if (!root) return errResp("未找到 .qflow 项目");
 
       if (structured) {
-        // AI 生成结构化 Spec
+        // 使用模板生成结构化 Spec（不再调用 AI）
         if (!description) return errResp("structured 模式必须提供 description");
         const { SpecCrud } = await import('../core/spec-crud.js'); // 动态导入
-        const { SpecAI } = await import('../core/spec-ai.js'); // 动态导入
-        const crud = new SpecCrud(root);
-        const ai = new SpecAI(root, crud, callAI);
-        const result = await ai.generateStructuredSpec(name, description); // 生成结构化 Spec
-        return jsonResp({ specId: result.spec.id, clarifications: result.clarifications });
+        const crud = new SpecCrud(root); // 创建 Spec CRUD 实例
+
+        // 直接用模板生成 Spec 内容
+        const specContent = [
+          '## 概述',
+          description, // 用户提供的描述
+          '',
+          '## 用户故事',
+          `- 作为用户，我希望 ${name}，以便提高效率`,
+          '',
+          '## 验收条件',
+          `- GIVEN 系统正常运行 WHEN 使用 ${name} THEN 功能正常工作`,
+          '',
+          '## 技术约束',
+          '- [NEEDS CLARIFICATION] 技术栈待确认',
+          '',
+          '## [NEEDS CLARIFICATION]',
+          '- 具体实现方式待确认',
+        ].join('\n'); // 模板内容
+
+        const spec = await crud.initSpec(name, type || 'architecture', specContent); // 创建 Spec
+
+        // 提取 [NEEDS CLARIFICATION] 标记
+        const clarifications = specContent.match(/\[NEEDS CLARIFICATION\][^\n]*/g) || []; // 正则提取待澄清项
+        log.debug(`模板生成结构化 Spec "${name}" (${clarifications.length} 个待澄清项)`); // 调试日志
+
+        return jsonResp({
+          specId: spec.id, // Spec ID
+          clarifications, // 待澄清项列表
+          hint: `已用模板创建 Spec "${name}"。你可以根据以下描述进一步完善用户故事和验收条件：\n描述: ${description}`, // 提示宿主 LLM
+        });
       } else {
         // 从代码库文件生成 Spec
         if (!type) return errResp("非 structured 模式必须提供 type");
@@ -839,7 +875,7 @@ export function registerStandardTools(server: McpServer, allowedTools?: Set<stri
   // 19. qflow_research - AI 研究查询
   if (shouldRegister("qflow_research")) server.tool(
     "qflow_research",
-    "通过 AI 执行开放式研究查询。分析技术方案、最佳实践、架构决策等。支持关联任务上下文、文件内容注入和详细度控制。",
+    "聚合研究上下文数据（任务信息、文件内容、附加上下文），返回给宿主 LLM 进行分析。",
     {
       query: z.string().describe("研究问题"),
       context: z.string().optional().describe("附加上下文信息"),
@@ -888,37 +924,46 @@ export function registerStandardTools(server: McpServer, allowedTools?: Set<stri
         }
 
         if (context) contextParts.push(context); // 附加用户上下文
-        const fullContext = contextParts.length > 0 ? contextParts.join('\n\n') : '';
+        const fullContext = contextParts.length > 0 ? contextParts.join('\n\n') : ''; // 聚合所有上下文
 
-        // 根据详细度生成差异化 prompt
-        const detailLevel = detail ?? 'medium';
-        const detailInstruction = detailLevel === 'low'
-          ? '请提供简短摘要，仅输出核心要点（每项不超过2句话），省略详细解释和次要信息。'
-          : detailLevel === 'high'
-            ? '请提供深度分析，每个分析要点需包含详细论证、代码示例（如适用）、权衡利弊、替代方案对比和实施建议，内容尽量完整详尽。'
-            : '请提供结构化的分析结果，包括：要点总结、方案对比、建议、注意事项。';
+        // 构建任务上下文摘要（如有关联任务）
+        let taskContext: string | undefined; // 任务上下文信息
+        if (taskId) {
+          const root = await resolveRoot(undefined); // 解析项目根目录
+          if (root) {
+            const tm = new TaskManager(root); // 创建任务管理器
+            const task = await tm.getTask(taskId); // 获取任务
+            if (task) {
+              taskContext = `[${task.id}] ${task.title}: ${task.description}`; // 任务摘要
+            }
+          }
+        }
 
-        const prompt = fullContext
-          ? `研究问题：${query}\n\n上下文：${fullContext}\n\n${detailInstruction}`
-          : `研究问题：${query}\n\n${detailInstruction}`;
+        // 构建文件内容摘要（如有注入文件）
+        const fileContents: Record<string, string> = {}; // 文件内容映射
+        if (files && files.length > 0) {
+          for (const part of contextParts) {
+            const match = part.match(/^文件 \[(.+?)\]:\n([\s\S]+)$/); // 解析文件内容片段
+            if (match) fileContents[match[1]] = match[2]; // 存入映射
+          }
+        }
 
-        const ResearchResultSchema = z.object({
-          summary: z.string().describe("要点总结"),
-          analysis: z.array(z.object({
-            point: z.string(),
-            detail: z.string(),
-          })).describe("分析要点"),
-          recommendations: z.array(z.string()).describe("建议"),
-          caveats: z.array(z.string()).describe("注意事项"),
+        log.debug(`研究查询聚合完成: query="${query}", context长度=${fullContext.length}, files=${Object.keys(fileContents).length}`); // 调试日志
+
+        // 不再调 AI，直接返回聚合的上下文数据
+        return jsonResp({
+          query, // 原始研究问题
+          detail: detail ?? 'medium', // 详细度级别
+          context: fullContext, // 聚合上下文
+          taskContext: taskId ? taskContext : undefined, // 任务上下文（可选）
+          fileContents: files ? fileContents : undefined, // 文件内容（可选）
+          hint: '以上是为此研究查询聚合的上下文数据。请基于这些信息进行分析。', // 提示宿主 LLM
         });
-
-        const result = await callAIWithSchema(prompt, ResearchResultSchema); // 调用 AI
-        return jsonResp({ result, detail: detailLevel });
       } catch (e) {
         return jsonResp({
-          result: null,
-          error: (e as Error).message,
-          note: "AI 研究失败，请检查 AI Provider 配置",
+          query, // 原始研究问题
+          error: (e as Error).message, // 错误信息
+          hint: '上下文聚合失败，请检查文件路径和项目配置。', // 提示宿主 LLM
         });
       }
     }

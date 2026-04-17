@@ -1,27 +1,22 @@
 /**
- * AI 驱动复杂度评分（1-10）
+ * 复杂度评分（1-10）
  *
  * 功能：分析任务的技术深度/依赖数量/不确定性/代码影响范围，给出复杂度评分
- * 支持三种模式：
- *   - AI 模式：通过 Prompt 模板 + callAIWithSchema 获取 AI 评分
- *   - 启发式模式：无 AI 时基于简单规则计算评分
- *   - 智能模式：先尝试 AI，失败自动降级到启发式
+ * v23.0: AI 评分已移除，smartScore 直接使用启发式评分
  *
  * 函数列表：
- *   - buildScoringPrompt(task): 构建 AI 评分提示词
- *   - heuristicScore(task): 无 AI 时的多维度启发式评分（基于任务类型/关键词库/依赖数/子任务/跨域标签）
- *   - aiScore(task): 调用 AI 进行复杂度评分
- *   - smartScore(task): 先尝试 AI 评分，失败降级到启发式评分
+ *   - buildScoringPrompt(task): 构建评分提示词（可供宿主 LLM 使用）
+ *   - heuristicScore(task): 多维度启发式评分（基于任务类型/关键词库/依赖数/子任务/跨域标签）
+ *   - smartScore(task): 直接使用启发式评分
  *
  * 导出类型：
- *   - ComplexityResultSchema: Zod schema，用于校验 AI 返回结果
+ *   - ComplexityResultSchema: Zod schema，用于校验评分结果
  *   - ComplexityResult: 复杂度评分结果类型
  */
 
 import { z } from 'zod';
 import type { Task } from '../schemas/task.js';
-import { callAIWithSchema } from '../core/ai-provider.js'; // AI 调用接口
-import { loadPromptTemplate, renderPrompt, selectVariant } from '../shared/prompt-templates.js'; // Prompt 模板系统
+// v23.0: 移除 callAIWithSchema / prompt-templates 导入，AI 评分已移除
 import { log } from '../utils/logger.js'; // 日志工具
 
 // 复杂度评分结果的 Zod Schema，用于校验 AI 返回的 JSON
@@ -239,64 +234,12 @@ export function heuristicScore(task: Task): ComplexityResult {
 }
 
 /**
- * 使用 AI 进行复杂度评分
- *
- * 流程：
- * 1. 加载 analyze-complexity.json Prompt 模板
- * 2. 根据上下文选择合适的变体
- * 3. 渲染模板变量
- * 4. 调用 callAIWithSchema 并用 ComplexityResultSchema 校验
+ * 智能评分：直接使用启发式评分（v23.0: AI 评分已移除，由宿主 LLM 处理）
  *
  * @param task - 要评分的任务
- * @returns AI 生成的复杂度评分结果
- * @throws AI 调用或校验失败时抛出错误
- */
-export async function aiScore(task: Task): Promise<ComplexityResult> {
-  log.debug(`开始 AI 复杂度评分: ${task.id} - ${task.title}`); // 调试日志
-
-  // 加载 Prompt 模板
-  const template = await loadPromptTemplate('analyze-complexity.json'); // 加载分析模板
-  if (!template) { // 模板加载失败
-    throw new Error('无法加载 analyze-complexity.json 模板'); // 抛出错误
-  }
-
-  // 构建模板变量
-  const variables = { // 模板参数映射
-    taskTitle: task.title, // 任务标题
-    taskDescription: task.description, // 任务描述
-    dependencies: task.dependencies.join(', ') || '无', // 依赖列表
-    tags: task.tags.join(', ') || '无', // 标签列表
-  };
-
-  // 选择变体并渲染
-  const variant = selectVariant(template, variables); // 根据条件选择变体
-  const systemPrompt = renderPrompt(variant.system, variables); // 渲染系统提示词
-  const userPrompt = renderPrompt(variant.user, variables); // 渲染用户提示词
-
-  // 调用 AI 并校验结果
-  const result = await callAIWithSchema<ComplexityResult>( // 调用 AI
-    userPrompt, // 用户提示词
-    ComplexityResultSchema, // Zod 校验 schema
-    { systemPrompt }, // 系统提示词
-  );
-
-  log.debug(`AI 复杂度评分结果: score=${result.score}, subtasks=${result.suggestedSubtasks}`); // 调试日志
-  return result; // 返回评分结果
-}
-
-/**
- * 智能评分：先尝试 AI 评分，失败自动降级到启发式评分
- *
- * @param task - 要评分的任务
- * @returns 复杂度评分结果（AI 或启发式）
+ * @returns 复杂度评分结果（启发式）
  */
 export async function smartScore(task: Task): Promise<ComplexityResult> {
-  try {
-    log.debug(`smartScore: 尝试 AI 评分 - ${task.id}`); // 调试日志
-    const result = await aiScore(task); // 尝试 AI 评分
-    return result; // AI 成功，直接返回
-  } catch (err) { // AI 调用失败
-    log.warn(`AI 评分失败，降级到启发式评分: ${(err as Error).message}`); // 警告日志
-    return heuristicScore(task); // 降级到启发式评分
-  }
+  log.debug(`smartScore: 使用启发式评分 - ${task.id}`); // 调试日志
+  return heuristicScore(task); // 直接使用启发式评分，无需 AI
 }
