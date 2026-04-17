@@ -362,7 +362,6 @@ export class OnboardingEngine {
       customSteps.push({ id: 'init-git', title: '初始化 Git 仓库', description: '建议使用版本控制管理项目', priority: 'high' });
     }
     customSteps.push({ id: 'create-tasks', title: '创建首批任务', description: '使用 qflow_task_create 分解项目目标', priority: 'medium' }); // 通用步骤
-    customSteps.push({ id: 'setup-ai', title: '配置 AI Provider', description: '选择并配置 AI 模型提供商', priority: 'medium' }); // AI 配置
     customSteps.push({ id: 'explore-tools', title: '探索 qflow 工具', description: '查看可用的 MCP 工具列表', priority: 'low' }); // 低优先级探索
 
     // 生成个性化建议列表

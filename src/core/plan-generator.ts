@@ -32,21 +32,18 @@ import { TaskManager } from './task-manager.js'; // 任务管理器
  * PlanGenerator 类 - 从 Spec 生成完整实现计划
  *
  * 通过构造函数注入 SpecCrud，解耦 Spec 数据读取与计划生成逻辑。
- * 可选注入 callAI 函数以支持 AI 增强生成（未注入时使用模板降级）。
+ * v25.0: AI 基础设施已移除，使用模板生成。
  */
 export class PlanGenerator {
   private projectRoot: string; // 项目根目录
   private crud: SpecCrud; // Spec CRUD 引用
-  private callAI: ((prompt: string, options?: { maxTokens?: number }) => Promise<{ content: string }>) | null; // AI 调用函数（可选）
 
   constructor(
     projectRoot: string,
     crud: SpecCrud,
-    callAI?: (prompt: string, options?: { maxTokens?: number }) => Promise<{ content: string }>
   ) {
     this.projectRoot = projectRoot; // 保存根目录
     this.crud = crud; // 保存 CRUD 实例
-    this.callAI = callAI ?? null; // 保存 AI 函数（可选）
   }
 
   /** 计划目录路径（.qflow/plans/） */

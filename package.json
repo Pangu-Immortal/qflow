@@ -1,7 +1,7 @@
 {
   "name": "qflow",
   "version": "25.0.0",
-  "description": "Claude Code 自动化工具链 - MCP Server + CLI + Context Modules",
+  "description": "All-in-one AI 项目管理 MCP 工具 — 装上就用，不需要 API Key",
   "main": "dist/mcp.js",
   "bin": {
     "qflow": "dist/cli.js"

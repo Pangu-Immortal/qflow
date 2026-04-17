@@ -12,7 +12,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://modelcontextprotocol.io)
-[![Tools](https://img.shields.io/badge/MCP%20Tools-51-orange.svg)]()
+[![Tools](https://img.shields.io/badge/MCP%20Tools-50-orange.svg)]()
 [![Dependencies](https://img.shields.io/badge/Dependencies-4-brightgreen.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue.svg)](https://www.typescriptlang.org)
 
@@ -24,7 +24,9 @@
 
 ## 💡 What is qflow?
 
-qflow is a pure MCP tool layer that turns your AI editor (Claude Code / Cursor / Windsurf / Codex) into a full project manager. 51 tools, 17 context modules, 34 Lottie animation templates, only 4 runtime dependencies. Install and go — no API key configuration needed.
+qflow is a pure MCP tool layer that turns your AI editor (Claude Code / Cursor / Windsurf / Codex) into a full project manager. 50 tools, 17 context modules, 34 Lottie animation templates, only 4 runtime dependencies. Install and go — no API key configuration needed.
+
+MCP (Model Context Protocol) is an open protocol that lets AI editors connect to external tools.
 
 ---
 
@@ -66,6 +68,8 @@ Not a feature list — real scenarios you can use tomorrow:
 
 ## 🚀 30-Second Install
 
+> Prerequisites: [Node.js](https://nodejs.org) >= 18
+
 ```bash
 git clone https://github.com/Pangu-Immortal/qflow.git
 cd qflow
@@ -74,7 +78,9 @@ bash setup.sh
 
 Restart your editor. Done.
 
-**No API key needed.** qflow is a pure tool layer — your AI editor provides the intelligence. All 51 tools work out of the box.
+**No API key needed.** qflow is a pure tool layer — your AI editor provides the intelligence. All 50 tools work out of the box.
+
+> Tip: Add `.qflow/` to your project's `.gitignore` to keep task data out of Git.
 
 ---
 
@@ -84,7 +90,7 @@ Restart your editor. Done.
 
 ---
 
-## 📦 51 Tools at a Glance
+## 📦 50 Tools at a Glance
 
 ### 🗂️ Task Management (15 tools)
 
@@ -108,15 +114,17 @@ Init, propose changes, SHA-256 conflict detection, deterministic merge, 3-dimens
 
 ### ⚙️ Other Tools
 
-Template management, plugin system, DAG workflow orchestration, persistent memory, session handoff, system diagnostics, editor rule installation, runtime model switching.
+Template management, plugin system, DAG workflow orchestration, persistent memory, session handoff, system diagnostics, editor rule installation.
 
 ---
 
-## 📊 Comparison with Alternatives
+## 📊 How qflow Compares
+
+> **qflow is the only All-in-one solution available today** — task management + Spec-driven development + multi-persona review + design systems + animation engine, all in one tool. Task Master only handles tasks. OpenSpec only handles Specs.
 
 | Dimension | **qflow** | Task Master AI | OpenSpec |
 |-----------|-----------|----------------|----------|
-| MCP Tools | **51** | 44 | 0 (CLI only) |
+| MCP Tools | **50** | 44 | 0 (CLI only) |
 | Runtime Dependencies | **4** | 61 | 9 |
 | License | **MIT (pure)** | MIT + Commons Clause | MIT |
 | Requires API Key | **No** | Yes | No |
@@ -135,7 +143,7 @@ qflow loads tools in tiers so you only pay for what you use:
 |------|-------|----------|
 | `core` | 10 | Minimal footprint, task basics only |
 | `standard` (default) | 32 | Full task + spec + context workflow |
-| `all` | 51 | Power users: review, autopilot, TDD, sprints, plugins |
+| `all` | 50 | Power users: review, autopilot, TDD, sprints, plugins |
 
 Set via `QFLOW_MODE` environment variable.
 
@@ -207,10 +215,10 @@ Set via `QFLOW_MODE` environment variable.
 ## ❓ FAQ
 
 **Does qflow require an API key?**
-No. qflow is a pure MCP tool layer — intelligence comes from your AI editor (Claude Code / Cursor / Windsurf). All 51 tools work out of the box with zero configuration.
+No. qflow is a pure MCP tool layer — intelligence comes from your AI editor (Claude Code / Cursor / Windsurf). All 50 tools work out of the box with zero configuration.
 
 **How does qflow compare to Task Master AI?**
-Task Master focuses on task management (44 tools). qflow is an all-in-one solution (51 tools) that adds Spec management, 12-persona review, 6-platform design systems, Lottie engine, TDD, and Sprint management. qflow has only 4 dependencies (vs 61), and uses a pure MIT license.
+Task Master focuses on task management (44 tools). qflow is an all-in-one solution (50 tools) that adds Spec management, 12-persona review, 6-platform design systems, Lottie engine, TDD, and Sprint management. qflow has only 4 dependencies (vs 61), and uses a pure MIT license.
 
 **Which editors are supported?**
 Any MCP-compatible tool: Claude Code, Cursor, Windsurf, Codex CLI, VS Code (via MCP), and more. You can also use the CLI directly (`qflow task add`, `qflow task list`).

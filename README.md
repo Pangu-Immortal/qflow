@@ -12,7 +12,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://modelcontextprotocol.io)
-[![Tools](https://img.shields.io/badge/MCP%20Tools-51-orange.svg)]()
+[![Tools](https://img.shields.io/badge/MCP%20Tools-50-orange.svg)]()
 [![Dependencies](https://img.shields.io/badge/Dependencies-4-brightgreen.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue.svg)](https://www.typescriptlang.org)
 
@@ -24,7 +24,9 @@
 
 ## 💡 一句话介绍
 
-qflow 是一个纯 MCP 工具层，让你的 AI 编辑器（Claude Code / Cursor / Windsurf / Codex）秒变项目经理。51 个工具、17 个上下文模块、34 种 Lottie 动画模板，只有 4 个运行时依赖，装上就用，不需要配置任何 API Key。
+qflow 是一个纯 MCP 工具层，让你的 AI 编辑器（Claude Code / Cursor / Windsurf / Codex）秒变项目经理。50 个工具、17 个上下文模块、34 种 Lottie 动画模板，只有 4 个运行时依赖，装上就用，不需要配置任何 API Key。
+
+MCP（Model Context Protocol）是让 AI 编辑器连接外部工具的开放协议。
 
 ---
 
@@ -66,6 +68,8 @@ qflow 是一个纯 MCP 工具层，让你的 AI 编辑器（Claude Code / Cursor
 
 ## 🚀 30 秒安装
 
+> 前置要求：[Node.js](https://nodejs.org) >= 18
+
 ```bash
 git clone https://github.com/Pangu-Immortal/qflow.git
 cd qflow
@@ -74,7 +78,9 @@ bash setup.sh
 
 重启编辑器，完成。
 
-**不需要配置 API Key。** qflow 是纯工具层，你的 AI 编辑器提供智能。所有 51 个工具开箱即用。
+**不需要配置 API Key。** qflow 是纯工具层，你的 AI 编辑器提供智能。所有 50 个工具开箱即用。
+
+> 提示：在你的项目中将 `.qflow/` 加入 `.gitignore`，避免任务数据被提交到 Git。
 
 ---
 
@@ -84,7 +90,7 @@ bash setup.sh
 
 ---
 
-## 📦 51 个工具一览
+## 📦 50 个工具一览
 
 ### 🗂️ 任务管理（15 个工具）
 
@@ -108,15 +114,17 @@ bash setup.sh
 
 ### ⚙️ 其他工具
 
-模板管理、插件系统、DAG 工作流编排、持久化记忆、会话交接、系统诊断、编辑器规则安装、运行时模型切换。
+模板管理、插件系统、DAG 工作流编排、持久化记忆、会话交接、系统诊断、编辑器规则安装。
 
 ---
 
-## 📊 与竞品对比
+## 📊 同类产品对比
+
+> **qflow 是目前唯一的 All-in-one 方案** —— 任务管理 + Spec 驱动 + 多角色评审 + 设计系统 + 动画引擎，一个工具全搞定。Task Master 只管任务，OpenSpec 只管 Spec。
 
 | 维度 | **qflow** | Task Master AI | OpenSpec |
 |------|-----------|----------------|----------|
-| MCP 工具数 | **51** | 44 | 0（仅 CLI） |
+| MCP 工具数 | **50** | 44 | 0（仅 CLI） |
 | 运行时依赖 | **4 个** | 61 个 | 9 个 |
 | 许可证 | **MIT（纯开源）** | MIT + Commons Clause | MIT |
 | 需要 API Key | **不需要** | 需要 | 不需要 |
@@ -130,10 +138,10 @@ bash setup.sh
 ## ❓ 常见问题
 
 **qflow 需要 API Key 吗？**
-不需要。qflow 是纯 MCP 工具层，智能由你的 AI 编辑器（Claude Code / Cursor / Windsurf）提供。所有 51 个工具开箱即用，零配置。
+不需要。qflow 是纯 MCP 工具层，智能由你的 AI 编辑器（Claude Code / Cursor / Windsurf）提供。所有 50 个工具开箱即用，零配置。
 
 **qflow 和 Task Master AI 有什么区别？**
-Task Master 专注任务管理（44 工具）。qflow 是 All-in-one 方案（51 工具），额外提供 Spec 管理、12 角色评审、6 平台设计系统、Lottie 引擎、TDD、Sprint。而且 qflow 只有 4 个依赖（vs 61 个），纯 MIT 许可。
+Task Master 专注任务管理（44 工具）。qflow 是 All-in-one 方案（50 工具），额外提供 Spec 管理、12 角色评审、6 平台设计系统、Lottie 引擎、TDD、Sprint。而且 qflow 只有 4 个依赖（vs 61 个），纯 MIT 许可。
 
 **支持哪些编辑器？**
 任何 MCP 兼容工具：Claude Code、Cursor、Windsurf、Codex CLI、VS Code（通过 MCP）等。也可以直接用 CLI（`qflow task add`、`qflow task list`）。

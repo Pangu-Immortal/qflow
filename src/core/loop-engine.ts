@@ -24,9 +24,6 @@ import { promisify } from 'node:util'; // v20.0: promisify
 
 const execFileAsync = promisify(execFile); // v20.0: 异步 execFile
 
-/** v20.0 P0-2: AI 调用回调类型 */
-export type CallAIFn = (prompt: string, context?: string) => Promise<string>;
-
 /** 循环阶段类型 */
 export type LoopPhase = 'plan' | 'code' | 'test' | 'review' | 'commit' | 'idle';
 
@@ -119,21 +116,14 @@ export const LOOP_PRESETS: LoopPreset[] = [
 export class LoopEngine {
   private projectRoot: string;            // 项目根目录路径
   private state: LoopState | null = null; // 内存中的循环状态缓存
-  private callAI: CallAIFn | null = null; // v20.0 P0-2: AI 调用回调（DI 注入）
 
   /**
    * 构造函数
    * @param projectRoot 项目根目录绝对路径
-   * @param callAI      可选的 AI 调用回调（DI 注入，用于 plan/code/test/review 阶段）
    */
-  constructor(projectRoot: string, callAI?: CallAIFn) {
+  constructor(projectRoot: string) {
     this.projectRoot = projectRoot; // 保存项目根目录
-    this.callAI = callAI ?? null;   // v20.0 P0-2: 保存 AI 回调
     void LOOP_COOLDOWN_MS;          // 引用常量，防止 unused import 警告
-    // v21.0 P0-2: 未注入 callAI 时输出明确警告，提示 AI 阶段将降级为占位文本
-    if (!this.callAI) {
-      log.warn('[LoopEngine] callAI 未注入，AI 阶段将返回占位文本');
-    }
   }
 
   /** 获取状态文件的绝对路径 */
@@ -185,50 +175,20 @@ export class LoopEngine {
 
     try {
       switch (phase) {
-        case 'plan': { // v20.0 P0-3: plan 阶段调用 callAI 生成计划
-          if (this.callAI) {
-            log.info('[LoopEngine] calling AI for plan...'); // v21.0 P0-3: 阶段前日志
-            const prompt = `为任务 ${this.state!.taskId} 生成实现计划。当前迭代: ${this.state!.iteration + 1}/${this.state!.maxIterations}。请输出：1. 实现步骤 2. 涉及文件 3. 风险点。`;
-            output = await this.callAI(prompt, `preset=${this.state!.presetName}`); // 调用 AI
-            log.info(`LoopEngine: plan 阶段 AI 调用成功 (task=${this.state!.taskId})`);
-          } else {
-            output = `[plan] 任务 ${this.state!.taskId} 计划阶段：请分析需求并生成实现计划。（未注入 callAI，返回指令文本）`; // 降级到指令文本
-          }
+        case 'plan': { // plan 阶段：返回指令文本，由宿主 LLM 完成
+          output = `[plan] 任务 ${this.state!.taskId} 计划阶段：请分析需求并生成实现计划。迭代: ${this.state!.iteration + 1}/${this.state!.maxIterations}`;
           break;
         }
-        case 'code': { // v20.0 P0-4: code 阶段调用 callAI 生成代码
-          if (this.callAI) {
-            log.info('[LoopEngine] calling AI for code...'); // v21.0 P0-3: 阶段前日志
-            const planOutput = this.state!.results.filter(r => r.phase === 'plan').pop()?.output || ''; // 获取最近的计划输出
-            const prompt = `根据以下计划为任务 ${this.state!.taskId} 生成实现代码。\n\n计划:\n${planOutput.slice(0, 2000)}\n\n请输出完整的代码实现。`;
-            output = await this.callAI(prompt, `task=${this.state!.taskId}`); // 调用 AI
-            log.info(`LoopEngine: code 阶段 AI 调用成功 (task=${this.state!.taskId})`);
-          } else {
-            output = `[code] 任务 ${this.state!.taskId} 编码阶段：请根据计划编写代码。（未注入 callAI，返回指令文本）`;
-          }
+        case 'code': { // code 阶段：返回指令文本，由宿主 LLM 完成
+          output = `[code] 任务 ${this.state!.taskId} 编码阶段：请根据计划编写代码。`;
           break;
         }
-        case 'test': { // v20.0 P0-5: test 阶段调用 callAI 生成测试
-          if (this.callAI) {
-            log.info('[LoopEngine] calling AI for test...'); // v21.0 P0-3: 阶段前日志
-            const prompt = `为任务 ${this.state!.taskId} 的实现代码生成测试用例。迭代: ${this.state!.iteration + 1}。请输出可执行的测试代码。`;
-            output = await this.callAI(prompt, `task=${this.state!.taskId}`); // 调用 AI
-            log.info(`LoopEngine: test 阶段 AI 调用成功 (task=${this.state!.taskId})`);
-          } else {
-            output = `[test] 任务 ${this.state!.taskId} 测试阶段：请编写并运行测试。（未注入 callAI，返回指令文本）`;
-          }
+        case 'test': { // test 阶段：返回指令文本，由宿主 LLM 完成
+          output = `[test] 任务 ${this.state!.taskId} 测试阶段：请编写并运行测试。`;
           break;
         }
-        case 'review': { // v20.0 P0-5: review 阶段调用 callAI 审查
-          if (this.callAI) {
-            log.info('[LoopEngine] calling AI for review...'); // v21.0 P0-3: 阶段前日志
-            const codeOutput = this.state!.results.filter(r => r.phase === 'code').pop()?.output || ''; // 获取最近的代码输出
-            const prompt = `审查任务 ${this.state!.taskId} 的代码实现。\n\n代码:\n${codeOutput.slice(0, 2000)}\n\n请检查：1. 代码质量 2. 安全性 3. 性能 4. 可维护性。`;
-            output = await this.callAI(prompt, `review task=${this.state!.taskId}`); // 调用 AI
-            log.info(`LoopEngine: review 阶段 AI 调用成功 (task=${this.state!.taskId})`);
-          } else {
-            output = `[review] 任务 ${this.state!.taskId} 审查阶段：请审查代码质量。（未注入 callAI，返回指令文本）`;
-          }
+        case 'review': { // review 阶段：返回指令文本，由宿主 LLM 完成
+          output = `[review] 任务 ${this.state!.taskId} 审查阶段：请审查代码质量。`;
           break;
         }
         case 'commit': { // v20.0 P0-6: commit 阶段执行 git commit
@@ -250,7 +210,7 @@ export class LoopEngine {
           output = `[${phase}] 无操作`; // 无操作
         }
       }
-    } catch (err) { // 捕获 callAI 等异常
+    } catch (err) { // 捕获阶段执行异常
       const msg = (err as Error).message || '未知错误'; // 错误消息
       output = `[${phase}] 阶段执行异常: ${msg}`; // 记录异常
       success = false; // 标记失败

@@ -15,7 +15,7 @@
  *   qflow_use_tag / qflow_profile_switch / qflow_tool_search / qflow_spec_sync
  *
  * 独立保留（3 个）：
- *   qflow_editor_rules / qflow_models_switch / qflow_diagnostics
+ *   qflow_editor_rules / qflow_diagnostics
  */
 import { createRequire } from 'node:module'; // ESM 中加载 CommonJS 模块
 const require = createRequire(import.meta.url); // 创建 require 函数
@@ -72,7 +72,6 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
     ['qflow_tool_search', '搜索已注册的 MCP 工具'],
     ['qflow_spec_sync', '将 Spec 内容同步到目标文件'],
     ['qflow_editor_rules', '编辑器规则安装与查询'],
-    ['qflow_models_switch', '运行时切换指定角色的模型'],
     ['qflow_diagnostics', '全系统健康检查'],
     ['qflow_agile', '敏捷工作流预设：list/get/step'],
     ['qflow_plugin', '插件管理：install/remove/list/get/search/enable/disable'],
@@ -816,21 +815,6 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
     }
   );
 
-  // ==================== 14. qflow_models_switch（从 standard 搬入）====================
-  if (shouldRegister("qflow_models_switch")) server.tool(
-    "qflow_models_switch",
-    "运行时切换指定角色的模型。支持 main/research/fallback 等角色。",
-    {
-      role: z.string().describe("角色名: main/research/fallback"),
-      modelId: z.string().describe("模型 ID"),
-      projectRoot: z.string().optional().describe("项目根目录"),
-    },
-    async ({ role, modelId, projectRoot }) => {
-      // v25.0: AI 基础设施已移除，模型切换功能不再可用
-      log.warn(`[models_switch] AI 基础设施已移除，模型切换不可用 (role=${role}, model=${modelId})`);
-      return errResp("AI 基础设施已移除（v25.0 去 AI 化），模型切换功能不再可用");
-    }
-  );
 
   // ==================== 15. qflow_diagnostics（独立保留 + 漂移检测 + 文件监控）====================
   if (shouldRegister("qflow_diagnostics")) server.tool(
@@ -882,10 +866,6 @@ export function registerAllTools(server: McpServer, allowedTools?: Set<string>):
             diagnostics.project = null;
             diagnostics.note = "未在 qflow 项目中，部分诊断跳过";
           }
-
-          // AI Provider 状态
-          const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');
-          diagnostics.aiProvider = { settingsExists: await fileExists(settingsPath) };
 
           // Slash 命令状态
           const commandsDir = path.join(os.homedir(), '.claude', 'commands');

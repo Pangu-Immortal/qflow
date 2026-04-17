@@ -3,7 +3,7 @@
  *
  * 实现测试驱动开发的自动化循环：test → write → implement → verify → commit。
  * 引擎负责状态管理、命令执行、阶段流转和持久化，AI 辅助阶段（write/implement）
- * 仅返回指令文本，由上层调用方对接 AI Provider 完成代码生成。
+ * 仅返回指令文本，由宿主 LLM 完成代码生成。
  *
  * 函数列表：
  * - TddEngine.constructor    : 初始化引擎，设置项目根目录和空闲状态
@@ -30,7 +30,6 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { z } from 'zod';
 
-import type { CallAIFn } from './loop-engine.js'; // v20.0 P0-7: 复用 AI 回调类型
 
 // ─── 类型定义 ────────────────────────────────────────────────
 
@@ -158,17 +157,11 @@ function createIdleState(): TddState {
 export class TddEngine {
   private readonly projectRoot: string;          // 项目根目录绝对路径
   private state: TddState;                       // 当前运行状态
-  private callAI: CallAIFn | null = null;        // v20.0 P0-7: AI 调用回调（DI 注入）
 
-  constructor(projectRoot: string, callAI?: CallAIFn) {
+  constructor(projectRoot: string) {
     this.projectRoot = projectRoot;              // 保存项目根目录
-    this.callAI = callAI ?? null;                // v20.0 P0-7: 保存 AI 回调
     this.state = createIdleState();              // 初始化为空闲状态
     log.info(`TDD 引擎初始化: ${projectRoot}`); // 记录初始化日志
-    // v21.0 P0-4: 未注入 callAI 时输出明确警告，提示 AI 阶段将降级为占位文本
-    if (!this.callAI) {
-      log.warn('[TddEngine] callAI 未注入，AI 阶段将返回占位文本');
-    }
   }
 
   /** 状态文件的绝对路径 */
@@ -234,40 +227,20 @@ export class TddEngine {
           output = result.output;                // 捕获输出
           break;
         }
-        case 'write': {                          // v20.0 P0-8: write 阶段调用 callAI 生成测试代码
-          if (this.callAI) {
-            const prompt = `为任务 ${config.taskId} 编写失败的测试用例。`
-              + ` 测试命令: ${config.testCommand}。`
-              + ` 当前迭代: ${this.state.iteration}/${this.state.maxIterations}。`
-              + ` 要求: 测试应覆盖目标功能的核心路径，确保在实现前测试失败(红灯)。`;
-            output = await this.callAI(prompt, `tdd-write task=${config.taskId}`); // 调用 AI 生成测试
-            success = true;
-            log.info(`TDD write: AI 调用成功 (task=${config.taskId})`);
-          } else {
-            output = `[AI 指令] 请为任务 ${config.taskId} 编写失败的测试用例。` // 降级到指令文本
-              + ` 测试命令: ${config.testCommand}。`
-              + ` 当前迭代: ${this.state.iteration}/${this.state.maxIterations}。`
-              + ` 要求: 测试应覆盖目标功能的核心路径，确保在实现前测试失败(红灯)。`;
-            success = true;                        // AI 指令阶段始终成功（由上层判断）
-          }
+        case 'write': {                          // write 阶段：返回指令文本，由宿主 LLM 完成
+          output = `[AI 指令] 请为任务 ${config.taskId} 编写失败的测试用例。`
+            + ` 测试命令: ${config.testCommand}。`
+            + ` 当前迭代: ${this.state.iteration}/${this.state.maxIterations}。`
+            + ` 要求: 测试应覆盖目标功能的核心路径，确保在实现前测试失败(红灯)。`;
+          success = true;                        // 指令阶段始终成功（由上层判断）
           break;
         }
-        case 'implement': {                      // v20.0 P0-9: implement 阶段调用 callAI 生成实现代码
-          if (this.callAI) {
-            const prompt = `为任务 ${config.taskId} 编写最小实现代码使测试通过。`
-              + ` 测试命令: ${config.testCommand}。`
-              + ` 当前迭代: ${this.state.iteration}/${this.state.maxIterations}。`
-              + ` 要求: 仅编写使当前失败测试通过的最少代码，遵循 YAGNI 原则。`;
-            output = await this.callAI(prompt, `tdd-implement task=${config.taskId}`); // 调用 AI 生成实现
-            success = true;
-            log.info(`TDD implement: AI 调用成功 (task=${config.taskId})`);
-          } else {
-            output = `[AI 指令] 请为任务 ${config.taskId} 编写最小实现代码使测试通过。` // 降级到指令文本
-              + ` 测试命令: ${config.testCommand}。`
-              + ` 当前迭代: ${this.state.iteration}/${this.state.maxIterations}。`
-              + ` 要求: 仅编写使当前失败测试通过的最少代码，遵循 YAGNI 原则。`;
-            success = true;                        // AI 指令阶段始终成功
-          }
+        case 'implement': {                      // implement 阶段：返回指令文本，由宿主 LLM 完成
+          output = `[AI 指令] 请为任务 ${config.taskId} 编写最小实现代码使测试通过。`
+            + ` 测试命令: ${config.testCommand}。`
+            + ` 当前迭代: ${this.state.iteration}/${this.state.maxIterations}。`
+            + ` 要求: 仅编写使当前失败测试通过的最少代码，遵循 YAGNI 原则。`;
+          success = true;                        // 指令阶段始终成功
           break;
         }
         case 'verify': {                         // 验证阶段：再次运行测试确认通过

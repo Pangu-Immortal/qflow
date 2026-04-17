@@ -23,7 +23,7 @@
  *   - changes: {projectRoot}/.qflow/changes/{pending|applied|archived}/{changeId}.json
  *
  * 依赖注入说明：
- *   - SM-6: callAI 已去除（v25.0 去 AI 化），SpecAI 接收空函数占位
+ *   - SM-6: callAI 已去除（v25.0 去 AI 化）
  *   - SM-7: TaskManager 在构造函数中实例化后注入 SpecVerify
  *   - SM-8: loadConfig 通过 config-manager.js 动态 import 一次性获取后注入 SpecCrud
  */
@@ -75,20 +75,16 @@ export class SpecManager {
     const tm = new TaskManager(projectRoot);
     this.verify_ = new SpecVerify(projectRoot, this.crud, tm); // 初始化验证子模块，注入 crud + tm
 
-    // SpecAI 在首次调用时懒初始化（需要异步加载 callAI），见 getAI()
+    // SpecAI 在首次调用时懒初始化，见 getAI()
     log.debug(`SpecManager 已初始化（聚合层）: ${projectRoot}`); // 调试日志
   }
 
   /**
    * 获取 SpecAI 子模块实例（懒初始化）
-   *
-   * v25.0: AI 基础设施已移除，callAI 传入空函数占位（SpecAI 内部不再调用）
    */
   private async getAI(): Promise<SpecAI> {
     if (!this.ai_) { // 首次调用时初始化
-      // v25.0: AI 已去除，传入空函数占位（SpecAI 构造函数仍需该参数，但内部不调用）
-      const noopCallAI = async () => ({ content: '' });
-      this.ai_ = new SpecAI(this.projectRoot, this.crud, noopCallAI); // 空函数占位
+      this.ai_ = new SpecAI(this.projectRoot, this.crud); // v25.0: 无需 callAI 参数
       log.debug('SpecAI 子模块已初始化（懒加载）'); // 调试日志
     }
     return this.ai_; // 返回实例

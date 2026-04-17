@@ -13,8 +13,7 @@
  * - getArtifactDAGStatus()  获取 Spec 依赖 DAG 状态
  * - fastForward()           为 Spec 各 section 快速生成规划产物（v20.0 P2-10）
  *
- * 依赖注入：
- * - callAI: CallAIFn  从外部注入 AI 调用函数（v23.0: 所有方法已改为模板路径，callAI 不再被调用）
+ * v25.0: AI 基础设施已移除，所有方法使用模板路径，由宿主 LLM 细化。
  */
 
 import path from 'node:path'; // 路径拼接工具
@@ -27,25 +26,18 @@ import { GEN_FROM_CODE_MAX_FILES, GEN_FROM_CODE_MAX_CHARS, MERMAID_LABEL_MAX_LEN
 import type { SpecCrud } from './spec-crud.js'; // CRUD 子模块类型
 
 /**
- * AI 调用函数类型定义（SM-6: 通过构造函数注入，消除动态 import）
- */
-export type CallAIFn = (prompt: string, options?: { systemPrompt?: string; maxTokens?: number }) => Promise<{ content: string }>;
-
-/**
  * SpecAI 类 - 处理 Spec 的 AI 生成和探索性 Spec 管理
  *
- * 通过构造函数注入 SpecCrud 和 callAI 函数，实现对 AI 提供者的解耦。
+ * v25.0: AI 基础设施已移除，所有方法使用模板路径。
  */
 export class SpecAI {
   /**
    * @param projectRoot - 项目根目录绝对路径
    * @param crud        - SpecCrud 实例，用于读取/创建 Spec 数据
-   * @param callAI      - AI 调用函数（SM-6: 依赖注入，不再动态 import ai-provider.js）
    */
   constructor(
     private projectRoot: string,
     private crud: SpecCrud, // 依赖注入 SpecCrud
-    private callAI: CallAIFn, // 依赖注入 AI 调用函数（SM-6）
   ) {}
 
   /**
@@ -183,7 +175,7 @@ export class SpecAI {
    *
    * 读取指定文件内容，通过 AI 分析生成 Spec 文档。
    * 限制: 最多 5 个文件，每个文件最多 2000 字符。
-   * SM-6: callAI 通过构造函数注入，不再动态 import ai-provider.js
+   * v25.0: AI 基础设施已移除，直接使用模板生成
    *
    * @param name      - Spec 名称
    * @param type      - Spec 类型
@@ -570,7 +562,7 @@ export class SpecAI {
    * v20.0 P2-10: 快速生成 Spec 的所有规划产物（任务、测试大纲等）
    *
    * 读取 Spec 内容，遍历已有 section，为每个 section 生成关联的规划产物。
-   * 优先使用 callAI 生成，AI 不可用时返回结构化模板。
+   * v25.0: 使用结构化模板生成规划产物。
    *
    * @param specId - 目标 Spec ID
    * @returns 生成的产物列表

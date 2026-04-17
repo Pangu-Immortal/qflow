@@ -394,13 +394,13 @@ export class AgentOrchestrator {
 
   /**
    * v20.0 P4-5/P4-6: 多角色辩论 — 模拟 Party 中每个参与者角色进行辩论
-   * 每个参与者基于其 persona 角色生成观点，通过 callAI 驱动
+   * 每个参与者基于其 persona 角色生成模板观点
+   * v25.0: AI 基础设施已移除，仅使用模板观点
    * @param sessionId - Party 会话 ID
    * @param topic - 辩论主题
-   * @param callAI - AI 调用回调（可选，无则返回模板观点）
    * @returns 辩论结果
    */
-  async partyDebate(sessionId: string, topic: string, callAI?: (prompt: string) => Promise<{ content: string }>): Promise<{
+  async partyDebate(sessionId: string, topic: string): Promise<{
     sessionId: string;
     topic: string;
     rounds: Array<{
@@ -421,18 +421,7 @@ export class AgentOrchestrator {
       const personaName = persona?.name || pid; // 显示名称，降级到 ID
       const role = persona?.role || 'participant'; // 角色描述，降级到默认值
 
-      let viewpoint: string; // 当前参与者的观点
-      if (callAI) { // 有 AI 回调时走 AI 生成
-        try {
-          const prompt = `你是 ${personaName}（角色: ${role}）。请就以下主题发表你的观点：\n\n主题: ${topic}\n\n请从你的专业角度（${role}）给出简洁观点（100字以内）。`; // 构造角色提示词
-          const result = await callAI(prompt); // 调用 AI 生成观点
-          viewpoint = result.content; // 取 AI 返回内容
-        } catch {
-          viewpoint = `[${personaName}] 作为 ${role}，我认为 ${topic} 需要从${role}角度审慎考虑。`; // AI 调用失败时降级到模板观点
-        }
-      } else {
-        viewpoint = `[${personaName}] 作为 ${role}，我认为 ${topic} 需要从${role}角度审慎考虑。`; // 无 AI 回调时使用模板观点
-      }
+      const viewpoint = `[${personaName}] 作为 ${role}，我认为 ${topic} 需要从${role}角度审慎考虑。`; // 模板观点
 
       // 记录到 session（调用已有方法复用校验逻辑）
       this.addPartyMessage(sessionId, pid, viewpoint);
