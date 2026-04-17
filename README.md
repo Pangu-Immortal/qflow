@@ -46,28 +46,138 @@ qflow turns your AI coding assistant into a full project manager. With 51 MCP to
 
 ---
 
+## Context Modules
+
+qflow provides 17 on-demand context modules for AI -- the most comprehensive context modules for AI available in any MCP server. Modules are token-aware, support unloading and compression, and inject domain-specific knowledge into your AI coding assistant's context window.
+
+| Group | Module | Description |
+|-------|--------|-------------|
+| **Engineering** | `core` | Project conventions, naming rules, and workflow constraints |
+| | `phase1` | Code analysis and architecture understanding (read-only mode) |
+| | `phase2` | Development execution with multi-agent orchestration |
+| | `ui-constraints` | Cross-platform UI dimension and spacing constraints |
+| | `context-guard` | Auto-compression at 70%/85%/90% context thresholds |
+| | `thinking-tiers` | Tiered reasoning depth control (quick/standard/deep) |
+| | `iron-rules` | Immutable engineering rules that override all other context |
+| | `readme-spec` | README and documentation generation guidelines |
+| | `reverse` | Reverse engineering workflow (APK, mini-app, protocol) |
+| **Design (v24.0)** | `design-web` | Web design system: color, typography, grid, components |
+| | `design-app` | App design system: iOS HIG + Material Design 3 |
+| | `ui-web` | Vue + Vant + mini-app UI hard constraints |
+| | `ui-ios` | SwiftUI layout, spacing, and component rules |
+| | `ui-android` | Jetpack Compose layout, spacing, and component rules |
+| | `ui-game` | Cocos Creator + Unity UGUI/UI Toolkit rules |
+| | `pencil` | Pencil design tool reference and .pen file operations |
+| | `ppt` | PPT generation guide with 17 visual styles |
+
+Load modules with `qflow_context_load`, check token usage with `qflow_context_status`, and free tokens with `qflow_context_compress`. Design system context loading covers 6 platforms (Web, iOS, Android, Game, Pencil, PPT), making qflow the only open-source MCP server with built-in design system awareness for AI project management.
+
+---
+
+## Lottie Animation Engine
+
+qflow includes a built-in Lottie animation generator MCP tool (`qflow_lottie`) with 34 preset templates across 6 categories. Generate customizable Lottie JSON animations directly from your AI coding assistant -- no design tool required.
+
+| Category | Templates | Examples |
+|----------|-----------|---------|
+| **Loading** | 8 templates | Spinner, pulse dot, orbital, progress bar, skeleton shimmer, wave, bounce, circular |
+| **Feedback** | 6 templates | Success checkmark, error cross, warning triangle, info badge, confetti, thumbs up |
+| **Interaction** | 6 templates | Heart like, star favorite, toggle switch, swipe hint, pull-to-refresh, tap ripple |
+| **Transition** | 6 templates | Fade in/out, slide up, scale bounce, flip card, morph shape, page turn |
+| **Data** | 4 templates | Chart grow, counter roll, pie chart fill, progress ring |
+| **Empty State** | 4 templates | No data, no network, no search result, maintenance |
+
+**Usage example** -- generate a Lottie animation in 3 lines of conversation:
+
+```
+You: "Generate a success checkmark animation in green, 120x120px"
+AI:  → calls qflow_lottie(template: "success-checkmark", color: "#22C55E", width: 120, height: 120)
+     → Returns Lottie JSON file ready for Android Compose / iOS SwiftUI / Web
+```
+
+All templates support custom **color**, **size (width/height)**, and **frame rate (fps)**. Output is standard Lottie JSON compatible with `lottie-android`, `lottie-ios`, and `lottie-web`.
+
+---
+
 ## Comparison with Alternatives
 
-How does qflow compare to other AI project management tools?
+How does qflow compare to other AI project management tools? This is the most comprehensive comparison of MCP tools for developers -- covering task management, spec-driven development, design system loading, and Lottie animation generation.
 
-| Feature | **qflow** | Task Master AI | OpenSpec | Manual Management |
-|---------|-----------|----------------|----------|-------------------|
-| MCP Tools | **51** | ~20 | ~10 | 0 |
-| Tool Tiers (load control) | **3 tiers** | None | None | N/A |
-| Task State Machine | **7 states** | 3 states | None | Ad-hoc |
-| Dependency DAG + Cycle Detection | **Yes** | Partial | No | Manual |
-| Spec-Driven Development | **Full lifecycle** | No | Yes | Manual |
-| Complexity Scoring | **5-dimension** | Basic | No | Gut feeling |
-| Multi-Agent Personas | **12 personas** | No | No | No |
-| Autopilot Engine | **5 presets** | No | No | No |
-| AI Provider Support | **16 providers** | OpenAI only | OpenAI only | N/A |
-| Works Without API Key | **Yes (heuristic fallback)** | No | No | N/A |
-| PRD Parser | **Yes** | No | No | Manual |
-| Sprint Management | **Yes** | No | No | Jira/Linear |
-| TDD Loop | **Yes** | No | No | Manual |
-| Runtime Dependencies | **4 packages** | 10+ | 5+ | N/A |
-| File-Based (no DB) | **Yes** | Yes | Yes | Spreadsheets |
-| Claude Code / Cursor / Windsurf | **All supported** | Claude only | Claude only | N/A |
+> **Note:** Data verified against actual source code as of April 2026. Task Master tool count from `mcp-server/src/tools/tool-registry.js`, OpenSpec from `package.json` + CLI commands.
+
+### Core Architecture
+
+| Dimension | **qflow** | Task Master AI | OpenSpec |
+|-----------|-----------|----------------|----------|
+| Architecture | **MCP Server + CLI** | MCP Server + CLI | CLI only (not an MCP server) |
+| MCP Tools | **51** | 44 | 0 |
+| Tool Tiers (token control) | **3 tiers (10/32/51)** | 3 tiers (7/14/44) | N/A |
+| Runtime Dependencies | **4 packages** | 61 packages | 9 packages |
+| License | **MIT (pure)** | MIT + Commons Clause | MIT (pure) |
+| Language | TypeScript | JavaScript/TypeScript | TypeScript |
+
+### Task & Project Management
+
+| Dimension | **qflow** | Task Master AI | OpenSpec |
+|-----------|-----------|----------------|----------|
+| Task State Machine | **7 states** (pending/active/done/blocked/review/deferred/cancelled) | 6 states (pending/done/in-progress/review/deferred/cancelled) | 2 states (checkbox) |
+| Dependency DAG | **Yes + Kahn cycle detection + auto-fix** | Yes (add/remove/validate/fix) | Artifact-level only |
+| Critical Path Analysis | **Yes** | No | No |
+| Complexity Scoring | **5-dimension heuristic + AI** | AI-powered (analyze + report) | No |
+| PRD-to-Tasks Parser | **Yes (auto-create task tree)** | Yes (parse_prd) | No |
+| Sprint Management | **Yes (Scrum lifecycle)** | No | No |
+| TDD Loop Engine | **Yes (red-green-refactor)** | No | No |
+| Tag-based Workspaces | **Yes (isolate/switch/merge)** | Yes (multi-context tags) | No |
+
+### Spec & Quality
+
+| Dimension | **qflow** | Task Master AI | OpenSpec |
+|-----------|-----------|----------------|----------|
+| Spec-Driven Development | **Full lifecycle (init/propose/apply/verify/archive)** | No | **Yes (core feature)** |
+| SHA-256 Conflict Detection | **Yes** | No | No |
+| Living Spec Propagation | **Yes** | No | Yes (delta specs) |
+| Multi-Agent Review | **12 personas (PM/Architect/QA/Security/DBA/DevOps...)** | No | No |
+| Adversarial Debate | **Yes (multi-perspective)** | No | No |
+| Constitution Governance | **Yes (must/should/may rules)** | No | No |
+
+### AI & Automation
+
+| Dimension | **qflow** | Task Master AI | OpenSpec |
+|-----------|-----------|----------------|----------|
+| AI Provider Support | **16 providers** | 17+ providers | Model-agnostic (0 API calls) |
+| Works Without API Key | **Yes (heuristic fallback for all features)** | No (API key required) | Yes (no AI calls) |
+| Autopilot Engine | **Yes (5 presets, token-bucket rate-limited)** | Yes (8 autopilot tools) | No |
+| Research with Sources | **Yes** | Yes | No |
+| Graceful Degradation | **Every AI call has template fallback** | No fallback | N/A |
+
+### Design & Creative Tools (qflow exclusive)
+
+| Dimension | **qflow** | Task Master AI | OpenSpec |
+|-----------|-----------|----------------|----------|
+| Context Modules | **17 modules (on-demand, token-aware)** | No | No |
+| Design System Loading | **6 platforms (Web/App/iOS/Android/Game/Pencil)** | No | No |
+| Lottie Animation Engine | **34 templates, custom color/size/fps** | No | No |
+| PPT Generation Reference | **Yes (17 visual styles)** | No | No |
+
+### Editor & Platform Support
+
+| Dimension | **qflow** | Task Master AI | OpenSpec |
+|-----------|-----------|----------------|----------|
+| Claude Code | **Yes** | Yes | Yes |
+| Cursor | **Yes** | Yes | Yes |
+| Windsurf | **Yes** | Yes | Yes |
+| VS Code / Copilot | Via MCP | Yes | Yes |
+| Other Editors | Any MCP-compatible | 15+ (Cline, Roo, Zed, Kiro...) | 28 (broadest) |
+| One-Line Install Script | **Yes (setup.sh)** | Yes (npx) | Yes (npx) |
+
+### Why Choose qflow?
+
+- **All-in-one**: Task management + spec management + design system + animation generation in a single tool. Task Master focuses only on tasks; OpenSpec only on specs.
+- **Minimal footprint**: 4 runtime dependencies vs Task Master's 61. Less supply chain risk, faster install.
+- **Works offline**: Every AI feature has a non-AI fallback. Task Master requires an API key for core features.
+- **Pure MIT license**: No Commons Clause restrictions. Free for any commercial use.
+- **Multi-agent review**: 12 built-in personas for adversarial review. No other tool offers this.
+- **Design-aware**: 17 context modules covering 6 UI platforms. Load design system rules on demand without wasting tokens.
 
 ---
 
@@ -247,7 +357,7 @@ qflow uses a tiered tool system so you only load what you need:
 |------|-------------|----------------|----------|
 | `minimal` / `core` | 10 | core | Minimal footprint, task basics only |
 | `standard` | 32 | core + standard | **Recommended default** -- full task + spec + context workflow |
-| `all` | 50 | core + standard + all | Power users: review, autopilot, TDD, sprints, plugins |
+| `all` | 51 | core + standard + all | Power users: review, autopilot, TDD, sprints, plugins |
 
 Set the mode via `QFLOW_MODE` environment variable or pass `QFLOW_TOOLS` for fine-grained control.
 
@@ -428,7 +538,8 @@ qflow/
 │   ├── shared/                     # Constants, helpers, prompt templates
 │   └── templates/                  # Slash command .md templates
 ├── data/
-│   ├── context-modules/            # Loadable context modules
+│   ├── context-modules/            # 17 loadable context modules
+│   ├── lottie-templates/           # 34 Lottie animation templates
 │   └── prompts/                    # AI prompt templates (JSON)
 └── package.json
 ```
@@ -462,11 +573,11 @@ qflow/
 
 ### What is qflow?
 
-qflow is an open-source MCP (Model Context Protocol) server that adds structured project management capabilities to AI coding assistants. It provides 50 tools for task tracking, spec-driven development, complexity scoring, multi-agent review, and autonomous task execution -- all running locally with file-based state.
+qflow is an open-source MCP (Model Context Protocol) server that adds structured AI project management capabilities to AI coding assistants. It provides 51 MCP tools for task management, spec-driven development, complexity scoring AI, multi-agent code review, and autonomous task execution -- all running locally with file-based project management and no database required.
 
 ### What is MCP (Model Context Protocol)?
 
-MCP is an open protocol that lets AI assistants (like Claude Code, Cursor, Windsurf) connect to external tools and data sources. qflow implements an MCP server, so any MCP-compatible AI tool can use qflow's 50 project management tools natively.
+MCP is an open protocol (Model Context Protocol) that lets AI assistants (like Claude Code, Cursor, Windsurf) connect to external tools and data sources. qflow implements an MCP server, so any MCP-compatible AI coding assistant can use qflow's 51 project management tools natively.
 
 ### Does qflow require an AI API key?
 
@@ -483,7 +594,7 @@ qflow works with any MCP-compatible AI tool, including:
 
 ### How does qflow compare to Task Master AI?
 
-qflow offers more tools (50 vs ~20), more task states (7 vs 3), multi-agent personas (12 built-in), autopilot engine, TDD loop, sprint management, and support for 16 AI providers. qflow also works without an API key. See the [Comparison table](#comparison-with-alternatives) for a full breakdown.
+Both are MCP servers for AI-assisted development. Task Master (44 tools) focuses on task management; qflow (51 tools) is an all-in-one solution adding spec-driven development, multi-agent review (12 personas), design system loading (6 platforms), Lottie animation engine, TDD loop, and sprint management. Key differences: qflow works without an API key (heuristic fallback), has only 4 runtime dependencies (vs Task Master's 61), and uses a pure MIT license (Task Master uses MIT + Commons Clause). See the [Comparison table](#comparison-with-alternatives) for a 30+ dimension breakdown.
 
 ### Can I use qflow without Claude Code?
 
@@ -491,11 +602,11 @@ Yes. qflow is an MCP server, not a Claude Code plugin. It works with Cursor, Win
 
 ### How do tool tiers work?
 
-qflow loads tools based on the `QFLOW_MODE` environment variable. `core` loads 10 essential tools, `standard` (default) loads 32, and `all` loads all 50. This keeps your AI assistant's tool list clean and reduces token usage when you only need basic features.
+qflow loads MCP tools based on the `QFLOW_MODE` environment variable. `core` loads 10 essential tools, `standard` (default) loads 32, and `all` loads all 51. This keeps your AI coding assistant's tool list clean and reduces token usage when you only need basic task management features.
 
 ### Is qflow free to use?
 
-Yes. qflow is open-source under the MIT license. It is free for personal and commercial use. The only potential cost is your own AI API key if you want AI-enhanced features, but this is entirely optional.
+Yes. qflow is open source under the MIT license. It is free for personal and commercial use. The only potential cost is your own AI API key if you want AI-enhanced features for AI project management, but this is entirely optional.
 
 ### How many runtime dependencies does qflow have?
 
@@ -503,7 +614,27 @@ Only 4: `@modelcontextprotocol/sdk`, `zod`, `commander`, and `chalk`. qflow is d
 
 ### Can qflow manage large projects?
 
-Yes. qflow supports dependency DAGs with cycle detection (Kahn's topological sort), critical path analysis, fan-out/fan-in patterns, sprint management, and workspace isolation by tag. The complexity scoring system adapts planning tracks (Quick / Standard / Enterprise) based on project scale.
+Yes. qflow supports dependency DAGs with cycle detection (Kahn's topological sort), critical path analysis, fan-out/fan-in patterns, sprint management, and workspace isolation by tag. The complexity scoring AI adapts planning tracks (Quick / Standard / Enterprise) based on project scale. Task dependency management is built into every workflow.
+
+### How to generate Lottie animations with qflow?
+
+Use the `qflow_lottie` MCP tool. It provides 34 preset templates across 6 categories (loading, feedback, interaction, transition, data, empty state). Simply tell your AI assistant what animation you need -- for example, "generate a success checkmark animation in blue" -- and qflow returns a standard Lottie JSON file compatible with Android, iOS, and Web. This Lottie animation generator MCP tool supports custom color, size, and frame rate.
+
+### What context modules does qflow provide?
+
+qflow ships 17 context modules for AI organized into two groups: 9 engineering modules (core, phase1, phase2, ui-constraints, context-guard, thinking-tiers, iron-rules, readme-spec, reverse) and 8 design system modules added in v24.0 (design-web, design-app, ui-web, ui-ios, ui-android, ui-game, pencil, ppt). Modules load on demand via `qflow_context_load` and are token-aware with auto-compression.
+
+### How to use qflow without an API key?
+
+Simply skip the `QFLOW_API_KEY` configuration. qflow is AI provider agnostic and works without any API key via graceful degradation. AI-enhanced features (task expansion, spec generation, research, complexity scoring) fall back to heuristic algorithms and templates. All 47 non-AI tools work at full capability. This makes qflow ideal for offline or air-gapped environments.
+
+### What is the difference between qflow and Jira?
+
+qflow is a file-based project management tool designed for AI coding assistants, while Jira is a web-based project tracker for human teams. qflow runs locally with no database required, integrates directly into Claude Code, Cursor, and Windsurf via the Model Context Protocol, and provides AI-powered features like PRD to tasks converter, autonomous task execution, and complexity scoring. Jira requires a hosted server, manual ticket creation, and has no native AI coding integration.
+
+### How to manage task dependencies in qflow?
+
+Use the `qflow_task_deps` tool for task dependency management: add dependencies between tasks, remove them, validate the dependency graph for cycles, and find the critical path. qflow uses Kahn's topological sort for cycle detection and automatically unblocks downstream tasks when dependencies complete. Dependencies support linear, fan-out, and fan-in patterns.
 
 ---
 
