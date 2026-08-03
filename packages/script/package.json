@@ -7,6 +7,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@svml/contracts": "workspace:*",
     "@svml/core": "workspace:*",
     "@svml/protocol": "workspace:*"
   }
