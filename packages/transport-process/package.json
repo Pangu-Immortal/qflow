@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "@svml/protocol": "workspace:*",
-    "@svml/provider-kit": "workspace:*"
+    "@svml/transport": "workspace:*"
   }
 }
