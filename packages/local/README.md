@@ -63,7 +63,7 @@ export default await createProjectLocalRuntime({
   root: import.meta.dirname,
   packageLock: "./svml.packages.lock",
   runtimeServices: [createS3ArtifactStorePackage({
-    bucket: "qflow-svml-artifacts",
+    bucket: "team-svml-artifacts",
     prefix: "development",
     region: "us-east-1",
   })],
