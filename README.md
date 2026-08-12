@@ -21,7 +21,7 @@
   <a href="https://narratage.qflow.ai/"><img alt="Website" src="https://img.shields.io/badge/Website-narratage.qflow.ai-000000?style=flat-square&logo=googlechrome&logoColor=white"></a>
   <a href="https://discord.gg/85hnyQnxpn"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat-square&logo=discord&logoColor=white"></a>
   <a href="https://x.com/qflowai"><img alt="X" src="https://img.shields.io/badge/Follow-%40qflowai-000000?style=flat-square&logo=x&logoColor=white"></a>
-  <a href="https://t.me/narratage"><img alt="Telegram" src="https://img.shields.io/badge/Telegram-Join-26A5E4?style=flat-square&logo=telegram&logoColor=white"></a>
+  <a href="https://t.me/narratage"><img alt="Telegram" src="https://img.shields.io/badge/Telegram-Join%20Group-26A5E4?style=flat-square&logo=telegram&logoColor=white"></a>
 </p>
 
 Narratage is a semantic, graph-native system for making AI video. You write the story, choose the
