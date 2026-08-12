@@ -141,15 +141,12 @@ expresses the work, the Run Graph selects Targets and Candidates for one Build. 
 verifies and advances the resulting state machine, so video concepts stay in independently
 installable packages — Core hard-codes no model, Track or Provider.
 
-The normative laws are in the
-[Core Kernel specification](https://narratage.qflow.ai/guide/spec/core-kernel).
-
 ## Where to go next
 
 - [Quickstart](https://narratage.qflow.ai/quickstart) — the files you control, the commands, and
   your first real Build.
 - [Develop](https://narratage.qflow.ai/guide/develop) — package architecture, adding an author
-  package or a Provider, and the normative specifications.
+  package or a Provider.
 
 ## License
 
