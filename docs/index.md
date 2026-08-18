@@ -11,6 +11,9 @@ hero:
     - theme: alt
       text: Develop
       link: /guide/develop
+    - theme: alt
+      text: GitHub
+      link: https://github.com/qflow-ai/narratage
 ---
 
 <ClientOnly>
