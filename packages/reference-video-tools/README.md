@@ -1,17 +1,23 @@
 # `@qflow/reference-video-tools`
 
-MCP stdio tools for reconstructing a reference video with Qflow.
+CLI tools for reconstructing a reference video with Qflow.
 
-The package exposes `prepare_reference`, `observe_reference`, and
-`inspect_svml_vocabulary`. The first two send narrow natural-language requests to Gemini with a
-fixed temperature of `1.0`; they never receive SVML syntax and never write SVML. The final source
-files are authored by the calling agent and checked with the existing `pnpm qflow check` command.
+The package exposes three CLI subcommands: `prepare_reference`, `observe_reference`, and
+`inspect_svml_vocabulary`. Each command prints one JSON result to stdout. The first two send narrow
+natural-language requests to Gemini with a fixed temperature of `1.0`; they never receive SVML
+syntax and never write SVML. The final source files are authored by the calling agent and checked
+with the existing `pnpm qflow check` command.
 
-Start the server from the repository or an installed package:
+Run the CLI from the repository or an installed package:
 
 ```bash
-node --import tsx packages/reference-video-tools/src/server.ts
+pnpm qflow-reference-video-tools prepare_reference --video-path ./reference.mp4
+pnpm qflow-reference-video-tools observe_reference --reference-id <reference-id>
+pnpm qflow-reference-video-tools inspect_svml_vocabulary --package @qflow/media-track --tag Track
 ```
+
+For automation, every command also accepts `--input '{"...":"..."}'` with the complete JSON input
+object. This is useful when the calling agent already has a structured request.
 
 `prepare_reference` requires a local video path and stores derived media under the project's
 gitignored `.qflow/reference-video-tools/` directory. Gemini uses the existing Vertex environment
