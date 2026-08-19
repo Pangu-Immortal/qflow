@@ -12,11 +12,9 @@
   },
   "dependencies": {
     "@google/genai": "1.52.0",
-    "@qflow/artifact-store-fs": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/runtime": "workspace:*",
     "@modelcontextprotocol/sdk": "1.30.0",
     "zod": "3.25.76"
   },
