@@ -94,7 +94,7 @@ Frontend；不存在一个认识全部语法的中央解析器。
 @qflow/typography-track      typography overlay Track
 @qflow/audio-track           arbitrary sample-domain Audio Track
 @qflow/deck-track            depth-stack collection Track
-@qflow/ranking               four ranking component families
+@qflow/ranking               three ranking component families
 @qflow/screen-overlay        self-contained full-canvas overlays
 @qflow/film                  Film composition
 @qflow/composition           peer Track composition
