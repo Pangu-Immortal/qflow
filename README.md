@@ -17,10 +17,6 @@
   &nbsp;&bull;&nbsp;
   <a href="https://qflow.ai/guide/develop"><strong>Develop</strong></a>
   &nbsp;&bull;&nbsp;
-  <a href="https://narratage.qflow.ai/"><strong>Docs</strong></a>
-  &nbsp;&bull;&nbsp;
-  <a href="https://discord.gg/85hnyQnxpn"><strong>Discord</strong></a>
-  &nbsp;&bull;&nbsp;
   <a href="./README.zh-CN.md"><strong>简体中文</strong></a>
 </p>
 
