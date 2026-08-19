@@ -7,12 +7,15 @@
 
 <p align="center">
   <strong>Clone any viral video with AI agents.</strong>
-  <br>
-  <em>1 command, 100 variants, 100M views.</em>
+  1 command, 100 variants, 100M views.
 </p>
 
 <p align="center">
   <a href="https://qflow.ai/"><strong>Website</strong></a>
+  &nbsp;&bull;&nbsp;
+  <a href="https://qflow.ai/quickstart"><strong>Quickstart</strong></a>
+  &nbsp;&bull;&nbsp;
+  <a href="https://qflow.ai/guide/develop"><strong>Develop</strong></a>
   &nbsp;&bull;&nbsp;
   <a href="https://narratage.qflow.ai/"><strong>Docs</strong></a>
   &nbsp;&bull;&nbsp;
