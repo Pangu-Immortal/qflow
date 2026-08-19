@@ -1,12 +1,7 @@
 <p align="center">
-  <!--
-    Absolute, and pointing at the published site rather than the repository:
-    this repo is private, so a relative path resolves to something the GitHub
-    mobile app cannot authenticate and it draws a broken image instead.
-  -->
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://qflow.ai/logo-line-dark.svg?v=qflow-20260819">
-    <img alt="Qflow" src="https://qflow.ai/logo-line-light.svg?v=qflow-20260819" width="400" height="78">
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/public/qflow-logo-light.png">
+    <img alt="Qflow" src="./docs/public/qflow-logo-dark.png" width="400" height="78">
   </picture>
 </p>
 
