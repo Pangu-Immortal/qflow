@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { artifactTypes } from "@qflow/artifact";
-import { parseStructuredElement } from "@qflow/markup";
+import { markupSurfaceHostFacetAbi, parseStructuredElement } from "@qflow/markup";
 import type { StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/markup";
 import { textTypes } from "@qflow/text";
 
@@ -93,7 +93,8 @@ test("the physical package carries both independently importable Surface impleme
     { name: "@qflow/gpt-image", surfaces: ["Image"] },
     { name: "@qflow/gpt-image/clean", surfaces: ["Image"] },
   ]);
-  assert.equal(gptImageNodePackage.hostFacets.length, 2);
+  assert.equal(gptImageNodePackage.hostFacets
+    .filter((facet) => facet.abi === markupSurfaceHostFacetAbi).length, 2);
 });
 
 test("GPT Image Surface rejects hidden inline prompts and undeclared child shapes", async () => {

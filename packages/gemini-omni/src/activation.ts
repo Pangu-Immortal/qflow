@@ -1,6 +1,7 @@
 import { createMarkupSurfaceHostFacet } from "@qflow/markup";
 import {
   geminiOmniComponent,
+  geminiOmniDefinition,
   geminiOmniManifest,
   geminiOmniModuleRef,
   geminiOmniMarkupSurfaces,
@@ -11,7 +12,7 @@ export const qflowPackage = {
   format: "qflow.node-package@1" as const,
   modules: [{ manifest: geminiOmniManifest }],
   components: [geminiOmniComponent],
-  hostFacets: [createMarkupSurfaceHostFacet({
+  hostFacets: [geminiOmniDefinition.hostFacet, createMarkupSurfaceHostFacet({
     module: geminiOmniModuleRef,
     declaration: geminiOmniMarkupSurfaces.find((item) => item.name === "video")!,
     handler: decodeGeminiOmniVideoSurface,

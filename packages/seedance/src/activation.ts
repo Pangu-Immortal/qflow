@@ -5,6 +5,7 @@ import {
   decodeSeedanceReferenceVideoSurface,
   decodeSeedanceTextVideoSurface,
   seedanceComponent,
+  seedanceDefinition,
   seedanceManifest,
   seedanceModuleRef,
   seedanceMarkupSurfaces,
@@ -15,6 +16,7 @@ export const qflowPackage = {
   modules: [{ manifest: seedanceManifest }],
   components: [seedanceComponent],
   hostFacets: [
+    seedanceDefinition.hostFacet,
     createMarkupSurfaceHostFacet({
       module: seedanceModuleRef,
     declaration: seedanceMarkupSurfaces.find((item) => item.name === "text-video")!,

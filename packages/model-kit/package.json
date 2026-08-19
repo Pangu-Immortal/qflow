@@ -12,6 +12,7 @@
     "@qflow/component-kit": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/generation": "workspace:*",
+    "@qflow/host": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/text": "workspace:*"
   }

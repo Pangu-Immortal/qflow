@@ -1,6 +1,7 @@
 import { createMarkupSurfaceHostFacet } from "@qflow/markup";
 import {
   grokImagineComponent,
+  grokImagineDefinition,
   grokImagineManifest,
   grokImagineModuleRef,
   grokImagineMarkupSurfaces,
@@ -12,6 +13,7 @@ export const qflowPackage = {
   modules: [{ manifest: grokImagineManifest }],
   components: [grokImagineComponent],
   hostFacets: [
+    grokImagineDefinition.hostFacet,
     createMarkupSurfaceHostFacet({
       module: grokImagineModuleRef,
     declaration: grokImagineMarkupSurfaces.find((item) => item.name === "video")!,
