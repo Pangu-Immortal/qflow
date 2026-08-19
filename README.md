@@ -59,19 +59,19 @@ For finished video builds, install `ffmpeg` and `ffprobe`. Some optional provide
 
 ## Use the Qflow skill
 
-The `/qflow` skill is available to coding agents from the cloned repository. Ask your agent to set up the environment and create the workflow for you:
+The `/qflow` skill is available to coding agents from the cloned repository. Ask your agent to set up the environment and create the Qflow sources for you:
 
 ```text
-/qflow Clone this viral video into a reusable workflow, show me a preview, and guide me through producing variants.
+/qflow Reconstruct this viral video as Qflow Author Source and Run Source, show me a preview, and guide me through building variants.
 ```
 
 Or start without a reference video:
 
 ```text
-/qflow Create a video workflow from my description, using templates and $0 code-rendered visuals wherever possible.
+/qflow Create .svml Author Source and .svrun Run Source for this video, using templates and $0 code-rendered visuals wherever possible.
 ```
 
-Your agent can check the environment, request only the credentials the chosen workflow needs, preview the result, and run the build.
+Your agent can check the environment, request only the credentials required by the selected Runtime Profile, preview the Author Source, plan the Run Source, and submit the Build.
 
 ## License
 
