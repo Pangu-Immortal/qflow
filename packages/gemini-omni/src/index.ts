@@ -1,8 +1,8 @@
-import { sealGenerationPortRequest, sealGenerationPortTable } from "@narratage/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@narratage/generation";
-import { defineExactModelModule } from "@narratage/model-kit";
+import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
+import { defineExactModelModule } from "@qflow/model-kit";
 
-export const geminiOmniModuleRef = { name: "@narratage/gemini-omni", version: "1" } as const;
+export const geminiOmniModuleRef = { name: "@qflow/gemini-omni", version: "1" } as const;
 
 export const geminiOmniVideoPorts: GenerationPortTable = sealGenerationPortTable({
   model: "gemini-omni-video",

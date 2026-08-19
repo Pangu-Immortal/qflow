@@ -1,7 +1,7 @@
-import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
+import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
 
 import { locateMomentOccurrences, locateProgramOccurrence, locateSegmentOccurrence, locateSelectionOccurrences } from "./location.js";
 import {

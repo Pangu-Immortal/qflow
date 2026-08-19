@@ -1,7 +1,7 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { BlobRef, StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
-import { rasterTransformRequest } from "@narratage/raster";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { BlobRef, StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
+import { rasterTransformRequest } from "@qflow/raster";
 
 import { imageTransformProducers, imageTransformTypes } from "./manifest.js";
 import { verifyImageTransformProgram } from "./program.js";

@@ -2,21 +2,21 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { registerTypeValidatorFacets } from "@narratage/component-kit";
-import { createResolvedClosure } from "@narratage/core";
-import { canonicalize } from "@narratage/protocol";
-import type { BlobRef } from "@narratage/protocol";
-import { TypeValidatorRegistry, validateValue } from "@narratage/validation";
-import { artifactManifest } from "@narratage/artifact";
-import type { FontArtifactRef } from "@narratage/media";
-import { mediaManifest } from "@narratage/media";
-import { narrativeManifest } from "@narratage/narrative";
-import { programSpaceManifest, sealProgramSpace } from "@narratage/program-space";
-import { speechManifest } from "@narratage/speech";
-import { speechEvidenceManifest } from "@narratage/speech-evidence";
-import { semanticMapManifest } from "@narratage/semantic-map";
-import { spatialManifest } from "@narratage/spatial";
-import { VISUAL_IR_V1, visualIrManifest } from "@narratage/visual-ir";
+import { registerTypeValidatorFacets } from "@qflow/component-kit";
+import { createResolvedClosure } from "@qflow/core";
+import { canonicalize } from "@qflow/protocol";
+import type { BlobRef } from "@qflow/protocol";
+import { TypeValidatorRegistry, validateValue } from "@qflow/validation";
+import { artifactManifest } from "@qflow/artifact";
+import type { FontArtifactRef } from "@qflow/media";
+import { mediaManifest } from "@qflow/media";
+import { narrativeManifest } from "@qflow/narrative";
+import { programSpaceManifest, sealProgramSpace } from "@qflow/program-space";
+import { speechManifest } from "@qflow/speech";
+import { speechEvidenceManifest } from "@qflow/speech-evidence";
+import { semanticMapManifest } from "@qflow/semantic-map";
+import { spatialManifest } from "@qflow/spatial";
+import { VISUAL_IR_V1, visualIrManifest } from "@qflow/visual-ir";
 
 import {
   assertCompositionIdentity,
@@ -51,7 +51,7 @@ function fixture() {
     frameRate: { numerator: 30, denominator: 1 },
   });
   const visual = sealVisualTrack({
-    visualIr: "narratage.visual-ir@1",
+    visualIr: "qflow.visual-ir@1",
     id: "caption",
     presents: [{
       id: "cue-1",
@@ -158,7 +158,7 @@ test("VisualTrack cannot silently extend the versioned public Visual IR", () => 
       canvas: { width: 1080, height: 1920, clearColor: "#000000" },
       tracks: [unknownStyle],
     }), programSpace),
-    /outside narratage\.visual-ir@1/u,
+    /outside qflow\.visual-ir@1/u,
   );
 
   const fixedPosition = sealVisualTrack({

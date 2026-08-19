@@ -1,20 +1,20 @@
-import { mediaTypes } from "@narratage/media";
-import type { FontArtifactRef, FontStackRef } from "@narratage/media";
-import { narrativeTypes } from "@narratage/narrative";
-import { programSpaceTypes } from "@narratage/program-space";
-import type { CanonicalValue, TypeRef } from "@narratage/protocol";
-import { semanticMapTypes } from "@narratage/semantic-map";
-import { spatialTypes } from "@narratage/spatial";
-import { svsRecipeType } from "@narratage/svs";
-import type { SvsRecipe } from "@narratage/svs";
-import { sealText, textTypes } from "@narratage/text";
+import { mediaTypes } from "@qflow/media";
+import type { FontArtifactRef, FontStackRef } from "@qflow/media";
+import { narrativeTypes } from "@qflow/narrative";
+import { programSpaceTypes } from "@qflow/program-space";
+import type { CanonicalValue, TypeRef } from "@qflow/protocol";
+import { semanticMapTypes } from "@qflow/semantic-map";
+import { spatialTypes } from "@qflow/spatial";
+import { svsRecipeType } from "@qflow/svs";
+import type { SvsRecipe } from "@qflow/svs";
+import { sealText, textTypes } from "@qflow/text";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceRecordDraft,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { createRankingFragment } from "./fragment.js";
 import type { RankingFragmentItem, RankingFragmentSound } from "./fragment.js";

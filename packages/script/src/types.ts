@@ -1,7 +1,7 @@
-import type { CanonicalValue, SourceRange, StoredValue, TypeRef } from "@narratage/protocol";
-import type { Narrative, NarrativeMomentOccurrence, NarrativeSegment, NarrativeSelectionOccurrence, NarrativeToken, NarrativeTurn } from "@narratage/narrative";
+import type { CanonicalValue, SourceRange, StoredValue, TypeRef } from "@qflow/protocol";
+import type { Narrative, NarrativeMomentOccurrence, NarrativeSegment, NarrativeSelectionOccurrence, NarrativeToken, NarrativeTurn } from "@qflow/narrative";
 
-export type { Narrative, SemanticAnchor } from "@narratage/narrative";
+export type { Narrative, SemanticAnchor } from "@qflow/narrative";
 
 export type Affinity = "left" | "right";
 

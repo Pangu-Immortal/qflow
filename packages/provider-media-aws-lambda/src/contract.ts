@@ -1,5 +1,5 @@
-import { canonicalize } from "@narratage/protocol";
-import type { CanonicalValue, StoredValue } from "@narratage/protocol";
+import { canonicalize } from "@qflow/protocol";
+import type { CanonicalValue, StoredValue } from "@qflow/protocol";
 
 /**
  * The envelope between the Endpoint and the function it invokes.
@@ -9,8 +9,8 @@ import type { CanonicalValue, StoredValue } from "@narratage/protocol";
  * invocation is an untrusted input even when the account is trusted. Neither
  * side treats the other's output as already valid.
  */
-export const MEDIA_LAMBDA_REQUEST = "narratage.media-lambda-request@1";
-export const MEDIA_LAMBDA_RESPONSE = "narratage.media-lambda-response@1";
+export const MEDIA_LAMBDA_REQUEST = "qflow.media-lambda-request@1";
+export const MEDIA_LAMBDA_RESPONSE = "qflow.media-lambda-response@1";
 
 export const mediaLambdaOperations = [
   "inspect",

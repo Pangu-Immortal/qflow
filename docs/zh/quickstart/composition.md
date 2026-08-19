@@ -9,9 +9,9 @@ Film 是最终的组装阶段。它接收所有对等的 Track，对其进行验
 Composition。然后渲染器将该 Composition 编译为 MP4 视频。
 
 ```svml
-<import as="space" from="@narratage/spatial@1"/>
-<import as="film" from="@narratage/film@1"/>
-<import as="render" from="@narratage/render-hyperframes@1"/>
+<import as="space" from="@qflow/spatial@1"/>
+<import as="film" from="@qflow/film@1"/>
+<import as="render" from="@qflow/render-hyperframes@1"/>
 ```
 
 ## film:Film
@@ -107,23 +107,23 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
 ### Author Source (`main.svml`)
 
 ```svml
-<?svml using="@narratage/markup@1"?>
+<?svml using="@qflow/markup@1"?>
 
 <svml>
-  <import from="@narratage/script@1"/>
-  <import as="wording" from="@narratage/text@1"/>
-  <import as="seedance" from="@narratage/seedance@1"/>
-  <import as="speech" from="@narratage/speech-spine@1"/>
-  <import as="whisperx" from="@narratage/whisperx@1"/>
-  <import as="caption" from="@narratage/caption@1"/>
-  <import as="caption-fine" from="@narratage/caption-fine@1"/>
-  <import as="caption-ai" from="@narratage/caption-gemini@1"/>
-  <import as="fonts" from="@narratage/fonts-open@1"/>
-  <import as="media-track" from="@narratage/media-track@1"/>
-  <import as="text" from="@narratage/typography-track@1"/>
-  <import as="space" from="@narratage/spatial@1"/>
-  <import as="film" from="@narratage/film@1"/>
-  <import as="render" from="@narratage/render-hyperframes@1"/>
+  <import from="@qflow/script@1"/>
+  <import as="wording" from="@qflow/text@1"/>
+  <import as="seedance" from="@qflow/seedance@1"/>
+  <import as="speech" from="@qflow/speech-spine@1"/>
+  <import as="whisperx" from="@qflow/whisperx@1"/>
+  <import as="caption" from="@qflow/caption@1"/>
+  <import as="caption-fine" from="@qflow/caption-fine@1"/>
+  <import as="caption-ai" from="@qflow/caption-gemini@1"/>
+  <import as="fonts" from="@qflow/fonts-open@1"/>
+  <import as="media-track" from="@qflow/media-track@1"/>
+  <import as="text" from="@qflow/typography-track@1"/>
+  <import as="space" from="@qflow/spatial@1"/>
+  <import as="film" from="@qflow/film@1"/>
+  <import as="render" from="@qflow/render-hyperframes@1"/>
   <import as="studio" source="./studio.svs"/>
 
   <!-- 1. Script: the semantic truth -->
@@ -199,7 +199,7 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
 ### 样式表 (`studio.svs`)
 
 ```svs
-<?svml using="@narratage/svs@1"?>
+<?svml using="@qflow/svs@1"?>
 
 <sheet version="1">
   film.vertical {
@@ -231,7 +231,7 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
 ### Run Source (`build.svrun`)
 
 ```svml
-<?svml using="@narratage/run-markup@1"?>
+<?svml using="@qflow/run-markup@1"?>
 
 <svrun version="1">
   <author source="./main.svml"/>
@@ -242,9 +242,9 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
 ### 编译与验证
 
 ```bash
-narratage check examples/talking-film-graph-check/main.svml
+qflow check examples/talking-film-graph-check/main.svml
 
-narratage plan examples/talking-film-graph-check/build.svrun
+qflow plan examples/talking-film-graph-check/build.svrun
 ```
 
 `check` 编译 Author Graph——验证所有导入、类型和图的边，而不调用任何外部服务。`plan`

@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/speech-basis",
+  "name": "@qflow/speech-basis",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,22 +7,22 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/composition": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/media-track": "workspace:*",
-    "@narratage/program-space": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/speech": "workspace:*"
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/media-track": "workspace:*",
+    "@qflow/program-space": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/speech": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/core": "workspace:*",
-    "@narratage/driver-node": "workspace:*",
-    "@narratage/media-pipeline": "workspace:*",
-    "@narratage/validation": "workspace:*"
+    "@qflow/core": "workspace:*",
+    "@qflow/driver-node": "workspace:*",
+    "@qflow/media-pipeline": "workspace:*",
+    "@qflow/validation": "workspace:*"
   }
 }

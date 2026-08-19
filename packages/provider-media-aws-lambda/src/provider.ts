@@ -1,13 +1,13 @@
-import { mediaTypes } from "@narratage/media";
-import { artifactTypes } from "@narratage/artifact";
-import { mediaPipelineCapabilities } from "@narratage/media-pipeline";
-import { canonicalize } from "@narratage/protocol";
-import type { BlobRef, CanonicalValue } from "@narratage/protocol";
-import { speechTypes } from "@narratage/speech";
-import { defineEndpointPackage } from "@narratage/endpoint-kit";
-import type { EndpointFulfillment, EndpointInvocationContext } from "@narratage/endpoint-kit";
-import { AwsLambdaJsonInvoker } from "@narratage/transport-aws-lambda";
-import type { JsonInvoker } from "@narratage/transport-aws-lambda";
+import { mediaTypes } from "@qflow/media";
+import { artifactTypes } from "@qflow/artifact";
+import { mediaPipelineCapabilities } from "@qflow/media-pipeline";
+import { canonicalize } from "@qflow/protocol";
+import type { BlobRef, CanonicalValue } from "@qflow/protocol";
+import { speechTypes } from "@qflow/speech";
+import { defineEndpointPackage } from "@qflow/endpoint-kit";
+import type { EndpointFulfillment, EndpointInvocationContext } from "@qflow/endpoint-kit";
+import { AwsLambdaJsonInvoker } from "@qflow/transport-aws-lambda";
+import type { JsonInvoker } from "@qflow/transport-aws-lambda";
 
 import {
   MEDIA_LAMBDA_REQUEST,
@@ -17,7 +17,7 @@ import {
 import type { MediaLambdaOperation } from "./contract.js";
 
 export const awsLambdaMediaProviderModuleRef = {
-  name: "@narratage/provider-media-aws-lambda",
+  name: "@qflow/provider-media-aws-lambda",
   version: "1",
 } as const;
 

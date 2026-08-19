@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseStructuredElement } from "@narratage/markup";
-import { sealText, textTypes } from "@narratage/text";
+import { parseStructuredElement } from "@qflow/markup";
+import { sealText, textTypes } from "@qflow/text";
 
 import {
   countSpeechEstimateUnits,
@@ -9,7 +9,7 @@ import {
   estimateSpeechDuration,
   sealSpeechEstimatePolicy,
   speechEstimatePolicyFromRecipe,
-} from "@narratage/estimate";
+} from "@qflow/estimate";
 
 function estimateSurface(source: string) {
   return decodeSpeechEstimateSurface({

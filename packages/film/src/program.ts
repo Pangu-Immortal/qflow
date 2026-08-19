@@ -1,9 +1,9 @@
-import { assertProgramSpaceIdentity } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { assertCanvasSpace } from "@narratage/spatial";
-import type { CanvasSpace } from "@narratage/spatial";
-import { assertAudioTrackIdentity, assertCompositionIdentity, assertVisualTrackIdentity, sealComposition } from "@narratage/composition";
-import type { AudioTrack, Composition, Track, VisualTrack } from "@narratage/composition";
+import { assertProgramSpaceIdentity } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { assertCanvasSpace } from "@qflow/spatial";
+import type { CanvasSpace } from "@qflow/spatial";
+import { assertAudioTrackIdentity, assertCompositionIdentity, assertVisualTrackIdentity, sealComposition } from "@qflow/composition";
+import type { AudioTrack, Composition, Track, VisualTrack } from "@qflow/composition";
 
 import type { FilmProgram, FilmTrackSet } from "./types.js";
 

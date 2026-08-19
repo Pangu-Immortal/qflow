@@ -9,9 +9,9 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 
-import { compileSourceClosure, resolveCompiledSourceExport } from "@narratage/elaborator";
-import type { Digest } from "@narratage/protocol";
-import { createRecordAdmitter } from "@narratage/validation";
+import { compileSourceClosure, resolveCompiledSourceExport } from "@qflow/elaborator";
+import type { Digest } from "@qflow/protocol";
+import { createRecordAdmitter } from "@qflow/validation";
 
 import { officialVideoDomain } from "../official-video.js";
 import { createObserver } from "./observe.js";

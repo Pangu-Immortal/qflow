@@ -2,18 +2,18 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { artifactTypes } from "@narratage/artifact";
-import { compileHyperframesDocument } from "@narratage/hyperframes";
-import type { FontArtifactRef, FontStackRef } from "@narratage/media";
-import { mediaTypes } from "@narratage/media";
-import { sealProgramSpace } from "@narratage/program-space";
-import { spatialTypes } from "@narratage/spatial";
-import { svsRecipeType } from "@narratage/svs";
-import type { SvsRecipe } from "@narratage/svs";
-import { parseStructuredElement } from "@narratage/markup";
-import type { SurfaceResolvedReference } from "@narratage/markup";
-import { sealText } from "@narratage/text";
-import { textTypes } from "@narratage/text";
+import { artifactTypes } from "@qflow/artifact";
+import { compileHyperframesDocument } from "@qflow/hyperframes";
+import type { FontArtifactRef, FontStackRef } from "@qflow/media";
+import { mediaTypes } from "@qflow/media";
+import { sealProgramSpace } from "@qflow/program-space";
+import { spatialTypes } from "@qflow/spatial";
+import { svsRecipeType } from "@qflow/svs";
+import type { SvsRecipe } from "@qflow/svs";
+import { parseStructuredElement } from "@qflow/markup";
+import type { SurfaceResolvedReference } from "@qflow/markup";
+import { sealText } from "@qflow/text";
+import { textTypes } from "@qflow/text";
 
 import {
   appendProgramCommentSticker,
@@ -91,8 +91,8 @@ test("explicit metadata is rendered and the terminal compiler accepts the Track 
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [rendered],
   }, space);
-  assert.match(document.html, /data-narratage-element-id="meta"/u);
-  assert.match(document.html, /data-narratage-element-id="body"/u);
+  assert.match(document.html, /data-qflow-element-id="meta"/u);
+  assert.match(document.html, /data-qflow-element-id="body"/u);
 });
 
 test("SVS controls appearance and local motion but cannot smuggle geometry", () => {
@@ -161,7 +161,7 @@ test("Track Surface lowers mixed program and semantic Stickers to a finite expli
   const blob = { kind: "blob" as const, digest: fixtureDigest("comment-avatar"), size: 128, mediaType: "image/png" };
   const refs = new Map<string, SurfaceResolvedReference>([
     ["video.canvas", authored("video.canvas", spatialTypes.canvas, canvas)],
-    ["video.space", authored("video.space", { module: { name: "@narratage/program-space", version: "1" }, name: "ProgramSpace" }, space)],
+    ["video.space", authored("video.space", { module: { name: "@qflow/program-space", version: "1" }, name: "ProgramSpace" }, space)],
     ["layout.comment", authored("layout.comment", spatialTypes.frame, frame)],
     ["social", authored("social", commentStickerTypes.style, style)],
     ["avatar", authored("avatar", artifactTypes.blob, blob)],

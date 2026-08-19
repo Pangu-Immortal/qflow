@@ -2,15 +2,15 @@ import {
   elaborateGraphFragment,
   exportRunFragment,
   resolveCompiledSourceExport,
-} from "@narratage/elaborator";
-import { canonicalStringify } from "@narratage/protocol";
+} from "@qflow/elaborator";
+import { canonicalStringify } from "@qflow/protocol";
 import type {
   Candidate,
   GraphValueRef,
   ModuleRef,
   OperationNode,
   StoredValue,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 import {
   createProvidedCandidate,
 } from "./candidate.js";

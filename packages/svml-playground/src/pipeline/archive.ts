@@ -8,8 +8,8 @@
  */
 import {
   createRuntimeArchiveFromConfig, createRuntimeArtifactAccessFromConfig,
-} from "@narratage/runtime-local/config";
-import type { BuildState } from "@narratage/protocol";
+} from "@qflow/runtime-local/config";
+import type { BuildState } from "@qflow/protocol";
 
 export type Archive = {
   /** A prior Build by its authored id, or undefined when it is not on this machine. */

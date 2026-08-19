@@ -5,13 +5,13 @@ import {
   decodeMediaPresentation,
   decodeMediaSampleSpec,
   mediaAppearanceKeys,
-} from "@narratage/media-track";
+} from "@qflow/media-track";
 import type {
   MediaPaintLayerSpec,
   MediaSampleLayerSpec,
-} from "@narratage/media-track";
-import type { ContentFit } from "@narratage/spatial";
-import type { SvsRecipe } from "@narratage/svs";
+} from "@qflow/media-track";
+import type { ContentFit } from "@qflow/spatial";
+import type { SvsRecipe } from "@qflow/svs";
 
 import {
   sealDepthStackCardSpec,

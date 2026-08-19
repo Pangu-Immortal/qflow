@@ -1,9 +1,9 @@
-import { programSpaceTypes } from "@narratage/program-space";
-import { spatialTypes } from "@narratage/spatial";
-import { compositionTypes } from "@narratage/composition";
-import type { Track } from "@narratage/composition";
-import { sealGraphFragment } from "@narratage/elaborator";
-import type { FragmentOperation } from "@narratage/elaborator";
+import { programSpaceTypes } from "@qflow/program-space";
+import { spatialTypes } from "@qflow/spatial";
+import { compositionTypes } from "@qflow/composition";
+import type { Track } from "@qflow/composition";
+import { sealGraphFragment } from "@qflow/elaborator";
+import type { FragmentOperation } from "@qflow/elaborator";
 
 import { filmProducers, filmTypes } from "./manifest.js";
 import type { FilmAssemblyFragmentOptions, FilmTrackInput } from "./types.js";

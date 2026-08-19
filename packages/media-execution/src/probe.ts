@@ -1,6 +1,6 @@
-import { sealMediaInspection } from "@narratage/media";
-import type { MediaAudioStream, MediaInspection, MediaOtherStream, MediaRational, MediaStream, MediaTimestamp, MediaVideoStream } from "@narratage/media";
-import type { BlobRef } from "@narratage/protocol";
+import { sealMediaInspection } from "@qflow/media";
+import type { MediaAudioStream, MediaInspection, MediaOtherStream, MediaRational, MediaStream, MediaTimestamp, MediaVideoStream } from "@qflow/media";
+import type { BlobRef } from "@qflow/protocol";
 
 type JsonObject = Record<string, unknown>;
 

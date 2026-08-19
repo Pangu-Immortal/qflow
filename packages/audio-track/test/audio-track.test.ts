@@ -17,29 +17,29 @@ import {
   sealAudioClipSpec,
   sealAudioTrackHeader,
   decodeAudioTrackSurface,
-} from "@narratage/audio-track";
-import type { AudioClipSpec, AudioTrackSet } from "@narratage/audio-track";
-import { artifactManifest } from "@narratage/artifact";
-import { registerTypeValidatorFacets } from "@narratage/component-kit";
-import { sealComposition, compositionManifest, compositionTypes } from "@narratage/composition";
-import { createResolvedClosure, sealBuildRequest, start } from "@narratage/core";
-import { AuthorFrontendRegistry, compileSourceClosure, resolveCompiledSourceExport } from "@narratage/elaborator";
-import type { SynchronizedMedia } from "@narratage/media";
-import { mediaComponent, mediaDependency, mediaManifest, mediaTypes } from "@narratage/media";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import { narrativeManifest } from "@narratage/narrative";
-import { compileAudioProgramPlan } from "@narratage/media-pipeline";
-import { programSpaceDependency, programSpaceManifest, programSpaceTypes, sealProgramSpace } from "@narratage/program-space";
-import type { ModuleManifest } from "@narratage/protocol";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import { semanticMapManifest } from "@narratage/semantic-map";
-import { speechEvidenceManifest } from "@narratage/speech-evidence";
-import { speechManifest } from "@narratage/speech";
-import { spatialManifest } from "@narratage/spatial";
-import { temporalManifest } from "@narratage/temporal";
-import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@narratage/markup";
-import { createRecordAdmitter, TypeValidatorRegistry } from "@narratage/validation";
-import { visualIrManifest } from "@narratage/visual-ir";
+} from "@qflow/audio-track";
+import type { AudioClipSpec, AudioTrackSet } from "@qflow/audio-track";
+import { artifactManifest } from "@qflow/artifact";
+import { registerTypeValidatorFacets } from "@qflow/component-kit";
+import { sealComposition, compositionManifest, compositionTypes } from "@qflow/composition";
+import { createResolvedClosure, sealBuildRequest, start } from "@qflow/core";
+import { AuthorFrontendRegistry, compileSourceClosure, resolveCompiledSourceExport } from "@qflow/elaborator";
+import type { SynchronizedMedia } from "@qflow/media";
+import { mediaComponent, mediaDependency, mediaManifest, mediaTypes } from "@qflow/media";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import { narrativeManifest } from "@qflow/narrative";
+import { compileAudioProgramPlan } from "@qflow/media-pipeline";
+import { programSpaceDependency, programSpaceManifest, programSpaceTypes, sealProgramSpace } from "@qflow/program-space";
+import type { ModuleManifest } from "@qflow/protocol";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import { semanticMapManifest } from "@qflow/semantic-map";
+import { speechEvidenceManifest } from "@qflow/speech-evidence";
+import { speechManifest } from "@qflow/speech";
+import { spatialManifest } from "@qflow/spatial";
+import { temporalManifest } from "@qflow/temporal";
+import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup";
+import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
+import { visualIrManifest } from "@qflow/visual-ir";
 
 const space = sealProgramSpace({
   durationSec: 10,
@@ -237,7 +237,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
     outputs: [mediaTypes.synchronized, programSpaceTypes.programSpace],
   } as const;
   const fixtureManifest: ModuleManifest = {
-    format: "narratage.module@1",
+    format: "qflow.module@1",
     name: fixtureModule.name,
     version: fixtureModule.version,
     dependencies: [mediaDependency, programSpaceDependency],
@@ -285,10 +285,10 @@ test("the self-described Audio Surface parses into the same finite Producer grap
     entry: {
       id: "/project/audio.svml",
       name: "audio.svml",
-      text: `<?svml using="@narratage/markup@1"?>
+      text: `<?svml using="@qflow/markup@1"?>
       <svml>
         <import as="fixture" from="example.audio-inputs@1"/>
-        <import as="audio" from="@narratage/audio-track@1"/>
+        <import as="audio" from="@qflow/audio-track@1"/>
         <fixture:Inputs/>
         <audio:Track id="sound" space={space}>
           <audio:Clip source={source} during="program" playback="loop-end" gain="0.5" fade-in="2f" fade-out="3f"/>

@@ -1,21 +1,21 @@
-import { artifactDependency } from "@narratage/artifact";
-import { mediaDependency, mediaTypes } from "@narratage/media";
-import { compositionDependency } from "@narratage/composition";
+import { artifactDependency } from "@qflow/artifact";
+import { mediaDependency, mediaTypes } from "@qflow/media";
+import { compositionDependency } from "@qflow/composition";
 import {
   hyperframesManifest,
   hyperframesModuleRef,
   hyperframesTypes,
-} from "@narratage/hyperframes";
+} from "@qflow/hyperframes";
 import type {
   CapabilityRef,
   ModuleManifest,
   ProducerRef,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 import {
   mediaPipelineModuleRef,
-} from "@narratage/media-pipeline";
+} from "@qflow/media-pipeline";
 
-export const renderHyperframesModuleRef = { name: "@narratage/render-hyperframes", version: "1" } as const;
+export const renderHyperframesModuleRef = { name: "@qflow/render-hyperframes", version: "1" } as const;
 export const renderHyperframesCapabilities = {
   renderVisual: { module: renderHyperframesModuleRef, name: "render-visual" },
 } satisfies Record<string, CapabilityRef>;
@@ -32,7 +32,7 @@ export const renderHyperframesMarkupSurfaces = [{
 
 
 export const renderHyperframesManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: renderHyperframesModuleRef.name,
   version: renderHyperframesModuleRef.version,
   dependencies: [

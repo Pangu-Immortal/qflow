@@ -1,7 +1,7 @@
 import {
   maskSourceHeader,
   parseSourceHeader,
-} from "@narratage/source";
+} from "@qflow/source";
 
 import type {
   RunDocument,

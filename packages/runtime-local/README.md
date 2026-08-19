@@ -1,23 +1,23 @@
-# `@narratage/runtime-local`
+# `@qflow/runtime-local`
 
-The default local Runtime for Narratage. It owns the Worker, scheduler, SQLite state and Build queue.
+The default local Runtime for Qflow. It owns the Worker, scheduler, SQLite state and Build queue.
 It contains no video, authoring or Provider policy.
 
 A Runtime Profile selects only the environmental parts that genuinely vary:
 
 ```json
 {
-  "format": "narratage.runtime-profile@1",
+  "format": "qflow.runtime-profile@1",
   "runtime": {
-    "use": "@narratage/runtime-local",
+    "use": "@qflow/runtime-local",
     "config": {
-      "dataRoot": ".narratage/runtimes/local",
+      "dataRoot": ".qflow/runtimes/local",
       "artifacts": {
-        "use": "@narratage/artifact-store-fs",
+        "use": "@qflow/artifact-store-fs",
         "config": { "path": "artifacts" }
       },
       "credentials": {
-        "environment": { "use": "@narratage/credential-store-env" }
+        "environment": { "use": "@qflow/credential-store-env" }
       },
       "endpoints": {}
     }

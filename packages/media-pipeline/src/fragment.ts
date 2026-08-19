@@ -1,6 +1,6 @@
-import { mediaTypes } from "@narratage/media";
-import { artifactTypes } from "@narratage/artifact";
-import { sealGraphFragment } from "@narratage/elaborator";
+import { mediaTypes } from "@qflow/media";
+import { artifactTypes } from "@qflow/artifact";
+import { sealGraphFragment } from "@qflow/elaborator";
 
 import {
   mediaPipelineProducers,

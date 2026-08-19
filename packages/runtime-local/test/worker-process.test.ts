@@ -12,12 +12,12 @@ import {
 } from "../src/worker-process.js";
 
 test("one detached Runtime Worker can be started, observed and stopped", async () => {
-  const root = await mkdtemp(join(tmpdir(), "narratage-runtime-process-"));
+  const root = await mkdtemp(join(tmpdir(), "qflow-runtime-process-"));
   const profile = join(root, "runtime.json");
-  const dataRoot = join(root, ".narratage", "runtimes", "local");
-  await writeFile(profile, JSON.stringify({ format: "narratage.runtime-profile@1" }), "utf8");
-  await mkdir(join(root, ".narratage"), { recursive: true });
-  await writeFile(join(root, ".narratage", "runtime"), "runtime.json\n", "utf8");
+  const dataRoot = join(root, ".qflow", "runtimes", "local");
+  await writeFile(profile, JSON.stringify({ format: "qflow.runtime-profile@1" }), "utf8");
+  await mkdir(join(root, ".qflow"), { recursive: true });
+  await writeFile(join(root, ".qflow", "runtime"), "runtime.json\n", "utf8");
   const program = `
     const fs = require("node:fs");
     const path = require("node:path");
@@ -38,7 +38,7 @@ test("one detached Runtime Worker can be started, observed and stopped", async (
     );
     assert.equal(first.state, "running");
     assert.ok(first.pid);
-    assert.equal(await readFile(join(root, ".narratage", "runtime"), "utf8"), "runtime.json\n");
+    assert.equal(await readFile(join(root, ".qflow", "runtime"), "utf8"), "runtime.json\n");
 
     const second = await ensureRuntimeProcess(
       profile,

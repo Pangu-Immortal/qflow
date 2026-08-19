@@ -6,7 +6,7 @@ WhisperX/OpenCV, `uv` for locked Python environments, and `ffmpeg`/`ffprobe` for
 macOS/Linux or Windows PowerShell:
 
 ```text
-node .agents/skills/narratage/scripts/check-environment.mjs
+node .agents/skills/qflow/scripts/check-environment.mjs
 ```
 
 If the probe reports `corepack missing` (some newer Node.js distributions do not bundle it), install
@@ -33,11 +33,11 @@ For managed local programs:
 uv python install 3.13
 uv sync --project services/whisperx --frozen
 uv sync --project services/image-opencv --frozen
-uv run --project services/whisperx --frozen narratage-whisperx-prepare
-narratage runtime use narratage.runtime.json
-narratage doctor
-narratage runtime up
-narratage runtime status
+uv run --project services/whisperx --frozen qflow-whisperx-prepare
+qflow runtime use qflow.runtime.json
+qflow doctor
+qflow runtime up
+qflow runtime status
 ```
 
 Use `runtime up` for normal Build preparation: it owns the detached durable Worker and prepares the external

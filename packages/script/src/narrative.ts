@@ -1,13 +1,13 @@
-import { canonicalize } from "@narratage/protocol";
-import type { CanonicalValue } from "@narratage/protocol";
+import { canonicalize } from "@qflow/protocol";
+import type { CanonicalValue } from "@qflow/protocol";
 import type {
   CaptionCorrespondence,
   CaptionDisplayAtom,
   CaptionDisplaySequence,
   CaptionDisplayWord,
   CaptionDisplayWordSubset,
-} from "@narratage/narrative";
-import { sealText } from "@narratage/text";
+} from "@qflow/narrative";
+import { sealText } from "@qflow/text";
 
 import type { ParsedCaptionRegion, ParsedNarrative } from "./types.js";
 

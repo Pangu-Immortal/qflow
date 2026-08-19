@@ -6,13 +6,13 @@
  * Capability means - the Providers declare what they fulfil, and a Need nobody
  * can fulfil is reported rather than faked.
  */
-import { EndpointRegistry, MemoryArtifactStore, NodeDriver } from "@narratage/driver-node";
-import type { EndpointPackage } from "@narratage/endpoint-kit";
-import type { ArtifactStore } from "@narratage/runtime";
-import type { BuildState } from "@narratage/protocol";
-import { createLocalHyperframesProvider } from "@narratage/provider-hyperframes-local";
-import { createLocalMediaProvider } from "@narratage/provider-media-local";
-import { createLocalWhisperXProvider } from "@narratage/provider-whisperx-local";
+import { EndpointRegistry, MemoryArtifactStore, NodeDriver } from "@qflow/driver-node";
+import type { EndpointPackage } from "@qflow/endpoint-kit";
+import type { ArtifactStore } from "@qflow/runtime";
+import type { BuildState } from "@qflow/protocol";
+import { createLocalHyperframesProvider } from "@qflow/provider-hyperframes-local";
+import { createLocalMediaProvider } from "@qflow/provider-media-local";
+import { createLocalWhisperXProvider } from "@qflow/provider-whisperx-local";
 
 import { officialVideoDomain } from "../official-video.js";
 

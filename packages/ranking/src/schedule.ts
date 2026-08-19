@@ -1,27 +1,27 @@
 import {
   assertFontArtifactRef,
   verifySynchronizedMedia,
-} from "@narratage/media";
-import type { SynchronizedMedia } from "@narratage/media";
+} from "@qflow/media";
+import type { SynchronizedMedia } from "@qflow/media";
 import type {
   NarrativeMomentRef,
   NarrativeSelectionRef,
-} from "@narratage/narrative";
+} from "@qflow/narrative";
 import {
   assertProgramSpaceIdentity,
   programSpaceFrameCount,
-} from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { canonicalize, isDigest } from "@narratage/protocol";
-import { verifyText } from "@narratage/text";
-import type { Text } from "@narratage/text";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import { assertSpatialFrame } from "@narratage/spatial";
+} from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { canonicalize, isDigest } from "@qflow/protocol";
+import { verifyText } from "@qflow/text";
+import type { Text } from "@qflow/text";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import { assertSpatialFrame } from "@qflow/spatial";
 import {
   locateMomentOccurrences,
   locateSelectionOccurrences,
   resolveTriggeredSchedule,
-} from "@narratage/temporal";
+} from "@qflow/temporal";
 
 import type {
   ColumnItem,
@@ -486,7 +486,7 @@ export function fitTypewriterStage(
   };
 }
 
-export function buildTierBoardProgram(header: RankingHeader, frameValue: import("@narratage/spatial").SpatialFrame, schedule: RankingSchedule, style: TierBoardStyle, set: TierBoardItemSet): TierBoardProgram {
+export function buildTierBoardProgram(header: RankingHeader, frameValue: import("@qflow/spatial").SpatialFrame, schedule: RankingSchedule, style: TierBoardStyle, set: TierBoardItemSet): TierBoardProgram {
   assert(header.variant === "tier-board" && schedule.variant === "tier-board", "TierBoard variant is inconsistent.");
   assertSpatialFrame(frameValue);
   assertTierBoardStyle(style);
@@ -498,7 +498,7 @@ export function buildTierBoardProgram(header: RankingHeader, frameValue: import(
   return canonicalize(result) as unknown as TierBoardProgram;
 }
 
-export function buildColumnProgram(header: RankingHeader, frameValue: import("@narratage/spatial").SpatialFrame, schedule: RankingSchedule, style: ColumnStyle, set: ColumnItemSet): ColumnProgram {
+export function buildColumnProgram(header: RankingHeader, frameValue: import("@qflow/spatial").SpatialFrame, schedule: RankingSchedule, style: ColumnStyle, set: ColumnItemSet): ColumnProgram {
   assert(header.variant === "column" && schedule.variant === "column", "Column variant is inconsistent.");
   assertSpatialFrame(frameValue);
   assertColumnStyle(style);
@@ -508,7 +508,7 @@ export function buildColumnProgram(header: RankingHeader, frameValue: import("@n
   return canonicalize(result) as unknown as ColumnProgram;
 }
 
-export function buildTopThreeProgram(header: RankingHeader, frameValue: import("@narratage/spatial").SpatialFrame, schedule: RankingSchedule, style: TopThreeStyle, set: TopThreeItemSet): TopThreeProgram {
+export function buildTopThreeProgram(header: RankingHeader, frameValue: import("@qflow/spatial").SpatialFrame, schedule: RankingSchedule, style: TopThreeStyle, set: TopThreeItemSet): TopThreeProgram {
   assert(header.variant === "top-three" && schedule.variant === "top-three", "TopThree variant is inconsistent.");
   assertSpatialFrame(frameValue);
   assertTopThreeStyle(style);
@@ -523,7 +523,7 @@ export function graphemes(text: string): string[] {
   return [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(text)].map((value) => value.segment);
 }
 
-export function buildTypewriterListProgram(header: RankingHeader, title: string, frameValue: import("@narratage/spatial").SpatialFrame, schedule: RankingSchedule, style: TypewriterListStyle, set: TypewriterItemSet): TypewriterListProgram {
+export function buildTypewriterListProgram(header: RankingHeader, title: string, frameValue: import("@qflow/spatial").SpatialFrame, schedule: RankingSchedule, style: TypewriterListStyle, set: TypewriterItemSet): TypewriterListProgram {
   assert(header.variant === "typewriter-list" && schedule.variant === "typewriter-list", "TypewriterList variant is inconsistent.");
   assert(title.trim().length > 0, "TypewriterList title is empty.");
   assertSpatialFrame(frameValue);

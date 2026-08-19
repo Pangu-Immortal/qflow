@@ -1,8 +1,8 @@
-import { sealGenerationPortRequest, sealGenerationRequestDraft, sealGenerationPortTable } from "@narratage/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@narratage/generation";
-import { defineExactModelModule } from "@narratage/model-kit";
+import { sealGenerationPortRequest, sealGenerationRequestDraft, sealGenerationPortTable } from "@qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
+import { defineExactModelModule } from "@qflow/model-kit";
 
-export const mimoTtsModuleRef = { name: "@narratage/mimo-tts", version: "1" } as const;
+export const mimoTtsModuleRef = { name: "@qflow/mimo-tts", version: "1" } as const;
 export const mimoTtsModels = [
   "mimo-v2.5-tts",
   "mimo-v2.5-tts-voicedesign",

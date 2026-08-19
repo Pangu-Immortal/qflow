@@ -4,17 +4,17 @@ import type {
   EndpointScheduling,
   ImmediateEndpointHandler,
   AsyncEndpoint,
-} from "@narratage/endpoint-kit";
+} from "@qflow/endpoint-kit";
 import type {
   ProducerRegistrar,
-} from "@narratage/component-kit";
+} from "@qflow/component-kit";
 import type {
   CapabilityRef,
   Need,
   ProducerRef,
   TypeRef,
-} from "@narratage/protocol";
-import { verifyCredentialRef } from "@narratage/runtime";
+} from "@qflow/protocol";
+import { verifyCredentialRef } from "@qflow/runtime";
 
 import type {
   ProducerHandler,

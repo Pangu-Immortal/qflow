@@ -1,21 +1,21 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { GenerateContentResponse, GoogleGenAIOptions, Schema } from "@google/genai";
-import { captionTypes } from "@narratage/caption";
+import { captionTypes } from "@qflow/caption";
 import {
   captionGeminiCapabilities,
   sealCaptionGeminiPlan,
   verifyCaptionGeminiRequest,
-} from "@narratage/caption-gemini";
-import type { CaptionGeminiRequest } from "@narratage/caption-gemini";
-import { defineEndpointPackage } from "@narratage/endpoint-kit";
-import type { EndpointFulfillment, EndpointInvocationContext } from "@narratage/endpoint-kit";
-import { canonicalize } from "@narratage/protocol";
-import type { CanonicalValue } from "@narratage/protocol";
-import { credentialRef } from "@narratage/runtime";
-import type { CredentialRef } from "@narratage/runtime";
+} from "@qflow/caption-gemini";
+import type { CaptionGeminiRequest } from "@qflow/caption-gemini";
+import { defineEndpointPackage } from "@qflow/endpoint-kit";
+import type { EndpointFulfillment, EndpointInvocationContext } from "@qflow/endpoint-kit";
+import { canonicalize } from "@qflow/protocol";
+import type { CanonicalValue } from "@qflow/protocol";
+import { credentialRef } from "@qflow/runtime";
+import type { CredentialRef } from "@qflow/runtime";
 
 export const googleVertexProviderModuleRef = {
-  name: "@narratage/provider-google-vertex",
+  name: "@qflow/provider-google-vertex",
   version: "1",
 } as const;
 type GenerateCaptionContentInput = {

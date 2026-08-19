@@ -1,12 +1,12 @@
-import { compositionTypes } from "@narratage/composition";
-import { sealGraphFragment } from "@narratage/elaborator";
-import type { FragmentOperation, GraphFragment } from "@narratage/elaborator";
-import { mediaTypes } from "@narratage/media";
-import { narrativeTypes } from "@narratage/narrative";
-import { programSpaceTypes } from "@narratage/program-space";
-import { semanticMapTypes } from "@narratage/semantic-map";
-import { spatialTypes } from "@narratage/spatial";
-import { textTypes } from "@narratage/text";
+import { compositionTypes } from "@qflow/composition";
+import { sealGraphFragment } from "@qflow/elaborator";
+import type { FragmentOperation, GraphFragment } from "@qflow/elaborator";
+import { mediaTypes } from "@qflow/media";
+import { narrativeTypes } from "@qflow/narrative";
+import { programSpaceTypes } from "@qflow/program-space";
+import { semanticMapTypes } from "@qflow/semantic-map";
+import { spatialTypes } from "@qflow/spatial";
+import { textTypes } from "@qflow/text";
 
 import { rankingProducers, rankingTypes } from "./manifest.js";
 import type { RankingVariant } from "./types.js";

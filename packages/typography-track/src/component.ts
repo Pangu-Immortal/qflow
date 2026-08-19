@@ -1,12 +1,12 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import type { ProgramSpace } from "@narratage/program-space";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import type { CompositableSurfaceRef } from "@narratage/media";
-import type { SpatialFrame, SpatialPath, SpatialPoint } from "@narratage/spatial";
-import type { StoredValue } from "@narratage/protocol";
-import type { Text } from "@narratage/text";
-import { canonicalize } from "@narratage/protocol";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import type { ProgramSpace } from "@qflow/program-space";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import type { CompositableSurfaceRef } from "@qflow/media";
+import type { SpatialFrame, SpatialPath, SpatialPoint } from "@qflow/spatial";
+import type { StoredValue } from "@qflow/protocol";
+import type { Text } from "@qflow/text";
+import { canonicalize } from "@qflow/protocol";
 
 import { typographyTrackProducers } from "./manifest.js";
 import { appendMomentTextItem, appendProgramTextItem, appendSelectionTextItem, bindAreaTextPlacement, bindPathTextPlacement, bindPointTextPlacement, createTypographyTrackSet, finalizeTypographyTrack, renderTypographyTrack, renderTextMaskTrack, materializePlainTextItem } from "./program.js";

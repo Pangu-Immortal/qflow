@@ -1,4 +1,4 @@
-import type { ProgramSpace } from "@narratage/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
 
 import type { TemporalDuration } from "./types.js";
 

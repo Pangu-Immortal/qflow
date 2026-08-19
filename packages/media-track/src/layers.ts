@@ -2,15 +2,15 @@ import {
   assertCompositableSurfaceRef,
   synchronizedMediaSampleFrames,
   verifySynchronizedMedia,
-} from "@narratage/media";
-import type { CompositableSurfaceRef, SynchronizedMedia } from "@narratage/media";
-import { canonicalize, isDigest } from "@narratage/protocol";
-import type { BlobRef } from "@narratage/protocol";
+} from "@qflow/media";
+import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
+import { canonicalize, isDigest } from "@qflow/protocol";
+import type { BlobRef } from "@qflow/protocol";
 import {
   assertContentFit,
   assertIntrinsicExtent,
-} from "@narratage/spatial";
-import type { ContentFit, IntrinsicExtent } from "@narratage/spatial";
+} from "@qflow/spatial";
+import type { ContentFit, IntrinsicExtent } from "@qflow/spatial";
 
 import type {
   MediaGradientStop,

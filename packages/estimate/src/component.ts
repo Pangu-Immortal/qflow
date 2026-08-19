@@ -1,7 +1,7 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
-import type { Text } from "@narratage/text";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
+import type { Text } from "@qflow/text";
 
 import { estimateProducers } from "./manifest.js";
 import { estimateSpeechDuration } from "./program.js";

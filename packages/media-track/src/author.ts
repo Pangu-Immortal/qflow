@@ -1,6 +1,6 @@
-import type { SvsRecipe } from "@narratage/svs";
-import { decodeContentFitProperties } from "@narratage/spatial";
-import type { ContentFit } from "@narratage/spatial";
+import type { SvsRecipe } from "@qflow/svs";
+import { decodeContentFitProperties } from "@qflow/spatial";
+import type { ContentFit } from "@qflow/spatial";
 
 import {
   sealMediaPaintLayerSpec,

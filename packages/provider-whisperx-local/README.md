@@ -1,6 +1,6 @@
-# @narratage/provider-whisperx-local
+# @qflow/provider-whisperx-local
 
-Trusted local Provider for the explicit `@narratage/whisperx#whisperx-alignment` capability. It talks to
+Trusted local Provider for the explicit `@qflow/whisperx#whisperx-alignment` capability. It talks to
 the warm Python service in `services/whisperx` through `/health` and `/transcribe`.
 
 The Provider accepts only canonical 16 kHz mono PCM s16 WAV bytes produced by the separate media

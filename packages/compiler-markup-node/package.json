@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/compiler-markup-node",
+  "name": "@qflow/compiler-markup-node",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -8,15 +8,15 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@narratage/compiler-node": "workspace:*",
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/workspace": "workspace:*",
-    "@narratage/package-loader-node": "workspace:*",
-    "@narratage/markup": "workspace:*",
-    "@narratage/validation": "workspace:*"
+    "@qflow/compiler-node": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/workspace": "workspace:*",
+    "@qflow/package-loader-node": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/validation": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/workspace-fs-node": "workspace:*"
+    "@qflow/workspace-fs-node": "workspace:*"
   }
 }

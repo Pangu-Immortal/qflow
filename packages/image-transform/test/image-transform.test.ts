@@ -10,10 +10,10 @@ import {
   imageTransformManifest,
   imageTransformTypes,
   sealImageTransformProgram,
-} from "@narratage/image-transform";
-import { artifactTypes } from "@narratage/artifact";
-import { rasterCapabilities } from "@narratage/raster";
-import type { CanonicalValue, TypedRecord } from "@narratage/protocol";
+} from "@qflow/image-transform";
+import { artifactTypes } from "@qflow/artifact";
+import { rasterCapabilities } from "@qflow/raster";
+import type { CanonicalValue, TypedRecord } from "@qflow/protocol";
 
 test("the GPT Image cleanup is one explicit reusable Program", () => {
   assert.deepEqual(gptImageDenoiseV1.operations, [{

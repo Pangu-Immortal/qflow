@@ -1,11 +1,11 @@
 ---
 title: Runtime
-description: The execution boundary outside Narratage source and Core.
+description: The execution boundary outside Qflow source and Core.
 ---
 
 # Runtime
 
-Narratage keeps three decisions separate:
+Qflow keeps three decisions separate:
 
 | Owner | Decides |
 |---|---|
@@ -17,7 +17,7 @@ Core is a domain neutral state machine. It accepts facts, derives Commands and v
 Records. It does not start processes, read credentials, choose Providers or know that a Build makes
 video.
 
-`@narratage/runtime-local` is the default execution environment. It owns one Worker, scheduler, Build
+`@qflow/runtime-local` is the default execution environment. It owns one Worker, scheduler, Build
 queue and SQLite database. Those are one implementation, not user-selectable pseudo-components.
 
 ## Runtime Profile
@@ -26,20 +26,20 @@ The Profile contains only environmental choices that genuinely vary:
 
 ```json
 {
-  "format": "narratage.runtime-profile@1",
+  "format": "qflow.runtime-profile@1",
   "runtime": {
-    "use": "@narratage/runtime-local",
+    "use": "@qflow/runtime-local",
     "config": {
-      "dataRoot": ".narratage/runtimes/local",
+      "dataRoot": ".qflow/runtimes/local",
       "artifacts": {
-        "use": "@narratage/artifact-store-fs",
+        "use": "@qflow/artifact-store-fs",
         "config": { "path": "artifacts" }
       },
       "credentials": {
-        "environment": { "use": "@narratage/credential-store-env" }
+        "environment": { "use": "@qflow/credential-store-env" }
       },
       "endpoints": {
-        "media": { "use": "@narratage/provider-media-local" }
+        "media": { "use": "@qflow/provider-media-local" }
       }
     }
   }
@@ -58,7 +58,7 @@ contains no Workspace, author imports or creative routing.
 Selecting a Profile writes a project pointer. Execution data stays under `dataRoot`:
 
 ```text
-.narratage/
+.qflow/
   runtime
   runtimes/
     local/
@@ -90,9 +90,9 @@ An Endpoint may declare a long-lived helper such as a warm local WhisperX servic
 its probe and optional start command; the local Runtime only supervises it.
 
 ```bash
-narratage programs status
-narratage programs up
-narratage programs down
+qflow programs status
+qflow programs up
+qflow programs down
 ```
 
 Program commands load Endpoint packages only. They do not open SQLite, Artifact Stores or Credential
@@ -101,11 +101,11 @@ Stores.
 ## Lifecycle
 
 ```bash
-narratage runtime use narratage.runtime.json
-narratage runtime up
-narratage runtime status
-narratage runtime logs
-narratage runtime down
+qflow runtime use qflow.runtime.json
+qflow runtime up
+qflow runtime status
+qflow runtime logs
+qflow runtime down
 ```
 
 `runtime up` starts the local Worker. `build` submits work; `status`, `queue` and `cancel` observe or

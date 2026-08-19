@@ -1,6 +1,6 @@
-import { isDigest } from "@narratage/protocol";
-import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@narratage/program-space";
-import { assertContentFit, assertIntrinsicExtent, assertSpatialFrame } from "@narratage/spatial";
+import { isDigest } from "@qflow/protocol";
+import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
+import { assertContentFit, assertIntrinsicExtent, assertSpatialFrame } from "@qflow/spatial";
 import type { SpeechAudioBasis, SpeechBasis, SpeechDuration, SpeechEvidenceAudio } from "./types.js";
 function assertAudioBlob(value: SpeechBasis["audio"], label: string): void {
   if (value.kind !== "blob" || !isDigest(value.digest) || !Number.isSafeInteger(value.size)

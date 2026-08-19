@@ -1,4 +1,4 @@
-# `@narratage/caption`
+# `@qflow/caption`
 
 Style-family-neutral Caption contracts and deterministic whole-Atom timing.
 

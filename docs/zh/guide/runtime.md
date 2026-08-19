@@ -1,11 +1,11 @@
 ---
 title: Runtime
-description: Narratage Source 与 Core 之外的执行边界。
+description: Qflow Source 与 Core 之外的执行边界。
 ---
 
 # Runtime
 
-Narratage 把三个决定分开：
+Qflow 把三个决定分开：
 
 | 所有者 | 决定什么 |
 |---|---|
@@ -16,7 +16,7 @@ Narratage 把三个决定分开：
 Core 是领域无关的状态机。它接收事实、派生 Command、验证 Record，不启动进程、不读取凭证、
 不选择 Provider，也不知道 Build 最终是不是视频。
 
-`@narratage/runtime-local` 是默认执行环境。它自己拥有 Worker、调度器、Build 队列和 SQLite。
+`@qflow/runtime-local` 是默认执行环境。它自己拥有 Worker、调度器、Build 队列和 SQLite。
 这些是同一个本地实现，不再伪装成需要用户逐项选择的组件。
 
 ## Runtime Profile
@@ -25,20 +25,20 @@ Profile 只保留真正会随环境变化的选择：
 
 ```json
 {
-  "format": "narratage.runtime-profile@1",
+  "format": "qflow.runtime-profile@1",
   "runtime": {
-    "use": "@narratage/runtime-local",
+    "use": "@qflow/runtime-local",
     "config": {
-      "dataRoot": ".narratage/runtimes/local",
+      "dataRoot": ".qflow/runtimes/local",
       "artifacts": {
-        "use": "@narratage/artifact-store-fs",
+        "use": "@qflow/artifact-store-fs",
         "config": { "path": "artifacts" }
       },
       "credentials": {
-        "environment": { "use": "@narratage/credential-store-env" }
+        "environment": { "use": "@qflow/credential-store-env" }
       },
       "endpoints": {
-        "media": { "use": "@narratage/provider-media-local" }
+        "media": { "use": "@qflow/provider-media-local" }
       }
     }
   }
@@ -56,7 +56,7 @@ Provider 实现。
 选择 Profile 会写入项目指针，执行数据位于 `dataRoot`：
 
 ```text
-.narratage/
+.qflow/
   runtime
   runtimes/
     local/
@@ -87,9 +87,9 @@ Endpoint 可以声明 WhisperX 这类需要常驻的辅助程序。Endpoint 提�
 Runtime 只负责管理它。
 
 ```bash
-narratage programs status
-narratage programs up
-narratage programs down
+qflow programs status
+qflow programs up
+qflow programs down
 ```
 
 这些命令只加载 Endpoint 包，不打开 SQLite、Artifact Store 或 Credential Store。
@@ -97,11 +97,11 @@ narratage programs down
 ## 生命周期
 
 ```bash
-narratage runtime use narratage.runtime.json
-narratage runtime up
-narratage runtime status
-narratage runtime logs
-narratage runtime down
+qflow runtime use qflow.runtime.json
+qflow runtime up
+qflow runtime status
+qflow runtime logs
+qflow runtime down
 ```
 
 `runtime up` 启动本地 Worker。`build` 提交任务，`status`、`queue`、`cancel` 用来观察和控制。

@@ -1,31 +1,31 @@
 {
-  "format": "narratage.runtime-profile@1",
+  "format": "qflow.runtime-profile@1",
   "runtime": {
-    "use": "@narratage/runtime-local",
+    "use": "@qflow/runtime-local",
     "config": {
-      "dataRoot": ".narratage/runtimes/local",
-      "artifacts": { "use": "@narratage/artifact-store-fs", "config": { "path": "artifacts" } },
+      "dataRoot": ".qflow/runtimes/local",
+      "artifacts": { "use": "@qflow/artifact-store-fs", "config": { "path": "artifacts" } },
       "credentials": {
-        "environment": { "use": "@narratage/credential-store-env" }
+        "environment": { "use": "@qflow/credential-store-env" }
       },
       "endpoints": {
         "kie.talking-head-aroll": {
-          "use": "@narratage/provider-kie",
+          "use": "@qflow/provider-kie",
           "config": {
             "apiKey": { "store": "env", "key": "KIE_API_KEY" },
             "defaultConcurrency": 2
           }
         },
         "media.talking-head-aroll": {
-          "use": "@narratage/provider-media-local",
+          "use": "@qflow/provider-media-local",
           "config": { "defaultConcurrency": 2 }
         },
         "whisperx.talking-head-aroll": {
-          "use": "@narratage/provider-whisperx-local",
+          "use": "@qflow/provider-whisperx-local",
           "config": { "defaultConcurrency": 1 }
         },
         "vertex.talking-head-aroll": {
-          "use": "@narratage/provider-google-vertex",
+          "use": "@qflow/provider-google-vertex",
           "config": {
             "projectEnv": "GOOGLE_CLOUD_PROJECT",
             "credentials": { "store": "env", "key": "GOOGLE_APPLICATION_CREDENTIALS_JSON" },
@@ -34,7 +34,7 @@
           }
         },
         "hyperframes.talking-head-aroll": {
-          "use": "@narratage/provider-hyperframes-local",
+          "use": "@qflow/provider-hyperframes-local",
           "config": { "workers": 2, "quality": "standard", "defaultConcurrency": 1 }
         }
       }

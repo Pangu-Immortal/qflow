@@ -7,14 +7,14 @@ import type {
   SourceAssetRequest,
   SourceImportRequest,
   SourceUnit,
-} from "@narratage/source";
+} from "@qflow/source";
 import type {
   ArtifactAttachment,
   Workspace,
   WorkspaceSession,
-} from "@narratage/workspace";
-import { WorkspaceError } from "@narratage/workspace";
-import type { BlobRef } from "@narratage/protocol";
+} from "@qflow/workspace";
+import { WorkspaceError } from "@qflow/workspace";
+import type { BlobRef } from "@qflow/protocol";
 
 function isWithin(root: string, path: string): boolean {
   const relation = relative(root, path);

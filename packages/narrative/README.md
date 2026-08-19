@@ -1,3 +1,3 @@
-# `@narratage/narrative`
+# `@qflow/narrative`
 
 Public, provider-neutral contracts for authored speech and semantic selections.

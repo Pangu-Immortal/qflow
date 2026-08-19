@@ -1,16 +1,16 @@
-import { programSpaceTypes } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { spatialTypes } from "@narratage/spatial";
-import { compositionTypes } from "@narratage/composition";
-import type { AudioTrack, Track, VisualTrack } from "@narratage/composition";
-import { svsRecipeType } from "@narratage/svs";
-import type { SvsRecipe } from "@narratage/svs";
+import { programSpaceTypes } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { spatialTypes } from "@qflow/spatial";
+import { compositionTypes } from "@qflow/composition";
+import type { AudioTrack, Track, VisualTrack } from "@qflow/composition";
+import { svsRecipeType } from "@qflow/svs";
+import type { SvsRecipe } from "@qflow/svs";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { createFilmAssemblyFragment } from "./fragment.js";
 import { filmTypes } from "./manifest.js";
@@ -124,7 +124,7 @@ export const decodeFilmSurface: StructuredSurfaceHandler = ({ element, resolveRe
   if (new Set(tracks.map((track) => track.name)).size !== tracks.length) {
     throw new Error(`${element.name} cannot include the same Track more than once`);
   }
-  const fragment = createFilmAssemblyFragment({ name: "@narratage/film/surface-assembly@1", tracks });
+  const fragment = createFilmAssemblyFragment({ name: "@qflow/film/surface-assembly@1", tracks });
 
   return {
     records: [{

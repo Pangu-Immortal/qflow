@@ -1,6 +1,6 @@
-import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@narratage/media";
-import type { SynchronizedMedia } from "@narratage/media";
-import { canonicalize } from "@narratage/protocol";
+import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/media";
+import type { SynchronizedMedia } from "@qflow/media";
+import { canonicalize } from "@qflow/protocol";
 
 import { assertMediaIdentity } from "./layers.js";
 import type { MediaSoundSet, MediaSoundSpec } from "./types.js";

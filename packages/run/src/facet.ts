@@ -1,11 +1,11 @@
-import type { GraphFragment } from "@narratage/elaborator";
-import type { HostFacet } from "@narratage/host";
+import type { GraphFragment } from "@qflow/elaborator";
+import type { HostFacet } from "@qflow/host";
 
 import type {
   RunFragmentPackage,
 } from "./types.js";
 
-export const runFragmentHostAbi = "narratage.run-fragment-host@1";
+export const runFragmentHostAbi = "qflow.run-fragment-host@1";
 
 export type RunFragmentHostFacet = HostFacet & {
   readonly abi: typeof runFragmentHostAbi;

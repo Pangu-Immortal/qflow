@@ -1,9 +1,9 @@
-import type { CaptionProgram, TimedCaptionProjection } from "@narratage/caption";
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { CaptionDisplaySequence } from "@narratage/narrative";
-import type { ProgramSpace } from "@narratage/program-space";
-import type { StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
+import type { CaptionProgram, TimedCaptionProjection } from "@qflow/caption";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { CaptionDisplaySequence } from "@qflow/narrative";
+import type { ProgramSpace } from "@qflow/program-space";
+import type { StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
 
 import { captionFineProducers } from "./manifest.js";
 import { renderFineCaption } from "./render.js";

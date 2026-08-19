@@ -1,5 +1,5 @@
-import { artifactTypes } from "@narratage/artifact";
-import { sealGraphFragment } from "@narratage/elaborator";
+import { artifactTypes } from "@qflow/artifact";
+import { sealGraphFragment } from "@qflow/elaborator";
 
 import { imageTransformProducers, imageTransformTypes } from "./manifest.js";
 

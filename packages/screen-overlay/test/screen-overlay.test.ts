@@ -2,16 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { artifactManifest } from "@narratage/artifact";
-import { registerTypeValidatorFacets } from "@narratage/component-kit";
-import { compositionManifest, compositionTypes, sealComposition, sealVisualTrack } from "@narratage/composition";
-import { createResolvedClosure, sealBuildRequest, start } from "@narratage/core";
-import { AuthorFrontendRegistry, compileSourceClosure, resolveCompiledSourceExport } from "@narratage/elaborator";
-import { compileHyperframesDocument } from "@narratage/hyperframes";
-import { mediaManifest } from "@narratage/media";
-import { narrativeManifest } from "@narratage/narrative";
-import { programSpaceDependency, programSpaceManifest, programSpaceTypes, sealProgramSpace } from "@narratage/program-space";
-import type { ModuleManifest } from "@narratage/protocol";
+import { artifactManifest } from "@qflow/artifact";
+import { registerTypeValidatorFacets } from "@qflow/component-kit";
+import { compositionManifest, compositionTypes, sealComposition, sealVisualTrack } from "@qflow/composition";
+import { createResolvedClosure, sealBuildRequest, start } from "@qflow/core";
+import { AuthorFrontendRegistry, compileSourceClosure, resolveCompiledSourceExport } from "@qflow/elaborator";
+import { compileHyperframesDocument } from "@qflow/hyperframes";
+import { mediaManifest } from "@qflow/media";
+import { narrativeManifest } from "@qflow/narrative";
+import { programSpaceDependency, programSpaceManifest, programSpaceTypes, sealProgramSpace } from "@qflow/program-space";
+import type { ModuleManifest } from "@qflow/protocol";
 import {
   appendProgramScreenOverlay,
   createScreenOverlaySet,
@@ -25,16 +25,16 @@ import {
   screenOverlayProducers,
   sealScreenOverlayHeader,
   sealScreenOverlayItemSpec,
-} from "@narratage/screen-overlay";
-import type { ScreenOverlayComponent } from "@narratage/screen-overlay";
-import { semanticMapManifest } from "@narratage/semantic-map";
-import { speechEvidenceManifest } from "@narratage/speech-evidence";
-import { speechManifest } from "@narratage/speech";
-import { sealCanvasSpace, spatialComponent, spatialDependency, spatialManifest, spatialTypes } from "@narratage/spatial";
-import { temporalManifest } from "@narratage/temporal";
-import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@narratage/markup";
-import { createRecordAdmitter, TypeValidatorRegistry } from "@narratage/validation";
-import { visualIrManifest } from "@narratage/visual-ir";
+} from "@qflow/screen-overlay";
+import type { ScreenOverlayComponent } from "@qflow/screen-overlay";
+import { semanticMapManifest } from "@qflow/semantic-map";
+import { speechEvidenceManifest } from "@qflow/speech-evidence";
+import { speechManifest } from "@qflow/speech";
+import { sealCanvasSpace, spatialComponent, spatialDependency, spatialManifest, spatialTypes } from "@qflow/spatial";
+import { temporalManifest } from "@qflow/temporal";
+import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup";
+import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
+import { visualIrManifest } from "@qflow/visual-ir";
 
 const canvas = sealCanvasSpace({
   widthPx: 1080, heightPx: 1920,
@@ -101,7 +101,7 @@ test("overlay Tracks interleave with peer Tracks only through absolute stacking"
   const below = trackFor(components[1]!, 20);
   const above = { ...trackFor(components[0]!, 80), id: "screen-above" };
   const middle = sealVisualTrack({
-    visualIr: "narratage.visual-ir@1", id: "middle",
+    visualIr: "qflow.visual-ir@1", id: "middle",
     presents: [{ id: "middle", span: { startFrame: 0, endFrameExclusive: 60 }, stacking: { order: 50, tieBreak: "middle" },
       elements: [{ id: "root", order: 0, kind: "box", style: [{ name: "background-color", value: "#112233" }] }] }],
   });
@@ -109,9 +109,9 @@ test("overlay Tracks interleave with peer Tracks only through absolute stacking"
     id: "stack", canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [above, middle, below],
   }), space);
-  const belowAt = document.html.indexOf('data-narratage-track-id="screen"');
-  const middleAt = document.html.indexOf('data-narratage-track-id="middle"');
-  const aboveAt = document.html.indexOf('data-narratage-track-id="screen-above"');
+  const belowAt = document.html.indexOf('data-qflow-track-id="screen"');
+  const middleAt = document.html.indexOf('data-qflow-track-id="middle"');
+  const aboveAt = document.html.indexOf('data-qflow-track-id="screen-above"');
   assert.ok(belowAt < middleAt && middleAt < aboveAt);
 });
 
@@ -135,7 +135,7 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
     outputs: [spatialTypes.canvas, programSpaceTypes.programSpace],
   } as const;
   const fixtureManifest: ModuleManifest = {
-    format: "narratage.module@1",
+    format: "qflow.module@1",
     name: fixtureModule.name,
     version: fixtureModule.version,
     dependencies: [spatialDependency, programSpaceDependency],
@@ -183,10 +183,10 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
     entry: {
       id: "/project/screen.svml",
       name: "screen.svml",
-      text: `<?svml using="@narratage/markup@1"?>
+      text: `<?svml using="@qflow/markup@1"?>
       <svml>
         <import as="fixture" from="example.screen-inputs@1"/>
-        <import as="screen" from="@narratage/screen-overlay@1"/>
+        <import as="screen" from="@qflow/screen-overlay@1"/>
         <fixture:Inputs/>
         <screen:Track id="screen-fx" canvas={canvas} space={space}>
           <screen:Flash during="program" z="70" color="#ffffff" intensity="0.9" attack="2" hold="3" decay="5"/>

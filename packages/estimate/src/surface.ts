@@ -1,13 +1,13 @@
-import type { CanonicalValue } from "@narratage/protocol";
-import { svsRecipeType } from "@narratage/svs";
-import type { SvsRecipe } from "@narratage/svs";
-import { textTypes } from "@narratage/text";
+import type { CanonicalValue } from "@qflow/protocol";
+import { svsRecipeType } from "@qflow/svs";
+import type { SvsRecipe } from "@qflow/svs";
+import { textTypes } from "@qflow/text";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { speechEstimateFragment } from "./fragment.js";
 import { estimateTypes } from "./manifest.js";

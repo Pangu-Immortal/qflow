@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { artifactTypes } from "@narratage/artifact";
+import { artifactTypes } from "@qflow/artifact";
 import {
   createImageComposeFragment,
   decodeImageComposeSurface,
@@ -11,10 +11,10 @@ import {
   imageComposeTypes,
   sealImageComposeLayerSpec,
   sealImageComposeOptions,
-} from "@narratage/image-compose";
-import { rasterCapabilities } from "@narratage/raster";
-import type { CanonicalValue, StoredValue, TypeRef, TypedRecord } from "@narratage/protocol";
-import { sealCanvasSpace, sealSpatialFrame, spatialTypes } from "@narratage/spatial";
+} from "@qflow/image-compose";
+import { rasterCapabilities } from "@qflow/raster";
+import type { CanonicalValue, StoredValue, TypeRef, TypedRecord } from "@qflow/protocol";
+import { sealCanvasSpace, sealSpatialFrame, spatialTypes } from "@qflow/spatial";
 
 const canvas = sealCanvasSpace({
   widthPx: 1080, heightPx: 1920,

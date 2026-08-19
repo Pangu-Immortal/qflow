@@ -1,5 +1,5 @@
-import { createAuthorFrontendHostFacet } from "@narratage/elaborator";
-import { createMarkupSurfaceHostFacet } from "@narratage/markup";
+import { createAuthorFrontendHostFacet } from "@qflow/elaborator";
+import { createMarkupSurfaceHostFacet } from "@qflow/markup";
 
 import {
   decodeTextRenderSurface,
@@ -11,8 +11,8 @@ import {
   textMarkupSurfaces,
 } from "./index.js";
 
-export const narratagePackage = {
-  format: "narratage.node-package@1" as const,
+export const qflowPackage = {
+  format: "qflow.node-package@1" as const,
   modules: [{ manifest: textManifest }],
   components: [textComponent],
   hostFacets: [
@@ -30,4 +30,4 @@ export const narratagePackage = {
   ],
 };
 
-export default narratagePackage;
+export default qflowPackage;

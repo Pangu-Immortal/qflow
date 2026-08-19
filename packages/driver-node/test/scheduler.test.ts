@@ -5,12 +5,12 @@ import {
   ProducerRegistry,
   NodeDriver,
   EndpointRegistry,
-} from "@narratage/driver-node";
-import type { AsyncEndpoint } from "@narratage/endpoint-kit";
+} from "@qflow/driver-node";
+import type { AsyncEndpoint } from "@qflow/endpoint-kit";
 import {
   LocalBuildScheduler,
-} from "@narratage/runtime";
-import type { OperationSnapshot, OperationStore, OperationUpdate } from "@narratage/runtime";
+} from "@qflow/runtime";
+import type { OperationSnapshot, OperationStore, OperationUpdate } from "@qflow/runtime";
 import {
   createResolvedClosure,
   link,
@@ -18,7 +18,7 @@ import {
   sealCompiledGraph,
   sealRecord,
   start,
-} from "@narratage/core";
+} from "@qflow/core";
 
 import { capabilities, createGreetingBuild, manifest, producers as greetingProducers, types } from "../../core/test/greeting-fixture.js";
 

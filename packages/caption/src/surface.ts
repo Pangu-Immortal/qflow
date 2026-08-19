@@ -1,11 +1,11 @@
-import { narrativeTypes } from "@narratage/narrative";
-import type { CaptionDisplaySequence, CaptionDisplayWordSubset } from "@narratage/narrative";
+import { narrativeTypes } from "@qflow/narrative";
+import type { CaptionDisplaySequence, CaptionDisplayWordSubset } from "@qflow/narrative";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { captionTypes } from "./manifest.js";
 import { captionWordsForRole } from "./display.js";

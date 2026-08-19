@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/store-sqlite",
+  "name": "@qflow/store-sqlite",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -11,8 +11,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@narratage/core": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/runtime": "workspace:*"
+    "@qflow/core": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/runtime": "workspace:*"
   }
 }

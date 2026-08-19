@@ -2,12 +2,12 @@ import { compositionComponent, spatialComponent, videoContractManifests } from "
 import {
   registerProducerFacets,
   registerTypeValidatorFacets,
-} from "@narratage/component-kit";
-import { sealProgramSpace } from "@narratage/program-space";
-import { sealSpeechBasis, speechDependency, speechTypes } from "@narratage/speech";
-import type { SpeechBasis } from "@narratage/speech";
-import { compositionTypes } from "@narratage/composition";
-import { mediaPipelineManifest } from "@narratage/media-pipeline";
+} from "@qflow/component-kit";
+import { sealProgramSpace } from "@qflow/program-space";
+import { sealSpeechBasis, speechDependency, speechTypes } from "@qflow/speech";
+import type { SpeechBasis } from "@qflow/speech";
+import { compositionTypes } from "@qflow/composition";
+import { mediaPipelineManifest } from "@qflow/media-pipeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
@@ -19,8 +19,8 @@ import {
   sealCompiledGraph,
   sealRecord,
   start,
-} from "@narratage/core";
-import { ProducerRegistry, NodeDriver } from "@narratage/driver-node";
+} from "@qflow/core";
+import { ProducerRegistry, NodeDriver } from "@qflow/driver-node";
 import type {
   BuildRequest,
   CompiledGraph,
@@ -28,7 +28,7 @@ import type {
   ModuleManifest,
   ProducerRef,
   TypeRef,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 import {
   projectSpeechAudio,
   projectSpeechAudioTrack,
@@ -37,16 +37,16 @@ import {
   speechBasisComponent,
   speechBasisManifest,
   speechBasisProducers,
-} from "@narratage/speech-basis";
-import { TypeValidatorRegistry } from "@narratage/validation";
-import { mediaTrackManifest } from "@narratage/media-track";
+} from "@qflow/speech-basis";
+import { TypeValidatorRegistry } from "@qflow/validation";
+import { mediaTrackManifest } from "@qflow/media-track";
 
 const testModule = { name: "example.speech-basis-product", version: "0.0.0" } as const;
 const requestType = { module: testModule, name: "SpeechRequest" } satisfies TypeRef;
 const generateProducer = { module: testModule, name: "generate-speech-basis" } satisfies ProducerRef;
 
 const testManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: testModule.name,
   version: testModule.version,
   dependencies: [speechDependency],

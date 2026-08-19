@@ -3,22 +3,22 @@ import { createHash } from "node:crypto";
 import {
   compileSourceClosure,
   prepareAuthorSource,
-} from "@narratage/elaborator";
-import { link } from "@narratage/core";
+} from "@qflow/elaborator";
+import { link } from "@qflow/core";
 import type {
   AuthorFrontendRegistryLike,
   AuthorSourceDiscovery,
   CompiledSourceClosure,
   AuthorRecordAdmitter,
-} from "@narratage/elaborator";
-import type { SourceUnit } from "@narratage/source";
-import type { ArtifactAttachment, Workspace, WorkspaceSession } from "@narratage/workspace";
-import type { BlobRef, LinkedProgram } from "@narratage/protocol";
+} from "@qflow/elaborator";
+import type { SourceUnit } from "@qflow/source";
+import type { ArtifactAttachment, Workspace, WorkspaceSession } from "@qflow/workspace";
+import type { BlobRef, LinkedProgram } from "@qflow/protocol";
 import {
   TypeValidatorRegistry,
   createRecordAdmitter,
-} from "@narratage/validation";
-import type { TypeValidatorRegistryLike } from "@narratage/validation";
+} from "@qflow/validation";
+import type { TypeValidatorRegistryLike } from "@qflow/validation";
 
 import { NodeCompilerError } from "./error.js";
 import type { ModulePackageRegistryLike } from "./modules.js";

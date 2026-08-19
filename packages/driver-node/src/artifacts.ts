@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 
-import type { BlobRef, Digest } from "@narratage/protocol";
+import type { BlobRef, Digest } from "@qflow/protocol";
 
-import type { ArtifactStore } from "@narratage/runtime";
+import type { ArtifactStore } from "@qflow/runtime";
 
 export class MemoryArtifactStore implements ArtifactStore {
   readonly #values = new Map<Digest, Uint8Array>();

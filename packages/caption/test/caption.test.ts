@@ -10,24 +10,24 @@ import {
   sealCaptionPlan,
   sealCaptionStyle,
   temporalizeCaptionPlan,
-} from "@narratage/caption";
-import type { CaptionFieldDeclaration, CaptionStyleIntent } from "@narratage/caption";
-import { narrativeTypes } from "@narratage/narrative";
-import type { CaptionDisplayWordSubset, Narrative } from "@narratage/narrative";
-import { canonicalize } from "@narratage/protocol";
-import type { StoredValue, TypeRef } from "@narratage/protocol";
-import { sealProgramSpace } from "@narratage/program-space";
-import { sealSpeechBasis } from "@narratage/speech";
-import type { SpeechAudioBasis } from "@narratage/speech";
-import { locateSpeechTiming } from "@narratage/speech-alignment";
-import { sealAlignedTranscriptEvidence } from "@narratage/speech-evidence";
+} from "@qflow/caption";
+import type { CaptionFieldDeclaration, CaptionStyleIntent } from "@qflow/caption";
+import { narrativeTypes } from "@qflow/narrative";
+import type { CaptionDisplayWordSubset, Narrative } from "@qflow/narrative";
+import { canonicalize } from "@qflow/protocol";
+import type { StoredValue, TypeRef } from "@qflow/protocol";
+import { sealProgramSpace } from "@qflow/program-space";
+import { sealSpeechBasis } from "@qflow/speech";
+import type { SpeechAudioBasis } from "@qflow/speech";
+import { locateSpeechTiming } from "@qflow/speech-alignment";
+import { sealAlignedTranscriptEvidence } from "@qflow/speech-evidence";
 import {
   captionCorrespondence,
   captionDisplaySequence,
   captionSelectionWordSubset,
   parseScript,
-} from "@narratage/script";
-import type { StructuredElement, SurfaceResolvedReference } from "@narratage/markup";
+} from "@qflow/script";
+import type { StructuredElement, SurfaceResolvedReference } from "@qflow/markup";
 
 type TranscriptFixture = {
   readonly words: readonly {

@@ -1,4 +1,4 @@
-import { sealGraphFragment } from "@narratage/elaborator";
+import { sealGraphFragment } from "@qflow/elaborator";
 
 import { spatialProducers, spatialTypes } from "./manifest.js";
 

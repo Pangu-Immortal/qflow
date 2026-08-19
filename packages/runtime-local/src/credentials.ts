@@ -1,6 +1,6 @@
 import {
   writableCredentialStore,
-} from "@narratage/runtime";
+} from "@qflow/runtime";
 
 import type {
   CreateLocalCredentialControlOptions,

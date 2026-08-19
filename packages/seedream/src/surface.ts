@@ -1,10 +1,10 @@
-import { artifactTypes } from "@narratage/artifact";
-import { generationPort, sealGenerationMediaBinding, sealGenerationRequestDraft } from "@narratage/generation";
-import type { GenerationMediaPort } from "@narratage/generation";
-import { createExactModelPrimaryGenerationFragment, exactModelMediaInputNames, exactModelTextInputName } from "@narratage/model-kit";
-import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@narratage/markup";
-import type { CanonicalValue, TypeRef } from "@narratage/protocol";
-import { textTypes, verifyText } from "@narratage/text";
+import { artifactTypes } from "@qflow/artifact";
+import { generationPort, sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/generation";
+import type { GenerationMediaPort } from "@qflow/generation";
+import { createExactModelPrimaryGenerationFragment, exactModelMediaInputNames, exactModelTextInputName } from "@qflow/model-kit";
+import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/markup";
+import type { CanonicalValue, TypeRef } from "@qflow/protocol";
+import { textTypes, verifyText } from "@qflow/text";
 import { seedreamEndpoints } from "./index.js";
 
 function assert(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(message); }

@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/speech",
+  "name": "@qflow/speech",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,14 +7,14 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/media": "workspace:*",
-    "@narratage/narrative": "workspace:*",
-    "@narratage/program-space": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/spatial": "workspace:*"
+    "@qflow/media": "workspace:*",
+    "@qflow/narrative": "workspace:*",
+    "@qflow/program-space": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/spatial": "workspace:*"
   }
 }

@@ -1,11 +1,11 @@
-import type { ComponentPackage, ProducerHandlerContext } from "@narratage/component-kit";
-import type { CompositableSurfaceRef, SynchronizedMedia } from "@narratage/media";
-import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import type { ProgramSpace } from "@narratage/program-space";
-import { canonicalize } from "@narratage/protocol";
-import type { BlobRef, StoredValue } from "@narratage/protocol";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import type { CanvasSpace, ContentFit, IntrinsicExtent, SpatialFrame, SpatialPath } from "@narratage/spatial";
+import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
+import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
+import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import type { ProgramSpace } from "@qflow/program-space";
+import { canonicalize } from "@qflow/protocol";
+import type { BlobRef, StoredValue } from "@qflow/protocol";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import type { CanvasSpace, ContentFit, IntrinsicExtent, SpatialFrame, SpatialPath } from "@qflow/spatial";
 
 import {
   appendMediaPaintLayer,

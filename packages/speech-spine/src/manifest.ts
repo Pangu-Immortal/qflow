@@ -1,25 +1,25 @@
-import { artifactDependency } from "@narratage/artifact";
-import { narrativeDependency, narrativeExcerptSchema, narrativeTypes } from "@narratage/narrative";
-import { mediaDependency, mediaTypes, synchronizedMediaSchema } from "@narratage/media";
-import { programSpaceDependency, programSpaceTypes } from "@narratage/program-space";
-import { speechDependency, speechTypes } from "@narratage/speech";
-import { compositionDependency, compositionTypes } from "@narratage/composition";
+import { artifactDependency } from "@qflow/artifact";
+import { narrativeDependency, narrativeExcerptSchema, narrativeTypes } from "@qflow/narrative";
+import { mediaDependency, mediaTypes, synchronizedMediaSchema } from "@qflow/media";
+import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+import { speechDependency, speechTypes } from "@qflow/speech";
+import { compositionDependency, compositionTypes } from "@qflow/composition";
 import {
   mediaPipelineManifest,
   mediaPipelineModuleRef,
   mediaPipelineTypes,
-} from "@narratage/media-pipeline";
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@narratage/protocol";
-import { speechBasisManifest, speechBasisModuleRef } from "@narratage/speech-basis";
+} from "@qflow/media-pipeline";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
+import { speechBasisManifest, speechBasisModuleRef } from "@qflow/speech-basis";
 import {
   contentFitSchema,
   spatialDependency,
   spatialFrameSchema,
   spatialTypes,
-} from "@narratage/spatial";
-import { svsManifest, svsModuleRef } from "@narratage/svs";
+} from "@qflow/spatial";
+import { svsManifest, svsModuleRef } from "@qflow/svs";
 
-export const speechSpineModuleRef = { name: "@narratage/speech-spine", version: "1" } as const;
+export const speechSpineModuleRef = { name: "@qflow/speech-spine", version: "1" } as const;
 export const speechSpineTypes = {
   spineProgram: { module: speechSpineModuleRef, name: "SpeechSpineProgram" },
   spineSet: { module: speechSpineModuleRef, name: "SpeechSpineSet" },
@@ -77,7 +77,7 @@ export const speechSpineMarkupSurfaces = [{
 
 
 export const speechSpineManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: speechSpineModuleRef.name,
   version: speechSpineModuleRef.version,
   dependencies: [

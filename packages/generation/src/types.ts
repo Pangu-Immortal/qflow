@@ -1,4 +1,4 @@
-import type { BlobRef } from "@narratage/protocol";
+import type { BlobRef } from "@qflow/protocol";
 
 export type GeneratedImageSet = {
   readonly images: readonly BlobRef[];

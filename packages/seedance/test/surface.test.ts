@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { artifactTypes } from "@narratage/artifact";
-import { parseStructuredElement } from "@narratage/markup";
-import type { StructuredSurfaceHandler, SurfaceResolvedReference } from "@narratage/markup";
-import { textTypes } from "@narratage/text";
+import { artifactTypes } from "@qflow/artifact";
+import { parseStructuredElement } from "@qflow/markup";
+import type { StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/markup";
+import { textTypes } from "@qflow/text";
 
 import {
   decodeSeedanceFrameVideoSurface,

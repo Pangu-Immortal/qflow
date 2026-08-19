@@ -1,16 +1,16 @@
-import { narrativeDependency, narrativeTypes } from "@narratage/narrative";
-import { speechDependency, speechTypes } from "@narratage/speech";
-import { speechEvidenceDependency, speechEvidenceTypes } from "@narratage/speech-evidence";
-import { semanticMapDependency, semanticMapTypes } from "@narratage/semantic-map";
-import type { ModuleManifest, ProducerRef } from "@narratage/protocol";
+import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
+import { speechDependency, speechTypes } from "@qflow/speech";
+import { speechEvidenceDependency, speechEvidenceTypes } from "@qflow/speech-evidence";
+import { semanticMapDependency, semanticMapTypes } from "@qflow/semantic-map";
+import type { ModuleManifest, ProducerRef } from "@qflow/protocol";
 
-export const speechAlignmentModuleRef = { name: "@narratage/speech-alignment", version: "1" } as const;
+export const speechAlignmentModuleRef = { name: "@qflow/speech-alignment", version: "1" } as const;
 export const speechAlignmentProducers = {
   locate: { module: speechAlignmentModuleRef, name: "locate-speech" },
 } satisfies Record<string, ProducerRef>;
 
 export const speechAlignmentManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: speechAlignmentModuleRef.name,
   version: speechAlignmentModuleRef.version,
   dependencies: [

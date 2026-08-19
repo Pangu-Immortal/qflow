@@ -1,4 +1,4 @@
-import type { CanonicalValue, SourceRange } from "@narratage/protocol";
+import type { CanonicalValue, SourceRange } from "@qflow/protocol";
 
 export type SvsRecipe = {
   readonly path: string;

@@ -6,9 +6,9 @@ import {
   assertFontArtifactRef,
   assertFontStackRef,
   mediaTypes,
-} from "@narratage/media";
-import type { FontArtifactRef, FontStackRef } from "@narratage/media";
-import type { StructuredElement, StructuredSurfaceHandler } from "@narratage/markup";
+} from "@qflow/media";
+import type { FontArtifactRef, FontStackRef } from "@qflow/media";
+import type { StructuredElement, StructuredSurfaceHandler } from "@qflow/markup";
 
 import {
   openFontFamilies,
@@ -114,7 +114,7 @@ async function materializeFace(
     const bytes = Uint8Array.from(await readFile(file.path));
     const basename = file.path.split("/").at(-1)!;
     const resolved = await resolveAsset({
-      from: `package:@narratage/fonts-open/${request.familyName}/${basename}`,
+      from: `package:@qflow/fonts-open/${request.familyName}/${basename}`,
       mediaType: "font/woff2",
       bytes,
       range: element.range,

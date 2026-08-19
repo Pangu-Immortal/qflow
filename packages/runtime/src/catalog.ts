@@ -1,7 +1,7 @@
 import type {
   LogicalOutputRef,
   RecordRef,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 
 export type BuildCatalogAlias = {
   readonly name: string;

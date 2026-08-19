@@ -1,10 +1,10 @@
-import type { FrameSpan } from "@narratage/composition";
-import type { BlobRef } from "@narratage/protocol";
+import type { FrameSpan } from "@qflow/composition";
+import type { BlobRef } from "@qflow/protocol";
 import type {
   OccurrenceExpansion,
   TemporalDuration,
   TemporalWindowProjection,
-} from "@narratage/temporal";
+} from "@qflow/temporal";
 
 export type AudioOccupancy =
   | { readonly mode: "once"; readonly align: "start" | "end" }

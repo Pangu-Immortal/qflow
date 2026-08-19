@@ -1,4 +1,4 @@
-import type { FontArtifactRef } from "@narratage/media";
+import type { FontArtifactRef } from "@qflow/media";
 
 export type FineCaptionGlyphPaint = {
   readonly fill: string;

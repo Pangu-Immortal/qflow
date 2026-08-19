@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { sealComposition } from "@narratage/composition";
-import type { AudioTrack } from "@narratage/composition";
-import { compileHyperframesDocument } from "@narratage/hyperframes";
-import { mediaTypes } from "@narratage/media";
-import type { CompositableSurfaceRef, SynchronizedMedia } from "@narratage/media";
-import { mediaPipelineProducers } from "@narratage/media-pipeline";
-import { artifactTypes } from "@narratage/artifact";
-import { narrativeTypes } from "@narratage/narrative";
+import { sealComposition } from "@qflow/composition";
+import type { AudioTrack } from "@qflow/composition";
+import { compileHyperframesDocument } from "@qflow/hyperframes";
+import { mediaTypes } from "@qflow/media";
+import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
+import { mediaPipelineProducers } from "@qflow/media-pipeline";
+import { artifactTypes } from "@qflow/artifact";
+import { narrativeTypes } from "@qflow/narrative";
 import {
   appendMediaPaintLayer,
   appendMediaSound,
@@ -46,23 +46,23 @@ import {
   stillMediaTrackFragment,
   mediaTrackManifest,
   mediaTrackMarkupSurfaces,
-} from "@narratage/media-track";
+} from "@qflow/media-track";
 import type {
   MediaHandoffOperator,
   MediaItemSpec,
   MediaLayerSet,
   MediaSequenceSpec,
-} from "@narratage/media-track";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import { sealProgramSpace } from "@narratage/program-space";
-import { programSpaceTypes } from "@narratage/program-space";
-import type { BlobRef } from "@narratage/protocol";
-import { semanticMapTypes } from "@narratage/semantic-map";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import { spatialTypes } from "@narratage/spatial";
-import { svsRecipeType } from "@narratage/svs";
-import type { SvsRecipe } from "@narratage/svs";
-import type { StructuredElement, StructuredNode, SurfaceResolvedReference, MarkupAttributeValue } from "@narratage/markup";
+} from "@qflow/media-track";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import { sealProgramSpace } from "@qflow/program-space";
+import { programSpaceTypes } from "@qflow/program-space";
+import type { BlobRef } from "@qflow/protocol";
+import { semanticMapTypes } from "@qflow/semantic-map";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import { spatialTypes } from "@qflow/spatial";
+import { svsRecipeType } from "@qflow/svs";
+import type { SvsRecipe } from "@qflow/svs";
+import type { StructuredElement, StructuredNode, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/markup";
 
 const space = sealProgramSpace({
   durationSec: 4,
@@ -279,7 +279,7 @@ test("self-blur is two explicit samples of one Artifact and Artifact collection 
   assert.equal(document.artifacts.length, 1);
   assert.equal((document.html.match(new RegExp(source.digest, "gu")) ?? []).length, 0,
     "HTML uses artifact URIs without the digest prefix spelling");
-  assert.equal((document.html.match(/narratage-artifact:\/\/sha256\//gu) ?? []).length, 2);
+  assert.equal((document.html.match(/qflow-artifact:\/\/sha256\//gu) ?? []).length, 2);
   const blurred = track.presents[0]!.elements.find((element) => element.id === "blurred");
   assert.equal(blurred?.style.find((entry) => entry.name === "left")?.value, "-48px");
   assert.equal(blurred?.style.find((entry) => entry.name === "top")?.value, "-48px");

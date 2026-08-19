@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/spatial",
+  "name": "@qflow/spatial",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,17 +7,17 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/markup": "workspace:*"
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/markup": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/core": "workspace:*",
-    "@narratage/validation": "workspace:*"
+    "@qflow/core": "workspace:*",
+    "@qflow/validation": "workspace:*"
   }
 }

@@ -1,15 +1,15 @@
-import { mediaTypes } from "@narratage/media";
-import { narrativeTypes } from "@narratage/narrative";
-import { programSpaceTypes } from "@narratage/program-space";
-import { semanticMapTypes } from "@narratage/semantic-map";
+import { mediaTypes } from "@qflow/media";
+import { narrativeTypes } from "@qflow/narrative";
+import { programSpaceTypes } from "@qflow/program-space";
+import { semanticMapTypes } from "@qflow/semantic-map";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceRecordDraft,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
-import type { TemporalDuration, TemporalPointExpression } from "@narratage/temporal";
+} from "@qflow/markup";
+import type { TemporalDuration, TemporalPointExpression } from "@qflow/temporal";
 
 import { createAudioTrackFragment } from "./fragment.js";
 import { audioTrackTypes } from "./manifest.js";

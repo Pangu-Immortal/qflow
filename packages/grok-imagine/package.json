@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/grok-imagine",
+  "name": "@qflow/grok-imagine",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,15 +7,15 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/artifact": "workspace:*",
-    "@narratage/generation": "workspace:*",
-    "@narratage/markup": "workspace:*",
-    "@narratage/model-kit": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/text": "workspace:*"
+    "@qflow/artifact": "workspace:*",
+    "@qflow/generation": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/model-kit": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/text": "workspace:*"
   }
 }

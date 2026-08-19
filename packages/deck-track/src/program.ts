@@ -1,27 +1,27 @@
 import {
   assertFontArtifactRef,
-} from "@narratage/media";
+} from "@qflow/media";
 import {
   assertMediaFramePresentation,
   assertMediaLayerSet,
   assertMediaLifecycleMotion,
-} from "@narratage/media-track";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
+} from "@qflow/media-track";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import {
   assertProgramSpaceIdentity,
   programSpaceFrameCount,
-} from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { canonicalize } from "@narratage/protocol";
-import { verifyText } from "@narratage/text";
-import type { Text } from "@narratage/text";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import { assertSpatialFrame } from "@narratage/spatial";
-import type { SpatialFrame } from "@narratage/spatial";
+} from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { canonicalize } from "@qflow/protocol";
+import { verifyText } from "@qflow/text";
+import type { Text } from "@qflow/text";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import { assertSpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 import {
   locateMomentOccurrences,
   locateSelectionOccurrences,
-} from "@narratage/temporal";
+} from "@qflow/temporal";
 
 import type {
   DeckCardTone,

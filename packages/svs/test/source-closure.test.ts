@@ -4,34 +4,34 @@ import {
   createResolvedClosure,
   sealBuildRequest,
   start,
-} from "@narratage/core";
+} from "@qflow/core";
 import {
   AuthorFrontendRegistry,
   SourceClosureError,
   compileSourceClosure,
   resolveCompiledSourceExport,
   sealGraphFragment,
-} from "@narratage/elaborator";
-import type { AuthorSourceUnit } from "@narratage/elaborator";
+} from "@qflow/elaborator";
+import type { AuthorSourceUnit } from "@qflow/elaborator";
 import type {
   ModuleManifest,
   ProducerRef,
   TypeRef,
   TypedRecord,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 import {
   SvsSyntaxError,
   parseSvs,
   svsFrontend,
   svsManifest,
   svsRecipeType,
-} from "@narratage/svs";
-import type { SvsRecipe } from "@narratage/svs";
+} from "@qflow/svs";
+import type { SvsRecipe } from "@qflow/svs";
 import {
   MarkupSurfaceRegistry,
   createMarkupAuthorFrontend,
-} from "@narratage/markup";
-import type { StructuredElement } from "@narratage/markup";
+} from "@qflow/markup";
+import type { StructuredElement } from "@qflow/markup";
 
 const laboratory = { name: "example.recipe-card", version: "1" } as const;
 const cardType = { module: laboratory, name: "Card" } satisfies TypeRef;
@@ -43,7 +43,7 @@ const cardSurface = {
 } as const;
 
 const manifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: laboratory.name,
   version: laboratory.version,
   dependencies: [{ module: { name: svsManifest.name, version: svsManifest.version } }],
@@ -153,7 +153,7 @@ function sourceRegistry(): MarkupSurfaceRegistry {
 const closure = createResolvedClosure([svsManifest, manifest]);
 
 function unit(id: string, text: string, frontend?: string): AuthorSourceUnit {
-  const selected = frontend ?? (id.endsWith(".svs") ? "@narratage/svs@1" : "@narratage/markup@1");
+  const selected = frontend ?? (id.endsWith(".svs") ? "@qflow/svs@1" : "@qflow/markup@1");
   return {
     id,
     name: id.split("/").at(-1) ?? id,

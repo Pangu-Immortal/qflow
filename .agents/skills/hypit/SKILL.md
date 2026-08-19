@@ -1,12 +1,12 @@
 ---
-name: narratage
-description: Author, check, plan, build, inspect, and retrieve Narratage/SVML video sources; configure the cross-platform Node/pnpm/Python runtime and API keys; reconstruct reference video directly as .svml/.svs/.svrun sources; and apply native SVML production playbooks for prompts, continuity, captions, B-roll, overlays, audio, and common video formats. Use for the Narratage repository, its quickstart, SVML authoring, runtime profiles, reference-video reconstruction, or video craft decisions.
+name: qflow
+description: Author, check, plan, build, inspect, and retrieve Qflow/SVML video sources; configure the cross-platform Node/pnpm/Python runtime and API keys; reconstruct reference video directly as .svml/.svs/.svrun sources; and apply native SVML production playbooks for prompts, continuity, captions, B-roll, overlays, audio, and common video formats. Use for the Qflow repository, its quickstart, SVML authoring, runtime profiles, reference-video reconstruction, or video craft decisions.
 ---
 
-# Narratage
+# Qflow
 
-Use this entrypoint for work in the `narratage` repository. Keep `.svml` Author Source, `.svrun` Run
-Source, and the declarative `narratage.runtime.json` Runtime Profile separate.
+Use this entrypoint for work in the `qflow` repository. Keep `.svml` Author Source, `.svrun` Run
+Source, and the declarative `qflow.runtime.json` Runtime Profile separate.
 
 ## Route the task
 
@@ -29,7 +29,7 @@ Source, and the declarative `narratage.runtime.json` Runtime Profile separate.
 ## Read the package README before writing its syntax
 
 Before writing any element from a package, read that package's README. The import
-`@narratage/<name>@1` is `packages/<name>/README.md` — every package that defines SVML elements has
+`@qflow/<name>@1` is `packages/<name>/README.md` — every package that defines SVML elements has
 one, and it is the authority on that package's components, attributes, and ports.
 
 Never write a component or attribute you have not seen in that file, and never infer one package's
@@ -40,11 +40,11 @@ same attributes.
 
 ```bash
 cd path/to/project
-narratage runtime use narratage.runtime.json
-narratage plan build.svrun
-narratage build build.svrun --follow
-narratage inspect <build-id>
-narratage get <build-id> \
+qflow runtime use qflow.runtime.json
+qflow plan build.svrun
+qflow build build.svrun --follow
+qflow inspect <build-id>
+qflow get <build-id> \
   --name final.video --to output/final.mp4
 ```
 
@@ -56,7 +56,7 @@ to stop only the Worker; use `programs down` separately when external programs s
 Neither command cancels Builds or remote Provider work.
 
 After submitting without `--follow`, or after leaving an observer, reattach with
-`narratage status <build-id> --watch`. A plain `status` remains a one-time snapshot.
+`qflow status <build-id> --watch`. A plain `status` remains a one-time snapshot.
 
 Every `build` invocation receives a fresh automatic Build id. Never try to reclaim a prior Build by
 restoring Source bytes or choosing an id. Cross-Build reuse exists only through explicit
@@ -77,7 +77,7 @@ in as the picture it names, held for the length it declares.
 pkill -f svml-playground || true          # never leave the old one holding the port
 pnpm svml:playground -- --source path/to/main.svml \
   --run path/to/build.svrun \
-  --runtime path/to/narratage.runtime.json &
+  --runtime path/to/qflow.runtime.json &
 # then send the author: http://localhost:5179/
 ```
 

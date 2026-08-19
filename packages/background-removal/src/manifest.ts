@@ -1,7 +1,7 @@
-import { artifactDependency, artifactTypes } from "@narratage/artifact";
-import type { CapabilityRef, ModuleManifest, ProducerRef } from "@narratage/protocol";
+import { artifactDependency, artifactTypes } from "@qflow/artifact";
+import type { CapabilityRef, ModuleManifest, ProducerRef } from "@qflow/protocol";
 
-export const backgroundRemovalModuleRef = { name: "@narratage/background-removal", version: "1" } as const;
+export const backgroundRemovalModuleRef = { name: "@qflow/background-removal", version: "1" } as const;
 export const backgroundRemovalCapabilities = {
   remove: { module: backgroundRemovalModuleRef, name: "remove-background" },
 } satisfies Record<string, CapabilityRef>;
@@ -15,7 +15,7 @@ export const backgroundRemovalMarkupSurfaces = [{
 
 
 export const backgroundRemovalManifest: ModuleManifest = {
-  format: "narratage.module@1", name: backgroundRemovalModuleRef.name, version: backgroundRemovalModuleRef.version,
+  format: "qflow.module@1", name: backgroundRemovalModuleRef.name, version: backgroundRemovalModuleRef.version,
   dependencies: [artifactDependency], types: [],
   capabilities: [{ name: backgroundRemovalCapabilities.remove.name, returns: artifactTypes.blob }],
   producers: [{

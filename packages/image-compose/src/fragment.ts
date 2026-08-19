@@ -1,7 +1,7 @@
-import { artifactTypes } from "@narratage/artifact";
-import { sealGraphFragment } from "@narratage/elaborator";
-import type { FragmentOperation } from "@narratage/elaborator";
-import { spatialTypes } from "@narratage/spatial";
+import { artifactTypes } from "@qflow/artifact";
+import { sealGraphFragment } from "@qflow/elaborator";
+import type { FragmentOperation } from "@qflow/elaborator";
+import { spatialTypes } from "@qflow/spatial";
 
 import { imageComposeProducers, imageComposeTypes } from "./manifest.js";
 

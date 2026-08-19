@@ -1,8 +1,8 @@
-import type { FrameSpan } from "@narratage/composition";
-import type { FontArtifactRef } from "@narratage/media";
-import type { BlobRef } from "@narratage/protocol";
-import type { SpatialFrame } from "@narratage/spatial";
-import type { OccurrenceExpansion, TemporalWindowProjection } from "@narratage/temporal";
+import type { FrameSpan } from "@qflow/composition";
+import type { FontArtifactRef } from "@qflow/media";
+import type { BlobRef } from "@qflow/protocol";
+import type { SpatialFrame } from "@qflow/spatial";
+import type { OccurrenceExpansion, TemporalWindowProjection } from "@qflow/temporal";
 
 export type CommentStickerTextStyle = {
   readonly fonts: readonly FontArtifactRef[];

@@ -1,19 +1,19 @@
 import { compositionComponent, spatialComponent, videoContractManifests } from "../../../test/support/video-domain.js";
-import { registerTypeValidatorFacets } from "@narratage/component-kit";
-import { programSpaceDependency, programSpaceTypes, sealProgramSpace } from "@narratage/program-space";
-import { compositionDependency, compositionTypes, sealAudioTrack, sealVisualTrack } from "@narratage/composition";
-import type { Track } from "@narratage/composition";
+import { registerTypeValidatorFacets } from "@qflow/component-kit";
+import { programSpaceDependency, programSpaceTypes, sealProgramSpace } from "@qflow/program-space";
+import { compositionDependency, compositionTypes, sealAudioTrack, sealVisualTrack } from "@qflow/composition";
+import type { Track } from "@qflow/composition";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { createResolvedClosure, sealBuildRequest, start } from "@narratage/core";
+import { createResolvedClosure, sealBuildRequest, start } from "@qflow/core";
 import {
   AuthorFrontendRegistry,
   compileSourceClosure,
   resolveCompiledSourceExport,
-} from "@narratage/elaborator";
-import type { AuthorSourceUnit } from "@narratage/elaborator";
+} from "@qflow/elaborator";
+import type { AuthorSourceUnit } from "@qflow/elaborator";
 import {
   decodeFilmSurface,
   filmManifest,
@@ -21,20 +21,20 @@ import {
   filmModuleRef,
   filmProducers,
   filmTypes,
-} from "@narratage/film";
-import type { ModuleManifest } from "@narratage/protocol";
-import { svsFrontend, svsManifest } from "@narratage/svs";
+} from "@qflow/film";
+import type { ModuleManifest } from "@qflow/protocol";
+import { svsFrontend, svsManifest } from "@qflow/svs";
 import {
   decodeCanvasSurface,
   spatialManifest,
   spatialMarkupSurfaces,
   spatialModuleRef,
-} from "@narratage/spatial";
+} from "@qflow/spatial";
 import {
   MarkupSurfaceRegistry,
   createMarkupAuthorFrontend,
-} from "@narratage/markup";
-import { createRecordAdmitter, TypeValidatorRegistry } from "@narratage/validation";
+} from "@qflow/markup";
+import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
 
 const fixtureModule = { name: "example.film-fixture", version: "1" } as const;
 const fixtureSurfaceDigest = fixtureDigest("example.film-fixture/inputs-surface@1");
@@ -43,7 +43,7 @@ const fixtureSurface = {
   outputs: [programSpaceTypes.programSpace, compositionTypes.visualTrack, compositionTypes.audioTrack],
 } as const;
 const fixtureManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: fixtureModule.name,
   version: fixtureModule.version,
   dependencies: [
@@ -60,7 +60,7 @@ const space = sealProgramSpace({
   frameRate: { numerator: 30, denominator: 1 },
 });
 const visual = sealVisualTrack({
-  visualIr: "narratage.visual-ir@1",
+  visualIr: "qflow.visual-ir@1",
   id: "visual",
   presents: [],
 });
@@ -77,7 +77,7 @@ const closure = createResolvedClosure([
 ]);
 
 function source(id: string, text: string): AuthorSourceUnit {
-  const frontend = id.endsWith(".svs") ? "@narratage/svs@1" : "@narratage/markup@1";
+  const frontend = id.endsWith(".svs") ? "@qflow/svs@1" : "@qflow/markup@1";
   return {
     id,
     name: id.split("/").at(-1) ?? id,
@@ -123,8 +123,8 @@ async function compileFilm(options: { readonly styles?: string } = {}) {
   frontends.register(createMarkupAuthorFrontend({
     registry: surfaces,
     resolveModule(request) {
-      if (request.from.startsWith("@narratage/film")) return filmModuleRef;
-      if (request.from.startsWith("@narratage/spatial")) return spatialModuleRef;
+      if (request.from.startsWith("@qflow/film")) return filmModuleRef;
+      if (request.from.startsWith("@qflow/spatial")) return spatialModuleRef;
       return fixtureModule;
     },
   }));
@@ -133,8 +133,8 @@ async function compileFilm(options: { readonly styles?: string } = {}) {
   return await compileSourceClosure({
     entry: source("/project/main.svml", `<svml>
       <import as="fixture" from="example.film-fixture@1"/>
-      <import as="film" from="@narratage/film@1"/>
-      <import as="space" from="@narratage/spatial@1"/>
+      <import as="film" from="@qflow/film@1"/>
+      <import as="space" from="@qflow/spatial@1"/>
       <import as="studio" source="./studio.svs"/>
       <fixture:Inputs/>
       <space:Canvas id="vertical" width="1080" height="1920"/>

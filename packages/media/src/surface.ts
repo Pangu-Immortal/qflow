@@ -1,8 +1,8 @@
-import { artifactTypes } from "@narratage/artifact";
+import { artifactTypes } from "@qflow/artifact";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { assertFontArtifactRef } from "./render.js";
 import { mediaTypes } from "./manifest.js";

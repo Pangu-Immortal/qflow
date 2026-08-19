@@ -1,5 +1,5 @@
-import { canonicalize, isDigest } from "@narratage/protocol";
-import { assertCanvasSpace, assertSpatialFrame } from "@narratage/spatial";
+import { canonicalize, isDigest } from "@qflow/protocol";
+import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
 
 import type {
   RasterComposeRequest, RasterEncodeOperation, RasterLayer, RasterRequest,

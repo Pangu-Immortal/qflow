@@ -1,10 +1,10 @@
-# `@narratage/seedream`
+# `@qflow/seedream`
 
 Exact author/compute contracts and package-owned author Surfaces for Seedream image generation.
 
 The two modes are separate Surfaces and project the primary result to an ordinary image Artifact.
 This package defines what the author requested, not where it runs: API translation, credentials,
-retry and queue behavior belong to a selected Runtime Endpoint such as `@narratage/provider-kie`.
+retry and queue behavior belong to a selected Runtime Endpoint such as `@qflow/provider-kie`.
 
 The modes stay explicit in the source:
 

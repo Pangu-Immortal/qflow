@@ -1,13 +1,13 @@
 import {
   sealRecord,
-} from "@narratage/core";
-import type { AuthorFrontend, AuthorSourceExport } from "@narratage/elaborator";
-import { parseSvs } from "@narratage/svs";
+} from "@qflow/core";
+import type { AuthorFrontend, AuthorSourceExport } from "@qflow/elaborator";
+import { parseSvs } from "@qflow/svs";
 
 import { textModuleRef, textTypes } from "./manifest.js";
 import { textTemplateFromSvsRecipes } from "./svs.js";
 
-export const textSvsFrontendId = "@narratage/text/svs@1";
+export const textSvsFrontendId = "@qflow/text/svs@1";
 
 export const textSvsFrontend: AuthorFrontend = {
   id: textSvsFrontendId,
@@ -26,7 +26,7 @@ export const textSvsFrontend: AuthorFrontend = {
     const record = sealRecord({
       id,
       type: textTypes.template,
-      value: { kind: "inline", value: template as unknown as import("@narratage/protocol").CanonicalValue },
+      value: { kind: "inline", value: template as unknown as import("@qflow/protocol").CanonicalValue },
     });
     const exports: AuthorSourceExport[] = [{ name: id, ref: { kind: "record", id }, type: textTypes.template }];
     return {

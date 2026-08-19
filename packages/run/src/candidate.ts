@@ -1,11 +1,11 @@
 import {
   canonicalize,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 import type {
   Candidate,
   StoredValue,
   TypeRef,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 
 export type ProvidedCandidateInput = {
   readonly id: string;

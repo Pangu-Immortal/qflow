@@ -1,50 +1,50 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { videoContractManifests } from "../../../test/support/video-domain.js";
-import { createResolvedClosure } from "@narratage/core";
+import { createResolvedClosure } from "@qflow/core";
 
-import { verifyGraphFragment } from "@narratage/elaborator";
+import { verifyGraphFragment } from "@qflow/elaborator";
 import {
   geminiOmniDefinition,
   geminiOmniManifest,
   sealGeminiOmniRequest,
-} from "@narratage/gemini-omni";
-import { MemoryArtifactStore } from "@narratage/driver-node";
+} from "@qflow/gemini-omni";
+import { MemoryArtifactStore } from "@qflow/driver-node";
 import {
   assertMappingCoversPorts,
   compileWireRequest,
   generationManifest,
-} from "@narratage/generation";
-import type { GenerationPortTable } from "@narratage/generation";
+} from "@qflow/generation";
+import type { GenerationPortTable } from "@qflow/generation";
 import {
   gptImageDefinition,
   gptImageManifest,
   sealGptImage2Request,
-} from "@narratage/gpt-image";
+} from "@qflow/gpt-image";
 import {
   grokImagineDefinition,
   grokImagineManifest,
   sealGrokImagineRequest,
-} from "@narratage/grok-imagine";
+} from "@qflow/grok-imagine";
 import {
   minimaxH3Definition,
   minimaxH3Manifest,
   sealMinimaxH3Request,
-} from "@narratage/minimax-h3";
+} from "@qflow/minimax-h3";
 import {
   nanoBananaDefinition,
   nanoBananaManifest,
   sealNanoBananaRequest,
-} from "@narratage/nano-banana";
-import { kieModelCatalog } from "@narratage/provider-kie";
-import { seedanceDefinition, seedanceManifest, seedancePorts, sealSeedanceRequest } from "@narratage/seedance";
+} from "@qflow/nano-banana";
+import { kieModelCatalog } from "@qflow/provider-kie";
+import { seedanceDefinition, seedanceManifest, seedancePorts, sealSeedanceRequest } from "@qflow/seedance";
 import {
   seedreamDefinition,
   seedreamManifest,
   sealSeedreamRequest,
-} from "@narratage/seedream";
-import type { CapabilityRef, LinkedProgram } from "@narratage/protocol";
-import { textManifest } from "@narratage/text";
+} from "@qflow/seedream";
+import type { CapabilityRef, LinkedProgram } from "@qflow/protocol";
+import { textManifest } from "@qflow/text";
 
 /**
  * Every exact model this repository ships, paired with the Capability it publishes.
@@ -72,13 +72,13 @@ test("the selected KIE release is seven exact model families and no Grok image c
   assert.deepEqual(
     [...new Set(kieModelCatalog.map((item) => item.capability.module.name))].sort(),
     [
-      "@narratage/gemini-omni",
-      "@narratage/gpt-image",
-      "@narratage/grok-imagine",
-      "@narratage/minimax-h3",
-      "@narratage/nano-banana",
-      "@narratage/seedance",
-      "@narratage/seedream",
+      "@qflow/gemini-omni",
+      "@qflow/gpt-image",
+      "@qflow/grok-imagine",
+      "@qflow/minimax-h3",
+      "@qflow/nano-banana",
+      "@qflow/seedance",
+      "@qflow/seedream",
     ],
   );
 });

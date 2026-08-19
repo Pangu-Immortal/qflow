@@ -1,5 +1,5 @@
-import { assertSpatialFrame } from "@narratage/spatial";
-import { canonicalize, isDigest } from "@narratage/protocol";
+import { assertSpatialFrame } from "@qflow/spatial";
+import { canonicalize, isDigest } from "@qflow/protocol";
 
 import type {
   ImageComposeLayer,

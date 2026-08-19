@@ -1,12 +1,12 @@
-import type { ComponentPackage, ProducerHandlerContext } from "@narratage/component-kit";
-import type { SynchronizedMedia } from "@narratage/media";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import type { ProgramSpace } from "@narratage/program-space";
-import { canonicalize } from "@narratage/protocol";
-import type { BlobRef, StoredValue } from "@narratage/protocol";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import type { SpatialFrame } from "@narratage/spatial";
-import type { Text } from "@narratage/text";
+import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
+import type { SynchronizedMedia } from "@qflow/media";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import type { ProgramSpace } from "@qflow/program-space";
+import { canonicalize } from "@qflow/protocol";
+import type { BlobRef, StoredValue } from "@qflow/protocol";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import type { SpatialFrame } from "@qflow/spatial";
+import type { Text } from "@qflow/text";
 
 import { rankingProducers, rankingTypes } from "./manifest.js";
 import { appendColumnItem, appendRankingItemSpec, appendRankingSound, appendTierBoardItem, appendTopThreeItem, appendTypewriterItem, assertColumnProgram, assertRankingSchedule, assertRankingSoundEventPlan, assertTierBoardProgram, assertTopThreeProgram, assertTypewriterListProgram, buildColumnProgram, buildColumnSoundEvents, buildRankingSchedule, buildTierBoardProgram, buildTierBoardSoundEvents, buildTopThreeProgram, buildTopThreeSoundEvents, buildTypewriterListProgram, buildTypewriterSoundEvents, createColumnItemSet, createRankingItemSpecSet, createRankingSoundSet, createTierBoardItemSet, createTopThreeItemSet, createTypewriterItemSet, materializeRankingTextItem } from "./schedule.js";

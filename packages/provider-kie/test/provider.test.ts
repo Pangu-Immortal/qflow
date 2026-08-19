@@ -5,14 +5,14 @@ import { fixtureDigest } from "../../../test/fixture-digest.js";
 import {
   MemoryArtifactStore,
   EndpointRegistry,
-} from "@narratage/driver-node";
-import type { EndpointRegistration } from "@narratage/driver-node";
-import type { AsyncEndpoint } from "@narratage/endpoint-kit";
-import { artifactTypes } from "@narratage/artifact";
-import { backgroundRemovalCapabilities, backgroundRemovalRequest } from "@narratage/background-removal";
-import { seedanceEndpoints, sealSeedanceRequest } from "@narratage/seedance";
-import type { CanonicalValue, Need } from "@narratage/protocol";
-import { createKieProvider } from "@narratage/provider-kie";
+} from "@qflow/driver-node";
+import type { EndpointRegistration } from "@qflow/driver-node";
+import type { AsyncEndpoint } from "@qflow/endpoint-kit";
+import { artifactTypes } from "@qflow/artifact";
+import { backgroundRemovalCapabilities, backgroundRemovalRequest } from "@qflow/background-removal";
+import { seedanceEndpoints, sealSeedanceRequest } from "@qflow/seedance";
+import type { CanonicalValue, Need } from "@qflow/protocol";
+import { createKieProvider } from "@qflow/provider-kie";
 
 function need(constraints: CanonicalValue): Need {
   return {

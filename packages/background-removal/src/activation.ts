@@ -1,4 +1,4 @@
-import { createMarkupSurfaceHostFacet } from "@narratage/markup";
+import { createMarkupSurfaceHostFacet } from "@qflow/markup";
 
 import {
   backgroundRemovalComponent, backgroundRemovalManifest,
@@ -6,8 +6,8 @@ import {
   backgroundRemovalMarkupSurfaces,
 } from "./index.js";
 
-export const narratagePackage = {
-  format: "narratage.node-package@1" as const,
+export const qflowPackage = {
+  format: "qflow.node-package@1" as const,
   modules: [{ manifest: backgroundRemovalManifest }],
   components: [backgroundRemovalComponent],
   hostFacets: [{ ...createMarkupSurfaceHostFacet({
@@ -15,4 +15,4 @@ export const narratagePackage = {
     declaration: backgroundRemovalMarkupSurfaces.find((item) => item.name === "background")!, handler: decodeBackgroundRemovalSurface,
   }) }],
 };
-export default narratagePackage;
+export default qflowPackage;

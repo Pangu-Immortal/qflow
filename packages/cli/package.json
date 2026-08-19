@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/cli",
+  "name": "@qflow/cli",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -8,14 +8,14 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@narratage/compiler-node": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/workspace": "workspace:*",
-    "@narratage/package-loader-node": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/run": "workspace:*",
-    "@narratage/runtime": "workspace:*",
-    "@narratage/runtime-host-node": "workspace:*",
-    "@narratage/source": "workspace:*"
+    "@qflow/compiler-node": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/workspace": "workspace:*",
+    "@qflow/package-loader-node": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/run": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-host-node": "workspace:*",
+    "@qflow/source": "workspace:*"
   }
 }

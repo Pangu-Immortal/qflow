@@ -1,6 +1,6 @@
-import { programSpaceSchema } from "@narratage/program-space";
-import type { ValueSchema } from "@narratage/protocol";
-import { contentFitSchema, intrinsicExtentSchema, spatialFrameSchema } from "@narratage/spatial";
+import { programSpaceSchema } from "@qflow/program-space";
+import type { ValueSchema } from "@qflow/protocol";
+import { contentFitSchema, intrinsicExtentSchema, spatialFrameSchema } from "@qflow/spatial";
 const string = { kind: "string", minLength: 1 } as const;
 const number = { kind: "number", minimum: 0 } as const;
 const integer = { kind: "number", integer: true, minimum: 0 } as const;

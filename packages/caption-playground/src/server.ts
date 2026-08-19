@@ -3,17 +3,17 @@ import { readFile, rename, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, relative, resolve } from "node:path";
 
-import { captionTypes } from "@narratage/caption";
-import { fineCaptionRecipeSchema, FINE_CAPTION_FAMILY } from "@narratage/caption-fine";
-import { openFontFamilies } from "@narratage/fonts-open";
-import type { OpenFontFamily, OpenFontStyle } from "@narratage/fonts-open";
-import { narrativeTypes } from "@narratage/narrative";
-import { loadNodePackageSelection } from "@narratage/package-loader-node";
-import type { LoadedPackage } from "@narratage/package-loader-node";
-import type { ArtifactAttachment } from "@narratage/workspace";
-import type { CanonicalValue, TypedRecord, TypeRef } from "@narratage/protocol";
-import { parseSvs } from "@narratage/svs";
-import { createVideoCompiler, discoverVideoSourcePackages } from "@narratage/video-cli";
+import { captionTypes } from "@qflow/caption";
+import { fineCaptionRecipeSchema, FINE_CAPTION_FAMILY } from "@qflow/caption-fine";
+import { openFontFamilies } from "@qflow/fonts-open";
+import type { OpenFontFamily, OpenFontStyle } from "@qflow/fonts-open";
+import { narrativeTypes } from "@qflow/narrative";
+import { loadNodePackageSelection } from "@qflow/package-loader-node";
+import type { LoadedPackage } from "@qflow/package-loader-node";
+import type { ArtifactAttachment } from "@qflow/workspace";
+import type { CanonicalValue, TypedRecord, TypeRef } from "@qflow/protocol";
+import { parseSvs } from "@qflow/svs";
+import { createVideoCompiler, discoverVideoSourcePackages } from "@qflow/video-cli";
 import type { Plugin, ViteDevServer } from "vite";
 
 import type {
@@ -325,7 +325,7 @@ export function captionPlaygroundPlugin(options: CaptionPlaygroundOptions): Plug
   };
 
   return {
-    name: "narratage-caption-playground",
+    name: "qflow-caption-playground",
     configureServer(value) {
       server = value;
       value.watcher.add([options.source, options.recipeFile, options.fontFile]);

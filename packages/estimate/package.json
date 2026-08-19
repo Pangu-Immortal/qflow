@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/estimate",
+  "name": "@qflow/estimate",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,17 +7,17 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/markup": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/speech": "workspace:*",
-    "@narratage/svs": "workspace:*",
-    "@narratage/text": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/speech": "workspace:*",
+    "@qflow/svs": "workspace:*",
+    "@qflow/text": "workspace:*",
     "cmu-pronouncing-dictionary": "3.0.0"
   }
 }

@@ -4,13 +4,13 @@ export type {
   SpeechCharacterEvidence,
   SpeechTranscriptPassage,
   SpeechWordEvidence,
-} from "@narratage/speech-evidence";
+} from "@qflow/speech-evidence";
 export type {
   CompleteSemanticMap,
   SemanticTimePoint,
   TimedSpeechToken,
-} from "@narratage/semantic-map";
-export type { SpeechAudioBasis } from "@narratage/speech";
+} from "@qflow/semantic-map";
+export type { SpeechAudioBasis } from "@qflow/speech";
 
 /** Private vocabulary of the alignment implementation, not part of SemanticMap. */
 export type AlignmentRelation =

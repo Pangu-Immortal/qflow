@@ -1,4 +1,4 @@
-export { plannedNeeds } from "@narratage/core";
+export { plannedNeeds } from "@qflow/core";
 export type * from "./catalog.js";
 export {
   CompositeCredentialStore,

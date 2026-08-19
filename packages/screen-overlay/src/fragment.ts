@@ -1,10 +1,10 @@
-import { compositionTypes } from "@narratage/composition";
-import { sealGraphFragment } from "@narratage/elaborator";
-import type { FragmentOperation } from "@narratage/elaborator";
-import { narrativeTypes } from "@narratage/narrative";
-import { programSpaceTypes } from "@narratage/program-space";
-import { semanticMapTypes } from "@narratage/semantic-map";
-import { spatialTypes } from "@narratage/spatial";
+import { compositionTypes } from "@qflow/composition";
+import { sealGraphFragment } from "@qflow/elaborator";
+import type { FragmentOperation } from "@qflow/elaborator";
+import { narrativeTypes } from "@qflow/narrative";
+import { programSpaceTypes } from "@qflow/program-space";
+import { semanticMapTypes } from "@qflow/semantic-map";
+import { spatialTypes } from "@qflow/spatial";
 import { screenOverlayProducers, screenOverlayTypes } from "./manifest.js";
 
 export type ScreenOverlayFragmentItem =

@@ -1,8 +1,8 @@
-import { sealGenerationPortRequest, sealGenerationPortTable } from "@narratage/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@narratage/generation";
-import { defineExactModelModule } from "@narratage/model-kit";
+import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
+import { defineExactModelModule } from "@qflow/model-kit";
 
-export const minimaxH3ModuleRef = { name: "@narratage/minimax-h3", version: "1" } as const;
+export const minimaxH3ModuleRef = { name: "@qflow/minimax-h3", version: "1" } as const;
 
 /**
  * What MiniMax H3 accepts is a property of the trained model, not of whichever

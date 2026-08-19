@@ -1,14 +1,14 @@
-import { mediaComponent } from "@narratage/media";
-import type { ComponentPackage } from "@narratage/component-kit";
-import { verifyMediaInspection, verifyMediaStreamSelection, verifyMuxedMedia, verifyRenderedVisual, verifySynchronizedMedia, verifyTimelineAudio } from "@narratage/media";
-import type { MediaInspection, MediaStreamSelection, MuxedMedia, RenderedVisual, TimelineAudio } from "@narratage/media";
-import { assertProgramSpaceIdentity, programSpaceSampleFrames } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { assertSpeechAudioBasisIdentity, speechEvidenceSampleBoundary } from "@narratage/speech";
-import type { SpeechAudioBasis } from "@narratage/speech";
-import type { Composition } from "@narratage/composition";
-import type { BlobRef, CanonicalValue, StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
+import { mediaComponent } from "@qflow/media";
+import type { ComponentPackage } from "@qflow/component-kit";
+import { verifyMediaInspection, verifyMediaStreamSelection, verifyMuxedMedia, verifyRenderedVisual, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/media";
+import type { MediaInspection, MediaStreamSelection, MuxedMedia, RenderedVisual, TimelineAudio } from "@qflow/media";
+import { assertProgramSpaceIdentity, programSpaceSampleFrames } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { assertSpeechAudioBasisIdentity, speechEvidenceSampleBoundary } from "@qflow/speech";
+import type { SpeechAudioBasis } from "@qflow/speech";
+import type { Composition } from "@qflow/composition";
+import type { BlobRef, CanonicalValue, StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
 
 import {
   compileAudioProgramPlan,

@@ -1,4 +1,4 @@
-import { canonicalize } from "@narratage/protocol";
+import { canonicalize } from "@qflow/protocol";
 
 import type {
   Text,

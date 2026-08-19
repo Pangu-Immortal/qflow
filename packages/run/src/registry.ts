@@ -1,4 +1,4 @@
-import type { GraphFragment } from "@narratage/elaborator";
+import type { GraphFragment } from "@qflow/elaborator";
 
 import type { RunFragmentPackage, RunFragmentRegistryLike } from "./types.js";
 

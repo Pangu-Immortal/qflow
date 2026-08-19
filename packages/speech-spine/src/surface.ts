@@ -1,19 +1,19 @@
-import { narrativeTypes } from "@narratage/narrative";
-import { artifactTypes } from "@narratage/artifact";
-import { mediaTypes } from "@narratage/media";
+import { narrativeTypes } from "@qflow/narrative";
+import { artifactTypes } from "@qflow/artifact";
+import { mediaTypes } from "@qflow/media";
 import {
   mediaPipelineTypes,
   sealMediaSelectionRequest,
   synchronizedMediaFragment,
-} from "@narratage/media-pipeline";
-import type { SvsRecipe } from "@narratage/svs";
-import { svsRecipeType } from "@narratage/svs";
+} from "@qflow/media-pipeline";
+import type { SvsRecipe } from "@qflow/svs";
+import { svsRecipeType } from "@qflow/svs";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { createSpeechSpineFragment } from "./fragment.js";
 import { speechSpineTypes } from "./manifest.js";
@@ -22,7 +22,7 @@ import {
   contentFitPropertyNames,
   decodeContentFitProperties,
   spatialTypes,
-} from "@narratage/spatial";
+} from "@qflow/spatial";
 
 function localName(value: string): string {
   return value.includes(":") ? value.slice(value.lastIndexOf(":") + 1) : value;
@@ -216,7 +216,7 @@ export const decodeSpeechSpineSurface: StructuredSurfaceHandler = ({ element, re
     frameRate: rate,
   });
   const assembly = createSpeechSpineFragment({
-    name: `@narratage/speech-spine/surface/${id}@1`,
+    name: `@qflow/speech-spine/surface/${id}@1`,
     takes: declaredTakes.map(({ mediaName, segmentName, visual }) => ({
       mediaName,
       segmentName,

@@ -1,4 +1,4 @@
-import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
+import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import type { CompleteSemanticMap } from "./types.js";
 
 export type LocatedFrameSpan = { readonly startFrame: number; readonly endFrameExclusive: number };

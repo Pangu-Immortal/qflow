@@ -1,5 +1,5 @@
-import type { ComponentPackage, ProducerHandlerContext } from "@narratage/component-kit";
-import type { StoredValue } from "@narratage/protocol";
+import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
+import type { StoredValue } from "@qflow/protocol";
 
 import {
   textProducers,

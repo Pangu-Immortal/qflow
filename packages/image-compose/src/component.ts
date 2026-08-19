@@ -1,8 +1,8 @@
-import type { ComponentPackage, ProducerHandlerContext } from "@narratage/component-kit";
-import type { BlobRef, StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
-import { rasterComposeRequest } from "@narratage/raster";
-import type { CanvasSpace, SpatialFrame } from "@narratage/spatial";
+import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
+import type { BlobRef, StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
+import { rasterComposeRequest } from "@qflow/raster";
+import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
 
 import { imageComposeProducers, imageComposeTypes } from "./manifest.js";
 import {

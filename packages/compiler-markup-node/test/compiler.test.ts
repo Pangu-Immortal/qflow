@@ -8,10 +8,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { createMarkupNodeCompiler } from "@narratage/compiler-markup-node";
-import type { NodePackageContribution } from "@narratage/package-loader-node";
-import { createMarkupSurfaceHostFacet } from "@narratage/markup";
-import { NodeFilesystemWorkspace } from "@narratage/workspace-fs-node";
+import { createMarkupNodeCompiler } from "@qflow/compiler-markup-node";
+import type { NodePackageContribution } from "@qflow/package-loader-node";
+import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { NodeFilesystemWorkspace } from "@qflow/workspace-fs-node";
 
 const module = { name: "example.card", version: "1" } as const;
 const resultType = { module, name: "CardResult" } as const;
@@ -23,10 +23,10 @@ const cardSurface = {
 } as const;
 
 const installedPackage: NodePackageContribution = {
-  format: "narratage.node-package@1",
+  format: "qflow.node-package@1",
   modules: [{
     manifest: {
-      format: "narratage.module@1",
+      format: "qflow.module@1",
       name: module.name,
       version: module.version,
       dependencies: [],
@@ -63,10 +63,10 @@ const installedPackage: NodePackageContribution = {
 };
 
 test("Markup compiler alone selects Markup Surface Host facets from a generic package contribution", async () => {
-  const root = await mkdtemp(join(tmpdir(), "narratage-markup-compiler-"));
+  const root = await mkdtemp(join(tmpdir(), "qflow-markup-compiler-"));
   try {
     const source = join(root, "main.svml");
-    await writeFile(source, `<?svml using="@narratage/markup@1"?>
+    await writeFile(source, `<?svml using="@qflow/markup@1"?>
     <svml>
       <import as="example" from="example.card@1"/>
       <example:Card/>

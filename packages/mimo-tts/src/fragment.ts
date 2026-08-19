@@ -1,5 +1,5 @@
-import { createExactModelPrimaryGenerationFragment } from "@narratage/model-kit";
-import type { ExactModelEndpoint, ExactModelMediaInput, ExactModelTextInput } from "@narratage/model-kit";
+import { createExactModelPrimaryGenerationFragment } from "@qflow/model-kit";
+import type { ExactModelEndpoint, ExactModelMediaInput, ExactModelTextInput } from "@qflow/model-kit";
 
 /** Model result projection over the same graph-native request assembly as every exact model. */
 export function createMimoTtsAudioFragment(

@@ -3,7 +3,7 @@ import {
   assertVisualTrackIdentity,
   sealAudioTrack,
   sealVisualTrack,
-} from "@narratage/composition";
+} from "@qflow/composition";
 import type {
   AudioClip,
   AudioTrack,
@@ -16,14 +16,14 @@ import type {
   VisualTextPaintLayer,
   VisualTextTypography,
   VisualTrack,
-} from "@narratage/composition";
-import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@narratage/media";
+} from "@qflow/composition";
+import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/media";
 import {
   assertProgramSpaceIdentity,
   programFrameSampleBoundary,
   programSpaceSampleFrames,
-} from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
+} from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
 
 import {
   assertColumnProgram,
@@ -248,7 +248,7 @@ function directItemAnimation(duration: number, appearFrames: number): VisualAnim
 }
 
 function sealTrack(space: ProgramSpace, id: string, presents: readonly VisualPresent[]): VisualTrack {
-  const value = sealVisualTrack({ visualIr: "narratage.visual-ir@1", id, presents });
+  const value = sealVisualTrack({ visualIr: "qflow.visual-ir@1", id, presents });
   assertVisualTrackIdentity(value, space);
   return value;
 }

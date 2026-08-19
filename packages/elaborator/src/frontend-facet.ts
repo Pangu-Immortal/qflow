@@ -1,12 +1,12 @@
 import {
   createFrontendHostFacet,
   frontendsFromHostFacets,
-} from "@narratage/host";
+} from "@qflow/host";
 import type {
   FrontendHostFacet,
   HostFacet,
-} from "@narratage/host";
-import { sourceFrontendPackageAbi } from "@narratage/source";
+} from "@qflow/host";
+import { sourceFrontendPackageAbi } from "@qflow/source";
 
 import type { AuthorFrontend } from "./source.js";
 

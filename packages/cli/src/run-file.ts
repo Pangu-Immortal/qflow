@@ -1,20 +1,20 @@
 import {
   NodeRunCompiler,
-} from "@narratage/compiler-node";
+} from "@qflow/compiler-node";
 import type {
   NodeCompiledRun,
   NodeCompiler,
-} from "@narratage/compiler-node";
+} from "@qflow/compiler-node";
 import type { CliRuntime } from "./runtime-port.js";
-import type { NodePackageContribution } from "@narratage/package-loader-node";
-import type { WorkspaceSession } from "@narratage/workspace";
+import type { NodePackageContribution } from "@qflow/package-loader-node";
+import type { WorkspaceSession } from "@qflow/workspace";
 import {
   installRunFragmentHostFacets,
   runFrontendsFromHostFacets,
   RunFragmentRegistry,
   RunFrontendRegistry,
-} from "@narratage/run";
-import type { RunFrontend } from "@narratage/run";
+} from "@qflow/run";
+import type { RunFrontend } from "@qflow/run";
 import { selectArchivedRecord } from "./archive.js";
 
 export type LoadedRunFile = NodeCompiledRun & {

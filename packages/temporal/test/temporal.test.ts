@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import { programFrameSampleBoundary, programSpaceSampleFrames } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import { programFrameSampleBoundary, programSpaceSampleFrames } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
 
 import {
   assertWindowRelation,

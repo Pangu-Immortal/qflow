@@ -11,13 +11,13 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-import { NodeRunCompiler } from "@narratage/compiler-node";
-import type { PlannedBuild } from "@narratage/compiler-node";
-import type { Digest, StoredValue } from "@narratage/protocol";
+import { NodeRunCompiler } from "@qflow/compiler-node";
+import type { PlannedBuild } from "@qflow/compiler-node";
+import type { Digest, StoredValue } from "@qflow/protocol";
 import {
   compileRunSource, RunFragmentRegistry, RunFrontendRegistry, resolveRunDocument,
-} from "@narratage/run";
-import { runMarkupFrontend } from "@narratage/run-markup";
+} from "@qflow/run";
+import { runMarkupFrontend } from "@qflow/run-markup";
 
 import { officialVideoDomain } from "../official-video.js";
 import type { Archive } from "./archive.js";

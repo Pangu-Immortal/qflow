@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { renderCliError, writeCliHelp } from "@narratage/cli";
-import type { CliIo } from "@narratage/cli";
+import { renderCliError, writeCliHelp } from "@qflow/cli";
+import type { CliIo } from "@qflow/cli";
 
 const argv = process.argv.slice(2);
 const json = argv.includes("--json");

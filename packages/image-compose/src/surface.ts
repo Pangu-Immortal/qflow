@@ -1,7 +1,7 @@
-import { artifactTypes } from "@narratage/artifact";
-import type { CanonicalValue } from "@narratage/protocol";
-import { spatialTypes } from "@narratage/spatial";
-import type { StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference, MarkupAttributeValue } from "@narratage/markup";
+import { artifactTypes } from "@qflow/artifact";
+import type { CanonicalValue } from "@qflow/protocol";
+import { spatialTypes } from "@qflow/spatial";
+import type { StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/markup";
 
 import { createImageComposeFragment } from "./fragment.js";
 import { imageComposeTypes } from "./manifest.js";

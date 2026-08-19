@@ -1,8 +1,8 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { CaptionProgram } from "@narratage/caption";
-import type { CaptionDisplaySequence } from "@narratage/narrative";
-import type { StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { CaptionProgram } from "@qflow/caption";
+import type { CaptionDisplaySequence } from "@qflow/narrative";
+import type { StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
 
 import { captionGeminiProducers, captionGeminiTypes } from "./manifest.js";
 import { verifyCaptionGeminiProgram } from "./program.js";

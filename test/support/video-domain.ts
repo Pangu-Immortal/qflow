@@ -1,14 +1,14 @@
-import { artifactManifest } from "@narratage/artifact";
-import { compositionComponent, compositionManifest } from "@narratage/composition";
-import { mediaComponent, mediaManifest } from "@narratage/media";
-import { narrativeManifest } from "@narratage/narrative";
-import { programSpaceManifest } from "@narratage/program-space";
-import { semanticMapManifest } from "@narratage/semantic-map";
-import { spatialComponent, spatialManifest } from "@narratage/spatial";
-import { speechManifest } from "@narratage/speech";
-import { speechEvidenceManifest } from "@narratage/speech-evidence";
-import { temporalManifest } from "@narratage/temporal";
-import { visualIrManifest } from "@narratage/visual-ir";
+import { artifactManifest } from "@qflow/artifact";
+import { compositionComponent, compositionManifest } from "@qflow/composition";
+import { mediaComponent, mediaManifest } from "@qflow/media";
+import { narrativeManifest } from "@qflow/narrative";
+import { programSpaceManifest } from "@qflow/program-space";
+import { semanticMapManifest } from "@qflow/semantic-map";
+import { spatialComponent, spatialManifest } from "@qflow/spatial";
+import { speechManifest } from "@qflow/speech";
+import { speechEvidenceManifest } from "@qflow/speech-evidence";
+import { temporalManifest } from "@qflow/temporal";
+import { visualIrManifest } from "@qflow/visual-ir";
 
 /** Shared test fixture only; production packages import only the contracts they use. */
 export const videoContractManifests = [

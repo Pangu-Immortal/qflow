@@ -1,18 +1,18 @@
-import type { NarrativeExcerpt } from "@narratage/narrative";
-import { synchronizedMediaSampleFrames, verifySynchronizedMedia, verifyTimelineAudio } from "@narratage/media";
-import type { SynchronizedMedia, TimelineAudio } from "@narratage/media";
-import { assertProgramSpaceIdentity, sealProgramSpace } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { sealSpeechBasis } from "@narratage/speech";
-import type { SpeechBasis } from "@narratage/speech";
+import type { NarrativeExcerpt } from "@qflow/narrative";
+import { synchronizedMediaSampleFrames, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/media";
+import type { SynchronizedMedia, TimelineAudio } from "@qflow/media";
+import { assertProgramSpaceIdentity, sealProgramSpace } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { sealSpeechBasis } from "@qflow/speech";
+import type { SpeechBasis } from "@qflow/speech";
 import {
   sealAudioProgramPlan,
   verifyAudioProgramPlan,
-} from "@narratage/media-pipeline";
-import type { AudioProgramPlan } from "@narratage/media-pipeline";
-import { canonicalize } from "@narratage/protocol";
-import { assertContentFit, assertSpatialFrame } from "@narratage/spatial";
-import type { ContentFit, SpatialFrame } from "@narratage/spatial";
+} from "@qflow/media-pipeline";
+import type { AudioProgramPlan } from "@qflow/media-pipeline";
+import { canonicalize } from "@qflow/protocol";
+import { assertContentFit, assertSpatialFrame } from "@qflow/spatial";
+import type { ContentFit, SpatialFrame } from "@qflow/spatial";
 
 import type {
   SpeechSpineProgram,

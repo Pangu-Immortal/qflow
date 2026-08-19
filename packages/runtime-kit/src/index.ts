@@ -1,12 +1,12 @@
-import type { EndpointPackage } from "@narratage/endpoint-kit";
-import type { HostFacet } from "@narratage/host";
-import type { CanonicalValue } from "@narratage/protocol";
-import { credentialRef } from "@narratage/runtime";
-import type { ArtifactStore, CredentialRef, CredentialStore } from "@narratage/runtime";
+import type { EndpointPackage } from "@qflow/endpoint-kit";
+import type { HostFacet } from "@qflow/host";
+import type { CanonicalValue } from "@qflow/protocol";
+import { credentialRef } from "@qflow/runtime";
+import type { ArtifactStore, CredentialRef, CredentialStore } from "@qflow/runtime";
 
-export const runtimeEndpointAdapterHostAbi = "narratage.runtime-endpoint-adapter-host@1";
-export const runtimeArtifactStoreAdapterHostAbi = "narratage.runtime-artifact-store-adapter-host@1";
-export const runtimeCredentialStoreAdapterHostAbi = "narratage.runtime-credential-store-adapter-host@1";
+export const runtimeEndpointAdapterHostAbi = "qflow.runtime-endpoint-adapter-host@1";
+export const runtimeArtifactStoreAdapterHostAbi = "qflow.runtime-artifact-store-adapter-host@1";
+export const runtimeCredentialStoreAdapterHostAbi = "qflow.runtime-credential-store-adapter-host@1";
 
 export type RuntimeAdapterKind = "endpoint" | "artifact-store" | "credential-store";
 

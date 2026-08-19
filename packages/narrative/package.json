@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/narrative",
+  "name": "@qflow/narrative",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,10 +7,10 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/protocol": "workspace:*"
+    "@qflow/protocol": "workspace:*"
   }
 }

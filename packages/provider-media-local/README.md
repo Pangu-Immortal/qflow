@@ -1,10 +1,10 @@
-# `@narratage/provider-media-local`
+# `@qflow/provider-media-local`
 
-Trusted local ffprobe/ffmpeg implementation of `@narratage/media-pipeline`'s eight exact byte-operation
+Trusted local ffprobe/ffmpeg implementation of `@qflow/media-pipeline`'s eight exact byte-operation
 capabilities. It is Runtime configuration and is never imported by author `.svml`.
 
 ```ts
-import { createLocalMediaProvider } from "@narratage/provider-media-local";
+import { createLocalMediaProvider } from "@qflow/provider-media-local";
 
 const media = createLocalMediaProvider({ instance: "media.local", defaultConcurrency: 1 });
 ```

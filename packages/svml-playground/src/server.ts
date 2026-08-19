@@ -130,7 +130,7 @@ export function svmlPlaygroundPlugin(options: SvmlPlaygroundOptions): Plugin {
   };
 
   return {
-    name: "narratage-svml-playground",
+    name: "qflow-svml-playground",
     configureServer(value) {
       server = value;
       value.watcher.add([options.source, ...(options.run === undefined ? [] : [options.run])]);
@@ -142,7 +142,7 @@ export function svmlPlaygroundPlugin(options: SvmlPlaygroundOptions): Plugin {
         if (changed === options.source || changed === options.run || path.endsWith(".svs")) schedule();
       });
       value.middlewares.use((request, response, next) => {
-        const url = new URL(request.url ?? "/", "http://narratage.local");
+        const url = new URL(request.url ?? "/", "http://qflow.local");
         if (request.method !== "GET" && request.method !== "HEAD") {
           next();
           return;

@@ -1,6 +1,6 @@
-import { speechTypes } from "@narratage/speech";
-import { sealGraphFragment } from "@narratage/elaborator";
-import { textTypes } from "@narratage/text";
+import { speechTypes } from "@qflow/speech";
+import { sealGraphFragment } from "@qflow/elaborator";
+import { textTypes } from "@qflow/text";
 
 import { estimateProducers, estimateTypes } from "./manifest.js";
 

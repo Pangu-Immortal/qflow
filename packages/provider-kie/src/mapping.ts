@@ -1,5 +1,5 @@
-import type { CapabilityRef, ModuleRef } from "@narratage/protocol";
-import type { GenerationWireMapping } from "@narratage/generation";
+import type { CapabilityRef, ModuleRef } from "@qflow/protocol";
+import type { GenerationWireMapping } from "@qflow/generation";
 
 /**
  * How KIE names each model's declared input ports.
@@ -11,13 +11,13 @@ import type { GenerationWireMapping } from "@narratage/generation";
  */
 
 /** Model packages this KIE release is written against. A version bump is a mapping review. */
-const SEEDANCE: ModuleRef = { name: "@narratage/seedance", version: "1" };
-const MINIMAX: ModuleRef = { name: "@narratage/minimax-h3", version: "1" };
-const GEMINI: ModuleRef = { name: "@narratage/gemini-omni", version: "1" };
-const GROK: ModuleRef = { name: "@narratage/grok-imagine", version: "1" };
-const GPT_IMAGE: ModuleRef = { name: "@narratage/gpt-image", version: "1" };
-const NANO_BANANA: ModuleRef = { name: "@narratage/nano-banana", version: "1" };
-const SEEDREAM: ModuleRef = { name: "@narratage/seedream", version: "1" };
+const SEEDANCE: ModuleRef = { name: "@qflow/seedance", version: "1" };
+const MINIMAX: ModuleRef = { name: "@qflow/minimax-h3", version: "1" };
+const GEMINI: ModuleRef = { name: "@qflow/gemini-omni", version: "1" };
+const GROK: ModuleRef = { name: "@qflow/grok-imagine", version: "1" };
+const GPT_IMAGE: ModuleRef = { name: "@qflow/gpt-image", version: "1" };
+const NANO_BANANA: ModuleRef = { name: "@qflow/nano-banana", version: "1" };
+const SEEDREAM: ModuleRef = { name: "@qflow/seedream", version: "1" };
 
 /** KIE keeps each reference modality in its own array, as its schema documents. */
 const referenceFields = {

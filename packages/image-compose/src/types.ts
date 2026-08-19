@@ -1,5 +1,5 @@
-import type { BlobRef } from "@narratage/protocol";
-import type { SpatialFrame } from "@narratage/spatial";
+import type { BlobRef } from "@qflow/protocol";
+import type { SpatialFrame } from "@qflow/spatial";
 
 export type ImageComposeOptions = {
   readonly background: string;

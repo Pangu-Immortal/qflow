@@ -1,4 +1,4 @@
-# `@narratage/caption-gemini`
+# `@qflow/caption-gemini`
 
 Exact Gemini Caption planning, without wording, Style-selection or timing authority.
 

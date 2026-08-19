@@ -4,23 +4,23 @@ import { createRequire } from "node:module";
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { mediaTypes, sealRenderedVisual } from "@narratage/media";
-import type { RenderedVisual } from "@narratage/media";
-import { verifyCompositableSurfaceBytes } from "@narratage/media-execution";
-import type { EndpointInvocationContext, EndpointFulfillment } from "@narratage/endpoint-kit";
-import { assertHyperframesDocument } from "@narratage/hyperframes";
-import type { HyperframesDocument } from "@narratage/hyperframes";
-import { stageHyperframesProject } from "@narratage/hyperframes/project";
-import { renderHyperframesCapabilities } from "@narratage/render-hyperframes";
-import { canonicalize } from "@narratage/protocol";
-import { isStreamingArtifactStore } from "@narratage/runtime";
-import type { BlobRef, CanonicalValue } from "@narratage/protocol";
-import { defineEndpointPackage } from "@narratage/endpoint-kit";
+import { mediaTypes, sealRenderedVisual } from "@qflow/media";
+import type { RenderedVisual } from "@qflow/media";
+import { verifyCompositableSurfaceBytes } from "@qflow/media-execution";
+import type { EndpointInvocationContext, EndpointFulfillment } from "@qflow/endpoint-kit";
+import { assertHyperframesDocument } from "@qflow/hyperframes";
+import type { HyperframesDocument } from "@qflow/hyperframes";
+import { stageHyperframesProject } from "@qflow/hyperframes/project";
+import { renderHyperframesCapabilities } from "@qflow/render-hyperframes";
+import { canonicalize } from "@qflow/protocol";
+import { isStreamingArtifactStore } from "@qflow/runtime";
+import type { BlobRef, CanonicalValue } from "@qflow/protocol";
+import { defineEndpointPackage } from "@qflow/endpoint-kit";
 
 const HYPERFRAMES_VERSION = "0.7.101";
 
 export const localHyperframesProviderModuleRef = {
-  name: "@narratage/provider-hyperframes-local",
+  name: "@qflow/provider-hyperframes-local",
   version: "1",
 } as const;
 
@@ -259,7 +259,7 @@ export function createLocalHyperframesProvider(config: CreateLocalHyperframesPro
       returns: mediaTypes.renderedVisual,
       handler: async (context) => {
         const document = visualRequest(context.need.constraints);
-        const work = await mkdtemp(join(tmpdir(), "narratage-hyperframes-local-"));
+        const work = await mkdtemp(join(tmpdir(), "qflow-hyperframes-local-"));
         try {
           await stageHyperframesProject({
             document,

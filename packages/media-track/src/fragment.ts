@@ -1,8 +1,8 @@
-import { artifactTypes } from "@narratage/artifact";
-import { compositionTypes } from "@narratage/composition";
-import { sealGraphFragment } from "@narratage/elaborator";
-import { programSpaceTypes } from "@narratage/program-space";
-import { spatialTypes } from "@narratage/spatial";
+import { artifactTypes } from "@qflow/artifact";
+import { compositionTypes } from "@qflow/composition";
+import { sealGraphFragment } from "@qflow/elaborator";
+import { programSpaceTypes } from "@qflow/program-space";
+import { spatialTypes } from "@qflow/spatial";
 
 import { mediaTrackProducers, mediaTrackTypes } from "./manifest.js";
 

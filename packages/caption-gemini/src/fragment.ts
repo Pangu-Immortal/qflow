@@ -1,6 +1,6 @@
-import { narrativeTypes } from "@narratage/narrative";
-import { captionTypes } from "@narratage/caption";
-import { sealGraphFragment } from "@narratage/elaborator";
+import { narrativeTypes } from "@qflow/narrative";
+import { captionTypes } from "@qflow/caption";
+import { sealGraphFragment } from "@qflow/elaborator";
 
 import { captionGeminiProducers, captionGeminiTypes } from "./manifest.js";
 

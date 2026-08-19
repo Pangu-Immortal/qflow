@@ -3,22 +3,22 @@ import {
   assertVisualTrackIdentity,
   sealAudioTrack,
   sealVisualTrack,
-} from "@narratage/composition";
-import type { AudioClip, AudioTrack, VisualTrack } from "@narratage/composition";
-import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
+} from "@qflow/composition";
+import type { AudioClip, AudioTrack, VisualTrack } from "@qflow/composition";
+import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import {
   assertProgramSpaceIdentity,
   programFrameSampleBoundary,
   programSpaceFrameCount,
   programSpaceSampleFrames,
-} from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { canonicalize, isDigest } from "@narratage/protocol";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import { assertCanvasSpace, assertSpatialFrame } from "@narratage/spatial";
-import type { CanvasSpace } from "@narratage/spatial";
-import { assertSpatialPath } from "@narratage/spatial";
-import type { SpatialPath } from "@narratage/spatial";
+} from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { canonicalize, isDigest } from "@qflow/protocol";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
+import type { CanvasSpace } from "@qflow/spatial";
+import { assertSpatialPath } from "@qflow/spatial";
+import type { SpatialPath } from "@qflow/spatial";
 import {
   locateMomentOccurrences,
   locateSelectionOccurrences,
@@ -26,8 +26,8 @@ import {
   projectProgramWindow,
   projectSegmentWindow,
   projectSelectionWindows,
-} from "@narratage/temporal";
-import type { ProjectedOccurrence, TemporalDuration, TemporalPointExpression } from "@narratage/temporal";
+} from "@qflow/temporal";
+import type { ProjectedOccurrence, TemporalDuration, TemporalPointExpression } from "@qflow/temporal";
 
 import {
   assertMediaIdentity,
@@ -494,7 +494,7 @@ export function assertMediaTrackProgramIdentity(value: MediaTrackProgram, space:
 export function projectMediaVisualTrack(space: ProgramSpace, program: MediaTrackProgram): VisualTrack {
   assertMediaTrackProgramIdentity(program, space);
   const track = sealVisualTrack({
-    visualIr: "narratage.visual-ir@1",
+    visualIr: "qflow.visual-ir@1",
     id: program.id,
     presents: [
       ...program.items.map((item) => ({

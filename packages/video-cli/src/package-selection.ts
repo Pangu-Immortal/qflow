@@ -1,9 +1,9 @@
-import { discoverSourcePackages } from "@narratage/cli";
+import { discoverSourcePackages } from "@qflow/cli";
 import {
   createMarkupAuthorFrontend,
   MarkupSurfaceRegistry,
-} from "@narratage/markup";
-import type { LoadedPackage } from "@narratage/package-loader-node";
+} from "@qflow/markup";
+import type { LoadedPackage } from "@qflow/package-loader-node";
 
 const markupFrontend = createMarkupAuthorFrontend({
   registry: new MarkupSurfaceRegistry(),

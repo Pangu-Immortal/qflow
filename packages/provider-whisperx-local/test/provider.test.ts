@@ -1,14 +1,14 @@
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { sealSpeechEvidenceAudio, speechTypes } from "@narratage/speech";
+import { sealSpeechEvidenceAudio, speechTypes } from "@qflow/speech";
 import assert from "node:assert/strict";
-import { MemoryArtifactStore, EndpointRegistry } from "@narratage/driver-node";
-import type { Need } from "@narratage/protocol";
-import { speechEvidenceTypes } from "@narratage/speech-evidence";
+import { MemoryArtifactStore, EndpointRegistry } from "@qflow/driver-node";
+import type { Need } from "@qflow/protocol";
+import { speechEvidenceTypes } from "@qflow/speech-evidence";
 import {
   whisperXCapabilities,
   whisperXRequestForEvidenceAudio,
-} from "@narratage/whisperx";
+} from "@qflow/whisperx";
 
 import {
   createLocalWhisperXProvider,
@@ -80,7 +80,7 @@ test("local Provider stages canonical evidence bytes unchanged and returns seale
     if (url.endsWith("/health")) {
       return new Response(JSON.stringify({
           ok: true,
-          protocol: "narratage.whisperx-service@1",
+          protocol: "qflow.whisperx-service@1",
           serviceVersion: "0.1.0",
           whisperxVersion: "3.8.6",
           model: "small",

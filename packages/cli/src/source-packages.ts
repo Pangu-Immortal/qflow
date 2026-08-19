@@ -1,12 +1,12 @@
 import {
   loadNodePackageSelection,
-} from "@narratage/package-loader-node";
+} from "@qflow/package-loader-node";
 import type {
   LoadedPackage,
   LogicalPackageAddress,
   NodePackageSelectionRequest,
-} from "@narratage/package-loader-node";
-import { modulePackageAbi } from "@narratage/protocol";
+} from "@qflow/package-loader-node";
+import { modulePackageAbi } from "@qflow/protocol";
 
 import type { CliDistribution } from "./distribution.js";
 

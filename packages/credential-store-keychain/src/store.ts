@@ -1,14 +1,14 @@
 import { execFile } from "node:child_process";
 
-import { verifyCredentialRef } from "@narratage/runtime";
+import { verifyCredentialRef } from "@qflow/runtime";
 import type {
   CredentialRef,
   CredentialValue,
   WritableCredentialStore,
-} from "@narratage/runtime";
+} from "@qflow/runtime";
 
 export const keychainCredentialStoreModuleRef = {
-  name: "@narratage/credential-store-keychain",
+  name: "@qflow/credential-store-keychain",
   version: "1",
 } as const;
 
@@ -26,7 +26,7 @@ export type CreateKeychainCredentialStorePackageOptions = {
   readonly remove?: KeychainDeleter;
 };
 
-const DEFAULT_SERVICE = "narratage";
+const DEFAULT_SERVICE = "qflow";
 
 /**
  * `security find-generic-password -s <service> -a <account> -w`

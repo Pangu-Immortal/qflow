@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/media-track",
+  "name": "@qflow/media-track",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,23 +7,23 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/artifact": "workspace:*",
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/composition": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/media": "workspace:*",
-    "@narratage/media-pipeline": "workspace:*",
-    "@narratage/narrative": "workspace:*",
-    "@narratage/program-space": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/semantic-map": "workspace:*",
-    "@narratage/spatial": "workspace:*",
-    "@narratage/svs": "workspace:*",
-    "@narratage/markup": "workspace:*",
-    "@narratage/temporal": "workspace:*"
+    "@qflow/artifact": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/media-pipeline": "workspace:*",
+    "@qflow/narrative": "workspace:*",
+    "@qflow/program-space": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/semantic-map": "workspace:*",
+    "@qflow/spatial": "workspace:*",
+    "@qflow/svs": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/temporal": "workspace:*"
   }
 }

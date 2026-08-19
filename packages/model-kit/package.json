@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/model-kit",
+  "name": "@qflow/model-kit",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -8,11 +8,11 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@narratage/artifact": "workspace:*",
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/generation": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/text": "workspace:*"
+    "@qflow/artifact": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/generation": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/text": "workspace:*"
   }
 }

@@ -6,12 +6,12 @@ import {
   sealGenerationMediaBinding,
   sealGenerationRequestDraft,
   sealGenerationPortTable,
-} from "@narratage/generation";
+} from "@qflow/generation";
 import {
   createExactModelPrimaryGenerationFragment,
   defineExactModelModule,
-} from "@narratage/model-kit";
-import { sealText } from "@narratage/text";
+} from "@qflow/model-kit";
+import { sealText } from "@qflow/text";
 
 const ports = sealGenerationPortTable({
   model: "graph-native-image",

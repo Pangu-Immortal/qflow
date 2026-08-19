@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/generation",
+  "name": "@qflow/generation",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,17 +7,17 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/artifact": "workspace:*",
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/text": "workspace:*"
+    "@qflow/artifact": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/text": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/driver-node": "workspace:*",
-    "@narratage/validation": "workspace:*"
+    "@qflow/driver-node": "workspace:*",
+    "@qflow/validation": "workspace:*"
   }
 }

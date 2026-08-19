@@ -1,6 +1,6 @@
-import { verifyMediaInspection } from "@narratage/media";
-import type { MediaAudioStream, MediaInspection, MediaVideoStream } from "@narratage/media";
-import { canonicalize } from "@narratage/protocol";
+import { verifyMediaInspection } from "@qflow/media";
+import type { MediaAudioStream, MediaInspection, MediaVideoStream } from "@qflow/media";
+import { canonicalize } from "@qflow/protocol";
 
 import type {
   AudioExtractionRequest,

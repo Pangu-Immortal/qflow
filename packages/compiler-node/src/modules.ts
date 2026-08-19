@@ -1,9 +1,9 @@
-import { createResolvedClosure } from "@narratage/core";
+import { createResolvedClosure } from "@qflow/core";
 import type {
   ModuleManifest,
   ModuleRef,
   ResolvedModuleClosure,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 
 import { NodeCompilerError } from "./error.js";
 

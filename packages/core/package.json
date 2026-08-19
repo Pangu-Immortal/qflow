@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/core",
+  "name": "@qflow/core",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -8,6 +8,6 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@narratage/protocol": "workspace:*"
+    "@qflow/protocol": "workspace:*"
   }
 }

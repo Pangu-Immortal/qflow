@@ -1,9 +1,9 @@
-import { artifactTypes } from "@narratage/artifact";
-import { programSpaceTypes } from "@narratage/program-space";
-import { compositionTypes } from "@narratage/composition";
-import { sealGraphFragment } from "@narratage/elaborator";
-import { hyperframesProducers } from "@narratage/hyperframes";
-import { mediaPipelineProducers } from "@narratage/media-pipeline";
+import { artifactTypes } from "@qflow/artifact";
+import { programSpaceTypes } from "@qflow/program-space";
+import { compositionTypes } from "@qflow/composition";
+import { sealGraphFragment } from "@qflow/elaborator";
+import { hyperframesProducers } from "@qflow/hyperframes";
+import { mediaPipelineProducers } from "@qflow/media-pipeline";
 
 import {
   renderHyperframesProducers,

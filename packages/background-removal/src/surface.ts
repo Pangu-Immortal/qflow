@@ -1,5 +1,5 @@
-import { artifactTypes } from "@narratage/artifact";
-import type { StructuredSurfaceHandler, SurfaceResolvedReference, MarkupAttributeValue } from "@narratage/markup";
+import { artifactTypes } from "@qflow/artifact";
+import type { StructuredSurfaceHandler, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/markup";
 
 import { backgroundRemovalFragment } from "./fragment.js";
 

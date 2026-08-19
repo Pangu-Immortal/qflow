@@ -1,11 +1,11 @@
-import { speechDependency, speechTypes } from "@narratage/speech";
-import { speechEvidenceDependency, speechEvidenceTypes } from "@narratage/speech-evidence";
-import { semanticMapDependency, semanticMapTypes } from "@narratage/semantic-map";
-import type { CapabilityRef, ModuleManifest, ProducerRef } from "@narratage/protocol";
-import { mediaPipelineManifest, mediaPipelineModuleRef } from "@narratage/media-pipeline";
-import { speechAlignmentManifest, speechAlignmentModuleRef } from "@narratage/speech-alignment";
+import { speechDependency, speechTypes } from "@qflow/speech";
+import { speechEvidenceDependency, speechEvidenceTypes } from "@qflow/speech-evidence";
+import { semanticMapDependency, semanticMapTypes } from "@qflow/semantic-map";
+import type { CapabilityRef, ModuleManifest, ProducerRef } from "@qflow/protocol";
+import { mediaPipelineManifest, mediaPipelineModuleRef } from "@qflow/media-pipeline";
+import { speechAlignmentManifest, speechAlignmentModuleRef } from "@qflow/speech-alignment";
 
-export const whisperXModuleRef = { name: "@narratage/whisperx", version: "1" } as const;
+export const whisperXModuleRef = { name: "@qflow/whisperx", version: "1" } as const;
 export const whisperXCapabilities = {
   alignment: { module: whisperXModuleRef, name: "whisperx-alignment" },
 } satisfies Record<string, CapabilityRef>;
@@ -22,7 +22,7 @@ export const whisperXMarkupSurfaces = [{
 
 
 export const whisperXManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: whisperXModuleRef.name,
   version: whisperXModuleRef.version,
   dependencies: [

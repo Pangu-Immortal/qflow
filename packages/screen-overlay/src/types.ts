@@ -1,5 +1,5 @@
-import type { FrameSpan } from "@narratage/composition";
-import type { OccurrenceExpansion, TemporalWindowProjection } from "@narratage/temporal";
+import type { FrameSpan } from "@qflow/composition";
+import type { OccurrenceExpansion, TemporalWindowProjection } from "@qflow/temporal";
 
 export type FlashOverlay = {
   readonly kind: "flash"; readonly color: string; readonly intensity: number;

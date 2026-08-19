@@ -1,7 +1,7 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { SpeechEvidenceAudio } from "@narratage/speech";
-import type { CanonicalValue, StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { SpeechEvidenceAudio } from "@qflow/speech";
+import type { CanonicalValue, StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
 
 import { whisperXRequestForEvidenceAudio } from "./evidence.js";
 import { whisperXProducers } from "./manifest.js";

@@ -1,15 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveCaptionProgram, sealCaptionStyle } from "@narratage/caption";
-import type { CaptionFieldDeclaration, CaptionStyleIntent } from "@narratage/caption";
+import { resolveCaptionProgram, sealCaptionStyle } from "@qflow/caption";
+import type { CaptionFieldDeclaration, CaptionStyleIntent } from "@qflow/caption";
 import {
   compileCaptionGeminiRequest,
   sealCaptionGeminiPlan,
   sealCaptionGeminiProgram,
-} from "@narratage/caption-gemini";
-import type { CaptionGeminiRequest, RawCaptionGeminiResponse } from "@narratage/caption-gemini";
-import { captionDisplaySequence, parseScript } from "@narratage/script";
+} from "@qflow/caption-gemini";
+import type { CaptionGeminiRequest, RawCaptionGeminiResponse } from "@qflow/caption-gemini";
+import { captionDisplaySequence, parseScript } from "@qflow/script";
 
 function style(id: string, fields: readonly CaptionFieldDeclaration[] = []): CaptionStyleIntent {
   return sealCaptionStyle({

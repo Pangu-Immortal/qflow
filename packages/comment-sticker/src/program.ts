@@ -1,7 +1,7 @@
 import {
   assertVisualTrackIdentity,
   sealVisualTrack,
-} from "@narratage/composition";
+} from "@qflow/composition";
 import type {
   VisualAnimation,
   VisualElement,
@@ -9,24 +9,24 @@ import type {
   VisualTextFlow,
   VisualTextTypography,
   VisualTrack,
-} from "@narratage/composition";
-import { assertFontArtifactRef } from "@narratage/media";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import { assertProgramSpaceIdentity } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { canonicalize, isDigest } from "@narratage/protocol";
-import type { BlobRef } from "@narratage/protocol";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import { assertCanvasSpace, assertSpatialFrame } from "@narratage/spatial";
-import type { CanvasSpace, SpatialFrame } from "@narratage/spatial";
+} from "@qflow/composition";
+import { assertFontArtifactRef } from "@qflow/media";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import { assertProgramSpaceIdentity } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { canonicalize, isDigest } from "@qflow/protocol";
+import type { BlobRef } from "@qflow/protocol";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
+import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
 import {
   projectMomentWindows,
   projectProgramWindow,
   projectSelectionWindows,
-} from "@narratage/temporal";
-import type { ProjectedOccurrence } from "@narratage/temporal";
-import { verifyText } from "@narratage/text";
-import type { Text } from "@narratage/text";
+} from "@qflow/temporal";
+import type { ProjectedOccurrence } from "@qflow/temporal";
+import { verifyText } from "@qflow/text";
+import type { Text } from "@qflow/text";
 
 import type {
   CommentStickerContent,
@@ -615,7 +615,7 @@ export function renderCommentSticker(canvas: CanvasSpace, space: ProgramSpace, p
   assertProgramSpaceIdentity(space);
   assertCommentStickerProgram(program);
   const track = sealVisualTrack({
-    visualIr: "narratage.visual-ir@1",
+    visualIr: "qflow.visual-ir@1",
     id: program.id,
     presents: program.items.map((item) => ({
       id: item.id,

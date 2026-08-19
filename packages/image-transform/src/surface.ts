@@ -1,11 +1,11 @@
-import { artifactTypes } from "@narratage/artifact";
+import { artifactTypes } from "@qflow/artifact";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
-import type { CanonicalValue } from "@narratage/protocol";
+} from "@qflow/markup";
+import type { CanonicalValue } from "@qflow/protocol";
 
 import { imageTransformFragment } from "./fragment.js";
 import { imageTransformTypes } from "./manifest.js";

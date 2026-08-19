@@ -1,7 +1,7 @@
-import { mediaDependency, mediaTypes } from "@narratage/media";
-import type { ModuleManifest } from "@narratage/protocol";
+import { mediaDependency, mediaTypes } from "@qflow/media";
+import type { ModuleManifest } from "@qflow/protocol";
 
-export const fontsOpenModuleRef = { name: "@narratage/fonts-open", version: "1" } as const;
+export const fontsOpenModuleRef = { name: "@qflow/fonts-open", version: "1" } as const;
 
 export const fontsOpenMarkupSurfaces = [{
     name: "face",
@@ -17,7 +17,7 @@ export const fontsOpenMarkupSurfaces = [{
 
 
 export const fontsOpenManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: fontsOpenModuleRef.name,
   version: fontsOpenModuleRef.version,
   dependencies: [mediaDependency],

@@ -1,4 +1,4 @@
-# `@narratage/workspace-fs-node`
+# `@qflow/workspace-fs-node`
 
 Reference Node filesystem implementation of the host-neutral `Workspace` contract.
 

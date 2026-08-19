@@ -1,25 +1,25 @@
-import { artifactTypes } from "@narratage/artifact";
+import { artifactTypes } from "@qflow/artifact";
 import {
   generationPort,
   sealGenerationMediaBinding,
   sealGenerationRequestDraft,
-} from "@narratage/generation";
+} from "@qflow/generation";
 import type {
   GenerationMediaPort,
   GenerationMediaRole,
   GenerationPortTable,
-} from "@narratage/generation";
-import { exactModelMediaInputNames, exactModelTextInputName } from "@narratage/model-kit";
-import type { ExactModelEndpoint, ExactModelMediaInput } from "@narratage/model-kit";
-import type { CanonicalValue } from "@narratage/protocol";
-import { speechTypes } from "@narratage/speech";
-import { textTypes, verifyText } from "@narratage/text";
+} from "@qflow/generation";
+import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/model-kit";
+import type { ExactModelEndpoint, ExactModelMediaInput } from "@qflow/model-kit";
+import type { CanonicalValue } from "@qflow/protocol";
+import { speechTypes } from "@qflow/speech";
+import { textTypes, verifyText } from "@qflow/text";
 import type {
   MarkupAttributeValue,
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import {
   createSeedanceAssembledGenerationFragment,

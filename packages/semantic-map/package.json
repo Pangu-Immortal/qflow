@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/semantic-map",
+  "name": "@qflow/semantic-map",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,12 +7,12 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/narrative": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/speech-evidence": "workspace:*"
+    "@qflow/narrative": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/speech-evidence": "workspace:*"
   }
 }

@@ -3,14 +3,14 @@ import test from "node:test";
 import { videoContractManifests } from "../../../test/support/video-domain.js";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { createResolvedClosure } from "@narratage/core";
-import type { FontArtifactRef, SynchronizedMedia } from "@narratage/media";
-import { mediaTypes } from "@narratage/media";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import { sealProgramSpace } from "@narratage/program-space";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import { sealSpatialFrame } from "@narratage/spatial";
-import type { SvsRecipe } from "@narratage/svs";
+import { createResolvedClosure } from "@qflow/core";
+import type { FontArtifactRef, SynchronizedMedia } from "@qflow/media";
+import { mediaTypes } from "@qflow/media";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import { sealProgramSpace } from "@qflow/program-space";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import { sealSpatialFrame } from "@qflow/spatial";
+import type { SvsRecipe } from "@qflow/svs";
 
 import {
   appendColumnItem,
@@ -58,7 +58,7 @@ import {
   rankingProducers,
   rankingTypes,
   sealRankingHeader,
-} from "@narratage/ranking";
+} from "@qflow/ranking";
 import type {
   ColumnItemSpec,
   RankingHeader,
@@ -67,19 +67,19 @@ import type {
   TierBoardItemSpec,
   TopThreeItemSpec,
   TypewriterItemSpec,
-} from "@narratage/ranking";
-import { narrativeTypes } from "@narratage/narrative";
-import { programSpaceTypes } from "@narratage/program-space";
-import { semanticMapTypes } from "@narratage/semantic-map";
-import { spatialTypes } from "@narratage/spatial";
-import { svsRecipeType } from "@narratage/svs";
-import { sealText, textManifest, textTypes } from "@narratage/text";
+} from "@qflow/ranking";
+import { narrativeTypes } from "@qflow/narrative";
+import { programSpaceTypes } from "@qflow/program-space";
+import { semanticMapTypes } from "@qflow/semantic-map";
+import { spatialTypes } from "@qflow/spatial";
+import { svsRecipeType } from "@qflow/svs";
+import { sealText, textManifest, textTypes } from "@qflow/text";
 import type {
   StructuredElement,
   StructuredNode,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 const space = sealProgramSpace({
   durationSec: 8,

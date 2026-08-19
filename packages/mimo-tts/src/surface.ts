@@ -1,19 +1,19 @@
-import { artifactTypes } from "@narratage/artifact";
+import { artifactTypes } from "@qflow/artifact";
 import {
   generationPort,
   sealGenerationMediaBinding,
-} from "@narratage/generation";
-import type { GenerationMediaPort, GenerationPortValue } from "@narratage/generation";
-import { exactModelMediaInputNames, exactModelTextInputName } from "@narratage/model-kit";
-import type { ExactModelMediaInput, ExactModelTextInput } from "@narratage/model-kit";
-import type { CanonicalValue } from "@narratage/protocol";
-import { textTypes, verifyText } from "@narratage/text";
+} from "@qflow/generation";
+import type { GenerationMediaPort, GenerationPortValue } from "@qflow/generation";
+import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/model-kit";
+import type { ExactModelMediaInput, ExactModelTextInput } from "@qflow/model-kit";
+import type { CanonicalValue } from "@qflow/protocol";
+import { textTypes, verifyText } from "@qflow/text";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { createMimoTtsAudioFragment } from "./fragment.js";
 import {

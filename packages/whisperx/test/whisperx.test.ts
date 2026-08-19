@@ -1,20 +1,20 @@
 import {
   registerProducerFacets,
-} from "@narratage/component-kit";
-import type { ProducerRegistrar } from "@narratage/component-kit";
-import { sealProgramSpace } from "@narratage/program-space";
-import { sealSpeechBasis, sealSpeechEvidenceAudio } from "@narratage/speech";
-import type { SpeechBasis, SpeechEvidenceAudio } from "@narratage/speech";
+} from "@qflow/component-kit";
+import type { ProducerRegistrar } from "@qflow/component-kit";
+import { sealProgramSpace } from "@qflow/program-space";
+import { sealSpeechBasis, sealSpeechEvidenceAudio } from "@qflow/speech";
+import type { SpeechBasis, SpeechEvidenceAudio } from "@qflow/speech";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import type { Digest, ProducerRef } from "@narratage/protocol";
+import type { Digest, ProducerRef } from "@qflow/protocol";
 import {
   whisperXComponent,
   whisperXProducers,
   whisperXRequestForEvidenceAudio,
-} from "@narratage/whisperx";
+} from "@qflow/whisperx";
 
 function basis() {
   const programSpace = sealProgramSpace({

@@ -1,4 +1,4 @@
-import { canonicalize, isDigest } from "@narratage/protocol";
+import { canonicalize, isDigest } from "@qflow/protocol";
 
 import type { BackgroundRemovalRequest } from "./types.js";
 

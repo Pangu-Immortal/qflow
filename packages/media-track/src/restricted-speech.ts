@@ -1,9 +1,9 @@
-import type { VisualPresent } from "@narratage/composition";
-import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import type { BlobRef } from "@narratage/protocol";
-import { assertContentFit, assertIntrinsicExtent, assertSpatialFrame } from "@narratage/spatial";
-import type { ContentFit, IntrinsicExtent, SpatialFrame } from "@narratage/spatial";
+import type { VisualPresent } from "@qflow/composition";
+import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import type { BlobRef } from "@qflow/protocol";
+import { assertContentFit, assertIntrinsicExtent, assertSpatialFrame } from "@qflow/spatial";
+import type { ContentFit, IntrinsicExtent, SpatialFrame } from "@qflow/spatial";
 
 import { lowerMediaItemElements } from "./lower.js";
 import type { MediaItemProgram } from "./types.js";

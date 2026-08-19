@@ -1,6 +1,6 @@
-import type { NodeCompiler } from "@narratage/compiler-node";
-import type { LoadedPackage, NodePackageContribution } from "@narratage/package-loader-node";
-import type { NodeRuntimeHost } from "@narratage/runtime-host-node";
+import type { NodeCompiler } from "@qflow/compiler-node";
+import type { LoadedPackage, NodePackageContribution } from "@qflow/package-loader-node";
+import type { NodeRuntimeHost } from "@qflow/runtime-host-node";
 
 export type CliCompilerOptions = {
   /** Canonical containment boundary for Author and Run Sources plus source assets. */
@@ -35,7 +35,7 @@ export type CliDistribution = {
     readonly packages?: readonly LoadedPackage[];
   }): Promise<{
     readonly selected: readonly string[];
-    readonly logical?: readonly import("@narratage/package-loader-node").LogicalPackageAddress[];
+    readonly logical?: readonly import("@qflow/package-loader-node").LogicalPackageAddress[];
   }>;
   /** Open the Runtime Profile with this application's Runtime implementation. */
   openRuntimeHost(path: string, options: { readonly packageRoot: string }): Promise<NodeRuntimeHost>;

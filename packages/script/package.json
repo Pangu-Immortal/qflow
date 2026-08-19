@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/script",
+  "name": "@qflow/script",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,16 +7,16 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/narrative": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/text": "workspace:*",
-    "@narratage/markup": "workspace:*"
+    "@qflow/narrative": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/text": "workspace:*",
+    "@qflow/markup": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/core": "workspace:*"
+    "@qflow/core": "workspace:*"
   }
 }

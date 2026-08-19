@@ -1,6 +1,6 @@
-import type { NarrativeExcerpt } from "@narratage/narrative";
-import type { SynchronizedMedia } from "@narratage/media";
-import type { ContentFit, SpatialFrame } from "@narratage/spatial";
+import type { NarrativeExcerpt } from "@qflow/narrative";
+import type { SynchronizedMedia } from "@qflow/media";
+import type { ContentFit, SpatialFrame } from "@qflow/spatial";
 
 /** Author-owned policy for one ordered Speech Spine. */
 export type SpeechSpineProgram = {

@@ -1,6 +1,6 @@
 # SVML WhisperX Service
 
-This is the trusted, warm Python process used by `@narratage/provider-whisperx-local`. It is a Runtime
+This is the trusted, warm Python process used by `@qflow/provider-whisperx-local`. It is a Runtime
 deployment package, not an author-importable SVML module and not part of Core.
 
 The service has one narrow job:
@@ -22,19 +22,19 @@ WhisperX 3.8.6 supports Python 3.10 through 3.13. The checked-in lock selects Py
 ```bash
 uv python install 3.13
 uv sync --project services/whisperx --frozen
-uv run --project services/whisperx --frozen narratage-whisperx-prepare
-uv run --project services/whisperx --frozen narratage-whisperx-check
+uv run --project services/whisperx --frozen qflow-whisperx-prepare
+uv run --project services/whisperx --frozen qflow-whisperx-check
 ```
 
 The first model start may download ASR and alignment weights. Production should put the relevant
-Hugging Face cache on persistent storage. `narratage-whisperx-prepare` separately installs NLTK's
+Hugging Face cache on persistent storage. `qflow-whisperx-prepare` separately installs NLTK's
 `punkt_tab` sentence data from a commit-pinned official archive after verifying its SHA-256. This
 resource is required by WhisperX alignment and is never downloaded inside an inference request.
 
 ## Run
 
 ```bash
-uv run --project services/whisperx --frozen narratage-whisperx-service
+uv run --project services/whisperx --frozen qflow-whisperx-service
 curl http://127.0.0.1:8765/health
 ```
 
@@ -45,22 +45,22 @@ model       small
 device      cpu
 compute     int8
 batch size  8
-protocol    narratage.whisperx-service@1
+protocol    qflow.whisperx-service@1
 ```
 
 Configuration is deployment state:
 
 | Variable | Default | Meaning |
 |---|---:|---|
-| `NARRATAGE_WHISPERX_PORT` | `8765` | loopback port |
-| `NARRATAGE_WHISPERX_MODEL` | `small` | faster-whisper model |
-| `NARRATAGE_WHISPERX_DEVICE` | `cpu` | `cpu` or the deployed accelerator |
-| `NARRATAGE_WHISPERX_COMPUTE` | `int8` on CPU | CTranslate2 compute type |
-| `NARRATAGE_WHISPERX_BATCH_SIZE` | `8` | bounded ASR batch size |
-| `NARRATAGE_WHISPERX_INPUT_ROOTS` | OS temp directory | path-separated roots the service may read |
-| `NARRATAGE_WHISPERX_NLTK_DATA` | user SVML cache | prepared, identity-checked NLTK data root |
-| `NARRATAGE_WHISPERX_MAX_REQUEST_BYTES` | `65536` | HTTP JSON bound |
-| `NARRATAGE_WHISPERX_MAX_AUDIO_BYTES` | `536870912` | staged canonical WAV bound |
+| `QFLOW_WHISPERX_PORT` | `8765` | loopback port |
+| `QFLOW_WHISPERX_MODEL` | `small` | faster-whisper model |
+| `QFLOW_WHISPERX_DEVICE` | `cpu` | `cpu` or the deployed accelerator |
+| `QFLOW_WHISPERX_COMPUTE` | `int8` on CPU | CTranslate2 compute type |
+| `QFLOW_WHISPERX_BATCH_SIZE` | `8` | bounded ASR batch size |
+| `QFLOW_WHISPERX_INPUT_ROOTS` | OS temp directory | path-separated roots the service may read |
+| `QFLOW_WHISPERX_NLTK_DATA` | user SVML cache | prepared, identity-checked NLTK data root |
+| `QFLOW_WHISPERX_MAX_REQUEST_BYTES` | `65536` | HTTP JSON bound |
+| `QFLOW_WHISPERX_MAX_AUDIO_BYTES` | `536870912` | staged canonical WAV bound |
 
 The Node Provider must configure the same model, device, compute, batch size, service version and
 WhisperX version. A mismatch fails before transcription results are accepted.

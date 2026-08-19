@@ -3,9 +3,9 @@ import test from "node:test";
 import { videoContractManifests } from "../../../test/support/video-domain.js";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { compositionDependency, compositionTypes } from "@narratage/composition";
-import type { VisualElement, VisualTimedSampling } from "@narratage/composition";
-import { createResolvedClosure } from "@narratage/core";
+import { compositionDependency, compositionTypes } from "@qflow/composition";
+import type { VisualElement, VisualTimedSampling } from "@qflow/composition";
+import { createResolvedClosure } from "@qflow/core";
 import {
   decodeDepthStackLabelSurface,
   decodeDepthStackSurface,
@@ -25,32 +25,32 @@ import {
   sealDepthStackCardSpec,
   sealDepthStackHeader,
   sealDepthStackSpec,
-} from "@narratage/deck-track";
+} from "@qflow/deck-track";
 import type {
   DepthStackCardLabel,
   DepthStackProgram,
   DepthStackSpec,
-} from "@narratage/deck-track";
-import type { FontArtifactRef } from "@narratage/media";
-import { mediaTypes } from "@narratage/media";
-import { mediaPipelineManifest } from "@narratage/media-pipeline";
-import type { MediaLayerSet } from "@narratage/media-track";
-import { narrativeTypes } from "@narratage/narrative";
-import { programSpaceTypes, sealProgramSpace } from "@narratage/program-space";
-import type { ModuleManifest } from "@narratage/protocol";
-import { semanticMapTypes } from "@narratage/semantic-map";
-import { sealCanvasSpace, sealSpatialFrame, spatialTypes } from "@narratage/spatial";
-import { svsRecipeType } from "@narratage/svs";
-import { sealText, textManifest, textTypes } from "@narratage/text";
-import type { SvsRecipe } from "@narratage/svs";
+} from "@qflow/deck-track";
+import type { FontArtifactRef } from "@qflow/media";
+import { mediaTypes } from "@qflow/media";
+import { mediaPipelineManifest } from "@qflow/media-pipeline";
+import type { MediaLayerSet } from "@qflow/media-track";
+import { narrativeTypes } from "@qflow/narrative";
+import { programSpaceTypes, sealProgramSpace } from "@qflow/program-space";
+import type { ModuleManifest } from "@qflow/protocol";
+import { semanticMapTypes } from "@qflow/semantic-map";
+import { sealCanvasSpace, sealSpatialFrame, spatialTypes } from "@qflow/spatial";
+import { svsRecipeType } from "@qflow/svs";
+import { sealText, textManifest, textTypes } from "@qflow/text";
+import type { SvsRecipe } from "@qflow/svs";
 import type {
   StructuredElement,
   StructuredNode,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
-import { artifactTypes } from "@narratage/artifact";
-import { mediaTrackManifest, mediaTrackTypes } from "@narratage/media-track";
+} from "@qflow/markup";
+import { artifactTypes } from "@qflow/artifact";
+import { mediaTrackManifest, mediaTrackTypes } from "@qflow/media-track";
 
 const space = sealProgramSpace({
   durationSec: 2,
@@ -445,7 +445,7 @@ test("Label Surface compiles explicit exact-font text rather than media metadata
   assert.equal(result.components[0]?.outputs.label, "proof-label");
   assert.equal(result.fragments[0]?.operations[0]?.producer.name, depthStackProducers.bindLabelText.name);
   assert.ok(result.records.some((record) => record.type.name === depthStackTypes.cardLabelStyle.name));
-  assert.ok(result.records.some((record) => record.type.module.name === "@narratage/text" && record.type.name === "Text"));
+  assert.ok(result.records.some((record) => record.type.module.name === "@qflow/text" && record.type.name === "Text"));
 });
 
 test("Label Surface accepts ordinary graph Text without copying it during author compilation", async () => {
@@ -473,7 +473,7 @@ test("Label Surface accepts ordinary graph Text without copying it during author
 
 test("another Deck family can coexist by contributing only the existing VisualTrack waist", () => {
   const other: ModuleManifest = {
-    format: "narratage.module@1" as const,
+    format: "qflow.module@1" as const,
     name: "example.carousel",
     version: "1",
     dependencies: [compositionDependency],
@@ -492,7 +492,7 @@ test("another Deck family can coexist by contributing only the existing VisualTr
     depthStackManifest,
     other,
   ]);
-  assert.ok(closure.modules.some((module) => module.manifest.name === "@narratage/deck-track"));
+  assert.ok(closure.modules.some((module) => module.manifest.name === "@qflow/deck-track"));
   assert.ok(closure.modules.some((module) => module.manifest.name === "example.carousel"));
   assert.deepEqual(other.producers[0]?.outputs[0]?.type, compositionTypes.visualTrack);
 });

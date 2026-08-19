@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/run-markup",
+  "name": "@qflow/run-markup",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,16 +7,16 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/protocol": "workspace:*",
-    "@narratage/run": "workspace:*",
-    "@narratage/markup": "workspace:*"
+    "@qflow/protocol": "workspace:*",
+    "@qflow/run": "workspace:*",
+    "@qflow/markup": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/core": "workspace:*",
-    "@narratage/elaborator": "workspace:*"
+    "@qflow/core": "workspace:*",
+    "@qflow/elaborator": "workspace:*"
   }
 }

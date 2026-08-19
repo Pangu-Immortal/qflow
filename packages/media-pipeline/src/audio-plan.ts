@@ -1,8 +1,8 @@
-import { programFrameSampleBoundary, programSpaceFrameCount } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { assertCompositionIdentity } from "@narratage/composition";
-import type { Composition } from "@narratage/composition";
-import { canonicalize, isDigest } from "@narratage/protocol";
+import { programFrameSampleBoundary, programSpaceFrameCount } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { assertCompositionIdentity } from "@qflow/composition";
+import type { Composition } from "@qflow/composition";
+import { canonicalize, isDigest } from "@qflow/protocol";
 
 import type { AudioProgramPlan } from "./types.js";
 

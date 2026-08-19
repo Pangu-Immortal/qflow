@@ -4,13 +4,13 @@ import type {
   VisualTextFlow,
   VisualTextPaintLayer,
   VisualTextTypography,
-} from "@narratage/composition";
+} from "@qflow/composition";
 import type {
   MediaFramePresentation,
   MediaLayerSet,
   MediaLifecycleMotion,
-} from "@narratage/media-track";
-import type { SpatialFrame } from "@narratage/spatial";
+} from "@qflow/media-track";
+import type { SpatialFrame } from "@qflow/spatial";
 
 export type DepthStackVisibility = {
   readonly previous: number;

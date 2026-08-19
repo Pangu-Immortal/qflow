@@ -1,7 +1,7 @@
-import { programSpaceTypes } from "@narratage/program-space";
-import { compositionTypes } from "@narratage/composition";
-import type { Composition } from "@narratage/composition";
-import { sealGraphFragment } from "@narratage/elaborator";
+import { programSpaceTypes } from "@qflow/program-space";
+import { compositionTypes } from "@qflow/composition";
+import type { Composition } from "@qflow/composition";
+import { sealGraphFragment } from "@qflow/elaborator";
 
 import { hyperframesProducers, hyperframesTypes } from "./manifest.js";
 

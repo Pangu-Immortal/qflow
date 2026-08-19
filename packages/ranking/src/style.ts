@@ -1,13 +1,13 @@
 import {
   assertFontArtifactRef,
   assertFontStackRef,
-} from "@narratage/media";
+} from "@qflow/media";
 import type {
   FontArtifactRef,
   FontStackRef,
-} from "@narratage/media";
-import { canonicalize } from "@narratage/protocol";
-import type { SvsRecipe } from "@narratage/svs";
+} from "@qflow/media";
+import { canonicalize } from "@qflow/protocol";
+import type { SvsRecipe } from "@qflow/svs";
 
 import {
   assertColumnStyle,

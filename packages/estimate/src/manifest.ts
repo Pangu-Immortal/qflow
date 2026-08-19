@@ -1,9 +1,9 @@
-import { speechDependency, speechTypes } from "@narratage/speech";
-import { textDependency, textTypes } from "@narratage/text";
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@narratage/protocol";
-import { svsManifest, svsRecipeType } from "@narratage/svs";
+import { speechDependency, speechTypes } from "@qflow/speech";
+import { textDependency, textTypes } from "@qflow/text";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
+import { svsManifest, svsRecipeType } from "@qflow/svs";
 
-export const estimateModuleRef = { name: "@narratage/estimate", version: "1" } as const;
+export const estimateModuleRef = { name: "@qflow/estimate", version: "1" } as const;
 export const estimateTypes = {
   speechPolicy: { module: estimateModuleRef, name: "SpeechEstimatePolicy" },
 } satisfies Record<string, TypeRef>;
@@ -34,7 +34,7 @@ export const estimateMarkupSurfaces = [{
 
 
 export const estimateManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: estimateModuleRef.name,
   version: estimateModuleRef.version,
   dependencies: [

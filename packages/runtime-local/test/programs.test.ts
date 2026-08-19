@@ -5,16 +5,16 @@ import { join } from "node:path";
 import test from "node:test";
 import { setTimeout as sleep } from "node:timers/promises";
 
-import { createRuntimeEndpointAdapterFacet, RuntimeAdapterRegistry } from "@narratage/runtime-kit";
-import type { ManagedProgram } from "@narratage/runtime-kit";
-import type { CapabilityRef } from "@narratage/protocol";
+import { createRuntimeEndpointAdapterFacet, RuntimeAdapterRegistry } from "@qflow/runtime-kit";
+import type { ManagedProgram } from "@qflow/runtime-kit";
+import type { CapabilityRef } from "@qflow/protocol";
 
 import {
   bringManagedProgramsUp,
   declaredManagedPrograms,
   reportManagedPrograms,
   takeManagedProgramsDown,
-} from "@narratage/runtime-local";
+} from "@qflow/runtime-local";
 
 const requiredCapability = {
   module: { name: "example.capabilities", version: "1" },
@@ -27,12 +27,12 @@ const requiredCapability = {
  * ready, and stopping — without a Python environment.
  */
 async function project(program: (root: string) => ManagedProgram) {
-  const root = await mkdtemp(join(tmpdir(), "narratage-programs-"));
-  const path = join(root, "narratage.runtime.json");
+  const root = await mkdtemp(join(tmpdir(), "qflow-programs-"));
+  const path = join(root, "qflow.runtime.json");
   await writeFile(path, JSON.stringify({
-    format: "narratage.runtime-profile@1",
+    format: "qflow.runtime-profile@1",
     runtime: {
-      use: "@narratage/runtime-local",
+      use: "@qflow/runtime-local",
       config: {
         dataRoot: ".",
         artifacts: { use: "example.artifacts" },
@@ -117,7 +117,7 @@ function fileBackedProgram(marker: string): ManagedProgram {
 }
 
 test("up starts the program once for every Endpoint that drives it, and down stops it", async () => {
-  const marker = join(await mkdtemp(join(tmpdir(), "narratage-marker-")), "ready");
+  const marker = join(await mkdtemp(join(tmpdir(), "qflow-marker-")), "ready");
   const { root, path, options } = await project(() => fileBackedProgram(marker));
   const progress: string[] = [];
 
@@ -178,7 +178,7 @@ test("down leaves a running program this project did not start", async () => {
 });
 
 test("a program with nothing to start is prepared, and preparing is the whole job", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "narratage-prepare-"));
+  const directory = await mkdtemp(join(tmpdir(), "qflow-prepare-"));
   const marker = join(directory, "installed");
   const { path, options } = await project(() => ({
     id: "example",
@@ -200,13 +200,13 @@ test("a program with nothing to start is prepared, and preparing is the whole jo
 });
 
 test("up creates a fresh Runtime data directory before running commands", async () => {
-  const projectRoot = await mkdtemp(join(tmpdir(), "narratage-fresh-runtime-"));
+  const projectRoot = await mkdtemp(join(tmpdir(), "qflow-fresh-runtime-"));
   const dataRoot = join(projectRoot, "never-created");
-  const path = join(projectRoot, "narratage.runtime.json");
+  const path = join(projectRoot, "qflow.runtime.json");
   await writeFile(path, JSON.stringify({
-    format: "narratage.runtime-profile@1",
+    format: "qflow.runtime-profile@1",
     runtime: {
-      use: "@narratage/runtime-local",
+      use: "@qflow/runtime-local",
       config: {
         dataRoot: "./never-created",
         artifacts: { use: "example.artifacts" },

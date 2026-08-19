@@ -1,7 +1,7 @@
-import { sealComposition } from "@narratage/composition";
-import type { Composition, Track } from "@narratage/composition";
-import { compileHyperframesDocument, materializeHyperframesHtml } from "@narratage/hyperframes";
-import type { ProgramSpace } from "@narratage/program-space";
+import { sealComposition } from "@qflow/composition";
+import type { Composition, Track } from "@qflow/composition";
+import { compileHyperframesDocument, materializeHyperframesHtml } from "@qflow/hyperframes";
+import type { ProgramSpace } from "@qflow/program-space";
 
 import { injectRuntimeShim } from "./runtime-shim.js";
 

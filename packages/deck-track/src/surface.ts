@@ -1,24 +1,24 @@
-import { artifactTypes } from "@narratage/artifact";
-import { mediaTypes } from "@narratage/media";
-import type { FontStackRef } from "@narratage/media";
-import { mediaTrackTypes } from "@narratage/media-track";
-import { narrativeTypes } from "@narratage/narrative";
-import { programSpaceTypes } from "@narratage/program-space";
-import type { TypeRef } from "@narratage/protocol";
-import { semanticMapTypes } from "@narratage/semantic-map";
-import { spatialTypes } from "@narratage/spatial";
-import { svsRecipeType } from "@narratage/svs";
-import type { SvsRecipe } from "@narratage/svs";
-import { sealText, textTypes } from "@narratage/text";
-import { sealGraphFragment } from "@narratage/elaborator";
-import type { AuthorValueRef } from "@narratage/elaborator";
+import { artifactTypes } from "@qflow/artifact";
+import { mediaTypes } from "@qflow/media";
+import type { FontStackRef } from "@qflow/media";
+import { mediaTrackTypes } from "@qflow/media-track";
+import { narrativeTypes } from "@qflow/narrative";
+import { programSpaceTypes } from "@qflow/program-space";
+import type { TypeRef } from "@qflow/protocol";
+import { semanticMapTypes } from "@qflow/semantic-map";
+import { spatialTypes } from "@qflow/spatial";
+import { svsRecipeType } from "@qflow/svs";
+import type { SvsRecipe } from "@qflow/svs";
+import { sealText, textTypes } from "@qflow/text";
+import { sealGraphFragment } from "@qflow/elaborator";
+import type { AuthorValueRef } from "@qflow/elaborator";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceRecordDraft,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import {
   decodeDepthStackCardSpec,

@@ -1,4 +1,4 @@
-# @narratage/speech-spine
+# @qflow/speech-spine
 
 Trusted, static Graph Fragments for the first official speech-video Program.
 

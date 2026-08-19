@@ -1,8 +1,8 @@
-import { narrativeDependency, narrativeTypes } from "@narratage/narrative";
-import { semanticMapDependency, semanticMapTypes } from "@narratage/semantic-map";
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@narratage/protocol";
+import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
+import { semanticMapDependency, semanticMapTypes } from "@qflow/semantic-map";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
 
-export const captionModuleRef = { name: "@narratage/caption", version: "1" } as const;
+export const captionModuleRef = { name: "@qflow/caption", version: "1" } as const;
 export const captionProducers = {
   temporalizePlan: { module: captionModuleRef, name: "temporalize-caption-plan" },
 } satisfies Record<string, ProducerRef>;
@@ -99,7 +99,7 @@ export const captionMarkupSurfaces = [{
 
 
 export const captionManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: captionModuleRef.name,
   version: captionModuleRef.version,
   dependencies: [narrativeDependency, semanticMapDependency],

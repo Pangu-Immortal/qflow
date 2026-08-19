@@ -1,5 +1,5 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { StoredValue } from "@narratage/protocol";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { StoredValue } from "@qflow/protocol";
 
 import { hyperframesVisualRequest } from "./product.js";
 import { renderHyperframesProducers } from "./manifest.js";

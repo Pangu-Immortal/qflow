@@ -1,6 +1,6 @@
 import {
   isStreamingArtifactStore,
-} from "@narratage/runtime";
+} from "@qflow/runtime";
 
 import type {
   CreateLocalRuntimeArchiveControlOptions,

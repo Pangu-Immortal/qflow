@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/media-lambda",
+  "name": "@qflow/media-lambda",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -8,14 +8,14 @@
     ".": "./src/handler.ts"
   },
   "dependencies": {
-    "@narratage/artifact-store-s3": "workspace:*",
-    "@narratage/media": "workspace:*",
-    "@narratage/media-execution": "workspace:*",
-    "@narratage/media-pipeline": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/provider-media-aws-lambda": "workspace:*",
-    "@narratage/speech": "workspace:*",
-    "@narratage/transport-aws-lambda": "workspace:*"
+    "@qflow/artifact-store-s3": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/media-execution": "workspace:*",
+    "@qflow/media-pipeline": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/provider-media-aws-lambda": "workspace:*",
+    "@qflow/speech": "workspace:*",
+    "@qflow/transport-aws-lambda": "workspace:*"
   },
   "scripts": {
     "build": "node build.mjs",

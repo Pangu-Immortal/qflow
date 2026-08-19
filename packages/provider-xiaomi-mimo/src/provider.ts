@@ -1,17 +1,17 @@
-import { defineEndpointPackage } from "@narratage/endpoint-kit";
-import type { EndpointInvocationContext } from "@narratage/endpoint-kit";
+import { defineEndpointPackage } from "@qflow/endpoint-kit";
+import type { EndpointInvocationContext } from "@qflow/endpoint-kit";
 import {
   generationTypes,
   sealGeneratedAudioSet,
-} from "@narratage/generation";
-import type { GenerationMediaValue, GenerationRequest } from "@narratage/generation";
-import { canonicalize } from "@narratage/protocol";
-import type { CanonicalValue, CapabilityRef } from "@narratage/protocol";
-import { credentialRef } from "@narratage/runtime";
-import type { CredentialRef } from "@narratage/runtime";
+} from "@qflow/generation";
+import type { GenerationMediaValue, GenerationRequest } from "@qflow/generation";
+import { canonicalize } from "@qflow/protocol";
+import type { CanonicalValue, CapabilityRef } from "@qflow/protocol";
+import { credentialRef } from "@qflow/runtime";
+import type { CredentialRef } from "@qflow/runtime";
 
-export const xiaomiMimoProviderModuleRef = { name: "@narratage/provider-xiaomi-mimo", version: "1" } as const;
-const mimoModelModule = { name: "@narratage/mimo-tts", version: "1" } as const;
+export const xiaomiMimoProviderModuleRef = { name: "@qflow/provider-xiaomi-mimo", version: "1" } as const;
+const mimoModelModule = { name: "@qflow/mimo-tts", version: "1" } as const;
 const modelNames = [
   "mimo-v2.5-tts",
   "mimo-v2.5-tts-voicedesign",

@@ -1,18 +1,18 @@
-import { artifactDependency } from "@narratage/artifact";
-import { mediaDependency, mediaTypes } from "@narratage/media";
-import { programSpaceDependency, programSpaceTypes } from "@narratage/program-space";
-import { speechDependency, speechTypes } from "@narratage/speech";
-import { compositionDependency, compositionTypes } from "@narratage/composition";
-import { artifactTypes } from "@narratage/artifact";
+import { artifactDependency } from "@qflow/artifact";
+import { mediaDependency, mediaTypes } from "@qflow/media";
+import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+import { speechDependency, speechTypes } from "@qflow/speech";
+import { compositionDependency, compositionTypes } from "@qflow/composition";
+import { artifactTypes } from "@qflow/artifact";
 import type {
   CapabilityRef,
   ModuleManifest,
   ProducerRef,
   TypeRef,
   ValueSchema,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 
-export const mediaPipelineModuleRef = { name: "@narratage/media-pipeline", version: "1" } as const;
+export const mediaPipelineModuleRef = { name: "@qflow/media-pipeline", version: "1" } as const;
 export const mediaPipelineTypes = {
   selectionRequest: { module: mediaPipelineModuleRef, name: "MediaSelectionRequest" },
   audioProgramPlan: { module: mediaPipelineModuleRef, name: "AudioProgramPlan" },
@@ -219,7 +219,7 @@ export const mediaPipelineMarkupSurfaces = [
 
 
 export const mediaPipelineManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: mediaPipelineModuleRef.name,
   version: mediaPipelineModuleRef.version,
   dependencies: [

@@ -1,9 +1,9 @@
 import { execFile } from "node:child_process";
 
-import { probeMediaToolchain } from "@narratage/media-execution";
-import { runtimeConfigObject, runtimeConfigString } from "@narratage/runtime-kit";
-import type { RuntimeAdapterFactoryContext, ManagedProgram, ManagedProgramState } from "@narratage/runtime-kit";
-import { resolveRuntimeExecutable } from "@narratage/runtime-host-node";
+import { probeMediaToolchain } from "@qflow/media-execution";
+import { runtimeConfigObject, runtimeConfigString } from "@qflow/runtime-kit";
+import type { RuntimeAdapterFactoryContext, ManagedProgram, ManagedProgramState } from "@qflow/runtime-kit";
+import { resolveRuntimeExecutable } from "@qflow/runtime-host-node";
 
 import { defaultHyperframesCliPath } from "./provider.js";
 

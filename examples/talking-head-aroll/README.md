@@ -27,30 +27,30 @@ Select the Runtime Profile:
 
 ```sh
 cd examples/talking-head-aroll
-narratage runtime use narratage.runtime.json
+qflow runtime use qflow.runtime.json
 ```
 
 Inspect the authored graph—including the visible `*.prompt` Text output and `*.program`—without a paid call:
 
 ```sh
-narratage check main.svml
+qflow check main.svml
 ```
 
 Inspect the exact paid plan before submitting it:
 
 ```sh
-narratage plan build.svrun
+qflow plan build.svrun
 ```
 
 Build the complete film after preparing the managed local WhisperX service and exposing `KIE_API_KEY`,
 `GOOGLE_CLOUD_PROJECT` and `GOOGLE_APPLICATION_CREDENTIALS_JSON`:
 
 ```sh
-narratage runtime up
+qflow runtime up
 
-narratage build build.svrun --follow
+qflow build build.svrun --follow
 
-narratage get <build-id> \
+qflow get <build-id> \
   --name final.video \
   --to output/final.mp4
 ```
@@ -62,7 +62,7 @@ Run the same downstream film from the four archived generated shots without anot
 submission:
 
 ```sh
-narratage build reuse-generated.svrun --follow
+qflow build reuse-generated.svrun --follow
 ```
 
 Before this second command, replace `REPLACE_WITH_BUILD_ID` in `reuse-generated.svrun` with the

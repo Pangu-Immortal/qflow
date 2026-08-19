@@ -1,4 +1,4 @@
-# `@narratage/video-cli`
+# `@qflow/video-cli`
 
 Official video command application. It selects the Markup compiler Host, but deliberately carries
 no built-in author, Run, Provider or Store package.
@@ -11,22 +11,22 @@ From the repository:
 
 ```bash
 cd path/to/project
-narratage runtime use narratage.runtime.json
-narratage check main.svml
-narratage plan build.svrun
-narratage build build.svrun --follow
-narratage status <build-id> --watch
-narratage builds
-narratage history [source-output-name] [--source ./main.svml]
-narratage inspect <build-id>
-narratage get <build-id> --name final.video --to ./final.mp4
-narratage cancel <build-id>
-narratage doctor
-narratage gc
+qflow runtime use qflow.runtime.json
+qflow check main.svml
+qflow plan build.svrun
+qflow build build.svrun --follow
+qflow status <build-id> --watch
+qflow builds
+qflow history [source-output-name] [--source ./main.svml]
+qflow inspect <build-id>
+qflow get <build-id> --name final.video --to ./final.mp4
+qflow cancel <build-id>
+qflow doctor
+qflow gc
 ```
 
 Link the repository command once with `npm link`. It resolves its own TypeScript loader and CLI, so
-it neither invokes pnpm per command nor requires a separate project to contain Narratage's
+it neither invokes pnpm per command nor requires a separate project to contain Qflow's
 `package.json`.
 
 `--workspace` is only the Source Workspace containment boundary. `--asset-root` may additionally admit
@@ -82,10 +82,10 @@ output. Upstream work behind the selected Candidate is pruned by reverse reachab
 unbound reachable output follows the ordinary graph. This is a new Build identity and never resumes
 or copies the prior Build's outstanding Commands.
 
-`@narratage/package-loader-node` loads explicitly selected installed implementation packages and checks
+`@qflow/package-loader-node` loads explicitly selected installed implementation packages and checks
 their Module, Host-facet, Producer and Validator contributions. Frontends are ordinary
-`narratage.source-frontend@1` Host facets, so the Loader does not
+`qflow.source-frontend@1` Host facets, so the Loader does not
 select a syntax; each Source Header selects among installed Frontends. Run Fragment libraries enter
-only through the `narratage.run-fragment-host@1` facet. Source cannot
+only through the `qflow.run-fragment-host@1` facet. Source cannot
 install a package or activate Provider/Runtime authority. Arbitrary untrusted community execution
 remains absent until an isolated Worker and real permission boundary exist.

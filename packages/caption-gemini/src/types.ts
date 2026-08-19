@@ -6,7 +6,7 @@ import type {
   CaptionPlannedCue,
   CaptionPlannedRun,
   CaptionProgram,
-} from "@narratage/caption";
+} from "@qflow/caption";
 
 export type {
   CaptionFieldAssignment,

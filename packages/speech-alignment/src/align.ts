@@ -1,5 +1,5 @@
-import type { NarrativeToken } from "@narratage/narrative";
-import type { SpeechWordEvidence } from "@narratage/speech-evidence";
+import type { NarrativeToken } from "@qflow/narrative";
+import type { SpeechWordEvidence } from "@qflow/speech-evidence";
 
 import { editDistance, normalizeForAlignment } from "./normalize.js";
 import type { AlignmentGroup, AlignmentRelation } from "./types.js";

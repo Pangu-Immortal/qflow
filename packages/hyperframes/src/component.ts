@@ -1,8 +1,8 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { ProgramSpace } from "@narratage/program-space";
-import type { Composition } from "@narratage/composition";
-import type { CanonicalValue, StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { ProgramSpace } from "@qflow/program-space";
+import type { Composition } from "@qflow/composition";
+import type { CanonicalValue, StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
 
 import { compileHyperframesDocument } from "./document.js";
 import { hyperframesProducers } from "./manifest.js";

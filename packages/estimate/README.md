@@ -1,4 +1,4 @@
-# `@narratage/estimate`
+# `@qflow/estimate`
 
 Provider-free deterministic speech-duration planning.
 

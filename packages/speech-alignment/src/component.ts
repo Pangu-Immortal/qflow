@@ -1,9 +1,9 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { Narrative } from "@narratage/narrative";
-import type { SpeechAudioBasis } from "@narratage/speech";
-import type { AlignedTranscriptEvidence } from "@narratage/speech-evidence";
-import type { StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { Narrative } from "@qflow/narrative";
+import type { SpeechAudioBasis } from "@qflow/speech";
+import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
+import type { StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
 
 import {
   locateSpeechTiming,

@@ -1,18 +1,18 @@
-import { artifactTypes } from "@narratage/artifact";
+import { artifactTypes } from "@qflow/artifact";
 import {
   assertBackgroundRemovalRequest,
   backgroundRemovalCapabilities,
-} from "@narratage/background-removal";
-import type { BackgroundRemovalRequest } from "@narratage/background-removal";
+} from "@qflow/background-removal";
+import type { BackgroundRemovalRequest } from "@qflow/background-removal";
 import {
   compileWireRequest,
   generationTypes,
   sealGeneratedImageSet,
   sealGeneratedVideoSet,
-} from "@narratage/generation";
-import type { GenerationArtifactUrlResolver, GenerationRequest, GenerationWireMapping } from "@narratage/generation";
-import { canonicalize } from "@narratage/protocol";
-import type { BlobRef, CanonicalValue, CapabilityRef, StoredValue, TypeRef } from "@narratage/protocol";
+} from "@qflow/generation";
+import type { GenerationArtifactUrlResolver, GenerationRequest, GenerationWireMapping } from "@qflow/generation";
+import { canonicalize } from "@qflow/protocol";
+import type { BlobRef, CanonicalValue, CapabilityRef, StoredValue, TypeRef } from "@qflow/protocol";
 
 import { kieModelCatalog, verifyKieModelCatalog } from "./mapping.js";
 

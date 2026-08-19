@@ -1,6 +1,6 @@
-import { narrativeTypes } from "@narratage/narrative";
-import { semanticMapTypes } from "@narratage/semantic-map";
-import { sealGraphFragment } from "@narratage/elaborator";
+import { narrativeTypes } from "@qflow/narrative";
+import { semanticMapTypes } from "@qflow/semantic-map";
+import { sealGraphFragment } from "@qflow/elaborator";
 
 import { captionProducers, captionTypes } from "./manifest.js";
 

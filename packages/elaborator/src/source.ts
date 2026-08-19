@@ -1,5 +1,5 @@
-import { link } from "@narratage/core";
-import { canonicalStringify, isDigest } from "@narratage/protocol";
+import { link } from "@qflow/core";
+import { canonicalStringify, isDigest } from "@qflow/protocol";
 import type {
   CompiledGraph,
   GraphValueRef,
@@ -7,11 +7,11 @@ import type {
   ResolvedModuleClosure,
   TypeRef,
   TypedRecord,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 import {
   maskSourceHeader,
   parseSourceHeader,
-} from "@narratage/source";
+} from "@qflow/source";
 import type {
   ResolvedSourceAsset,
   SourceAssetRequest,
@@ -20,7 +20,7 @@ import type {
   SourceImportRequest,
   SourceResolver,
   SourceUnit,
-} from "@narratage/source";
+} from "@qflow/source";
 
 import {
   elaborateAuthorGraph,

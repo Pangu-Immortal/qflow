@@ -1,9 +1,9 @@
-import { programSpaceDependency, programSpaceTypes } from "@narratage/program-space";
-import { speechDependency, speechTypes } from "@narratage/speech";
-import { compositionDependency, compositionTypes } from "@narratage/composition";
-import type { ModuleManifest, ProducerRef } from "@narratage/protocol";
+import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+import { speechDependency, speechTypes } from "@qflow/speech";
+import { compositionDependency, compositionTypes } from "@qflow/composition";
+import type { ModuleManifest, ProducerRef } from "@qflow/protocol";
 
-export const speechBasisModuleRef = { name: "@narratage/speech-basis", version: "1" } as const;
+export const speechBasisModuleRef = { name: "@qflow/speech-basis", version: "1" } as const;
 
 export const speechBasisProducers = {
   projectAudio: { module: speechBasisModuleRef, name: "project-audio" },
@@ -13,7 +13,7 @@ export const speechBasisProducers = {
 } satisfies Record<string, ProducerRef>;
 
 export const speechBasisManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: speechBasisModuleRef.name,
   version: speechBasisModuleRef.version,
   dependencies: [

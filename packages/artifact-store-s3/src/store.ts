@@ -1,14 +1,14 @@
 import { createHash, randomUUID } from "node:crypto";
 
-import { isDigest } from "@narratage/protocol";
-import type { BlobRef, Digest } from "@narratage/protocol";
-import type { ArtifactStore } from "@narratage/runtime";
+import { isDigest } from "@qflow/protocol";
+import type { BlobRef, Digest } from "@qflow/protocol";
+import type { ArtifactStore } from "@qflow/runtime";
 
 import { AwsS3ObjectClient } from "./client.js";
 import type { S3ObjectClient } from "./client.js";
 
 export const s3ArtifactStoreModuleRef = {
-  name: "@narratage/artifact-store-s3",
+  name: "@qflow/artifact-store-s3",
   version: "1",
 } as const;
 

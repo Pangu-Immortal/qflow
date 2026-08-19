@@ -1,9 +1,9 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { ProgramSpace } from "@narratage/program-space";
-import type { CanvasSpace } from "@narratage/spatial";
-import type { AudioTrack, VisualTrack } from "@narratage/composition";
-import type { StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { ProgramSpace } from "@qflow/program-space";
+import type { CanvasSpace } from "@qflow/spatial";
+import type { AudioTrack, VisualTrack } from "@qflow/composition";
+import type { StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
 
 import { filmProducers } from "./manifest.js";
 import { appendFilmAudioTrack, appendFilmVisualTrack, compileFilmComposition, createFilmTrackSet } from "./program.js";

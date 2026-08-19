@@ -4,42 +4,42 @@ import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
 import { validateDistributedRenderConfig } from "@hyperframes/aws-lambda/sdk";
-import { EndpointRegistry, MemoryArtifactStore } from "@narratage/driver-node";
-import type { EndpointRegistration } from "@narratage/driver-node";
-import type { AsyncEndpoint } from "@narratage/endpoint-kit";
-import type { HyperframesDocument } from "@narratage/hyperframes";
-import { mediaTypes, verifyRenderedVisual } from "@narratage/media";
-import type { RenderedVisual } from "@narratage/media";
+import { EndpointRegistry, MemoryArtifactStore } from "@qflow/driver-node";
+import type { EndpointRegistration } from "@qflow/driver-node";
+import type { AsyncEndpoint } from "@qflow/endpoint-kit";
+import type { HyperframesDocument } from "@qflow/hyperframes";
+import { mediaTypes, verifyRenderedVisual } from "@qflow/media";
+import type { RenderedVisual } from "@qflow/media";
 import {
   createAwsLambdaHyperframesProvider,
   supportsAwsLambdaHyperframes,
-} from "@narratage/provider-hyperframes-aws-lambda";
+} from "@qflow/provider-hyperframes-aws-lambda";
 import type {
   HyperframesAwsLambdaClient,
   HyperframesLambdaProgress,
   HyperframesLambdaRender,
   HyperframesLambdaRenderConfig,
   HyperframesLambdaSite,
-} from "@narratage/provider-hyperframes-aws-lambda";
-import { canonicalize } from "@narratage/protocol";
-import type { CanonicalValue, Need } from "@narratage/protocol";
-import type { RuntimeEndpointAdapterImplementation } from "@narratage/runtime-kit";
+} from "@qflow/provider-hyperframes-aws-lambda";
+import { canonicalize } from "@qflow/protocol";
+import type { CanonicalValue, Need } from "@qflow/protocol";
+import type { RuntimeEndpointAdapterImplementation } from "@qflow/runtime-kit";
 import {
   hyperframesVisualRequest,
   renderHyperframesCapabilities,
-} from "@narratage/render-hyperframes";
-import type { ArtifactStore, StreamingArtifactStore } from "@narratage/runtime";
+} from "@qflow/render-hyperframes";
+import type { ArtifactStore, StreamingArtifactStore } from "@qflow/runtime";
 
-import { narratagePackage as awsLambdaActivation } from "../src/activation.js";
+import { qflowPackage as awsLambdaActivation } from "../src/activation.js";
 
 const ACCOUNT = "123456789012";
 const REGION = "us-east-1";
-const BUCKET = "narratage-render-test";
-const STATE_MACHINE = `arn:aws:states:${REGION}:${ACCOUNT}:stateMachine:narratage-hyperframes`;
-const EXECUTION_PREFIX = `arn:aws:states:${REGION}:${ACCOUNT}:execution:narratage-hyperframes:`;
+const BUCKET = "qflow-render-test";
+const STATE_MACHINE = `arn:aws:states:${REGION}:${ACCOUNT}:stateMachine:qflow-hyperframes`;
+const EXECUTION_PREFIX = `arn:aws:states:${REGION}:${ACCOUNT}:execution:qflow-hyperframes:`;
 function documentFixture(fps = 30, denominator = 1): HyperframesDocument {
   return {
-    visualIr: "narratage.visual-ir@1",
+    visualIr: "qflow.visual-ir@1",
     frameRate: { numerator: fps, denominator },
     frameCount: 60,
     canvas: { width: 720, height: 1280 },
@@ -161,7 +161,7 @@ function fakeClient(options: {
     async stop(input) {
       state.stopped.push(input.executionArn);
       assert.equal(input.region, REGION);
-      assert.match(input.reason, /Narratage cancelled Operation/u);
+      assert.match(input.reason, /Qflow cancelled Operation/u);
     },
     async openOutput(input) {
       state.opened.push(input.s3Uri);
@@ -236,7 +236,7 @@ test("the Lambda Endpoint declines frame domains and requirements it cannot pres
       alphaMode: "straight",
       timing: { kind: "still" },
     }],
-    html: `<!doctype html><img data-narratage-surface-artifact="${artifact.digest}" src="narratage-artifact://sha256/${artifact.digest.slice("sha256:".length)}"/>`,
+    html: `<!doctype html><img data-qflow-surface-artifact="${artifact.digest}" src="qflow-artifact://sha256/${artifact.digest.slice("sha256:".length)}"/>`,
   };
   assert.equal(supportsAwsLambdaHyperframes(hyperframesVisualRequest(withSurface)), false,
     "a deployment without a Surface verifier must fail closed");
@@ -296,7 +296,7 @@ test("one submission is polled and streams the output into the ArtifactStore", a
   assert.doesNotThrow(() => validateDistributedRenderConfig(state.renderInputs[0]!.config),
     "the locked SDK must accept the exact configuration sent by the Endpoint");
   assert.equal(state.renderInputs[0]!.executionName,
-    `narratage-${common.operation.replace(/[^A-Za-z0-9_-]/gu, "-")}`);
+    `qflow-${common.operation.replace(/[^A-Za-z0-9_-]/gu, "-")}`);
 
   const completed = await endpoint.poll({
     ...common,

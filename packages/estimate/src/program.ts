@@ -1,6 +1,6 @@
-import type { Text } from "@narratage/text";
-import { assertSpeechDurationIdentity, sealSpeechDuration } from "@narratage/speech";
-import type { SpeechDuration } from "@narratage/speech";
+import type { Text } from "@qflow/text";
+import { assertSpeechDurationIdentity, sealSpeechDuration } from "@qflow/speech";
+import type { SpeechDuration } from "@qflow/speech";
 import { dictionary as cmuPronouncingDictionary } from "cmu-pronouncing-dictionary";
 
 import type {

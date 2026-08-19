@@ -3,19 +3,19 @@ import type {
   VisualEasing,
   VisualPresent,
   VisualStyleDeclaration,
-} from "@narratage/composition";
-import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { canonicalize } from "@narratage/protocol";
-import { assertCanvasSpace, assertSpatialFrame } from "@narratage/spatial";
-import type { CanvasSpace } from "@narratage/spatial";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
+} from "@qflow/composition";
+import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { canonicalize } from "@qflow/protocol";
+import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
+import type { CanvasSpace } from "@qflow/spatial";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
 import {
   locateMomentOccurrences,
   locateSelectionOccurrences,
   resolveTriggeredSchedule,
-} from "@narratage/temporal";
+} from "@qflow/temporal";
 
 import { assertMediaIdentity, assertMediaLayerSet } from "./layers.js";
 import { lowerMediaItemElements } from "./lower.js";

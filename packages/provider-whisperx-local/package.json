@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/provider-whisperx-local",
+  "name": "@qflow/provider-whisperx-local",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,18 +7,18 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/endpoint-kit": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/runtime-kit": "workspace:*",
-    "@narratage/speech-evidence": "workspace:*",
-    "@narratage/whisperx": "workspace:*"
+    "@qflow/endpoint-kit": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/runtime-kit": "workspace:*",
+    "@qflow/speech-evidence": "workspace:*",
+    "@qflow/whisperx": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/driver-node": "workspace:*",
-    "@narratage/speech": "workspace:*"
+    "@qflow/driver-node": "workspace:*",
+    "@qflow/speech": "workspace:*"
   }
 }

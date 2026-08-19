@@ -3,18 +3,18 @@ import type {
   CoreCommand,
   TypeRef,
   CapabilityRef,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 import type {
   ProducerHandler,
-} from "@narratage/component-kit";
-import type { EndpointRegistrationOptions, EndpointScheduling, ImmediateEndpointHandler, AsyncEndpoint } from "@narratage/endpoint-kit";
+} from "@qflow/component-kit";
+import type { EndpointRegistrationOptions, EndpointScheduling, ImmediateEndpointHandler, AsyncEndpoint } from "@qflow/endpoint-kit";
 
 export type {
   ProducerHandler,
   ProducerHandlerContext,
   ProducerHandlerResult,
   ProducerRegistrar,
-} from "@narratage/component-kit";
+} from "@qflow/component-kit";
 
 export type DriverExecutionOutcome = {
   readonly command: string;

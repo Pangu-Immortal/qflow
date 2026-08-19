@@ -1,11 +1,11 @@
-import { artifactTypes } from "@narratage/artifact";
-import { generationPort, sealGenerationMediaBinding, sealGenerationRequestDraft } from "@narratage/generation";
-import type { GenerationMediaPort, GenerationMediaRole, GenerationPortValue } from "@narratage/generation";
-import { createExactModelPrimaryGenerationFragment, exactModelMediaInputNames, exactModelTextInputName } from "@narratage/model-kit";
-import type { ExactModelMediaInput } from "@narratage/model-kit";
-import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@narratage/markup";
-import type { CanonicalValue, TypeRef } from "@narratage/protocol";
-import { textTypes, verifyText } from "@narratage/text";
+import { artifactTypes } from "@qflow/artifact";
+import { generationPort, sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/generation";
+import type { GenerationMediaPort, GenerationMediaRole, GenerationPortValue } from "@qflow/generation";
+import { createExactModelPrimaryGenerationFragment, exactModelMediaInputNames, exactModelTextInputName } from "@qflow/model-kit";
+import type { ExactModelMediaInput } from "@qflow/model-kit";
+import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/markup";
+import type { CanonicalValue, TypeRef } from "@qflow/protocol";
+import { textTypes, verifyText } from "@qflow/text";
 import { minimaxH3Endpoints } from "./index.js";
 
 type Media = { readonly port: "referenceImage" | "referenceVideo" | "referenceAudio" | "firstFrame" | "lastFrame"; readonly role: GenerationMediaRole; readonly source: SurfaceResolvedReference };

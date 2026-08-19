@@ -8,7 +8,7 @@ import {
   sealCompiledGraph,
   sealRecord,
   start,
-} from "@narratage/core";
+} from "@qflow/core";
 import type {
   BuildRequest,
   BuildState,
@@ -24,7 +24,7 @@ import type {
   ProducerRef,
   Satisfaction,
   TypeRef,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 
 const moduleRef = { name: "example.kernel-demand", version: "0.0.0" } as const;
 const types = {
@@ -60,7 +60,7 @@ const producers = {
 const seedanceCapability = { module: moduleRef, name: "seedance-media" } as const;
 
 const manifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: moduleRef.name,
   version: moduleRef.version,
   dependencies: [],

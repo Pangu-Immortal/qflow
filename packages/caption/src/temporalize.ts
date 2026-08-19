@@ -1,6 +1,6 @@
-import type { CaptionCorrespondence, CaptionDisplaySequence } from "@narratage/narrative";
-import { tokenFrameSpan } from "@narratage/semantic-map";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
+import type { CaptionCorrespondence, CaptionDisplaySequence } from "@qflow/narrative";
+import { tokenFrameSpan } from "@qflow/semantic-map";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
 
 import { CaptionTimingError } from "./error.js";
 import { assertCaptionCorrespondence, assertCaptionDisplaySequence } from "./display.js";

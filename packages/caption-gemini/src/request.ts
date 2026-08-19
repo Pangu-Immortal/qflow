@@ -1,6 +1,6 @@
-import { assertCaptionProgramForDisplay } from "@narratage/caption";
-import type { CaptionFieldDeclaration, CaptionProgram } from "@narratage/caption";
-import type { CaptionDisplaySequence } from "@narratage/narrative";
+import { assertCaptionProgramForDisplay } from "@qflow/caption";
+import type { CaptionFieldDeclaration, CaptionProgram } from "@qflow/caption";
+import type { CaptionDisplaySequence } from "@qflow/narrative";
 
 import { verifyCaptionGeminiProgram } from "./program.js";
 import type {

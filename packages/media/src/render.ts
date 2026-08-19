@@ -1,5 +1,5 @@
-import { isDigest } from "@narratage/protocol";
-import type { BlobRef } from "@narratage/protocol";
+import { isDigest } from "@qflow/protocol";
+import type { BlobRef } from "@qflow/protocol";
 
 const FONT_MEDIA_TYPES = new Set([
   "font/otf",

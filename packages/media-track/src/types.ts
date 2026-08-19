@@ -1,16 +1,16 @@
-import type { FrameSpan } from "@narratage/composition";
-import type { CompositableSurfaceRef, MediaRational } from "@narratage/media";
-import type { BlobRef } from "@narratage/protocol";
+import type { FrameSpan } from "@qflow/composition";
+import type { CompositableSurfaceRef, MediaRational } from "@qflow/media";
+import type { BlobRef } from "@qflow/protocol";
 import type {
   ContentFit,
   IntrinsicExtent,
   SpatialFrame,
   SpatialPath,
-} from "@narratage/spatial";
+} from "@qflow/spatial";
 import type {
   OccurrenceExpansion,
   TemporalWindowProjection,
-} from "@narratage/temporal";
+} from "@qflow/temporal";
 
 /** Intrinsic visual truth resolved before Media authoring; never a Provider or lineage envelope. */
 export type MediaVisualSource =

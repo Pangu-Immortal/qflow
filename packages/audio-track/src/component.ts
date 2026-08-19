@@ -1,10 +1,10 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { SynchronizedMedia } from "@narratage/media";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
-import type { ProgramSpace } from "@narratage/program-space";
-import { canonicalize } from "@narratage/protocol";
-import type { StoredValue } from "@narratage/protocol";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { SynchronizedMedia } from "@qflow/media";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import type { ProgramSpace } from "@qflow/program-space";
+import { canonicalize } from "@qflow/protocol";
+import type { StoredValue } from "@qflow/protocol";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
 
 import { audioTrackProducers, audioTrackTypes } from "./manifest.js";
 import { appendMomentAudioItem, appendProgramAudioItem, appendSelectionAudioItem, assertAudioTrackProgram, createAudioTrackSet, finalizeAudioTrack, renderAudioTrack } from "./program.js";

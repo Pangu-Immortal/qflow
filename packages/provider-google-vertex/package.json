@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/provider-google-vertex",
+  "name": "@qflow/provider-google-vertex",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,21 +7,21 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
     "@google/genai": "1.52.0",
-    "@narratage/caption": "workspace:*",
-    "@narratage/caption-gemini": "workspace:*",
-    "@narratage/endpoint-kit": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/runtime": "workspace:*",
-    "@narratage/runtime-kit": "workspace:*",
-    "@narratage/runtime-host-node": "workspace:*"
+    "@qflow/caption": "workspace:*",
+    "@qflow/caption-gemini": "workspace:*",
+    "@qflow/endpoint-kit": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-kit": "workspace:*",
+    "@qflow/runtime-host-node": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/driver-node": "workspace:*",
-    "@narratage/script": "workspace:*"
+    "@qflow/driver-node": "workspace:*",
+    "@qflow/script": "workspace:*"
   }
 }

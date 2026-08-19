@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/caption-fine",
+  "name": "@qflow/caption-fine",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,23 +7,23 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/caption": "workspace:*",
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/composition": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/media": "workspace:*",
-    "@narratage/narrative": "workspace:*",
-    "@narratage/program-space": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/semantic-map": "workspace:*",
-    "@narratage/svs": "workspace:*",
-    "@narratage/markup": "workspace:*"
+    "@qflow/caption": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/narrative": "workspace:*",
+    "@qflow/program-space": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/semantic-map": "workspace:*",
+    "@qflow/svs": "workspace:*",
+    "@qflow/markup": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/script": "workspace:*"
+    "@qflow/script": "workspace:*"
   }
 }

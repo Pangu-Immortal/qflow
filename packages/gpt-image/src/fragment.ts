@@ -1,11 +1,11 @@
-import { artifactTypes } from "@narratage/artifact";
-import { sealGraphFragment } from "@narratage/elaborator";
-import { generationProducers } from "@narratage/generation";
-import { imageTransformProducers, imageTransformTypes } from "@narratage/image-transform";
-import { exactModelMediaInputNames, exactModelTextInputName } from "@narratage/model-kit";
-import type { ExactModelMediaInput, ExactModelTextInput } from "@narratage/model-kit";
-import type { FragmentOperation } from "@narratage/elaborator";
-import { textTypes } from "@narratage/text";
+import { artifactTypes } from "@qflow/artifact";
+import { sealGraphFragment } from "@qflow/elaborator";
+import { generationProducers } from "@qflow/generation";
+import { imageTransformProducers, imageTransformTypes } from "@qflow/image-transform";
+import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/model-kit";
+import type { ExactModelMediaInput, ExactModelTextInput } from "@qflow/model-kit";
+import type { FragmentOperation } from "@qflow/elaborator";
+import { textTypes } from "@qflow/text";
 
 import { gptImageEndpoints } from "./index.js";
 

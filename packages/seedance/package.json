@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/seedance",
+  "name": "@qflow/seedance",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,17 +7,17 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/artifact": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/generation": "workspace:*",
-    "@narratage/model-kit": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/speech": "workspace:*",
-    "@narratage/text": "workspace:*",
-    "@narratage/markup": "workspace:*"
+    "@qflow/artifact": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/generation": "workspace:*",
+    "@qflow/model-kit": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/speech": "workspace:*",
+    "@qflow/text": "workspace:*",
+    "@qflow/markup": "workspace:*"
   }
 }

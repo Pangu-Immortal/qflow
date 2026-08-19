@@ -1,16 +1,16 @@
 import type {
   ModuleManifest,
   TypeRef,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 
-export const artifactModuleRef = { name: "@narratage/artifact", version: "1" } as const;
+export const artifactModuleRef = { name: "@qflow/artifact", version: "1" } as const;
 
 export const artifactTypes = {
   blob: { module: artifactModuleRef, name: "BlobArtifact" },
 } satisfies Record<string, TypeRef>;
 
 export const artifactManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: artifactModuleRef.name,
   version: artifactModuleRef.version,
   dependencies: [],

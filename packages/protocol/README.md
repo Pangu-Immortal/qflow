@@ -1,4 +1,4 @@
-# `@narratage/protocol`
+# `@qflow/protocol`
 
 Data contracts shared across package boundaries.
 

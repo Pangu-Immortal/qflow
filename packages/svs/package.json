@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/svs",
+  "name": "@qflow/svs",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,15 +7,15 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/core": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/protocol": "workspace:*"
+    "@qflow/core": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/protocol": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/markup": "workspace:*"
+    "@qflow/markup": "workspace:*"
   }
 }

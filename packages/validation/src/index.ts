@@ -1,18 +1,18 @@
 import {
   resolveType,
   verifyRecordStructure,
-} from "@narratage/core";
+} from "@qflow/core";
 import type {
   TypeValidatorHandler,
   TypeValidatorRegistrar,
-} from "@narratage/component-kit";
-import type { ResolvedModuleClosure, StoredValue, TypeRef, TypedRecord } from "@narratage/protocol";
+} from "@qflow/component-kit";
+import type { ResolvedModuleClosure, StoredValue, TypeRef, TypedRecord } from "@qflow/protocol";
 
 function typeKey(type: TypeRef): string {
   return `${type.module.name}@${type.module.version}#${type.name}`;
 }
 
-export type { TypeValidatorContext, TypeValidatorHandler, TypeValidatorRegistrar } from "@narratage/component-kit";
+export type { TypeValidatorContext, TypeValidatorHandler, TypeValidatorRegistrar } from "@qflow/component-kit";
 
 export type TypeValidatorRegistration = {
   readonly handler: TypeValidatorHandler;

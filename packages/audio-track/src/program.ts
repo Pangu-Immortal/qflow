@@ -1,23 +1,23 @@
-import { assertAudioTrackIdentity, sealAudioTrack } from "@narratage/composition";
-import type { AudioClip, AudioTrack } from "@narratage/composition";
-import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@narratage/media";
-import type { SynchronizedMedia } from "@narratage/media";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@narratage/narrative";
+import { assertAudioTrackIdentity, sealAudioTrack } from "@qflow/composition";
+import type { AudioClip, AudioTrack } from "@qflow/composition";
+import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/media";
+import type { SynchronizedMedia } from "@qflow/media";
+import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import {
   assertProgramSpaceIdentity,
   programFrameSampleBoundary,
   programSpaceSampleFrames,
-} from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { canonicalize, isDigest } from "@narratage/protocol";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
+} from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { canonicalize, isDigest } from "@qflow/protocol";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
 import {
   projectMomentWindows,
   projectProgramWindow,
   projectSelectionWindows,
   temporalDurationInSamples,
-} from "@narratage/temporal";
-import type { ProjectedOccurrence, TemporalDuration } from "@narratage/temporal";
+} from "@qflow/temporal";
+import type { ProjectedOccurrence, TemporalDuration } from "@qflow/temporal";
 
 import type {
   AudioClipSpec,

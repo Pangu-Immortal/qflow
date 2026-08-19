@@ -1,10 +1,10 @@
-import { programSpaceSampleFrames } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { assertSpeechBasisIdentity } from "@narratage/speech";
-import type { SpeechAudioBasis, SpeechBasis } from "@narratage/speech";
-import { lowerRestrictedSpeechVisualPresents } from "@narratage/media-track";
-import { sealAudioTrack, sealVisualTrack } from "@narratage/composition";
-import type { AudioTrack, VisualTrack } from "@narratage/composition";
+import { programSpaceSampleFrames } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { assertSpeechBasisIdentity } from "@qflow/speech";
+import type { SpeechAudioBasis, SpeechBasis } from "@qflow/speech";
+import { lowerRestrictedSpeechVisualPresents } from "@qflow/media-track";
+import { sealAudioTrack, sealVisualTrack } from "@qflow/composition";
+import type { AudioTrack, VisualTrack } from "@qflow/composition";
 
 export function projectSpeechProgramSpace(basis: SpeechBasis): ProgramSpace {
   assertSpeechBasisIdentity(basis);
@@ -28,7 +28,7 @@ export function projectSpeechVisual(basis: SpeechBasis): VisualTrack {
     endFrameExclusive: segment.endFrameExclusive,
   }]));
   return sealVisualTrack({
-    visualIr: "narratage.visual-ir@1",
+    visualIr: "qflow.visual-ir@1",
     id: trackId,
     presents: lowerRestrictedSpeechVisualPresents(
       trackId,

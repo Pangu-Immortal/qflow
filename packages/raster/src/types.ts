@@ -1,5 +1,5 @@
-import type { BlobRef } from "@narratage/protocol";
-import type { CanvasSpace, SpatialFrame } from "@narratage/spatial";
+import type { BlobRef } from "@qflow/protocol";
+import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
 
 export type RasterInterpolation = "nearest" | "linear" | "cubic" | "area" | "lanczos";
 export type RasterFit = "contain" | "cover" | "stretch";

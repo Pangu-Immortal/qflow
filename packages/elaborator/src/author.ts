@@ -1,13 +1,13 @@
 import {
   sealCompiledGraph,
   verifyCompiledGraph,
-} from "@narratage/core";
+} from "@qflow/core";
 import type {
   CompiledGraph,
   GraphValueRef,
   LinkedProgram,
   TypeRef,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 
 import {
   bindAuthorFragment,

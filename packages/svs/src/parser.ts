@@ -1,4 +1,4 @@
-import type { CanonicalValue } from "@narratage/protocol";
+import type { CanonicalValue } from "@qflow/protocol";
 
 import type {
   ParsedSvsProperty,

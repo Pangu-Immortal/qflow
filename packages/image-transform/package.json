@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/image-transform",
+  "name": "@qflow/image-transform",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,15 +7,15 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/artifact": "workspace:*",
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/raster": "workspace:*",
-    "@narratage/markup": "workspace:*"
+    "@qflow/artifact": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/raster": "workspace:*",
+    "@qflow/markup": "workspace:*"
   }
 }

@@ -1,9 +1,9 @@
-import type { CaptionStyleIntent } from "@narratage/caption";
-import { sealCaptionStyle } from "@narratage/caption";
-import { assertFontArtifactRef } from "@narratage/media";
-import type { FontArtifactRef } from "@narratage/media";
-import { canonicalStringify } from "@narratage/protocol";
-import type { SvsRecipe } from "@narratage/svs";
+import type { CaptionStyleIntent } from "@qflow/caption";
+import { sealCaptionStyle } from "@qflow/caption";
+import { assertFontArtifactRef } from "@qflow/media";
+import type { FontArtifactRef } from "@qflow/media";
+import { canonicalStringify } from "@qflow/protocol";
+import type { SvsRecipe } from "@qflow/svs";
 
 import type { FineCaptionGlyphPaint, FineCaptionParameters } from "./types.js";
 import {
@@ -12,7 +12,7 @@ import {
   fineCaptionRequiredRecipeProperties,
 } from "./recipe.js";
 
-export const FINE_CAPTION_FAMILY = "@narratage/caption-fine@1";
+export const FINE_CAPTION_FAMILY = "@qflow/caption-fine@1";
 
 const ALLOWED_PROPERTIES = new Set<string>([
   ...fineCaptionRequiredRecipeProperties,

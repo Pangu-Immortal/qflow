@@ -1,20 +1,20 @@
-import type { Narrative } from "@narratage/narrative";
-import { sealProgramSpace } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { sealSpeechBasis } from "@narratage/speech";
-import type { SpeechAudioBasis, SpeechBasis } from "@narratage/speech";
-import { sealAlignedTranscriptEvidence } from "@narratage/speech-evidence";
-import type { AlignedTranscriptEvidence, SpeechCharacterEvidence, SpeechWordEvidence } from "@narratage/speech-evidence";
+import type { Narrative } from "@qflow/narrative";
+import { sealProgramSpace } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { sealSpeechBasis } from "@qflow/speech";
+import type { SpeechAudioBasis, SpeechBasis } from "@qflow/speech";
+import { sealAlignedTranscriptEvidence } from "@qflow/speech-evidence";
+import type { AlignedTranscriptEvidence, SpeechCharacterEvidence, SpeechWordEvidence } from "@qflow/speech-evidence";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { parseScript } from "@narratage/script";
+import { parseScript } from "@qflow/script";
 import {
   SpeechAlignmentError,
   alignWordGroups,
   locateSpeechTiming,
-} from "@narratage/speech-alignment";
+} from "@qflow/speech-alignment";
 
 type WordFixture = {
   readonly text: string;

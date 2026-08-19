@@ -1,16 +1,16 @@
 import {
   registerProducerFacets,
   registerTypeValidatorFacets,
-} from "@narratage/component-kit";
+} from "@qflow/component-kit";
 import {
   ProducerRegistry,
   NodeDriver,
   EndpointRegistry,
-} from "@narratage/driver-node";
+} from "@qflow/driver-node";
 import {
   isStreamingArtifactStore,
-} from "@narratage/runtime";
-import { TypeValidatorRegistry } from "@narratage/validation";
+} from "@qflow/runtime";
+import { TypeValidatorRegistry } from "@qflow/validation";
 
 import { createLocalRuntimeArchiveControl, createLocalRuntimeArtifactAccess } from "./control.js";
 import { createLocalCredentialControl } from "./credentials.js";

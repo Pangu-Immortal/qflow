@@ -1,12 +1,12 @@
-import type { AuthorValueRef, GraphFragment } from "@narratage/elaborator";
-import type { CanonicalValue } from "@narratage/protocol";
+import type { AuthorValueRef, GraphFragment } from "@qflow/elaborator";
+import type { CanonicalValue } from "@qflow/protocol";
 import type {
   SurfaceComponentDraft,
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import {
   anchoredFrameFragment,

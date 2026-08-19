@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/provider-hyperframes-local",
+  "name": "@qflow/provider-hyperframes-local",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,24 +7,24 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/endpoint-kit": "workspace:*",
-    "@narratage/hyperframes": "workspace:*",
-    "@narratage/media": "workspace:*",
-    "@narratage/media-execution": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/render-hyperframes": "workspace:*",
-    "@narratage/runtime": "workspace:*",
-    "@narratage/runtime-kit": "workspace:*",
-    "@narratage/runtime-host-node": "workspace:*",
+    "@qflow/endpoint-kit": "workspace:*",
+    "@qflow/hyperframes": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/media-execution": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/render-hyperframes": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-kit": "workspace:*",
+    "@qflow/runtime-host-node": "workspace:*",
     "hyperframes": "0.7.101"
   },
   "devDependencies": {
-    "@narratage/composition": "workspace:*",
-    "@narratage/driver-node": "workspace:*",
-    "@narratage/program-space": "workspace:*"
+    "@qflow/composition": "workspace:*",
+    "@qflow/driver-node": "workspace:*",
+    "@qflow/program-space": "workspace:*"
   }
 }

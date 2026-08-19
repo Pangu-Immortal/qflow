@@ -1,15 +1,15 @@
-import { isDigest } from "@narratage/protocol";
-import type { Narrative, NarrativeToken } from "@narratage/narrative";
-import { programFrameSampleBoundary, programSpaceFrameCount } from "@narratage/program-space";
-import type { SpeechAudioBasis } from "@narratage/speech";
+import { isDigest } from "@qflow/protocol";
+import type { Narrative, NarrativeToken } from "@qflow/narrative";
+import { programFrameSampleBoundary, programSpaceFrameCount } from "@qflow/program-space";
+import type { SpeechAudioBasis } from "@qflow/speech";
 import type {
   AlignedTranscriptEvidence,
   SpeechActivitySpan,
   SpeechCharacterEvidence,
   SpeechTranscriptPassage,
   SpeechWordEvidence,
-} from "@narratage/speech-evidence";
-import type { CompleteSemanticMap, SemanticTimePoint, TimedSpeechToken } from "@narratage/semantic-map";
+} from "@qflow/speech-evidence";
+import type { CompleteSemanticMap, SemanticTimePoint, TimedSpeechToken } from "@qflow/semantic-map";
 
 import { alignWordGroups } from "./align.js";
 import { SpeechAlignmentError } from "./error.js";

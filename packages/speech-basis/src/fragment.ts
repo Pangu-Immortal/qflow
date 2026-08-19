@@ -1,8 +1,8 @@
-import { programSpaceTypes } from "@narratage/program-space";
-import { speechTypes } from "@narratage/speech";
-import type { SpeechBasis } from "@narratage/speech";
-import { compositionTypes } from "@narratage/composition";
-import { sealGraphFragment } from "@narratage/elaborator";
+import { programSpaceTypes } from "@qflow/program-space";
+import { speechTypes } from "@qflow/speech";
+import type { SpeechBasis } from "@qflow/speech";
+import { compositionTypes } from "@qflow/composition";
+import { sealGraphFragment } from "@qflow/elaborator";
 
 import { speechBasisProducers } from "./manifest.js";
 

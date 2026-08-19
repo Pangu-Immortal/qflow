@@ -2,9 +2,9 @@ import type {
   VisualSamplingRational,
   VisualSamplingSegment,
   VisualTimedSampling,
-} from "@narratage/composition";
-import { assertProgramSpaceIdentity } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
+} from "@qflow/composition";
+import { assertProgramSpaceIdentity } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
 
 import type { MediaVisualOccupancy, MediaVisualTrim } from "./types.js";
 

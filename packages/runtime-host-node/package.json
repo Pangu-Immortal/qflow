@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/runtime-host-node",
+  "name": "@qflow/runtime-host-node",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -8,9 +8,9 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@narratage/protocol": "workspace:*",
-    "@narratage/runtime": "workspace:*",
-    "@narratage/runtime-kit": "workspace:*",
-    "@narratage/workspace": "workspace:*"
+    "@qflow/protocol": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-kit": "workspace:*",
+    "@qflow/workspace": "workspace:*"
   }
 }

@@ -1,10 +1,10 @@
-import { captionTypes } from "@narratage/caption";
-import { narrativeTypes } from "@narratage/narrative";
+import { captionTypes } from "@qflow/caption";
+import { narrativeTypes } from "@qflow/narrative";
 import type {
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { captionGeminiPlanningFragment } from "./fragment.js";
 import { captionGeminiTypes } from "./manifest.js";

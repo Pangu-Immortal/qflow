@@ -1,8 +1,8 @@
 import {
   canonicalize,
   isDigest,
-} from "@narratage/protocol";
-import type { BlobRef } from "@narratage/protocol";
+} from "@qflow/protocol";
+import type { BlobRef } from "@qflow/protocol";
 
 import type {
   GeneratedAudioSet,

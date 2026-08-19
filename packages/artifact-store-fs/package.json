@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/artifact-store-fs",
+  "name": "@qflow/artifact-store-fs",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,12 +7,12 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/protocol": "workspace:*",
-    "@narratage/runtime": "workspace:*",
-    "@narratage/runtime-kit": "workspace:*"
+    "@qflow/protocol": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-kit": "workspace:*"
   }
 }

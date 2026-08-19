@@ -1,4 +1,4 @@
-import { artifactTypes } from "@narratage/artifact";
+import { artifactTypes } from "@qflow/artifact";
 import assert from "node:assert/strict";
 import test from "node:test";
 

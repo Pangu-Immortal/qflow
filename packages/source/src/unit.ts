@@ -1,4 +1,4 @@
-import type { BlobRef, SourceRange } from "@narratage/protocol";
+import type { BlobRef, SourceRange } from "@qflow/protocol";
 
 export type SourceUnit = {
   /** Host-canonical identity used only for recursion and diagnostics. */

@@ -1,5 +1,5 @@
-import { mediaTypes } from "@narratage/media";
-import { artifactTypes } from "@narratage/artifact";
+import { mediaTypes } from "@qflow/media";
+import { artifactTypes } from "@qflow/artifact";
 import {
   executeExtractAudio,
   executeExtractFrame,
@@ -9,16 +9,16 @@ import {
   executeProjectSpeechEvidenceAudio,
   executeRenderTimelineAudio,
   executeTransformMedia,
-} from "@narratage/media-execution";
-import type { MediaExecutionEnvironment, MediaOperationResult } from "@narratage/media-execution";
-import { mediaPipelineCapabilities } from "@narratage/media-pipeline";
-import { canonicalize } from "@narratage/protocol";
-import { isStreamingArtifactStore } from "@narratage/runtime";
-import { speechTypes } from "@narratage/speech";
-import { defineEndpointPackage } from "@narratage/endpoint-kit";
-import type { EndpointFulfillment, EndpointInvocationContext } from "@narratage/endpoint-kit";
+} from "@qflow/media-execution";
+import type { MediaExecutionEnvironment, MediaOperationResult } from "@qflow/media-execution";
+import { mediaPipelineCapabilities } from "@qflow/media-pipeline";
+import { canonicalize } from "@qflow/protocol";
+import { isStreamingArtifactStore } from "@qflow/runtime";
+import { speechTypes } from "@qflow/speech";
+import { defineEndpointPackage } from "@qflow/endpoint-kit";
+import type { EndpointFulfillment, EndpointInvocationContext } from "@qflow/endpoint-kit";
 
-export const localMediaProviderModuleRef = { name: "@narratage/provider-media-local", version: "1" } as const;
+export const localMediaProviderModuleRef = { name: "@qflow/provider-media-local", version: "1" } as const;
 
 export type CreateLocalMediaProviderOptions = {
   readonly instance?: string;
@@ -45,7 +45,7 @@ function fulfillment(result: MediaOperationResult): EndpointFulfillment {
 
 /**
  * The Build's own ArtifactStore, and whatever ffmpeg this machine has. The
- * operations themselves live in `@narratage/media-execution`, shared with the
+ * operations themselves live in `@qflow/media-execution`, shared with the
  * AWS Provider so one Need cannot mean two different transforms.
  */
 export function createLocalMediaProvider(config: CreateLocalMediaProviderOptions) {

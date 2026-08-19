@@ -1,19 +1,19 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@narratage/speech-evidence";
-import type { AlignedTranscriptEvidence, SpeechTranscriptPassage } from "@narratage/speech-evidence";
-import type { EndpointInvocationContext, EndpointFulfillment } from "@narratage/endpoint-kit";
-import { canonicalize } from "@narratage/protocol";
-import type { CanonicalValue } from "@narratage/protocol";
-import { defineEndpointPackage } from "@narratage/endpoint-kit";
+import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@qflow/speech-evidence";
+import type { AlignedTranscriptEvidence, SpeechTranscriptPassage } from "@qflow/speech-evidence";
+import type { EndpointInvocationContext, EndpointFulfillment } from "@qflow/endpoint-kit";
+import { canonicalize } from "@qflow/protocol";
+import type { CanonicalValue } from "@qflow/protocol";
+import { defineEndpointPackage } from "@qflow/endpoint-kit";
 import {
   whisperXCapabilities,
-} from "@narratage/whisperx";
-import type { WhisperXAlignmentRequest } from "@narratage/whisperx";
+} from "@qflow/whisperx";
+import type { WhisperXAlignmentRequest } from "@qflow/whisperx";
 
 export const localWhisperXProviderModuleRef = {
-  name: "@narratage/provider-whisperx-local",
+  name: "@qflow/provider-whisperx-local",
   version: "1",
 } as const;
 export const localWhisperXPunktTabDigest =
@@ -250,7 +250,7 @@ export function createLocalWhisperXProvider(config: CreateLocalWhisperXProviderO
         assert(audio !== undefined && audio.byteLength === request.audio.size,
           `WhisperX evidence Artifact ${request.audio.digest} is unavailable or has changed`);
         assertCanonicalEvidenceWav(audio, request.sampleFrames);
-        const work = await mkdtemp(join(tmpdir(), "narratage-whisperx-local-"));
+        const work = await mkdtemp(join(tmpdir(), "qflow-whisperx-local-"));
         try {
           const audioPath = join(work, "alignment-evidence.wav");
           await writeFile(audioPath, audio);
@@ -271,7 +271,7 @@ export function createLocalWhisperXProvider(config: CreateLocalWhisperXProviderO
             readonly punktTabDigest?: unknown;
           };
           assert(healthValue.ok === true
-            && healthValue.protocol === "narratage.whisperx-service@1"
+            && healthValue.protocol === "qflow.whisperx-service@1"
             && healthValue.serviceVersion === expectedServiceVersion
             && healthValue.whisperxVersion === expectedWhisperXVersion
             && healthValue.model === expectedModel

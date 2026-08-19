@@ -1,9 +1,9 @@
-import type { CaptionProgram, TimedCaptionProjection } from "@narratage/caption";
-import { resolveCaptionProgram } from "@narratage/caption";
-import { renderFineCaption } from "@narratage/caption-fine";
-import type { CaptionDisplayAtom, CaptionDisplaySequence } from "@narratage/narrative";
-import type { CanonicalValue, ValueSchema } from "@narratage/protocol";
-import { sealProgramSpace } from "@narratage/program-space";
+import type { CaptionProgram, TimedCaptionProjection } from "@qflow/caption";
+import { resolveCaptionProgram } from "@qflow/caption";
+import { renderFineCaption } from "@qflow/caption-fine";
+import type { CaptionDisplayAtom, CaptionDisplaySequence } from "@qflow/narrative";
+import type { CanonicalValue, ValueSchema } from "@qflow/protocol";
+import { sealProgramSpace } from "@qflow/program-space";
 
 import type {
   CaptionPlaygroundFailure,

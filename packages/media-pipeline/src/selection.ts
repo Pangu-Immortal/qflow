@@ -1,10 +1,10 @@
-import type { Narrative } from "@narratage/narrative";
-import { sealMediaStreamSelection, verifyMediaInspection } from "@narratage/media";
-import type { MediaAudioStream, MediaInspection, MediaStreamSelection, MediaVideoStream } from "@narratage/media";
-import type { SpeechBasis } from "@narratage/speech";
+import type { Narrative } from "@qflow/narrative";
+import { sealMediaStreamSelection, verifyMediaInspection } from "@qflow/media";
+import type { MediaAudioStream, MediaInspection, MediaStreamSelection, MediaVideoStream } from "@qflow/media";
+import type { SpeechBasis } from "@qflow/speech";
 import {
   canonicalize,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 
 import type { MediaSelectionRequest } from "./types.js";
 

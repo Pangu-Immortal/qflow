@@ -1,9 +1,9 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { NarrativeExcerpt } from "@narratage/narrative";
-import type { SynchronizedMedia, TimelineAudio } from "@narratage/media";
-import type { StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
-import type { ContentFit, SpatialFrame } from "@narratage/spatial";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { NarrativeExcerpt } from "@qflow/narrative";
+import type { SynchronizedMedia, TimelineAudio } from "@qflow/media";
+import type { StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
+import type { ContentFit, SpatialFrame } from "@qflow/spatial";
 
 import { speechSpineProducers } from "./manifest.js";
 import { appendSpeechSpineAudioTake, appendSpeechSpineVisualTake, assembleSpeechBasis, compileSpeechSpineAudio, createSpeechSpineSet } from "./program.js";

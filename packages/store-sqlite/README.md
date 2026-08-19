@@ -1,6 +1,6 @@
-# `@narratage/store-sqlite`
+# `@qflow/store-sqlite`
 
-Private durable state used by `@narratage/runtime-local`.
+Private durable state used by `@qflow/runtime-local`.
 
 One SQLite file stores Build facts, external Operations, the Build queue, active capacity reservations
 and a small output catalog. No ready-command queue is stored: Core derives ready work from the saved

@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/audio-track",
+  "name": "@qflow/audio-track",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,29 +7,29 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/composition": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/media": "workspace:*",
-    "@narratage/narrative": "workspace:*",
-    "@narratage/program-space": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/semantic-map": "workspace:*",
-    "@narratage/temporal": "workspace:*",
-    "@narratage/markup": "workspace:*"
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/narrative": "workspace:*",
+    "@qflow/program-space": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/semantic-map": "workspace:*",
+    "@qflow/temporal": "workspace:*",
+    "@qflow/markup": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/artifact": "workspace:*",
-    "@narratage/core": "workspace:*",
-    "@narratage/media-pipeline": "workspace:*",
-    "@narratage/spatial": "workspace:*",
-    "@narratage/speech": "workspace:*",
-    "@narratage/speech-evidence": "workspace:*",
-    "@narratage/validation": "workspace:*",
-    "@narratage/visual-ir": "workspace:*"
+    "@qflow/artifact": "workspace:*",
+    "@qflow/core": "workspace:*",
+    "@qflow/media-pipeline": "workspace:*",
+    "@qflow/spatial": "workspace:*",
+    "@qflow/speech": "workspace:*",
+    "@qflow/speech-evidence": "workspace:*",
+    "@qflow/validation": "workspace:*",
+    "@qflow/visual-ir": "workspace:*"
   }
 }

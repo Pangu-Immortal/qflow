@@ -1,4 +1,4 @@
-import type { ObjectFieldSchema, ValueSchema } from "@narratage/protocol";
+import type { ObjectFieldSchema, ValueSchema } from "@qflow/protocol";
 
 export const generationDigestSchema = {
   kind: "string",

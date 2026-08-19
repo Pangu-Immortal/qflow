@@ -1,4 +1,4 @@
-import type { ModuleRef } from "@narratage/protocol";
+import type { ModuleRef } from "@qflow/protocol";
 
 import type {
   RawSurfaceDeclaration,

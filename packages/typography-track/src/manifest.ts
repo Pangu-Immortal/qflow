@@ -1,6 +1,6 @@
-import { narrativeDependency, narrativeTypes } from "@narratage/narrative";
-import { programSpaceDependency, programSpaceTypes } from "@narratage/program-space";
-import { semanticMapDependency, semanticMapTypes } from "@narratage/semantic-map";
+import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
+import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+import { semanticMapDependency, semanticMapTypes } from "@qflow/semantic-map";
 import {
   compositionDependency,
   compositionTypes,
@@ -9,20 +9,20 @@ import {
   visualTextPaintSchema,
   visualTextSequenceSchema,
   visualTextTypographySchema,
-} from "@narratage/composition";
+} from "@qflow/composition";
 import {
   spatialDependency,
   spatialFrameSchema,
   spatialPathSchema,
   spatialPointSchema,
   spatialTypes,
-} from "@narratage/spatial";
-import { VISUAL_STYLE_ENUM_VALUES_V1, VISUAL_STYLE_NAMES_V1 } from "@narratage/visual-ir";
-import { mediaDependency, mediaTypes } from "@narratage/media";
-import { textDependency, textTypes } from "@narratage/text";
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@narratage/protocol";
+} from "@qflow/spatial";
+import { VISUAL_STYLE_ENUM_VALUES_V1, VISUAL_STYLE_NAMES_V1 } from "@qflow/visual-ir";
+import { mediaDependency, mediaTypes } from "@qflow/media";
+import { textDependency, textTypes } from "@qflow/text";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
 
-export const typographyTrackModuleRef = { name: "@narratage/typography-track", version: "1" } as const;
+export const typographyTrackModuleRef = { name: "@qflow/typography-track", version: "1" } as const;
 export const typographyTrackTypes = {
   style: { module: typographyTrackModuleRef, name: "TextStyle" },
   motion: { module: typographyTrackModuleRef, name: "TextMotion" },
@@ -163,7 +163,7 @@ export const typographyTrackMarkupSurfaces = [
 
 
 export const typographyTrackManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: typographyTrackModuleRef.name,
   version: typographyTrackModuleRef.version,
   dependencies: [programSpaceDependency, narrativeDependency, semanticMapDependency, spatialDependency, mediaDependency, compositionDependency, textDependency],

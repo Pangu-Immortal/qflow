@@ -1,8 +1,8 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { CaptionCorrespondence, CaptionDisplaySequence } from "@narratage/narrative";
-import type { CompleteSemanticMap } from "@narratage/semantic-map";
-import type { StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { CaptionCorrespondence, CaptionDisplaySequence } from "@qflow/narrative";
+import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import type { StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
 
 import { captionProducers, captionTypes } from "./manifest.js";
 import { assertCaptionPlan } from "./plan.js";

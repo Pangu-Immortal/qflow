@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/film",
+  "name": "@qflow/film",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,26 +7,26 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/composition": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/program-space": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/spatial": "workspace:*",
-    "@narratage/svs": "workspace:*",
-    "@narratage/markup": "workspace:*"
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/program-space": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/spatial": "workspace:*",
+    "@qflow/svs": "workspace:*",
+    "@qflow/markup": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/core": "workspace:*",
-    "@narratage/driver-node": "workspace:*",
-    "@narratage/hyperframes": "workspace:*",
-    "@narratage/media": "workspace:*",
-    "@narratage/text": "workspace:*",
-    "@narratage/typography-track": "workspace:*",
-    "@narratage/validation": "workspace:*"
+    "@qflow/core": "workspace:*",
+    "@qflow/driver-node": "workspace:*",
+    "@qflow/hyperframes": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/text": "workspace:*",
+    "@qflow/typography-track": "workspace:*",
+    "@qflow/validation": "workspace:*"
   }
 }

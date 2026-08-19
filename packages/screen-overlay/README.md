@@ -1,4 +1,4 @@
-# `@narratage/screen-overlay`
+# `@qflow/screen-overlay`
 
 Official provider-free self-contained screen-paint package.
 

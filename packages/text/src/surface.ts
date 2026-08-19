@@ -1,12 +1,12 @@
-import type { CanonicalValue } from "@narratage/protocol";
-import { svsRecipeType } from "@narratage/svs";
-import type { SvsRecipe } from "@narratage/svs";
+import type { CanonicalValue } from "@qflow/protocol";
+import { svsRecipeType } from "@qflow/svs";
+import type { SvsRecipe } from "@qflow/svs";
 import type {
   MarkupAttributeValue,
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { createTextRenderFragment } from "./fragment.js";
 import {

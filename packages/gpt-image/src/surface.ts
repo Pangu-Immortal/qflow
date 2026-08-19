@@ -1,26 +1,26 @@
-import { artifactTypes } from "@narratage/artifact";
+import { artifactTypes } from "@qflow/artifact";
 import {
   generationPort,
   sealGenerationMediaBinding,
-} from "@narratage/generation";
-import type { GenerationMediaPort } from "@narratage/generation";
+} from "@qflow/generation";
+import type { GenerationMediaPort } from "@qflow/generation";
 import {
   gptImageDenoiseV1,
   imageTransformTypes,
-} from "@narratage/image-transform";
+} from "@qflow/image-transform";
 import {
   exactModelMediaInputNames,
   exactModelTextInputName,
   createExactModelPrimaryGenerationFragment,
-} from "@narratage/model-kit";
+} from "@qflow/model-kit";
 import type {
   MarkupAttributeValue,
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
-} from "@narratage/markup";
-import type { CanonicalValue, TypeRef } from "@narratage/protocol";
-import { textTypes, verifyText } from "@narratage/text";
+} from "@qflow/markup";
+import type { CanonicalValue, TypeRef } from "@qflow/protocol";
+import { textTypes, verifyText } from "@qflow/text";
 
 import { createGptImageCleanFragment } from "./fragment.js";
 import {

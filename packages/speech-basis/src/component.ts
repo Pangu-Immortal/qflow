@@ -1,7 +1,7 @@
-import type { ComponentPackage } from "@narratage/component-kit";
-import type { SpeechBasis } from "@narratage/speech";
-import type { StoredValue } from "@narratage/protocol";
-import { canonicalize } from "@narratage/protocol";
+import type { ComponentPackage } from "@qflow/component-kit";
+import type { SpeechBasis } from "@qflow/speech";
+import type { StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/protocol";
 
 import {
   speechBasisProducers,

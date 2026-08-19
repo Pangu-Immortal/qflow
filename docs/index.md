@@ -13,7 +13,7 @@ hero:
       link: /guide/develop
     - theme: alt
       text: GitHub
-      link: https://github.com/qflow-ai/narratage
+      link: https://github.com/qflow-ai/qflow
 ---
 
 <ClientOnly>

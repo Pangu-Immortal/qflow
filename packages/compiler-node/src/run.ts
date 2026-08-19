@@ -1,33 +1,33 @@
-import type { WorkspaceSession } from "@narratage/workspace";
-import { resolveCompiledSourceExport } from "@narratage/elaborator";
+import type { WorkspaceSession } from "@qflow/workspace";
+import { resolveCompiledSourceExport } from "@qflow/elaborator";
 import {
   sealBuildRequest,
   sealCompiledGraph,
   sliceExecution,
   defineBuild,
   materializeBuild,
-} from "@narratage/core";
+} from "@qflow/core";
 import type {
   ArtifactAttachment,
-} from "@narratage/workspace";
+} from "@qflow/workspace";
 import type {
   BuildDefinition,
   BuildState,
   StoredValue,
   TypeRef,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 import {
   collectRunModuleRequests,
   compileRunSource,
   resolveRunDocument,
-} from "@narratage/run";
+} from "@qflow/run";
 import type {
   RunCompilation,
   RunFragmentRegistryLike,
   RunFrontendRegistryLike,
   RunSourceUnit,
-} from "@narratage/run";
-import type { LinkedProgram } from "@narratage/protocol";
+} from "@qflow/run";
+import type { LinkedProgram } from "@qflow/protocol";
 
 import type { NodeCompiledSourceClosure } from "./compiler.js";
 import { mergeAttachments, NodeCompiler } from "./compiler.js";

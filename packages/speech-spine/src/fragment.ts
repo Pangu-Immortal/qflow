@@ -1,14 +1,14 @@
-import { narrativeTypes } from "@narratage/narrative";
-import { mediaTypes } from "@narratage/media";
-import { programSpaceTypes } from "@narratage/program-space";
-import { speechTypes } from "@narratage/speech";
-import { compositionTypes } from "@narratage/composition";
-import { sealGraphFragment } from "@narratage/elaborator";
-import type { FragmentOperation } from "@narratage/elaborator";
-import { mediaPipelineProducers } from "@narratage/media-pipeline";
-import { speechBasisProducers } from "@narratage/speech-basis";
-import { spatialTypes } from "@narratage/spatial";
-import type { TypeRef } from "@narratage/protocol";
+import { narrativeTypes } from "@qflow/narrative";
+import { mediaTypes } from "@qflow/media";
+import { programSpaceTypes } from "@qflow/program-space";
+import { speechTypes } from "@qflow/speech";
+import { compositionTypes } from "@qflow/composition";
+import { sealGraphFragment } from "@qflow/elaborator";
+import type { FragmentOperation } from "@qflow/elaborator";
+import { mediaPipelineProducers } from "@qflow/media-pipeline";
+import { speechBasisProducers } from "@qflow/speech-basis";
+import { spatialTypes } from "@qflow/spatial";
+import type { TypeRef } from "@qflow/protocol";
 
 import { speechSpineProducers, speechSpineTypes } from "./manifest.js";
 import type { SpeechSpineFragmentOptions } from "./types.js";

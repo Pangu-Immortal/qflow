@@ -10,9 +10,9 @@ import {
   openFontFamilies,
   openFontFamiliesByCategory,
   openFontFamilyNames,
-} from "@narratage/fonts-open";
-import type { FontArtifactRef, FontStackRef } from "@narratage/media";
-import type { StructuredElement, StructuredSurfaceHandler } from "@narratage/markup";
+} from "@qflow/fonts-open";
+import type { FontArtifactRef, FontStackRef } from "@qflow/media";
+import type { StructuredElement, StructuredSurfaceHandler } from "@qflow/markup";
 
 const require = createRequire(import.meta.url);
 const range = { start: 0, end: 80 };

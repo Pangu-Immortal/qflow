@@ -7,14 +7,14 @@ Build, retrieval, and reuse syntax. Use this file as the operational checklist.
 
 ```bash
 cd path/to/project
-narratage runtime use narratage.runtime.json
+qflow runtime use qflow.runtime.json
 
-narratage plan build.svrun
+qflow plan build.svrun
 
-narratage build build.svrun --follow
+qflow build build.svrun --follow
 
-narratage inspect <build-id>
-narratage get <build-id> \
+qflow inspect <build-id>
+qflow get <build-id> \
   --name final.video --to output/final.mp4
 ```
 
@@ -47,7 +47,7 @@ Builds remain archived and neither command cancels remote Provider work.
 
 ## Keep project and package boundaries distinct
 
-Prefer production projects outside the Narratage checkout. Relative Author Sources and assets stay
+Prefer production projects outside the Qflow checkout. Relative Author Sources and assets stay
 inside the independently resolved Source Workspace.
 
 - `--workspace` explicitly selects the Source Workspace boundary.

@@ -1,18 +1,18 @@
-import { canonicalStringify, isDigest } from "@narratage/protocol";
-import type { BlobRef } from "@narratage/protocol";
+import { canonicalStringify, isDigest } from "@qflow/protocol";
+import type { BlobRef } from "@qflow/protocol";
 
 import {
   assertVisualStyleV1,
   VISUAL_IR_V1,
-} from "@narratage/visual-ir";
+} from "@qflow/visual-ir";
 import {
   assertProgramSpaceIdentity,
   programSpaceFrameCount,
   programSpaceSampleFrames,
-} from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { assertCompositableSurfaceRef, assertFontArtifactRef } from "@narratage/media";
-import type { CompositableSurfaceRef, FontArtifactRef } from "@narratage/media";
+} from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { assertCompositableSurfaceRef, assertFontArtifactRef } from "@qflow/media";
+import type { CompositableSurfaceRef, FontArtifactRef } from "@qflow/media";
 
 export type FrameSpan = {
   readonly startFrame: number;

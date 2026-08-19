@@ -1,25 +1,25 @@
-import { artifactDependency, artifactTypes } from "@narratage/artifact";
-import { compositionDependency, compositionTypes } from "@narratage/composition";
+import { artifactDependency, artifactTypes } from "@qflow/artifact";
+import { compositionDependency, compositionTypes } from "@qflow/composition";
 import {
   compositableSurfaceSchema,
   mediaDependency,
   mediaTypes,
-} from "@narratage/media";
-import { narrativeDependency, narrativeTypes } from "@narratage/narrative";
-import { programSpaceDependency, programSpaceTypes } from "@narratage/program-space";
-import { mediaPipelineManifest, mediaPipelineModuleRef } from "@narratage/media-pipeline";
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@narratage/protocol";
-import { semanticMapDependency, semanticMapTypes } from "@narratage/semantic-map";
+} from "@qflow/media";
+import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
+import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+import { mediaPipelineManifest, mediaPipelineModuleRef } from "@qflow/media-pipeline";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
+import { semanticMapDependency, semanticMapTypes } from "@qflow/semantic-map";
 import {
   contentFitSchema,
   intrinsicExtentSchema,
   spatialDependency,
   spatialFrameSchema,
   spatialTypes,
-} from "@narratage/spatial";
-import { temporalDependency } from "@narratage/temporal";
+} from "@qflow/spatial";
+import { temporalDependency } from "@qflow/temporal";
 
-export const mediaTrackModuleRef = { name: "@narratage/media-track", version: "1" } as const;
+export const mediaTrackModuleRef = { name: "@qflow/media-track", version: "1" } as const;
 export const mediaTrackTypes = {
   header: { module: mediaTrackModuleRef, name: "MediaTrackHeader" },
   paintLayerSpec: { module: mediaTrackModuleRef, name: "MediaPaintLayerSpec" },
@@ -295,7 +295,7 @@ export const mediaTrackMarkupSurfaces = [{
 
 
 export const mediaTrackManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: mediaTrackModuleRef.name,
   version: mediaTrackModuleRef.version,
   dependencies: [

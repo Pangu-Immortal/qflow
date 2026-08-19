@@ -1,18 +1,18 @@
 {
-  "name": "@narratage/image-compose",
+  "name": "@qflow/image-compose",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": { ".": "./src/index.ts" },
-  "narratage": { "activation": "./src/activation.ts" },
+  "qflow": { "activation": "./src/activation.ts" },
   "dependencies": {
-    "@narratage/artifact": "workspace:*",
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/raster": "workspace:*",
-    "@narratage/spatial": "workspace:*",
-    "@narratage/markup": "workspace:*"
+    "@qflow/artifact": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/raster": "workspace:*",
+    "@qflow/spatial": "workspace:*",
+    "@qflow/markup": "workspace:*"
   }
 }

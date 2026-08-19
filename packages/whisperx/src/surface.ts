@@ -1,11 +1,11 @@
-import { narrativeTypes } from "@narratage/narrative";
-import { speechTypes } from "@narratage/speech";
+import { narrativeTypes } from "@qflow/narrative";
+import { speechTypes } from "@qflow/speech";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { whisperXSpeechAlignmentFragment } from "./fragment.js";
 

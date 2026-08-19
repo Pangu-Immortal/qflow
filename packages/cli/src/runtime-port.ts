@@ -11,4 +11,4 @@ export type {
   RuntimeHostExecution as CliRuntime,
   RuntimeHostStatus as CliRuntimeStatus,
   RuntimeWorkerState as CliRuntimeWorkerState,
-} from "@narratage/runtime-host-node";
+} from "@qflow/runtime-host-node";

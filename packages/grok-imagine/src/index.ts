@@ -1,8 +1,8 @@
-import { sealGenerationPortRequest, sealGenerationPortTable } from "@narratage/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@narratage/generation";
-import { defineExactModelModule } from "@narratage/model-kit";
+import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
+import { defineExactModelModule } from "@qflow/model-kit";
 
-export const grokImagineModuleRef = { name: "@narratage/grok-imagine", version: "1" } as const;
+export const grokImagineModuleRef = { name: "@qflow/grok-imagine", version: "1" } as const;
 export const grokImagineModels = ["grok-imagine-video", "grok-imagine-video-1.5-preview"] as const;
 export type GrokImagineModel = typeof grokImagineModels[number];
 

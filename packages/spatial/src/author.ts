@@ -1,4 +1,4 @@
-import type { CanonicalValue } from "@narratage/protocol";
+import type { CanonicalValue } from "@qflow/protocol";
 
 import { sealContentFit } from "./geometry.js";
 import type { ContentFit } from "./types.js";

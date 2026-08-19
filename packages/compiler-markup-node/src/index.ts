@@ -1,20 +1,20 @@
-import { registerTypeValidatorFacets } from "@narratage/component-kit";
+import { registerTypeValidatorFacets } from "@qflow/component-kit";
 import {
   ModulePackageRegistry,
   NodeCompiler,
-} from "@narratage/compiler-node";
-import { AuthorFrontendRegistry, installAuthorFrontendHostFacets } from "@narratage/elaborator";
-import type { Workspace } from "@narratage/workspace";
+} from "@qflow/compiler-node";
+import { AuthorFrontendRegistry, installAuthorFrontendHostFacets } from "@qflow/elaborator";
+import type { Workspace } from "@qflow/workspace";
 import {
   collectNodePackageComponents,
-} from "@narratage/package-loader-node";
-import type { NodePackageContribution } from "@narratage/package-loader-node";
+} from "@qflow/package-loader-node";
+import type { NodePackageContribution } from "@qflow/package-loader-node";
 import {
   createMarkupAuthorFrontend,
   installMarkupSurfaceHostFacets,
   MarkupSurfaceRegistry,
-} from "@narratage/markup";
-import { TypeValidatorRegistry } from "@narratage/validation";
+} from "@qflow/markup";
+import { TypeValidatorRegistry } from "@qflow/validation";
 
 export type CreateMarkupNodeCompilerOptions = {
   readonly workspace: Workspace;

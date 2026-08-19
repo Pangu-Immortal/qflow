@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/speech-alignment",
+  "name": "@qflow/speech-alignment",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,19 +7,19 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/narrative": "workspace:*",
-    "@narratage/program-space": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/semantic-map": "workspace:*",
-    "@narratage/speech": "workspace:*",
-    "@narratage/speech-evidence": "workspace:*"
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/narrative": "workspace:*",
+    "@qflow/program-space": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/semantic-map": "workspace:*",
+    "@qflow/speech": "workspace:*",
+    "@qflow/speech-evidence": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/script": "workspace:*"
+    "@qflow/script": "workspace:*"
   }
 }

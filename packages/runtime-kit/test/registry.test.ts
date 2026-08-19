@@ -11,8 +11,8 @@ import {
   runtimeConfigPositiveInteger,
   runtimeConfigString,
   RuntimeAdapterRegistry,
-} from "@narratage/runtime-kit";
-import type { RuntimeAdapterFactoryContext } from "@narratage/runtime-kit";
+} from "@qflow/runtime-kit";
+import type { RuntimeAdapterFactoryContext } from "@qflow/runtime-kit";
 
 const context = { dataRoot: "/tmp", instance: "one", config: {} };
 const endpointPackage = (instance: string) => ({

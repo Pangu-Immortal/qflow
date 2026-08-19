@@ -1,4 +1,4 @@
-# `@narratage/credential-store-env`
+# `@qflow/credential-store-env`
 
 Read-only `CredentialStore` backed by explicitly named environment variables.
 

@@ -1,22 +1,22 @@
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { mediaTypes, verifyRenderedVisual } from "@narratage/media";
-import type { CompositableSurfaceRef, RenderedVisual } from "@narratage/media";
-import { sealProgramSpace } from "@narratage/program-space";
-import { sealComposition, sealVisualTrack } from "@narratage/composition";
+import { mediaTypes, verifyRenderedVisual } from "@qflow/media";
+import type { CompositableSurfaceRef, RenderedVisual } from "@qflow/media";
+import { sealProgramSpace } from "@qflow/program-space";
+import { sealComposition, sealVisualTrack } from "@qflow/composition";
 import assert from "node:assert/strict";
-import { MemoryArtifactStore, EndpointRegistry } from "@narratage/driver-node";
-import type { EndpointRegistration } from "@narratage/driver-node";
-import type { ImmediateEndpointHandler } from "@narratage/endpoint-kit";
-import { compileHyperframesDocument } from "@narratage/hyperframes";
-import { renderHyperframesCapabilities, hyperframesVisualRequest } from "@narratage/render-hyperframes";
-import { canonicalize } from "@narratage/protocol";
-import type { CanonicalValue, Need } from "@narratage/protocol";
+import { MemoryArtifactStore, EndpointRegistry } from "@qflow/driver-node";
+import type { EndpointRegistration } from "@qflow/driver-node";
+import type { ImmediateEndpointHandler } from "@qflow/endpoint-kit";
+import { compileHyperframesDocument } from "@qflow/hyperframes";
+import { renderHyperframesCapabilities, hyperframesVisualRequest } from "@qflow/render-hyperframes";
+import { canonicalize } from "@qflow/protocol";
+import type { CanonicalValue, Need } from "@qflow/protocol";
 
 import { createLocalHyperframesProvider } from "../src/index.js";
 import { localHyperframesBrowserProgram } from "../src/program.js";
 
-const liveEnabled = process.env.NARRATAGE_BROWSER_TESTS === "1";
+const liveEnabled = process.env.QFLOW_BROWSER_TESTS === "1";
 const hasFfprobe = spawnSync("ffprobe", ["-version"], { stdio: "ignore" }).status === 0;
 
 function documentFixture(surface?: CompositableSurfaceRef) {
@@ -25,7 +25,7 @@ function documentFixture(surface?: CompositableSurfaceRef) {
     frameRate: { numerator: 12, denominator: 1 },
   });
   const track = sealVisualTrack({
-    visualIr: "narratage.visual-ir@1",
+    visualIr: "qflow.visual-ir@1",
     id: "provider-fixture",
     presents: [{
       id: "card",

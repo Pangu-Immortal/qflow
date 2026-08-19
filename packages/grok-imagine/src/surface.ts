@@ -1,20 +1,20 @@
-import { artifactTypes } from "@narratage/artifact";
-import { generationPort, sealGenerationMediaBinding, sealGenerationRequestDraft } from "@narratage/generation";
-import type { GenerationMediaPort, GenerationPortValue } from "@narratage/generation";
+import { artifactTypes } from "@qflow/artifact";
+import { generationPort, sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/generation";
+import type { GenerationMediaPort, GenerationPortValue } from "@qflow/generation";
 import {
   createExactModelPrimaryGenerationFragment,
   exactModelMediaInputNames,
   exactModelTextInputName,
-} from "@narratage/model-kit";
-import type { ExactModelEndpoint } from "@narratage/model-kit";
+} from "@qflow/model-kit";
+import type { ExactModelEndpoint } from "@qflow/model-kit";
 import type {
   MarkupAttributeValue,
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
-} from "@narratage/markup";
-import type { CanonicalValue, TypeRef } from "@narratage/protocol";
-import { textTypes, verifyText } from "@narratage/text";
+} from "@qflow/markup";
+import type { CanonicalValue, TypeRef } from "@qflow/protocol";
+import { textTypes, verifyText } from "@qflow/text";
 
 import { grokImagineEndpoints } from "./index.js";
 

@@ -1,10 +1,10 @@
-# `@narratage/cli`
+# `@qflow/cli`
 
-Domain neutral commands for checking, planning, building and inspecting Narratage projects.
+Domain neutral commands for checking, planning, building and inspecting Qflow projects.
 
 The command engine receives one explicit `CliDistribution`. A distribution supplies the compiler,
 trusted bootstrap packages, source package discovery and the Runtime Host selected by a Runtime
-Profile. The official video executable is assembled by `@narratage/video-cli`; another domain can
+Profile. The official video executable is assembled by `@qflow/video-cli`; another domain can
 reuse this package without installing video packages.
 
 Source imports decide which language and component packages give the source meaning. The Runtime

@@ -5,24 +5,24 @@ import {
   visualTextFlowSchema,
   visualTextPaintSchema,
   visualTextTypographySchema,
-} from "@narratage/composition";
-import { mediaDependency } from "@narratage/media";
+} from "@qflow/composition";
+import { mediaDependency } from "@qflow/media";
 import {
   mediaFramePresentationSchema,
   mediaLayerSetSchema,
   mediaLifecycleMotionSchema,
   mediaTrackDependency,
   mediaTrackTypes,
-} from "@narratage/media-track";
-import { narrativeDependency, narrativeTypes } from "@narratage/narrative";
-import { programSpaceDependency, programSpaceTypes } from "@narratage/program-space";
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@narratage/protocol";
-import { semanticMapDependency, semanticMapTypes } from "@narratage/semantic-map";
-import { spatialDependency, spatialFrameSchema, spatialTypes } from "@narratage/spatial";
-import { temporalDependency } from "@narratage/temporal";
-import { textDependency, textTypes } from "@narratage/text";
+} from "@qflow/media-track";
+import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
+import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
+import { semanticMapDependency, semanticMapTypes } from "@qflow/semantic-map";
+import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/spatial";
+import { temporalDependency } from "@qflow/temporal";
+import { textDependency, textTypes } from "@qflow/text";
 
-export const depthStackModuleRef = { name: "@narratage/deck-track", version: "1" } as const;
+export const depthStackModuleRef = { name: "@qflow/deck-track", version: "1" } as const;
 export const depthStackTypes = {
   header: { module: depthStackModuleRef, name: "DepthStackHeader" },
   spec: { module: depthStackModuleRef, name: "DepthStackSpec" },
@@ -124,7 +124,7 @@ export const depthStackMarkupSurfaces = [
 
 
 export const depthStackManifest: ModuleManifest = {
-  format: "narratage.module@1", name: depthStackModuleRef.name, version: depthStackModuleRef.version,
+  format: "qflow.module@1", name: depthStackModuleRef.name, version: depthStackModuleRef.version,
   dependencies: [narrativeDependency, semanticMapDependency, programSpaceDependency, spatialDependency, temporalDependency, mediaDependency, mediaTrackDependency, compositionDependency, textDependency],
   types: [
     { name: depthStackTypes.header.name },

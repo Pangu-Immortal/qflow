@@ -1,55 +1,55 @@
-import { artifactDependency } from "@narratage/artifact";
+import { artifactDependency } from "@qflow/artifact";
 import { videoContractManifests } from "../../../test/support/video-domain.js";
-import { registerTypeValidatorFacets } from "@narratage/component-kit";
-import { mediaDependency } from "@narratage/media";
-import { compositionTypes } from "@narratage/composition";
-import { artifactTypes } from "@narratage/artifact";
+import { registerTypeValidatorFacets } from "@qflow/component-kit";
+import { mediaDependency } from "@qflow/media";
+import { compositionTypes } from "@qflow/composition";
+import { artifactTypes } from "@qflow/artifact";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { createResolvedClosure, sealBuildRequest, start } from "@narratage/core";
+import { createResolvedClosure, sealBuildRequest, start } from "@qflow/core";
 import {
   AuthorFrontendRegistry,
   compileSourceClosure,
   resolveCompiledSourceExport,
-} from "@narratage/elaborator";
-import type { AuthorSourceUnit } from "@narratage/elaborator";
+} from "@qflow/elaborator";
+import type { AuthorSourceUnit } from "@qflow/elaborator";
 import {
   mediaPipelineComponent,
   mediaPipelineManifest,
   mediaPipelineProducers,
-} from "@narratage/media-pipeline";
-import type { ModuleManifest } from "@narratage/protocol";
+} from "@qflow/media-pipeline";
+import type { ModuleManifest } from "@qflow/protocol";
 import {
   decodeScriptSurface,
   scriptManifest,
   scriptMarkupSurfaces,
   scriptModuleRef,
-} from "@narratage/script";
-import { speechBasisManifest, speechBasisProducers } from "@narratage/speech-basis";
-import { textComponent, textManifest } from "@narratage/text";
-import { mediaTrackManifest } from "@narratage/media-track";
-import { svsManifest, svsModuleRef, svsRecipeType } from "@narratage/svs";
+} from "@qflow/script";
+import { speechBasisManifest, speechBasisProducers } from "@qflow/speech-basis";
+import { textComponent, textManifest } from "@qflow/text";
+import { mediaTrackManifest } from "@qflow/media-track";
+import { svsManifest, svsModuleRef, svsRecipeType } from "@qflow/svs";
 import {
   decodeSpeechSpineSurface,
   speechSpineManifest,
   speechSpineMarkupSurfaces,
   speechSpineModuleRef,
   speechSpineProducers,
-} from "@narratage/speech-spine";
+} from "@qflow/speech-spine";
 import {
   decodeCanvasSurface,
   decodeFrameSurface,
   spatialComponent,
   spatialMarkupSurfaces,
   spatialModuleRef,
-} from "@narratage/spatial";
+} from "@qflow/spatial";
 import {
   MarkupSurfaceRegistry,
   createMarkupAuthorFrontend,
-} from "@narratage/markup";
-import { createRecordAdmitter, TypeValidatorRegistry } from "@narratage/validation";
+} from "@qflow/markup";
+import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
 
 const fixtureModule = { name: "example.speech-media", version: "1" } as const;
 const fixtureSurfaceDigest = fixtureDigest("example.speech-media/surface@1");
@@ -57,7 +57,7 @@ const fixtureSurface = {
   name: "media", tag: "Media", mode: "structured", outputs: [artifactTypes.blob, svsRecipeType],
 } as const;
 const fixtureManifest: ModuleManifest = {
-  format: "narratage.module@1",
+  format: "qflow.module@1",
   name: fixtureModule.name,
   version: fixtureModule.version,
   dependencies: [artifactDependency, mediaDependency, { module: svsModuleRef }],
@@ -68,7 +68,7 @@ function source(text: string): AuthorSourceUnit {
   return {
     id: "/project/main.svml",
     name: "main.svml",
-    text: `<?svml using="@narratage/markup@1"?>\n${text}`,
+    text: `<?svml using="@qflow/markup@1"?>\n${text}`,
   };
 }
 
@@ -111,9 +111,9 @@ test("Speech Spine lowers ordered Takes into media normalization, one audio plan
   frontends.register(createMarkupAuthorFrontend({
     registry: surfaces,
     resolveModule(request) {
-      if (request.from.startsWith("@narratage/script")) return scriptModuleRef;
-      if (request.from.startsWith("@narratage/speech")) return speechSpineModuleRef;
-      if (request.from.startsWith("@narratage/spatial")) return spatialModuleRef;
+      if (request.from.startsWith("@qflow/script")) return scriptModuleRef;
+      if (request.from.startsWith("@qflow/speech")) return speechSpineModuleRef;
+      if (request.from.startsWith("@qflow/spatial")) return spatialModuleRef;
       return fixtureModule;
     },
   }));
@@ -123,10 +123,10 @@ test("Speech Spine lowers ordered Takes into media normalization, one audio plan
   registerTypeValidatorFacets(validators, textComponent.validators ?? []);
   const compiled = await compileSourceClosure({
     entry: source(`<svml>
-      <import from="@narratage/script@1"/>
+      <import from="@qflow/script@1"/>
       <import as="fixture" from="example.speech-media@1"/>
-      <import as="speech" from="@narratage/speech-spine@1"/>
-      <import as="space" from="@narratage/spatial@1"/>
+      <import as="speech" from="@qflow/speech-spine@1"/>
+      <import as="space" from="@qflow/spatial@1"/>
       <script id="story">
         <opening><ALICE> Hello from Alice.</opening>
         <answer><BOB> Hello from Bob.</answer>

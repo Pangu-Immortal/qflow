@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/caption-gemini",
+  "name": "@qflow/caption-gemini",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -7,18 +7,18 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "narratage": {
+  "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@narratage/caption": "workspace:*",
-    "@narratage/component-kit": "workspace:*",
-    "@narratage/elaborator": "workspace:*",
-    "@narratage/narrative": "workspace:*",
-    "@narratage/protocol": "workspace:*",
-    "@narratage/markup": "workspace:*"
+    "@qflow/caption": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/narrative": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/markup": "workspace:*"
   },
   "devDependencies": {
-    "@narratage/script": "workspace:*"
+    "@qflow/script": "workspace:*"
   }
 }

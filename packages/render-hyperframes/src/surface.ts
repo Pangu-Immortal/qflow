@@ -1,12 +1,12 @@
-import { programSpaceTypes } from "@narratage/program-space";
-import type { ProgramSpace } from "@narratage/program-space";
-import { compositionTypes } from "@narratage/composition";
-import type { Composition } from "@narratage/composition";
+import { programSpaceTypes } from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+import { compositionTypes } from "@qflow/composition";
+import type { Composition } from "@qflow/composition";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { renderHyperframesFragment } from "./fragment.js";
 

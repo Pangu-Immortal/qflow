@@ -1,5 +1,5 @@
-import { sealMediaInspection, verifyMediaStreamSelection } from "@narratage/media";
-import type { MediaInspection, MediaVideoStream } from "@narratage/media";
+import { sealMediaInspection, verifyMediaStreamSelection } from "@qflow/media";
+import type { MediaInspection, MediaVideoStream } from "@qflow/media";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";

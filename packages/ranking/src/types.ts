@@ -1,10 +1,10 @@
-import type { FrameSpan } from "@narratage/composition";
+import type { FrameSpan } from "@qflow/composition";
 import type {
   FontArtifactRef,
   SynchronizedMedia,
-} from "@narratage/media";
-import type { BlobRef } from "@narratage/protocol";
-import type { SpatialFrame } from "@narratage/spatial";
+} from "@qflow/media";
+import type { BlobRef } from "@qflow/protocol";
+import type { SpatialFrame } from "@qflow/spatial";
 
 export type RankingVariant = "tier-board" | "column" | "top-three" | "typewriter-list";
 

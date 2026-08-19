@@ -1,6 +1,6 @@
-import type { CliCompilerOptions } from "@narratage/cli";
-import { createMarkupNodeCompiler } from "@narratage/compiler-markup-node";
-import { NodeFilesystemWorkspace } from "@narratage/workspace-fs-node";
+import type { CliCompilerOptions } from "@qflow/cli";
+import { createMarkupNodeCompiler } from "@qflow/compiler-markup-node";
+import { NodeFilesystemWorkspace } from "@qflow/workspace-fs-node";
 
 /** Assemble the Markup compiler Host from only the packages selected for this invocation. */
 export function createVideoCompiler(options: CliCompilerOptions) {

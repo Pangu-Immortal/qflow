@@ -1,5 +1,5 @@
 {
-  "name": "@narratage/video-cli",
+  "name": "@qflow/video-cli",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -8,11 +8,11 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@narratage/cli": "workspace:*",
-    "@narratage/compiler-markup-node": "workspace:*",
-    "@narratage/markup": "workspace:*",
-    "@narratage/package-loader-node": "workspace:*",
-    "@narratage/runtime-local": "workspace:*",
-    "@narratage/workspace-fs-node": "workspace:*"
+    "@qflow/cli": "workspace:*",
+    "@qflow/compiler-markup-node": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/package-loader-node": "workspace:*",
+    "@qflow/runtime-local": "workspace:*",
+    "@qflow/workspace-fs-node": "workspace:*"
   }
 }

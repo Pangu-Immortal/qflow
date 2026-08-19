@@ -1,6 +1,6 @@
-# `@narratage/provider-image-opencv-local`
+# `@qflow/provider-image-opencv-local`
 
-Local OpenCV/NumPy realization of the single `@narratage/raster` capability.
+Local OpenCV/NumPy realization of the single `@qflow/raster` capability.
 
 Image Transform and Image Compose lower their different author meanings to one closed RasterRequest.
 One Handler stages its content-addressed inputs, and one Python interpreter shares decoding, fit,

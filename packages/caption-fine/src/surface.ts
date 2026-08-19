@@ -1,17 +1,17 @@
-import { captionTypes } from "@narratage/caption";
-import { assertFontArtifactRef, assertFontStackRef, mediaTypes } from "@narratage/media";
-import type { FontArtifactRef, FontStackRef } from "@narratage/media";
-import { narrativeTypes } from "@narratage/narrative";
-import { programSpaceTypes } from "@narratage/program-space";
-import { semanticMapTypes } from "@narratage/semantic-map";
-import { svsRecipeType } from "@narratage/svs";
-import type { SvsRecipe } from "@narratage/svs";
+import { captionTypes } from "@qflow/caption";
+import { assertFontArtifactRef, assertFontStackRef, mediaTypes } from "@qflow/media";
+import type { FontArtifactRef, FontStackRef } from "@qflow/media";
+import { narrativeTypes } from "@qflow/narrative";
+import { programSpaceTypes } from "@qflow/program-space";
+import { semanticMapTypes } from "@qflow/semantic-map";
+import { svsRecipeType } from "@qflow/svs";
+import type { SvsRecipe } from "@qflow/svs";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@narratage/markup";
+} from "@qflow/markup";
 
 import { fineCaptionTrackFragment } from "./fragment.js";
 import { fineCaptionStyle } from "./style.js";

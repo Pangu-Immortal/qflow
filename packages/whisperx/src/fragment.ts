@@ -1,10 +1,10 @@
-import { narrativeTypes } from "@narratage/narrative";
-import { speechTypes } from "@narratage/speech";
-import { speechEvidenceTypes } from "@narratage/speech-evidence";
-import { semanticMapTypes } from "@narratage/semantic-map";
-import { sealGraphFragment } from "@narratage/elaborator";
-import { mediaPipelineProducers } from "@narratage/media-pipeline";
-import { speechAlignmentProducers } from "@narratage/speech-alignment";
+import { narrativeTypes } from "@qflow/narrative";
+import { speechTypes } from "@qflow/speech";
+import { speechEvidenceTypes } from "@qflow/speech-evidence";
+import { semanticMapTypes } from "@qflow/semantic-map";
+import { sealGraphFragment } from "@qflow/elaborator";
+import { mediaPipelineProducers } from "@qflow/media-pipeline";
+import { speechAlignmentProducers } from "@qflow/speech-alignment";
 
 import { whisperXProducers } from "./manifest.js";
 

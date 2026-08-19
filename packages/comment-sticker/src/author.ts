@@ -1,6 +1,6 @@
-import { assertFontStackRef } from "@narratage/media";
-import type { FontStackRef } from "@narratage/media";
-import type { SvsRecipe } from "@narratage/svs";
+import { assertFontStackRef } from "@qflow/media";
+import type { FontStackRef } from "@qflow/media";
+import type { SvsRecipe } from "@qflow/svs";
 
 import { sealCommentStickerStyle } from "./program.js";
 import type { CommentStickerStyle, CommentStickerTextStyle } from "./types.js";

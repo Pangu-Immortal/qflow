@@ -9,9 +9,9 @@
  */
 import type {
   MarkupSurfaceRegistryLike, RegisteredSurface, StructuredElement, SurfaceDecodeOutput,
-} from "@narratage/markup";
-import type { ModuleRef } from "@narratage/protocol";
-import { parseScript } from "@narratage/script";
+} from "@qflow/markup";
+import type { ModuleRef } from "@qflow/protocol";
+import { parseScript } from "@qflow/script";
 
 import type { Range } from "../shared.js";
 
@@ -195,7 +195,7 @@ function harvestScript(input: RawInput, into: Record<string, unknown>[]): void {
       input.contentStart,
     );
     into.push({
-      format: "narratage.script-source-map@1",
+      format: "qflow.script-source-map@1",
       record: id,
       range: { start: input.openingStart, end: end + closing.length },
       segments: parsed.segments.map((segment) => ({ id: segment.id, range: segment.range })),

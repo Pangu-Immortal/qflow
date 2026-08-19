@@ -4,17 +4,17 @@ import {
   runtimeConfigObject,
   runtimeConfigPositiveInteger,
   runtimeConfigString,
-} from "@narratage/runtime-kit";
+} from "@qflow/runtime-kit";
 import {
   diagnoseRuntimeExecutable,
   resolveRuntimeExecutable,
-} from "@narratage/runtime-host-node";
+} from "@qflow/runtime-host-node";
 
 import { createLocalMediaProvider } from "./provider.js";
 import { localMediaToolchainProgram } from "./program.js";
 
 const localMediaRuntimeAdapter = createRuntimeEndpointAdapterFacet({
-  use: "@narratage/provider-media-local",
+  use: "@qflow/provider-media-local",
   activate(context) {
     if (context.pool === undefined) throw new Error("local media Provider Pool is required");
     const config = runtimeConfigObject(context.config, "local media");
@@ -57,9 +57,9 @@ const localMediaRuntimeAdapter = createRuntimeEndpointAdapterFacet({
   },
 });
 
-export const narratagePackage = {
-  format: "narratage.node-package@1" as const,
+export const qflowPackage = {
+  format: "qflow.node-package@1" as const,
   hostFacets: [localMediaRuntimeAdapter],
 };
 
-export default narratagePackage;
+export default qflowPackage;

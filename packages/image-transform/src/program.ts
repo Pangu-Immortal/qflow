@@ -1,5 +1,5 @@
-import { canonicalize } from "@narratage/protocol";
-import { assertRasterTransformOperations } from "@narratage/raster";
+import { canonicalize } from "@qflow/protocol";
+import { assertRasterTransformOperations } from "@qflow/raster";
 
 import type { ImageTransformProgram } from "./types.js";
 

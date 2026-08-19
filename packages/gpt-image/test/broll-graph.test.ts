@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { artifactManifest, artifactTypes } from "@narratage/artifact";
+import { artifactManifest, artifactTypes } from "@qflow/artifact";
 import {
   createResolvedClosure,
   link,
@@ -10,13 +10,13 @@ import {
   sealCompiledGraph,
   sealRecord,
   start,
-} from "@narratage/core";
-import { elaborateAuthorGraph } from "@narratage/elaborator";
+} from "@qflow/core";
+import { elaborateAuthorGraph } from "@qflow/elaborator";
 import {
   generationManifest,
   sealGenerationMediaBinding,
   sealGenerationRequestDraft,
-} from "@narratage/generation";
+} from "@qflow/generation";
 import {
   createGptImageCleanFragment,
   gptImage2Ports,
@@ -24,24 +24,24 @@ import {
   gptImageEndpoints,
   gptImageManifest,
   sealGptImage2Draft,
-} from "@narratage/gpt-image";
-import { gptImageDenoiseV1, imageTransformManifest, imageTransformTypes } from "@narratage/image-transform";
-import { exactModelMediaInputNames } from "@narratage/model-kit";
-import { mediaManifest } from "@narratage/media";
-import { narrativeManifest } from "@narratage/narrative";
-import { programSpaceManifest } from "@narratage/program-space";
-import type { CanonicalValue, Digest, ModuleManifest, StoredValue, TypeRef } from "@narratage/protocol";
-import { rasterManifest } from "@narratage/raster";
-import { createProvidedCandidate } from "@narratage/run";
+} from "@qflow/gpt-image";
+import { gptImageDenoiseV1, imageTransformManifest, imageTransformTypes } from "@qflow/image-transform";
+import { exactModelMediaInputNames } from "@qflow/model-kit";
+import { mediaManifest } from "@qflow/media";
+import { narrativeManifest } from "@qflow/narrative";
+import { programSpaceManifest } from "@qflow/program-space";
+import type { CanonicalValue, Digest, ModuleManifest, StoredValue, TypeRef } from "@qflow/protocol";
+import { rasterManifest } from "@qflow/raster";
+import { createProvidedCandidate } from "@qflow/run";
 import {
   createSeedanceAssembledGenerationFragment,
   seedanceEndpoints,
   seedanceManifest,
   seedancePorts,
-} from "@narratage/seedance";
-import { speechManifest } from "@narratage/speech";
-import { spatialManifest } from "@narratage/spatial";
-import { textManifest } from "@narratage/text";
+} from "@qflow/seedance";
+import { speechManifest } from "@qflow/speech";
+import { spatialManifest } from "@qflow/spatial";
+import { textManifest } from "@qflow/text";
 
 const image = (name: string) => ({
   kind: "blob" as const,

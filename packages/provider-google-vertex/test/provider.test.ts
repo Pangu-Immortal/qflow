@@ -5,19 +5,19 @@ import {
   captionGeminiCapabilities,
   compileCaptionGeminiRequest,
   sealCaptionGeminiProgram,
-} from "@narratage/caption-gemini";
+} from "@qflow/caption-gemini";
 import {
   captionTypes,
   resolveCaptionProgram,
   sealCaptionStyle,
-} from "@narratage/caption";
-import type { CaptionGeminiRequest, RawCaptionGeminiResponse } from "@narratage/caption-gemini";
-import { EndpointRegistry, MemoryArtifactStore } from "@narratage/driver-node";
-import type { ImmediateEndpointHandler } from "@narratage/endpoint-kit";
-import type { CanonicalValue, Need } from "@narratage/protocol";
-import { createGoogleVertexCaptionProvider } from "@narratage/provider-google-vertex";
-import type { GenerateCaptionContent } from "@narratage/provider-google-vertex";
-import { captionDisplaySequence, parseScript } from "@narratage/script";
+} from "@qflow/caption";
+import type { CaptionGeminiRequest, RawCaptionGeminiResponse } from "@qflow/caption-gemini";
+import { EndpointRegistry, MemoryArtifactStore } from "@qflow/driver-node";
+import type { ImmediateEndpointHandler } from "@qflow/endpoint-kit";
+import type { CanonicalValue, Need } from "@qflow/protocol";
+import { createGoogleVertexCaptionProvider } from "@qflow/provider-google-vertex";
+import type { GenerateCaptionContent } from "@qflow/provider-google-vertex";
+import { captionDisplaySequence, parseScript } from "@qflow/script";
 
 function request(): CaptionGeminiRequest {
   const narrative = parseScript("provider.svml", "<line><ALICE>Meaning becomes the source.</line>");
@@ -68,7 +68,7 @@ test("Vertex transports the exact model request while the model package validate
   const requestValue = request();
   let captured: Parameters<GenerateCaptionContent>[0] | undefined;
   const provider = createGoogleVertexCaptionProvider({
-    project: "narratage-test-project",
+    project: "qflow-test-project",
     location: "global",
     generateContent: async (input) => {
       captured = input;
@@ -98,7 +98,7 @@ test("Vertex transports the exact model request while the model package validate
 });
 
 test("Vertex configuration exposes credential/queue policy without changing the model request", () => {
-  const provider = createGoogleVertexCaptionProvider({ project: "narratage-test-project", defaultConcurrency: 3 });
+  const provider = createGoogleVertexCaptionProvider({ project: "qflow-test-project", defaultConcurrency: 3 });
   assert.equal(provider.instance.id, "google-vertex.caption");
   assert.deepEqual(provider.offers, [{
     capability: captionGeminiCapabilities.plan,
@@ -108,7 +108,7 @@ test("Vertex configuration exposes credential/queue policy without changing the 
 });
 
 test("Vertex defers projectEnv resolution until the Endpoint handles a Need", async () => {
-  const variable = "NARRATAGE_TEST_MISSING_VERTEX_PROJECT";
+  const variable = "QFLOW_TEST_MISSING_VERTEX_PROJECT";
   const previous = process.env[variable];
   delete process.env[variable];
   try {

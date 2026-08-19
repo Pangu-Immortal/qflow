@@ -1,62 +1,62 @@
 /**
  * The official video packages understood by this preview application.
  *
- * This is deliberately application-local composition. Narratage packages do
+ * This is deliberately application-local composition. Qflow packages do
  * not register themselves with a central video catalogue and do not know that
  * the Playground exists. The Playground chooses the packages it previews,
  * then reads the activation each package already publishes for normal Hosts.
  */
-import { registerProducerFacets, registerTypeValidatorFacets } from "@narratage/component-kit";
-import { createResolvedClosure } from "@narratage/core";
-import { ProducerRegistry } from "@narratage/driver-node";
+import { registerProducerFacets, registerTypeValidatorFacets } from "@qflow/component-kit";
+import { createResolvedClosure } from "@qflow/core";
+import { ProducerRegistry } from "@qflow/driver-node";
 import {
   AuthorFrontendRegistry,
   installAuthorFrontendHostFacets,
-} from "@narratage/elaborator";
+} from "@qflow/elaborator";
 import {
   createMarkupAuthorFrontend,
   installMarkupSurfaceHostFacets,
   MarkupSurfaceRegistry,
-} from "@narratage/markup";
-import type { MarkupSurfaceRegistryLike } from "@narratage/markup";
-import { loadNodePackageSelection } from "@narratage/package-loader-node";
-import type { ModuleRef, ResolvedModuleClosure } from "@narratage/protocol";
-import { TypeValidatorRegistry } from "@narratage/validation";
+} from "@qflow/markup";
+import type { MarkupSurfaceRegistryLike } from "@qflow/markup";
+import { loadNodePackageSelection } from "@qflow/package-loader-node";
+import type { ModuleRef, ResolvedModuleClosure } from "@qflow/protocol";
+import { TypeValidatorRegistry } from "@qflow/validation";
 
 const OFFICIAL_VIDEO_PACKAGES = [
-  "@narratage/audio-track",
-  "@narratage/background-removal",
-  "@narratage/caption",
-  "@narratage/caption-fine",
-  "@narratage/caption-gemini",
-  "@narratage/comment-sticker",
-  "@narratage/deck-track",
-  "@narratage/estimate",
-  "@narratage/film",
-  "@narratage/fonts-open",
-  "@narratage/gemini-omni",
-  "@narratage/gpt-image",
-  "@narratage/grok-imagine",
-  "@narratage/image-compose",
-  "@narratage/image-transform",
-  "@narratage/media",
-  "@narratage/media-pipeline",
-  "@narratage/media-track",
-  "@narratage/mimo-tts",
-  "@narratage/minimax-h3",
-  "@narratage/nano-banana",
-  "@narratage/ranking",
-  "@narratage/render-hyperframes",
-  "@narratage/screen-overlay",
-  "@narratage/script",
-  "@narratage/seedance",
-  "@narratage/seedream",
-  "@narratage/spatial",
-  "@narratage/speech-spine",
-  "@narratage/svs",
-  "@narratage/text",
-  "@narratage/typography-track",
-  "@narratage/whisperx",
+  "@qflow/audio-track",
+  "@qflow/background-removal",
+  "@qflow/caption",
+  "@qflow/caption-fine",
+  "@qflow/caption-gemini",
+  "@qflow/comment-sticker",
+  "@qflow/deck-track",
+  "@qflow/estimate",
+  "@qflow/film",
+  "@qflow/fonts-open",
+  "@qflow/gemini-omni",
+  "@qflow/gpt-image",
+  "@qflow/grok-imagine",
+  "@qflow/image-compose",
+  "@qflow/image-transform",
+  "@qflow/media",
+  "@qflow/media-pipeline",
+  "@qflow/media-track",
+  "@qflow/mimo-tts",
+  "@qflow/minimax-h3",
+  "@qflow/nano-banana",
+  "@qflow/ranking",
+  "@qflow/render-hyperframes",
+  "@qflow/screen-overlay",
+  "@qflow/script",
+  "@qflow/seedance",
+  "@qflow/seedream",
+  "@qflow/spatial",
+  "@qflow/speech-spine",
+  "@qflow/svs",
+  "@qflow/text",
+  "@qflow/typography-track",
+  "@qflow/whisperx",
 ] as const;
 
 type OfficialVideoDomain = {

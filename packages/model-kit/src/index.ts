@@ -3,9 +3,9 @@ import type {
   ProducerFacet,
   ProducerHandlerContext,
   TypeValidatorFacet,
-} from "@narratage/component-kit";
-import { artifactDependency, artifactTypes } from "@narratage/artifact";
-import { sealGraphFragment } from "@narratage/elaborator";
+} from "@qflow/component-kit";
+import { artifactDependency, artifactTypes } from "@qflow/artifact";
+import { sealGraphFragment } from "@qflow/elaborator";
 import {
   bindGenerationMedia,
   bindGenerationText,
@@ -19,18 +19,18 @@ import {
   verifyGenerationMediaBinding,
   verifyRequestDraftAgainstPorts,
   verifyRequestAgainstPorts,
-} from "@narratage/generation";
+} from "@qflow/generation";
 import type {
   GenerationMediaBinding,
   GenerationMediaPort,
   GenerationPortTable,
   GenerationRequestDraft,
-} from "@narratage/generation";
-import { textDependency, textTypes } from "@narratage/text";
-import type { Text } from "@narratage/text";
+} from "@qflow/generation";
+import { textDependency, textTypes } from "@qflow/text";
+import type { Text } from "@qflow/text";
 import {
   canonicalize,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 import type {
   CanonicalValue,
   CapabilityRef,
@@ -38,7 +38,7 @@ import type {
   ModuleRef,
   ProducerRef,
   TypeRef,
-} from "@narratage/protocol";
+} from "@qflow/protocol";
 
 /**
  * One exact model endpoint. The model declares which input ports it accepts;
@@ -183,7 +183,7 @@ export function defineExactModelModule<const Key extends string>(
   const endpointData = options.endpoints.map((spec) => ({ spec, ...endpointRef(options.module, spec) }));
 
   const manifest: ModuleManifest = {
-    format: "narratage.module@1",
+    format: "qflow.module@1",
     name: options.module.name,
     version: options.module.version,
     dependencies: [
