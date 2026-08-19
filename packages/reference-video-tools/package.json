@@ -12,10 +12,15 @@
   },
   "dependencies": {
     "@google/genai": "1.52.0",
+    "@qflow/driver-node": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/model-kit": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
+    "@qflow/provider-whisperx-local": "workspace:*",
+    "@qflow/speech": "workspace:*",
+    "@qflow/speech-evidence": "workspace:*",
+    "@qflow/whisperx": "workspace:*",
     "tsx": "4.21.0"
   },
   "devDependencies": {

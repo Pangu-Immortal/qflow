@@ -15,7 +15,7 @@ import { createKieProvider } from "@qflow/provider-kie";
  * The exact model family this Distribution reaches for when the author names none.
  * It is a Host default, not a Core preference: `--model` replaces it outright.
  */
-const defaultPictureModel = "@qflow/nano-banana";
+const defaultPictureModel = "@qflow/gpt-image";
 
 /** Options this command exposes, mapped onto the port names models declare for them. */
 const optionPorts = {
