@@ -97,7 +97,6 @@
     "@qflow/typography-track": "workspace:*",
     "@qflow/visual-ir": "workspace:*",
     "@qflow/whisperx": "workspace:*",
-    "@qflow/local-linerank": "workspace:*",
     "@types/node": "24.10.1",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
