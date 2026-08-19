@@ -13,6 +13,7 @@
   "dependencies": {
     "@google/genai": "1.52.0",
     "@qflow/markup": "workspace:*",
+    "@qflow/model-kit": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "tsx": "4.21.0"

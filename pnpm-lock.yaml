@@ -225,6 +225,52 @@ importers:
         specifier: ^1.6.4
         version: 1.6.4(@algolia/client-search@5.56.0)(@types/node@24.10.1)(postcss@8.5.25)(search-insights@2.17.3)(typescript@5.9.3)
 
+  examples/ranking-typewriter-reverse/packages/local-paper-list:
+    dependencies:
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../../../../packages/component-kit
+      '@qflow/composition':
+        specifier: workspace:*
+        version: link:../../../../packages/composition
+      '@qflow/elaborator':
+        specifier: workspace:*
+        version: link:../../../../packages/elaborator
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../../../../packages/markup
+      '@qflow/media':
+        specifier: workspace:*
+        version: link:../../../../packages/media
+      '@qflow/narrative':
+        specifier: workspace:*
+        version: link:../../../../packages/narrative
+      '@qflow/program-space':
+        specifier: workspace:*
+        version: link:../../../../packages/program-space
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../../../../packages/protocol
+      '@qflow/semantic-map':
+        specifier: workspace:*
+        version: link:../../../../packages/semantic-map
+      '@qflow/spatial':
+        specifier: workspace:*
+        version: link:../../../../packages/spatial
+      '@qflow/svs':
+        specifier: workspace:*
+        version: link:../../../../packages/svs
+      '@qflow/temporal':
+        specifier: workspace:*
+        version: link:../../../../packages/temporal
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../../../../packages/text
+    devDependencies:
+      '@qflow/core':
+        specifier: workspace:*
+        version: link:../../../../packages/core
+
   packages/artifact:
     dependencies:
       '@qflow/protocol':
@@ -2090,6 +2136,9 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
+      '@qflow/model-kit':
+        specifier: workspace:*
+        version: link:../model-kit
       '@qflow/package-loader-node':
         specifier: workspace:*
         version: link:../package-loader-node
