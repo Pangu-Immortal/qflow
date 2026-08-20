@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { resolve } from "node:path";
 import test from "node:test";
 
 import { runCli } from "../src/main.js";
@@ -48,10 +49,13 @@ test("programs dispatches lifecycle through the selected Runtime Controller", as
   await runCli(["programs", "up", "/p/qflow.runtime.json", "--max-wait-ms", "1000"], io, distribution(calls));
   await runCli(["programs", "down", "/p/qflow.runtime.json"], io, distribution(calls));
   await runCli(["programs", "status", "/p/qflow.runtime.json"], io, distribution(calls));
+  // The CLI resolves the profile it is given, and what resolving produces is the platform's own
+  // spelling. Asserting the argument back verbatim would only be asserting that this is POSIX.
+  const profile = resolve("/p/qflow.runtime.json");
   assert.deepEqual(calls, [
-    'up /p/qflow.runtime.json {"maxWaitMs":1000}',
-    "down /p/qflow.runtime.json",
-    "report /p/qflow.runtime.json",
+    `up ${profile} {"maxWaitMs":1000}`,
+    `down ${profile}`,
+    `report ${profile}`,
   ]);
 });
 
