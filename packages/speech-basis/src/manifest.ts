@@ -6,7 +6,6 @@ import type { ModuleManifest, ProducerRef } from "@qflow/protocol";
 export const speechBasisModuleRef = { name: "@qflow/speech-basis", version: "1" } as const;
 
 export const speechBasisProducers = {
-  projectAudio: { module: speechBasisModuleRef, name: "project-audio" },
   projectAudioTrack: { module: speechBasisModuleRef, name: "project-audio-track" },
   projectVisual: { module: speechBasisModuleRef, name: "project-visual" },
   projectProgramSpace: { module: speechBasisModuleRef, name: "project-program-space" },
@@ -28,12 +27,6 @@ export const speechBasisManifest: ModuleManifest = {
       name: speechBasisProducers.projectProgramSpace.name,
       inputs: [{ name: "basis", type: speechTypes.basis }],
       outputs: [{ name: "programSpace", type: programSpaceTypes.programSpace }],
-      needs: [],
-    },
-    {
-      name: speechBasisProducers.projectAudio.name,
-      inputs: [{ name: "basis", type: speechTypes.basis }],
-      outputs: [{ name: "audio", type: speechTypes.audioBasis }],
       needs: [],
     },
     {

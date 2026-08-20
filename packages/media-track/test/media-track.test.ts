@@ -7,7 +7,6 @@ import type { AudioTrack } from "@qflow/composition";
 import { compileHyperframesDocument } from "@qflow/hyperframes";
 import { mediaTypes } from "@qflow/media";
 import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
-import { mediaPipelineProducers } from "@qflow/media-pipeline";
 import { artifactTypes } from "@qflow/artifact";
 import { narrativeTypes } from "@qflow/narrative";
 import {
@@ -692,7 +691,6 @@ test("the Media author Surface emits explicit graph edges for layers, semantic t
     ["frame", plain("frame", spatialTypes.frame)],
     ["clip-path", plain("clip-path", spatialTypes.path)],
     ["still", plain("still", artifactTypes.blob)],
-    ["raw-video", plain("raw-video", artifactTypes.blob)],
     ["extent", plain("extent", spatialTypes.extent)],
     ["video", plain("video", mediaTypes.synchronized)],
     ["surface", plain("surface", mediaTypes.compositableSurface)],
@@ -716,7 +714,7 @@ test("the Media author Surface emits explicit graph edges for layers, semantic t
     node("media:Item", { id: "segment-card", image: ref("still"), extent: ref("extent"), frame: ref("frame"), appearance: ref("still-style"), during: ref("answer-segment") }),
     node("media:Item", { id: "proof", frame: ref("frame"), appearance: ref("card-style"), motion: ref("motion"), during: ref("selection"), "source-audio": "video", "audio-gain": "0.8" }, [
       node("media:Paint", { id: "backing", appearance: ref("paint-style") }),
-      node("media:Layer", { id: "video", video: ref("raw-video"), audio: "include", appearance: ref("video-style") }, [
+      node("media:Layer", { id: "video", media: ref("video"), appearance: ref("video-style") }, [
         node("media:Sampling", { at: "start", zoom: "1" }),
         node("media:Sampling", { at: "end", zoom: "1.1", y: "-10", easing: "ease-out" }),
       ]),
@@ -742,9 +740,6 @@ test("the Media author Surface emits explicit graph edges for layers, semantic t
   assert.ok(producers.includes("append-still-media-layer"));
   assert.ok(producers.includes("append-segment-media-item"));
   assert.ok(producers.includes("append-timed-media-layer"));
-  assert.ok(producers.includes(mediaPipelineProducers.bindAvRequest.name));
-  assert.ok(producers.includes(mediaPipelineProducers.inspect.name));
-  assert.ok(producers.includes(mediaPipelineProducers.normalize.name));
   assert.ok(producers.includes("append-surface-media-layer"));
   assert.ok(producers.includes("append-media-paint-layer"));
   assert.ok(producers.includes("bind-media-item-clip-path"));

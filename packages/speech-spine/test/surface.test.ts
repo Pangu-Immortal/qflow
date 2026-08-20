@@ -1,160 +1,98 @@
-import { artifactDependency } from "@qflow/artifact";
-import { videoContractManifests } from "../../../test/support/video-domain.js";
-import { registerTypeValidatorFacets } from "@qflow/component-kit";
-import { mediaDependency } from "@qflow/media";
-import { compositionTypes } from "@qflow/composition";
-import { artifactTypes } from "@qflow/artifact";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
 
-import { createResolvedClosure, sealBuildRequest, start } from "@qflow/core";
-import {
-  AuthorFrontendRegistry,
-  compileSourceClosure,
-  resolveCompiledSourceExport,
-} from "@qflow/elaborator";
-import type { AuthorSourceUnit } from "@qflow/elaborator";
-import {
-  mediaPipelineComponent,
-  mediaPipelineManifest,
-  mediaPipelineProducers,
-} from "@qflow/media-pipeline";
-import type { ModuleManifest } from "@qflow/protocol";
-import {
-  decodeScriptSurface,
-  scriptManifest,
-  scriptMarkupSurfaces,
-  scriptModuleRef,
-} from "@qflow/script";
-import { speechBasisManifest, speechBasisProducers } from "@qflow/speech-basis";
-import { textComponent, textManifest } from "@qflow/text";
-import { mediaTrackManifest } from "@qflow/media-track";
-import { svsManifest, svsModuleRef, svsRecipeType } from "@qflow/svs";
-import {
-  decodeSpeechSpineSurface,
-  speechSpineManifest,
-  speechSpineMarkupSurfaces,
-  speechSpineModuleRef,
-  speechSpineProducers,
-} from "@qflow/speech-spine";
-import {
-  decodeCanvasSurface,
-  decodeFrameSurface,
-  spatialComponent,
-  spatialMarkupSurfaces,
-  spatialModuleRef,
-} from "@qflow/spatial";
-import {
-  MarkupSurfaceRegistry,
-  createMarkupAuthorFrontend,
-} from "@qflow/markup";
-import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
+import type { StructuredElement, SurfaceResolvedReference } from "@qflow/markup";
+import type { SemanticTake } from "@qflow/speech";
+import { speechTypes } from "@qflow/speech";
+import { spatialTypes } from "@qflow/spatial";
+import { svsRecipeType } from "@qflow/svs";
+import { decodeSpeechSpineSurface } from "@qflow/speech-spine";
 
-const fixtureModule = { name: "example.speech-media", version: "1" } as const;
-const fixtureSurfaceDigest = fixtureDigest("example.speech-media/surface@1");
-const fixtureSurface = {
-  name: "media", tag: "Media", mode: "structured", outputs: [artifactTypes.blob, svsRecipeType],
-} as const;
-const fixtureManifest: ModuleManifest = {
-  format: "qflow.module@1",
-  name: fixtureModule.name,
-  version: fixtureModule.version,
-  dependencies: [artifactDependency, mediaDependency, { module: svsModuleRef }],
-  types: [], capabilities: [], producers: [],
+const take: SemanticTake = {
+  media: {
+    timeline: { frameRate: { numerator: 30, denominator: 1 }, frameCount: 30 },
+    visual: {
+      artifact: { kind: "blob", digest: fixtureDigest("spine:take:video"), size: 1, mediaType: "video/mp4" },
+      width: 720,
+      height: 1280,
+    },
+    audio: {
+      artifact: { kind: "blob", digest: fixtureDigest("spine:take:audio"), size: 1, mediaType: "audio/wav" },
+    },
+  },
+  segment: {
+    segmentId: "opening",
+    startAnchorId: "opening:start",
+    endAnchorId: "opening:end",
+    startFrame: 0,
+    endFrameExclusive: 30,
+  },
+  tokens: [],
+  anchors: [
+    { identity: "opening:start", frame: 0 },
+    { identity: "opening:end", frame: 30 },
+  ],
 };
 
-function source(text: string): AuthorSourceUnit {
-  return {
-    id: "/project/main.svml",
-    name: "main.svml",
-    text: `<?svml using="@qflow/markup@1"?>\n${text}`,
+function resolved(path: string): SurfaceResolvedReference | undefined {
+  if (path === "opening.take") return {
+    path,
+    ref: { kind: "record", id: path },
+    type: speechTypes.semanticTake,
+    record: { id: path, type: speechTypes.semanticTake, value: { kind: "inline", value: take } },
   };
+  if (path === "full") return {
+    path,
+    ref: { kind: "record", id: path },
+    type: spatialTypes.frame,
+    record: { id: path, type: spatialTypes.frame, value: { kind: "inline", value: {
+      xPx: 0, yPx: 0, widthPx: 720, heightPx: 1280,
+    } } },
+  };
+  if (path === "speech-style") return {
+    path,
+    ref: { kind: "record", id: path },
+    type: svsRecipeType,
+    record: { id: path, type: svsRecipeType, value: { kind: "inline", value: {
+      path: "speech.base", properties: { fit: "cover" },
+    } } },
+  };
+  return undefined;
 }
 
-test("Speech Spine lowers ordered Takes into media normalization, one audio plan and peer projections", async () => {
-  const closure = createResolvedClosure([
-    ...videoContractManifests,
-    mediaPipelineManifest,
-    mediaTrackManifest,
-    svsManifest,
-    speechBasisManifest,
-    speechSpineManifest,
-    textManifest,
-    scriptManifest,
-    fixtureManifest,
-  ]);
-  const surfaces = new MarkupSurfaceRegistry();
-  surfaces.registerRaw({ module: scriptModuleRef, declaration: scriptMarkupSurfaces[0]!, handler: decodeScriptSurface });
-  surfaces.registerStructured({ module: speechSpineModuleRef, declaration: speechSpineMarkupSurfaces.find((item) => item.name === "spine")!, handler: decodeSpeechSpineSurface });
-  surfaces.registerStructured({ module: spatialModuleRef, declaration: spatialMarkupSurfaces.find((item) => item.name === "canvas")!, handler: decodeCanvasSurface });
-  surfaces.registerStructured({ module: spatialModuleRef, declaration: spatialMarkupSurfaces.find((item) => item.name === "frame")!, handler: decodeFrameSurface });
-  surfaces.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
-    records: [
-      ...["take-one", "take-two", "voice-one"].map((id) => ({
-        id, type: artifactTypes.blob,
-        value: { kind: "blob" as const, digest: fixtureDigest(id), size: 128,
-          mediaType: id === "voice-one" ? "audio/mpeg" : "video/mp4" },
-        range: element.range,
-      })),
-      {
-        id: "speech-style", type: svsRecipeType,
-        value: { kind: "inline" as const, value: {
-          path: "speech.base", properties: { fit: "cover" },
-        } },
-        range: element.range,
-      },
-    ],
-    components: [], fragments: [],
-  }) });
-  const frontends = new AuthorFrontendRegistry();
-  frontends.register(createMarkupAuthorFrontend({
-    registry: surfaces,
-    resolveModule(request) {
-      if (request.from.startsWith("@qflow/script")) return scriptModuleRef;
-      if (request.from.startsWith("@qflow/speech")) return speechSpineModuleRef;
-      if (request.from.startsWith("@qflow/spatial")) return spatialModuleRef;
-      return fixtureModule;
+test("Speech Spine accepts only already-semantic Segment Takes", async () => {
+  const element: StructuredElement = {
+    kind: "element",
+    name: "speech:Spine",
+    attributes: {
+      id: "speech",
+      "frame-rate": "30",
+      "visual-frame": { kind: "reference", path: "full" },
+      "visual-appearance": { kind: "reference", path: "speech-style" },
+      "visual-z": "0",
     },
-  }));
-  const validators = new TypeValidatorRegistry();
-  registerTypeValidatorFacets(validators, mediaPipelineComponent.validators ?? []);
-  registerTypeValidatorFacets(validators, spatialComponent.validators ?? []);
-  registerTypeValidatorFacets(validators, textComponent.validators ?? []);
-  const compiled = await compileSourceClosure({
-    entry: source(`<svml>
-      <import from="@qflow/script@1"/>
-      <import as="fixture" from="example.speech-media@1"/>
-      <import as="speech" from="@qflow/speech-spine@1"/>
-      <import as="space" from="@qflow/spatial@1"/>
-      <script id="story">
-        <opening><ALICE> Hello from Alice.</opening>
-        <answer><BOB> Hello from Bob.</answer>
-      </script>
-      <fixture:Media/>
-      <space:Canvas id="vertical" width="720" height="1280"/>
-      <space:Frame id="speech-frame" within={vertical} left="0%" top="0%" right="100%" bottom="100%"/>
-      <speech:Spine id="speech" frame-rate="30"
-        visual-frame={speech-frame} visual-appearance={speech-style} visual-z="0">
-        <speech:Take audio={voice-one} segment={story.segment.opening}/>
-        <speech:Take video={take-two} segment={story.segment.answer}/>
-      </speech:Spine>
-    </svml>`),
-    closure,
-    frontends,
-    admitRecord: createRecordAdmitter(validators),
-    resolveSource() { throw new Error("fixture has no source imports"); },
+    children: [{
+      kind: "element",
+      name: "speech:Take",
+      attributes: { source: { kind: "reference", path: "opening.take" } },
+      children: [],
+      range: { start: 20, end: 60 },
+    }],
+    range: { start: 0, end: 70 },
+  };
+  const output = await decodeSpeechSpineSurface({
+    sourceName: "main.svml",
+    element,
+    resolveReference: resolved,
+    resolveAsset() { throw new Error("Speech Spine does not resolve assets"); },
   });
-  const target = resolveCompiledSourceExport(compiled, "speech.visual", compositionTypes.visualTrack);
-  const build = start(compiled.program, compiled.graph, sealBuildRequest({
-    targets: [{ output: target.ref.kind === "logical-output" ? target.ref.id : "" }],
-  }));
-  const names = build.plan.steps.map((step) => step.producer.name);
-  assert.equal(names.filter((name) => name === mediaPipelineProducers.inspect.name).length, 2);
-  assert.equal(names.filter((name) => name === mediaPipelineProducers.normalize.name).length, 2);
-  assert.equal(names.filter((name) => name === speechSpineProducers.appendAudioTake.name).length, 1);
-  assert.equal(names.filter((name) => name === speechSpineProducers.appendVisualTake.name).length, 1);
-  assert.equal(names.filter((name) => name === speechSpineProducers.compileAudio.name).length, 1);
-  assert.equal(names.filter((name) => name === mediaPipelineProducers.renderAudio.name).length, 1);
-  assert.equal(names.filter((name) => name === speechBasisProducers.projectVisual.name).length, 1);
+  assert.deepEqual(output.components[0]?.outputs, {
+    basis: "speech.basis",
+    space: "speech.space",
+    visual: "speech.visual",
+    audioTrack: "speech.audioTrack",
+    semanticMap: "speech.semanticMap",
+  });
+  assert.equal(output.exports?.includes("speech.audio") ?? false, false);
 });

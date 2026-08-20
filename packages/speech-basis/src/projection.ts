@@ -1,7 +1,7 @@
 import { programSpaceSampleFrames } from "@qflow/program-space";
 import type { ProgramSpace } from "@qflow/program-space";
 import { assertSpeechBasisIdentity } from "@qflow/speech";
-import type { SpeechAudioBasis, SpeechBasis } from "@qflow/speech";
+import type { SpeechBasis } from "@qflow/speech";
 import { lowerRestrictedSpeechVisualPresents } from "@qflow/media-track";
 import { sealAudioTrack, sealVisualTrack } from "@qflow/composition";
 import type { AudioTrack, VisualTrack } from "@qflow/composition";
@@ -9,15 +9,6 @@ import type { AudioTrack, VisualTrack } from "@qflow/composition";
 export function projectSpeechProgramSpace(basis: SpeechBasis): ProgramSpace {
   assertSpeechBasisIdentity(basis);
   return basis.programSpace;
-}
-
-export function projectSpeechAudio(basis: SpeechBasis): SpeechAudioBasis {
-  assertSpeechBasisIdentity(basis);
-  return {
-    programSpace: basis.programSpace,
-    audio: basis.audio,
-    segments: basis.segments,
-  };
 }
 
 export function projectSpeechVisual(basis: SpeechBasis): VisualTrack {

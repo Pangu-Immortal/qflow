@@ -1,7 +1,5 @@
-import type { Narrative } from "@qflow/narrative";
 import { sealMediaStreamSelection, verifyMediaInspection } from "@qflow/media";
 import type { MediaAudioStream, MediaInspection, MediaStreamSelection, MediaVideoStream } from "@qflow/media";
-import type { SpeechBasis } from "@qflow/speech";
 import {
   canonicalize,
 } from "@qflow/protocol";

@@ -9,7 +9,6 @@ import {
 } from "@qflow/media";
 import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
 import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
-import { mediaPipelineManifest, mediaPipelineModuleRef } from "@qflow/media-pipeline";
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
 import { semanticMapDependency, semanticMapTypes } from "@qflow/semantic-map";
 import {
@@ -597,7 +596,6 @@ export const mediaTrackManifest: ModuleManifest = {
   dependencies: [
     artifactDependency,
     mediaDependency,
-    { module: mediaPipelineModuleRef },
     narrativeDependency,
     semanticMapDependency,
     programSpaceDependency,

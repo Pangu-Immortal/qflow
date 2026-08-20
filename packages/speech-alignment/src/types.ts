@@ -5,13 +5,6 @@ export type {
   SpeechTranscriptPassage,
   SpeechWordEvidence,
 } from "@qflow/speech-evidence";
-export type {
-  CompleteSemanticMap,
-  SemanticTimePoint,
-  TimedSpeechToken,
-} from "@qflow/semantic-map";
-export type { SpeechAudioBasis } from "@qflow/speech";
-
 /** Private vocabulary of the alignment implementation, not part of SemanticMap. */
 export type AlignmentRelation =
   | "exact"
