@@ -53,7 +53,6 @@
     "@qflow/hyperframes": "workspace:*",
     "@qflow/image-compose": "workspace:*",
     "@qflow/image-transform": "workspace:*",
-    "@qflow/local-notebook-ranking": "workspace:*",
     "@qflow/runtime-local": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/media-track": "workspace:*",
