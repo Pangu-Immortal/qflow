@@ -16,7 +16,6 @@
     "@qflow/narrative": "workspace:*",
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/semantic-map": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/speech-evidence": "workspace:*"
   },

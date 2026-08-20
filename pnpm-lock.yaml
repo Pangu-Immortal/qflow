@@ -167,9 +167,9 @@ importers:
       '@qflow/seedream':
         specifier: workspace:*
         version: link:packages/seedream
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:packages/semantic-map
+        version: link:packages/semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:packages/spatial
@@ -179,15 +179,12 @@ importers:
       '@qflow/speech-alignment':
         specifier: workspace:*
         version: link:packages/speech-alignment
-      '@qflow/speech-basis':
-        specifier: workspace:*
-        version: link:packages/speech-basis
       '@qflow/speech-evidence':
         specifier: workspace:*
         version: link:packages/speech-evidence
-      '@qflow/speech-spine':
+      '@qflow/speech-track':
         specifier: workspace:*
-        version: link:packages/speech-spine
+        version: link:packages/speech-track
       '@qflow/store-sqlite':
         specifier: workspace:*
         version: link:packages/store-sqlite
@@ -284,9 +281,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
       '@qflow/temporal':
         specifier: workspace:*
         version: link:../temporal
@@ -351,9 +348,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
     devDependencies:
       '@qflow/program-space':
         specifier: workspace:*
@@ -400,9 +397,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
       '@qflow/svs':
         specifier: workspace:*
         version: link:../svs
@@ -495,9 +492,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -610,9 +607,6 @@ importers:
       '@qflow/narrative':
         specifier: workspace:*
         version: link:../narrative
-      '@qflow/semantic-map':
-        specifier: workspace:*
-        version: link:../semantic-map
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -682,9 +676,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -797,6 +791,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@qflow/semantic-track':
+        specifier: workspace:*
+        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -1502,9 +1499,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -2011,9 +2008,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -2115,6 +2112,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@qflow/semantic-track':
+        specifier: workspace:*
+        version: link:../semantic-track
     devDependencies:
       '@qflow/core':
         specifier: workspace:*
@@ -2122,6 +2122,9 @@ importers:
       '@qflow/driver-node':
         specifier: workspace:*
         version: link:../driver-node
+      '@qflow/svs':
+        specifier: workspace:*
+        version: link:../svs
       '@qflow/validation':
         specifier: workspace:*
         version: link:../validation
@@ -2265,9 +2268,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -2373,17 +2376,29 @@ importers:
         specifier: workspace:*
         version: link:../text
 
-  packages/semantic-map:
+  packages/semantic-track:
     dependencies:
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../component-kit
+      '@qflow/composition':
+        specifier: workspace:*
+        version: link:../composition
+      '@qflow/media':
+        specifier: workspace:*
+        version: link:../media
       '@qflow/narrative':
         specifier: workspace:*
         version: link:../narrative
+      '@qflow/program-space':
+        specifier: workspace:*
+        version: link:../program-space
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/speech-evidence':
+      '@qflow/speech':
         specifier: workspace:*
-        version: link:../speech-evidence
+        version: link:../speech
 
   packages/source:
     dependencies:
@@ -2418,18 +2433,9 @@ importers:
       '@qflow/media':
         specifier: workspace:*
         version: link:../media
-      '@qflow/program-space':
-        specifier: workspace:*
-        version: link:../program-space
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
-        specifier: workspace:*
-        version: link:../semantic-map
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
 
   packages/speech-alignment:
     dependencies:
@@ -2448,9 +2454,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
-        specifier: workspace:*
-        version: link:../semantic-map
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
@@ -2462,57 +2465,14 @@ importers:
         specifier: workspace:*
         version: link:../script
 
-  packages/speech-basis:
-    dependencies:
-      '@qflow/component-kit':
-        specifier: workspace:*
-        version: link:../component-kit
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
-      '@qflow/elaborator':
-        specifier: workspace:*
-        version: link:../elaborator
-      '@qflow/media-track':
-        specifier: workspace:*
-        version: link:../media-track
-      '@qflow/program-space':
-        specifier: workspace:*
-        version: link:../program-space
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/speech':
-        specifier: workspace:*
-        version: link:../speech
-    devDependencies:
-      '@qflow/core':
-        specifier: workspace:*
-        version: link:../core
-      '@qflow/driver-node':
-        specifier: workspace:*
-        version: link:../driver-node
-      '@qflow/media-pipeline':
-        specifier: workspace:*
-        version: link:../media-pipeline
-      '@qflow/svs':
-        specifier: workspace:*
-        version: link:../svs
-      '@qflow/validation':
-        specifier: workspace:*
-        version: link:../validation
-
   packages/speech-evidence:
     dependencies:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
 
-  packages/speech-spine:
+  packages/speech-track:
     dependencies:
-      '@qflow/artifact':
-        specifier: workspace:*
-        version: link:../artifact
       '@qflow/component-kit':
         specifier: workspace:*
         version: link:../component-kit
@@ -2525,30 +2485,21 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
+      '@qflow/media-track':
         specifier: workspace:*
-        version: link:../media
-      '@qflow/media-pipeline':
-        specifier: workspace:*
-        version: link:../media-pipeline
-      '@qflow/program-space':
-        specifier: workspace:*
-        version: link:../program-space
+        version: link:../media-track
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
-      '@qflow/speech-basis':
-        specifier: workspace:*
-        version: link:../speech-basis
       '@qflow/svs':
         specifier: workspace:*
         version: link:../svs
@@ -2556,9 +2507,6 @@ importers:
       '@qflow/core':
         specifier: workspace:*
         version: link:../core
-      '@qflow/media-track':
-        specifier: workspace:*
-        version: link:../media-track
       '@qflow/script':
         specifier: workspace:*
         version: link:../script
@@ -2631,6 +2579,9 @@ importers:
       '@qflow/script':
         specifier: workspace:*
         version: link:../script
+      '@qflow/semantic-track':
+        specifier: workspace:*
+        version: link:../semantic-track
       '@qflow/validation':
         specifier: workspace:*
         version: link:../validation
@@ -2674,9 +2625,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
 
   packages/text:
     dependencies:
@@ -2734,9 +2685,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-map':
+      '@qflow/semantic-track':
         specifier: workspace:*
-        version: link:../semantic-map
+        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial

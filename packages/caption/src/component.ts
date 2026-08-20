@@ -1,6 +1,6 @@
 import type { ComponentPackage } from "@qflow/component-kit";
 import type { CaptionCorrespondence, CaptionDisplaySequence } from "@qflow/narrative";
-import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import type { SemanticTrack } from "@qflow/semantic-track";
 import type { StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 
@@ -33,7 +33,7 @@ export const captionComponent = {
             value: canonicalize(temporalizeCaptionPlan(
               inline<CaptionDisplaySequence>(inputs.display?.value, "CaptionDisplaySequence"),
               inline<CaptionCorrespondence>(inputs.correspondence?.value, "CaptionCorrespondence"),
-              inline<CompleteSemanticMap>(inputs.map?.value, "CompleteSemanticMap"),
+              inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
               inline<CaptionProgram>(inputs.program?.value, "CaptionProgram"),
               inline<CaptionPlan>(inputs.plan?.value, "CaptionPlan"),
             )),

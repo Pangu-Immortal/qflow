@@ -21,7 +21,6 @@
     "@qflow/artifact": "workspace:*",
     "@qflow/core": "workspace:*",
     "@qflow/narrative": "workspace:*",
-    "@qflow/semantic-map": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",

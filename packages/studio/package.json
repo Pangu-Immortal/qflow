@@ -20,6 +20,7 @@
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
     "@qflow/script": "workspace:*",
+    "@qflow/semantic-track": "workspace:*",
     "@qflow/validation": "workspace:*",
     "@qflow/video-cli": "workspace:*",
     "@qflow/workspace": "workspace:*",

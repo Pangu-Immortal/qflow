@@ -1,9 +1,9 @@
 import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
 import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
-import type { ProgramSpace } from "@qflow/program-space";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef, StoredValue } from "@qflow/protocol";
-import type { CompleteSemanticMap } from "@qflow/semantic-map";
+import type { SemanticTrack } from "@qflow/semantic-track";
+import { projectSemanticProgramSpace } from "@qflow/semantic-track";
 import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
 import type { Text } from "@qflow/text";
 
@@ -31,7 +31,7 @@ function common(inputs: Record<string, { readonly value: StoredValue } | undefin
     header: inline<CommentStickerHeader>(inputs.header?.value, "CommentStickerHeader"),
     frame: inline<SpatialFrame>(inputs.frame?.value, "SpatialFrame"),
     style: inline<CommentStickerStyle>(inputs.style?.value, "CommentStickerStyle"),
-    space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+    semantic: inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
     spec: inline<CommentStickerItemSpec>(inputs.spec?.value, "CommentStickerItemSpec"),
     content: inline<CommentStickerContent>(inputs.content?.value, "CommentStickerContent"),
   };
@@ -69,7 +69,7 @@ export const commentStickerComponent = {
       handler: ({ inputs }: ProducerHandlerContext) => {
         const values = common(inputs);
         return { outputs: { set: output(appendProgramCommentSticker(
-          values.set, values.header, values.frame, values.style, values.space, values.spec, values.content,
+          values.set, values.header, values.frame, values.style, values.semantic, values.spec, values.content,
           ...(avatar ? [inline<BlobRef>(inputs.avatar?.value, "Comment Sticker avatar")] : []),
         )) }, needs: {} };
       },
@@ -82,8 +82,7 @@ export const commentStickerComponent = {
       handler: ({ inputs }: ProducerHandlerContext) => {
         const values = common(inputs);
         return { outputs: { set: output(appendSelectionCommentSticker(
-          values.set, values.header, values.frame, values.style, values.space,
-          inline<CompleteSemanticMap>(inputs.map?.value, "CompleteSemanticMap"),
+          values.set, values.header, values.frame, values.style, values.semantic,
           inline<NarrativeSelectionRef>(inputs.selection?.value, "NarrativeSelection"), values.spec, values.content,
           ...(avatar ? [inline<BlobRef>(inputs.avatar?.value, "Comment Sticker avatar")] : []),
         )) }, needs: {} };
@@ -97,8 +96,7 @@ export const commentStickerComponent = {
       handler: ({ inputs }: ProducerHandlerContext) => {
         const values = common(inputs);
         return { outputs: { set: output(appendMomentCommentSticker(
-          values.set, values.header, values.frame, values.style, values.space,
-          inline<CompleteSemanticMap>(inputs.map?.value, "CompleteSemanticMap"),
+          values.set, values.header, values.frame, values.style, values.semantic,
           inline<NarrativeMomentRef>(inputs.moment?.value, "NarrativeMoment"), values.spec, values.content,
           ...(avatar ? [inline<BlobRef>(inputs.avatar?.value, "Comment Sticker avatar")] : []),
         )) }, needs: {} };
@@ -115,7 +113,7 @@ export const commentStickerComponent = {
       producer: commentStickerProducers.render,
       handler: ({ inputs }) => ({ outputs: { track: output(renderCommentSticker(
         inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"),
-        inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        projectSemanticProgramSpace(inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack")),
         inline<CommentStickerProgram>(inputs.program?.value, "CommentStickerProgram"),
       )) }, needs: {} }),
     },

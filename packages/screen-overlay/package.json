@@ -11,9 +11,9 @@
     "@qflow/composition": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/narrative": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/semantic-map": "workspace:*",
+    "@qflow/program-space": "workspace:*",
+    "@qflow/semantic-track": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/temporal": "workspace:*",
     "@qflow/markup": "workspace:*"

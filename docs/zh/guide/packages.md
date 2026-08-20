@@ -81,11 +81,10 @@ Frontend；不存在一个认识全部语法的中央解析器。
 @qflow/mimo-tts              三个精确 Xiaomi MiMo TTS 模型及作者 Surface
 @qflow/estimate              duration estimation
 @qflow/speech                shared speech products
-@qflow/speech-basis          generated speech A/V product
 @qflow/speech-evidence       acoustic evidence products
-@qflow/semantic-map          authored-token timing map
 @qflow/speech-alignment      speech alignment
-@qflow/speech-spine          ordered speech-take compilation
+@qflow/semantic-track        continuous semantic program skeleton
+@qflow/speech-track          ordered speech-take compilation
 @qflow/whisperx              WhisperX component
 @qflow/caption               caption planning and timing
 @qflow/caption-gemini        Gemini caption planner

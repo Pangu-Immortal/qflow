@@ -1,7 +1,6 @@
 import { narrativeTypes } from "@qflow/narrative";
 import { mediaTypes } from "@qflow/media";
 import { speechTypes } from "@qflow/speech";
-import { speechEvidenceTypes } from "@qflow/speech-evidence";
 import { sealGraphFragment } from "@qflow/elaborator";
 import { mediaPipelineProducers } from "@qflow/media-pipeline";
 import { speechAlignmentProducers } from "@qflow/speech-alignment";
@@ -44,11 +43,6 @@ export const whisperXSemanticTakeFragment = sealGraphFragment({
     },
   ],
   exports: [
-    {
-      name: "evidence",
-      type: speechEvidenceTypes.alignedTranscript,
-      root: operation("request-whisperx"),
-    },
     {
       name: "take",
       type: speechTypes.semanticTake,

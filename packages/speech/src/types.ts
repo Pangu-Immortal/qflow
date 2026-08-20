@@ -1,27 +1,7 @@
-import type { ProgramSpace } from "@qflow/program-space";
-import type { BlobRef } from "@qflow/protocol";
 import type { SynchronizedMedia } from "@qflow/media";
-import type { ContentFit, IntrinsicExtent, SpatialFrame } from "@qflow/spatial";
-import type { SemanticTimePoint } from "@qflow/semantic-map";
+import type { BlobRef } from "@qflow/protocol";
 /** Positive seconds. The graph port's TypeRef already carries the SpeechDuration identity. */
 export type SpeechDuration = number;
-export type SpeechBasisSegment = {
-  readonly segmentId: string;
-  readonly startFrame: number;
-  readonly endFrameExclusive: number;
-};
-export type SpeechBasis = {
-  readonly programSpace: ProgramSpace; readonly audio: BlobRef;
-  readonly visualTrack: { readonly clips: readonly {
-    readonly segmentId: string;
-    readonly artifact: BlobRef;
-    readonly extent: IntrinsicExtent;
-    readonly frame: SpatialFrame;
-    readonly fit: ContentFit;
-    readonly stackingOrder: number;
-  }[] };
-  readonly segments: readonly SpeechBasisSegment[];
-};
 export type SpeechEvidenceAudio = {
   readonly artifact: BlobRef;
   /** Exact 16 kHz mono PCM sample count. Format constants belong to this Type, not every value. */
@@ -54,5 +34,5 @@ export type SemanticTake = {
     readonly endFrameExclusive: number;
   };
   readonly tokens: readonly SemanticTakeToken[];
-  readonly anchors: readonly SemanticTimePoint[];
+  readonly anchors: readonly { readonly identity: string; readonly frame: number }[];
 };

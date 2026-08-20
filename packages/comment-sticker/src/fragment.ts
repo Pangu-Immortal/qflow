@@ -3,9 +3,8 @@ import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
 import type { FragmentOperation } from "@qflow/elaborator";
 import { narrativeTypes } from "@qflow/narrative";
-import { programSpaceTypes } from "@qflow/program-space";
 import type { TypeRef } from "@qflow/protocol";
-import { semanticMapTypes } from "@qflow/semantic-map";
+import { semanticTrackTypes } from "@qflow/semantic-track";
 import { spatialTypes } from "@qflow/spatial";
 import { textTypes } from "@qflow/text";
 
@@ -13,8 +12,8 @@ import { commentStickerProducers, commentStickerTypes } from "./manifest.js";
 
 type TimedItem =
   | { readonly kind: "program" }
-  | { readonly kind: "selection"; readonly mapName: string; readonly sourceName: string }
-  | { readonly kind: "moment"; readonly mapName: string; readonly sourceName: string };
+  | { readonly kind: "selection"; readonly sourceName: string }
+  | { readonly kind: "moment"; readonly sourceName: string };
 
 export type CommentStickerFragmentItem = TimedItem & {
   readonly specName: string;
@@ -60,7 +59,6 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
     if (item.metaName !== undefined) types.set(item.metaName, textTypes.text);
     if (item.avatarName !== undefined) types.set(item.avatarName, artifactTypes.blob);
     if (item.kind !== "program") {
-      types.set(item.mapName, semanticMapTypes.complete);
       types.set(item.sourceName, item.kind === "selection" ? narrativeTypes.selection : narrativeTypes.moment);
     }
     const suffix = String(index + 1).padStart(4, "0");
@@ -96,12 +94,11 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
         header: input("header"),
         frame: input(item.frameName),
         style: input(item.styleName),
-        space: input("space"),
+        semantic: input("semantic"),
         spec: input(item.specName),
         content,
         ...(item.avatarName === undefined ? {} : { avatar: input(item.avatarName) }),
         ...(item.kind === "program" ? {} : {
-          map: input(item.mapName),
           [item.kind]: input(item.sourceName),
         }),
       },
@@ -119,7 +116,7 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
     {
       id: "comment:track",
       producer: commentStickerProducers.render,
-      inputs: { canvas: input("canvas"), space: input("space"), program: operation("comment:program") },
+      inputs: { canvas: input("canvas"), semantic: input("semantic"), program: operation("comment:program") },
       result: { kind: "output", name: "track" },
     },
   );
@@ -127,7 +124,7 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
     inputs: [
       { name: "canvas", type: spatialTypes.canvas },
       { name: "header", type: commentStickerTypes.header },
-      { name: "space", type: programSpaceTypes.programSpace },
+      { name: "semantic", type: semanticTrackTypes.track },
       ...[...types].map(([inputName, type]) => ({ name: inputName, type })),
     ],
     operations,
