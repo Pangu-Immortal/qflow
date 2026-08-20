@@ -20,8 +20,7 @@
     "test:image-opencv": "QFLOW_OPENCV_TESTS=1 QFLOW_OPENCV_PYTHON=services/image-opencv/.venv/bin/python node --import tsx --test packages/provider-image-opencv-local/test/provider.test.ts",
     "smoke:kie": "node --import tsx packages/provider-kie/test/live-smoke.ts",
     "qflow": "node bin/qflow.mjs",
-    "caption:playground": "pnpm --filter @qflow/caption-playground exec node --import tsx start.ts",
-    "svml:playground": "pnpm --filter @qflow/svml-playground exec node --import tsx start.ts",
+    "studio": "pnpm --filter @qflow/studio exec node --import tsx start.ts",
     "build:media-lambda": "pnpm --filter @qflow/media-lambda build",
     "build:media-lambda-layer": "pnpm --filter @qflow/media-lambda build:layer"
   },
