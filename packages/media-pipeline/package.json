@@ -20,6 +20,7 @@
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/speech": "workspace:*",
+    "@qflow/svs": "workspace:*",
     "@qflow/markup": "workspace:*"
   }
 }

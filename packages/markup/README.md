@@ -14,7 +14,7 @@ sandbox for third-party parser code.
 <?svml using="@qflow/markup@1"?>
 <svml>
   <import from="@qflow/script@1"/>
-  <import as="studio" source="./studio.svs"/>
+  <import as="recipes" source="./recipes.svs"/>
 
   <script id="story">
     <opening><ALICE>Hello.</opening>

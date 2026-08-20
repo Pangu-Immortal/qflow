@@ -2,9 +2,8 @@ import {
   registerProducerFacets,
 } from "@qflow/component-kit";
 import type { ProducerRegistrar } from "@qflow/component-kit";
-import { sealProgramSpace } from "@qflow/program-space";
-import { sealSpeechBasis, sealSpeechEvidenceAudio } from "@qflow/speech";
-import type { SpeechBasis, SpeechEvidenceAudio } from "@qflow/speech";
+import { sealSpeechEvidenceAudio } from "@qflow/speech";
+import type { SpeechEvidenceAudio } from "@qflow/speech";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureDigest } from "../../../test/fixture-digest.js";
@@ -16,20 +15,7 @@ import {
   whisperXRequestForEvidenceAudio,
 } from "@qflow/whisperx";
 
-function basis() {
-  const programSpace = sealProgramSpace({
-    durationSec: 1,
-    frameRate: { numerator: 30, denominator: 1 },
-  });
-  return sealSpeechBasis({
-    programSpace,
-    audio: { kind: "blob", digest: fixtureDigest("whisperx-test:audio"), size: 1, mediaType: "audio/wav" },
-    visualTrack: { clips: [] },
-    segments: [{ segmentId: "line", startFrame: 0, endFrameExclusive: 30 }],
-  });
-}
-
-function evidenceAudio(basis: SpeechBasis): SpeechEvidenceAudio {
+function evidenceAudio(): SpeechEvidenceAudio {
   return sealSpeechEvidenceAudio({
     artifact: {
       kind: "blob",
@@ -42,8 +28,7 @@ function evidenceAudio(basis: SpeechBasis): SpeechEvidenceAudio {
 }
 
 test("WhisperX receives normalized bytes without authored Segment truth", () => {
-  const source = basis();
-  const valid = evidenceAudio(source);
+  const valid = evidenceAudio();
   const request = whisperXRequestForEvidenceAudio(valid);
   assert.equal(request.audio.digest, valid.artifact.digest);
   assert.equal("segments" in request, false);

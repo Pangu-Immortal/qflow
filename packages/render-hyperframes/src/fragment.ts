@@ -1,5 +1,5 @@
 import { artifactTypes } from "@qflow/artifact";
-import { programSpaceTypes } from "@qflow/program-space";
+import { semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
 import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
 import { hyperframesProducers } from "@qflow/hyperframes";
@@ -15,13 +15,19 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 export const renderHyperframesFragment = sealGraphFragment({
   inputs: [
     { name: "composition", type: compositionTypes.composition },
-    { name: "space", type: programSpaceTypes.programSpace },
+    { name: "semantic", type: semanticTrackTypes.track },
   ],
   operations: [
     {
+      id: "project-space",
+      producer: semanticTrackProducers.projectProgramSpace,
+      inputs: { track: input("semantic") },
+      result: { kind: "output", name: "space" },
+    },
+    {
       id: "compile-document",
       producer: hyperframesProducers.compile,
-      inputs: { composition: input("composition"), space: input("space") },
+      inputs: { composition: input("composition"), space: operation("project-space") },
       result: { kind: "output", name: "document" },
     },
     {
@@ -33,7 +39,7 @@ export const renderHyperframesFragment = sealGraphFragment({
     {
       id: "compile-audio-program",
       producer: mediaPipelineProducers.planAudio,
-      inputs: { composition: input("composition"), space: input("space") },
+      inputs: { composition: input("composition"), space: operation("project-space") },
       result: { kind: "output", name: "plan" },
     },
     {

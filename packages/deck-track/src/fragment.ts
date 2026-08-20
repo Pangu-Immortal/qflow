@@ -5,8 +5,7 @@ import type { FragmentOperation, GraphFragment } from "@qflow/elaborator";
 import { mediaTypes } from "@qflow/media";
 import { mediaTrackProducers, mediaTrackTypes } from "@qflow/media-track";
 import { narrativeTypes } from "@qflow/narrative";
-import { programSpaceTypes } from "@qflow/program-space";
-import { semanticMapTypes } from "@qflow/semantic-map";
+import { semanticTrackTypes } from "@qflow/semantic-track";
 import { spatialTypes } from "@qflow/spatial";
 
 import { depthStackProducers, depthStackTypes } from "./manifest.js";
@@ -47,8 +46,7 @@ export function createDepthStackFragment(
     { name: "canvas", type: spatialTypes.canvas },
     { name: "frame", type: spatialTypes.frame },
     { name: "header", type: depthStackTypes.header },
-    { name: "map", type: semanticMapTypes.complete },
-    { name: "space", type: programSpaceTypes.programSpace },
+    { name: "semantic", type: semanticTrackTypes.track },
     { name: "spec", type: depthStackTypes.spec },
   ];
   const operations: FragmentOperation[] = [{
@@ -114,9 +112,8 @@ export function createDepthStackFragment(
         material: operation(sampleId),
         label: input(card.labelName),
         spec: input(card.cardSpecName),
-        map: input("map"),
+        semantic: input("semantic"),
         moment: input(card.momentName),
-        space: input("space"),
       },
       result: { kind: "output", name: "set" },
     });
@@ -141,9 +138,8 @@ export function createDepthStackFragment(
       header: input("header"),
       frame: input("frame"),
       spec: input("spec"),
-      space: input("space"),
+      semantic: input("semantic"),
       ...(terminal.kind === "program-end" ? {} : {
-        map: input("map"),
         terminal: input(terminal.inputName),
       }),
     },
@@ -152,7 +148,7 @@ export function createDepthStackFragment(
   operations.push({
     id: "track",
     producer: depthStackProducers.render,
-    inputs: { canvas: input("canvas"), space: input("space"), program: operation("program") },
+    inputs: { canvas: input("canvas"), semantic: input("semantic"), program: operation("program") },
     result: { kind: "output", name: "track" },
   });
   return sealGraphFragment({

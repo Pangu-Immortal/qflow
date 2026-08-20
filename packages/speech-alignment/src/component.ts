@@ -1,13 +1,11 @@
 import type { ComponentPackage } from "@qflow/component-kit";
-import type { Narrative } from "@qflow/narrative";
-import type { SpeechAudioBasis } from "@qflow/speech";
+import type { SynchronizedMedia } from "@qflow/media";
+import type { Narrative, NarrativeExcerpt } from "@qflow/narrative";
 import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
 import type { StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 
-import {
-  locateSpeechTiming,
-} from "./locate.js";
+import { alignSemanticTake } from "./local.js";
 import { speechAlignmentProducers } from "./manifest.js";
 
 function inline<T>(value: StoredValue | undefined, subject: string): T {
@@ -17,20 +15,23 @@ function inline<T>(value: StoredValue | undefined, subject: string): T {
 
 /** Provider-neutral deterministic alignment; acoustic measurement remains an explicit upstream Need. */
 export const speechAlignmentComponent = {
-  producers: [{
-    producer: speechAlignmentProducers.locate,
-    handler: ({ inputs }) => ({
-      outputs: {
-        map: {
-          kind: "inline",
-          value: canonicalize(locateSpeechTiming(
-            inline<Narrative>(inputs.narrative?.value, "Narrative"),
-            inline<SpeechAudioBasis>(inputs.audio?.value, "SpeechAudioBasis"),
-            inline<AlignedTranscriptEvidence>(inputs.evidence?.value, "AlignedTranscriptEvidence"),
-          )),
+  producers: [
+    {
+      producer: speechAlignmentProducers.alignTake,
+      handler: ({ inputs }) => ({
+        outputs: {
+          take: {
+            kind: "inline",
+            value: canonicalize(alignSemanticTake(
+              inline<Narrative>(inputs.narrative?.value, "Narrative"),
+              inline<NarrativeExcerpt>(inputs.segment?.value, "NarrativeExcerpt"),
+              inline<SynchronizedMedia>(inputs.media?.value, "SynchronizedMedia"),
+              inline<AlignedTranscriptEvidence>(inputs.evidence?.value, "AlignedTranscriptEvidence"),
+            )),
+          },
         },
-      },
-      needs: {},
-    }),
-  }],
+        needs: {},
+      }),
+    },
+  ],
 } satisfies ComponentPackage;

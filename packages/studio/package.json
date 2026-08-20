@@ -1,0 +1,30 @@
+{
+  "name": "@qflow/studio",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@qflow/cli": "workspace:*",
+    "@qflow/compiler-node": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/core": "workspace:*",
+    "@qflow/driver-node": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/hyperframes": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/package-loader-node": "workspace:*",
+    "@qflow/program-space": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/run": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-host-node": "workspace:*",
+    "@qflow/script": "workspace:*",
+    "@qflow/semantic-track": "workspace:*",
+    "@qflow/validation": "workspace:*",
+    "@qflow/video-cli": "workspace:*",
+    "@qflow/workspace": "workspace:*",
+    "@qflow/workspace-fs-node": "workspace:*",
+    "vite": "5.4.21"
+  }
+}

@@ -3,9 +3,8 @@ import { mediaTypes } from "@qflow/media";
 import type { FontStackRef } from "@qflow/media";
 import { mediaTrackTypes } from "@qflow/media-track";
 import { narrativeTypes } from "@qflow/narrative";
-import { programSpaceTypes } from "@qflow/program-space";
 import type { TypeRef } from "@qflow/protocol";
-import { semanticMapTypes } from "@qflow/semantic-map";
+import { semanticTrackTypes } from "@qflow/semantic-track";
 import { spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import type { SvsRecipe } from "@qflow/svs";
@@ -204,10 +203,9 @@ function terminal(
 }
 
 export const decodeDepthStackSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  allowed(element, ["id", "map", "space", "canvas", "frame", "appearance", "until", "until-boundary"]);
+  allowed(element, ["id", "semantic", "canvas", "frame", "appearance", "until", "until-boundary"]);
   const id = text(element, "id");
-  const map = reference(element.attributes.map, `${element.name}.map`, semanticMapTypes.complete, resolveReference);
-  const space = reference(element.attributes.space, `${element.name}.space`, programSpaceTypes.programSpace, resolveReference);
+  const semantic = reference(element.attributes.semantic, `${element.name}.semantic`, semanticTrackTypes.track, resolveReference);
   const canvas = reference(element.attributes.canvas, `${element.name}.canvas`, spatialTypes.canvas, resolveReference);
   const frame = reference(element.attributes.frame, `${element.name}.frame`, spatialTypes.frame, resolveReference);
   const appearance = recipe(element.attributes.appearance, `${element.name}.appearance`, resolveReference);
@@ -219,9 +217,9 @@ export const decodeDepthStackSurface: StructuredSurfaceHandler = ({ element, res
     { id: headerId, type: depthStackTypes.header, value: { kind: "inline", value: sealDepthStackHeader({ id }) }, range: element.range },
     { id: specId, type: depthStackTypes.spec, value: { kind: "inline", value: decodeDepthStackSpec(appearance) }, range: element.range },
   );
-  const inputs: Record<string, typeof map.ref> = {
-    canvas: canvas.ref, frame: frame.ref, header: { kind: "record", id: headerId }, map: map.ref,
-    space: space.ref, spec: { kind: "record", id: specId },
+  const inputs: Record<string, typeof semantic.ref> = {
+    canvas: canvas.ref, frame: frame.ref, header: { kind: "record", id: headerId }, semantic: semantic.ref,
+    spec: { kind: "record", id: specId },
   };
   if (terminalValue.reference !== undefined) inputs.terminal = terminalValue.reference.ref;
   const cards: DepthStackFragmentCard[] = [];
@@ -267,7 +265,7 @@ export const decodeDepthStackSurface: StructuredSurfaceHandler = ({ element, res
     inputs[sampleSpecName] = { kind: "record", id: sampleId };
     inputs[cardSpecName] = { kind: "record", id: cardSpecId };
     inputs[momentName] = moment.ref;
-    let labelRef: typeof map.ref;
+    let labelRef: typeof semantic.ref;
     if (child.attributes.label === undefined) {
       const labelId = `${id}.card.${suffix}.label-none`;
       records.push({ id: labelId, type: depthStackTypes.cardLabel, value: { kind: "inline", value: noDepthStackCardLabel() }, range: child.range });

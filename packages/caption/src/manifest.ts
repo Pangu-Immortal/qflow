@@ -1,5 +1,5 @@
 import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
-import { semanticMapDependency, semanticMapTypes } from "@qflow/semantic-map";
+import { semanticTrackDependency, semanticTrackTypes } from "@qflow/semantic-track";
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
 
 export const captionModuleRef = { name: "@qflow/caption", version: "1" } as const;
@@ -150,7 +150,7 @@ export const captionManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: captionModuleRef.name,
   version: captionModuleRef.version,
-  dependencies: [narrativeDependency, semanticMapDependency],
+  dependencies: [narrativeDependency, semanticTrackDependency],
   types: [
     { name: captionTypes.style.name },
     { name: captionTypes.program.name },
@@ -164,7 +164,7 @@ export const captionManifest: ModuleManifest = {
       inputs: [
         { name: "display", type: narrativeTypes.captionDisplay },
         { name: "correspondence", type: narrativeTypes.captionCorrespondence },
-        { name: "map", type: semanticMapTypes.complete },
+        { name: "semantic", type: semanticTrackTypes.track },
         { name: "program", type: captionTypes.program },
         { name: "plan", type: captionTypes.plan },
       ],

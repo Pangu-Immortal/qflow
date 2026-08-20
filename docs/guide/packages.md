@@ -86,11 +86,10 @@ specific Provider deployment.
 @qflow/mimo-tts              three exact Xiaomi MiMo TTS models + author Surfaces
 @qflow/estimate              duration estimation
 @qflow/speech                shared speech products
-@qflow/speech-basis          generated speech A/V product
 @qflow/speech-evidence       acoustic evidence products
-@qflow/semantic-map          authored-token timing map
 @qflow/speech-alignment      speech alignment
-@qflow/speech-spine          ordered speech-take compilation
+@qflow/semantic-track        continuous semantic program skeleton
+@qflow/speech-track          ordered speech-take compilation
 @qflow/whisperx              WhisperX component
 @qflow/caption               caption planning and timing
 @qflow/caption-gemini        Gemini caption planner
@@ -152,7 +151,7 @@ queues, stores, credentials and process lifecycle; they never define author synt
 ```text
 @qflow/cli                 generic command engine (requires explicit Distribution)
 @qflow/video-cli           video command application (selects Markup compiler, no built-in author packages)
-@qflow/svml-playground     development preview for a Source, never runs a Provider
+@qflow/studio              development preview for a Run, never runs a Provider
 ```
 
 ## Dependency rules

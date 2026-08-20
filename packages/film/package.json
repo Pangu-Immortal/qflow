@@ -16,6 +16,7 @@
     "@qflow/elaborator": "workspace:*",
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
+    "@qflow/semantic-track": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/svs": "workspace:*",
     "@qflow/markup": "workspace:*"

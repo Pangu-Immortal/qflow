@@ -20,11 +20,13 @@
     "@qflow/media-pipeline": "workspace:*",
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
+    "@qflow/semantic-track": "workspace:*",
     "@qflow/markup": "workspace:*"
   },
   "devDependencies": {
     "@qflow/core": "workspace:*",
     "@qflow/driver-node": "workspace:*",
+    "@qflow/svs": "workspace:*",
     "@qflow/validation": "workspace:*"
   }
 }
