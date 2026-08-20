@@ -151,7 +151,7 @@ queues, stores, credentials and process lifecycle; they never define author synt
 ```text
 @qflow/cli                 generic command engine (requires explicit Distribution)
 @qflow/video-cli           video command application (selects Markup compiler, no built-in author packages)
-@qflow/svml-playground     development preview for a Source, never runs a Provider
+@qflow/studio              development preview for a Run, never runs a Provider
 ```
 
 ## Dependency rules
