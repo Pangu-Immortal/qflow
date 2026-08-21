@@ -5,7 +5,8 @@
   "private": true,
   "type": "module",
   "bin": {
-    "qflow": "./bin/qflow.mjs"
+    "qflow": "./bin/qflow.mjs",
+    "qflow-reference-video-tools": "./packages/reference-video-tools/bin/reference-video-tools.mjs"
   },
   "packageManager": "pnpm@10.33.0",
   "scripts": {
