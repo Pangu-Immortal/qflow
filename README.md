@@ -9,7 +9,7 @@
 <p align="center">1 command, 100 variants, 100M views.</p>
 
 <p align="center">
-  <a href="https://narratage.qflow.ai/"><strong>Website</strong></a>
+  <a href="https://narratage.qflow.ai/"><strong>Demo</strong></a>
   &nbsp;&bull;&nbsp;
   <a href="https://narratage.qflow.ai/quickstart"><strong>Quickstart</strong></a>
   &nbsp;&bull;&nbsp;
