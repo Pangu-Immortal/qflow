@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/public/qflow-logo-light.png">
-    <img alt="Qflow" src="./docs/public/qflow-logo-dark.png" width="400" height="78">
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/public/qflow-logo-light.svg">
+    <img alt="Qflow" src="./docs/public/qflow-logo-dark.svg" width="400" height="122">
   </picture>
 </p>
 
