@@ -2496,6 +2496,9 @@ importers:
       '@qflow/semantic-track':
         specifier: workspace:*
         version: link:../semantic-track
+      '@qflow/svs':
+        specifier: workspace:*
+        version: link:../svs
       '@qflow/studio-adapter':
         specifier: workspace:*
         version: link:../studio-adapter
