@@ -2,7 +2,6 @@ import type { FrameSpan } from "@qflow/composition";
 import type { FontArtifactRef } from "@qflow/media";
 import type { BlobRef } from "@qflow/protocol";
 import type { SpatialFrame } from "@qflow/spatial";
-import type { OccurrenceExpansion, TemporalWindowProjection } from "@qflow/temporal";
 
 export type CommentStickerTextStyle = {
   readonly fonts: readonly FontArtifactRef[];
@@ -82,8 +81,6 @@ export type CommentStickerContent = {
 
 export type CommentStickerItemSpec = {
   readonly id: string;
-  readonly projection: TemporalWindowProjection;
-  readonly expansion: OccurrenceExpansion;
 };
 
 export type CommentStickerHeader = {

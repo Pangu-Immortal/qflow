@@ -29,9 +29,6 @@ importers:
       '@qflow/caption-fine':
         specifier: workspace:*
         version: link:packages/caption-fine
-      '@qflow/caption-gemini':
-        specifier: workspace:*
-        version: link:packages/caption-gemini
       '@qflow/comment-sticker':
         specifier: workspace:*
         version: link:packages/comment-sticker
@@ -56,9 +53,6 @@ importers:
       '@qflow/fonts-open':
         specifier: workspace:*
         version: link:packages/fonts-open
-      '@qflow/gemini-omni':
-        specifier: workspace:*
-        version: link:packages/gemini-omni
       '@qflow/generation':
         specifier: workspace:*
         version: link:packages/generation
@@ -104,9 +98,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:packages/protocol
-      '@qflow/provider-google-vertex':
-        specifier: workspace:*
-        version: link:packages/provider-google-vertex
       '@qflow/provider-hyperframes-aws-lambda':
         specifier: workspace:*
         version: link:packages/provider-hyperframes-aws-lambda
@@ -188,6 +179,12 @@ importers:
       '@qflow/store-sqlite':
         specifier: workspace:*
         version: link:packages/store-sqlite
+      '@qflow/studio-adapter':
+        specifier: workspace:*
+        version: link:packages/studio-adapter
+      '@qflow/studio-video-adapters':
+        specifier: workspace:*
+        version: link:packages/studio-video-adapters
       '@qflow/svs':
         specifier: workspace:*
         version: link:packages/svs
@@ -403,31 +400,6 @@ importers:
       '@qflow/svs':
         specifier: workspace:*
         version: link:../svs
-    devDependencies:
-      '@qflow/script':
-        specifier: workspace:*
-        version: link:../script
-
-  packages/caption-gemini:
-    dependencies:
-      '@qflow/caption':
-        specifier: workspace:*
-        version: link:../caption
-      '@qflow/component-kit':
-        specifier: workspace:*
-        version: link:../component-kit
-      '@qflow/elaborator':
-        specifier: workspace:*
-        version: link:../elaborator
-      '@qflow/markup':
-        specifier: workspace:*
-        version: link:../markup
-      '@qflow/narrative':
-        specifier: workspace:*
-        version: link:../narrative
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
     devDependencies:
       '@qflow/script':
         specifier: workspace:*
@@ -1162,27 +1134,6 @@ importers:
         specifier: 0.2.0
         version: 0.2.0
 
-  packages/gemini-omni:
-    dependencies:
-      '@qflow/artifact':
-        specifier: workspace:*
-        version: link:../artifact
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
-      '@qflow/markup':
-        specifier: workspace:*
-        version: link:../markup
-      '@qflow/model-kit':
-        specifier: workspace:*
-        version: link:../model-kit
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/text':
-        specifier: workspace:*
-        version: link:../text
-
   packages/generation:
     dependencies:
       '@qflow/artifact':
@@ -1628,40 +1579,6 @@ importers:
 
   packages/protocol: {}
 
-  packages/provider-google-vertex:
-    dependencies:
-      '@google/genai':
-        specifier: 1.52.0
-        version: 1.52.0
-      '@qflow/caption':
-        specifier: workspace:*
-        version: link:../caption
-      '@qflow/caption-gemini':
-        specifier: workspace:*
-        version: link:../caption-gemini
-      '@qflow/endpoint-kit':
-        specifier: workspace:*
-        version: link:../endpoint-kit
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/runtime':
-        specifier: workspace:*
-        version: link:../runtime
-      '@qflow/runtime-host-node':
-        specifier: workspace:*
-        version: link:../runtime-host-node
-      '@qflow/runtime-kit':
-        specifier: workspace:*
-        version: link:../runtime-kit
-    devDependencies:
-      '@qflow/driver-node':
-        specifier: workspace:*
-        version: link:../driver-node
-      '@qflow/script':
-        specifier: workspace:*
-        version: link:../script
-
   packages/provider-hyperframes-aws-lambda:
     dependencies:
       '@aws-sdk/client-s3':
@@ -1818,9 +1735,6 @@ importers:
       '@qflow/elaborator':
         specifier: workspace:*
         version: link:../elaborator
-      '@qflow/gemini-omni':
-        specifier: workspace:*
-        version: link:../gemini-omni
       '@qflow/gpt-image':
         specifier: workspace:*
         version: link:../gpt-image
@@ -2582,6 +2496,12 @@ importers:
       '@qflow/semantic-track':
         specifier: workspace:*
         version: link:../semantic-track
+      '@qflow/studio-adapter':
+        specifier: workspace:*
+        version: link:../studio-adapter
+      '@qflow/studio-video-adapters':
+        specifier: workspace:*
+        version: link:../studio-video-adapters
       '@qflow/validation':
         specifier: workspace:*
         version: link:../validation
@@ -2597,6 +2517,18 @@ importers:
       vite:
         specifier: 5.4.21
         version: 5.4.21(@types/node@24.10.1)
+
+  packages/studio-adapter:
+    dependencies:
+      '@qflow/host':
+        specifier: workspace:*
+        version: link:../host
+
+  packages/studio-video-adapters:
+    dependencies:
+      '@qflow/studio-adapter':
+        specifier: workspace:*
+        version: link:../studio-adapter
 
   packages/svs:
     dependencies:

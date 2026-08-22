@@ -4,6 +4,7 @@ import {
   runCli,
 } from "@qflow/cli";
 import type { CliIo } from "@qflow/cli";
+import { installDistributionPackageResolution } from "@qflow/package-loader-node";
 import type { LoadedPackage } from "@qflow/package-loader-node";
 
 import { videoCliDistribution } from "./distribution.js";
@@ -20,6 +21,9 @@ export function runVideoCli(
   io: CliIo,
   packages: readonly LoadedPackage[] = [],
 ): Promise<void> {
+  installDistributionPackageResolution(videoCliDistribution.packageRoot === undefined
+    ? []
+    : [videoCliDistribution.packageRoot]);
   return runCli(argv, io, {
     ...videoCliDistribution,
     bootstrapPackages: packages,

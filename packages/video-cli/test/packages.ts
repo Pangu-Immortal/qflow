@@ -1,5 +1,4 @@
 import artifact from "../../artifact/src/activation.js";
-import captionGemini from "../../caption-gemini/src/activation.js";
 import captionFine from "../../caption-fine/src/activation.js";
 import caption from "../../caption/src/activation.js";
 import composition from "../../composition/src/activation.js";
@@ -56,7 +55,6 @@ export const videoTestPackages = [
   bind("@qflow/seedance", seedance),
   bind("@qflow/caption", caption),
   bind("@qflow/caption-fine", captionFine),
-  bind("@qflow/caption-gemini", captionGemini),
   bind("@qflow/speech-alignment", speechAlignment),
   bind("@qflow/speech-track", speechTrack),
   bind("@qflow/whisperx", whisperX),
