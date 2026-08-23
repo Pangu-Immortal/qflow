@@ -5,12 +5,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./cli": "./src/cli.ts"
   },
   "dependencies": {
     "@qflow/cli": "workspace:*",
     "@qflow/compiler-markup-node": "workspace:*",
     "@qflow/credential-store-env": "workspace:*",
+    "@qflow/credential-store-os": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/endpoint-kit": "workspace:*",
     "@qflow/generation": "workspace:*",
@@ -19,6 +21,7 @@
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/provider-kie": "workspace:*",
+    "@qflow/runtime-host-node": "workspace:*",
     "@qflow/runtime-local": "workspace:*",
     "@qflow/workspace-fs-node": "workspace:*"
   }

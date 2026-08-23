@@ -15,6 +15,7 @@
     "@qflow/endpoint-kit": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/raster": "workspace:*",
+    "@qflow/image-opencv-runtime": "workspace:*",
     "@qflow/runtime-kit": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*"
   },

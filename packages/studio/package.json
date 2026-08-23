@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "exports": {
+    "./start": "./start.ts",
+    "./preview-check": "./preview-check.ts"
+  },
   "dependencies": {
     "@qflow/cli": "workspace:*",
     "@qflow/compiler-node": "workspace:*",

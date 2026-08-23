@@ -4,7 +4,11 @@ import {
   runCli,
 } from "@qflow/cli";
 import type { CliIo } from "@qflow/cli";
-import { installDistributionPackageResolution } from "@qflow/package-loader-node";
+import {
+  installDistributionPackageResolution,
+  installExternalPackageResolution,
+} from "@qflow/package-loader-node";
+import { qflowHostPackageRoot } from "@qflow/runtime-host-node";
 import type { LoadedPackage } from "@qflow/package-loader-node";
 
 import { videoCliDistribution } from "./distribution.js";
@@ -24,6 +28,7 @@ export function runVideoCli(
   installDistributionPackageResolution(videoCliDistribution.packageRoot === undefined
     ? []
     : [videoCliDistribution.packageRoot]);
+  installExternalPackageResolution([qflowHostPackageRoot()]);
   return runCli(argv, io, {
     ...videoCliDistribution,
     bootstrapPackages: packages,
