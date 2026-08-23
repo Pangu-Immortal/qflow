@@ -1,16 +1,15 @@
 import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
 import { canonicalize } from "@qflow/protocol";
 import type { StoredValue } from "@qflow/protocol";
-import type { SemanticTrack } from "@qflow/semantic-track";
-import { projectSemanticProgramSpace } from "@qflow/semantic-track";
+import type { ProgramSpace } from "@qflow/program-space";
 import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
-import type { TemporalWindow } from "@qflow/temporal";
+import type { TemporalPoint } from "@qflow/temporal";
 import type { MediaLayerSet } from "@qflow/media-track";
 import type { Text } from "@qflow/text";
 
 import { renderDepthStack } from "./lower.js";
 import { depthStackProducers, depthStackTypes } from "./manifest.js";
-import { appendDepthStackProjectedCard, assertDepthStackProgram, createDepthStackCardSet, finalizeDepthStackAtWindow, bindDepthStackCardLabelText } from "./program.js";
+import { appendDepthStackCard, assertDepthStackProgram, createDepthStackCardSet, finalizeDepthStack, bindDepthStackCardLabelText } from "./program.js";
 import type {
   DepthStackCardLabel,
   DepthStackCardLabelStyle,
@@ -33,7 +32,7 @@ function finalizeInputs(inputs: ProducerHandlerContext["inputs"]) {
     header: inline<DepthStackHeader>(inputs.header?.value, "DepthStackHeader"),
     frame: inline<SpatialFrame>(inputs.frame?.value, "SpatialFrame"),
     spec: inline<DepthStackSpec>(inputs.spec?.value, "DepthStackSpec"),
-    semantic: inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
+    space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
   };
 }
 
@@ -52,50 +51,29 @@ export const depthStackComponent = {
     },
     {
       producer: depthStackProducers.appendCard,
-        handler: ({ inputs }) => ({ outputs: { set: output(appendDepthStackProjectedCard(
+      handler: ({ inputs }) => ({ outputs: { set: output(appendDepthStackCard(
         inline<DepthStackCardSet>(inputs.set?.value, "DepthStackCardSet"),
         inline<MediaLayerSet>(inputs.material?.value, "MediaLayerSet"),
         inline<DepthStackCardLabel>(inputs.label?.value, "DepthStackCardLabel"),
         inline<DepthStackCardSpec>(inputs.spec?.value, "DepthStackCardSpec"),
-        inline<TemporalWindow>(inputs.window?.value, "TemporalWindow"),
+        inline<TemporalPoint>(inputs.activation?.value, "TemporalPoint"),
       )) }, needs: {} }),
     },
     {
-      producer: depthStackProducers.finalizeProgramEnd,
+      producer: depthStackProducers.finalize,
       handler: ({ inputs }) => {
         const value = finalizeInputs(inputs);
-        return { outputs: { program: output(finalizeDepthStackAtWindow(
+        return { outputs: { program: output(finalizeDepthStack(
           value.set, value.header, value.frame, value.spec,
-          inline<TemporalWindow>(inputs.terminal?.value, "TemporalWindow"), value.semantic, "end",
+          inline<TemporalPoint>(inputs.terminal?.value, "TemporalPoint"), value.space,
         )) }, needs: {} };
       },
     },
-    {
-      producer: depthStackProducers.finalizeUntilMoment,
-      handler: ({ inputs }) => {
-        const value = finalizeInputs(inputs);
-        return { outputs: { program: output(finalizeDepthStackAtWindow(
-          value.set, value.header, value.frame, value.spec,
-          inline<TemporalWindow>(inputs.terminal?.value, "TemporalWindow"), value.semantic, "start",
-        )) }, needs: {} };
-      },
-    },
-    ...([depthStackProducers.finalizeUntilSelectionStart, depthStackProducers.finalizeUntilSelectionEnd] as const)
-      .map((producer) => ({
-        producer,
-        handler: ({ inputs }: ProducerHandlerContext) => {
-          const value = finalizeInputs(inputs);
-            return { outputs: { program: output(finalizeDepthStackAtWindow(
-            value.set, value.header, value.frame, value.spec,
-            inline<TemporalWindow>(inputs.terminal?.value, "TemporalWindow"), value.semantic, "start",
-          )) }, needs: {} };
-        },
-      })),
     {
       producer: depthStackProducers.render,
       handler: ({ inputs }) => ({ outputs: { track: output(renderDepthStack(
         inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"),
-        projectSemanticProgramSpace(inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack")),
+        inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
         inline<DepthStackProgram>(inputs.program?.value, "DepthStackProgram"),
       )) }, needs: {} }),
     },

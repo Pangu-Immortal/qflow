@@ -5,7 +5,7 @@ import type {
 } from "@qflow/media";
 import type { BlobRef } from "@qflow/protocol";
 import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
-import type { TemporalWindow } from "@qflow/temporal";
+import type { TemporalPoint, TemporalWindow } from "@qflow/temporal";
 
 export type RankingVariant = "tier-board" | "column" | "top-three";
 
@@ -32,7 +32,7 @@ export type TriggeredRankingSchedule = {
 
 export type TriggeredRankingCandidate = {
   readonly itemId: string;
-  readonly window: TemporalWindow;
+  readonly activation: TemporalPoint;
 };
 
 export type TriggeredRankingCandidateSet = {

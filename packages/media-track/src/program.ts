@@ -13,13 +13,11 @@ import {
 } from "@qflow/program-space";
 import type { ProgramSpace } from "@qflow/program-space";
 import { canonicalize, isDigest } from "@qflow/protocol";
-import { projectSemanticProgramSpace } from "@qflow/semantic-track";
-import type { SemanticTrack } from "@qflow/semantic-track";
 import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
 import type { CanvasSpace } from "@qflow/spatial";
 import { assertSpatialPath } from "@qflow/spatial";
 import type { SpatialPath } from "@qflow/spatial";
-import type { ProjectedWindow } from "@qflow/temporal";
+import type { ProjectedWindow, TemporalPoint } from "@qflow/temporal";
 
 import {
   assertMediaIdentity,
@@ -173,10 +171,10 @@ function realizedItems(
 }
 
 /** Component entry point: timing has already been projected by @qflow/temporal. */
-export function appendProjectedMediaItem(
+export function appendMediaItem(
   set: MediaTrackSet,
   header: MediaTrackHeader,
-  semantic: SemanticTrack,
+  space: ProgramSpace,
   canvas: CanvasSpace,
   layers: MediaLayerSet,
   frame: MediaItemProgram["frame"],
@@ -184,7 +182,6 @@ export function appendProjectedMediaItem(
   sounds: MediaSoundSet,
   window: ProjectedWindow,
 ): MediaTrackSet {
-  const space = projectSemanticProgramSpace(semantic);
   return realizedItems(set, header, space, canvas, layers, frame, spec, sounds, window);
 }
 
@@ -247,21 +244,18 @@ function appendMediaSequenceAtFrame(
   return { ...set, sequences: [...set.sequences, sequence] };
 }
 
-export function appendMediaSequenceAtWindow(
+export function appendMediaSequence(
   set: MediaTrackSet,
   header: MediaTrackHeader,
-  semantic: SemanticTrack,
+  space: ProgramSpace,
   canvas: CanvasSpace,
   members: MediaSequenceMemberSet,
   frame: MediaSequenceProgram["frame"],
   spec: MediaSequenceSpec,
   sounds: MediaSoundSet,
-  window: ProjectedWindow,
-  boundary: "start" | "end" = "end",
+  terminal: TemporalPoint,
 ): MediaTrackSet {
-  const space = projectSemanticProgramSpace(semantic);
-  const terminalFrame = boundary === "start" ? window.span.startFrame : window.span.endFrameExclusive;
-  return appendMediaSequenceAtFrame(set, header, space, canvas, members, frame, spec, sounds, terminalFrame);
+  return appendMediaSequenceAtFrame(set, header, space, canvas, members, frame, spec, sounds, terminal.frame);
 }
 
 function assertSequence(sequence: MediaSequenceProgram, space: ProgramSpace, label: string): void {

@@ -10,7 +10,7 @@ import { canonicalize } from "@qflow/protocol";
 import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
 import type { CanvasSpace } from "@qflow/spatial";
 import { resolveTriggeredSchedule } from "@qflow/temporal";
-import type { TemporalWindow } from "@qflow/temporal";
+import type { TemporalPoint } from "@qflow/temporal";
 
 import { assertMediaIdentity, assertMediaLayerSet } from "./layers.js";
 import { lowerMediaItemElements } from "./lower.js";
@@ -107,13 +107,13 @@ function appendMediaSequenceMemberAtFrame(
   }) as unknown as MediaSequenceMemberSet;
 }
 
-export function appendMediaSequenceProjectedMember(
+export function appendMediaSequenceMember(
   set: MediaSequenceMemberSet,
   layers: MediaLayerSet,
   spec: MediaSequenceMemberSpec,
-  window: TemporalWindow,
+  activation: TemporalPoint,
 ): MediaSequenceMemberSet {
-  return appendMediaSequenceMemberAtFrame(set, layers, spec, window.span.startFrame);
+  return appendMediaSequenceMemberAtFrame(set, layers, spec, activation.frame);
 }
 
 export function assertMediaHandoffSpec(value: MediaHandoffSpec): void {
