@@ -2657,6 +2657,9 @@ importers:
       '@qflow/host':
         specifier: workspace:*
         version: link:../host
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
 
   packages/svs:
     dependencies:

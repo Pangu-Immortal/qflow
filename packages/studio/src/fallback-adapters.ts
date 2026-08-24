@@ -85,7 +85,7 @@ export const fallbackStudioAdapters: readonly StudioAdapter[] = [
   { id: "@qflow/studio#semantic-take", role: "semantic-take", output: { type: "SemanticTake" } },
   {
     id: "@qflow/studio#semantic-track", role: "semantic-track", output: { type: "SemanticTrack" },
-    family: "semantic", tone: "teal", label: "Semantic", icon: "timeline",
+    family: "semantic", tone: "teal", label: "Semantic", icon: "brand",
     lane: { heightPx: 45 },
   },
   {

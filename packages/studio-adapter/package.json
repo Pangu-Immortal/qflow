@@ -8,6 +8,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@qflow/host": "workspace:*"
+    "@qflow/host": "workspace:*",
+    "@qflow/protocol": "workspace:*"
   }
 }
