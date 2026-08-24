@@ -11,9 +11,11 @@ that reference names required child references, read those completely in the sta
 Keep `.svml` Author Source, `.svs` Recipe Source, `.svrun` Run Source, and
 `qflow.runtime.json` Runtime Profile as separate languages and responsibilities.
 
-Every route uses the machine-wide Qflow Distribution and an independent author project.
-`references/environment.md` establishes that boundary and installs the Distribution only when the
-`qflow` command is genuinely absent. Read it before the first command of any route.
+Every route uses a Qflow Distribution and an independent author project. Prefer an installed
+machine-wide CLI; when the task is running from a Qflow contributor checkout, use that checkout's
+Node entrypoints instead. The npm package is not currently published, so absence of the `qflow`
+command is not permission to install it from the registry. `references/environment.md` establishes
+the boundary and launcher selection. Read it before the first command of any route.
 
 ## Route
 
