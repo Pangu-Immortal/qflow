@@ -206,8 +206,8 @@ generic `text:Render` to produce the prompt, then connect that Text and the real
 the low-level Seedance Surface.
 
 Copy only the selected Kit `.svs` files into the video project's `./kits/` directory. Import the
-vendored project copy so the Kit bytes remain inside the Source Closure; do not reach back into a
-Qflow repository checkout from project source.
+vendored project copy so the Kit bytes remain inside the Source Closure; do not reach back into the
+installed Qflow Distribution from project source.
 
 Read the
 [`@qflow/seedance-kits` guide](https://github.com/qflow-ai/qflow/blob/main/packages/seedance-kits/README.md)

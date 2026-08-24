@@ -18,16 +18,20 @@ Qflow turns that source into a visible execution graph. Before any model or exte
 runs, you can check the source, choose a Run, and inspect the exact work it would require. This
 page gets you to that first safe plan: it needs no API keys and makes no paid call.
 
-## Clone the repository
+## Install Qflow
 
 ```bash
-git clone https://github.com/qflow-ai/qflow.git
-cd qflow
+npm install --global qflow
+npx skills add qflow-ai/qflow --global
 ```
+
+The first command installs the reusable Distribution. The second installs the skill globally so a
+new agent session in another project can find it. Ordinary authoring never requires a repository
+clone.
 
 ## Use the Qflow skill
 
-`/qflow` is available from that working directory. Send your agent:
+`/qflow` is available from any project directory. Send your agent:
 
 ```text
 /qflow Set up my environment, ask for only the API keys required by my Runtime Profile, and guide me through authoring and building my first SVML video.
@@ -36,36 +40,24 @@ cd qflow
 It works through the same five steps below, asking you only for what your Runtime Profile actually
 needs. Work through them yourself if you would rather not use an agent.
 
-## 1. Install the source workspace
+## 1. Check the installed Distribution
 
-You need Node.js 22+ and pnpm 10.33.x through Corepack.
-
-```bash
-corepack enable
-pnpm install --frozen-lockfile
-npm link
-```
-
-If `corepack` is unavailable:
+You need Node.js 22+ on macOS 13+ or Windows 10/11 x64.
 
 ```bash
-npm install --global corepack@0.34.5
-corepack enable
-corepack prepare pnpm@10.33.0 --activate
-pnpm install --frozen-lockfile
-npm link
+qflow paths --json
 ```
 
-`pnpm check` and `pnpm test` are repository-development commands. You do not need to run the full
-suite before using the CLI.
+The result separates the current project, its `.qflow` state, the machine Program Home and the npm
+Distribution. pnpm, Corepack and `npm link` are contributor tools, not user setup.
 
 ## 2. Compile the example
 
-The checked-in example includes a Script, two generated-video requests, speech assembly, WhisperX
+The linked example includes a Script, two generated-video requests, speech assembly, WhisperX
 alignment, captions, a media Track, text, Film and final rendering.
 
 ```bash
-cd examples/talking-film-graph-check
+cd /path/to/copied-talking-film-graph-check
 qflow check main.svml
 ```
 
@@ -111,8 +103,8 @@ shots without changing the authored video.
 
 ## 4. Start your own project
 
-Keep project files and generated media outside the Qflow repository. The linked `qflow`
-command works from that independent project directory:
+Keep project files and generated media outside the installed Qflow Distribution. The global
+`qflow` command works from that independent project directory:
 
 ```bash
 cd /path/to/my-video
@@ -122,8 +114,8 @@ qflow runtime use qflow.runtime.json
 qflow plan build.svrun
 ```
 
-A project with `package.json` owns its installed capability packages. A plain creative folder needs
-no Node project and uses packages from the linked checkout. Source and exported files remain in the
+A project with `package.json` owns its third-party packages. A plain creative folder needs no Node
+project and uses official packages from the installed Distribution. Source and exported files remain in the
 project. Runtime state and Artifacts live under the selected Profile's `dataRoot`.
 `runtime use` stores only a local pointer at `.qflow/runtime`. Source imports select author
 packages; the Profile independently selects Runtime packages through `use`.
@@ -140,9 +132,10 @@ After reviewing the plan:
 qflow build build.svrun --follow
 ```
 
-`build` assigns and prints a fresh Build id, stores the Build, ensures its Worker is available, and
-starts only the external programs declared by the selected endpoints. `--follow` is an observer;
-closing it does not stop the Build.
+`build` first repeats the same cheap local preflight, then assigns a fresh Build id, stores the Build
+and ensures its Worker is available. It never installs a package or starts a Managed Program. Run
+`qflow runtime up` explicitly when the selected deployment is not ready. `--follow` is only an
+observer; closing it does not stop the Build.
 
 Use `check` while editing a source. Use `doctor` to diagnose a new or broken deployment. They are
 safe, but neither is required as a repetitive pre-Build ceremony.
@@ -169,16 +162,27 @@ Install only what your selected Runtime Profile needs:
 | `ffmpeg` / `ffprobe` | using local media inspection, normalization or muxing |
 | Python 3.10–3.13 and `uv` | using local WhisperX or OpenCV |
 | Chromium | managed automatically by local HyperFrames rendering |
-| API credentials | selecting remote KIE, Vertex, Xiaomi or AWS endpoints |
+| API credentials | selecting remote KIE, Xiaomi or AWS endpoints |
+
+Upstream npm packages are demand-loaded into the shared machine package home shown by `qflow
+paths`; they are not copied into every project. `runtime up` prepares the exact npm packages required
+by its selected Runtime adapters. When an authored feature needs a package such as one Fontsource
+family, the compiler reports the exact repair command:
+
+```bash
+qflow packages install @fontsource-variable/inter@5.3.0
+```
 
 For local Python programs:
 
 ```bash
 uv python install 3.13
-uv sync --project services/whisperx --frozen
-uv sync --project services/image-opencv --frozen
-uv run --project services/whisperx --frozen qflow-whisperx-prepare
+qflow runtime use qflow.runtime.json
+qflow runtime up
 ```
+
+The Runtime creates a missing managed environment in the machine Program Home and reuses it across
+projects and sessions. Do not run a service's `uv sync` from an author project.
 
 Run `qflow doctor qflow.runtime.json` after changing a Runtime Profile. It reports missing tools,
 credentials and endpoint configuration without executing the graph.

@@ -13,9 +13,11 @@
   "dependencies": {
     "@qflow/endpoint-kit": "workspace:*",
     "@qflow/protocol": "workspace:*",
+    "@qflow/runtime-host-node": "workspace:*",
     "@qflow/runtime-kit": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",
-    "@qflow/whisperx": "workspace:*"
+    "@qflow/whisperx": "workspace:*",
+    "@qflow/whisperx-service-runtime": "workspace:*"
   },
   "devDependencies": {
     "@qflow/driver-node": "workspace:*",

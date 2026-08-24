@@ -5,7 +5,7 @@ CLI tools for reconstructing a reference video with Qflow.
 The package exposes six CLI subcommands: `list_svml_packages`, `prepare_reference`,
 `observe_reference`, `record_observation`, `inspect_svml_vocabulary`, and `compare_reconstruction`.
 Each command prints one JSON result to stdout. The final source files are authored by the calling
-agent and checked with the existing `pnpm qflow check` command.
+agent and checked with the installed `qflow check` command.
 
 `--observer` on `prepare_reference` chooses who reads the reference, once per reference:
 
@@ -22,16 +22,16 @@ shape. Neither receives SVML syntax, and neither writes SVML.
 Run the CLI from the repository or an installed package:
 
 ```bash
-pnpm qflow-reference-video-tools list_svml_packages
-pnpm qflow-reference-video-tools prepare_reference --video-path ./reference.mp4
-pnpm qflow-reference-video-tools prepare_reference --video-path ./reference.mp4 --redo people
-pnpm qflow-reference-video-tools prepare_reference --video-path ./reference.mp4 --redo transcript
-pnpm qflow-reference-video-tools observe_reference --reference-id <reference-id>
-pnpm qflow-reference-video-tools observe_reference --reference-id <reference-id> --shot-id shot-007
-pnpm qflow-reference-video-tools observe_reference --reference-id <reference-id> --shot-id shot-007 --question "How thick is the outline on the caption words?"
-pnpm qflow-reference-video-tools observe_reference --reference-id <reference-id> --shot-id shot-007 --reobserve
-pnpm qflow-reference-video-tools inspect_svml_vocabulary --package @qflow/media-track --tag Track
-pnpm qflow-reference-video-tools compare_reconstruction --reference-id <reference-id> --shot-id shot-007 --image ./rendered.png
+qflow-reference-video-tools list_svml_packages
+qflow-reference-video-tools prepare_reference --video-path ./reference.mp4
+qflow-reference-video-tools prepare_reference --video-path ./reference.mp4 --redo people
+qflow-reference-video-tools prepare_reference --video-path ./reference.mp4 --redo transcript
+qflow-reference-video-tools observe_reference --reference-id <reference-id>
+qflow-reference-video-tools observe_reference --reference-id <reference-id> --shot-id shot-007
+qflow-reference-video-tools observe_reference --reference-id <reference-id> --shot-id shot-007 --question "How thick is the outline on the caption words?"
+qflow-reference-video-tools observe_reference --reference-id <reference-id> --shot-id shot-007 --reobserve
+qflow-reference-video-tools inspect_svml_vocabulary --package @qflow/media-track --tag Track
+qflow-reference-video-tools compare_reconstruction --reference-id <reference-id> --shot-id shot-007 --image ./rendered.png
 ```
 
 For automation, every command also accepts `--input '{"...":"..."}'` with the complete JSON input
@@ -56,7 +56,7 @@ every single word. Placing an on-screen text reveal against the line that trigge
 of the word, not of the sentence around it, and that question comes up in every reconstruction. The
 speech audio is extracted to `speech.wav` beside the shot media and measured by the local WhisperX
 Provider in `@qflow/provider-whisperx-local`, which answers a loopback service on
-`http://127.0.0.1:8765`; start it with `uv run --project services/whisperx --frozen qflow-whisperx-service`.
+`http://127.0.0.1:8765`; start the selected managed service with `qflow runtime up`.
 The result reports `status`, `transcript_ref` and `word_count`, and the words themselves live in
 `transcript.json` as passages, each with a `words` array of `{ text, start_seconds, end_seconds, score }`.
 The transcript is deterministic local evidence rather than an observation: it is never written to the

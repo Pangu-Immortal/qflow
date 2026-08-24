@@ -13,7 +13,6 @@ import type { GenerationWireMapping } from "@qflow/generation";
 /** Model packages this KIE release is written against. A version bump is a mapping review. */
 const SEEDANCE: ModuleRef = { name: "@qflow/seedance", version: "1" };
 const MINIMAX: ModuleRef = { name: "@qflow/minimax-h3", version: "1" };
-const GEMINI: ModuleRef = { name: "@qflow/gemini-omni", version: "1" };
 const GROK: ModuleRef = { name: "@qflow/grok-imagine", version: "1" };
 const GPT_IMAGE: ModuleRef = { name: "@qflow/gpt-image", version: "1" };
 const NANO_BANANA: ModuleRef = { name: "@qflow/nano-banana", version: "1" };
@@ -62,28 +61,6 @@ const minimaxMapping: GenerationWireMapping = {
     ...referenceFields,
     firstFrame: { as: "url", field: "first_frame_url" },
     lastFrame: { as: "url", field: "last_frame_url" },
-  },
-};
-
-const geminiMapping: GenerationWireMapping = {
-  capability: { module: GEMINI, name: "gemini-omni-video" },
-  result: "video",
-  routes: [{ model: "gemini-omni-video" }],
-  fields: {
-    prompt: { as: "value", field: "prompt" },
-    duration: { as: "string", field: "duration" },
-    aspectRatio: { as: "value", field: "aspect_ratio" },
-    resolution: { as: "value", field: "resolution" },
-    seed: { as: "value", field: "seed" },
-    images: { as: "urlArray", field: "image_urls" },
-    audioIds: { as: "valueArray", field: "audio_ids" },
-    characterIds: { as: "valueArray", field: "character_ids" },
-    excerpts: {
-      as: "itemObject",
-      field: "video_list",
-      urlKey: "url",
-      fieldKeys: { startSec: "start", endSec: "ends" },
-    },
   },
 };
 
@@ -176,7 +153,6 @@ export const kieModelCatalog: readonly GenerationWireMapping[] = [
     constants: { return_last_frame: false, output_format: "mp4" },
   },
   minimaxMapping,
-  geminiMapping,
   grokVideoMapping,
   grokPreviewMapping,
   gptImageMapping,

@@ -1,5 +1,4 @@
 import type { ComponentPackage } from "@qflow/component-kit";
-import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import type { SemanticTrack } from "@qflow/semantic-track";
 import { projectSemanticProgramSpace } from "@qflow/semantic-track";
 import type { CompositableSurfaceRef } from "@qflow/media";
@@ -9,7 +8,7 @@ import type { Text } from "@qflow/text";
 import { canonicalize } from "@qflow/protocol";
 
 import { typographyTrackProducers } from "./manifest.js";
-import { appendMomentTextItem, appendProgramTextItem, appendSelectionTextItem, bindAreaTextPlacement, bindPathTextPlacement, bindPointTextPlacement, createTypographyTrackSet, finalizeTypographyTrack, renderTypographyTrack, renderTextMaskTrack, materializePlainTextItem } from "./program.js";
+import { appendProjectedTextItem, bindAreaTextPlacement, bindPathTextPlacement, bindPointTextPlacement, createTypographyTrackSet, finalizeTypographyTrack, renderTypographyTrack, renderTextMaskTrack, materializePlainTextItem } from "./program.js";
 import type {
   TextItemSpec,
   PlainTextItemSpec,
@@ -21,6 +20,7 @@ import type {
   TypographyTrackProgram,
   TypographyTrackSet,
 } from "./types.js";
+import type { TemporalWindow } from "@qflow/temporal";
 
 function inline<T>(value: StoredValue | undefined, subject: string): T {
   if (value?.kind !== "inline") throw new Error(`${subject} must be inline.`);
@@ -55,41 +55,15 @@ export const typographyTrackComponent = {
       handler: () => ({ outputs: { set: output(createTypographyTrackSet()) }, needs: {} }),
     },
     {
-      producer: typographyTrackProducers.appendProgram,
-      handler: ({ inputs }) => ({ outputs: { set: output(appendProgramTextItem(
+      producer: typographyTrackProducers.appendItem,
+      handler: ({ inputs }) => ({ outputs: { set: output(appendProjectedTextItem(
         inline<TypographyTrackSet>(inputs.set?.value, "TypographyTrackSet"),
         inline<TypographyTrackHeader>(inputs.header?.value, "TypographyTrackHeader"),
-        inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
         inline<TextPlacement>(inputs.placement?.value, "TextPlacement"),
         inline<TextItemSpec>(inputs.spec?.value, "TextItemSpec"),
         inline<TextStyle>(inputs.style?.value, "TextStyle"),
         inline<TextMotion>(inputs.motion?.value, "TextMotion"),
-      )) }, needs: {} }),
-    },
-    {
-      producer: typographyTrackProducers.appendSelection,
-      handler: ({ inputs }) => ({ outputs: { set: output(appendSelectionTextItem(
-        inline<TypographyTrackSet>(inputs.set?.value, "TypographyTrackSet"),
-        inline<TypographyTrackHeader>(inputs.header?.value, "TypographyTrackHeader"),
-        inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
-        inline<NarrativeSelectionRef>(inputs.selection?.value, "NarrativeSelection"),
-        inline<TextPlacement>(inputs.placement?.value, "TextPlacement"),
-        inline<TextItemSpec>(inputs.spec?.value, "TextItemSpec"),
-        inline<TextStyle>(inputs.style?.value, "TextStyle"),
-        inline<TextMotion>(inputs.motion?.value, "TextMotion"),
-      )) }, needs: {} }),
-    },
-    {
-      producer: typographyTrackProducers.appendMoment,
-      handler: ({ inputs }) => ({ outputs: { set: output(appendMomentTextItem(
-        inline<TypographyTrackSet>(inputs.set?.value, "TypographyTrackSet"),
-        inline<TypographyTrackHeader>(inputs.header?.value, "TypographyTrackHeader"),
-        inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
-        inline<NarrativeMomentRef>(inputs.moment?.value, "NarrativeMoment"),
-        inline<TextPlacement>(inputs.placement?.value, "TextPlacement"),
-        inline<TextItemSpec>(inputs.spec?.value, "TextItemSpec"),
-        inline<TextStyle>(inputs.style?.value, "TextStyle"),
-        inline<TextMotion>(inputs.motion?.value, "TextMotion"),
+        inline<TemporalWindow>(inputs.window?.value, "TemporalWindow"),
       )) }, needs: {} }),
     },
     {

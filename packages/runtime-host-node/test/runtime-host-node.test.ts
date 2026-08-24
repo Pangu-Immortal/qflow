@@ -6,6 +6,9 @@ import test from "node:test";
 
 import {
   diagnoseRuntimeExecutable,
+  qflowHostPackageRoot,
+  parseRegistryPackageSpec,
+  prepareHostPackages,
   resolveRuntimeExecutable,
 } from "@qflow/runtime-host-node";
 
@@ -23,6 +26,28 @@ test("configured executable paths are rooted at the Runtime Profile project", as
       fallback: "unused",
       subject: "fixture",
     }), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("machine packages are exact npm packages reused from one Host root", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-machine-packages-"));
+  try {
+    const packageRoot = qflowHostPackageRoot(root);
+    await mkdir(join(packageRoot, "node_modules", "hyperframes"), { recursive: true });
+    await writeFile(join(packageRoot, "node_modules", "hyperframes", "package.json"), JSON.stringify({
+      name: "hyperframes",
+      version: "0.7.101",
+    }));
+    assert.deepEqual(parseRegistryPackageSpec("hyperframes@0.7.101"), {
+      name: "hyperframes",
+      version: "0.7.101",
+      specifier: "hyperframes@0.7.101",
+    });
+    assert.throws(() => parseRegistryPackageSpec("@qflow/seedance@1.0.0"), /external npm registry package/u);
+    const reports = await prepareHostPackages(["hyperframes@0.7.101"], { root: packageRoot });
+    assert.equal(reports[0]?.action, "already-installed");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
