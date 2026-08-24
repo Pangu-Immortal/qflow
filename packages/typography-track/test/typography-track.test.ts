@@ -17,7 +17,7 @@ import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space"
 import type { ModuleManifest } from "@qflow/protocol";
 import { semanticTrackDependency, semanticTrackTypes } from "@qflow/semantic-track";
 import {
-  appendSelectionTextItem,
+  appendProjectedTextItem,
   bindAreaTextPlacement,
   createTypographyTrackSet,
   finalizeTypographyTrack,
@@ -47,6 +47,7 @@ import { svsManifest, svsRecipeType } from "@qflow/svs";
 import { sealText, textComponent, textDependency, textManifest, textTypes } from "@qflow/text";
 import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup";
 import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
+import { projectSelectionWindow } from "@qflow/temporal";
 
 const space = sealProgramSpace({
   durationSec: 5,
@@ -277,27 +278,29 @@ test("TypographyTrackProgram rejects a frame span outside ProgramSpace", () => {
 
 test("Selection Text consumes explicit Selection, SemanticTrack, Style, Motion and Placement edges", () => {
   const selection: NarrativeSelectionRef = {
-
     id: "callout",
-    occurrences: [{ occurrence: 1, startAnchorId: "selection:start", endAnchorId: "selection:end" }],
+    startAnchorId: "selection:start",
+    endAnchorId: "selection:end",
   };
   const header = sealTypographyTrackHeader({ id: "selected-text" });
   const spec = sealTextItemSpec({
 
     id: "meaning",
     document: document("MEANING"),
-    projection: { start: { ref: "selection.start" }, end: { ref: "selection.end" } },
-    expansion: { kind: "one" },
   });
-  const program = finalizeTypographyTrack(header, appendSelectionTextItem(
+  const program = finalizeTypographyTrack(header, appendProjectedTextItem(
     createTypographyTrackSet(),
     header,
-    semantic,
-    selection,
     bindAreaTextPlacement({ xPx: 108, yPx: 192, widthPx: 864, heightPx: 192 }),
     spec,
     textStyle("meaning", 80),
     stillTextMotion(),
+    projectSelectionWindow({
+      itemId: spec.id,
+      semantic,
+      selection,
+      projection: { start: { ref: "selection.start" }, end: { ref: "selection.end" } },
+    }),
   ));
   assert.deepEqual(program.items.map((item) => item.span), [{ startFrame: 30, endFrameExclusive: 60 }]);
 });

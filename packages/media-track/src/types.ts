@@ -7,10 +7,6 @@ import type {
   SpatialFrame,
   SpatialPath,
 } from "@qflow/spatial";
-import type {
-  OccurrenceExpansion,
-  TemporalWindowProjection,
-} from "@qflow/temporal";
 
 /** Intrinsic visual truth resolved before Media authoring; never a Provider or lineage envelope. */
 export type MediaVisualSource =
@@ -217,8 +213,6 @@ export type MediaAbsoluteStacking = {
 
 export type MediaItemSpec = {
   readonly id: string;
-  readonly projection: TemporalWindowProjection;
-  readonly expansion: OccurrenceExpansion;
   readonly presentation: MediaFramePresentation;
   readonly motion: MediaLifecycleMotion;
   readonly stackingOrder: number;

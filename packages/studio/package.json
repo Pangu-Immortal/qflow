@@ -3,6 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "exports": {
+    "./start": "./start.ts",
+    "./preview-check": "./preview-check.ts",
+    "./src/*": "./src/*"
+  },
   "dependencies": {
     "@qflow/cli": "workspace:*",
     "@qflow/compiler-node": "workspace:*",
@@ -21,6 +26,9 @@
     "@qflow/runtime-host-node": "workspace:*",
     "@qflow/script": "workspace:*",
     "@qflow/semantic-track": "workspace:*",
+    "@qflow/svs": "workspace:*",
+    "@qflow/studio-adapter": "workspace:*",
+    "@qflow/studio-video-adapters": "workspace:*",
     "@qflow/validation": "workspace:*",
     "@qflow/video-cli": "workspace:*",
     "@qflow/workspace": "workspace:*",

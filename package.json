@@ -1,14 +1,42 @@
 {
-  "name": "@qflow/repository",
-  "version": "0.0.1",
+  "name": "qflow",
+  "version": "0.1.0",
+  "description": "Qflow video authoring Distribution for AI agents",
   "license": "SEE LICENSE IN LICENSE",
-  "private": true,
   "type": "module",
   "bin": {
     "qflow": "./bin/qflow.mjs",
+    "qflow-studio": "./bin/qflow-studio.mjs",
+    "qflow-preview-check": "./bin/qflow-preview-check.mjs",
     "qflow-reference-video-tools": "./packages/reference-video-tools/bin/reference-video-tools.mjs"
   },
   "packageManager": "pnpm@10.33.0",
+  "files": [
+    "bin",
+    "packages/*/src/**/*",
+    "packages/*/bin/**/*",
+    "packages/*/runtime/**/*",
+    "packages/*/preview/**/*",
+    "packages/*/kits/**/*",
+    "packages/*/*.ts",
+    "packages/*/*.html",
+    "packages/*/package.json",
+    "packages/*/README.md",
+    "services/image-opencv/pyproject.toml",
+    "services/image-opencv/package.json",
+    "services/image-opencv/uv.lock",
+    "services/image-opencv/README.md",
+    "services/whisperx/pyproject.toml",
+    "services/whisperx/package.json",
+    "services/whisperx/uv.lock",
+    "services/whisperx/README.md",
+    "services/whisperx/src/**/*.py",
+    "docs/public/qflow-logo-dark.svg",
+    "docs/public/qflow-logo-light.svg",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
   "scripts": {
     "check": "tsc -p tsconfig.json --noEmit",
     "lockfile:refresh": "node test/lockfile-refresh.mjs",
@@ -27,8 +55,7 @@
     "build:media-lambda-layer": "pnpm --filter @qflow/media-lambda build:layer"
   },
   "engines": {
-    "node": ">=22",
-    "pnpm": ">=10.33.0 <11"
+    "node": ">=22"
   },
   "devDependencies": {
     "@qflow/artifact": "workspace:*",
@@ -38,16 +65,14 @@
     "@qflow/background-removal": "workspace:*",
     "@qflow/caption": "workspace:*",
     "@qflow/caption-fine": "workspace:*",
-    "@qflow/caption-gemini": "workspace:*",
     "@qflow/comment-sticker": "workspace:*",
     "@qflow/composition": "workspace:*",
     "@qflow/credential-store-env": "workspace:*",
-    "@qflow/credential-store-keychain": "workspace:*",
+    "@qflow/credential-store-os": "workspace:*",
     "@qflow/deck-track": "workspace:*",
     "@qflow/estimate": "workspace:*",
     "@qflow/film": "workspace:*",
     "@qflow/fonts-open": "workspace:*",
-    "@qflow/gemini-omni": "workspace:*",
     "@qflow/generation": "workspace:*",
     "@qflow/gpt-image": "workspace:*",
     "@qflow/grok-imagine": "workspace:*",
@@ -63,7 +88,6 @@
     "@qflow/narrative": "workspace:*",
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/provider-google-vertex": "workspace:*",
     "@qflow/provider-hyperframes-aws-lambda": "workspace:*",
     "@qflow/provider-hyperframes-local": "workspace:*",
     "@qflow/provider-image-opencv-local": "workspace:*",
@@ -91,6 +115,8 @@
     "@qflow/speech-evidence": "workspace:*",
     "@qflow/speech-track": "workspace:*",
     "@qflow/store-sqlite": "workspace:*",
+    "@qflow/studio-adapter": "workspace:*",
+    "@qflow/studio-video-adapters": "workspace:*",
     "@qflow/svs": "workspace:*",
     "@qflow/temporal": "workspace:*",
     "@qflow/text": "workspace:*",
@@ -98,9 +124,10 @@
     "@qflow/visual-ir": "workspace:*",
     "@qflow/whisperx": "workspace:*",
     "@types/node": "24.10.1",
-    "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vite": "5.4.21",
     "vitepress": "^1.6.4"
+  },
+  "dependencies": {
+    "tsx": "4.21.0"
   }
 }

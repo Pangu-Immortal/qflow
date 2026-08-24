@@ -2,11 +2,14 @@ import { speechDependency, speechTypes } from "@qflow/speech";
 import { mediaDependency, mediaTypes } from "@qflow/media";
 import { narrativeTypes } from "@qflow/narrative";
 import { speechEvidenceDependency, speechEvidenceTypes } from "@qflow/speech-evidence";
-import type { CapabilityRef, ModuleManifest, ProducerRef } from "@qflow/protocol";
+import type { CapabilityRef, ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
 import { mediaPipelineManifest, mediaPipelineModuleRef } from "@qflow/media-pipeline";
 import { speechAlignmentManifest, speechAlignmentModuleRef } from "@qflow/speech-alignment";
 
 export const whisperXModuleRef = { name: "@qflow/whisperx", version: "1" } as const;
+export const whisperXTypes = {
+  language: { module: whisperXModuleRef, name: "WhisperXLanguage" },
+} satisfies Record<string, TypeRef>;
 export const whisperXCapabilities = {
   alignment: { module: whisperXModuleRef, name: "whisperx-alignment" },
 } satisfies Record<string, CapabilityRef>;
@@ -18,7 +21,7 @@ export const whisperXMarkupSurfaces = [{
     name: "semantic-take",
     tag: "SemanticTake",
     mode: "structured",
-    outputs: [speechTypes.semanticTake],
+    outputs: [whisperXTypes.language, speechTypes.semanticTake],
     vocabulary: {
       summary:
         "Measures one normalized Take with WhisperX and aligns one authored Segment into a self-contained SemanticTake.",
@@ -34,15 +37,19 @@ export const whisperXMarkupSurfaces = [{
         { name: "media", kind: "reference", required: true,
           accepts: [mediaTypes.synchronized],
           summary: "Selects the already normalized SynchronizedMedia measured by WhisperX." },
+        { name: "language", kind: "literal", required: true,
+          values: ["en", "zh"],
+          summary: "Explicitly selects the English or Chinese WhisperX transcription and alignment models." },
       ],
       ports: [
         { name: "take", type: speechTypes.semanticTake,
           summary: "The normalized media plus this Segment's authored words and local frame anchors." },
       ],
       example: `<whisperx:SemanticTake id="opening" narrative={story}
-  segment={story.segment.opening} media={opening-media.media}/>`,
+  segment={story.segment.opening} media={opening-media.media} language="en"/>`,
       notes: [
-        "All three attributes are required; the element accepts no children and no text content.",
+        "All five attributes are required; the element accepts no children and no text content.",
+        "Language is never detected from Script text or audio; each alignment call states en or zh explicitly.",
         "Importing this package is what selects the WhisperX model family; the Runtime separately binds the alignment Need to an Endpoint.",
       ],
     },
@@ -60,7 +67,7 @@ export const whisperXManifest: ModuleManifest = {
     { module: mediaPipelineModuleRef },
     { module: speechAlignmentModuleRef },
   ],
-  types: [],
+  types: [{ name: whisperXTypes.language.name }],
   capabilities: [{
     name: whisperXCapabilities.alignment.name,
     returns: speechEvidenceTypes.alignedTranscript,
@@ -68,7 +75,10 @@ export const whisperXManifest: ModuleManifest = {
   producers: [
     {
       name: whisperXProducers.request.name,
-      inputs: [{ name: "evidence", type: speechTypes.evidenceAudio }],
+      inputs: [
+        { name: "evidence", type: speechTypes.evidenceAudio },
+        { name: "language", type: whisperXTypes.language },
+      ],
       outputs: [],
       needs: [{
         name: "alignment",

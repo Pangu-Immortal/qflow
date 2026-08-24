@@ -8,7 +8,8 @@
     "qflow-reference-video-tools": "./bin/reference-video-tools.mjs"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./cli": "./src/cli.ts"
   },
   "dependencies": {
     "@google/genai": "1.52.0",
@@ -27,6 +28,7 @@
     "@qflow/speech-evidence": "workspace:*",
     "@qflow/studio": "workspace:*",
     "@qflow/svs": "workspace:*",
+    "@qflow/video-cli": "workspace:*",
     "@qflow/whisperx": "workspace:*",
     "tsx": "4.21.0"
   },

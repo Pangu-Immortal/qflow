@@ -119,7 +119,6 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
   <import as="whisperx" from="@qflow/whisperx@1"/>
   <import as="caption" from="@qflow/caption@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
-  <import as="caption-ai" from="@qflow/caption-gemini@1"/>
   <import as="fonts" from="@qflow/fonts-open@1"/>
   <import as="media-track" from="@qflow/media-track@1"/>
   <import as="text" from="@qflow/typography-track@1"/>
@@ -170,7 +169,7 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
   <pipeline:Normalize id="motion-media" source={motion.video}
     video="primary-moving" audio="none" span-authority="video" clock={clock}/>
   <whisperx:SemanticTake id="opening-semantic" narrative={story}
-    segment={story.segment.opening} media={take-media.media}/>
+    segment={story.segment.opening} media={take-media.media} language="en"/>
   <speech:Track id="speech"
     visual-frame={speech-frame} visual-appearance={recipes.speech.visual} visual-z="0">
     <speech:Take source={opening-semantic.take}/>
@@ -180,11 +179,10 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
   <fonts:Stack id="caption-font" family="inter" weight="700" style="normal"/>
   <fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
   <caption-fine:Style id="base-caption" recipe={recipes.caption.base} font={caption-font}/>
-  <caption:Program id="caption-program" display={story.caption}
+  <caption:Program id="caption-program" document={story.caption} narrative={story}
     default={base-caption}/>
-  <caption-ai:Planner id="cue-plan" display={story.caption}
-    program={caption-program} model="gemini-2.5-flash"/>
-  <caption-fine:Track id="captions" display={story.caption} correspondence={story.caption.correspondence} semantic={speech.semantic} plan={cue-plan.plan} program={caption-program}/>
+  <caption-fine:Track id="captions" document={story.caption}
+    semantic={speech.semantic} program={caption-program}/>
 
   <media-track:Track id="cards" semantic={speech.semantic} canvas={vertical}>
     <media-track:Item media={motion-media.media} during={story.selection.demo}
