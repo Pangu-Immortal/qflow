@@ -4,7 +4,7 @@ import { sealGraphFragment } from "@qflow/elaborator";
 import { narrativeTypes } from "@qflow/narrative";
 import { semanticTrackTypes } from "@qflow/semantic-track";
 
-import { captionFineProducers } from "./manifest.js";
+import { captionFineProducers, captionFineTypes } from "./manifest.js";
 
 const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
@@ -43,9 +43,16 @@ export const fineCaptionTrackFragment = sealGraphFragment({
       result: { kind: "output", name: "track" },
     },
   ],
-  exports: [{
-    name: "track",
-    type: compositionTypes.visualTrack,
-    root: operation("caption-fine:render"),
-  }],
+  exports: [
+    {
+      name: "schedule",
+      type: captionFineTypes.schedule,
+      root: operation("caption-fine:schedule"),
+    },
+    {
+      name: "track",
+      type: compositionTypes.visualTrack,
+      root: operation("caption-fine:render"),
+    },
+  ],
 });

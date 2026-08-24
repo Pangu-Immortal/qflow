@@ -1,16 +1,13 @@
 {
-  "name": "@qflow/studio-video-adapters",
+  "name": "@qflow/media-track-studio",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "qflow": {
-    "activation": "./src/activation.ts"
-  },
+  "exports": { ".": "./src/index.ts" },
+  "qflow": { "activation": "./src/activation.ts" },
   "dependencies": {
+    "@qflow/media-track": "workspace:*",
     "@qflow/studio-adapter": "workspace:*"
   }
 }

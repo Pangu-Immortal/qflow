@@ -1,0 +1,13 @@
+{
+  "name": "@qflow/screen-overlay-studio",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "qflow": { "activation": "./src/activation.ts" },
+  "dependencies": {
+    "@qflow/screen-overlay": "workspace:*",
+    "@qflow/studio-adapter": "workspace:*"
+  }
+}

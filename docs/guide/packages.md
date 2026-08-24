@@ -157,7 +157,7 @@ queues, stores, credentials and process lifecycle; they never define author synt
 @qflow/cli                 generic command engine (requires explicit Distribution)
 @qflow/video-cli           video command application (selects Markup compiler, no built-in author packages)
 @qflow/studio-adapter      stable Studio companion ABI and presentation DTOs
-@qflow/studio-video-adapters official video-domain Studio interpretation
+@qflow/*-studio             independent official Studio companions selected explicitly by the Distribution
 @qflow/studio              development preview for a Run, never runs a Provider
 ```
 

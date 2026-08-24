@@ -5,7 +5,20 @@ import { installDistributionPackageResolution, loadNodePackageSelection } from "
 import { studioAdaptersFromPackage } from "@qflow/studio-adapter";
 import type { StudioAdapter } from "@qflow/studio-adapter";
 
+import { fallbackStudioAdapters } from "./fallback-adapters.js";
 import { StudioAdapterRegistry } from "./studio-registry.js";
+
+export const officialStudioAdapterPackages = [
+  "@qflow/audio-track-studio",
+  "@qflow/caption-fine-studio",
+  "@qflow/comment-sticker-studio",
+  "@qflow/deck-track-studio",
+  "@qflow/media-track-studio",
+  "@qflow/ranking-studio",
+  "@qflow/screen-overlay-studio",
+  "@qflow/speech-track-studio",
+  "@qflow/typography-track-studio",
+] as const;
 
 export const studioProfileFilename = "qflow.studio.json";
 
@@ -93,14 +106,14 @@ export async function loadStudioAdapterRegistry(input: {
 }): Promise<StudioAdapterRegistry> {
   installDistributionPackageResolution([input.distributionPackageRoot]);
   const officialPackages = await loadNodePackageSelection(
-    ["@qflow/studio-video-adapters"],
+    officialStudioAdapterPackages,
     input.distributionPackageRoot,
   );
   const officialAdapters = officialPackages.flatMap((item) =>
     studioAdaptersFromPackage(item.specifier, item.contribution.hostFacets ?? []));
   const project = await loadProjectStudioAdapters(input);
   return new StudioAdapterRegistry(
-    [...officialAdapters, ...project.adapters],
+    [...fallbackStudioAdapters, ...officialAdapters, ...project.adapters],
     { replace: project.replace },
   );
 }
