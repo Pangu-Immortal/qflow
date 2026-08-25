@@ -8,6 +8,7 @@
   "qflow": { "activation": "./src/activation.ts" },
   "dependencies": {
     "@qflow/caption-fine": "workspace:*",
+    "@qflow/composition": "workspace:*",
     "@qflow/narrative": "workspace:*",
     "@qflow/studio-adapter": "workspace:*"
   }

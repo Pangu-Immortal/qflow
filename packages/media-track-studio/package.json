@@ -8,6 +8,8 @@
   "qflow": { "activation": "./src/activation.ts" },
   "dependencies": {
     "@qflow/media-track": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/protocol": "workspace:*",
     "@qflow/studio-adapter": "workspace:*"
   }
 }

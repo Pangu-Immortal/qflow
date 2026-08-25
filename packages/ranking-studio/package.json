@@ -8,6 +8,7 @@
   "qflow": { "activation": "./src/activation.ts" },
   "dependencies": {
     "@qflow/ranking": "workspace:*",
+    "@qflow/composition": "workspace:*",
     "@qflow/studio-adapter": "workspace:*"
   }
 }

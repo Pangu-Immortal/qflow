@@ -1,7 +1,7 @@
-import { createStudioAdapterHostFacet } from "@qflow/studio-adapter";
-import { rankingStudioAdapters } from "./index.js";
+import { createStudioTrackCompanionHostFacet } from "@qflow/studio-adapter";
+import { rankingStudioTrackCompanions } from "./index.js";
 
 export default {
   format: "qflow.node-package@1" as const,
-  hostFacets: [createStudioAdapterHostFacet(rankingStudioAdapters)],
+  hostFacets: [createStudioTrackCompanionHostFacet(rankingStudioTrackCompanions)],
 };

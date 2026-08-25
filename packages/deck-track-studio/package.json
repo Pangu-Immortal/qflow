@@ -8,6 +8,7 @@
   "qflow": { "activation": "./src/activation.ts" },
   "dependencies": {
     "@qflow/deck-track": "workspace:*",
+    "@qflow/composition": "workspace:*",
     "@qflow/studio-adapter": "workspace:*"
   }
 }

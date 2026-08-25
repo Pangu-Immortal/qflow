@@ -1,7 +1,7 @@
-import { createStudioAdapterHostFacet } from "@qflow/studio-adapter";
-import { mediaTrackStudioAdapters } from "./index.js";
+import { createStudioTrackCompanionHostFacet } from "@qflow/studio-adapter";
+import { mediaTrackStudioTrackCompanions } from "./index.js";
 
 export default {
   format: "qflow.node-package@1" as const,
-  hostFacets: [createStudioAdapterHostFacet(mediaTrackStudioAdapters)],
+  hostFacets: [createStudioTrackCompanionHostFacet(mediaTrackStudioTrackCompanions)],
 };

@@ -15,25 +15,29 @@ const step = (id: string, owner: string, name: string, inputs: ProducerStep["inp
   id, producer: producer(owner, name), inputs, outputs, needs: {},
 });
 
-test("Studio reads Point lineage from the executed projection and consumption edges", () => {
+test("Studio reads Instant lineage and author authority from executed graph edges", () => {
   const program = [
     record("semantic", "@qflow/semantic-track", "SemanticTrack", { id: "speech" }),
     record("moment", "@qflow/narrative", "NarrativeMoment", { id: "cue", anchorId: "cue-anchor" }),
-    record("point-spec", "@qflow/temporal", "TemporalPointSpec", { id: "deck.card", projection: { ref: "moment.cue" } }),
+    record("point-spec", "@qflow/temporal", "TemporalInstantSpec", {
+      id: "deck.card", subjectId: "card", projection: { ref: "moment.cue" }, authority: { kind: "semantic", boundary: "cue" },
+    }),
     record("card-spec", "@qflow/deck-track", "DepthStackCardSpec", { id: "card" }),
   ];
   const executed = [
-    record("point", "@qflow/temporal", "TemporalPoint", {
-      id: "deck.card::cue", source: { kind: "moment", id: "cue" }, projection: { ref: "moment.cue" }, frame: 42,
+    record("point", "@qflow/temporal", "TemporalInstant", {
+      id: "deck.card::cue", subjectId: "card", source: { spaceId: "speech", narrativeId: "story", kind: "moment", id: "cue" }, projection: { ref: "moment.cue" },
+      authority: { kind: "semantic", boundary: "cue" }, frame: 42,
     }),
     record("cards", "@qflow/deck-track", "DepthStackCardSet", { cards: [{ id: "card", activationFrame: 42 }] }),
     record("track", "@qflow/composition", "VisualTrack", { presents: [] }),
-    record("unused-point", "@qflow/temporal", "TemporalPoint", {
-      id: "unused::cue", source: { kind: "moment", id: "cue" }, projection: { ref: "moment.cue" }, frame: 7,
+    record("unused-point", "@qflow/temporal", "TemporalInstant", {
+      id: "unused::cue", subjectId: "unused", source: { spaceId: "speech", narrativeId: "story", kind: "moment", id: "cue" }, projection: { ref: "moment.cue" },
+      authority: { kind: "semantic", boundary: "cue" }, frame: 7,
     }),
   ];
   const steps = [
-    step("project", "@qflow/temporal", "project-moment-point", { semantic: "semantic", moment: "moment", spec: "point-spec" }, { point: "point" }),
+    step("project", "@qflow/temporal", "project-moment-instant", { semantic: "semantic", moment: "moment", spec: "point-spec" }, { instant: "point" }),
     step("append", "@qflow/deck-track", "append-depth-stack-card", { set: "empty", spec: "card-spec", activation: "point" }, { set: "cards" }),
     step("render", "@qflow/deck-track", "render-depth-stack", { program: "cards" }, { track: "track" }),
   ];
@@ -54,17 +58,20 @@ test("Studio reads Point lineage from the executed projection and consumption ed
   assert.equal(bindings.length, 1);
   assert.deepEqual(bindings[0], {
     record: "point",
-    specRecord: "point-spec",
-    specId: "deck.card",
+    subjectId: "card",
     id: "deck.card::cue",
-    source: { kind: "moment", id: "cue" },
-    projection: { kind: "point", expression: "moment.cue", frame: 42 },
+    projection: {
+      kind: "instant", expression: "moment.cue", reference: "moment.cue", frame: 42,
+      source: { spaceId: "speech", narrativeId: "story", kind: "moment", id: "cue" },
+      authority: { kind: "semantic", source: { spaceId: "speech", narrativeId: "story", kind: "moment", id: "cue" }, boundary: "cue" },
+    },
     consumers: [{
       step: "append",
       producer: producer("@qflow/deck-track", "append-depth-stack-card"),
       input: "activation",
+      role: "domain",
       inputs: [
-        { name: "activation", record: "point", type: type("@qflow/temporal", "TemporalPoint"), value: executed[0]!.value.kind === "inline" ? executed[0]!.value.value : undefined },
+        { name: "activation", record: "point", type: type("@qflow/temporal", "TemporalInstant"), value: executed[0]!.value.kind === "inline" ? executed[0]!.value.value : undefined },
         { name: "spec", record: "card-spec", type: type("@qflow/deck-track", "DepthStackCardSpec"), value: { id: "card" } },
       ],
     }],
