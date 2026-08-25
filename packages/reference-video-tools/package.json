@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@google/genai": "1.52.0",
+    "@qflow/composition": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/estimate": "workspace:*",
     "@qflow/hyperframes": "workspace:*",
