@@ -1,9 +1,8 @@
 import { spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
-import { createRequire } from "node:module";
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { mediaTypes, sealRenderedVisual } from "@qflow/media";
 import type { RenderedVisual } from "@qflow/media";
 import { verifyCompositableSurfaceBytes } from "@qflow/media-execution";
@@ -13,6 +12,7 @@ import type { HyperframesDocument } from "@qflow/hyperframes";
 import { stageHyperframesProject } from "@qflow/hyperframes/project";
 import { renderHyperframesCapabilities } from "@qflow/render-hyperframes";
 import { canonicalize } from "@qflow/protocol";
+import { resolveNodePackageExecutable } from "@qflow/package-loader-node";
 import { isStreamingArtifactStore } from "@qflow/runtime";
 import type { BlobRef, CanonicalValue } from "@qflow/protocol";
 import { defineEndpointPackage } from "@qflow/endpoint-kit";
@@ -71,8 +71,7 @@ function positiveInteger(value: number, subject: string): number {
 }
 
 export function defaultHyperframesCliPath(): string {
-  const require = createRequire(import.meta.url);
-  return join(dirname(require.resolve("hyperframes/package.json")), "bin", "hyperframes.mjs");
+  return resolveNodePackageExecutable("hyperframes", "hyperframes", { from: import.meta.url });
 }
 
 function processEnvironment(): NodeJS.ProcessEnv {

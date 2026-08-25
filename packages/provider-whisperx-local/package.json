@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@qflow/endpoint-kit": "workspace:*",
+    "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
     "@qflow/runtime-kit": "workspace:*",

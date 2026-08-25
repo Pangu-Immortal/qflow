@@ -123,6 +123,7 @@
   },
   "dependencies": {
     "@qflow/media": "workspace:*",
+    "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/markup": "workspace:*"
   }

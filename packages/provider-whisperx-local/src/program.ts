@@ -1,8 +1,8 @@
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
-import { createRequire } from "node:module";
 import { join } from "node:path";
 
+import { resolveNodePackageResource } from "@qflow/package-loader-node";
 import { runtimeConfigObject, runtimeConfigString } from "@qflow/runtime-kit";
 import type {
   ManagedProgram,
@@ -22,9 +22,8 @@ import { pythonEnvironmentCommand } from "@qflow/runtime-host-node";
  * program home, while this read-only project remains replaceable Distribution
  * input. A custom service command transfers process ownership to that deployment.
  */
-const require = createRequire(import.meta.url);
 export const localWhisperXManagedProject = join(
-  require.resolve("@qflow/whisperx-service-runtime/pyproject.toml"),
+  resolveNodePackageResource("@qflow/whisperx-service-runtime", "pyproject.toml", { from: import.meta.url }),
   "..",
 );
 

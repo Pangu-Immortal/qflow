@@ -46,4 +46,9 @@ export type NodePackageLoadOptions = {
    * the reserved @qflow namespace resolves only from these roots when they are present.
    */
   readonly fallbackRoots?: readonly string[];
+  /**
+   * Machine npm homes used only by Distribution-owned packages for their ordinary upstream
+   * dependencies. Defaults to the roots installed by the Qflow launcher.
+   */
+  readonly externalRoots?: readonly string[];
 };
