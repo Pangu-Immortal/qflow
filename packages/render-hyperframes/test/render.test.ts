@@ -84,7 +84,7 @@ import {
 } from "@qflow/semantic-track";
 import { svsManifest } from "@qflow/svs";
 
-const space = sealProgramSpace({
+const space = sealProgramSpace({ id: "test-space", narrativeId: "test-narrative",
   durationSec: 2,
   frameRate: { numerator: 30, denominator: 1 },
 });

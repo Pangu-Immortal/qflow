@@ -16,6 +16,7 @@
     "@qflow/semantic-track": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/temporal": "workspace:*",
+    "@qflow/temporal-markup": "workspace:*",
     "@qflow/markup": "workspace:*"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 # `@qflow/provider-media-aws-lambda`
 
-AWS Lambda Endpoint package for the eight exact capabilities declared by
+AWS Lambda Endpoint package for the nine exact capabilities declared by
 `@qflow/media-pipeline` and implemented by `@qflow/media-execution`.
 
 The Provider invokes one versioned or aliased Lambda ARN synchronously. Source and result bytes stay

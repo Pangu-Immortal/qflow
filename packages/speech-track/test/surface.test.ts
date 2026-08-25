@@ -10,6 +10,7 @@ import { svsRecipeType } from "@qflow/svs";
 import { decodeSpeechTrackSurface } from "@qflow/speech-track";
 
 const take: SemanticTake = {
+  narrativeId: "test-narrative",
   media: {
     timeline: { frameRate: { numerator: 30, denominator: 1 }, frameCount: 30 },
     visual: {

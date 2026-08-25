@@ -1,7 +1,7 @@
 import { compositionTypes } from "@qflow/composition";
 import type { VisualTrack } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
-import { semanticTrackTypes } from "@qflow/semantic-track";
+import { semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
 
 import { typographyTrackProducers, typographyTrackTypes } from "./manifest.js";
 
@@ -14,12 +14,20 @@ export const typographyTrackFragment = sealGraphFragment({
     { name: "semantic", type: semanticTrackTypes.track },
     { name: "program", type: typographyTrackTypes.program },
   ],
-  operations: [{
-    id: "render",
-    producer: typographyTrackProducers.render,
-    inputs: { semantic: input("semantic"), program: input("program") },
-    result: { kind: "output", name: "track" },
-  }],
+  operations: [
+    {
+      id: "space",
+      producer: semanticTrackProducers.projectProgramSpace,
+      inputs: { track: input("semantic") },
+      result: { kind: "output", name: "space" },
+    },
+    {
+      id: "render",
+      producer: typographyTrackProducers.render,
+      inputs: { space: operation("space"), program: input("program") },
+      result: { kind: "output", name: "track" },
+    },
+  ],
   exports: [{
     name: "track",
     type: compositionTypes.visualTrack,

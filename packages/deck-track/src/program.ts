@@ -16,7 +16,8 @@ import { verifyText } from "@qflow/text";
 import type { Text } from "@qflow/text";
 import { assertSpatialFrame } from "@qflow/spatial";
 import type { SpatialFrame } from "@qflow/spatial";
-import type { TemporalPoint } from "@qflow/temporal";
+import { assertTemporalInstantFor } from "@qflow/temporal";
+import type { TemporalInstant } from "@qflow/temporal";
 
 import type {
   DeckCardTone,
@@ -228,11 +229,13 @@ function appendDepthStackCardAtFrame(
 
 export function appendDepthStackCard(
   set: DepthStackCardSet,
+  space: ProgramSpace,
   material: DepthStackCardSet["cards"][number]["material"],
   label: DepthStackCardLabel,
   spec: DepthStackCardSpec,
-  activation: TemporalPoint,
+  activation: TemporalInstant,
 ): DepthStackCardSet {
+  assertTemporalInstantFor(activation, { subjectId: spec.id, space });
   return appendDepthStackCardAtFrame(set, material, label, spec, activation.frame);
 }
 
@@ -269,9 +272,10 @@ export function finalizeDepthStack(
   header: DepthStackHeader,
   frame: SpatialFrame,
   spec: DepthStackSpec,
-  terminal: TemporalPoint,
+  terminal: TemporalInstant,
   space: ProgramSpace,
 ): DepthStackProgram {
+  assertTemporalInstantFor(terminal, { subjectId: header.id, space });
   return finalizeDepthStackAtFrame(set, header, frame, spec, terminal.frame, space);
 }
 

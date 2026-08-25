@@ -1,12 +1,12 @@
 import type { SynchronizedMedia } from "@qflow/media";
 import type { Narrative, NarrativeExcerpt } from "@qflow/narrative";
 import { sealProgramSpace } from "@qflow/program-space";
+import { materializeSemanticTake } from "@qflow/speech";
 import type { SemanticTake } from "@qflow/speech";
 import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
 
 import { locateAlignedSegmentTiming } from "./locate.js";
 import type { AlignmentBasis } from "./locate.js";
-import { materializeSemanticTake } from "./materialize.js";
 
 function segmentNarrative(narrative: Narrative, excerpt: NarrativeExcerpt): Narrative {
   if (excerpt.kind !== "segment") throw new Error("SemanticTake alignment requires a Segment excerpt.");
@@ -17,6 +17,7 @@ function segmentNarrative(narrative: Narrative, excerpt: NarrativeExcerpt): Narr
   }
   const tokens = narrative.tokens.slice(segment.tokenStart, segment.tokenEndExclusive);
   return {
+    id: narrative.id,
     segments: [{ ...segment, tokenStart: 0, tokenEndExclusive: tokens.length }],
     tokens,
     turns: narrative.turns
@@ -44,6 +45,8 @@ export function alignSemanticTake(
   if (media.audio === undefined) throw new Error(`SemanticTake ${excerpt.id} has no normalized audio.`);
   const localNarrative = segmentNarrative(narrative, excerpt);
   const programSpace = sealProgramSpace({
+    id: `${excerpt.narrativeId}.segment.${excerpt.id}`,
+    narrativeId: excerpt.narrativeId,
     durationSec: media.timeline.frameCount * media.timeline.frameRate.denominator
       / media.timeline.frameRate.numerator,
     frameRate: media.timeline.frameRate,

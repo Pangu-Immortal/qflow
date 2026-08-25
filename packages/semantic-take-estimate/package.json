@@ -1,0 +1,26 @@
+{
+  "name": "@qflow/semantic-take-estimate",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "dependencies": {
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/estimate": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/narrative": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/speech": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/script": "workspace:*"
+  }
+}

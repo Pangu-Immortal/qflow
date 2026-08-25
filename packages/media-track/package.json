@@ -24,5 +24,6 @@
     "@qflow/svs": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/temporal": "workspace:*"
+    ,"@qflow/temporal-markup": "workspace:*"
   }
 }

@@ -1,8 +1,7 @@
 import type { CaptionProgram, TimedCaptionProjection } from "@qflow/caption";
 import type { ComponentPackage } from "@qflow/component-kit";
 import type { CaptionDocument } from "@qflow/narrative";
-import { projectSemanticProgramSpace } from "@qflow/semantic-track";
-import type { SemanticTrack } from "@qflow/semantic-track";
+import type { ProgramSpace } from "@qflow/program-space";
 import type { StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 
@@ -36,7 +35,7 @@ export const captionFineComponent = {
           inline<FineCaptionSchedule>(inputs.schedule?.value, "FineCaptionSchedule"),
           inline<CaptionProgram>(inputs.program?.value, "CaptionProgram"),
           inline<CaptionDocument>(inputs.document?.value, "CaptionDocument"),
-          projectSemanticProgramSpace(inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack")),
+          inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
         )) } },
         needs: {},
       }),

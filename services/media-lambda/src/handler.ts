@@ -8,6 +8,7 @@ import {
   executeNormalizeMedia,
   executeProjectSpeechEvidenceAudio,
   executeRenderTimelineAudio,
+  executeRenderStillVideo,
   executeTransformMedia,
 } from "@qflow/media-execution";
 import type { MediaExecutionEnvironment, MediaOperationResult } from "@qflow/media-execution";
@@ -39,6 +40,7 @@ const OPERATIONS: Record<
   "transform": executeTransformMedia,
   "extract-audio": executeExtractAudio,
   "extract-frame": executeExtractFrame,
+  "render-still": executeRenderStillVideo,
   "project-speech-evidence-audio": executeProjectSpeechEvidenceAudio,
   "render-audio": executeRenderTimelineAudio,
   "mux": executeMuxProgramMedia,

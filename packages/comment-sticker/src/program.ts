@@ -17,6 +17,7 @@ import { canonicalize, isDigest } from "@qflow/protocol";
 import type { BlobRef } from "@qflow/protocol";
 import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
 import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
+import { assertTemporalWindowFor } from "@qflow/temporal";
 import type { ProjectedWindow } from "@qflow/temporal";
 import { verifyText } from "@qflow/text";
 import type { Text } from "@qflow/text";
@@ -194,6 +195,7 @@ export function assertCommentStickerSet(value: CommentStickerSet): void {
 function realized(
   set: CommentStickerSet,
   header: CommentStickerHeader,
+  space: ProgramSpace,
   frame: SpatialFrame,
   style: CommentStickerStyle,
   spec: CommentStickerItemSpec,
@@ -227,6 +229,7 @@ function realized(
 export function appendProjectedCommentSticker(
   set: CommentStickerSet,
   header: CommentStickerHeader,
+  space: ProgramSpace,
   frame: SpatialFrame,
   style: CommentStickerStyle,
   spec: CommentStickerItemSpec,
@@ -234,7 +237,8 @@ export function appendProjectedCommentSticker(
   window: ProjectedWindow,
   avatar?: BlobRef,
 ): CommentStickerSet {
-  return realized(set, header, frame, style, spec, content, window, avatar);
+  assertTemporalWindowFor(window, { subjectId: spec.id, space });
+  return realized(set, header, space, frame, style, spec, content, window, avatar);
 }
 
 export function assertCommentStickerProgram(value: CommentStickerProgram): void {
@@ -590,6 +594,7 @@ export function renderCommentSticker(canvas: CanvasSpace, space: ProgramSpace, p
   assertProgramSpaceIdentity(space);
   assertCommentStickerProgram(program);
   const track = sealVisualTrack({
+    programSpaceId: space.id,
     visualIr: "qflow.visual-ir@1",
     id: program.id,
     presents: program.items.map((item) => ({

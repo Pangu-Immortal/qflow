@@ -20,6 +20,7 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/semantic-track": "workspace:*",
     "@qflow/temporal": "workspace:*",
+    "@qflow/temporal-markup": "workspace:*",
     "@qflow/markup": "workspace:*"
   },
   "devDependencies": {

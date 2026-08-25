@@ -4,6 +4,7 @@ import { captionManifest, captionModuleRef, captionTypes } from "@qflow/caption"
 import { compositionDependency, compositionTypes } from "@qflow/composition";
 import { mediaDependency, mediaTypes } from "@qflow/media";
 import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
+import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
 import type { ModuleManifest, ProducerRef } from "@qflow/protocol";
 import { semanticTrackDependency, semanticTrackTypes } from "@qflow/semantic-track";
 import { svsRecipeType } from "@qflow/svs";
@@ -332,6 +333,7 @@ export const captionFineManifest: ModuleManifest = {
     compositionDependency,
     mediaDependency,
     narrativeDependency,
+    programSpaceDependency,
     semanticTrackDependency,
   ],
   types: [{ name: captionFineTypes.schedule.name }],
@@ -353,7 +355,7 @@ export const captionFineManifest: ModuleManifest = {
         { name: "schedule", type: captionFineTypes.schedule },
         { name: "program", type: captionTypes.program },
         { name: "document", type: narrativeTypes.captionDocument },
-        { name: "semantic", type: semanticTrackTypes.track },
+        { name: "space", type: programSpaceTypes.programSpace },
       ],
       outputs: [{ name: "track", type: compositionTypes.visualTrack }],
       needs: [],

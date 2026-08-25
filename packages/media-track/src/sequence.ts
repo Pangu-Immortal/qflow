@@ -9,8 +9,8 @@ import type { ProgramSpace } from "@qflow/program-space";
 import { canonicalize } from "@qflow/protocol";
 import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
 import type { CanvasSpace } from "@qflow/spatial";
-import { resolveTriggeredSchedule } from "@qflow/temporal";
-import type { TemporalPoint } from "@qflow/temporal";
+import { assertTemporalInstantFor, resolveTriggeredSchedule } from "@qflow/temporal";
+import type { TemporalInstant } from "@qflow/temporal";
 
 import { assertMediaIdentity, assertMediaLayerSet } from "./layers.js";
 import { lowerMediaItemElements } from "./lower.js";
@@ -109,10 +109,12 @@ function appendMediaSequenceMemberAtFrame(
 
 export function appendMediaSequenceMember(
   set: MediaSequenceMemberSet,
+  space: ProgramSpace,
   layers: MediaLayerSet,
   spec: MediaSequenceMemberSpec,
-  activation: TemporalPoint,
+  activation: TemporalInstant,
 ): MediaSequenceMemberSet {
+  assertTemporalInstantFor(activation, { subjectId: spec.id, space });
   return appendMediaSequenceMemberAtFrame(set, layers, spec, activation.frame);
 }
 

@@ -23,6 +23,7 @@
     "@qflow/spatial": "workspace:*",
     "@qflow/svs": "workspace:*",
     "@qflow/temporal": "workspace:*",
+    "@qflow/temporal-markup": "workspace:*",
     "@qflow/text": "workspace:*",
     "@qflow/markup": "workspace:*"
   },
