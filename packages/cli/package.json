@@ -10,12 +10,13 @@
   "dependencies": {
     "@qflow/compiler-node": "workspace:*",
     "@qflow/elaborator": "workspace:*",
-    "@qflow/workspace": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/run": "workspace:*",
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
-    "@qflow/source": "workspace:*"
+    "@qflow/source": "workspace:*",
+    "@qflow/workspace": "workspace:*",
+    "typescript": "5.9.3"
   }
 }
