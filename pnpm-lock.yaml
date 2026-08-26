@@ -2183,6 +2183,9 @@ importers:
       '@qflow/whisperx':
         specifier: workspace:*
         version: link:../whisperx
+      '@qflow/yt-dlp':
+        specifier: workspace:*
+        version: link:../yt-dlp
       tsx:
         specifier: 4.21.0
         version: 4.21.0
@@ -3108,6 +3111,8 @@ importers:
       '@qflow/workspace':
         specifier: workspace:*
         version: link:../workspace
+
+  packages/yt-dlp: {}
 
   services/image-opencv: {}
 
