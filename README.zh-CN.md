@@ -116,13 +116,13 @@ npx skills add qflow-ai/qflow -g
 编程 Agent 可以直接使用 `/qflow` skill。在任意空目录或现有项目目录中开启会话，让 Agent 为你创建视频：
 
 ```text
-/qflow 复刻这条爆款视频，先给我看预览，再带我批量生成变体。
+/qflow 复刻这个视频：/path/to/video
 ```
 
 也可以不提供参考视频，直接从描述开始：
 
 ```text
-/qflow 根据我的描述创建视频，尽量使用模板和成本为 $0 的代码渲染画面。
+/qflow 做一个 ranking 视频，把 Qflow 排到 S 级。
 ```
 
 Agent 会检查环境，只索要这条视频需要的凭据，先给出预览，再执行构建。
