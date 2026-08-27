@@ -18,11 +18,11 @@ import { openStudioArchive } from "@qflow/studio/src/archive.js";
 import { loadStudioDomain } from "@qflow/studio/src/domain.js";
 import type { Preview } from "@qflow/studio/src/programme.js";
 import { preview } from "@qflow/studio/src/programme.js";
-import { EndpointRegistry } from "@qflow/driver-node";
-import { createLocalMediaProvider } from "@qflow/provider-media-local";
 import { loadStudioRun } from "@qflow/studio/src/run.js";
 import { inspectStudioRun } from "@qflow/studio/src/studio-preflight.js";
 import { realizePreviewMock } from "@qflow/preview-mock";
+import { EndpointRegistry } from "@qflow/driver-node";
+import { createLocalMediaProvider } from "@qflow/provider-media-local";
 
 import { assert, ensureDir } from "./media.js";
 import type { TranscriptFile } from "./types.js";
@@ -611,8 +611,6 @@ export async function renderElement(input: RenderElementInput): Promise<Record<s
     const previewArchive = await openStudioArchive(undefined, packageRoot, projectRoot, distributionPackageRoot);
     const loadedPreview = await loadStudioRun({ run: previewMock.previewRun, domain: previewDomain, registry: previewRegistry, ...(previewArchive === undefined ? {} : { archive: previewArchive }) });
     const previewRun = { ...loadedPreview, attachments: [...loadedPreview.attachments, ...previewMock.attachments] };
-    const mockEndpoints = new EndpointRegistry();
-    await createLocalMediaProvider({}).install(mockEndpoints);
     const inspection = inspectStudioRun(previewRegistry, previewRun.source, previewRun, new Set([
       "@qflow/mock-media@1#render-mock-image",
       "@qflow/mock-media@1#render-mock-video",
@@ -620,6 +618,8 @@ export async function renderElement(input: RenderElementInput): Promise<Record<s
       "@qflow/media-pipeline@1#inspect-media",
       "@qflow/media-pipeline@1#normalize-media",
     ]));
+    const deterministicEndpoints = new EndpointRegistry();
+    await createLocalMediaProvider({}).install(deterministicEndpoints);
     built = await preview({
       source: previewRun.source,
       run: previewRun,
@@ -628,7 +628,7 @@ export async function renderElement(input: RenderElementInput): Promise<Record<s
       compositionRef: inspection.filmComposition,
       projections: inspection.projections,
       ...(previewArchive === undefined ? {} : { archive: previewArchive }),
-      endpoints: mockEndpoints,
+      endpoints: deterministicEndpoints,
     });
     programFrames = Math.max(1, ...built.anchors.values());
     frameOfToken = built.tokens.map((token) => ({ frame: built.anchors.get(token.startAnchorId) ?? 0, end: built.anchors.get(token.endAnchorId) ?? 0 }));

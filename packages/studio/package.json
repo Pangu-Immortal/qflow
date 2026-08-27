@@ -45,6 +45,7 @@
     "@qflow/video-cli": "workspace:*",
     "@qflow/workspace": "workspace:*",
     "@qflow/workspace-fs-node": "workspace:*",
+    "@qflow/provider-media-local": "workspace:*",
     "vite": "5.4.21"
   }
 }
