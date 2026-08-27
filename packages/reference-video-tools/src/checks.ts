@@ -125,7 +125,7 @@ async function checkedSources(runPath: string): Promise<{ readonly ok: boolean; 
     : join(distributionRoot!, "bin", "qflow.mjs");
 
   // The project is the package root, the way `qflow check` finds it when it is run from there. A
-  // project inside a larger tree resolves none of its own `packages/local-*` without this.
+  // project inside a larger tree resolves none of its own packages without this.
   const checked = spawnSync(process.execPath, [qflow, "check", runPath, "--package-root", dirname(runPath)], {
     encoding: "utf8", windowsHide: true, timeout: 600_000,
     env: { ...process.env, QFLOW_STRICT_SCRIPT_CUES: "1" },
