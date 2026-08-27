@@ -36,7 +36,9 @@ function usage(): string {
     "  qflow-reference-video-tools observe_reference --reference-id <id> --batch <questions.json>",
     "  qflow-reference-video-tools record_observation --reference-id <id> [--run <build.svrun>] --key <key> --text <text>|--text-file <path>",
     "  qflow-reference-video-tools record_observation --reference-id <id> [--run <build.svrun>] --batch <answers.json>",
-    "  qflow-reference-video-tools inspect_svml_vocabulary --package <name> [--package <name> ...] [--tag <tag> ...] [--without-previews]",
+    "  qflow-reference-video-tools inspect_svml_vocabulary --package <name> [--package <name> ...] [--tag <tag> ...] [--without-previews] [--run <build.svrun>]",
+    "  qflow-reference-video-tools validate_local_author_packages --run <build.svrun> [--expected-package <name> ...]",
+    "  qflow-reference-video-tools validate_script_cues --run <build.svrun>",
     "  qflow-reference-video-tools inspect_visual_contract [--shape visual-track|text-flow|text-typography|text-paint|text-document|path-command] [--producers-of <package> ...]",
     "  qflow-reference-video-tools paths",
     "  qflow-reference-video-tools compare_reconstruction --reference-id <id> --run <build.svrun> --segment <id>|--selection <id>|--tokens <from:to> --video <path>|--image <path> [--question <scope>] [--element <id>]",
@@ -450,8 +452,13 @@ async function main(): Promise<void> {
       package_names: packages.length > 0 ? packages : [required(flags, "package-name")],
       ...(many(flags, "tag").length === 0 ? {} : { tags: many(flags, "tag") }),
       ...(flags.get("without-previews") === true ? { include_previews: false } : {}),
+      ...(one(flags, "run") === undefined ? {} : { run: one(flags, "run") }),
     };
-    result = await tools.inspect_svml_vocabulary(input as { package_names: readonly string[]; tags?: readonly string[]; include_previews?: boolean });
+    result = await tools.inspect_svml_vocabulary(input as { package_names: readonly string[]; tags?: readonly string[]; include_previews?: boolean; run?: string });
+  } else if (command === "validate_local_author_packages") {
+    result = await tools.validate_local_author_packages({ run: required(flags, "run"), ...(many(flags, "expected-package").length === 0 ? {} : { expected_packages: many(flags, "expected-package") }) });
+  } else if (command === "validate_script_cues") {
+    result = await tools.validate_script_cues({ run: required(flags, "run") });
   } else if (command === "render_element") {
     const renderFile = one(flags, "batch");
     if (renderFile !== undefined) {
