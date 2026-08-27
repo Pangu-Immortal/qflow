@@ -18,6 +18,7 @@
     "@qflow/media": "workspace:*",
     "@qflow/narrative": "workspace:*",
     "@qflow/protocol": "workspace:*",
+    "@qflow/run": "workspace:*",
     "@qflow/speech": "workspace:*"
   },
   "devDependencies": {
