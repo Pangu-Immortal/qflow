@@ -1,0 +1,19 @@
+{
+  "name": "@example/example-component",
+  "version": "0.0.0-dev",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "qflow": { "activation": "./src/activation.ts" },
+  "dependencies": {
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/program-space": "workspace:*",
+    "@qflow/temporal": "workspace:*",
+    "@qflow/temporal-markup": "workspace:*",
+    "@qflow/visual-ir": "workspace:*"
+  }
+}
