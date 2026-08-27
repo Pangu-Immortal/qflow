@@ -10,6 +10,7 @@
     "@qflow/artifact": "workspace:*",
     "@qflow/artifact-store-fs": "workspace:*",
     "@qflow/compiler-node": "workspace:*",
+    "@qflow/estimate": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/mock-media": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
@@ -18,6 +19,7 @@
     "@qflow/media": "workspace:*",
     "@qflow/program-space": "workspace:*",
     "@qflow/speech": "workspace:*",
+    "@qflow/text": "workspace:*",
     "@qflow/semantic-take-estimate": "workspace:*",
     "@qflow/workspace": "workspace:*"
   }

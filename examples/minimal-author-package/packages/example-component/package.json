@@ -12,6 +12,7 @@
     "@qflow/markup": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/program-space": "workspace:*",
+    "@qflow/semantic-track": "workspace:*",
     "@qflow/temporal": "workspace:*",
     "@qflow/temporal-markup": "workspace:*",
     "@qflow/visual-ir": "workspace:*"
