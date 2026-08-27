@@ -8,6 +8,7 @@
   "qflow": { "activation": "./src/activation.ts" },
   "dependencies": {
     "@qflow/artifact": "workspace:*",
+    "@qflow/artifact-store-fs": "workspace:*",
     "@qflow/compiler-node": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/mock-media": "workspace:*",

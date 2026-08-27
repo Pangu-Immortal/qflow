@@ -1743,6 +1743,9 @@ importers:
       '@qflow/artifact':
         specifier: workspace:*
         version: link:../artifact
+      '@qflow/artifact-store-fs':
+        specifier: workspace:*
+        version: link:../artifact-store-fs
       '@qflow/compiler-node':
         specifier: workspace:*
         version: link:../compiler-node
@@ -2862,6 +2865,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@qflow/provider-media-local':
+        specifier: workspace:*
+        version: link:../provider-media-local
       '@qflow/ranking-studio':
         specifier: workspace:*
         version: link:../ranking-studio

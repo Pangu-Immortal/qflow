@@ -1,9 +1,15 @@
 ---
 name: qflow
-description: Produce a complete video program from a description — a ranking, a talking head, an explainer, a short — or reconstruct one from a reference video; author, check, preview, build, inspect and retrieve Qflow/SVML projects; configure runtimes and credentials; develop missing project-local author packages; and apply native video production playbooks. Use for making a video with Qflow, the Qflow repository, SVML/SVS/SVRun authoring, reconstruction, package vocabulary, runtime operations, or video craft decisions.
+description: Produce a complete video program from a description — a ranking, a talking head, an explainer, a short — or reconstruct one from a reference video; author, check, preview, build, inspect and retrieve Qflow/SVML projects; configure runtimes and credentials; develop missing project-local author packages; and apply native video production playbooks. Use for video production with Qflow and SVML/SVS/SVRun authoring; this is not for developing the Qflow repository itself.
 ---
 
 # Qflow
+
+> **Scope boundary:** This is a production skill for creating, reconstructing, previewing, reviewing,
+> revising and building videos with Qflow. It is **not a development skill for the Qflow repository
+> itself**. If the task is to implement, debug, test, refactor or otherwise develop Qflow packages,
+> CLIs, Studio, runtime or repository infrastructure, ignore the video-production routes and follow
+> the repository's contributor/development instructions instead.
 
 **Run the route to the end without stopping.** There are exactly two things worth interrupting the
 author for, and everything else is yours to decide:
@@ -84,7 +90,9 @@ the boundary and launcher selection. Read it before the first command of any rou
   the independent `revision_state` route. Restore the element's role in the frozen brief, edit only
   Source/Recipe/Run, invalidate the affected graph closure, and rerun deterministic gates. Revision
   never invokes VLM/observer visual inspection; after the change, start Studio only when the current
-  Run has no Studio session so the author can see the updated result.
+  Run has no Studio session so the author can see the updated result. This routing rule also applies
+  after a paid Build has produced the full video: revise the accepted-material Run, never the rendered
+  artifact and never by resuming either creation route.
 - A syntax question about one element, or a source that already exists → read
   `references/authoring.md`, then `references/quickstart.md` and the linked authoritative
   docs/package READMEs. A whole video is `references/original-authoring/route.md`, not this file.
