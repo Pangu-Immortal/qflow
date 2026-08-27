@@ -1,5 +1,6 @@
 import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
+import { semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
 import { programSpaceTypes } from "@qflow/program-space";
 import { exampleProducers } from "./manifest.js";
 
@@ -8,13 +9,11 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 
 export function createExampleFragment(producer: typeof exampleProducers[keyof typeof exampleProducers], id: string) {
   return sealGraphFragment({
-    inputs: [{ name: "space", type: programSpaceTypes.programSpace }],
-    operations: [{
-      id,
-      producer,
-      inputs: { space: input("space") },
-      result: { kind: "output", name: "track" },
-    }],
+    inputs: [{ name: "semantic", type: semanticTrackTypes.track }],
+    operations: [
+      { id: "space", producer: semanticTrackProducers.projectProgramSpace, inputs: { track: input("semantic") }, result: { kind: "output", name: "space" } },
+      { id, producer, inputs: { space: operation("space") }, result: { kind: "output", name: "track" } },
+    ],
     exports: [{ name: "track", type: compositionTypes.visualTrack, root: operation(id) }],
   });
 }
