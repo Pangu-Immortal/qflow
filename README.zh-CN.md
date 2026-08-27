@@ -133,11 +133,20 @@ Agent 会检查环境，只索要这条视频需要的凭据，先给出预览�
 
 [开发指南](https://docs.qflow.ai/zh/guide/develop)说明了前置条件、日常命令和仓库结构。
 
-|  |  |
-| --- | --- |
-| 缺陷报告 | [提交 issue](https://github.com/qflow-ai/qflow/issues/new?labels=bug) |
-| 功能请求 | [提交 issue](https://github.com/qflow-ai/qflow/issues/new?labels=enhancement) |
-| 问题咨询 | [Discord](https://discord.gg/85hnyQnxpn) 或 [Telegram](https://t.me/qflow) |
+<table>
+  <tr>
+    <td>缺陷报告</td>
+    <td><a href="https://github.com/qflow-ai/qflow/issues/new?labels=bug">提交 issue</a></td>
+  </tr>
+  <tr>
+    <td>功能请求</td>
+    <td><a href="https://github.com/qflow-ai/qflow/issues/new?labels=enhancement">提交 issue</a></td>
+  </tr>
+  <tr>
+    <td>问题咨询</td>
+    <td><a href="https://discord.gg/85hnyQnxpn">Discord</a> 或 <a href="https://t.me/qflow">Telegram</a></td>
+  </tr>
+</table>
 
 ## 许可证
 

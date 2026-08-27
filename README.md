@@ -137,11 +137,20 @@ up an open issue or open one for what you want to work on, and we will help you 
 The [Development Guide](https://docs.qflow.ai/guide/develop) covers the prerequisites, the daily
 commands and the repository layout.
 
-|  |  |
-| --- | --- |
-| Bug reports | [Open an issue](https://github.com/qflow-ai/qflow/issues/new?labels=bug) |
-| Feature requests | [Open an issue](https://github.com/qflow-ai/qflow/issues/new?labels=enhancement) |
-| Questions | [Discord](https://discord.gg/85hnyQnxpn) or [Telegram](https://t.me/qflow) |
+<table>
+  <tr>
+    <td>Bug reports</td>
+    <td><a href="https://github.com/qflow-ai/qflow/issues/new?labels=bug">Open an issue</a></td>
+  </tr>
+  <tr>
+    <td>Feature requests</td>
+    <td><a href="https://github.com/qflow-ai/qflow/issues/new?labels=enhancement">Open an issue</a></td>
+  </tr>
+  <tr>
+    <td>Questions</td>
+    <td><a href="https://discord.gg/85hnyQnxpn">Discord</a> or <a href="https://t.me/qflow">Telegram</a></td>
+  </tr>
+</table>
 
 ## License
 
