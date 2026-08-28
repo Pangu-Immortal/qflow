@@ -129,6 +129,7 @@ const sharedTheme = {
     dark: "/qflow-logo-light.svg",
     alt: "Qflow",
   },
+  logoLink: "https://qflow.ai",
   socialLinks: [
     { icon: "github" as const, link: "https://github.com/qflow-ai/qflow" },
   ],
