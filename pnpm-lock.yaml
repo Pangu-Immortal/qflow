@@ -2288,6 +2288,9 @@ importers:
       '@qflow/provider-whisperx-local':
         specifier: workspace:*
         version: link:../provider-whisperx-local
+      '@qflow/run-markup':
+        specifier: workspace:*
+        version: link:../run-markup
       '@qflow/script':
         specifier: workspace:*
         version: link:../script

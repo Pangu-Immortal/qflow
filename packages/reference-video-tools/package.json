@@ -25,6 +25,7 @@
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
+    "@qflow/run-markup": "workspace:*",
     "@qflow/provider-whisperx-local": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
     "@qflow/script": "workspace:*",
