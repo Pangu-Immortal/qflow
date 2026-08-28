@@ -125,8 +125,8 @@ const svsLanguage: Record<string, unknown> = {
 const sharedTheme = {
   siteTitle: "QFLOW",
   logo: {
-    light: "/logo-line-dark.svg",
-    dark: "/logo-line-light.svg",
+    light: "/qflow-logo-dark.svg",
+    dark: "/qflow-logo-light.svg",
     alt: "Qflow",
   },
   socialLinks: [
