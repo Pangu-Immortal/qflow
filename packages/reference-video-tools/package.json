@@ -36,6 +36,7 @@
     "@qflow/video-cli": "workspace:*",
     "@qflow/whisperx": "workspace:*",
     "@qflow/yt-dlp": "workspace:*",
+    "puppeteer-core": "25.5.0",
     "tsx": "4.21.0"
   },
   "devDependencies": {
