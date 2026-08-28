@@ -10,10 +10,12 @@
   "dependencies": {
     "@qflow/core": "workspace:*",
     "@qflow/elaborator": "workspace:*",
+    "@qflow/estimate": "workspace:*",
     "@qflow/workspace": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/run": "workspace:*",
     "@qflow/source": "workspace:*",
+    "@qflow/text": "workspace:*",
     "@qflow/validation": "workspace:*"
   },
   "devDependencies": {

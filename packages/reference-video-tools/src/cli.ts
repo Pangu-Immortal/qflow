@@ -44,7 +44,7 @@ function usage(): string {
     "  qflow-reference-video-tools inspect_svml_vocabulary --package <name> [--package <name> ...] [--tag <tag> ...] [--without-previews] [--run <build.svrun>]",
     "  qflow-reference-video-tools validate_local_author_packages --run <build.svrun> [--expected-package <name> ...]",
     "  qflow-reference-video-tools validate_script_cues --run <build.svrun>",
-    "  qflow-reference-video-tools inspect_visual_contract [--shape visual-track|text-flow|text-typography|text-paint|text-document|path-command] [--producers-of <package> ...]",
+    "  qflow-reference-video-tools inspect_visual_contract [--shape visual-track|visual-element|box|mask|text|image|video|surface|text-flow|text-typography|text-paint|text-document|path-command] [--producers-of <package> ...]",
     "  qflow-reference-video-tools paths",
     "  qflow-reference-video-tools compare_reconstruction --reference-id <id> --run <build.svrun> --segment <id>|--selection <id>|--tokens <from:to> --video <path>|--image <path> [--question <scope>] [--element <id>] [--tolerance-frames <n>]",
     "  qflow-reference-video-tools compare_reconstruction --reference-id <id> --shot-id <id> --video <path>|--image <path> [--question <scope>] [--element <id>] [--tolerance-frames <n>]",

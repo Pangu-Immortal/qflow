@@ -17,7 +17,7 @@ A Runtime Profile selects only the environmental parts that genuinely vary:
         "config": { "path": "artifacts" }
       },
       "credentials": {
-        "environment": { "use": "@qflow/credential-store-env" }
+        "env": { "use": "@qflow/credential-store-env" }
       },
       "endpoints": {}
     }

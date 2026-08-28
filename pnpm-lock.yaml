@@ -641,6 +641,9 @@ importers:
       '@qflow/elaborator':
         specifier: workspace:*
         version: link:../elaborator
+      '@qflow/estimate':
+        specifier: workspace:*
+        version: link:../estimate
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -650,6 +653,9 @@ importers:
       '@qflow/source':
         specifier: workspace:*
         version: link:../source
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
       '@qflow/validation':
         specifier: workspace:*
         version: link:../validation

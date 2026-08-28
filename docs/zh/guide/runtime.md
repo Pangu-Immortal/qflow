@@ -35,7 +35,7 @@ Profile 只保留真正会随环境变化的选择：
         "config": { "path": "artifacts" }
       },
       "credentials": {
-        "environment": { "use": "@qflow/credential-store-env" }
+        "env": { "use": "@qflow/credential-store-env" }
       },
       "endpoints": {
         "media": { "use": "@qflow/provider-media-local" }

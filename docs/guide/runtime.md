@@ -36,7 +36,7 @@ The Profile contains only environmental choices that genuinely vary:
         "config": { "path": "artifacts" }
       },
       "credentials": {
-        "environment": { "use": "@qflow/credential-store-env" }
+        "env": { "use": "@qflow/credential-store-env" }
       },
       "endpoints": {
         "media": { "use": "@qflow/provider-media-local" }
