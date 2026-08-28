@@ -34,6 +34,7 @@
     "@qflow/studio": "workspace:*",
     "@qflow/svs": "workspace:*",
     "@qflow/video-cli": "workspace:*",
+    "@qflow/visual-ir": "workspace:*",
     "@qflow/whisperx": "workspace:*",
     "@qflow/yt-dlp": "workspace:*",
     "puppeteer-core": "25.5.0",

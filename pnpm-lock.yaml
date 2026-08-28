@@ -2315,6 +2315,9 @@ importers:
       '@qflow/video-cli':
         specifier: workspace:*
         version: link:../video-cli
+      '@qflow/visual-ir':
+        specifier: workspace:*
+        version: link:../visual-ir
       '@qflow/whisperx':
         specifier: workspace:*
         version: link:../whisperx
