@@ -17,7 +17,7 @@ qflow plan build.svrun
 qflow build build.svrun --follow
 qflow status <build-id> --watch
 qflow builds
-qflow history [source-output-name] [--source ./main.svml]
+qflow history [source-output-name] [--source ./main.svml] [--pin] [--exclude-targets]
 qflow inspect <build-id>
 qflow get <build-id> --name final.video --to ./final.mp4
 qflow cancel <build-id>
