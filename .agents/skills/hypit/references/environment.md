@@ -52,12 +52,24 @@ Then use the checkout entrypoints directly for the rest of the route:
 ```text
 node <checkout>/bin/qflow.mjs paths --json
 node <checkout>/packages/reference-video-tools/bin/reference-video-tools.mjs <subcommand> ...
+node <checkout>/bin/qflow-studio.mjs --run <run> [--runtime <qflow.runtime.json>]
+node <checkout>/bin/qflow-preview-check.mjs <run> [<qflow.runtime.json>]
 ```
 
-In every reference that abbreviates these as `qflow` and `qflow-reference-video-tools`, interpret
-them as the selected launchers above. Do not globally link the checkout, use `npx qflow`, or install
-dependencies into an author project. Run reference-video-tool commands that share reference state
-from the same working directory, even though their launcher lives in the checkout.
+In every reference that abbreviates these as `qflow`, `qflow-reference-video-tools`,
+`qflow-studio` or `qflow-preview-check`, interpret them as the selected launchers above:
+
+| Abbreviation | Contributor checkout launcher |
+|---|---|
+| `qflow` | `node <checkout>/bin/qflow.mjs` |
+| `qflow-reference-video-tools` | `node <checkout>/packages/reference-video-tools/bin/reference-video-tools.mjs` |
+| `qflow-studio` | `node <checkout>/bin/qflow-studio.mjs` |
+| `qflow-preview-check` | `node <checkout>/bin/qflow-preview-check.mjs` |
+
+Do not interpret `qflow-studio` as a `studio` subcommand of `qflow`: Studio is a separate entrypoint.
+Do not globally link the checkout, use `npx qflow`, or install dependencies into an author project.
+Run reference-video-tool commands that share reference state from the same working directory, even
+though their launcher lives in the checkout.
 
 When a reference names `<skill-root>`, substitute the installed Qflow skill directory (the directory
 containing `SKILL.md` and `scripts/`); it is not relative to the author's project or checkout.

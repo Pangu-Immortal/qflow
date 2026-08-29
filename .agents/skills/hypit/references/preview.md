@@ -130,6 +130,9 @@ cd /path/to/project
 qflow-studio --run .qflow/preview/<digest>/preview.svrun --runtime qflow.runtime.json &
 ```
 
+`qflow-studio` is the standalone Studio launcher (`node <checkout>/bin/qflow-studio.mjs` in a
+contributor checkout), not a `studio` subcommand of `qflow`.
+
 If another Studio process is already using a different Run or startup parameters, stop that process
 before launching this command; otherwise reuse the existing process and let its Source watcher reload.
 
