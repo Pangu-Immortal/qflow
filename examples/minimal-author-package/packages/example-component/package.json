@@ -6,6 +6,7 @@
   "exports": { ".": "./src/index.ts" },
   "qflow": { "activation": "./src/activation.ts" },
   "dependencies": {
+    "@qflow/artifact": "workspace:*",
     "@qflow/component-kit": "workspace:*",
     "@qflow/composition": "workspace:*",
     "@qflow/elaborator": "workspace:*",
