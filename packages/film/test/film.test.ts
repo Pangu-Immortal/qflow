@@ -29,7 +29,6 @@ import {
 import { appendFilmAudioTrack, appendFilmVisualTrack, compileFilmComposition, createFilmAssemblyFragment, createFilmTrackSet, filmManifest, filmProducers, filmTypes, sealFilmProgram } from "@qflow/film";
 import { compileHyperframesDocument, hyperframesDocumentFragment, hyperframesManifest, hyperframesProducers, hyperframesTypes } from "@qflow/hyperframes";
 import type { CanonicalValue, CompiledGraph, StoredValue, TypedRecord } from "@qflow/protocol";
-import { svsManifest } from "@qflow/svs";
 import { textManifest } from "@qflow/text";
 import { renderTypographyTrack, sealTypographyTrackProgram, stillTextMotion, typographyTrackFragment, typographyTrackManifest, typographyTrackProducers, typographyTrackTypes } from "@qflow/typography-track";
 import type { TextStyle } from "@qflow/typography-track";
@@ -129,7 +128,6 @@ function stored(value: CanonicalValue): StoredValue {
 
 const closure = createResolvedClosure([
   ...videoContractManifests,
-  svsManifest,
   hyperframesManifest,
   textManifest,
   filmManifest,
