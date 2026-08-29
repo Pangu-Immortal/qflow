@@ -25,7 +25,7 @@ import {
   filmTypes,
 } from "@qflow/film";
 import type { ModuleManifest } from "@qflow/protocol";
-import { svsFrontend, svsManifest } from "@qflow/svs";
+import { svsFrontend } from "@qflow/svs";
 import {
   decodeCanvasSurface,
   spatialManifest,
@@ -74,7 +74,6 @@ const audio = sealAudioTrack({ programSpaceId: "test-space",
 
 const closure = createResolvedClosure([
   ...videoContractManifests,
-  svsManifest,
   fixtureManifest,
   filmManifest,
 ]);

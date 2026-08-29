@@ -33,6 +33,7 @@ import { semanticTrackDependency, semanticTrackManifest, semanticTrackProducers,
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { speechManifest } from "@qflow/speech";
 import { sealCanvasSpace, spatialComponent, spatialDependency, spatialManifest, spatialTypes } from "@qflow/spatial";
+import { svsManifest } from "@qflow/svs";
 import { temporalManifest, temporalProducers } from "@qflow/temporal";
 import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup";
 import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
@@ -158,6 +159,7 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
     speechEvidenceManifest,
     semanticTrackManifest,
     spatialManifest,
+    svsManifest,
     temporalManifest,
     visualIrManifest,
     compositionManifest,

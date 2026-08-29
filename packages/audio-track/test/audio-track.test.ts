@@ -37,6 +37,7 @@ import { temporalProducers } from "@qflow/temporal";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { speechManifest } from "@qflow/speech";
 import { spatialManifest } from "@qflow/spatial";
+import { svsManifest } from "@qflow/svs";
 import { temporalManifest } from "@qflow/temporal";
 import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup";
 import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
@@ -278,6 +279,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
     narrativeManifest,
     programSpaceManifest,
     speechManifest,
+    svsManifest,
     spatialManifest,
     speechEvidenceManifest,
     semanticTrackManifest,
