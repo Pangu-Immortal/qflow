@@ -43,7 +43,7 @@ $env:GOOGLE_APPLICATION_CREDENTIALS_JSON = Get-Content -Raw "$HOME\.config\qflow
 
 Keep keys outside Author/Run/Runtime source and committed files. Verify presence without printing
 values with, for example,
-`node .agents/skills/qflow/scripts/check-credentials.mjs KIE_API_KEY MIMO_API_KEY`, then run
+`node <skill-root>/scripts/check-credentials.mjs KIE_API_KEY MIMO_API_KEY`, then run
 `qflow doctor` (once a Runtime Profile is selected with `qflow runtime use qflow.runtime.json`;
 doctor audits the selected profile, so it needs no profile argument of its own).
 
