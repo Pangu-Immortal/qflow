@@ -14,7 +14,8 @@
     "@qflow/component-kit": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/markup": "workspace:*"
+    "@qflow/markup": "workspace:*",
+    "@qflow/svs": "workspace:*"
   },
   "devDependencies": {
     "@qflow/core": "workspace:*",
