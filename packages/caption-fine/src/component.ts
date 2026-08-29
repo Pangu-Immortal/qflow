@@ -4,6 +4,7 @@ import type { CaptionDocument } from "@qflow/narrative";
 import type { ProgramSpace } from "@qflow/program-space";
 import type { StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
+import type { SpatialRegionTimeline } from "@qflow/spatial";
 
 import { captionFineProducers } from "./manifest.js";
 import { renderFineCaption } from "./render.js";
@@ -36,6 +37,19 @@ export const captionFineComponent = {
           inline<CaptionProgram>(inputs.program?.value, "CaptionProgram"),
           inline<CaptionDocument>(inputs.document?.value, "CaptionDocument"),
           inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        )) } },
+        needs: {},
+      }),
+    },
+    {
+      producer: captionFineProducers.renderWithRegions,
+      handler: ({ inputs }) => ({
+        outputs: { track: { kind: "inline", value: canonicalize(renderFineCaption(
+          inline<FineCaptionSchedule>(inputs.schedule?.value, "FineCaptionSchedule"),
+          inline<CaptionProgram>(inputs.program?.value, "CaptionProgram"),
+          inline<CaptionDocument>(inputs.document?.value, "CaptionDocument"),
+          inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+          inline<SpatialRegionTimeline>(inputs.regions?.value, "SpatialRegionTimeline"),
         )) } },
         needs: {},
       }),

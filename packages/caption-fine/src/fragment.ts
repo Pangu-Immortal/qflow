@@ -3,6 +3,7 @@ import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
 import { narrativeTypes } from "@qflow/narrative";
 import { semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
+import { spatialTypes } from "@qflow/spatial";
 
 import { captionFineProducers, captionFineTypes } from "./manifest.js";
 
@@ -60,5 +61,52 @@ export const fineCaptionTrackFragment = sealGraphFragment({
       type: compositionTypes.visualTrack,
       root: operation("caption-fine:render"),
     },
+  ],
+});
+
+/** The same Caption pipeline with one explicit, external spatial-evidence edge. */
+export const fineCaptionRegionTrackFragment = sealGraphFragment({
+  inputs: [
+    { name: "document", type: narrativeTypes.captionDocument },
+    { name: "semantic", type: semanticTrackTypes.track },
+    { name: "program", type: captionTypes.program },
+    { name: "regions", type: spatialTypes.regionTimeline },
+  ],
+  operations: [
+    {
+      id: "caption:space",
+      producer: semanticTrackProducers.projectProgramSpace,
+      inputs: { track: input("semantic") },
+      result: { kind: "output", name: "space" },
+    },
+    {
+      id: "caption:temporalize-document",
+      producer: captionProducers.temporalizeDocument,
+      inputs: {
+        document: input("document"), semantic: input("semantic"), program: input("program"),
+      },
+      result: { kind: "output", name: "caption" },
+    },
+    {
+      id: "caption-fine:schedule",
+      producer: captionFineProducers.schedule,
+      inputs: {
+        caption: operation("caption:temporalize-document"), program: input("program"), document: input("document"),
+      },
+      result: { kind: "output", name: "schedule" },
+    },
+    {
+      id: "caption-fine:render",
+      producer: captionFineProducers.renderWithRegions,
+      inputs: {
+        schedule: operation("caption-fine:schedule"), program: input("program"),
+        document: input("document"), space: operation("caption:space"), regions: input("regions"),
+      },
+      result: { kind: "output", name: "track" },
+    },
+  ],
+  exports: [
+    { name: "schedule", type: captionFineTypes.schedule, root: operation("caption-fine:schedule") },
+    { name: "track", type: compositionTypes.visualTrack, root: operation("caption-fine:render") },
   ],
 });
