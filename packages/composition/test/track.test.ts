@@ -15,6 +15,7 @@ import { programSpaceManifest, sealProgramSpace } from "@qflow/program-space";
 import { speechManifest } from "@qflow/speech";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { spatialManifest } from "@qflow/spatial";
+import { svsManifest } from "@qflow/svs";
 import { VISUAL_IR_V1, visualIrManifest } from "@qflow/visual-ir";
 
 import {
@@ -30,7 +31,7 @@ import {
 import type { VisualTrack } from "../src/index.js";
 
 const videoContractManifests = [artifactManifest, narrativeManifest, mediaManifest, programSpaceManifest,
-  speechManifest, speechEvidenceManifest, spatialManifest, visualIrManifest, compositionManifest] as const;
+  speechManifest, speechEvidenceManifest, svsManifest, spatialManifest, visualIrManifest, compositionManifest] as const;
 
 const font: FontArtifactRef = {
   sources: [{ artifact: { kind: "blob", digest: fixtureDigest("track:test-font"), size: 1_024, mediaType: "font/woff2" } }],

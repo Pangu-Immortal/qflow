@@ -41,6 +41,7 @@ import {
 } from "@qflow/seedance";
 import { speechManifest } from "@qflow/speech";
 import { spatialManifest } from "@qflow/spatial";
+import { svsManifest } from "@qflow/svs";
 import { textManifest } from "@qflow/text";
 
 const image = (name: string) => ({
@@ -63,6 +64,7 @@ function fixture() {
     mediaManifest,
     programSpaceManifest,
     spatialManifest,
+    svsManifest,
     speechManifest,
     seedanceManifest,
   ];

@@ -7,6 +7,7 @@ import { semanticTrackManifest } from "@qflow/semantic-track";
 import { spatialComponent, spatialManifest } from "@qflow/spatial";
 import { speechManifest } from "@qflow/speech";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
+import { svsManifest } from "@qflow/svs";
 import { temporalManifest } from "@qflow/temporal";
 import { visualIrManifest } from "@qflow/visual-ir";
 
@@ -18,6 +19,7 @@ export const videoContractManifests = [
   programSpaceManifest,
   speechManifest,
   speechEvidenceManifest,
+  svsManifest,
   semanticTrackManifest,
   spatialManifest,
   temporalManifest,
