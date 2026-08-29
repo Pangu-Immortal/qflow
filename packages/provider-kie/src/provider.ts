@@ -11,7 +11,9 @@ import type {
   BlobRef,
   CanonicalValue,
   Digest,
+  Need,
 } from "@qflow/protocol";
+import type { GenerationRequest } from "@qflow/generation";
 import {
   defineEndpointPackage,
   wakeAfter,
@@ -22,6 +24,7 @@ import type { ArtifactStore, CredentialRef } from "@qflow/runtime";
 import {
   kieRouteForCapability,
   kieRoutes,
+  supportsKieGptImageRequest,
   verifyKieRoutes,
 } from "./routes.js";
 import type { KieTaskRequest } from "./routes.js";
@@ -589,6 +592,9 @@ export function createKieProvider(config: CreateKieProviderOptions) {
         : { maxConcurrency: laneConcurrency[route.capability.name] }),
       lifecycle: "asynchronous" as const,
       endpoint: providerEndpoint,
+      ...(route.capability.module.name === "@qflow/gpt-image" ? {
+        supports: (need: Need) => supportsKieGptImageRequest(need.constraints as unknown as GenerationRequest),
+      } : {}),
     })),
   });
 }

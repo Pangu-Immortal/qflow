@@ -261,6 +261,9 @@ importers:
 
   examples/minimal-author-package/packages/example-component:
     dependencies:
+      '@qflow/artifact':
+        specifier: workspace:*
+        version: link:../../../../packages/artifact
       '@qflow/component-kit':
         specifier: workspace:*
         version: link:../../../../packages/component-kit
@@ -273,6 +276,9 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../../../../packages/markup
+      '@qflow/media':
+        specifier: workspace:*
+        version: link:../../../../packages/media
       '@qflow/program-space':
         specifier: workspace:*
         version: link:../../../../packages/program-space
@@ -282,6 +288,9 @@ importers:
       '@qflow/semantic-track':
         specifier: workspace:*
         version: link:../../../../packages/semantic-track
+      '@qflow/svs':
+        specifier: workspace:*
+        version: link:../../../../packages/svs
       '@qflow/temporal':
         specifier: workspace:*
         version: link:../../../../packages/temporal
