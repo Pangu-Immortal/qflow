@@ -3,7 +3,7 @@
   "runtime": {
     "use": "@qflow/runtime-local",
     "config": {
-      "dataRoot": ".qflow/runtimes/local-v2",
+      "dataRoot": ".qflow/runtimes/local-v3",
       "artifacts": { "use": "@qflow/artifact-store-fs", "config": { "path": "artifacts" } },
       "credentials": { "env": { "use": "@qflow/credential-store-env" } },
       "endpoints": {
