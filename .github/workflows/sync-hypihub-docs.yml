@@ -1,0 +1,39 @@
+name: Notify QflowHub of documentation updates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch documentation sync
+        uses: actions/github-script@v7
+        env:
+          QFLOWHUB_SYNC_TOKEN: ${{ secrets.QFLOWHUB_SYNC_TOKEN }}
+        with:
+          script: |
+            const token = process.env.QFLOWHUB_SYNC_TOKEN;
+            if (!token) {
+              core.setFailed("QFLOWHUB_SYNC_TOKEN is not configured");
+              return;
+            }
+
+            const client = github.getOctokit(token);
+            await client.rest.repos.createDispatchEvent({
+              owner: "qflow-ai",
+              repo: "qflowhub",
+              event_type: "qflow-docs-updated",
+              client_payload: {
+                source_repo: `${context.repo.owner}/${context.repo.repo}`,
+                source_sha: context.sha,
+                source_ref: context.ref,
+              },
+            });
