@@ -132,6 +132,9 @@ importers:
       '@qflow/provider-hyperframes-local':
         specifier: workspace:*
         version: link:packages/provider-hyperframes-local
+      '@qflow/provider-qflowhub':
+        specifier: workspace:*
+        version: link:packages/provider-qflowhub
       '@qflow/provider-image-opencv-local':
         specifier: workspace:*
         version: link:packages/provider-image-opencv-local
@@ -1936,6 +1939,24 @@ importers:
       '@qflow/program-space':
         specifier: workspace:*
         version: link:../program-space
+
+  packages/provider-qflowhub:
+    dependencies:
+      '@qflow/endpoint-kit':
+        specifier: workspace:*
+        version: link:../endpoint-kit
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@qflow/runtime-kit':
+        specifier: workspace:*
+        version: link:../runtime-kit
 
   packages/provider-image-opencv-local:
     dependencies:

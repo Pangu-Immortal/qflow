@@ -98,6 +98,7 @@
     "@qflow/provider-hyperframes-aws-lambda": "workspace:*",
     "@qflow/provider-hyperframes-local": "workspace:*",
     "@qflow/provider-image-opencv-local": "workspace:*",
+    "@qflow/provider-qflowhub": "workspace:*",
     "@qflow/provider-kie": "workspace:*",
     "@qflow/provider-media-aws-lambda": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
