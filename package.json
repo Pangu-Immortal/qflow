@@ -79,6 +79,7 @@
     "@qflow/film-studio": "workspace:*",
     "@qflow/fonts-open": "workspace:*",
     "@qflow/generation": "workspace:*",
+    "@qflow/gemini": "workspace:*",
     "@qflow/gpt-image": "workspace:*",
     "@qflow/grok-imagine": "workspace:*",
     "@qflow/hyperframes": "workspace:*",

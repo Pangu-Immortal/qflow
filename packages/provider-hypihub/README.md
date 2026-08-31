@@ -30,8 +30,9 @@ Runtime Profile example:
 }
 ```
 
-Gemini VLM callers can use the exported `createQflowHubGeminiGenerator` without changing their
-provider-facing code. Set `QFLOWHUB_API_KEY` (and optionally `QFLOWHUB_BASE_URL`; either the origin or
+Gemini VLM is also exposed as the provider-neutral `@qflow/gemini` Runtime capability, so an Author
+Source can select the exact model while the Runtime chooses QflowHub or Vertex. Existing embedded
+callers can still use the exported `createQflowHubGeminiGenerator`. Set `QFLOWHUB_API_KEY` (and optionally `QFLOWHUB_BASE_URL`; either the origin or
 an existing `/v1`/`/v1beta` base is accepted) only when choosing QflowHub. The Runtime Provider also
 accepts the origin or either versioned base and normalizes it to `/v1`; missing or insufficient user
 credentials should be resolved at [qflow.ai](https://qflow.ai). Referenced image, audio and video

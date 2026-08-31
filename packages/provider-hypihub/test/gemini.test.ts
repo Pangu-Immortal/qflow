@@ -46,3 +46,29 @@ test("QflowHub Gemini points unavailable models to QflowHub", async () => {
   await assert.rejects(() => generate({ instruction: "x", parts: [{ text: "x" }] }),
     /get a QflowHub key with this model enabled at https:\/\/qflow\.ai/iu);
 });
+
+test("QflowHub Gemini retries upstream rate limits without reuploading files", async () => {
+  let uploads = 0;
+  let generations = 0;
+  const generate = createQflowHubGeminiGenerator({
+    apiKey: "test-key",
+    maxRateLimitRetries: 2,
+    rateLimitRetryDelayMs: 1,
+    fetch: async (input) => {
+      const url = String(input);
+      if (url.endsWith("/v1/files")) {
+        uploads += 1;
+        return Response.json({ url: "https://qflow.ai/files/ref" });
+      }
+      generations += 1;
+      return generations < 3
+        ? new Response("rate limited", { status: 429, headers: { "retry-after": "0" } })
+        : Response.json({ candidates: [{ content: { parts: [{ text: "OK" }] } }] });
+    },
+  });
+  assert.equal(await generate({ instruction: "x", parts: [
+    { text: "x" }, { inlineData: { mimeType: "image/png", data: "aW1hZ2U=" } },
+  ] }), "OK");
+  assert.equal(uploads, 1);
+  assert.equal(generations, 3);
+});

@@ -72,6 +72,9 @@ importers:
       '@qflow/fonts-open':
         specifier: workspace:*
         version: link:packages/fonts-open
+      '@qflow/gemini':
+        specifier: workspace:*
+        version: link:packages/gemini
       '@qflow/generation':
         specifier: workspace:*
         version: link:packages/generation
@@ -1313,6 +1316,27 @@ importers:
         specifier: 0.2.0
         version: 0.2.0
 
+  packages/gemini:
+    dependencies:
+      '@qflow/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../component-kit
+      '@qflow/elaborator':
+        specifier: workspace:*
+        version: link:../elaborator
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
+
   packages/generation:
     dependencies:
       '@qflow/artifact':
@@ -1948,6 +1972,9 @@ importers:
       '@qflow/endpoint-kit':
         specifier: workspace:*
         version: link:../endpoint-kit
+      '@qflow/gemini':
+        specifier: workspace:*
+        version: link:../gemini
       '@qflow/generation':
         specifier: workspace:*
         version: link:../generation
@@ -1960,6 +1987,9 @@ importers:
       '@qflow/runtime-kit':
         specifier: workspace:*
         version: link:../runtime-kit
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
     devDependencies:
       '@qflow/driver-node':
         specifier: workspace:*
@@ -2163,6 +2193,28 @@ importers:
       '@google/genai':
         specifier: 1.52.0
         version: 1.52.0
+      '@qflow/endpoint-kit':
+        specifier: workspace:*
+        version: link:../endpoint-kit
+      '@qflow/gemini':
+        specifier: workspace:*
+        version: link:../gemini
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@qflow/runtime-kit':
+        specifier: workspace:*
+        version: link:../runtime-kit
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
+    devDependencies:
+      '@qflow/driver-node':
+        specifier: workspace:*
+        version: link:../driver-node
 
   packages/provider-whisperx-local:
     dependencies:
@@ -2313,6 +2365,9 @@ importers:
       '@qflow/estimate':
         specifier: workspace:*
         version: link:../estimate
+      '@qflow/gemini':
+        specifier: workspace:*
+        version: link:../gemini
       '@qflow/hyperframes':
         specifier: workspace:*
         version: link:../hyperframes

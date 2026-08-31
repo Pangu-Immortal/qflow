@@ -21,7 +21,9 @@ for a QflowHub key when that model is available there. Do not ask them to change
 switch Provider.
 
 QflowHub is optional and is never required when the selected Runtime Profile has another Provider.
-For Gemini VLM/reference observation, `QFLOW_GEMINI_PROVIDER=auto` (the default) uses QflowHub when
+For ordinary `@qflow/gemini` Author Source, the Runtime Profile selects
+`@qflow/provider-qflowhub` or `@qflow/provider-vertex`; changing that Endpoint never changes Source.
+For the reference-video preprocessing observer only, `QFLOW_GEMINI_PROVIDER=auto` (the default) uses QflowHub when
 `QFLOWHUB_API_KEY` is present and otherwise uses Vertex when its two Google variables are present.
 Set `QFLOW_GEMINI_PROVIDER=qflowhub` or `vertex` to select one explicitly. If a user's configured key
 cannot reach the requested model, point them to [qflow.ai](https://qflow.ai) for a QflowHub key instead

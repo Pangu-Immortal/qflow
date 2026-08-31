@@ -3,8 +3,10 @@ import test from "node:test";
 
 import { EndpointRegistry, MemoryArtifactStore } from "@qflow/driver-node";
 import type { AsyncEndpoint } from "@qflow/endpoint-kit";
+import { geminiCapabilities, sealGeminiRequest } from "@qflow/gemini";
 import type { CanonicalValue, Need } from "@qflow/protocol";
 import { mimoTtsEndpoints } from "@qflow/mimo-tts";
+import { textTypes } from "@qflow/text";
 import { sealSeedanceRequest, seedanceEndpoints } from "@qflow/seedance";
 
 import { createQflowHubProvider } from "../src/provider.js";
@@ -113,4 +115,52 @@ test("QflowHub uploads referenced Artifacts once, submits their HTTPS URLs, and 
   const completed = await endpoint.poll({ ...common, handle: started.handle });
   assert.equal(completed.status, "completed");
   assert.equal(calls.length, 6);
+});
+
+test("QflowHub fulfills Gemini through the Runtime endpoint and uploads every media Artifact", async () => {
+  const artifacts = new MemoryArtifactStore();
+  const image = await artifacts.put(new Uint8Array([1, 2, 3]), "image/png");
+  const video = await artifacts.put(new Uint8Array([4, 5, 6]), "video/mp4");
+  const request: Need = {
+    id: "need:qflowhub-gemini",
+    capability: geminiCapabilities["gemini-3.7-flash"],
+    returns: textTypes.text,
+    constraints: sealGeminiRequest({
+      instruction: "Answer briefly.", prompt: "Inspect both references.",
+      media: [{ artifact: image }, { artifact: video }],
+    }) as unknown as CanonicalValue,
+    result: "record:qflowhub-gemini",
+  };
+  const uploads: string[] = [];
+  let generationBody: Record<string, unknown> | undefined;
+  const registry = new EndpointRegistry();
+  await createQflowHubProvider({ fetch: async (input, init) => {
+    const url = String(input);
+    if (url.endsWith("/v1/files")) {
+      assert.ok(init?.body instanceof FormData);
+      const file = init.body.get("file");
+      assert.ok(file instanceof File);
+      uploads.push(file.type);
+      return Response.json({ url: `https://qflow.ai/files/${uploads.length}` });
+    }
+    if (url.includes(":generateContent")) {
+      generationBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return Response.json({ candidates: [{ content: { parts: [{ text: "provider works" }] } }] });
+    }
+    throw new Error(`Unexpected URL ${url}`);
+  } }).install(registry);
+  const resolution = registry.resolve(request);
+  assert.equal(resolution.status, "resolved");
+  assert.equal(resolution.registration.kind, "immediate");
+  const result = await resolution.registration.handler({
+    command: { kind: "fulfill-need", id: "command:qflowhub-gemini", need: request },
+    need: request, artifacts, credentials: { apiKey: { secret: "test-key" } },
+  });
+  assert.deepEqual(result.value, { kind: "inline", value: { value: "provider works" } });
+  assert.deepEqual(uploads, ["image/png", "video/mp4"]);
+  assert.deepEqual((generationBody?.contents as readonly unknown[]), [{ role: "user", parts: [
+    { text: "Inspect both references." },
+    { fileData: { mimeType: "image/png", fileUri: "https://qflow.ai/files/1" } },
+    { fileData: { mimeType: "video/mp4", fileUri: "https://qflow.ai/files/2" } },
+  ] }]);
 });

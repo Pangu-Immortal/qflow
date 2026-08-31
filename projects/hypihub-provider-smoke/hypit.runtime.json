@@ -3,17 +3,17 @@
   "runtime": {
     "use": "@qflow/runtime-local",
     "config": {
-      "dataRoot": ".qflow/runtimes/local-v4",
+      "dataRoot": ".qflow/runtimes/local",
       "artifacts": { "use": "@qflow/artifact-store-fs", "config": { "path": "artifacts" } },
       "credentials": { "env": { "use": "@qflow/credential-store-env" } },
       "endpoints": {
         "qflowhub.smoke": {
           "use": "@qflow/provider-qflowhub",
-          "pool": "qflowhub.smoke-v4",
+          "pool": "qflowhub.smoke",
           "config": {
             "baseUrl": "https://qflow.ai/v1",
             "apiKey": { "store": "env", "key": "QFLOWHUB_API_KEY" },
-            "defaultConcurrency": 1,
+            "defaultConcurrency": 8,
             "pollIntervalMs": 5000,
             "requestTimeoutMs": 120000,
             "audio": false

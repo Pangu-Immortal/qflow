@@ -12,7 +12,7 @@ Source.
 
 Start from the Runtime Profile template in `docs/guide/runtime.md` (the repository does not ship a
 canonical `examples/*/qflow.runtime.json`). Bind one Endpoint per capability your Sources actually
-reach: the picture and video models, speech, alignment, the media Provider and the local renderer.
+reach: the picture and video models, Gemini VLM, speech, alignment, the media Provider and the local renderer.
 Read each Provider's README for the shape of its `config`, and reference credentials through the store
 rather than writing any secret into the file.
 
@@ -51,9 +51,16 @@ gateway, so a typical profile looks like this:
 ```
 
 `defaultConcurrency` is the total QflowHub pool shared by its model capabilities. Tune it to the
-quota behind the key; the Provider keeps each exact capability in its own lane. An explicit KIE
+quota behind the key; image/video capabilities keep exact-model lanes while Gemini requests share
+one conservative lane. An explicit KIE
 profile remains valid when a project deliberately chooses `@qflow/provider-kie`, but it is not the
 default route.
+
+An Author Source importing `@qflow/gemini` remains Provider-neutral. Bind those capabilities to
+`@qflow/provider-qflowhub` for QflowHub's upload-backed Gemini endpoint, or to
+`@qflow/provider-vertex` for direct Vertex. Never make this Build-time choice with
+`QFLOW_GEMINI_PROVIDER`; that environment switch belongs only to the reference-video preprocessing
+observer, which runs outside a Build.
 
 Provider-specific input limits are also part of preflight. For the KIE GPT Image 2 route, do not
 submit `4:3`, `3:4` or `4:5`; the route rejects those aspect ratios before upload or paid submission.
