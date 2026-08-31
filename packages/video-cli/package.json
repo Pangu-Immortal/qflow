@@ -20,7 +20,7 @@
     "@qflow/model-kit": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/provider-kie": "workspace:*",
+    "@qflow/provider-qflowhub": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
     "@qflow/runtime-local": "workspace:*",
     "@qflow/workspace-fs-node": "workspace:*"

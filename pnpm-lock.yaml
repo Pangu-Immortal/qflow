@@ -3251,9 +3251,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/provider-kie':
+      '@qflow/provider-qflowhub':
         specifier: workspace:*
-        version: link:../provider-kie
+        version: link:../provider-qflowhub
       '@qflow/runtime-host-node':
         specifier: workspace:*
         version: link:../runtime-host-node

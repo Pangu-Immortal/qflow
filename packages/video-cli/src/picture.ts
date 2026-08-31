@@ -9,7 +9,7 @@ import { exactModelsFromHostFacets } from "@qflow/model-kit";
 import type { ExactModelEndpoint } from "@qflow/model-kit";
 import { loadNodePackageSelection } from "@qflow/package-loader-node";
 import type { BlobRef, CanonicalValue, Need } from "@qflow/protocol";
-import { createKieProvider } from "@qflow/provider-kie";
+import { createQflowHubProvider } from "@qflow/provider-qflowhub";
 
 /**
  * The exact model family this Distribution reaches for when the author names none.
@@ -99,7 +99,9 @@ async function resolveCredentials(
   for (const [slot, ref] of Object.entries(registration.credentials ?? {})) {
     const value = await store.resolve(ref);
     assert(value !== undefined, ref.store === "env"
-      ? `credential ${slot} is unavailable; set ${ref.key} in the environment`
+      ? ref.key === "QFLOWHUB_API_KEY"
+        ? `credential ${slot} is unavailable; set ${ref.key} in the environment (get a QflowHub key at https://qflow.ai)`
+        : `credential ${slot} is unavailable; set ${ref.key} in the environment`
       : `credential ${slot} lives in CredentialStore ${ref.store}, which qflow image cannot open`);
     resolved[slot] = value;
   }
@@ -143,7 +145,7 @@ export async function generateVideoCliPicture(request: CliPictureRequest): Promi
     result: "record:qflow-image",
   };
   const registry = new EndpointRegistry();
-  await createKieProvider({}).install(registry);
+  await createQflowHubProvider({}).install(registry);
   const resolution = registry.resolve(need);
   assert(resolution.status === "resolved",
     `no Provider in this Distribution fulfils ${model.ports.model}`);
