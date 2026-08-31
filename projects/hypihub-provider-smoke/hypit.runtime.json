@@ -9,7 +9,7 @@
       "endpoints": {
         "qflowhub.smoke": {
           "use": "@qflow/provider-qflowhub",
-          "pool": "qflowhub.smoke",
+          "pool": "qflowhub.smoke-v4",
           "config": {
             "baseUrl": "https://qflow.ai/v1",
             "apiKey": { "store": "env", "key": "QFLOWHUB_API_KEY" },
