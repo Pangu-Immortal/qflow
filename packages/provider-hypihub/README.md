@@ -16,7 +16,7 @@ Runtime Profile example:
       "use": "@qflow/provider-qflowhub",
       "pool": "qflowhub.default",
       "config": {
-        "baseUrl": "https://apihub.qflow.ai/v1",
+        "baseUrl": "https://qflow.ai/v1",
         "apiKey": { "store": "env", "key": "QFLOWHUB_API_KEY" },
         "defaultConcurrency": 4
       }
