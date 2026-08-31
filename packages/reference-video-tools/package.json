@@ -12,7 +12,6 @@
     "./cli": "./src/cli.ts"
   },
   "dependencies": {
-    "@google/genai": "1.52.0",
     "@qflow/composition": "workspace:*",
     "@qflow/core": "workspace:*",
     "@qflow/driver-node": "workspace:*",
@@ -29,6 +28,7 @@
     "@qflow/provider-whisperx-local": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
     "@qflow/provider-qflowhub": "workspace:*",
+    "@qflow/provider-vertex": "workspace:*",
     "@qflow/script": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",

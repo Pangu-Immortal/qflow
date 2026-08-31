@@ -133,7 +133,8 @@ else. Results are not cached, because the rendered side changes on every iterati
 `unresolved` lists the keys of observations that failed. It is not a judgement about evidence
 quality: a complete observation that says "unclear" is still complete.
 
-Gemini uses `QFLOW_GEMINI_PROVIDER=auto|qflowhub|vertex` to select its backend. QflowHub uses
+Gemini uses `QFLOW_GEMINI_PROVIDER=auto|qflowhub|vertex` to select its backend. The backends are
+provided by `@qflow/provider-qflowhub` and `@qflow/provider-vertex`. QflowHub uses
 `QFLOWHUB_API_KEY` and optional `QFLOWHUB_BASE_URL` (default `https://qflow.ai`); Vertex uses the
 existing `GOOGLE_CLOUD_PROJECT`, `GOOGLE_APPLICATION_CREDENTIALS_JSON` and optional
 `GOOGLE_CLOUD_LOCATION`. The model defaults to `gemini-3.1-pro-preview`. A missing or insufficient

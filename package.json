@@ -100,6 +100,7 @@
     "@qflow/provider-image-opencv-local": "workspace:*",
     "@qflow/provider-qflowhub": "workspace:*",
     "@qflow/provider-kie": "workspace:*",
+    "@qflow/provider-vertex": "workspace:*",
     "@qflow/provider-media-aws-lambda": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
     "@qflow/preview-mock": "workspace:*",
