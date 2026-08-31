@@ -28,6 +28,7 @@
     "@qflow/run-markup": "workspace:*",
     "@qflow/provider-whisperx-local": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
+    "@qflow/provider-qflowhub": "workspace:*",
     "@qflow/script": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",

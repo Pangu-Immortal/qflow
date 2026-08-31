@@ -2321,6 +2321,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@qflow/provider-qflowhub':
+        specifier: workspace:*
+        version: link:../provider-qflowhub
       '@qflow/provider-media-local':
         specifier: workspace:*
         version: link:../provider-media-local
