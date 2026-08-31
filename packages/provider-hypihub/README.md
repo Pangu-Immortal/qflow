@@ -33,5 +33,7 @@ Gemini VLM callers can use the exported `createQflowHubGeminiGenerator` without 
 provider-facing code. Set `QFLOWHUB_API_KEY` (and optionally `QFLOWHUB_BASE_URL`; either the origin or
 an existing `/v1`/`/v1beta` base is accepted) only when choosing QflowHub. The Runtime Provider also
 accepts the origin or either versioned base and normalizes it to `/v1`; missing or insufficient user
-credentials should be resolved at [qflow.ai](https://qflow.ai). Video/audio reference artifacts need
-an operator-supplied `publicAssetUrl` callback because QflowHub must fetch those references over HTTPS.
+credentials should be resolved at [qflow.ai](https://qflow.ai). Referenced image, audio and video
+Artifacts are uploaded automatically through `POST /v1/files`, then their returned HTTPS capability
+URLs are used in image and video requests. Uploads are deduplicated by Artifact digest within one
+Runtime operation. Embedded callers may override that transport with `publicAssetUrl`.

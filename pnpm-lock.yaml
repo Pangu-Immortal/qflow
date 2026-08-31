@@ -1960,6 +1960,13 @@ importers:
       '@qflow/runtime-kit':
         specifier: workspace:*
         version: link:../runtime-kit
+    devDependencies:
+      '@qflow/driver-node':
+        specifier: workspace:*
+        version: link:../driver-node
+      '@qflow/seedance':
+        specifier: workspace:*
+        version: link:../seedance
 
   packages/provider-image-opencv-local:
     dependencies:

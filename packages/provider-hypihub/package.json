@@ -12,5 +12,9 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-kit": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/driver-node": "workspace:*",
+    "@qflow/seedance": "workspace:*"
   }
 }

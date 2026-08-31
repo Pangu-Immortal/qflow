@@ -33,7 +33,7 @@ test("QflowHub GPT image requests use canonical edit references and size dimensi
   });
 });
 
-test("QflowHub image-to-video requests use input_reference", async () => {
+test("QflowHub image-to-video requests preserve Qflow's first-frame semantics", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "minimax-h3");
   assert.ok(route);
   const result = await route.compile({
@@ -48,11 +48,11 @@ test("QflowHub image-to-video requests use input_reference", async () => {
     prompt: "animate",
     seconds: 5,
     resolution: "2k",
-    input_reference: "data:image/png;base64,AQID",
+    first_frame: "data:image/png;base64,AQID",
   });
 });
 
-test("QflowHub preserves video/audio reference arrays for its upstream passthrough", async () => {
+test("QflowHub sends audio references through the public top-level field", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "minimax-h3");
   assert.ok(route);
   const result = await route.compile({
@@ -64,11 +64,11 @@ test("QflowHub preserves video/audio reference arrays for its upstream passthrou
   }, resolveAudio);
   assert.deepEqual(result.input, {
     prompt: "animate", seconds: 5, resolution: "2k",
-    extra: { reference_audios: ["data:audio/wav;base64,AQID"] },
+    reference_audios: ["data:audio/wav;base64,AQID"],
   });
 });
 
-test("QflowHub Seedance multimodal references ride in the public extra passthrough", async () => {
+test("QflowHub Seedance sends reference images through the public top-level field", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "seedance-2");
   assert.ok(route);
   const result = await route.compile({
@@ -93,11 +93,11 @@ test("QflowHub Seedance multimodal references ride in the public extra passthrou
     aspect_ratio: "16:9",
     generate_audio: true,
     web_search: false,
-    extra: { reference_image_urls: ["data:image/png;base64,AQID", "data:image/png;base64,AQID"] },
+    reference_image_urls: ["data:image/png;base64,AQID", "data:image/png;base64,AQID"],
   });
 });
 
-test("QflowHub MiniMax reference mode preserves image arrays in extra", async () => {
+test("QflowHub MiniMax reference mode preserves the public image array", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "minimax-h3");
   assert.ok(route);
   const result = await route.compile({ ports: {
@@ -108,7 +108,35 @@ test("QflowHub MiniMax reference mode preserves image arrays in extra", async ()
   assert.deepEqual(result.input, {
     prompt: "animate", seconds: 6, aspect_ratio: "16:9",
     resolution: "2k",
-    extra: { reference_image_urls: ["data:image/png;base64,AQID"] },
+    reference_image_urls: ["data:image/png;base64,AQID"],
+  });
+});
+
+test("QflowHub uses ref_video_url for one video and the public array for multiple videos", async () => {
+  const route = hypiHubRoutes.find((item) => item.capability.name === "minimax-h3");
+  assert.ok(route);
+  const video = { ...image, mediaType: "video/mp4" };
+  const resolveVideo = async (artifact: typeof video) => `https://qflow.ai/files/${artifact.digest.slice(-1)}.mp4`;
+
+  const single = await route.compile({ ports: {
+    prompt: ["animate"], duration: [6],
+    referenceVideo: [{ role: "video", artifact: video }],
+  } }, resolveVideo);
+  assert.deepEqual(single.input, {
+    prompt: "animate", seconds: 6, resolution: "2k",
+    ref_video_url: "https://qflow.ai/files/1.mp4",
+  });
+
+  const multiple = await route.compile({ ports: {
+    prompt: ["animate"], duration: [6],
+    referenceVideo: [
+      { role: "video", artifact: video },
+      { role: "video", artifact: { ...video, digest: `sha256:${"2".repeat(64)}` } },
+    ],
+  } }, resolveVideo);
+  assert.deepEqual(multiple.input, {
+    prompt: "animate", seconds: 6, resolution: "2k",
+    reference_videos: ["https://qflow.ai/files/1.mp4", "https://qflow.ai/files/2.mp4"],
   });
 });
 
