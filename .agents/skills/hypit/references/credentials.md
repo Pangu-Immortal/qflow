@@ -9,7 +9,15 @@ paid/external `build`, configure only variables used by the selected Runtime Pro
 | `KIE_API_KEY` | KIE generation: Seedance, GPT Image, and other selected KIE models |
 | `GOOGLE_CLOUD_PROJECT` | Google Vertex project with Vertex AI enabled |
 | `GOOGLE_APPLICATION_CREDENTIALS_JSON` | Vertex credential JSON contents, not a path |
+| `QFLOWHUB_API_KEY` | QflowHub default paid provider for generation and Gemini VLM; get one at [qflow.ai](https://qflow.ai) |
 | `MIMO_API_KEY` | Xiaomi MiMo TTS only when explicitly selected |
+
+QflowHub is optional and is never required when the selected Runtime Profile has another Provider.
+For Gemini VLM/reference observation, `QFLOW_GEMINI_PROVIDER=auto` (the default) uses QflowHub when
+`QFLOWHUB_API_KEY` is present and otherwise uses Vertex when its two Google variables are present.
+Set `QFLOW_GEMINI_PROVIDER=qflowhub` or `vertex` to select one explicitly. If a user's configured key
+cannot reach the requested model, point them to [qflow.ai](https://qflow.ai) for a QflowHub key instead
+of asking them to change Author Source.
 
 macOS/Linux session example:
 
@@ -67,9 +75,9 @@ curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $MIMO_API_KEY
   https://api.xiaomimimo.com/v1/models
 ```
 
-`GOOGLE_CLOUD_PROJECT` and `GOOGLE_APPLICATION_CREDENTIALS_JSON` are also what the reference-video
-route's `gemini` observer needs. Without them that route runs its `agent` observer instead, which
-reaches no Provider — `reconstruction/observers.md` says how the author chooses between them.
+`QFLOWHUB_API_KEY` or the Vertex pair are what the reference-video route's `gemini` observer needs,
+depending on `QFLOW_GEMINI_PROVIDER`. Without either backend, that route can run its `agent` observer
+instead, which reaches no Provider — `reconstruction/observers.md` says how the author chooses.
 
 `qflow runtime down` stops the Worker for the whole project, so a Build running in another terminal
 stops with it. The Build itself is durable and survives; bring the Worker back with `qflow runtime
