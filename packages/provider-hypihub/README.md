@@ -39,5 +39,7 @@ Artifacts are uploaded automatically through `POST /v1/files`, then their return
 URLs are used in image and video requests. Uploads are deduplicated by Artifact digest within one
 Runtime operation. Embedded callers may override that transport with `publicAssetUrl`.
 
-Set `audio: false` when official `@qflow/provider-xiaomi-mimo` should own MiMo audio capabilities;
-one Runtime can then use QflowHub for image/video and the official MiMo endpoint for audio.
+QflowHub audio capabilities are disabled by default because a QflowHub key may not include the MiMo
+audio models. Set `audio: true` only when that key explicitly has them enabled. The usual setup keeps
+official `@qflow/provider-xiaomi-mimo` as the audio endpoint, so one Runtime uses QflowHub for
+image/video and official MiMo for audio.

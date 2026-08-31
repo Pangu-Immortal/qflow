@@ -223,7 +223,10 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
     module: hypiHubProviderModuleRef, facet: "gateway", instance: options.instance ?? "qflowhub.default", pool: options.pool ?? options.instance ?? "qflowhub.default",
     credentials: { apiKey: options.apiKey ?? credentialRef("env", "QFLOWHUB_API_KEY") }, credentialInputs: { apiKey: { label: "QflowHub API key" } }, defaultConcurrency: options.defaultConcurrency ?? 4,
     capabilities: hypiHubRoutes
-      .filter((route) => options.audio !== false || route.media !== "audio")
+      // QflowHub keys do not necessarily include the MiMo audio models. Keep
+      // official Xiaomi MiMo as the safe default; opting into QflowHub audio is
+      // an explicit Runtime decision for a key that actually has those models.
+      .filter((route) => options.audio === true || route.media !== "audio")
       .map((route) => route.media === "audio"
         ? { capability: route.capability, returns: route.returns, lifecycle: "immediate" as const, handler: audioEndpoint, lane: route.capability.name }
         : { capability: route.capability, returns: route.returns, lifecycle: "asynchronous" as const, endpoint: asyncEndpoint, lane: route.capability.name }),

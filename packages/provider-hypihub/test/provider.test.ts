@@ -4,6 +4,7 @@ import test from "node:test";
 import { EndpointRegistry, MemoryArtifactStore } from "@qflow/driver-node";
 import type { AsyncEndpoint } from "@qflow/endpoint-kit";
 import type { CanonicalValue, Need } from "@qflow/protocol";
+import { mimoTtsEndpoints } from "@qflow/mimo-tts";
 import { sealSeedanceRequest, seedanceEndpoints } from "@qflow/seedance";
 
 import { createQflowHubProvider } from "../src/provider.js";
@@ -26,6 +27,28 @@ async function endpointFor(request: Need, fetch: typeof globalThis.fetch): Promi
   assert.equal(resolution.registration.kind, "asynchronous");
   return resolution.registration.endpoint;
 }
+
+test("QflowHub keeps audio opt-in so official MiMo can own the default audio routes", async () => {
+  const registry = new EndpointRegistry();
+  await createQflowHubProvider({ fetch: async () => { throw new Error("audio must not call fetch"); } }).install(registry);
+  assert.equal(registry.resolve({
+    id: "need:qflowhub-audio-default",
+    capability: mimoTtsEndpoints.preset.capability,
+    returns: mimoTtsEndpoints.preset.returns,
+    constraints: { ports: {} },
+    result: "record:qflowhub-audio-default",
+  }).status, "missing");
+
+  const optedIn = new EndpointRegistry();
+  await createQflowHubProvider({ audio: true, fetch: async () => { throw new Error("not reached"); } }).install(optedIn);
+  assert.equal(optedIn.resolve({
+    id: "need:qflowhub-audio-opt-in",
+    capability: mimoTtsEndpoints.preset.capability,
+    returns: mimoTtsEndpoints.preset.returns,
+    constraints: { ports: {} },
+    result: "record:qflowhub-audio-opt-in",
+  }).status, "resolved");
+});
 
 test("QflowHub uploads referenced Artifacts once, submits their HTTPS URLs, and persists the result", async () => {
   const artifacts = new MemoryArtifactStore();

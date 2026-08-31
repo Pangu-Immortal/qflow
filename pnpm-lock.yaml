@@ -1964,6 +1964,9 @@ importers:
       '@qflow/driver-node':
         specifier: workspace:*
         version: link:../driver-node
+      '@qflow/mimo-tts':
+        specifier: workspace:*
+        version: link:../mimo-tts
       '@qflow/seedance':
         specifier: workspace:*
         version: link:../seedance

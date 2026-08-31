@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@qflow/driver-node": "workspace:*",
+    "@qflow/mimo-tts": "workspace:*",
     "@qflow/seedance": "workspace:*"
   }
 }
