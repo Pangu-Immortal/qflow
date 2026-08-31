@@ -70,3 +70,5 @@ examples/**/.svml/
 /projects/*
 !/projects/qflowhub-provider-smoke/
 !/projects/qflowhub-provider-smoke/**
+/projects/qflowhub-provider-smoke/.qflow/
+/projects/qflowhub-provider-smoke/.DS_Store
