@@ -1,6 +1,6 @@
 # `@qflow/provider-qflowhub`
 
-Thin Qflow Runtime Provider for a QflowHub `/v1` deployment. It is an optional default gateway for
+Thin Qflow Runtime Provider for a QflowHub deployment. It is an optional default gateway for
 paid generation and Gemini VLM requests; callers may keep their own Provider and select QflowHub only
 when its key is configured.
 
@@ -20,7 +20,7 @@ Runtime Profile example:
       "use": "@qflow/provider-qflowhub",
       "pool": "qflowhub.default",
       "config": {
-        "baseUrl": "https://qflow.ai/v1",
+        "baseUrl": "https://qflow.ai",
         "apiKey": { "store": "env", "key": "QFLOWHUB_API_KEY" },
         "defaultConcurrency": 4
       }
@@ -30,5 +30,8 @@ Runtime Profile example:
 ```
 
 Gemini VLM callers can use the exported `createQflowHubGeminiGenerator` without changing their
-provider-facing code. Set `QFLOWHUB_API_KEY` (and optionally `QFLOWHUB_BASE_URL`) only when choosing
-QflowHub; missing or insufficient user credentials should be resolved at [qflow.ai](https://qflow.ai).
+provider-facing code. Set `QFLOWHUB_API_KEY` (and optionally `QFLOWHUB_BASE_URL`; either the origin or
+an existing `/v1`/`/v1beta` base is accepted) only when choosing QflowHub. The Runtime Provider also
+accepts the origin or either versioned base and normalizes it to `/v1`; missing or insufficient user
+credentials should be resolved at [qflow.ai](https://qflow.ai). Video/audio reference artifacts need
+an operator-supplied `publicAssetUrl` callback because QflowHub must fetch those references over HTTPS.

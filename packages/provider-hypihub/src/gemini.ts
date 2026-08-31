@@ -33,7 +33,12 @@ function partValue(part: QflowHubGeminiPart): Record<string, unknown> {
 export function createQflowHubGeminiGenerator(options: QflowHubGeminiGeneratorOptions) {
   const apiKey = options.apiKey.trim();
   assert(apiKey.length > 0, "QflowHub API key is empty");
-  const baseUrl = (options.baseUrl ?? "https://qflow.ai").replace(/\/$/u, "");
+  // The native Gemini endpoint lives at /v1beta while the paid image/video
+  // client lives at /v1. Accept either commonly configured QflowHub base URL
+  // and strip only the version suffix before adding /v1beta below.
+  const baseUrl = (options.baseUrl ?? "https://qflow.ai")
+    .replace(/\/(?:v1beta|v1)\/?$/iu, "")
+    .replace(/\/$/u, "");
   const model = options.model?.trim() || "gemini-3.1-pro-preview";
   const timeout = options.requestTimeoutMs ?? 120_000;
   const fetcher = options.fetch ?? globalThis.fetch;
@@ -53,7 +58,13 @@ export function createQflowHubGeminiGenerator(options: QflowHubGeminiGeneratorOp
         }),
       });
       const text = await response.text();
-      if (!response.ok) throw new Error(`QflowHub Gemini returned HTTP ${response.status}: ${text.slice(0, 300)}`);
+      if (!response.ok) {
+        const message = `QflowHub Gemini returned HTTP ${response.status}: ${text.slice(0, 300)}`;
+        if (response.status === 401 || response.status === 403 || response.status === 404) {
+          throw new Error(`${message}. Get a QflowHub key with this model enabled at https://qflow.ai`);
+        }
+        throw new Error(message);
+      }
       let body: unknown;
       try { body = JSON.parse(text); } catch { throw new Error("QflowHub Gemini returned invalid JSON"); }
       const candidates = (body as { readonly candidates?: readonly { readonly content?: { readonly parts?: readonly { readonly text?: unknown }[] } }[] }).candidates;
