@@ -1,8 +1,6 @@
 import { createMarkupSurfaceHostFacet } from "@qflow/markup";
 
 import {
-  decodeMimoPresetSurface,
-  decodeMimoVoiceCloneSurface,
   decodeMimoVoiceDesignSurface,
   mimoTtsComponent,
   mimoTtsDefinition,
@@ -19,15 +17,7 @@ export const qflowPackage = {
     mimoTtsDefinition.hostFacet,
     createMarkupSurfaceHostFacet({
       module: mimoTtsModuleRef,
-    declaration: mimoTtsMarkupSurfaces.find((item) => item.name === "preset")!, handler: decodeMimoPresetSurface,
-    }),
-    createMarkupSurfaceHostFacet({
-      module: mimoTtsModuleRef,
     declaration: mimoTtsMarkupSurfaces.find((item) => item.name === "voiceDesign")!, handler: decodeMimoVoiceDesignSurface,
-    }),
-    createMarkupSurfaceHostFacet({
-      module: mimoTtsModuleRef,
-    declaration: mimoTtsMarkupSurfaces.find((item) => item.name === "voiceClone")!, handler: decodeMimoVoiceCloneSurface,
     }),
   ],
 };

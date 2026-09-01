@@ -83,7 +83,7 @@ Frontend；不存在一个认识全部语法的中央解析器。
 @qflow/gpt-image             GPT Image model family
 @qflow/nano-banana           Nano Banana model family
 @qflow/seedream              Seedream model family
-@qflow/mimo-tts              三个精确 Xiaomi MiMo TTS 模型及作者 Surface
+@qflow/mimo-tts              Xiaomi MiMo VoiceDesign 模型及作者 Surface
 @qflow/estimate              duration estimation
 @qflow/speech                shared speech products
 @qflow/speech-evidence       acoustic evidence products
@@ -123,7 +123,7 @@ Frontend；不存在一个认识全部语法的中央解析器。
 @qflow/provider-hyperframes-aws-lambda asynchronous distributed rendering
 @qflow/provider-image-opencv-local   本地 OpenCV 光栅执行
 @qflow/provider-media-aws-lambda     synchronous AWS media execution
-@qflow/provider-xiaomi-mimo           Xiaomi 官方 MiMo TTS API
+@qflow/provider-xiaomi-mimo           Xiaomi 官方 MiMo VoiceDesign API
 ```
 
 ### Layer 6：Runtime
