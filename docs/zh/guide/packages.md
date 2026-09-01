@@ -140,8 +140,8 @@ Frontend；不存在一个认识全部语法的中央解析器。
 @qflow/runtime-host-node     Node Runtime Host ABI
 @qflow/runtime-local         本地 Worker 与组装
 @qflow/store-sqlite          SQLite 状态
-@qflow/artifact-store-fs     Runtime 内部文件系统临时 Artifact
-@qflow/artifact-store-s3     供需要 S3 临时 Artifact 的 Runtime 实现使用的库
+@qflow/resource-store-fs     Runtime 内部文件系统临时 Resource
+@qflow/resource-store-s3     供需要 S3 临时 Resource 的 Runtime 实现使用的库
 @qflow/build-result          存储无关的项目 Result 模型
 @qflow/build-result-kit      Build Result 仓库包 ABI
 @qflow/build-result-fs       默认项目 Result 仓库

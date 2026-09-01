@@ -13,7 +13,7 @@ import type {
 import { assertFontArtifactRef } from "@qflow/media";
 import { assertProgramSpaceIdentity } from "@qflow/program-space";
 import type { ProgramSpace } from "@qflow/program-space";
-import { canonicalize, isDigest } from "@qflow/protocol";
+import { canonicalize, isResourceId } from "@qflow/protocol";
 import type { BlobRef } from "@qflow/protocol";
 import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
 import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
@@ -161,7 +161,7 @@ export function setCommentStickerContentText(
 }
 
 function assertAvatar(value: BlobRef): void {
-  assert(value.kind === "blob" && isDigest(value.digest), "Comment Sticker avatar is not a BlobRef.");
+  assert(value.kind === "blob" && isResourceId(value.resource), "Comment Sticker avatar is not a BlobRef.");
   integer(value.size, "Comment Sticker avatar size");
   assert(value.mediaType.startsWith("image/"), "Comment Sticker avatar must be an image Artifact.");
 }

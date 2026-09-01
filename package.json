@@ -50,17 +50,15 @@
     "test:image-opencv": "node test/run.mjs image-opencv",
     "smoke:kie": "node --import tsx packages/provider-kie/test/live-smoke.ts",
     "qflow": "node bin/qflow.mjs",
-    "studio": "pnpm --filter @qflow/studio exec node --import tsx start.ts",
-    "build:media-lambda": "pnpm --filter @qflow/media-lambda build",
-    "build:media-lambda-layer": "pnpm --filter @qflow/media-lambda build:layer"
+    "studio": "pnpm --filter @qflow/studio exec node --import tsx start.ts"
   },
   "engines": {
     "node": ">=22"
   },
   "devDependencies": {
     "@qflow/artifact": "workspace:*",
-    "@qflow/artifact-store-fs": "workspace:*",
-    "@qflow/artifact-store-s3": "workspace:*",
+    "@qflow/resource-store-fs": "workspace:*",
+    "@qflow/resource-store-s3": "workspace:*",
     "@qflow/build-result": "workspace:*",
     "@qflow/build-result-fs": "workspace:*",
     "@qflow/build-result-kit": "workspace:*",
@@ -107,7 +105,6 @@
     "@qflow/provider-qflowhub": "workspace:*",
     "@qflow/provider-kie": "workspace:*",
     "@qflow/provider-vertex": "workspace:*",
-    "@qflow/provider-media-aws-lambda": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
     "@qflow/preview-mock": "workspace:*",
     "@qflow/provider-whisperx-local": "workspace:*",

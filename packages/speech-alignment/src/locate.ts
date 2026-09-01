@@ -1,4 +1,4 @@
-import { isDigest } from "@qflow/protocol";
+import { isResourceId } from "@qflow/protocol";
 import type { BlobRef } from "@qflow/protocol";
 import type { Narrative, NarrativeToken } from "@qflow/narrative";
 import { programFrameSampleBoundary, programSpaceFrameCount } from "@qflow/program-space";
@@ -96,7 +96,7 @@ function validateBasis(narrative: Narrative, basis: AlignmentBasis): void {
     fail("SPEECH_FRAME_RATE", "ProgramSpace frame rate must be a positive rational number.");
   }
   const frameCount = programSpaceFrameCount(basis.programSpace);
-  if (basis.audio.kind !== "blob" || !isDigest(basis.audio.digest)
+  if (basis.audio.kind !== "blob" || !isResourceId(basis.audio.resource)
     || basis.audio.mediaType !== "audio/wav" || !Number.isSafeInteger(basis.audio.size) || basis.audio.size < 0) {
     fail("SPEECH_AUDIO_DIGEST", "Speech alignment audio BlobRef is invalid.");
   }

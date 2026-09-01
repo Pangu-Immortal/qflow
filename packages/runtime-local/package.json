@@ -11,7 +11,7 @@
     "./worker-process": "./src/worker-process.ts"
   },
   "dependencies": {
-    "@qflow/artifact-store-fs": "workspace:*",
+    "@qflow/resource-store-fs": "workspace:*",
     "@qflow/build-result": "workspace:*",
     "@qflow/build-result-fs": "workspace:*",
     "@qflow/build-result-kit": "workspace:*",

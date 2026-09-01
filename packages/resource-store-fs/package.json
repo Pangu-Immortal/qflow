@@ -1,5 +1,5 @@
 {
-  "name": "@qflow/artifact-store-fs",
+  "name": "@qflow/resource-store-fs",
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,

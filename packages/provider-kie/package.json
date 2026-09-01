@@ -20,7 +20,7 @@
     "@qflow/runtime-kit": "workspace:*"
   },
   "devDependencies": {
-    "@qflow/artifact-store-fs": "workspace:*",
+    "@qflow/resource-store-fs": "workspace:*",
     "@qflow/component-kit": "workspace:*",
     "@qflow/core": "workspace:*",
     "@qflow/credential-store-env": "workspace:*",

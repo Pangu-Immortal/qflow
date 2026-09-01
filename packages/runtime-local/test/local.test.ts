@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { FileArtifactStore } from "@qflow/artifact-store-fs";
+import { FileResourceStore } from "@qflow/resource-store-fs";
 import { FileBuildResultRepository, readBuildResult } from "@qflow/build-result";
 import { EnvironmentCredentialStore } from "@qflow/credential-store-env";
 import { defineEndpointPackage } from "@qflow/endpoint-kit";
@@ -49,9 +49,9 @@ function projectRuntimeFixture(directory: string) {
     buildCatalog: state.catalog,
     operationStore: state.operations,
     dispatchStore: state.dispatch,
-    artifactStore: new FileArtifactStore(join(directory, ".qflow", "artifacts")),
-    artifactStoreForBuild: (build: string) => new FileArtifactStore(join(work, build)),
-    clearBuildArtifacts: async (build: string) => {
+    resourceStore: new FileResourceStore(join(directory, ".qflow", "artifacts")),
+    resourceStoreForBuild: (build: string) => new FileResourceStore(join(work, build)),
+    clearBuildResources: async (build: string) => {
       await rm(join(work, build), { recursive: true, force: true });
     },
     openBuildResultRepository: async (location: import("@qflow/build-result-kit").BuildResultRepositoryLocation) => {
@@ -280,7 +280,7 @@ test("project local runtime queues, polls and cancels work with replaceable pack
 test("a completed public file moves into its Build Result and leaves no Runtime working copy", async () => {
   const directory = await mkdtemp(join(tmpdir(), "qflow-local-result-file-"));
   const id = "public-file-result";
-  const workStore = new FileArtifactStore(join(directory, ".qflow", "work", id));
+  const workStore = new FileResourceStore(join(directory, ".qflow", "work", id));
   const initial = createGreetingBuild({ generationRealization: "placeholder" });
   const buildDefinition = defineBuild(initial.program, initial.graph, sealBuildRequest({
     targets: [{ output: "generated" }],

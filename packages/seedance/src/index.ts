@@ -19,7 +19,7 @@ import { assertSpeechDurationIdentity, speechDependency, speechTypes } from "@qf
 import type { SpeechDuration } from "@qflow/speech";
 import { textTypes } from "@qflow/text";
 import { canonicalize } from "@qflow/protocol";
-import type { Digest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
+import type { ResourceId, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
 
 export const seedanceModuleRef = { name: "@qflow/seedance", version: "1" } as const;
 export const seedanceModels = ["seedance-2", "seedance-2-fast", "seedance-2-mini", "seedance-2.5"] as const;

@@ -1,5 +1,5 @@
 import { link } from "@qflow/core";
-import { canonicalStringify, isDigest } from "@qflow/protocol";
+import { canonicalStringify, isResourceId } from "@qflow/protocol";
 import type {
   CompiledGraph,
   GraphValueRef,
@@ -498,7 +498,7 @@ export async function compileSourceClosure(
         const resolved = await request.resolveAsset(rawSource, assetRequest);
         const artifact = resolved.artifact;
         assert(artifact.kind === "blob", "INVALID_SOURCE_ASSET", `${assetRequest.from} did not resolve to a BlobRef`);
-        assert(isDigest(artifact.digest), "INVALID_SOURCE_ASSET_DIGEST", `${assetRequest.from} has an invalid digest`);
+        assert(isResourceId(artifact.resource), "INVALID_SOURCE_ASSET_DIGEST", `${assetRequest.from} has an invalid digest`);
         assert(Number.isSafeInteger(artifact.size) && artifact.size >= 0, "INVALID_SOURCE_ASSET_SIZE", `${assetRequest.from} has an invalid size`);
         assert(
           artifact.mediaType === assetRequest.mediaType,

@@ -15,12 +15,6 @@ importers:
       '@qflow/artifact':
         specifier: workspace:*
         version: link:packages/artifact
-      '@qflow/artifact-store-fs':
-        specifier: workspace:*
-        version: link:packages/artifact-store-fs
-      '@qflow/artifact-store-s3':
-        specifier: workspace:*
-        version: link:packages/artifact-store-s3
       '@qflow/audio-track':
         specifier: workspace:*
         version: link:packages/audio-track
@@ -159,9 +153,6 @@ importers:
       '@qflow/provider-kie':
         specifier: workspace:*
         version: link:packages/provider-kie
-      '@qflow/provider-media-aws-lambda':
-        specifier: workspace:*
-        version: link:packages/provider-media-aws-lambda
       '@qflow/provider-media-local':
         specifier: workspace:*
         version: link:packages/provider-media-local
@@ -186,6 +177,12 @@ importers:
       '@qflow/render-hyperframes':
         specifier: workspace:*
         version: link:packages/render-hyperframes
+      '@qflow/resource-store-fs':
+        specifier: workspace:*
+        version: link:packages/resource-store-fs
+      '@qflow/resource-store-s3':
+        specifier: workspace:*
+        version: link:packages/resource-store-s3
       '@qflow/run-markup':
         specifier: workspace:*
         version: link:packages/run-markup
@@ -330,27 +327,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-
-  packages/artifact-store-fs:
-    dependencies:
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/runtime':
-        specifier: workspace:*
-        version: link:../runtime
-
-  packages/artifact-store-s3:
-    dependencies:
-      '@aws-sdk/client-s3':
-        specifier: 3.1103.0
-        version: 3.1103.0
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/runtime':
-        specifier: workspace:*
-        version: link:../runtime
 
   packages/audio-track:
     dependencies:
@@ -1930,9 +1906,6 @@ importers:
       '@qflow/artifact':
         specifier: workspace:*
         version: link:../artifact
-      '@qflow/artifact-store-fs':
-        specifier: workspace:*
-        version: link:../artifact-store-fs
       '@qflow/compiler-node':
         specifier: workspace:*
         version: link:../compiler-node
@@ -1957,6 +1930,9 @@ importers:
       '@qflow/provider-media-local':
         specifier: workspace:*
         version: link:../provider-media-local
+      '@qflow/resource-store-fs':
+        specifier: workspace:*
+        version: link:../resource-store-fs
       '@qflow/semantic-take-estimate':
         specifier: workspace:*
         version: link:../semantic-take-estimate
@@ -2165,9 +2141,6 @@ importers:
         specifier: workspace:*
         version: link:../runtime-kit
     devDependencies:
-      '@qflow/artifact-store-fs':
-        specifier: workspace:*
-        version: link:../artifact-store-fs
       '@qflow/component-kit':
         specifier: workspace:*
         version: link:../component-kit
@@ -2204,6 +2177,9 @@ importers:
       '@qflow/narrative':
         specifier: workspace:*
         version: link:../narrative
+      '@qflow/resource-store-fs':
+        specifier: workspace:*
+        version: link:../resource-store-fs
       '@qflow/runtime-local':
         specifier: workspace:*
         version: link:../runtime-local
@@ -2222,37 +2198,6 @@ importers:
       '@qflow/validation':
         specifier: workspace:*
         version: link:../validation
-
-  packages/provider-media-aws-lambda:
-    dependencies:
-      '@qflow/artifact':
-        specifier: workspace:*
-        version: link:../artifact
-      '@qflow/endpoint-kit':
-        specifier: workspace:*
-        version: link:../endpoint-kit
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
-      '@qflow/media-pipeline':
-        specifier: workspace:*
-        version: link:../media-pipeline
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/runtime-kit':
-        specifier: workspace:*
-        version: link:../runtime-kit
-      '@qflow/speech':
-        specifier: workspace:*
-        version: link:../speech
-      '@qflow/transport-aws-lambda':
-        specifier: workspace:*
-        version: link:../transport-aws-lambda
-    devDependencies:
-      '@qflow/driver-node':
-        specifier: workspace:*
-        version: link:../driver-node
 
   packages/provider-media-local:
     dependencies:
@@ -2600,6 +2545,27 @@ importers:
         specifier: workspace:*
         version: link:../validation
 
+  packages/resource-store-fs:
+    dependencies:
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+
+  packages/resource-store-s3:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: 3.1103.0
+        version: 3.1103.0
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+
   packages/run:
     dependencies:
       '@qflow/elaborator':
@@ -2684,9 +2650,6 @@ importers:
 
   packages/runtime-local:
     dependencies:
-      '@qflow/artifact-store-fs':
-        specifier: workspace:*
-        version: link:../artifact-store-fs
       '@qflow/build-result':
         specifier: workspace:*
         version: link:../build-result
@@ -2711,6 +2674,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@qflow/resource-store-fs':
+        specifier: workspace:*
+        version: link:../resource-store-fs
       '@qflow/runtime':
         specifier: workspace:*
         version: link:../runtime
@@ -3123,6 +3089,9 @@ importers:
       '@qflow/audio-track-studio':
         specifier: workspace:*
         version: link:../audio-track-studio
+      '@qflow/build-result':
+        specifier: workspace:*
+        version: link:../build-result
       '@qflow/caption-fine-studio':
         specifier: workspace:*
         version: link:../caption-fine-studio
@@ -3520,37 +3489,6 @@ importers:
   packages/yt-dlp: {}
 
   services/image-opencv: {}
-
-  services/media-lambda:
-    dependencies:
-      '@qflow/artifact-store-s3':
-        specifier: workspace:*
-        version: link:../../packages/artifact-store-s3
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../../packages/media
-      '@qflow/media-execution':
-        specifier: workspace:*
-        version: link:../../packages/media-execution
-      '@qflow/media-pipeline':
-        specifier: workspace:*
-        version: link:../../packages/media-pipeline
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../../packages/protocol
-      '@qflow/provider-media-aws-lambda':
-        specifier: workspace:*
-        version: link:../../packages/provider-media-aws-lambda
-      '@qflow/speech':
-        specifier: workspace:*
-        version: link:../../packages/speech
-      '@qflow/transport-aws-lambda':
-        specifier: workspace:*
-        version: link:../../packages/transport-aws-lambda
-    devDependencies:
-      esbuild:
-        specifier: ^0.25.0
-        version: 0.25.12
 
   services/whisperx: {}
 

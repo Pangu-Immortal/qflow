@@ -57,7 +57,7 @@ Reusable values and deterministic building blocks. They support video authoring 
 film's creative structure or call an external service.
 
 ```text
-@qflow/artifact              content-addressed bytes
+@qflow/artifact              Runtime-referenced byte values
 @qflow/component-kit         Producer and validator registration
 @qflow/text                  graph-native text templates
 @qflow/media                 media values
@@ -149,8 +149,8 @@ project Build Result repository are the intentional package-selected boundaries.
 @qflow/runtime-host-node     Node Runtime Host ABI
 @qflow/runtime-local         local Worker and assembly
 @qflow/store-sqlite          SQLite state
-@qflow/artifact-store-fs     internal filesystem working Artifacts
-@qflow/artifact-store-s3     library for Runtime implementations needing S3 working Artifacts
+@qflow/resource-store-fs     internal filesystem working Resources
+@qflow/resource-store-s3     library for Runtime implementations needing S3 working Resources
 @qflow/build-result          storage-neutral project Result model
 @qflow/build-result-kit      Build Result repository package ABI
 @qflow/build-result-fs       default project Result repository
