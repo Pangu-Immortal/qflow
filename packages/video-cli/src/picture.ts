@@ -98,13 +98,13 @@ async function resolveCredentials(
   const resolved: Record<string, { readonly secret: string }> = {};
   for (const [slot, ref] of Object.entries(registration.credentials ?? {})) {
     const value = ref.store === "os" && (process.platform === "darwin" || process.platform === "win32")
-      ? await new OsCredentialStore().resolve(ref)
+      ? await new OsCredentialStore().resolve(ref) ?? await new EnvironmentCredentialStore().resolve({ store: "env", key: "QFLOWHUB_API_KEY" })
       : await new EnvironmentCredentialStore().resolve(ref);
-    assert(value !== undefined, ref.store === "env"
-      ? ref.key === "QFLOWHUB_API_KEY"
-        ? `credential ${slot} is unavailable; sign in with QflowHub using: qflow auth login qflowhub.default`
-        : `credential ${slot} is unavailable; set ${ref.key} in the environment`
-      : `credential ${slot} lives in CredentialStore ${ref.store}, which qflow image cannot open`);
+    assert(value !== undefined, ref.key === "QFLOWHUB_API_KEY"
+      ? `credential ${slot} is unavailable; sign in with QflowHub using: qflow auth login qflowhub.default`
+      : ref.store === "env"
+        ? `credential ${slot} is unavailable; set ${ref.key} in the environment`
+        : `credential ${slot} lives in CredentialStore ${ref.store}, which qflow image cannot open`);
     resolved[slot] = value;
   }
   return resolved;
