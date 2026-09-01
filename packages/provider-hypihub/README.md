@@ -23,7 +23,7 @@ Runtime Profile example:
       "config": {
         "baseUrl": "https://qflow.ai",
         "apiKey": { "store": "os", "key": "qflowhub.oauth" },
-        "defaultConcurrency": 4
+        "defaultConcurrency": 10
       }
     }
   }

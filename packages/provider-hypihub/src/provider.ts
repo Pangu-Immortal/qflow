@@ -252,7 +252,7 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
   };
   return defineEndpointPackage({
     module: hypiHubProviderModuleRef, facet: "gateway", instance: options.instance ?? "qflowhub.default", pool: options.pool ?? options.instance ?? "qflowhub.default",
-    credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") }, credentialInputs: { apiKey: { label: "QflowHub login" } }, defaultConcurrency: options.defaultConcurrency ?? 4,
+    credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") }, credentialInputs: { apiKey: { label: "QflowHub login" } }, defaultConcurrency: options.defaultConcurrency ?? 10,
     capabilities: [
       ...hypiHubRoutes
       // QflowHub OAuth grants do not necessarily include the MiMo audio models. Keep
@@ -268,7 +268,6 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
         lifecycle: "immediate" as const,
         handler: geminiEndpoint,
         lane: "gemini",
-        maxConcurrency: 1,
       })),
     ],
   });
