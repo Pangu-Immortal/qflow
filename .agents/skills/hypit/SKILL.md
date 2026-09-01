@@ -34,7 +34,7 @@ a run the author has to restart.
 
 ## Credentials: run QflowHub login for the author
 
-When a selected QflowHub Endpoint is missing its OS credential, run `qflow auth login <endpoint> --runtime <profile>` yourself. The command opens the QflowHub login page in the browser, waits for the OAuth callback, and stores the resulting session in the OS credential store. Do not tell the author to copy a key or run the command manually. Continue only after login succeeds; if it is cancelled or fails, stop before any paid request.
+When a selected QflowHub Endpoint is missing its OS credential, first tell the author why you are opening the login: no usable credential is configured, and the browser sign-in is needed to let Qflow use QflowHub without asking them to copy or paste an API key. If the account has no active Qflow subscription, they can purchase one on qflow.ai after signing in. The session is stored in the OS credential store, and opening login does not itself submit a paid generation. Then run `qflow auth login <endpoint> --runtime <profile>` yourself. The command opens the QflowHub login page in the browser, waits for the OAuth callback, and stores the resulting session in the OS credential store. Do not tell the author to copy a key or run the command manually. Continue only after login succeeds; if it is cancelled or fails, stop before any paid request.
 
 Use this file only to route the task. A route file is a sequence of numbered steps, and each step
 names the files it needs; read those when you reach that step rather than all of them up front.
