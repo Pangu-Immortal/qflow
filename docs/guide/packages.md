@@ -137,8 +137,9 @@ never on exact-model packages or the CLI.
 
 ### Layer 6: Runtime
 
-Domain-neutral execution ports plus replaceable deployment implementations. Runtime packages own
-queues, stores, credentials and process lifecycle; they never define author syntax.
+Domain-neutral execution ports plus replaceable deployment implementations. The local Runtime owns
+its queue, active stores and process lifecycle as one implementation; credentials, Endpoints and the
+project Build Result repository are the intentional package-selected boundaries.
 
 ```text
 @qflow/runtime               Scheduler, Worker and Store ports
@@ -148,8 +149,12 @@ queues, stores, credentials and process lifecycle; they never define author synt
 @qflow/runtime-host-node     Node Runtime Host ABI
 @qflow/runtime-local         local Worker and assembly
 @qflow/store-sqlite          SQLite state
-@qflow/artifact-store-fs     filesystem Artifacts
-@qflow/artifact-store-s3     S3 Artifacts
+@qflow/artifact-store-fs     internal filesystem working Artifacts
+@qflow/artifact-store-s3     library for Runtime implementations needing S3 working Artifacts
+@qflow/build-result          storage-neutral project Result model
+@qflow/build-result-kit      Build Result repository package ABI
+@qflow/build-result-fs       default project Result repository
+@qflow/build-result-s3       optional S3-compatible project Result repository
 @qflow/credential-store-env  environment credentials
 @qflow/credential-store-os      macOS Keychain or Windows Credential Locker
 ```

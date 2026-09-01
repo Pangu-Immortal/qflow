@@ -1,0 +1,15 @@
+{
+  "name": "@qflow/build-result-kit",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@qflow/build-result": "workspace:*",
+    "@qflow/host": "workspace:*",
+    "@qflow/protocol": "workspace:*"
+  }
+}

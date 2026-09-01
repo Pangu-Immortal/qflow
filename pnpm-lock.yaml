@@ -33,6 +33,15 @@ importers:
       '@qflow/build-result':
         specifier: workspace:*
         version: link:packages/build-result
+      '@qflow/build-result-fs':
+        specifier: workspace:*
+        version: link:packages/build-result-fs
+      '@qflow/build-result-kit':
+        specifier: workspace:*
+        version: link:packages/build-result-kit
+      '@qflow/build-result-s3':
+        specifier: workspace:*
+        version: link:packages/build-result-s3
       '@qflow/caption':
         specifier: workspace:*
         version: link:packages/caption
@@ -330,9 +339,6 @@ importers:
       '@qflow/runtime':
         specifier: workspace:*
         version: link:../runtime
-      '@qflow/runtime-kit':
-        specifier: workspace:*
-        version: link:../runtime-kit
 
   packages/artifact-store-s3:
     dependencies:
@@ -345,9 +351,6 @@ importers:
       '@qflow/runtime':
         specifier: workspace:*
         version: link:../runtime
-      '@qflow/runtime-kit':
-        specifier: workspace:*
-        version: link:../runtime-kit
 
   packages/audio-track:
     dependencies:
@@ -442,6 +445,42 @@ importers:
 
   packages/build-result:
     dependencies:
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+
+  packages/build-result-fs:
+    dependencies:
+      '@qflow/build-result':
+        specifier: workspace:*
+        version: link:../build-result
+      '@qflow/build-result-kit':
+        specifier: workspace:*
+        version: link:../build-result-kit
+
+  packages/build-result-kit:
+    dependencies:
+      '@qflow/build-result':
+        specifier: workspace:*
+        version: link:../build-result
+      '@qflow/host':
+        specifier: workspace:*
+        version: link:../host
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+
+  packages/build-result-s3:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: 3.1103.0
+        version: 3.1103.0
+      '@qflow/build-result':
+        specifier: workspace:*
+        version: link:../build-result
+      '@qflow/build-result-kit':
+        specifier: workspace:*
+        version: link:../build-result-kit
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -2597,6 +2636,9 @@ importers:
 
   packages/runtime:
     dependencies:
+      '@qflow/build-result-kit':
+        specifier: workspace:*
+        version: link:../build-result-kit
       '@qflow/core':
         specifier: workspace:*
         version: link:../core
@@ -2609,6 +2651,9 @@ importers:
       '@qflow/build-result':
         specifier: workspace:*
         version: link:../build-result
+      '@qflow/build-result-kit':
+        specifier: workspace:*
+        version: link:../build-result-kit
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -2645,6 +2690,12 @@ importers:
       '@qflow/build-result':
         specifier: workspace:*
         version: link:../build-result
+      '@qflow/build-result-fs':
+        specifier: workspace:*
+        version: link:../build-result-fs
+      '@qflow/build-result-kit':
+        specifier: workspace:*
+        version: link:../build-result-kit
       '@qflow/component-kit':
         specifier: workspace:*
         version: link:../component-kit

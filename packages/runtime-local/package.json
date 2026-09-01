@@ -13,6 +13,8 @@
   "dependencies": {
     "@qflow/artifact-store-fs": "workspace:*",
     "@qflow/build-result": "workspace:*",
+    "@qflow/build-result-fs": "workspace:*",
+    "@qflow/build-result-kit": "workspace:*",
     "@qflow/component-kit": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/endpoint-kit": "workspace:*",

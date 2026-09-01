@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@qflow/build-result": "workspace:*",
+    "@qflow/build-result-kit": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-kit": "workspace:*",

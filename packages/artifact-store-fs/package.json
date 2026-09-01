@@ -7,12 +7,8 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "qflow": {
-    "activation": "./src/activation.ts"
-  },
   "dependencies": {
     "@qflow/protocol": "workspace:*",
-    "@qflow/runtime": "workspace:*",
-    "@qflow/runtime-kit": "workspace:*"
+    "@qflow/runtime": "workspace:*"
   }
 }
