@@ -185,7 +185,7 @@ qflow paths
 
 | 变量 | Provider / 用途 |
 |---|---|
-| `QFLOWHUB_API_KEY` | QflowHub 付费生成与 Gemini VLM；前往 https://qflow.ai 获取 |
+| QflowHub OAuth | QflowHub 付费生成与 Gemini VLM；运行 `qflow auth login qflowhub.default --runtime qflow.runtime.json` 并在 https://qflow.ai 登录 |
 | `KIE_API_KEY` | 仅在显式选择 KIE Provider 时使用 |
 | `MIMO_API_KEY` | Xiaomi MiMo TTS；只有选择该 Endpoint 时才需要 |
 

@@ -1,5 +1,6 @@
 import type { CliPicture, CliPictureRequest } from "@qflow/cli";
 import { EnvironmentCredentialStore } from "@qflow/credential-store-env";
+import { OsCredentialStore } from "@qflow/credential-store-os";
 import { EndpointRegistry, MemoryArtifactStore } from "@qflow/driver-node";
 import type { EndpointRegistration } from "@qflow/driver-node";
 import type { EndpointOutcome } from "@qflow/endpoint-kit";
@@ -94,13 +95,14 @@ function sealPictureRequest(endpoint: ExactModelEndpoint, request: CliPictureReq
 async function resolveCredentials(
   registration: EndpointRegistration,
 ): Promise<Readonly<Record<string, { readonly secret: string }>>> {
-  const store = new EnvironmentCredentialStore();
   const resolved: Record<string, { readonly secret: string }> = {};
   for (const [slot, ref] of Object.entries(registration.credentials ?? {})) {
-    const value = await store.resolve(ref);
+    const value = ref.store === "os" && (process.platform === "darwin" || process.platform === "win32")
+      ? await new OsCredentialStore().resolve(ref)
+      : await new EnvironmentCredentialStore().resolve(ref);
     assert(value !== undefined, ref.store === "env"
       ? ref.key === "QFLOWHUB_API_KEY"
-        ? `credential ${slot} is unavailable; set ${ref.key} in the environment (get a QflowHub key at https://qflow.ai)`
+        ? `credential ${slot} is unavailable; sign in with QflowHub using: qflow auth login qflowhub.default`
         : `credential ${slot} is unavailable; set ${ref.key} in the environment`
       : `credential ${slot} lives in CredentialStore ${ref.store}, which qflow image cannot open`);
     resolved[slot] = value;
