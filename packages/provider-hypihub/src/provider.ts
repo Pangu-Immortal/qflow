@@ -222,7 +222,7 @@ function endpoint(client: QflowHubClient, pollIntervalMs: number, maxOperationMs
 
 export function createQflowHubProvider(options: CreateQflowHubProviderOptions = {}) {
   const client = new QflowHubClient({ baseUrl: apiBaseUrl(options.baseUrl ?? "https://qflow.ai/v1"), timeout: options.requestTimeoutMs ?? 30_000, fetcher: options.fetch ?? globalThis.fetch });
-  const asyncEndpoint = endpoint(client, options.pollIntervalMs ?? 5_000, 20 * 60_000, options.publicAssetUrl);
+  const asyncEndpoint = endpoint(client, options.pollIntervalMs ?? 10_000, 20 * 60_000, options.publicAssetUrl);
   const audioEndpoint: ImmediateEndpointHandler = async (context) => {
     try {
       return await synthesizeAudio(client, context, options.publicAssetUrl);
@@ -252,7 +252,7 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
   };
   return defineEndpointPackage({
     module: hypiHubProviderModuleRef, facet: "gateway", instance: options.instance ?? "qflowhub.default", pool: options.pool ?? options.instance ?? "qflowhub.default",
-    credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") }, credentialInputs: { apiKey: { label: "QflowHub login" } }, defaultConcurrency: options.defaultConcurrency ?? 10,
+    credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") }, credentialInputs: { apiKey: { label: "QflowHub login" } }, defaultConcurrency: options.defaultConcurrency ?? 3,
     capabilities: [
       ...hypiHubRoutes
       .filter((route) => options.audio !== false || route.media !== "audio")

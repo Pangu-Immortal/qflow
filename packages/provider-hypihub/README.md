@@ -23,7 +23,8 @@ Runtime Profile example:
       "config": {
         "baseUrl": "https://qflow.ai",
         "apiKey": { "store": "os", "key": "qflowhub.oauth" },
-        "defaultConcurrency": 10
+        "defaultConcurrency": 3,
+        "pollIntervalMs": 10000
       }
     }
   }
