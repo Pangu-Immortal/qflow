@@ -67,6 +67,15 @@ and `auth login`; never add discovery, help, diagnostics, or source inspection b
 
 ## Credentials: run QflowHub login for the author
 
+Before any step that would call a QflowHub-backed API, check the selected QflowHub Endpoint's
+credential with `qflow auth status <endpoint> --runtime <profile>`. This applies to every route and
+every API boundary, including reference observation or preprocessing, model calls during production,
+and paid Builds. If the writable OS credential is missing, explain the login as specified below and
+immediately run `qflow auth login <endpoint> --runtime <profile>` yourself. Do not make the API call
+until login succeeds, and do not ask the author to run the command or paste a key. A configured
+credential needs no repeated login. This rule does not replace a Provider the author explicitly
+selected or sign them into QflowHub for a route that does not use QflowHub.
+
 When a selected QflowHub Endpoint is missing its OS credential, first tell the author why you are opening the login: no usable credential is configured, and the browser sign-in is needed to let Qflow use QflowHub without asking them to copy or paste an API key. If the account has no active Qflow subscription, they can purchase one on qflow.ai after signing in. The session is stored in the OS credential store, and opening login does not itself submit a paid generation. Then run `qflow auth login <endpoint> --runtime <profile>` yourself. The command opens the QflowHub login page in the browser, waits for the OAuth callback, and stores the resulting session in the OS credential store. Do not tell the author to copy a key or run the command manually. Continue only after login succeeds; if it is cancelled or fails, stop before any paid request.
 
 Use this file only to route the task. A route file is a sequence of numbered steps, and each step
