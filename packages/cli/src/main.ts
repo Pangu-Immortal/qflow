@@ -143,7 +143,7 @@ async function hypiHubOAuthLogin(io: CliIo): Promise<string> {
   io.write(`Opening QflowHub login: ${authorize}\n`);
   const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";
   const openerArgs = process.platform === "win32" ? ["/c", "start", "", authorize.toString()] : [authorize.toString()];
-  spawn(opener, openerArgs, { stdio: "ignore", detached: true }).unref();
+  spawn(opener, openerArgs, { stdio: "ignore", detached: true, windowsHide: true }).unref();
   const code = await callback;
   const tokenResponse = await fetch("https://qflow.ai/oauth/token", {
     method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
