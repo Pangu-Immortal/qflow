@@ -8,6 +8,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@qflow/build-result": "workspace:*",
     "@qflow/compiler-node": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
@@ -18,5 +19,10 @@
     "@qflow/source": "workspace:*",
     "@qflow/workspace": "workspace:*",
     "typescript": "5.9.3"
+  },
+  "devDependencies": {
+    "@qflow/markup": "workspace:*",
+    "@qflow/run-markup": "workspace:*",
+    "@qflow/workspace-fs-node": "workspace:*"
   }
 }

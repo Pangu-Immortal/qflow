@@ -6,7 +6,7 @@ when its OAuth login is configured.
 
 It maps the currently shipped image/video model capabilities to QflowHub, including image edits and
 image-to-video first-frame inputs, submits jobs, polls them, downloads the first-class assets and
-persists them in Qflow's configured ArtifactStore. Image references use QflowHub's documented
+admits them into the current Build's working byte area. Image references use QflowHub's documented
 `reference_images` object shape (`[{ "url": "…" }]`); video references use the public
 `reference_image_urls`, `reference_videos`, and `reference_audios` fields (with `ref_video_url`
 for one video). First/last-frame images use `first_frame` and `last_frame`. It also

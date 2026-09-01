@@ -30,6 +30,9 @@ importers:
       '@qflow/background-removal':
         specifier: workspace:*
         version: link:packages/background-removal
+      '@qflow/build-result':
+        specifier: workspace:*
+        version: link:packages/build-result
       '@qflow/caption':
         specifier: workspace:*
         version: link:packages/caption
@@ -437,6 +440,12 @@ importers:
         specifier: workspace:*
         version: link:../protocol
 
+  packages/build-result:
+    dependencies:
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+
   packages/caption:
     dependencies:
       '@qflow/component-kit':
@@ -534,6 +543,9 @@ importers:
 
   packages/cli:
     dependencies:
+      '@qflow/build-result':
+        specifier: workspace:*
+        version: link:../build-result
       '@qflow/compiler-node':
         specifier: workspace:*
         version: link:../compiler-node
@@ -564,6 +576,16 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+    devDependencies:
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/run-markup':
+        specifier: workspace:*
+        version: link:../run-markup
+      '@qflow/workspace-fs-node':
+        specifier: workspace:*
+        version: link:../workspace-fs-node
 
   packages/comment-sticker:
     dependencies:
@@ -2584,6 +2606,9 @@ importers:
 
   packages/runtime-host-node:
     dependencies:
+      '@qflow/build-result':
+        specifier: workspace:*
+        version: link:../build-result
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -2614,6 +2639,12 @@ importers:
 
   packages/runtime-local:
     dependencies:
+      '@qflow/artifact-store-fs':
+        specifier: workspace:*
+        version: link:../artifact-store-fs
+      '@qflow/build-result':
+        specifier: workspace:*
+        version: link:../build-result
       '@qflow/component-kit':
         specifier: workspace:*
         version: link:../component-kit
@@ -2645,9 +2676,6 @@ importers:
         specifier: workspace:*
         version: link:../validation
     devDependencies:
-      '@qflow/artifact-store-fs':
-        specifier: workspace:*
-        version: link:../artifact-store-fs
       '@qflow/core':
         specifier: workspace:*
         version: link:../core

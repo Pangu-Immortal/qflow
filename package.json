@@ -61,6 +61,7 @@
     "@qflow/artifact": "workspace:*",
     "@qflow/artifact-store-fs": "workspace:*",
     "@qflow/artifact-store-s3": "workspace:*",
+    "@qflow/build-result": "workspace:*",
     "@qflow/audio-track": "workspace:*",
     "@qflow/audio-track-studio": "workspace:*",
     "@qflow/background-removal": "workspace:*",
