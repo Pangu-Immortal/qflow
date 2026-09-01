@@ -211,7 +211,7 @@ variables referenced by the selected Runtime Profile:
 
 | Variable | Provider/use |
 |---|---|
-| `QFLOWHUB_API_KEY` | QflowHub paid generation and Gemini VLM; get one at https://qflow.ai |
+| QflowHub OAuth | QflowHub paid generation and Gemini VLM; run `qflow auth login qflowhub.default --runtime qflow.runtime.json` |
 | `KIE_API_KEY` | Explicit KIE Provider only |
 | `MIMO_API_KEY` | Xiaomi MiMo TTS, only when that Endpoint is selected |
 

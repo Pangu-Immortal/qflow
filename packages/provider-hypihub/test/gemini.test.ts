@@ -44,7 +44,7 @@ test("QflowHub Gemini points unavailable models to QflowHub", async () => {
     fetch: async () => new Response("missing", { status: 404 }),
   });
   await assert.rejects(() => generate({ instruction: "x", parts: [{ text: "x" }] }),
-    /get a QflowHub key with this model enabled at https:\/\/qflow\.ai/iu);
+    /sign in to QflowHub at https:\/\/qflow\.ai with qflow auth login/iu);
 });
 
 test("QflowHub Gemini retries upstream rate limits without reuploading files", async () => {

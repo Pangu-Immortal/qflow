@@ -796,7 +796,7 @@ async function defaultGenerate(model: string): Promise<GenerateText> {
     throw new Error("QFLOW_GEMINI_PROVIDER must be auto, qflowhub or vertex");
   }
   if (backend === "qflowhub" || (backend === "auto" && hypiHubKey)) {
-    if (!hypiHubKey) throw new Error("QFLOW_GEMINI_PROVIDER=qflowhub requires QFLOWHUB_API_KEY; get one at https://qflow.ai");
+    if (!hypiHubKey) throw new Error("QFLOW_GEMINI_PROVIDER=qflowhub requires QflowHub OAuth; run qflow auth login qflowhub.default");
     const generate = createQflowHubGeminiGenerator({
       apiKey: hypiHubKey,
       model,
@@ -808,7 +808,7 @@ async function defaultGenerate(model: string): Promise<GenerateText> {
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         if (!/qflow\.ai/iu.test(message) && /HTTP (401|403|404)\b|model_not_found|no_capable_provider/iu.test(message)) {
-          throw new Error(`${message}. This Gemini model is not available with the configured key; get a QflowHub key at https://qflow.ai`);
+          throw new Error(`${message}. Sign in at https://qflow.ai with qflow auth login to enable this Gemini model`);
         }
         throw error;
       }
@@ -817,7 +817,7 @@ async function defaultGenerate(model: string): Promise<GenerateText> {
   const project = process.env.GOOGLE_CLOUD_PROJECT?.trim();
   const credentials = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.trim();
   if (!project || !credentials) {
-    throw new Error("Gemini credentials are unavailable. Configure Vertex credentials or set QFLOWHUB_API_KEY (get one at https://qflow.ai).");
+    throw new Error("Gemini credentials are unavailable. Configure Vertex credentials or sign in to QflowHub with qflow auth login.");
   }
   const generate = createVertexGeminiGenerator({
     project,
@@ -831,7 +831,7 @@ async function defaultGenerate(model: string): Promise<GenerateText> {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (!/qflow\.ai/iu.test(message) && /\b(?:401|403|404)\b|permission denied|unauthenticated|not found|failed precondition/iu.test(message)) {
-        throw new Error(`${message}. This Gemini model or Vertex credential is unavailable; get a QflowHub key at https://qflow.ai`);
+        throw new Error(`${message}. This Gemini model or Vertex credential is unavailable; sign in at https://qflow.ai with qflow auth login`);
       }
       throw error;
     }

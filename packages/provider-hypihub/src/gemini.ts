@@ -128,7 +128,7 @@ export function createQflowHubGeminiGenerator(options: QflowHubGeminiGeneratorOp
       if (!response.ok) {
         const message = `QflowHub Gemini returned HTTP ${response.status}: ${text.slice(0, 300)}`;
         if (response.status === 401 || response.status === 403 || response.status === 404) {
-          throw new Error(`${message}. Get a QflowHub key with this model enabled at https://qflow.ai`);
+          throw new Error(`${message}. Sign in to QflowHub at https://qflow.ai with qflow auth login`);
         }
         throw new Error(message);
       }

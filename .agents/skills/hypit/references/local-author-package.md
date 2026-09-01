@@ -260,7 +260,7 @@ For a media slot, declare an Artifact Fragment input. Producer inputs are `Typed
 value is under `kind === "inline"`. Branch on BlobRef `mediaType` (`image/*` or `video/*`) when
 choosing the Visual IR element, and still draw the empty frame/cell when no material is supplied.
 `qflow image` is a direct, billed QflowHub image-model call (default `@qflow/gpt-image`, credential
-`QFLOWHUB_API_KEY`; get a key at [qflow.ai](https://qflow.ai)); it does not use a project Runtime Profile, Build or Run Source. Obtain approval
+QflowHub OAuth via `qflow auth login` at [qflow.ai](https://qflow.ai)); it does not use a project Runtime Profile, Build or Run Source. Obtain approval
 before using it and reserve it for package-owned chrome.
 
 ```typescript

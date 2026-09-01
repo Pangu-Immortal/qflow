@@ -116,7 +116,7 @@ writing a Run Source whose only purpose is to produce a component's own texture,
 the wrong place: generate it once while authoring the package and commit the file.
 
 Produce that file with `qflow image --prompt <text> --to <path>`, a direct billed QflowHub image-model
-call (default `@qflow/gpt-image`, using `QFLOWHUB_API_KEY`; get a key at [qflow.ai](https://qflow.ai)). It writes a picture and nothing else; no
+call (default `@qflow/gpt-image`, using QflowHub OAuth via `qflow auth login` at [qflow.ai](https://qflow.ai)). It writes a picture and nothing else; no
 project Runtime Profile, Source, Run, Build or Record participates. A package asset is authoring
 input, not the output of anybody's video, so it is never a Target or Record.
 

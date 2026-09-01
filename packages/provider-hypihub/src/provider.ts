@@ -44,13 +44,13 @@ function apiBaseUrl(value: string): string {
 }
 function credential(context: EndpointInvocationContext): string {
   const value = context.credentials.apiKey?.secret;
-  assert(typeof value === "string" && value.length > 0, "QflowHub API key is unavailable");
+  assert(typeof value === "string" && value.length > 0, "QflowHub login is unavailable; run qflow auth login for QflowHub");
   return value;
 }
 function guidedMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
-  return /API key is unavailable|HTTP (?:401|403|404)\b|not enabled for|model_not_found|no_capable_provider/iu.test(message)
-    ? `${message}. Get a QflowHub key with this model enabled at https://qflow.ai`
+  return /API key is unavailable|QflowHub login is unavailable|HTTP (?:401|403|404)\b|not enabled for|model_not_found|no_capable_provider/iu.test(message)
+    ? `${message}. Sign in to QflowHub at https://qflow.ai with qflow auth login`
     : message;
 }
 function failure(error: unknown): EndpointOutcome {
@@ -252,10 +252,10 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
   };
   return defineEndpointPackage({
     module: hypiHubProviderModuleRef, facet: "gateway", instance: options.instance ?? "qflowhub.default", pool: options.pool ?? options.instance ?? "qflowhub.default",
-    credentials: { apiKey: options.apiKey ?? credentialRef("env", "QFLOWHUB_API_KEY") }, credentialInputs: { apiKey: { label: "QflowHub API key" } }, defaultConcurrency: options.defaultConcurrency ?? 4,
+    credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") }, credentialInputs: { apiKey: { label: "QflowHub login" } }, defaultConcurrency: options.defaultConcurrency ?? 4,
     capabilities: [
       ...hypiHubRoutes
-      // QflowHub keys do not necessarily include the MiMo audio models. Keep
+      // QflowHub OAuth grants do not necessarily include the MiMo audio models. Keep
       // official Xiaomi MiMo as the safe default; opting into QflowHub audio is
       // an explicit Runtime decision for a key that actually has those models.
       .filter((route) => options.audio === true || route.media !== "audio")
