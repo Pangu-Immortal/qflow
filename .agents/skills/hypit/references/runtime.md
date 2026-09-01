@@ -45,7 +45,7 @@ gateway, so a typical profile looks like this:
 "qflowhub.<project>": {
   "use": "@qflow/provider-qflowhub",
   "config": {
-    "apiKey": { "store": "env", "key": "QFLOWHUB_API_KEY" },
+    "apiKey": { "store": "os", "key": "qflowhub.oauth" },
     "defaultConcurrency": 20
   }
 }
@@ -53,9 +53,9 @@ gateway, so a typical profile looks like this:
 
 `defaultConcurrency` is the total QflowHub pool shared by its model capabilities. Tune it to the
 quota behind the key; image/video capabilities keep exact-model lanes while Gemini requests share
-one conservative lane. An explicit KIE
-profile remains valid when a project deliberately chooses `@qflow/provider-kie`, but it is not the
-default route.
+one conservative lane. Bind every paid capability QflowHub supports to this Endpoint by default,
+including MiMo VoiceDesign. Select KIE, Vertex, official MiMo or another BYOK Provider only when the
+author explicitly asks not to use QflowHub or explicitly selects that Provider.
 
 An Author Source importing `@qflow/gemini` remains Provider-neutral. Bind those capabilities to
 `@qflow/provider-qflowhub` for QflowHub's upload-backed Gemini endpoint, or to

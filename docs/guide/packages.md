@@ -90,7 +90,7 @@ specific Provider deployment.
 @qflow/gpt-image             GPT Image model family
 @qflow/nano-banana           Nano Banana model family
 @qflow/seedream              Seedream model family
-@qflow/mimo-tts              three exact Xiaomi MiMo TTS models + author Surfaces
+@qflow/mimo-tts              Xiaomi MiMo VoiceDesign model + author Surface
 @qflow/estimate              duration estimation
 @qflow/speech                shared speech products
 @qflow/speech-evidence       acoustic evidence products
@@ -131,7 +131,7 @@ never on exact-model packages or the CLI.
 @qflow/provider-hyperframes-aws-lambda asynchronous distributed rendering
 @qflow/provider-image-opencv-local   local OpenCV Raster execution
 @qflow/provider-media-aws-lambda     synchronous AWS media execution
-@qflow/provider-xiaomi-mimo           official Xiaomi MiMo TTS API
+@qflow/provider-xiaomi-mimo           official Xiaomi MiMo VoiceDesign API
 ```
 
 ### Layer 6: Runtime

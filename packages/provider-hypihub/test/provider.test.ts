@@ -30,7 +30,7 @@ async function endpointFor(request: Need, fetch: typeof globalThis.fetch): Promi
   return resolution.registration.endpoint;
 }
 
-test("QflowHub keeps MiMo VoiceDesign audio opt-in so official MiMo can own the default audio routes", async () => {
+test("QflowHub exposes VoiceDesign by default and permits an explicit alternate audio Provider", async () => {
   const registry = new EndpointRegistry();
   await createQflowHubProvider({ fetch: async () => { throw new Error("audio must not call fetch"); } }).install(registry);
   assert.equal(registry.resolve({
@@ -39,17 +39,17 @@ test("QflowHub keeps MiMo VoiceDesign audio opt-in so official MiMo can own the 
     returns: mimoTtsEndpoints.voiceDesign.returns,
     constraints: { ports: {} },
     result: "record:qflowhub-audio-default",
-  }).status, "missing");
+  }).status, "resolved");
 
-  const optedIn = new EndpointRegistry();
-  await createQflowHubProvider({ audio: true, fetch: async () => { throw new Error("not reached"); } }).install(optedIn);
-  assert.equal(optedIn.resolve({
+  const optedOut = new EndpointRegistry();
+  await createQflowHubProvider({ audio: false, fetch: async () => { throw new Error("not reached"); } }).install(optedOut);
+  assert.equal(optedOut.resolve({
     id: "need:qflowhub-audio-opt-in",
     capability: mimoTtsEndpoints.voiceDesign.capability,
     returns: mimoTtsEndpoints.voiceDesign.returns,
     constraints: { ports: {} },
     result: "record:qflowhub-audio-opt-in",
-  }).status, "resolved");
+  }).status, "missing");
 });
 
 test("QflowHub uploads referenced Artifacts once, submits their HTTPS URLs, and persists the result", async () => {
