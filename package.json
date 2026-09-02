@@ -6,7 +6,6 @@
   "type": "module",
   "bin": {
     "qflow": "./bin/qflow.mjs",
-    "qflow-migrate-flat-results": "./bin/qflow-migrate-flat-results.mjs",
     "qflow-studio": "./bin/qflow-studio.mjs",
     "qflow-preview-check": "./bin/qflow-preview-check.mjs",
     "qflow-reference-video-tools": "./packages/reference-video-tools/bin/reference-video-tools.mjs"
