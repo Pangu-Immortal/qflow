@@ -30,6 +30,13 @@ async function endpointFor(request: Need, fetch: typeof globalThis.fetch): Promi
   return resolution.registration.endpoint;
 }
 
+test("QflowHub declares its own credential acquisition flow", () => {
+  const [credential] = createQflowHubProvider().credentials;
+  assert.equal(credential?.acquisition?.kind, "oauth2-pkce");
+  assert.equal(credential?.acquisition?.authorizationEndpoint, "https://qflow.ai/oauth/consent");
+  assert.equal(credential?.acquisition?.tokenEndpoint, "https://qflow.ai/oauth/token");
+});
+
 test("QflowHub exposes VoiceDesign by default and permits an explicit alternate audio Provider", async () => {
   const registry = new EndpointRegistry();
   await createQflowHubProvider({ fetch: async () => { throw new Error("audio must not call fetch"); } }).install(registry);

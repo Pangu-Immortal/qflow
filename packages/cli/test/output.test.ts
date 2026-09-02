@@ -37,8 +37,9 @@ test("author check exposes author-facing Outputs, not graph or resource identiti
 
 test("JSON mode writes exactly the stable command view", () => {
   const machine = {
-    format: "qflow.cli-doctor@2" as const,
+    format: "qflow.cli-doctor@3" as const,
     ok: false,
+    project: "/project",
     profile: "/project/qflow.runtime.ts",
     diagnosticCount: 1,
     diagnostics: [{ severity: "error" as const, code: "MISSING", message: "not found" }],

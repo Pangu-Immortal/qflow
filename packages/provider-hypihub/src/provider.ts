@@ -252,7 +252,18 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
   };
   return defineEndpointPackage({
     module: hypiHubProviderModuleRef, facet: "gateway", instance: options.instance ?? "qflowhub.default", pool: options.pool ?? options.instance ?? "qflowhub.default",
-    credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") }, credentialInputs: { apiKey: { label: "QflowHub login" } }, defaultConcurrency: options.defaultConcurrency ?? 3,
+    credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") },
+    credentialInputs: { apiKey: {
+      label: "QflowHub login",
+      acquisition: {
+        kind: "oauth2-pkce",
+        authorizationEndpoint: "https://qflow.ai/oauth/consent",
+        tokenEndpoint: "https://qflow.ai/oauth/token",
+        clientId: "hyc_d5d5e8e7131b0c877756e66c",
+        scopes: ["user:profile", "user:inference"],
+      },
+    } },
+    defaultConcurrency: options.defaultConcurrency ?? 4,
     capabilities: [
       ...hypiHubRoutes
       .filter((route) => options.audio !== false || route.media !== "audio")
