@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@qflow/build-result": "workspace:*",
+    "@qflow/build-result-kit": "workspace:*",
     "@qflow/compiler-node": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",

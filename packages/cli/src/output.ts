@@ -38,6 +38,7 @@ export type DoctorOutput = {
   readonly format: "qflow.cli-doctor@1";
   readonly ok: boolean;
   readonly dataRoot: string;
+  readonly resultRepository?: { readonly root: string; readonly use: string };
   readonly diagnostics: readonly CliDiagnostic[];
 };
 
@@ -65,7 +66,7 @@ export type RunCheckOutput = {
   readonly candidates: Readonly<Record<string, string>>;
   readonly satisfactions: readonly unknown[];
   readonly steps?: number;
-  readonly unresolvedBuildRecords?: readonly {
+  readonly unresolvedHistoricalOutputs?: readonly {
     readonly id: string;
     readonly build: string;
     readonly output: string;
@@ -126,6 +127,7 @@ export type CliPresentation =
       /** Presentation names declared by this Author Source and Run Source. Never used to plan. */
       readonly outputNames?: Readonly<Record<string, string>>;
       readonly satisfactionNames?: Readonly<Record<string, string>>;
+      readonly selections?: readonly { readonly output: string; readonly candidate: string; readonly record: string }[];
     }
   | {
       readonly kind: "operational";
@@ -214,6 +216,9 @@ function renderDoctor(view: Extract<CliPresentation, { kind: "doctor" }>, io: Cl
   lines.push(...facts([
     ["Profile", shortPath(view.profile)],
     ["Data root", shortPath(view.machine.dataRoot)],
+    ...(view.machine.resultRepository === undefined
+      ? []
+      : [["Result store", `${view.machine.resultRepository.use} · ${shortPath(view.machine.resultRepository.root)}`] as const]),
   ], colors));
   lines.push("");
   if (view.machine.diagnostics.length === 0) {
@@ -288,11 +293,11 @@ function renderRunCheck(
     ["Satisfactions", String(view.machine.satisfactions.length)],
     ...(view.machine.steps === undefined ? [] : [["Steps", String(view.machine.steps)] as const]),
   ], colors));
-  const unresolved = view.machine.unresolvedBuildRecords ?? [];
+  const unresolved = view.machine.unresolvedHistoricalOutputs ?? [];
   if (unresolved.length > 0) {
     lines.push("", heading("warning", `${unresolved.length} historical Candidate${unresolved.length === 1 ? "" : "s"} unresolved`, io, colors));
     for (const item of unresolved) lines.push(`  ${item.id} ← ${item.build}/${item.output}`);
-    lines.push(`  ${colors.dim("The Run source is valid. plan/build will resolve these archived values.")}`);
+    lines.push(`  ${colors.dim("The Run source is valid. plan/build will resolve these Result values.")}`);
   }
   return `${lines.join("\n")}\n`;
 }
@@ -364,9 +369,10 @@ function renderPlan(
     const capabilityCount = view.machine.preflight.capabilities.length;
     lines.push(`  ${colors.dim(`Runtime base checked; ${capabilityCount} demanded Endpoint ${capabilityCount === 1 ? "capability" : "capabilities"} checked.`)}`);
   }
+  const selections = view.selections ?? [];
   const visibleSelections = verbose
-    ? plan.selections
-    : plan.selections.filter((selection) => view.satisfactionNames?.[selection.output] !== undefined);
+    ? selections
+    : selections.filter((selection) => view.satisfactionNames?.[selection.output] !== undefined);
   if (visibleSelections.length > 0) {
     lines.push("", colors.strong(verbose ? "Selections" : "Run choices"));
     for (const selection of visibleSelections) {
@@ -437,7 +443,8 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow doctor")),
       colors.dim("Diagnose one complete declarative Runtime Profile without submitting work."),
       "",
-      "  qflow doctor [<runtime-profile>]",
+      "  qflow doctor [<runtime-profile>] [--workspace <project>]",
+      "  Checks the Runtime deployment and the project's selected Result Store.",
     ],
     plan: [
       colors.accent(colors.strong("qflow plan")),
@@ -452,9 +459,9 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow build")),
       colors.dim("Submit one durable Build and ensure its selected Runtime Worker is available."),
       "",
-      "  qflow build <run-source> [--name <name>] [--runtime <profile>] [--asset-root <directory>] [--follow]",
+      "  qflow build <run-source> [--title <text>] [--runtime <profile>] [--asset-root <directory>] [--follow]",
       "",
-      "  --name <name>             give this execution a human-facing name",
+      "  --title <text>            give this Result a human-facing title",
       "  --follow                   observe the Build; the Worker still owns execution",
       "  --max-wait-ms <ms>         bound startup or follow waiting",
     ],
@@ -465,7 +472,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       "  qflow runtime use <profile>       select the Profile for this project",
       "  qflow runtime unset               remove only the local selection",
       "  qflow runtime up [<profile>]      prepare selected packages, programs and Worker",
-      "  qflow runtime status [<profile>]  inspect Worker, queue capacity and declared programs",
+      "  qflow runtime status [<profile>]  inspect Worker, active Builds and declared programs",
       "  qflow runtime logs [<profile>]    read Worker logs",
       "  qflow runtime down [<profile>]    stop the Worker; external programs keep running",
     ],
@@ -487,12 +494,12 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       "  qflow programs status [<profile>]",
       "  qflow programs down [<profile>]",
     ],
-    queue: [
-      colors.accent(colors.strong("qflow queue")),
-      colors.dim("Inspect durable Build dispatch and Provider pool capacity."),
+    activity: [
+      colors.accent(colors.strong("qflow activity")),
+      colors.dim("Inspect active Builds and Provider pool capacity."),
       "",
-      "  qflow queue [--runtime <profile>] [--watch]",
-      "  qflow queue [--runtime <profile>] --watch --jsonl",
+      "  qflow activity [--runtime <profile>] [--watch]",
+      "  qflow activity [--runtime <profile>] --watch --jsonl",
     ],
     paths: [
       colors.accent(colors.strong("qflow paths")),
@@ -504,14 +511,14 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow builds")),
       colors.dim("List project-owned Build Results without opening a Runtime."),
       "",
-      "  qflow builds [--workspace <project>]",
+      "  qflow builds [--workspace <project>] [--limit <count>] [--before <build-id>]",
     ],
     status: [
       colors.accent(colors.strong("qflow status")),
       colors.dim("Show one Build now, or keep watching it without owning execution."),
       "",
       "  qflow status <build-id> [--runtime <profile>] [--watch]",
-      "  --watch                   observe until terminal; the Worker still owns execution",
+      "  --watch                   observe until a Result outcome or operator attention",
       "  --max-wait-ms <ms>        stop watching after a bounded wait",
     ],
     inspect: [
@@ -524,20 +531,32 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow get")),
       colors.dim("Read or copy one exact named Build Output; copying never reruns work."),
       "",
-      "  qflow get <build-id> --name <output-name> [--workspace <project>] [--to <path>]",
+      "  qflow get <build-id> --output <name> [--workspace <project>] [--to <path>]",
     ],
     history: [
       colors.accent(colors.strong("qflow history")),
       colors.dim("Find project Build Outputs from local result manifests."),
       "",
-      "  qflow history <output-name> [--workspace <project>] [--source <author-source>]",
-      "  qflow history --source <author-source> [--workspace <project>]",
+      "  qflow history <output-name> [--workspace <project>] [--source <author-source>] [--limit <count>] [--before <build-id>]",
+      "  qflow history --source <author-source> [--workspace <project>] [--limit <count>] [--before <build-id>]",
     ],
     cancel: [
       colors.accent(colors.strong("qflow cancel")),
       colors.dim("Withdraw one Build and honestly reconcile work already submitted to Providers."),
       "",
       "  qflow cancel <build-id> [--runtime <profile>] [--reason <text>]",
+    ],
+    result: [
+      colors.accent(colors.strong("qflow result")),
+      colors.dim("Edit one Result, finish an interrupted Result write, or discard an incomplete submission."),
+      "",
+      "  qflow result finish <build-id> [--runtime <profile>]",
+      "  qflow result discard <build-id> [--runtime <profile>]",
+      "  qflow result edit <build-id> [--workspace <project>] [--title <text>] [--note <text>]",
+      "                           [--highlight <output> ...]",
+      "  --clear-title            remove the Result's human title",
+      "  --clear-note             remove its note",
+      "  --clear-highlights       remove all highlighted Outputs",
     ],
     image: [
       colors.accent(colors.strong("qflow image")),
@@ -588,7 +607,7 @@ export function writeCliHelp(io: CliIo, topic?: string): void {
     row("runtime use <profile>", "select this project's execution environment", 40),
     row("plan <run-source>", "see exactly what this Run will demand", 40),
     row("build <run-source>", "submit durable work; add --follow to watch", 40),
-    row("get <build-id>", "read or copy an archived result", 40),
+    row("get <build-id>", "read or copy a Result Output", 40),
     row("doctor [profile]", "diagnose deployment setup when needed", 40),
     "",
     colors.strong("Authoring"),
@@ -602,8 +621,11 @@ export function writeCliHelp(io: CliIo, topic?: string): void {
     row("history [output]", "find named historical Build Outputs"),
     row("status <build-id> [--watch]", "show or continuously observe one Build"),
     row("inspect <build-id>", "inspect one project Build Result"),
-    row("get <build-id> --name <output>", "read or materialize one Build Output"),
+    row("get <build-id> --output <name>", "read or materialize one Build Output"),
     row("cancel <build-id>", "withdraw one Build and reconcile submitted work"),
+    row("result finish <build-id>", "finish an interrupted Result write"),
+    row("result discard <build-id>", "discard one incomplete submission"),
+    row("result edit <build-id>", "title, annotate or highlight one Result"),
     "",
     colors.strong("Runtime"),
     row("doctor [profile]", "validate deployment without executing"),
@@ -611,7 +633,7 @@ export function writeCliHelp(io: CliIo, topic?: string): void {
     row("runtime up|status|logs|down", "prepare deployment and manage the Worker"),
     row("programs up|status|down", "manage declared external programs only"),
     row("packages install|status", "manage pinned upstream packages in the machine home"),
-    row("queue [--watch]", "inspect durable dispatch and shared capacity"),
+    row("activity [--watch]", "inspect active Builds and shared capacity"),
     row("paths", "show every effective state location"),
     row("auth status|login|logout", "manage Endpoint-declared credential references"),
     "",

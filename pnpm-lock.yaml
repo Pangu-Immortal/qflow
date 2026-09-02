@@ -561,6 +561,9 @@ importers:
       '@qflow/build-result':
         specifier: workspace:*
         version: link:../build-result
+      '@qflow/build-result-kit':
+        specifier: workspace:*
+        version: link:../build-result-kit
       '@qflow/compiler-node':
         specifier: workspace:*
         version: link:../compiler-node
@@ -2662,6 +2665,9 @@ importers:
       '@qflow/component-kit':
         specifier: workspace:*
         version: link:../component-kit
+      '@qflow/core':
+        specifier: workspace:*
+        version: link:../core
       '@qflow/driver-node':
         specifier: workspace:*
         version: link:../driver-node
@@ -2693,9 +2699,6 @@ importers:
         specifier: workspace:*
         version: link:../validation
     devDependencies:
-      '@qflow/core':
-        specifier: workspace:*
-        version: link:../core
       '@qflow/credential-store-env':
         specifier: workspace:*
         version: link:../credential-store-env

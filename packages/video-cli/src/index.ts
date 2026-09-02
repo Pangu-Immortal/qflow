@@ -1,8 +1,4 @@
-import {
-  materializeArtifact,
-  materializeRecord,
-  runCli,
-} from "@qflow/cli";
+import { runCli } from "@qflow/cli";
 import type { CliIo } from "@qflow/cli";
 import {
   installDistributionPackageResolution,
@@ -13,7 +9,6 @@ import type { LoadedPackage } from "@qflow/package-loader-node";
 
 import { videoCliDistribution } from "./distribution.js";
 
-export { materializeArtifact, materializeRecord };
 export {
   createVideoCompiler,
 } from "./compiler.js";

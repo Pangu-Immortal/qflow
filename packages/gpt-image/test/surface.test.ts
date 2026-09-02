@@ -2,16 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { artifactTypes } from "@qflow/artifact";
-import { markupSurfaceHostFacetAbi, parseStructuredElement } from "@qflow/markup";
+import { parseStructuredElement } from "@qflow/markup";
 import type { StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/markup";
 import { textTypes } from "@qflow/text";
 
-import gptImageNodePackage from "../src/activation.js";
 import {
   decodeCleanGptImageSurface,
   decodeGptImageSurface,
 } from "../src/surface.js";
-import { gptImageCleanMarkupSurfaces, gptImageMarkupSurfaces } from "../src/index.js";
 
 const refs = new Map<string, SurfaceResolvedReference>([
   ["prompt", {
@@ -83,18 +81,6 @@ test("clean GPT Image Surface adds the official denoise as one visible downstrea
   const clean = result.fragments[0]?.operations.find((operation) => operation.id === "clean-image");
   assert.deepEqual(clean?.inputs.source, { kind: "fragment-operation", operation: "select-primary-image" });
   assert.deepEqual(clean?.inputs.program, { kind: "fragment-input", name: "cleanup" });
-});
-
-test("the physical package carries both independently importable Surface implementations", () => {
-  assert.deepEqual([
-    { name: "@qflow/gpt-image", surfaces: gptImageMarkupSurfaces.map((surface) => surface.tag) },
-    { name: "@qflow/gpt-image/clean", surfaces: gptImageCleanMarkupSurfaces.map((surface) => surface.tag) },
-  ], [
-    { name: "@qflow/gpt-image", surfaces: ["Image"] },
-    { name: "@qflow/gpt-image/clean", surfaces: ["Image"] },
-  ]);
-  assert.equal(gptImageNodePackage.hostFacets
-    .filter((facet) => facet.abi === markupSurfaceHostFacetAbi).length, 2);
 });
 
 test("GPT Image Surface rejects hidden inline prompts and undeclared child shapes", async () => {

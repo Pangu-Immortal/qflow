@@ -44,11 +44,10 @@ test("Studio reads Instant lineage and author authority from executed graph edge
   const state = {
     format: "qflow.build@1",
     program: { closure: { modules: [] }, records: program },
-    graph: { format: "qflow.graph@1", outputs: [], candidates: [], operations: [] },
-    request: { format: "qflow.build-request@1", targets: [{ output: "visual" }] },
+    targets: [{ output: "visual" }],
     plan: {
       format: "qflow.plan@1", steps, goals: [{ record: "track", type: type("@qflow/composition", "VisualTrack") }],
-      selections: [{ output: "visual", candidate: "visual-candidate", record: "track" }],
+      outputBindings: [{ output: "visual", record: "track", type: type("@qflow/composition", "VisualTrack") }],
     },
     status: "complete", records: executed, steps: steps.map(({ id }) => ({ id, status: "complete" as const })),
     needs: [], outstanding: [], diagnostics: [],

@@ -111,8 +111,8 @@ qflow plan build.svrun
 
 A project with `package.json` owns its third-party packages. A plain creative folder needs no Node
 project and uses official packages from the installed Distribution. Source and exported files remain in the
-project. By default, Build Results live under the project's `.qflow/results`; a Profile may point the
-same complete Result model at S3. Active execution state always lives under the selected Profile's
+project. By default, Build Results live under the project's `.qflow/results`; a project-owned
+`qflow.results.json` may point the same complete Result model at S3. Active execution state always lives under the selected Profile's
 `dataRoot`.
 `runtime use` stores only a local pointer at `.qflow/runtime`. Source imports select author
 packages; the Profile independently selects Runtime packages through `use`.
@@ -140,10 +140,10 @@ safe, but neither is required as a repetitive pre-Build ceremony.
 ```bash
 qflow status <build-id> --watch
 
-qflow queue
+qflow activity
 
 qflow get <build-id> \
-  --name final.video \
+  --output final.video \
   --to output/final.mp4
 ```
 
@@ -181,7 +181,7 @@ qflow runtime up
 The Runtime creates a missing managed environment in the machine Program Home and reuses it across
 projects and sessions. Do not run a service's `uv sync` from an author project.
 
-Run `qflow doctor qflow.runtime.json` after changing a Runtime Profile. It reports missing tools,
+Run `qflow doctor qflow.runtime.json` after changing a Runtime Profile or project Result Store. It reports missing tools,
 credentials and endpoint configuration without executing the graph.
 
 ## Read next
