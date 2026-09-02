@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
+import { buildResultDirectory } from "@qflow/build-result";
 import type { BuildResultRepository } from "@qflow/build-result";
 import type { BuildView } from "@qflow/runtime-host-node";
 
@@ -109,7 +110,7 @@ test("Studio library joins this environment's Builds with project Build Result f
 test("Studio opens project Build Results without a Runtime or ResourceStore", async () => {
   const root = await mkdtemp(join(tmpdir(), "qflow-studio-results-"));
   const build = "bld_20260902T130000002Z_0000000001";
-  const directory = join(root, ".qflow", "results", build);
+  const directory = buildResultDirectory(join(root, ".qflow", "results"), build);
   const bytes = new TextEncoder().encode("finished-video");
   try {
     await mkdir(join(directory, "files"), { recursive: true });

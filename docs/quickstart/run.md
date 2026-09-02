@@ -271,10 +271,11 @@ only with `--workspace`. `--package-root` locates installed packages and never w
 ```text
 .qflow/
   results/
-    <build-id>/
-      result.json
-      files/
-      values/
+    <UTC-date>/
+      <build-id>/
+        result.json
+        files/
+        values/
 ```
 
 That is the zero-configuration Result repository. The `output/` directory shown earlier is only a
