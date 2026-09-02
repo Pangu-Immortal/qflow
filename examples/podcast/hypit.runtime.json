@@ -1,0 +1,50 @@
+{
+  "format": "qflow.runtime-profile@1",
+  "runtime": {
+    "use": "@qflow/runtime-local",
+    "config": {
+      "dataRoot": ".qflow/runtimes/local",
+      "artifacts": {
+        "use": "@qflow/artifact-store-fs",
+        "config": { "path": "artifacts" }
+      },
+      "credentials": {
+        "env": { "use": "@qflow/credential-store-env" },
+        "os": { "use": "@qflow/credential-store-os" }
+      },
+      "endpoints": {
+        "qflowhub.qflow-podcast": {
+          "use": "@qflow/provider-qflowhub",
+          "pool": "generation",
+          "config": {
+            "apiKey": { "store": "env", "key": "QFLOWHUB_API_KEY" },
+            "defaultConcurrency": 4,
+            "requestTimeoutMs": 120000
+          }
+        },
+        "media.qflow-podcast": {
+          "use": "@qflow/provider-media-local",
+          "pool": "media",
+          "config": { "defaultConcurrency": 2 }
+        },
+        "whisperx.qflow-podcast": {
+          "use": "@qflow/provider-whisperx-local",
+          "pool": "alignment",
+          "config": {
+            "expectedModel": "small",
+            "defaultConcurrency": 1
+          }
+        },
+        "hyperframes.qflow-podcast": {
+          "use": "@qflow/provider-hyperframes-local",
+          "pool": "render",
+          "config": {
+            "workers": 2,
+            "quality": "standard",
+            "defaultConcurrency": 1
+          }
+        }
+      }
+    }
+  }
+}

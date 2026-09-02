@@ -113,6 +113,7 @@ specific Provider deployment.
 @qflow/render-hyperframes    explicit HyperFrames rendering component
 @qflow/image-transform       image processing component
 @qflow/image-compose         ordered still-image composition
+@qflow/interview-emoji-reveal reusable top-of-frame answer icon strip
 @qflow/raster                shared deterministic raster execution contract
 @qflow/background-removal    external image cutout capability
 ```

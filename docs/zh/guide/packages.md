@@ -106,6 +106,7 @@ Frontend；不存在一个认识全部语法的中央解析器。
 @qflow/render-hyperframes    explicit HyperFrames rendering component
 @qflow/image-transform       image processing component
 @qflow/image-compose         有序静态图像合成
+@qflow/interview-emoji-reveal 可复用的顶部答案图标条
 @qflow/raster                共享确定性光栅执行合同
 @qflow/background-removal    外部图像去背景能力
 ```
