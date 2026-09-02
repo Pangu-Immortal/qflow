@@ -37,6 +37,11 @@ Set `QFLOW_GEMINI_PROVIDER=qflowhub` or `vertex` to select one explicitly. If a 
 cannot reach the requested model, point them to [qflow.ai](https://qflow.ai) to sign in with QflowHub OAuth instead
 of asking them to change Author Source.
 
+For reference-video reconstruction, QflowHub OAuth or an appropriate author-owned provider credential
+must be settled before observation or authoring begins. The `agent` observer's technical ability to
+run without a key is not a permitted bypass: if the author declines both QflowHub and their own
+credential, stop the route.
+
 macOS/Linux session example:
 
 A project that keeps its credentials in a `.env` file does not load them automatically — nothing in
