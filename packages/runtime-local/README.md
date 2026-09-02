@@ -7,19 +7,17 @@ A Runtime Profile selects only the environmental parts that genuinely vary:
 
 ```json
 {
-  "format": "qflow.runtime-profile@1",
-  "runtime": {
-    "use": "@qflow/runtime-local",
-    "config": {
-      "dataRoot": ".qflow/runtimes/local",
-      "credentials": {
-        "env": { "use": "@qflow/credential-store-env" }
-      },
-      "endpoints": {}
-    }
-  }
+  "format": "qflow.runtime-local@1",
+  "dataRoot": ".qflow/runtimes/local",
+  "credentials": {
+    "env": { "use": "@qflow/credential-store-env" }
+  },
+  "endpoints": {}
 }
 ```
+
+The official video Distribution selects this Runtime implementation before it opens the file. The
+Profile therefore describes only local execution and does not repeat a fake Runtime Host selector.
 
 A project that wants a non-default Result repository owns a separate `qflow.results.json`:
 

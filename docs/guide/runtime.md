@@ -5,7 +5,7 @@ description: The execution boundary outside Qflow source and Core.
 
 # Runtime
 
-Qflow keeps three decisions separate:
+Qflow keeps four decisions separate:
 
 | Owner | Decides |
 |---|---|
@@ -28,24 +28,24 @@ The Profile contains only environmental choices that genuinely vary:
 
 ```json
 {
-  "format": "qflow.runtime-profile@1",
-  "runtime": {
-    "use": "@qflow/runtime-local",
-    "config": {
-      "dataRoot": ".qflow/runtimes/local",
-      "credentials": {
-        "env": { "use": "@qflow/credential-store-env" }
-      },
-      "endpoints": {
-        "media": { "use": "@qflow/provider-media-local" }
-      }
-    }
+  "format": "qflow.runtime-local@1",
+  "dataRoot": ".qflow/runtimes/local",
+  "credentials": {
+    "env": { "use": "@qflow/credential-store-env" }
+  },
+  "endpoints": {
+    "media": { "use": "@qflow/provider-media-local" }
   }
 }
 ```
 
 * `credentials` selects stores for explicit credential references.
 * `endpoints` selects exact Provider implementations and their configuration.
+
+The official video Distribution selects the local Runtime before opening this file. The Profile
+does not repeat a `runtime.use` selector that cannot make another choice. Another application may
+provide a different Runtime Host at its Distribution assembly boundary without changing Core or
+the generic CLI.
 
 Result storage belongs to the project, not the execution environment. A project may select it in
 `qflow.results.json`; omitting the file uses the same filesystem default:
