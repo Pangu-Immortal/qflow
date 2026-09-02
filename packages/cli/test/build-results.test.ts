@@ -75,6 +75,7 @@ test("builds, history, inspect and get read project Build Results without openin
   const root = await mkdtemp(join(tmpdir(), "qflow-cli-results-"));
   try {
     await fixture(root);
+    await writeFile(join(root, ".qflow", "runtime"), "missing-runtime.json\n", "utf8");
     const builds = await jsonCommand(["builds"], root) as {
       readonly builds: readonly {
         readonly id: string;
