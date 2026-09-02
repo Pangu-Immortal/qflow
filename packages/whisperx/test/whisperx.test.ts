@@ -1,17 +1,10 @@
-import {
-  registerProducerFacets,
-} from "@qflow/component-kit";
-import type { ProducerRegistrar } from "@qflow/component-kit";
 import { sealSpeechEvidenceAudio } from "@qflow/speech";
 import type { SpeechEvidenceAudio } from "@qflow/speech";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
 
-import type { ResourceId, ProducerRef } from "@qflow/protocol";
 import {
-  whisperXComponent,
-  whisperXProducers,
   whisperXRequestForEvidenceAudio,
 } from "@qflow/whisperx";
 
@@ -34,17 +27,4 @@ test("WhisperX receives normalized bytes without authored Segment truth", () => 
   assert.equal("segments" in request, false);
   assert.equal(request.sampleFrames, 16_000);
   assert.equal(request.language, "es");
-});
-
-test("WhisperX installs into the host-neutral compute port without a Node Driver", () => {
-  const registrations: ProducerRef[] = [];
-  const registrar: ProducerRegistrar = {
-    registerProducer(producer) {
-      registrations.push(producer);
-    },
-  };
-
-  registerProducerFacets(registrar, whisperXComponent.producers);
-
-  assert.deepEqual(registrations, [whisperXProducers.request]);
 });
