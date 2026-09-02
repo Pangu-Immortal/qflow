@@ -93,6 +93,9 @@ importers:
       '@qflow/image-transform':
         specifier: workspace:*
         version: link:packages/image-transform
+      '@qflow/interview-emoji-reveal':
+        specifier: workspace:*
+        version: link:packages/interview-emoji-reveal
       '@qflow/media':
         specifier: workspace:*
         version: link:packages/media
@@ -1539,6 +1542,48 @@ importers:
       '@qflow/raster':
         specifier: workspace:*
         version: link:../raster
+
+  packages/interview-emoji-reveal:
+    dependencies:
+      '@qflow/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../component-kit
+      '@qflow/composition':
+        specifier: workspace:*
+        version: link:../composition
+      '@qflow/elaborator':
+        specifier: workspace:*
+        version: link:../elaborator
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/narrative':
+        specifier: workspace:*
+        version: link:../narrative
+      '@qflow/program-space':
+        specifier: workspace:*
+        version: link:../program-space
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/semantic-track':
+        specifier: workspace:*
+        version: link:../semantic-track
+      '@qflow/spatial':
+        specifier: workspace:*
+        version: link:../spatial
+      '@qflow/svs':
+        specifier: workspace:*
+        version: link:../svs
+      '@qflow/temporal':
+        specifier: workspace:*
+        version: link:../temporal
+      '@qflow/temporal-markup':
+        specifier: workspace:*
+        version: link:../temporal-markup
 
   packages/markup:
     dependencies:
