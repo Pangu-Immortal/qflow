@@ -19,6 +19,31 @@ const installedLauncher = process.env.QFLOW_CLI_LAUNCHER;
 export const videoCliDistribution: CliDistribution = {
   packageRoot,
   bootstrapPackages: [],
+  initialRuntimeProfile: {
+    format: "qflow.runtime-local@1",
+    dataRoot: ".qflow/runtimes/local",
+    credentials: {
+      os: { use: "@qflow/credential-store-os" },
+    },
+    endpoints: {
+      "qflowhub.default": {
+        use: "@qflow/provider-qflowhub",
+        pool: "qflowhub.default",
+        config: {
+          baseUrl: "https://qflow.ai",
+          apiKey: { store: "os", key: "qflowhub.oauth" },
+        },
+      },
+      "media.local": {
+        use: "@qflow/provider-media-local",
+        pool: "media.local",
+      },
+      "hyperframes.local": {
+        use: "@qflow/provider-hyperframes-local",
+        pool: "hyperframes.local",
+      },
+    },
+  },
   createCompiler: createVideoCompiler,
   discoverSourcePackages: async (path, options) => {
     const { discoverVideoSourcePackages } = await import("./package-selection.js");

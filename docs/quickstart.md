@@ -110,10 +110,18 @@ Keep project files and generated media outside the installed Qflow Distribution.
 ```bash
 cd /path/to/my-video
 
-qflow runtime use qflow.runtime.json
+qflow runtime init
+qflow auth login qflowhub.default
+qflow doctor
 
 qflow plan build.svrun
 ```
+
+`runtime init` creates and selects the official starter Profile without installing anything or
+contacting a service. That Profile uses QflowHub for remote generation, Gemini vision and WhisperX
+alignment, and local Endpoints for media processing and HyperFrames rendering. If the project already
+has an intentional Profile, select it with `qflow runtime use <profile>` instead; initialization never
+overwrites one.
 
 A project with `package.json` owns its third-party packages. A plain creative folder needs no Node
 project and uses official packages from the installed Distribution. Source and exported files remain in the
@@ -141,7 +149,8 @@ qflow build build.svrun --follow
 
 `build` first repeats the same cheap local preflight, then assigns a fresh Build id, stores the Build
 and ensures its Worker is available. It never installs a package or starts a Managed Program. Run
-`qflow runtime up` explicitly when the selected deployment is not ready. `--follow` is only an
+`qflow runtime up` explicitly when the selected local Runtime is not ready. It prepares local
+dependencies, Programs and the Worker; it does not start or probe QflowHub. `--follow` is only an
 observer; closing it does not stop the Build.
 
 Use `check` while editing a source. Use `doctor` to diagnose a new or broken deployment. They are
@@ -171,7 +180,7 @@ Install only what your selected Runtime Profile needs:
 | `ffmpeg` / `ffprobe` | using local media inspection, normalization or muxing |
 | Python 3.10–3.13 and `uv` | using local WhisperX or OpenCV |
 | Chromium | managed automatically by local HyperFrames rendering |
-| API credentials | selecting remote KIE, Xiaomi or AWS endpoints |
+| API credentials | selecting QflowHub or other remote Endpoints |
 
 Upstream npm packages are demand-loaded into the shared machine package home shown by `qflow
 paths`; they are not copied into every project. `runtime up` prepares the exact npm packages required

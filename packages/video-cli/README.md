@@ -1,7 +1,8 @@
 # `@qflow/video-cli`
 
-Official video command application. It selects the Markup compiler Host, but deliberately carries
-no built-in author, Run, Provider or Store package.
+Official video command application. It selects the Markup compiler Host and supplies one editable
+starter Runtime Profile. The CLI still imports no Provider or Store implementation; installed packages
+are activated only by explicit Source imports or Profile `use` entries.
 
 Every Frontend, Surface, deterministic Producer and Validator is activated from Source imports.
 Installing a new author package therefore does not require a video CLI or Core release. Source
@@ -11,7 +12,10 @@ From any project:
 
 ```bash
 cd path/to/project
-qflow runtime use qflow.runtime.json
+qflow runtime init
+qflow auth login qflowhub.default
+qflow doctor
+qflow runtime up
 qflow check main.svml
 qflow plan build.svrun
 qflow build build.svrun --follow

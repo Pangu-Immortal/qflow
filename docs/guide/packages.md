@@ -125,7 +125,7 @@ never on exact-model packages or the CLI.
 
 ```text
 @qflow/provider-kie                  KIE generation plus background removal
-@qflow/provider-qflowhub              QflowHub paid generation and Gemini VLM gateway
+@qflow/provider-qflowhub              QflowHub generation, Gemini VLM and WhisperX gateway
 @qflow/provider-media-local          local ffprobe/ffmpeg
 @qflow/provider-whisperx-local       local WhisperX service
 @qflow/provider-hyperframes-local    local Chrome rendering

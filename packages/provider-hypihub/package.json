@@ -13,11 +13,14 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-kit": "workspace:*",
-    "@qflow/text": "workspace:*"
+    "@qflow/speech-evidence": "workspace:*",
+    "@qflow/text": "workspace:*",
+    "@qflow/whisperx": "workspace:*"
   },
   "devDependencies": {
     "@qflow/driver-node": "workspace:*",
     "@qflow/mimo-tts": "workspace:*",
-    "@qflow/seedance": "workspace:*"
+    "@qflow/seedance": "workspace:*",
+    "@qflow/speech": "workspace:*"
   }
 }

@@ -2,7 +2,7 @@ import type { EndpointPackage } from "@qflow/endpoint-kit";
 import type { HostFacet } from "@qflow/host";
 import type { CanonicalValue } from "@qflow/protocol";
 import { credentialRef } from "@qflow/runtime";
-import type { CredentialRef, CredentialStore } from "@qflow/runtime";
+import type { CredentialRef, CredentialStore, CredentialValue } from "@qflow/runtime";
 
 export const runtimeEndpointAdapterHostAbi = "qflow.runtime-endpoint-adapter-host@1";
 export const runtimeCredentialStoreAdapterHostAbi = "qflow.runtime-credential-store-adapter-host@1";
@@ -63,7 +63,10 @@ export type ManagedProgram = {
 export type RuntimeEndpointActivation = {
   readonly endpoint: EndpointPackage;
   readonly program?: ManagedProgram;
-  readonly diagnose?: () => readonly RuntimeDoctorDiagnostic[] | Promise<readonly RuntimeDoctorDiagnostic[]>;
+  readonly diagnose?: (context: {
+    readonly credentials: Readonly<Record<string, CredentialValue>>;
+    readonly capabilities?: readonly import("@qflow/protocol").CapabilityRef[];
+  }) => readonly RuntimeDoctorDiagnostic[] | Promise<readonly RuntimeDoctorDiagnostic[]>;
 };
 
 export type RuntimeOpened<T> = {

@@ -65,7 +65,7 @@ export async function runExecutionCommand(input: {
   }
 
   if (runtimeProfile === undefined) {
-    throw new Error(`${args.command} requires a Runtime; run qflow runtime use <profile> or pass --runtime <profile>`);
+    throw new Error(`${args.command} requires a Runtime; run qflow runtime init, select one with runtime use, or pass --runtime <profile>`);
   }
   const selectedHost = await runtimeHost(runtimeProfile);
 
