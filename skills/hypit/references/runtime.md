@@ -58,9 +58,8 @@ including MiMo VoiceDesign. Select KIE, Vertex, official MiMo or another BYOK Pr
 author explicitly asks not to use QflowHub or explicitly selects that Provider.
 
 Bind `@qflow/whisperx#whisperx-alignment` to a QflowHub Endpoint in the same Profile. It uses the same
-`qflowhub.oauth` credential and defaults to `victor-upmeet/whisperx`. Keep
-`@qflow/provider-whisperx-local` only as an explicitly selected fallback; do not add it to the default
-Skill-created Profile.
+`qflowhub.oauth` credential and defaults to `victor-upmeet/whisperx`. The Skill-created Profile must
+bind this capability to QflowHub.
 
 An Author Source importing `@qflow/gemini` remains Provider-neutral. Bind those capabilities to
 `@qflow/provider-qflowhub` for QflowHub's upload-backed Gemini endpoint, or to
@@ -72,8 +71,7 @@ Provider-specific input limits are also part of preflight. For the KIE GPT Image
 submit `4:3`, `3:4` or `4:5`; the route rejects those aspect ratios before upload or paid submission.
 
 The local Providers stay small: `media` and `hyperframes` are bounded by this machine's cores rather
-than by a remote queue. WhisperX alignment uses the QflowHub lane in the default Skill path; the local
-WhisperX Provider remains available only when an author explicitly selects it.
+than by a remote queue. WhisperX alignment uses the QflowHub lane in the Skill path.
 
 Set this while writing the Profile. Changing it later needs a Worker restart, and the restart rule
 below makes that costly once a Build is in flight.

@@ -58,7 +58,7 @@ The standard sequence is:
 
 ```text
 select Runtime Profile → check QflowHub credential → explain and run OAuth when missing
-→ confirm login → qflow runtime up → verify WhisperX/other programs
+→ confirm login → qflow runtime up → verify QflowHub alignment/other programs
 → only then inspect media, call Gemini, author Source or Build
 ```
 
@@ -238,7 +238,9 @@ spending. `qflow build` is submitted only after explicit cost approval.
 
 1. Select the Distribution, project root and Runtime Profile, then create `route_state`.
 2. Before inspecting examples or freezing the brief, check the `qflowhub.default` credential. If the writable QflowHub OS credential is missing, explain that OAuth avoids copying an API key and run `qflow auth login qflowhub.default --runtime qflow.runtime.json`; an account without an active subscription can purchase one at qflow.ai.
-3. Run `qflow runtime up` and confirm WhisperX and every other selected program are healthy. Do not enter brief, vocabulary or Source work before this gate is complete.
+3. Run `qflow runtime up` and confirm the QflowHub WhisperX alignment model is reachable through the
+   selected Endpoint, along with every other selected program. Do not enter brief, vocabulary or
+   Source work before this gate is complete.
 4. When vocabulary inspection proves a real gap, pause Source authoring and enter the project-package branch: create `packages/<slug>/`, write `package.json` and activation first, then implement the Manifest, Types, Producers, Validators, Surface/decoder, Fragment, README and preview. Install, import and pass `validate_local_author_packages`, `preview_check` and `layout_check` before returning to this route.
 
 ```text
