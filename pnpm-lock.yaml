@@ -705,9 +705,6 @@ importers:
       '@qflow/elaborator':
         specifier: workspace:*
         version: link:../elaborator
-      '@qflow/estimate':
-        specifier: workspace:*
-        version: link:../estimate
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -924,15 +921,6 @@ importers:
 
   packages/estimate:
     dependencies:
-      '@qflow/component-kit':
-        specifier: workspace:*
-        version: link:../component-kit
-      '@qflow/elaborator':
-        specifier: workspace:*
-        version: link:../elaborator
-      '@qflow/markup':
-        specifier: workspace:*
-        version: link:../markup
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -1915,9 +1903,6 @@ importers:
       '@qflow/driver-node':
         specifier: workspace:*
         version: link:../driver-node
-      '@qflow/estimate':
-        specifier: workspace:*
-        version: link:../estimate
       '@qflow/media':
         specifier: workspace:*
         version: link:../media
@@ -2425,9 +2410,6 @@ importers:
       '@qflow/driver-node':
         specifier: workspace:*
         version: link:../driver-node
-      '@qflow/estimate':
-        specifier: workspace:*
-        version: link:../estimate
       '@qflow/gemini':
         specifier: workspace:*
         version: link:../gemini
@@ -2827,9 +2809,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/speech':
-        specifier: workspace:*
-        version: link:../speech
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
@@ -2914,6 +2893,9 @@ importers:
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
+      '@qflow/svs':
+        specifier: workspace:*
+        version: link:../svs
     devDependencies:
       '@qflow/script':
         specifier: workspace:*
@@ -3397,6 +3379,9 @@ importers:
       '@qflow/driver-node':
         specifier: workspace:*
         version: link:../driver-node
+      '@qflow/estimate':
+        specifier: workspace:*
+        version: link:../estimate
       '@qflow/gemini':
         specifier: workspace:*
         version: link:../gemini

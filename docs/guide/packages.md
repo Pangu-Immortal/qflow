@@ -91,7 +91,7 @@ specific Provider deployment.
 @qflow/nano-banana           Nano Banana model family
 @qflow/seedream              Seedream model family
 @qflow/mimo-tts              Xiaomi MiMo VoiceDesign model + author Surface
-@qflow/estimate              duration estimation
+@qflow/estimate              creation-time speech measurement (qflow measure) and the estimate policy type
 @qflow/speech                shared speech products
 @qflow/speech-evidence       acoustic evidence products
 @qflow/speech-alignment      speech alignment

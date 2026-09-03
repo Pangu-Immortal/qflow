@@ -4,13 +4,16 @@
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "qflow": { "activation": "./src/activation.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
   "dependencies": {
     "@qflow/artifact": "workspace:*",
     "@qflow/resource-store-fs": "workspace:*",
     "@qflow/compiler-node": "workspace:*",
-    "@qflow/estimate": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/mock-media": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",

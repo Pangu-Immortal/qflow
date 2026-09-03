@@ -15,7 +15,6 @@
     "@qflow/composition": "workspace:*",
     "@qflow/core": "workspace:*",
     "@qflow/driver-node": "workspace:*",
-    "@qflow/estimate": "workspace:*",
     "@qflow/gemini": "workspace:*",
     "@qflow/hyperframes": "workspace:*",
     "@qflow/markup": "workspace:*",

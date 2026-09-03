@@ -84,7 +84,7 @@ Frontend；不存在一个认识全部语法的中央解析器。
 @qflow/nano-banana           Nano Banana model family
 @qflow/seedream              Seedream model family
 @qflow/mimo-tts              Xiaomi MiMo VoiceDesign 模型及作者 Surface
-@qflow/estimate              duration estimation
+@qflow/estimate              创作期量稿（qflow measure）与估算策略类型
 @qflow/speech                shared speech products
 @qflow/speech-evidence       acoustic evidence products
 @qflow/speech-alignment      speech alignment

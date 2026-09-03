@@ -13,6 +13,7 @@
     "@qflow/compiler-markup-node": "workspace:*",
     "@qflow/credential-store-os": "workspace:*",
     "@qflow/driver-node": "workspace:*",
+    "@qflow/estimate": "workspace:*",
     "@qflow/gemini": "workspace:*",
     "@qflow/generation": "workspace:*",
     "@qflow/markup": "workspace:*",
@@ -21,12 +22,12 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/provider-qflowhub": "workspace:*",
     "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-host-node": "workspace:*",
+    "@qflow/runtime-local": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",
     "@qflow/text": "workspace:*",
     "@qflow/whisperx": "workspace:*",
-    "@qflow/runtime-host-node": "workspace:*",
-    "@qflow/runtime-local": "workspace:*",
     "@qflow/workspace-fs-node": "workspace:*"
   }
 }
