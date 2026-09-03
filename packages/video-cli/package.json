@@ -11,6 +11,7 @@
   "dependencies": {
     "@qflow/cli": "workspace:*",
     "@qflow/compiler-markup-node": "workspace:*",
+    "@qflow/composition": "workspace:*",
     "@qflow/credential-store-os": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/estimate": "workspace:*",
@@ -18,6 +19,7 @@
     "@qflow/generation": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/mimo-tts": "workspace:*",
+    "@qflow/model-kit": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/provider-qflowhub": "workspace:*",
@@ -27,7 +29,9 @@
     "@qflow/speech": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",
     "@qflow/text": "workspace:*",
+    "@qflow/visual-ir": "workspace:*",
     "@qflow/whisperx": "workspace:*",
-    "@qflow/workspace-fs-node": "workspace:*"
+    "@qflow/workspace-fs-node": "workspace:*",
+    "@qflow/yt-dlp": "workspace:*"
   }
 }

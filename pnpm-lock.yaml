@@ -2399,94 +2399,6 @@ importers:
         specifier: workspace:*
         version: link:../spatial
 
-  packages/reference-video-tools:
-    dependencies:
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
-      '@qflow/core':
-        specifier: workspace:*
-        version: link:../core
-      '@qflow/driver-node':
-        specifier: workspace:*
-        version: link:../driver-node
-      '@qflow/gemini':
-        specifier: workspace:*
-        version: link:../gemini
-      '@qflow/hyperframes':
-        specifier: workspace:*
-        version: link:../hyperframes
-      '@qflow/markup':
-        specifier: workspace:*
-        version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
-      '@qflow/model-kit':
-        specifier: workspace:*
-        version: link:../model-kit
-      '@qflow/package-loader-node':
-        specifier: workspace:*
-        version: link:../package-loader-node
-      '@qflow/preview-mock':
-        specifier: workspace:*
-        version: link:../preview-mock
-      '@qflow/program-space':
-        specifier: workspace:*
-        version: link:../program-space
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/provider-media-local':
-        specifier: workspace:*
-        version: link:../provider-media-local
-      '@qflow/run-markup':
-        specifier: workspace:*
-        version: link:../run-markup
-      '@qflow/runtime':
-        specifier: workspace:*
-        version: link:../runtime
-      '@qflow/script':
-        specifier: workspace:*
-        version: link:../script
-      '@qflow/speech':
-        specifier: workspace:*
-        version: link:../speech
-      '@qflow/speech-evidence':
-        specifier: workspace:*
-        version: link:../speech-evidence
-      '@qflow/studio':
-        specifier: workspace:*
-        version: link:../studio
-      '@qflow/svs':
-        specifier: workspace:*
-        version: link:../svs
-      '@qflow/text':
-        specifier: workspace:*
-        version: link:../text
-      '@qflow/video-cli':
-        specifier: workspace:*
-        version: link:../video-cli
-      '@qflow/visual-ir':
-        specifier: workspace:*
-        version: link:../visual-ir
-      '@qflow/whisperx':
-        specifier: workspace:*
-        version: link:../whisperx
-      '@qflow/yt-dlp':
-        specifier: workspace:*
-        version: link:../yt-dlp
-      puppeteer-core:
-        specifier: 25.5.0
-        version: 25.5.0
-      tsx:
-        specifier: 4.21.0
-        version: 4.21.0
-    devDependencies:
-      '@types/node':
-        specifier: 24.10.1
-        version: 24.10.1
-
   packages/render-hyperframes:
     dependencies:
       '@qflow/artifact':
@@ -3373,6 +3285,9 @@ importers:
       '@qflow/compiler-markup-node':
         specifier: workspace:*
         version: link:../compiler-markup-node
+      '@qflow/composition':
+        specifier: workspace:*
+        version: link:../composition
       '@qflow/credential-store-os':
         specifier: workspace:*
         version: link:../credential-store-os
@@ -3394,6 +3309,9 @@ importers:
       '@qflow/mimo-tts':
         specifier: workspace:*
         version: link:../mimo-tts
+      '@qflow/model-kit':
+        specifier: workspace:*
+        version: link:../model-kit
       '@qflow/package-loader-node':
         specifier: workspace:*
         version: link:../package-loader-node
@@ -3421,12 +3339,18 @@ importers:
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
+      '@qflow/visual-ir':
+        specifier: workspace:*
+        version: link:../visual-ir
       '@qflow/whisperx':
         specifier: workspace:*
         version: link:../whisperx
       '@qflow/workspace-fs-node':
         specifier: workspace:*
         version: link:../workspace-fs-node
+      '@qflow/yt-dlp':
+        specifier: workspace:*
+        version: link:../yt-dlp
 
   packages/visual-ir:
     dependencies:
