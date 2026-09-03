@@ -116,6 +116,10 @@ project. By default, Build Results live under the project's `.qflow/results`; a 
 temporary Resources always live under the selected Profile's `dataRoot`.
 `runtime use` stores only a local pointer at `.qflow/runtime`. Source imports select author
 packages; the Profile independently selects Credential Stores and Endpoints through their own `use` entries.
+Project resolution happens first. `--workspace` selects it explicitly; otherwise the current
+directory's nearest `package.json` is its boundary, or the current directory itself for a plain
+creative folder. Only that exact project's `.qflow/runtime` is read—Profile filenames are never
+guessed and parent-project selections are never inherited.
 
 Start from [`examples/talking-film-live`](https://github.com/qflow-ai/qflow/tree/main/examples/talking-film-live) when you need a
 complete Runtime Profile. Copy the source structure, then replace its assets, Script, model choices
