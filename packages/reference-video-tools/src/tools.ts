@@ -5,6 +5,8 @@ import { createHash } from "node:crypto";
 import { deflateSync } from "node:zlib";
 import { basename, dirname, join, resolve } from "node:path";
 import { loadNodePackageSelection, locateNodePackage, physicalPackageName } from "@qflow/package-loader-node";
+import { OsCredentialStore } from "@qflow/credential-store-os";
+import { credentialRef } from "@qflow/runtime";
 import { markupSurfaceHostFacetAbi } from "@qflow/markup";
 import type { RegisteredSurface, SurfaceVocabulary } from "@qflow/markup";
 import { exactModelHostAbi } from "@qflow/model-kit";
@@ -790,7 +792,7 @@ function positiveInt(value: number, label: string): number {
 }
 
 async function defaultGenerate(model: string): Promise<GenerateText> {
-  const hypiHubKey = process.env.QFLOWHUB_API_KEY?.trim();
+  const hypiHubKey = await resolveQflowHubApiKey();
   const backend = process.env.QFLOW_GEMINI_PROVIDER?.trim().toLowerCase() || "auto";
   if (backend !== "auto" && backend !== "qflowhub" && backend !== "vertex") {
     throw new Error("QFLOW_GEMINI_PROVIDER must be auto, qflowhub or vertex");
@@ -836,6 +838,18 @@ async function defaultGenerate(model: string): Promise<GenerateText> {
       throw error;
     }
   };
+}
+
+/** Resolve the QflowHub credential written by `qflow auth login`, with env fallback. */
+async function resolveQflowHubApiKey(): Promise<string | undefined> {
+  if (process.platform === "darwin" || process.platform === "win32") {
+    const value = await new OsCredentialStore()
+      .resolve(credentialRef("os", "qflowhub.oauth"))
+      .catch(() => undefined);
+    const secret = value?.secret?.trim();
+    if (secret) return secret;
+  }
+  return process.env.QFLOWHUB_API_KEY?.trim() || undefined;
 }
 
 const MIME_TYPES: Readonly<Record<string, string>> = {

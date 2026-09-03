@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@qflow/composition": "workspace:*",
+    "@qflow/credential-store-os": "workspace:*",
     "@qflow/core": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/estimate": "workspace:*",
@@ -26,6 +27,7 @@
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/run-markup": "workspace:*",
+    "@qflow/runtime": "workspace:*",
     "@qflow/provider-whisperx-local": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
     "@qflow/provider-qflowhub": "workspace:*",
