@@ -17,7 +17,7 @@ qflow-studio --run examples/all-components-preview/studio.svrun --workspace .
 | Argument | Meaning |
 | --- | --- |
 | `--run <build.svrun>` | Run Source to open. Required. |
-| `--runtime <qflow.runtime.json>` | Optional Runtime Profile used only to show active `BuildView` and Operation information. Historical Results and `<build-record>` come from the project Result Store. |
+| `--runtime <qflow.runtime.json>` | Optional Runtime Profile used only to show active `BuildView` and Operation information. Historical Results and `<build-record>` come from the project Result Repository. |
 | `--workspace <directory>` | Source access and writeback boundary; defaults to the Run directory. |
 | `--port <number>` | HTTP port; defaults to `5179`. |
 
