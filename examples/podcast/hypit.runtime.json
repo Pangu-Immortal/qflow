@@ -30,14 +30,6 @@
         "defaultConcurrency": 2
       }
     },
-    "whisperx.qflow-podcast": {
-      "use": "@qflow/provider-whisperx-local",
-      "pool": "alignment",
-      "config": {
-        "expectedModel": "small",
-        "defaultConcurrency": 1
-      }
-    },
     "hyperframes.qflow-podcast": {
       "use": "@qflow/provider-hyperframes-local",
       "pool": "render",

@@ -27,13 +27,6 @@
         "defaultConcurrency": 2
       }
     },
-    "whisperx.football-ranking": {
-      "use": "@qflow/provider-whisperx-local",
-      "pool": "alignment",
-      "config": {
-        "defaultConcurrency": 1
-      }
-    },
     "hyperframes.football-ranking": {
       "use": "@qflow/provider-hyperframes-local",
       "pool": "render",
