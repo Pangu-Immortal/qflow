@@ -2032,9 +2032,15 @@ importers:
       '@qflow/runtime-kit':
         specifier: workspace:*
         version: link:../runtime-kit
+      '@qflow/speech-evidence':
+        specifier: workspace:*
+        version: link:../speech-evidence
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
+      '@qflow/whisperx':
+        specifier: workspace:*
+        version: link:../whisperx
     devDependencies:
       '@qflow/driver-node':
         specifier: workspace:*
@@ -2449,9 +2455,6 @@ importers:
       '@qflow/provider-vertex':
         specifier: workspace:*
         version: link:../provider-vertex
-      '@qflow/provider-whisperx-local':
-        specifier: workspace:*
-        version: link:../provider-whisperx-local
       '@qflow/run-markup':
         specifier: workspace:*
         version: link:../run-markup

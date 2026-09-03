@@ -28,7 +28,6 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/run-markup": "workspace:*",
     "@qflow/runtime": "workspace:*",
-    "@qflow/provider-whisperx-local": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
     "@qflow/provider-qflowhub": "workspace:*",
     "@qflow/provider-vertex": "workspace:*",

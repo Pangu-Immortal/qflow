@@ -2,7 +2,9 @@ import { access } from "node:fs/promises";
 import { join } from "node:path";
 import { EndpointRegistry, MemoryArtifactStore } from "@qflow/driver-node";
 import type { Need } from "@qflow/protocol";
-import { createLocalWhisperXProvider } from "@qflow/provider-whisperx-local";
+import { createQflowHubProvider } from "@qflow/provider-qflowhub";
+import { OsCredentialStore } from "@qflow/credential-store-os";
+import { credentialRef } from "@qflow/runtime";
 import { sealSpeechEvidenceAudio } from "@qflow/speech";
 import { speechEvidenceTypes } from "@qflow/speech-evidence";
 import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
@@ -13,26 +15,36 @@ import { assert, command, readBytes, round, writeJson } from "./media.js";
 import type { Transcript, TranscriptFile, TranscriptPassage, TranscriptWord } from "./types.js";
 
 /**
- * Whether the local WhisperX service answers.
+ * Whether the QflowHub WhisperX endpoint answers.
  *
  * The route used to probe the service by hand, as three commands, before `prepare_reference`. The
- * service answers `/health`, which is the same call the Provider makes before transcribing — made
- * early enough to be reported before the minutes a first start spends loading the model. It reports
- * rather than refuses: a machine without the service still prepares everything except the transcript,
- * which `prepareTranscript` leaves recoverable.
+ * The model-card probe is made early enough to report missing credentials or model routing before
+ * preparation spends time extracting audio. It reports rather than refuses: an unavailable endpoint
+ * still prepares everything except the transcript, which `prepareTranscript` leaves recoverable.
  */
-export async function whisperxHealth(baseUrl = "http://127.0.0.1:8765"): Promise<{ readonly ok: boolean; readonly reason: string }> {
-  const normalized = baseUrl.replace(/\/+$/u, "");
+async function hypiHubApiKey(): Promise<string | undefined> {
+  if (process.platform === "darwin" || process.platform === "win32") {
+    const value = await new OsCredentialStore().resolve(credentialRef("os", "qflowhub.oauth")).catch(() => undefined);
+    const secret = value?.secret?.trim();
+    if (secret) return secret;
+  }
+  return process.env.QFLOWHUB_API_KEY?.trim() || undefined;
+}
+
+export async function whisperxHealth(baseUrl = process.env.QFLOWHUB_BASE_URL?.trim() || "https://qflow.ai"): Promise<{ readonly ok: boolean; readonly reason: string }> {
+  const normalized = `${baseUrl.replace(/\/+$/u, "").replace(/\/(?:v1beta|v1)$/iu, "")}/v1`;
+  const apiKey = await hypiHubApiKey();
+  if (!apiKey) return { ok: false, reason: "QflowHub WhisperX credentials are unavailable; run qflow auth login qflowhub.default" };
   try {
-    const response = await fetch(`${normalized}/health`, { signal: AbortSignal.timeout(5_000) });
+    const response = await fetch(`${normalized}/models/${encodeURIComponent("victor-upmeet/whisperx")}`, {
+      headers: { authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(5_000),
+    });
     if (!response.ok) return { ok: false, reason: `WhisperX answered ${response.status}` };
-    const body = await response.json().catch(() => undefined) as { readonly ok?: unknown } | null | undefined;
-    if (body === null || typeof body !== "object" || body.ok !== true) {
-      return { ok: false, reason: "WhisperX is up but not ready; a first start spends a few minutes loading the model" };
-    }
+    const body = await response.json().catch(() => undefined) as { readonly endpoints?: unknown } | null | undefined;
+    if (body === null || typeof body !== "object" || !Array.isArray(body.endpoints) || !body.endpoints.includes("transcriptions")) return { ok: false, reason: "QflowHub WhisperX model does not expose transcriptions" };
     return { ok: true, reason: "" };
   } catch {
-    return { ok: false, reason: `WhisperX is not reachable at ${normalized}` };
+    return { ok: false, reason: `QflowHub WhisperX is not reachable at ${normalized}` };
   }
 }
 
@@ -69,7 +81,7 @@ function reason(error: unknown): string {
   return error.cause === undefined ? error.message : `${error.message}: ${reason(error.cause)}`;
 }
 
-/** Ask the local WhisperX Provider for the word times of one canonical evidence WAV. */
+/** Ask the QflowHub WhisperX Provider for the word times of one canonical evidence WAV. */
 export async function transcribeSpeechAudio(
   audioPath: string,
   language: WhisperXLanguage,
@@ -86,15 +98,19 @@ export async function transcribeSpeechAudio(
     result: "record:reference-video-transcript",
   };
   const registry = new EndpointRegistry();
-  await createLocalWhisperXProvider({ instance: "whisperx.local", pool: "whisperx.local" }).install(registry);
+  await createQflowHubProvider({
+    baseUrl: process.env.QFLOWHUB_BASE_URL?.trim() || "https://qflow.ai",
+  }).install(registry);
   const resolved = registry.resolve(need);
-  assert(resolved.status === "resolved", "the local WhisperX Provider does not offer word alignment");
-  assert(resolved.registration.kind === "immediate", "the local WhisperX Provider answers word alignment asynchronously");
+  assert(resolved.status === "resolved", "the QflowHub Provider does not offer WhisperX word alignment");
+  assert(resolved.registration.kind === "immediate", "the QflowHub Provider answers WhisperX alignment asynchronously");
+  const apiKey = await hypiHubApiKey();
+  assert(apiKey !== undefined, "QflowHub WhisperX credentials are unavailable; run qflow auth login qflowhub.default");
   const fulfillment = await resolved.registration.handler({
     command: { kind: "fulfill-need", id: "command:reference-video-transcript", need },
     need,
     artifacts,
-    credentials: {},
+    credentials: { apiKey: { secret: apiKey } },
   });
   assert(fulfillment.value.kind === "inline", "WhisperX returned alignment evidence by reference");
   const aligned = fulfillment.value.value as unknown as AlignedTranscriptEvidence;
@@ -139,7 +155,7 @@ export async function prepareTranscript(
     if (redo || await access(audioPath).then(() => false, () => true)) await extractSpeechAudio(videoPath, audioPath);
     // A refused connection says only "fetch failed"; the reader still has to learn what to start.
     const passages = await transcribeSpeechAudio(audioPath, language)
-      .catch((error: unknown) => { throw new Error(`local WhisperX did not answer: ${reason(error)}`); });
+      .catch((error: unknown) => { throw new Error(`QflowHub WhisperX did not answer: ${reason(error)}`); });
     const transcriptPath = join(root, "transcript.json");
     const file: TranscriptFile = { reference_id: reference, audio_ref: audioPath, passages };
     await writeJson(transcriptPath, file);

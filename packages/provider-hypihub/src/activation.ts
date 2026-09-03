@@ -15,7 +15,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
   activate(context) {
     if (context.pool === undefined) throw new Error("QflowHub Provider Pool is required");
     const config = runtimeConfigObject(context.config, "QflowHub");
-    runtimeConfigExact(config, ["baseUrl", "apiKey", "defaultConcurrency", "pollIntervalMs", "requestTimeoutMs", "audio"], "QflowHub");
+    runtimeConfigExact(config, ["baseUrl", "apiKey", "defaultConcurrency", "pollIntervalMs", "requestTimeoutMs", "audio", "whisperxModel"], "QflowHub");
     const baseUrl = runtimeConfigString(config.baseUrl, "QflowHub baseUrl");
     if (baseUrl !== undefined) {
       const url = new URL(baseUrl);
@@ -29,6 +29,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
     const pollIntervalMs = runtimeConfigPositiveInteger(config.pollIntervalMs, "QflowHub pollIntervalMs");
     const requestTimeoutMs = runtimeConfigPositiveInteger(config.requestTimeoutMs, "QflowHub requestTimeoutMs");
     const audio = runtimeConfigBoolean(config.audio, "QflowHub audio");
+    const whisperxModel = runtimeConfigString(config.whisperxModel, "QflowHub whisperxModel");
     return {
       endpoint: createQflowHubProvider({
         instance: context.instance,
@@ -39,6 +40,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
         ...(pollIntervalMs === undefined ? {} : { pollIntervalMs }),
         ...(requestTimeoutMs === undefined ? {} : { requestTimeoutMs }),
         ...(audio === undefined ? {} : { audio }),
+        ...(whisperxModel === undefined ? {} : { whisperxModel }),
       }),
     };
   },

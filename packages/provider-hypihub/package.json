@@ -13,7 +13,9 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-kit": "workspace:*",
-    "@qflow/text": "workspace:*"
+    "@qflow/text": "workspace:*",
+    "@qflow/speech-evidence": "workspace:*",
+    "@qflow/whisperx": "workspace:*"
   },
   "devDependencies": {
     "@qflow/driver-node": "workspace:*",
