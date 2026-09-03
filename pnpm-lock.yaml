@@ -3394,21 +3394,51 @@ importers:
       '@qflow/credential-store-os':
         specifier: workspace:*
         version: link:../credential-store-os
+      '@qflow/driver-node':
+        specifier: workspace:*
+        version: link:../driver-node
+      '@qflow/gemini':
+        specifier: workspace:*
+        version: link:../gemini
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
+      '@qflow/mimo-tts':
+        specifier: workspace:*
+        version: link:../mimo-tts
       '@qflow/package-loader-node':
         specifier: workspace:*
         version: link:../package-loader-node
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
       '@qflow/provider-qflowhub':
         specifier: workspace:*
         version: link:../provider-qflowhub
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
       '@qflow/runtime-host-node':
         specifier: workspace:*
         version: link:../runtime-host-node
       '@qflow/runtime-local':
         specifier: workspace:*
         version: link:../runtime-local
+      '@qflow/speech':
+        specifier: workspace:*
+        version: link:../speech
+      '@qflow/speech-evidence':
+        specifier: workspace:*
+        version: link:../speech-evidence
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
+      '@qflow/whisperx':
+        specifier: workspace:*
+        version: link:../whisperx
       '@qflow/workspace-fs-node':
         specifier: workspace:*
         version: link:../workspace-fs-node
