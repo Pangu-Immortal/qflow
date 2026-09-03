@@ -138,5 +138,5 @@ Gemini uses `QFLOW_GEMINI_PROVIDER=auto|qflowhub|vertex` to select its backend. 
 provided by `@qflow/provider-qflowhub` and `@qflow/provider-vertex`. QflowHub uses
 `QFLOWHUB_API_KEY` and optional `QFLOWHUB_BASE_URL` (default `https://qflow.ai`); Vertex uses the
 existing `GOOGLE_CLOUD_PROJECT`, `GOOGLE_APPLICATION_CREDENTIALS_JSON` and optional
-`GOOGLE_CLOUD_LOCATION`. The model defaults to `gemini-3.7-flash-openai`. A missing or insufficient
+`GOOGLE_CLOUD_LOCATION`. The model defaults to `gemini-3.1-pro`. A missing or insufficient
 user key should be resolved by obtaining a QflowHub key at https://qflow.ai, not by changing Source.
