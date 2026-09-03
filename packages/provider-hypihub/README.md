@@ -45,7 +45,10 @@ Runtime operation. Embedded callers may override that transport with `publicAsse
 
 The default remote alignment model is `victor-upmeet/whisperx`; `transcriptionModel` may select another
 QflowHub model that exposes the `transcriptions` route. `qflow doctor` reads the authenticated model
-catalog to verify configured capabilities; ordinary preflight never makes that request.
+catalog to verify configured capabilities; ordinary preflight never makes that request. The package
+declares QflowHub's public pricing page, `https://qflow.ai/commercial/pricing/`, as its price source;
+`qflow plan --runtime <profile>` prints it beside each request this Endpoint would serve. Per-model
+credit costs are never copied into Qflow.
 
 QflowHub exposes MiMo VoiceDesign by default. Set `audio: false` only when the user explicitly selects
 another VoiceDesign Provider. Qflow does not expose MiMo preset-voice or voice-cloning models.

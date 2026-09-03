@@ -356,6 +356,7 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
   };
   return defineEndpointPackage({
     module: hypiHubProviderModuleRef, facet: "gateway", instance: options.instance ?? "qflowhub.default", pool: options.pool ?? options.instance ?? "qflowhub.default",
+    pricing: { kind: "page", url: "https://qflow.ai/commercial/pricing/" },
     credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") },
     credentialInputs: { apiKey: {
       label: "QflowHub login",
