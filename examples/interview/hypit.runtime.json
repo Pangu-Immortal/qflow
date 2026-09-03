@@ -27,14 +27,6 @@
           "pool": "media",
           "config": { "defaultConcurrency": 2 }
         },
-        "whisperx.qflow-interview": {
-          "use": "@qflow/provider-whisperx-local",
-          "pool": "alignment",
-          "config": {
-            "expectedModel": "large-v3",
-            "defaultConcurrency": 1
-          }
-        },
         "hyperframes.qflow-interview": {
           "use": "@qflow/provider-hyperframes-local",
           "pool": "render",

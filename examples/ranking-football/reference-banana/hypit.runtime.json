@@ -12,23 +12,20 @@
         "os": { "use": "@qflow/credential-store-os" }
       },
       "endpoints": {
-        "kie.football-ranking": {
-          "use": "@qflow/provider-kie",
+        "qflowhub.football-ranking": {
+          "use": "@qflow/provider-qflowhub",
           "pool": "generation",
           "config": {
-            "apiKey": { "store": "os", "key": "KIE_API_KEY" },
-            "defaultConcurrency": 10
+            "baseUrl": "https://qflow.ai",
+            "apiKey": { "store": "os", "key": "qflowhub.oauth" },
+            "defaultConcurrency": 4,
+            "requestTimeoutMs": 120000
           }
         },
         "media.football-ranking": {
           "use": "@qflow/provider-media-local",
           "pool": "media",
           "config": { "defaultConcurrency": 2 }
-        },
-        "whisperx.football-ranking": {
-          "use": "@qflow/provider-whisperx-local",
-          "pool": "alignment",
-          "config": { "defaultConcurrency": 1 }
         },
         "hyperframes.football-ranking": {
           "use": "@qflow/provider-hyperframes-local",
