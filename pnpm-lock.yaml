@@ -3391,33 +3391,15 @@ importers:
       '@qflow/compiler-markup-node':
         specifier: workspace:*
         version: link:../compiler-markup-node
-      '@qflow/credential-store-env':
-        specifier: workspace:*
-        version: link:../credential-store-env
       '@qflow/credential-store-os':
         specifier: workspace:*
         version: link:../credential-store-os
-      '@qflow/driver-node':
-        specifier: workspace:*
-        version: link:../driver-node
-      '@qflow/endpoint-kit':
-        specifier: workspace:*
-        version: link:../endpoint-kit
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/model-kit':
-        specifier: workspace:*
-        version: link:../model-kit
       '@qflow/package-loader-node':
         specifier: workspace:*
         version: link:../package-loader-node
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
       '@qflow/provider-qflowhub':
         specifier: workspace:*
         version: link:../provider-qflowhub

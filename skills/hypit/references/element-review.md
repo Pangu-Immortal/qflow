@@ -78,8 +78,8 @@ can be illegible on the picture that will replace it.
 `render_element` delegates this to `@qflow/preview-mock`. The realizer finds every relevant logical
 output in the compiled Author/Run Graph — the takes, stills and slot contents — derives geometry from
 Graph inputs, and materializes them through `@qflow/mock-media` in a temporary Run under
-`.qflow/preview/<run-name>/`. Never `qflow image`, which pays for a generation
-the video will not reuse, and never a placeholder drawn by a script written for the occasion.
+`.qflow/preview/<run-name>/`. Never a paid generation the video will not reuse, and never a
+placeholder drawn by a script written for the occasion.
 
 Geometry follows the fixed Graph policy: Canvas width/height first, then generation aspect-ratio,
 then Canvas fallback; resolution labels such as `720p` and `2K` are not converted to pixels, and
