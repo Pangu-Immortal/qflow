@@ -53,6 +53,9 @@ Qflow gives AI agents (Claude Code, Codex...) a language and system to create vi
 npx skills add qflow-ai/qflow -g
 ```
 
+OpenAgents and other Skill hubs install the same canonical `skills/qflow/` directory. On first use,
+the Skill prepares the executable Qflow Distribution separately; your video project can live anywhere.
+
 ## Examples
 
 ### UGC

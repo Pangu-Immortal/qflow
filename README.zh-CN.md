@@ -53,6 +53,9 @@ Qflow 为 AI Agent（Claude Code、Codex 等）提供了一套制作视频的语
 npx skills add qflow-ai/qflow -g
 ```
 
+OpenAgents 等 Skill Hub 安装的是同一个 `skills/qflow/` 真目录。首次使用时，Skill 会另行准备
+可执行的 Qflow Distribution；视频项目可以放在任意位置。
+
 ## 示例
 
 ### UGC

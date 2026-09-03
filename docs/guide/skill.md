@@ -12,6 +12,22 @@ There is no route database, revision history, recovery cursor or aggregate proje
 recoverable because the authored files and useful media/report files are ordinary project content,
 not because a second system reconstructs an agent's past actions.
 
+## Skill installation and execution
+
+`skills/qflow/` is the one real, agent-neutral Skill directory. OpenAgents and other Skill hubs install
+that subtree into their Agent's global Skill directory. Repository checkouts expose the same source to
+Claude Code and Codex through the two leaf links `.claude/skills/qflow` and `.codex/skills/qflow`; the
+parent Skill directories remain independent so either Agent can also have private Skills.
+
+The installed Skill is guidance, not the executable Qflow Distribution. Until the npm package is
+published, the Skill selects an existing Qflow checkout or prepares a machine-level checkout at
+`<home>/qflow`, updates it only by fast-forwarding `origin/main`, installs its pinned dependencies and
+uses its Node entrypoints. A Skill-hub reinstall updates the installed guidance; pulling the checkout
+updates the executable Distribution. Neither silently rewrites the other.
+
+The Skill, Distribution and video project have independent locations and lifetimes. A video project
+may live anywhere, needs no Skill link, and is never added to the Qflow repository workspace.
+
 ## Start from the request
 
 Decide whether the task is original authoring or reconstruction from a reference. Then inspect the
@@ -60,7 +76,8 @@ and is not required to submit a Build.
 
 ## Reconstruction
 
-Prepare the reference once:
+Do not inspect repository example projects on this route and never use the supplied reference as a
+Film, Track or Take source. Prepare it once as evidence:
 
 ```bash
 qflow-reference-video-tools prepare_reference --video-path ./reference.mp4 --observer agent
