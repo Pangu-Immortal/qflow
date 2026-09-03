@@ -34,9 +34,9 @@ QflowHub is the default for supported paid capabilities and Gemini VLM. It can b
 author explicitly selects another Provider.
 For ordinary `@qflow/gemini` Author Source, the Runtime Profile selects
 `@qflow/provider-qflowhub` or `@qflow/provider-vertex`; changing that Endpoint never changes Source.
-For the reference-video preprocessing observer, `QFLOW_GEMINI_PROVIDER=auto` (the default) uses the
-completed QflowHub OAuth environment. Set `QFLOW_GEMINI_PROVIDER=vertex` only when the author explicitly
-requested Vertex and both Google variables are configured. If a configured key cannot reach the requested
+The reference-video preprocessing observer uses the same Gemini Endpoint the selected Runtime Profile
+binds: pass `--runtime <profile>` or select the Profile with `qflow runtime use`. There is no separate
+environment switch for it. If a configured key cannot reach the requested
 model, return to environment setup and use QflowHub OAuth when that model is available there; do not ask
 them to change Author Source.
 
@@ -101,8 +101,8 @@ curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $MIMO_API_KEY
   https://api.xiaomimimo.com/v1/models
 ```
 
-QflowHub OAuth or the Vertex pair are what the reference-video route's `gemini` observer needs,
-depending on `QFLOW_GEMINI_PROVIDER`. Without either backend, that route can run its `agent` observer
+The reference-video route's `gemini` observer needs whatever credential the selected Runtime Profile's
+Gemini Endpoint declares (QflowHub OAuth by default). Without one, that route can run its `agent` observer
 instead, which reaches no Provider — `reconstruction/observers.md` says how the author chooses.
 
 `qflow runtime down` stops the Worker for the whole project, so a Build running in another terminal

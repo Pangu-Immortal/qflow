@@ -4,12 +4,10 @@ import { cpus } from "node:os";
 import { deflateSync } from "node:zlib";
 import { basename, dirname, join, resolve } from "node:path";
 import { loadNodePackageSelection, locateNodePackage, physicalPackageName } from "@qflow/package-loader-node";
-import { OsCredentialStore } from "@qflow/credential-store-os";
-import { credentialRef } from "@qflow/runtime";
 import { markupSurfaceHostFacetAbi } from "@qflow/markup";
 import type { RegisteredSurface, SurfaceVocabulary } from "@qflow/markup";
 import { exactModelHostAbi } from "@qflow/model-kit";
-import type { ValueSchema } from "@qflow/protocol";
+import type { CanonicalValue, Need, ValueSchema } from "@qflow/protocol";
 import {
   visualPathCommandSchema, visualTextDocumentSchema, visualTextFlowSchema,
   visualTextPaintSchema, visualTextTypographySchema, visualTrackSchema,
@@ -20,10 +18,12 @@ import {
 import { VISUAL_STYLE_ENUM_VALUES_V1, VISUAL_STYLE_NAMES_V1 } from "@qflow/visual-ir";
 
 import { describeSchema } from "./schema.js";
-import { videoCliDistribution } from "@qflow/video-cli";
-import { createQflowHubGeminiGenerator } from "@qflow/provider-qflowhub";
-import { createVertexGeminiGenerator } from "@qflow/provider-vertex";
-import type { GeminiInlinePart } from "@qflow/gemini";
+import { findRuntimeProfile, videoCliDistribution } from "@qflow/video-cli";
+import { MemoryResourceStore } from "@qflow/driver-node";
+import { geminiCapabilities, geminiModels, sealGeminiRequest } from "@qflow/gemini";
+import type { GeminiInlinePart, GeminiMediaPart, GeminiModel } from "@qflow/gemini";
+import { textTypes } from "@qflow/text";
+import { whisperXCapabilities } from "@qflow/whisperx";
 
 import { authorSource, invokedFrom, nearestPackageRoot, referenceRoot, referenceWords, renderElement, renderPreviews, spokenRange, standInSidecarPath, tokenWindow } from "./authoring.js";
 import type { RenderElementInput, RenderPreviewsInput, SpokenRange, StandInFocus, StandInSidecar } from "./authoring.js";
@@ -52,19 +52,24 @@ import {
   tileFrames,
   writeJson,
 } from "./media.js";
-import { prepareTranscript, whisperxHealth } from "./transcript.js";
+import { prepareTranscript } from "./transcript.js";
+import type { InvokeNeed } from "./transcript.js";
 import type { Observation, ObservationTaskRequest, Observer, PrepareResult, ReferenceState, Shot, Transcript } from "./types.js";
 
 export type PrepareReferenceInput = {
   readonly video_path: string;
   readonly redo?: "media" | "transcript" | "people" | "voices" | "systems" | "places" | "all";
   readonly observer?: Observer;
+  /** Runtime Profile whose Endpoints observe and transcribe; defaults to the project's selection. */
+  readonly runtime?: string;
 };
 export type ObserveReferenceInput = {
   readonly reference_id: string;
   readonly shot_ids?: readonly string[];
   readonly question?: string;
   readonly reobserve?: boolean;
+  /** Runtime Profile whose Gemini Endpoint answers; defaults to the project's selection. */
+  readonly runtime?: string;
   /**
    * A round of narrow questions, asked together. Each entry names its own shots and its own question
    * and inherits `reference_id`; each `shot_ids` array must contain exactly one shot. No narrow
@@ -102,6 +107,8 @@ export type ValidateLocalAuthorPackagesInput = {
 };
 export type CompareReconstructionInput = {
   readonly reference_id: string;
+  /** Runtime Profile whose Gemini Endpoint compares; defaults to the project's selection. */
+  readonly runtime?: string;
   /**
    * A stretch of the reference to compare against, named one of two ways. Exactly one is given.
    *
@@ -435,65 +442,83 @@ function positiveInt(value: number, label: string): number {
   return value;
 }
 
-async function defaultGenerate(model: string): Promise<GenerateText> {
-  const hypiHubKey = await resolveQflowHubApiKey();
-  const backend = process.env.QFLOW_GEMINI_PROVIDER?.trim().toLowerCase() || "auto";
-  if (backend !== "auto" && backend !== "qflowhub" && backend !== "vertex") {
-    throw new Error("QFLOW_GEMINI_PROVIDER must be auto, qflowhub or vertex");
-  }
-  if (backend === "qflowhub" || (backend === "auto" && hypiHubKey)) {
-    if (!hypiHubKey) throw new Error("QFLOW_GEMINI_PROVIDER=qflowhub requires QflowHub OAuth; run qflow auth login qflowhub.default");
-    const generate = createQflowHubGeminiGenerator({
-      apiKey: hypiHubKey,
-      model,
-      baseUrl: process.env.QFLOWHUB_BASE_URL?.trim() || "https://qflow.ai",
-    });
-    return async ({ parts, instruction }) => {
-      try {
-        return await generate({ parts: parts as unknown as Parameters<typeof generate>[0]["parts"], instruction });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (!/qflow\.ai/iu.test(message) && /HTTP (401|403|404)\b|model_not_found|no_capable_provider/iu.test(message)) {
-          throw new Error(`${message}. Sign in at https://qflow.ai with qflow auth login to enable this Gemini model`);
-        }
-        throw error;
-      }
-    };
-  }
-  const project = process.env.GOOGLE_CLOUD_PROJECT?.trim();
-  const credentials = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.trim();
-  if (!project || !credentials) {
-    throw new Error("Gemini credentials are unavailable. Configure Vertex credentials or sign in to QflowHub with qflow auth login.");
-  }
-  const generate = createVertexGeminiGenerator({
-    project,
-    credentials,
-    model,
-    location: process.env.GOOGLE_CLOUD_LOCATION?.trim() || "global",
+type RuntimeHost = Awaited<ReturnType<typeof videoCliDistribution.openRuntimeHost>>;
+
+/**
+ * The Runtime Profile a creation-time call executes through: the one the caller named, otherwise the
+ * project's own selection, read the way `qflow` reads it. Observation and transcription never pick a
+ * Provider, read a credential store or contact a service themselves.
+ */
+async function runtimeProfileFor(runtime: string | undefined): Promise<string> {
+  if (runtime !== undefined) return resolve(invokedFrom(), runtime);
+  const projectRoot = nearestPackageRoot(invokedFrom()) ?? invokedFrom();
+  const selected = await findRuntimeProfile(projectRoot);
+  assert(selected !== undefined,
+    `No Runtime Profile is selected for ${projectRoot}; run qflow runtime use <profile> there, or pass --runtime <profile>`);
+  return selected.profile;
+}
+
+async function runtimeHostFor(runtime: string | undefined): Promise<RuntimeHost> {
+  const profile = await runtimeProfileFor(runtime);
+  const projectRoot = nearestPackageRoot(dirname(profile)) ?? dirname(profile);
+  return await videoCliDistribution.openRuntimeHost(profile, {
+    packageRoot: projectRoot,
+    ...(videoCliDistribution.packageRoot === undefined ? {} : { distributionPackageRoot: videoCliDistribution.packageRoot }),
   });
+}
+
+function geminiModel(model: string): GeminiModel {
+  assert((geminiModels as readonly string[]).includes(model),
+    `Gemini model ${model} is not declared by @qflow/gemini; declared models: ${geminiModels.join(", ")}`);
+  return model as GeminiModel;
+}
+
+/**
+ * Observation through the selected Runtime Profile: the same Need, Endpoint, credential and Provider
+ * resolution a Build uses, without a Build. The inline parts this file assembles become one Gemini
+ * request whose media live in a per-call resource store; nothing reaches Build state or a Result.
+ */
+function runtimeGenerate(host: RuntimeHost, model: GeminiModel): GenerateText {
   return async ({ parts, instruction }) => {
-    try {
-      return await generate({ parts, instruction });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (!/qflow\.ai/iu.test(message) && /\b(?:401|403|404)\b|permission denied|unauthenticated|not found|failed precondition/iu.test(message)) {
-        throw new Error(`${message}. This Gemini model or Vertex credential is unavailable; sign in at https://qflow.ai with qflow auth login`);
-      }
-      throw error;
+    const resources = new MemoryResourceStore();
+    const prompt: string[] = [];
+    const media: GeminiMediaPart[] = [];
+    for (const part of parts) {
+      if (part.text !== undefined) { prompt.push(part.text); continue; }
+      media.push({ artifact: await resources.put(Buffer.from(part.inlineData.data, "base64"), part.inlineData.mimeType) });
     }
+    const need: Need = {
+      id: "need:reference-video-observation",
+      capability: geminiCapabilities[model],
+      returns: textTypes.text,
+      constraints: sealGeminiRequest({ instruction, prompt: prompt.join("\n\n"), media }) as unknown as CanonicalValue,
+      result: "record:reference-video-observation",
+    };
+    const fulfillment = await host.invoke(need, resources);
+    assert(fulfillment.value.kind === "inline", "Gemini returned its observation by reference");
+    const text = (fulfillment.value.value as { readonly value?: unknown } | null)?.value;
+    assert(typeof text === "string", "Gemini observation is not Text");
+    return text;
   };
 }
 
-/** Resolve the QflowHub credential written by `qflow auth login`, with env fallback. */
-async function resolveQflowHubApiKey(): Promise<string | undefined> {
-  if (process.platform === "darwin" || process.platform === "win32") {
-    const value = await new OsCredentialStore()
-      .resolve(credentialRef("os", "qflowhub.oauth"))
-      .catch(() => undefined);
-    const secret = value?.secret?.trim();
-    if (secret) return secret;
+/**
+ * How a transcript is measured: the `whisperx-alignment` Endpoint of the selected Runtime Profile.
+ * Preparation reports a missing selection or Endpoint beside everything else it prepared instead of
+ * refusing; the transcript stays recoverable with `--redo transcript` once the Profile serves it.
+ */
+async function alignmentThrough(runtime: string | undefined): Promise<{ readonly invoke: InvokeNeed; readonly note?: string }> {
+  const refusing = (note: string) => ({ invoke: (async () => { throw new Error(note); }) as InvokeNeed, note });
+  try {
+    const host = await runtimeHostFor(runtime);
+    const [provider] = await host.providers([whisperXCapabilities.alignment]);
+    if (provider?.status === "resolved") return { invoke: async (need, resources) => await host.invoke(need, resources) };
+    return refusing(provider?.status === "ambiguous"
+      ? `several Endpoints serve @qflow/whisperx#whisperx-alignment: ${(provider.endpoints ?? []).join(", ")}; keep exactly one in the Runtime Profile`
+      : "no Endpoint in the selected Runtime Profile serves @qflow/whisperx#whisperx-alignment; qflow plan --runtime <profile> shows what each capability needs");
+  } catch (error) {
+    return refusing(error instanceof Error ? error.message : String(error));
   }
-  return process.env.QFLOWHUB_API_KEY?.trim() || undefined;
 }
 
 const MIME_TYPES: Readonly<Record<string, string>> = {
@@ -548,6 +573,8 @@ async function callSafely(retryDelayMs: number, generate: GenerateText, parts: r
       if (permanent(error)) break;
       if (attempt === 6) break;
       const wait = rateLimited(error) ? Math.min(900_000, 45_000 * 2 ** (attempt - 1)) : retryDelayMs * attempt;
+      // The retry is visible, not hidden: each failed attempt and the wait before the next one is reported.
+      process.stderr.write(`observation attempt ${attempt}/6 failed: ${message(error)}; retrying in ${Math.round(wait / 1000)}s\n`);
       await new Promise((resolveWait) => setTimeout(resolveWait, wait));
     }
   }
@@ -1037,7 +1064,9 @@ export function createReferenceVideoTools(options: ToolOptions = {}): ReferenceV
       ...(projectPackageDirectories.length === 0 && expected.size === 0 ? { note: "no project-owned packages declared" } : {}),
     };
   }
-  const model = options.model ?? process.env.GEMINI_MODEL?.trim() ?? "gemini-3.1-pro";
+  // The model is the author's choice among those @qflow/gemini declares; which Provider answers is the
+  // Runtime Profile's.
+  const model = options.model ?? process.env.GEMINI_MODEL?.trim() ?? geminiModels[0];
   // Pacing is deployment policy, not author intent: it depends on the quota behind the credentials,
   // which the calling agent has no way to know. It is settable here and through the environment, and
   // deliberately not through a CLI flag.
@@ -1047,8 +1076,19 @@ export function createReferenceVideoTools(options: ToolOptions = {}): ReferenceV
   const concurrency = options.concurrency ?? positiveEnv("QFLOW_REFERENCE_CONCURRENCY") ?? 4;
   const gapMs = options.launchGapMs ?? positiveEnv("QFLOW_REFERENCE_LAUNCH_GAP_MS") ?? 1_500;
   const retryDelayMs = options.retryDelayMs ?? 2_000;
-  let generatorPromise: Promise<GenerateText> | undefined;
-  const generator = async (): Promise<GenerateText> => generatorPromise ??= options.generate === undefined ? defaultGenerate(model) : Promise.resolve(options.generate);
+  // One observer per Runtime Profile: an injected generator serves every call, otherwise the Profile's
+  // Gemini Endpoint is opened once per Profile path and reused.
+  const generators = new Map<string, Promise<GenerateText>>();
+  const generator = async (runtime: string | undefined): Promise<GenerateText> => {
+    if (options.generate !== undefined) return options.generate;
+    const profile = await runtimeProfileFor(runtime);
+    let opened = generators.get(profile);
+    if (opened === undefined) {
+      opened = runtimeHostFor(profile).then((host) => runtimeGenerate(host, geminiModel(model)));
+      generators.set(profile, opened);
+    }
+    return await opened;
+  };
 
   const loadState = async (reference: string): Promise<ReferenceState> => {
     const state = await readJson<ReferenceState>(join(stateRoot(reference), "state.json"));
@@ -1076,6 +1116,7 @@ export function createReferenceVideoTools(options: ToolOptions = {}): ReferenceV
     observer: Observer,
     state: ReferenceState,
     comparisonRun?: string,
+    runtime?: string,
   ): Promise<{ readonly ask: Asker; readonly pending: readonly ObservationTaskRequest[]; readonly paced?: boolean }> => {
     if (observer === "agent") {
       const pending: ObservationTaskRequest[] = [];
@@ -1115,7 +1156,7 @@ export function createReferenceVideoTools(options: ToolOptions = {}): ReferenceV
         },
       };
     }
-    const generate = await generator();
+    const generate = await generator(runtime);
     const mediaPart = mediaParts();
     return {
       pending: [],
@@ -1271,11 +1312,11 @@ export function createReferenceVideoTools(options: ToolOptions = {}): ReferenceV
       // everything except the transcript, which stays recoverable — and points at the repair. A
       // reference whose transcript is already complete and unchanged needs no probe.
       const needsTranscript = !(state.transcript?.status === "complete" && !redoTranscript);
-      const whisperx = needsTranscript ? await whisperxHealth() : undefined;
+      const alignment = needsTranscript ? await alignmentThrough(input.runtime) : undefined;
       const transcribing = state.transcript?.status === "complete" && !redoTranscript
         ? Promise.resolve(state.transcript)
-        : prepareTranscript(reference, videoPath, root, info.hasAudio, "en", redoTranscript);
-      const { ask, pending } = await askerFor(observer, state);
+        : prepareTranscript(reference, videoPath, root, info.hasAudio, "en", redoTranscript, alignment!.invoke);
+      const { ask, pending } = await askerFor(observer, state, undefined, input.runtime);
       const whole = [analysisVideo];
       const [people, voices, systems, places] = await Promise.all([
         state.people_and_product?.status === "complete" && !redoPeople
@@ -1320,9 +1361,7 @@ export function createReferenceVideoTools(options: ToolOptions = {}): ReferenceV
         observer,
         ...(fetched === undefined ? {} : { source_url: fetched.url, downloaded: !fetched.cached }),
         pending_observations: pending,
-        ...(whisperx?.ok === false
-          ? { whisperx: `${whisperx.reason}. Read <skill-root>/references/host-setup.md for the failure branches.` }
-          : {}),
+        ...(alignment?.note === undefined ? {} : { whisperx: alignment.note }),
       };
     },
 
@@ -1349,7 +1388,7 @@ export function createReferenceVideoTools(options: ToolOptions = {}): ReferenceV
       const selected = input.shot_ids === undefined ? state.shots : state.shots.filter((shot) => input.shot_ids!.includes(shot.shot_id));
       assert(selected.length > 0, "no requested shot ids exist");
       const observer: Observer = state.observer ?? "gemini";
-      const { ask, pending, paced } = await askerFor(observer, state);
+      const { ask, pending, paced } = await askerFor(observer, state, undefined, input.runtime);
       // An observer that answers out of band produces a list rather than a request, so the launch gap
       // and the concurrency cap have nothing to pace.
       const rate = paced === false ? { concurrency: Number.MAX_SAFE_INTEGER, gapMs: 0 } : { concurrency, gapMs };
@@ -1711,7 +1750,7 @@ export function createReferenceVideoTools(options: ToolOptions = {}): ReferenceV
       const slot = eventId(basename(renderedPath).replace(/\.[^.]*$/u, ""), new Date(startedAt));
       const standIn = await standInBeside(renderedPath);
       const observer: Observer = state.observer ?? "gemini";
-      const { ask, pending } = await askerFor(observer, state, input.run);
+      const { ask, pending } = await askerFor(observer, state, input.run, input.runtime);
 
       // Which stretch of the reference the render is put beside. A render covers the words a Segment
       // or a Selection marks, so that is what the reference is cut to; a shot is a cut in the picture

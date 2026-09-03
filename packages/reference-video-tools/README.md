@@ -55,8 +55,7 @@ It also produces `transcript`: the verbatim speech of the whole reference with a
 every single word. Placing an on-screen text reveal against the line that triggers it needs the time
 of the word, not of the sentence around it, and that question comes up in every reconstruction. The
 speech audio is extracted to `speech.wav` beside the shot media and measured through the
-`@qflow/whisperx#whisperx-alignment` capability. This tool currently instantiates the local WhisperX
-Provider directly; routing it through the selected Runtime Profile is pending.
+`@qflow/whisperx#whisperx-alignment` Endpoint of the selected Runtime Profile.
 The result reports `status`, `transcript_ref` and `word_count`, and the words themselves live in
 `transcript.json` as passages, each with a `words` array of `{ text, start_seconds, end_seconds, score }`.
 The transcript is deterministic local evidence rather than an observation: it is never written to the
@@ -85,12 +84,12 @@ depend on a separate state database.
 
 ## Environment
 
-Reference observation uses `QFLOW_GEMINI_PROVIDER=auto|qflowhub|vertex`. QflowHub first reads the
-`qflowhub.oauth` session written by `qflow auth login` from the OS credential store, then falls back to
-`QFLOWHUB_API_KEY`; `QFLOWHUB_BASE_URL` remains optional. Vertex reads `GOOGLE_CLOUD_PROJECT`,
-`GOOGLE_APPLICATION_CREDENTIALS_JSON` and optional `GOOGLE_CLOUD_LOCATION`. Gemini defaults to
-`gemini-3.1-pro`.
-
-Transcript preparation uses the selected local WhisperX service. Start services through the normal
-Runtime configuration with `qflow runtime up`. `QFLOW_REFERENCE_CONCURRENCY` and
-`QFLOW_REFERENCE_LAUNCH_GAP_MS` only control observation request pacing.
+Observation and transcription run through the selected Runtime Profile, the same way a Build does:
+`--runtime <profile>` names it, otherwise the project's `.qflow/runtime` selection is read. The
+Profile's Gemini Endpoint (QflowHub, Vertex or another Provider) answers `--observer gemini`, and its
+`@qflow/whisperx#whisperx-alignment` Endpoint measures the transcript. This tool never chooses a
+Provider, reads a credential store or contacts a service itself; `qflow plan --runtime <profile>` shows
+which Endpoint serves each capability and where it publishes prices. The Gemini model defaults to the
+first model `@qflow/gemini` declares; `GEMINI_MODEL` selects another declared model.
+`QFLOW_REFERENCE_CONCURRENCY` and `QFLOW_REFERENCE_LAUNCH_GAP_MS` only control observation request
+pacing.

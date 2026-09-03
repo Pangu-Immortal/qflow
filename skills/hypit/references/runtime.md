@@ -59,9 +59,8 @@ author explicitly asks not to use QflowHub or explicitly selects that Provider.
 
 An Author Source importing `@qflow/gemini` remains Provider-neutral. Bind those capabilities to
 `@qflow/provider-qflowhub` for QflowHub's upload-backed Gemini endpoint, or to
-`@qflow/provider-vertex` for direct Vertex. Never make this Build-time choice with
-`QFLOW_GEMINI_PROVIDER`; that environment switch belongs only to the reference-video preprocessing
-observer, which runs outside a Build.
+`@qflow/provider-vertex` for direct Vertex. The reference-video preprocessing observer runs outside a
+Build but reads the same Profile binding; there is no separate environment switch.
 
 Provider-specific input limits are also part of preflight. For the KIE GPT Image 2 route, do not
 submit `4:3`, `3:4` or `4:5`; the route rejects those aspect ratios before upload or paid submission.

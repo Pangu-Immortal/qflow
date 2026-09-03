@@ -5,7 +5,7 @@ import { delimiter, isAbsolute, join, resolve } from "node:path";
 import type { ArtifactAttachment } from "@qflow/workspace";
 import type { BuildResultForward } from "@qflow/build-result";
 import type { BuildResultRepositoryLocation } from "@qflow/build-result-kit";
-import type { BuildDefinition, BuildState, CapabilityRef } from "@qflow/protocol";
+import type { BuildDefinition, BuildState, CapabilityRef, Need, StoredValue } from "@qflow/protocol";
 import type {
   BuildCatalogDescriptor,
   BuildCompletion,
@@ -13,6 +13,7 @@ import type {
   CredentialAcquisition,
   CredentialRef,
   OperationSnapshot,
+  ResourceStore,
   RuntimeWorkerRunOptions,
 } from "@qflow/runtime";
 import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-kit";
@@ -228,6 +229,12 @@ export type NodeRuntimeHost = {
    * Reads the Profile and Endpoint declarations only; never resolves a credential or contacts a service.
    */
   providers(capabilities: readonly CapabilityRef[]): Promise<readonly RuntimeHostCapabilityProvider[]>;
+  /**
+   * Execute one immediate Need through the selected Endpoint and its credentials, outside any Build.
+   * The creation-time boundary for observation, transcription and other quick capabilities; it
+   * creates no Build, Result or state, and refuses asynchronous capabilities.
+   */
+  invoke(need: Need, resources: ResourceStore): Promise<{ readonly value: StoredValue }>;
   runWorker(readyFile: string, owner: string): Promise<void>;
 };
 
