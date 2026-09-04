@@ -50,5 +50,7 @@ declares QflowHub's public pricing page, `https://qflow.ai/commercial/pricing/`,
 `qflow plan --runtime <profile>` prints it beside each request this Endpoint would serve. Per-model
 credit costs are never copied into Qflow.
 
-QflowHub exposes MiMo VoiceDesign by default. Set `audio: false` only when the user explicitly selects
-another VoiceDesign Provider. Qflow does not expose MiMo preset-voice or voice-cloning models.
+QflowHub declares MiMo VoiceDesign together with every other capability it serves; it never hides
+one. When another selected Endpoint offers the same capability (a local WhisperX, a Vertex Gemini,
+the official MiMo Provider), the Runtime Profile's `bindings` say which Endpoint serves it. Qflow does
+not expose MiMo preset-voice or voice-cloning models.

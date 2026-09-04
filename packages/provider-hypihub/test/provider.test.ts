@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { EndpointRegistry, MemoryResourceStore } from "@qflow/driver-node";
+import { defineEndpointPackage } from "@qflow/endpoint-kit";
 import type { AsyncEndpoint } from "@qflow/endpoint-kit";
 import { geminiCapabilities, sealGeminiRequest } from "@qflow/gemini";
 import type { CanonicalValue, Need } from "@qflow/protocol";
@@ -77,26 +78,37 @@ test("QflowHub doctor checks the authenticated catalogue only when actively invo
   assert.deepEqual(diagnostics, []);
 });
 
-test("QflowHub exposes VoiceDesign by default and permits an explicit alternate audio Provider", async () => {
+test("QflowHub declares VoiceDesign like everything else it can do; who serves it is the Profile's binding", async () => {
   const registry = new EndpointRegistry();
   await createQflowHubProvider({ fetch: async () => { throw new Error("audio must not call fetch"); } }).install(registry);
-  assert.equal(registry.resolve({
+  const need = {
     id: "need:qflowhub-audio-default",
     capability: mimoTtsEndpoints.voiceDesign.capability,
     returns: mimoTtsEndpoints.voiceDesign.returns,
     constraints: { ports: {} },
     result: "record:qflowhub-audio-default",
-  }).status, "resolved");
+  };
+  assert.equal(registry.resolve(need).status, "resolved");
 
-  const optedOut = new EndpointRegistry();
-  await createQflowHubProvider({ audio: false, fetch: async () => { throw new Error("not reached"); } }).install(optedOut);
-  assert.equal(optedOut.resolve({
-    id: "need:qflowhub-audio-opt-in",
-    capability: mimoTtsEndpoints.voiceDesign.capability,
-    returns: mimoTtsEndpoints.voiceDesign.returns,
-    constraints: { ports: {} },
-    result: "record:qflowhub-audio-opt-in",
-  }).status, "missing");
+  // A second Endpoint offering the same capability makes the choice the deployment's, not the Provider's.
+  const other = defineEndpointPackage({
+    module: { name: "example.tts", version: "1" },
+    facet: "tts",
+    instance: "mimo.official",
+    pool: "mimo.official",
+    capabilities: [{
+      capability: mimoTtsEndpoints.voiceDesign.capability,
+      returns: mimoTtsEndpoints.voiceDesign.returns,
+      lifecycle: "immediate",
+      handler: () => ({ value: { kind: "inline", value: null } }),
+    }],
+  });
+  await other.install(registry);
+  assert.equal(registry.resolve(need).status, "ambiguous");
+  registry.bind(mimoTtsEndpoints.voiceDesign.capability, "mimo.official");
+  const resolved = registry.resolve(need);
+  assert.equal(resolved.status, "resolved");
+  assert.equal(resolved.status === "resolved" ? resolved.registration.id : undefined, "mimo.official");
 });
 
 test("QflowHub uploads referenced Artifacts once, submits their HTTPS URLs, and persists the result", async () => {

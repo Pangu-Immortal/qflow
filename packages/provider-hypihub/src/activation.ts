@@ -2,7 +2,6 @@ import {
   createRuntimeEndpointAdapterFacet,
   runtimeConfigCredentialRef,
   runtimeConfigExact,
-  runtimeConfigBoolean,
   runtimeConfigObject,
   runtimeConfigPositiveInteger,
   runtimeConfigString,
@@ -16,8 +15,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
     if (context.pool === undefined) throw new Error("QflowHub Provider Pool is required");
     const config = runtimeConfigObject(context.config, "QflowHub");
     runtimeConfigExact(config, [
-      "baseUrl", "apiKey", "defaultConcurrency", "pollIntervalMs", "requestTimeoutMs", "audio",
-      "transcriptionModel",
+      "baseUrl", "apiKey", "defaultConcurrency", "pollIntervalMs", "requestTimeoutMs", "transcriptionModel",
     ], "QflowHub");
     const baseUrl = runtimeConfigString(config.baseUrl, "QflowHub baseUrl");
     if (baseUrl !== undefined) {
@@ -31,7 +29,6 @@ const adapter = createRuntimeEndpointAdapterFacet({
     const defaultConcurrency = runtimeConfigPositiveInteger(config.defaultConcurrency, "QflowHub defaultConcurrency");
     const pollIntervalMs = runtimeConfigPositiveInteger(config.pollIntervalMs, "QflowHub pollIntervalMs");
     const requestTimeoutMs = runtimeConfigPositiveInteger(config.requestTimeoutMs, "QflowHub requestTimeoutMs");
-    const audio = runtimeConfigBoolean(config.audio, "QflowHub audio");
     const transcriptionModel = runtimeConfigString(config.transcriptionModel, "QflowHub transcriptionModel");
     const options = {
         instance: context.instance,
@@ -41,7 +38,6 @@ const adapter = createRuntimeEndpointAdapterFacet({
         ...(defaultConcurrency === undefined ? {} : { defaultConcurrency }),
         ...(pollIntervalMs === undefined ? {} : { pollIntervalMs }),
         ...(requestTimeoutMs === undefined ? {} : { requestTimeoutMs }),
-        ...(audio === undefined ? {} : { audio }),
         ...(transcriptionModel === undefined ? {} : { transcriptionModel }),
       };
     return {
