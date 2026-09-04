@@ -2460,6 +2460,9 @@ importers:
       '@qflow/build-result-kit':
         specifier: workspace:*
         version: link:../build-result-kit
+      '@qflow/driver-node':
+        specifier: workspace:*
+        version: link:../driver-node
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol

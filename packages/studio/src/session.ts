@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { relative } from "node:path";
 
+import type { EndpointRegistry } from "@qflow/driver-node";
 import { markupAuthorFrontendId } from "@qflow/markup";
 import { svsFrontendId } from "@qflow/svs";
 
@@ -58,9 +59,10 @@ export async function readStudioSession(input: {
   readonly revision: number;
   readonly sourcePath?: string;
   readonly workspaceRoot: string;
+  readonly endpoints?: EndpointRegistry;
 }): Promise<StudioSession> {
   const source = input.run.source;
-  const inspection = inspectStudioRun(input.registry, source, input.run);
+  const inspection = inspectStudioRun(input.registry, source, input.run, input.endpoints);
   const outputRefs = [
     inspection.filmComposition,
     ...inspection.projections.map((projection) => projection.ref),
@@ -72,6 +74,7 @@ export async function readStudioSession(input: {
     outputRefs,
     compositionRef: inspection.filmComposition,
     projections: inspection.projections,
+    ...(input.endpoints === undefined ? {} : { endpoints: input.endpoints }),
   });
   const rendered = renderPreview({
     composition: built.composition,

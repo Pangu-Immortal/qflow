@@ -8,7 +8,7 @@ import {
 } from "@qflow/package-loader-node";
 import type { NodePackageSelectionRequest } from "@qflow/package-loader-node";
 import { EndpointRegistry } from "@qflow/driver-node";
-import type { EndpointFulfillment } from "@qflow/endpoint-kit";
+import type { EndpointFulfillment, EndpointRegistrar } from "@qflow/endpoint-kit";
 import { assertBuildId, canonicalize, canonicalStringify } from "@qflow/protocol";
 import type { CanonicalValue, CapabilityRef, Need } from "@qflow/protocol";
 import {
@@ -480,6 +480,32 @@ async function installedEndpointRegistry(
 ): Promise<EndpointRegistry> {
   const endpoints = new EndpointRegistry();
   for (const { activation } of activations) await activation.endpoint.install(endpoints);
+  applyEndpointBindings(endpoints, document.bindings);
+  return endpoints;
+}
+
+/**
+ * The Endpoints a display may execute without a Build. Only Providers that declare `local` pricing
+ * are installed, and only their immediate capabilities; the Profile's bindings still apply, so a
+ * capability bound to a priced Endpoint resolves to nothing here rather than to a local stand-in.
+ */
+export async function localRuntimeConfigEndpoints(
+  path: string,
+  options: LoadRuntimeConfigOptions = {},
+): Promise<EndpointRegistry> {
+  const { document, root, packageRoot } = await openRuntimeConfig(path, options.packageRoot);
+  const hostStateRoot = resolve(options.hostStateRoot ?? qflowHostStateRoot());
+  const registry = options.registry ?? new RuntimeAdapterRegistry();
+  await installRuntimeAdapters(registry, packageRoot, endpointPackageSelection(document), options.distributionPackageRoot);
+  const endpoints = new EndpointRegistry();
+  const immediateOnly: EndpointRegistrar = {
+    registerImmediateEndpoint: (...args) => endpoints.registerImmediateEndpoint(...args),
+    registerAsyncEndpoint: () => {},
+  };
+  for (const { activation } of await activatedEndpoints(document, root, hostStateRoot, registry)) {
+    if (activation.endpoint.pricing?.kind !== "local") continue;
+    await activation.endpoint.install(immediateOnly);
+  }
   applyEndpointBindings(endpoints, document.bindings);
   return endpoints;
 }
