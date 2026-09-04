@@ -28,7 +28,6 @@ export const videoCliDistribution: CliDistribution = {
     endpoints: {
       "qflowhub.default": {
         use: "@qflow/provider-qflowhub",
-        pool: "generation",
         config: {
           baseUrl: "https://qflow.ai",
           apiKey: { store: "os", key: "qflowhub.oauth" },
@@ -36,11 +35,9 @@ export const videoCliDistribution: CliDistribution = {
       },
       "media.local": {
         use: "@qflow/provider-media-local",
-        pool: "media",
       },
       "hyperframes.local": {
         use: "@qflow/provider-hyperframes-local",
-        pool: "render",
       },
     },
   },
