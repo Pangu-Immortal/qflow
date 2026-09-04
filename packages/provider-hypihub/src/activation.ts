@@ -15,7 +15,18 @@ const adapter = createRuntimeEndpointAdapterFacet({
     if (context.pool === undefined) throw new Error("QflowHub Provider Pool is required");
     const config = runtimeConfigObject(context.config, "QflowHub");
     runtimeConfigExact(config, [
-      "baseUrl", "apiKey", "defaultConcurrency", "pollIntervalMs", "requestTimeoutMs", "transcriptionModel",
+      "baseUrl",
+      "apiKey",
+      "defaultConcurrency",
+      "pollIntervalMs",
+      "requestTimeoutMs",
+      "operationTimeoutMs",
+      "uploadPartTimeoutMs",
+      "uploadPartAttempts",
+      "downloadAttempts",
+      "geminiRateLimitAttempts",
+      "geminiRateLimitRetryDelayMs",
+      "transcriptionModel",
     ], "QflowHub");
     const baseUrl = runtimeConfigString(config.baseUrl, "QflowHub baseUrl");
     if (baseUrl !== undefined) {
@@ -29,6 +40,12 @@ const adapter = createRuntimeEndpointAdapterFacet({
     const defaultConcurrency = runtimeConfigPositiveInteger(config.defaultConcurrency, "QflowHub defaultConcurrency");
     const pollIntervalMs = runtimeConfigPositiveInteger(config.pollIntervalMs, "QflowHub pollIntervalMs");
     const requestTimeoutMs = runtimeConfigPositiveInteger(config.requestTimeoutMs, "QflowHub requestTimeoutMs");
+    const operationTimeoutMs = runtimeConfigPositiveInteger(config.operationTimeoutMs, "QflowHub operationTimeoutMs");
+    const uploadPartTimeoutMs = runtimeConfigPositiveInteger(config.uploadPartTimeoutMs, "QflowHub uploadPartTimeoutMs");
+    const uploadPartAttempts = runtimeConfigPositiveInteger(config.uploadPartAttempts, "QflowHub uploadPartAttempts");
+    const downloadAttempts = runtimeConfigPositiveInteger(config.downloadAttempts, "QflowHub downloadAttempts");
+    const geminiRateLimitAttempts = runtimeConfigPositiveInteger(config.geminiRateLimitAttempts, "QflowHub geminiRateLimitAttempts");
+    const geminiRateLimitRetryDelayMs = runtimeConfigPositiveInteger(config.geminiRateLimitRetryDelayMs, "QflowHub geminiRateLimitRetryDelayMs");
     const transcriptionModel = runtimeConfigString(config.transcriptionModel, "QflowHub transcriptionModel");
     const options = {
         instance: context.instance,
@@ -38,6 +55,12 @@ const adapter = createRuntimeEndpointAdapterFacet({
         ...(defaultConcurrency === undefined ? {} : { defaultConcurrency }),
         ...(pollIntervalMs === undefined ? {} : { pollIntervalMs }),
         ...(requestTimeoutMs === undefined ? {} : { requestTimeoutMs }),
+        ...(operationTimeoutMs === undefined ? {} : { operationTimeoutMs }),
+        ...(uploadPartTimeoutMs === undefined ? {} : { uploadPartTimeoutMs }),
+        ...(uploadPartAttempts === undefined ? {} : { uploadPartAttempts }),
+        ...(downloadAttempts === undefined ? {} : { downloadAttempts }),
+        ...(geminiRateLimitAttempts === undefined ? {} : { geminiRateLimitAttempts }),
+        ...(geminiRateLimitRetryDelayMs === undefined ? {} : { geminiRateLimitRetryDelayMs }),
         ...(transcriptionModel === undefined ? {} : { transcriptionModel }),
       };
     return {

@@ -1,4 +1,5 @@
 import type { GeminiInlinePart } from "@qflow/gemini";
+import { QflowHubUploader } from "./upload.js";
 
 export type QflowHubGeminiPart = GeminiInlinePart
   | { readonly fileData: { readonly mimeType?: string; readonly fileUri: string } };
@@ -8,6 +9,8 @@ export type QflowHubGeminiGeneratorOptions = {
   readonly model?: string;
   readonly baseUrl?: string;
   readonly requestTimeoutMs?: number;
+  readonly uploadPartTimeoutMs?: number;
+  readonly uploadPartAttempts?: number;
   readonly maxRateLimitRetries?: number;
   readonly rateLimitRetryDelayMs?: number;
   readonly fetch?: typeof globalThis.fetch;
@@ -38,7 +41,7 @@ function retryDelay(response: Response, fallback: number, attempt: number): numb
   return fallback * (attempt + 1);
 }
 
-function partValue(part: QflowHubGeminiPart, uploaded: Map<string, Promise<string>>,
+function partValue(part: QflowHubGeminiPart,
   upload: (mimeType: string, data: string) => Promise<string>): Promise<Record<string, unknown>> {
   if ("text" in part) return Promise.resolve({ text: part.text });
   if ("fileData" in part) {
@@ -49,13 +52,8 @@ function partValue(part: QflowHubGeminiPart, uploaded: Map<string, Promise<strin
   if ("inlineData" in part) {
     assert(typeof part.inlineData.mimeType === "string" && typeof part.inlineData.data === "string",
       "QflowHub Gemini inline media part is incomplete");
-    const key = `${part.inlineData.mimeType}\0${part.inlineData.data}`;
-    let pending = uploaded.get(key);
-    if (pending === undefined) {
-      pending = upload(part.inlineData.mimeType, part.inlineData.data);
-      uploaded.set(key, pending);
-    }
-    return pending.then((fileUri) => ({ fileData: { mimeType: part.inlineData.mimeType, fileUri } }));
+    return upload(part.inlineData.mimeType, part.inlineData.data)
+      .then((fileUri) => ({ fileData: { mimeType: part.inlineData.mimeType, fileUri } }));
   }
   throw new Error("QflowHub Gemini only supports text, inline media and file media parts");
 }
@@ -78,35 +76,28 @@ export function createQflowHubGeminiGenerator(options: QflowHubGeminiGeneratorOp
   const rateLimitRetryDelayMs = positiveInteger(options.rateLimitRetryDelayMs ?? 2_000,
     "QflowHub Gemini rateLimitRetryDelayMs");
   const fetcher = options.fetch ?? globalThis.fetch;
+  const uploader = new QflowHubUploader({
+    baseUrl,
+    requestTimeoutMs: timeout,
+    uploadPartTimeoutMs: positiveInteger(options.uploadPartTimeoutMs ?? 5 * 60_000,
+      "QflowHub Gemini uploadPartTimeoutMs"),
+    uploadPartAttempts: positiveInteger(options.uploadPartAttempts ?? 3,
+      "QflowHub Gemini uploadPartAttempts"),
+    fetch: fetcher,
+  });
 
   return async (input: QflowHubGeminiGenerateInput): Promise<string> => {
+    const upload = async (mimeType: string, encoded: string): Promise<string> => {
+      let bytes: Uint8Array;
+      try { bytes = new Uint8Array(Buffer.from(encoded, "base64")); }
+      catch (error) { throw new Error("QflowHub Gemini inline media is not valid base64", { cause: error }); }
+      assert(bytes.byteLength > 0, "QflowHub Gemini inline media is empty");
+      return await uploader.upload({ bytes, mediaType: mimeType }, apiKey);
+    };
+    const parts = await Promise.all(input.parts.map((part) => partValue(part, upload)));
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
-      const uploaded = new Map<string, Promise<string>>();
-      const upload = async (mimeType: string, encoded: string): Promise<string> => {
-        let bytes: Uint8Array;
-        try { bytes = new Uint8Array(Buffer.from(encoded, "base64")); }
-        catch (error) { throw new Error("QflowHub Gemini inline media is not valid base64", { cause: error }); }
-        assert(bytes.byteLength > 0, "QflowHub Gemini inline media is empty");
-        const form = new FormData();
-        const copy = new ArrayBuffer(bytes.byteLength);
-        new Uint8Array(copy).set(bytes);
-        form.append("file", new Blob([copy], { type: mimeType }), `gemini-reference.${extension(mimeType)}`);
-        form.append("purpose", "reference");
-        const uploadedResponse = await fetcher(`${baseUrl}/v1/files`, {
-          method: "POST", signal: controller.signal,
-          headers: { authorization: `Bearer ${apiKey}` }, body: form,
-        });
-        const uploadedText = await uploadedResponse.text();
-        if (!uploadedResponse.ok) throw new Error(`QflowHub Gemini file upload returned HTTP ${uploadedResponse.status}: ${uploadedText.slice(0, 300)}`);
-        let uploadedBody: unknown;
-        try { uploadedBody = JSON.parse(uploadedText); } catch { throw new Error("QflowHub Gemini file upload returned invalid JSON"); }
-        const url = (uploadedBody as { readonly url?: unknown }).url;
-        assert(typeof url === "string" && /^https:\/\//iu.test(url), "QflowHub Gemini file upload returned no HTTPS URL");
-        return url;
-      };
-      const parts = await Promise.all(input.parts.map((part) => partValue(part, uploaded, upload)));
       let response: Response | undefined;
       let text = "";
       for (let attempt = 0; attempt <= maxRateLimitRetries; attempt += 1) {
@@ -144,13 +135,4 @@ export function createQflowHubGeminiGenerator(options: QflowHubGeminiGeneratorOp
       clearTimeout(timer);
     }
   };
-}
-
-function extension(mimeType: string): string {
-  const value: Readonly<Record<string, string>> = {
-    "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp",
-    "audio/mpeg": "mp3", "audio/wav": "wav", "audio/mp4": "m4a",
-    "video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm",
-  };
-  return value[mimeType.toLowerCase()] ?? "bin";
 }
