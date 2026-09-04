@@ -1,14 +1,12 @@
 import type { AsyncEndpoint, EndpointFulfillment, EndpointInvocationContext, EndpointPollContext, EndpointStartContext, EndpointOutcome, ImmediateEndpointHandler } from "@qflow/endpoint-kit";
 import { defineEndpointPackage, wakeAfter } from "@qflow/endpoint-kit";
-import { geminiCapabilities, geminiModels, verifyGeminiRequest } from "@qflow/gemini";
+import { geminiCapabilities, geminiModels, geminiTypes, sealVisualObservation, verifyGeminiRequest } from "@qflow/gemini";
 import type { GeminiRequest } from "@qflow/gemini";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef, CapabilityRef } from "@qflow/protocol";
 import { credentialRef } from "@qflow/runtime";
 import type { CredentialRef, ResourceStore } from "@qflow/runtime";
 import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@qflow/speech-evidence";
-import { sealText } from "@qflow/text";
-import { textTypes } from "@qflow/text";
 import {
   assertWhisperXEvidenceWav,
   interpretWhisperXTranscript,
@@ -322,7 +320,7 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
       parts.push({ inlineData: { mimeType: item.artifact.mediaType, data: Buffer.from(bytes).toString("base64") } });
     }
     const value = await generate({ parts, instruction: request.instruction });
-    return { value: { kind: "inline", value: canonicalize(sealText(value)) } };
+    return { value: { kind: "inline", value: canonicalize(sealVisualObservation(value)) } };
   };
   const transcriptionModel = options.transcriptionModel?.trim() || "victor-upmeet/whisperx";
   const whisperXEndpoint: ImmediateEndpointHandler = async (context) => {
@@ -370,21 +368,21 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
     capabilities: [
       ...hypiHubRoutes
       .map((route) => route.media === "audio"
-        ? { capability: route.capability, returns: route.returns, lifecycle: "immediate" as const, handler: audioEndpoint, lane: route.capability.name }
-        : { capability: route.capability, returns: route.returns, lifecycle: "asynchronous" as const, endpoint: asyncEndpoint, lane: route.capability.name }),
+        ? { capability: route.capability, returns: route.returns, lifecycle: "immediate" as const, handler: audioEndpoint, capacity: route.capability.name }
+        : { capability: route.capability, returns: route.returns, lifecycle: "asynchronous" as const, endpoint: asyncEndpoint, capacity: route.capability.name }),
       ...geminiModels.map((model) => ({
         capability: geminiCapabilities[model],
-        returns: textTypes.text,
+        returns: geminiTypes.visualObservation,
         lifecycle: "immediate" as const,
         handler: geminiEndpoint,
-        lane: "gemini",
+        capacity: "gemini",
       })),
       {
         capability: whisperXCapabilities.alignment,
         returns: speechEvidenceTypes.alignedTranscript,
         lifecycle: "immediate" as const,
         handler: whisperXEndpoint,
-        lane: "transcription",
+        capacity: "transcription",
       },
     ],
   });

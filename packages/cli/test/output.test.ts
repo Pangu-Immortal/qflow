@@ -57,14 +57,14 @@ test("plan presents useful choices and readable requests without default graph i
   const presentation = {
     kind: "plan",
     machine: {
-      format: "qflow.cli-plan@2",
+      format: "qflow.cli-plan@3",
       ok: true,
       run: "/project/build.svrun",
       targetCount: 1,
       targets: ["take.video"],
       steps: 2,
-      externalRequestCount: 1,
-      externalRequests: [{ operation: "@qflow/media@1/inspect", count: 1 }],
+      requestCount: 1,
+      requestIssueCount: 0,
       preflight: {
         ok: true,
         capabilityCount: 1,
@@ -79,26 +79,26 @@ test("plan presents useful choices and readable requests without default graph i
   } as const;
   const output = capture(human, presentation);
   assert.match(output, /take\.video\s+← preview/u);
-  assert.match(output, /1\s+inspect/u);
+  assert.match(output, /Requests\s+1/u);
   assert.match(output, /Preflight\s+ready/u);
   assert.doesNotMatch(output, /Runtime\s+ready/u);
   assert.doesNotMatch(output, /@qflow\/media|unused\.image|Declared but not reached|logical:|record:|step-/u);
 
   const verbose = capture({ ...human, verbose: true }, presentation);
-  assert.match(verbose, /1\s+@qflow\/media@1\/inspect/u);
+  assert.match(verbose, /Requests\s+1/u);
   assert.match(verbose, /unused\.image/u);
 });
 
 test("plan names the Provider and price page behind each request, and points at --runtime when it cannot", () => {
   const base = {
-    format: "qflow.cli-plan@2",
+    format: "qflow.cli-plan@3",
     ok: true,
     run: "/project/build.svrun",
     targetCount: 1,
     targets: ["take.video"],
     steps: 3,
-    externalRequestCount: 2,
-    externalRequests: [{ operation: "@qflow/seedance@1/request-seedance-2-mini", count: 2 }],
+    requestCount: 2,
+    requestIssueCount: 0,
     choiceCount: 0,
     choices: [],
   } as const;
@@ -106,28 +106,39 @@ test("plan names the Provider and price page behind each request, and points at 
   assert.match(without, /Pass --runtime <profile>/u);
   assert.doesNotMatch(without, /Providers and price pages/u);
 
-  const output = capture(human, { kind: "plan", machine: { ...base, providers: [
+  const output = capture(human, { kind: "plan", machine: { ...base, providerRequestCount: 2, localRequestCount: 1, unresolvedRequestCount: 1, providers: [
     {
+      request: "seedance:one",
       capability: "@qflow/seedance@1#seedance-2-mini",
+      checked: "capability",
       status: "resolved",
       endpoint: "qflowhub.default",
       use: "@qflow/provider-qflowhub",
       pricing: { kind: "page", url: "https://qflow.ai/commercial/pricing/" },
     },
-    { capability: "@qflow/media@1#inspect", status: "resolved", endpoint: "media.local", use: "@qflow/provider-media-local", pricing: { kind: "local" } },
-    { capability: "@qflow/whisperx@1#whisperx-alignment", status: "resolved", endpoint: "whisperx.remote", use: "@qflow/provider-example" },
-    { capability: "@qflow/gpt-image@1#gpt-image-2", status: "unresolved" },
-  ] } });
+    { request: "media:one", capability: "@qflow/media@1#inspect", checked: "request", status: "resolved", endpoint: "media.local", use: "@qflow/provider-media-local", pricing: { kind: "local" } },
+    { request: "whisper:one", capability: "@qflow/whisperx@1#whisperx-alignment", checked: "request", status: "resolved", endpoint: "whisperx.remote", use: "@qflow/provider-example" },
+    { request: "image:one", capability: "@qflow/gpt-image@1#gpt-image-2", checked: "request", status: "unresolved" },
+  ], needs: [{
+    request: "seedance:one",
+    step: "video::component::presenter.generate",
+    port: "request",
+    capability: "@qflow/seedance@1#seedance-2-mini",
+    summary: { fields: { prompt: "42 chars", duration: 10, resolution: "720p" }, references: { image: 1 } },
+    pending: [{ input: "referenceImages", record: "presenter:image", sourceStep: "presenter.generate", kind: "image" }],
+    checked: "capability",
+  }] } });
   assert.match(output, /Providers and price pages/u);
   assert.match(output, /@qflow\/seedance#seedance-2-mini\n\s+qflowhub\.default \(@qflow\/provider-qflowhub\)\s+·\s+https:\/\/qflow\.ai\/commercial\/pricing\//u);
   assert.match(output, /media\.local .*·\s+local, no Provider charge/u);
   assert.match(output, /whisperx\.remote .*·\s+price source unknown/u);
-  assert.match(output, /gpt-image#gpt-image-2\n\s+no selected Endpoint\n/u);
+  assert.match(output, /gpt-image#gpt-image-2\n\s+no selected Endpoint accepts this request\n/u);
+  assert.match(output, /prompt 42 chars · duration 10 · resolution 720p · 1 image reference · file produced during Build/u);
   assert.doesNotMatch(output, /Pass --runtime/u);
   assert.doesNotMatch(output, /seedance@1#/u);
 
   const verbose = capture({ ...human, verbose: true }, { kind: "plan", machine: { ...base, providers: [
-    { capability: "@qflow/seedance@1#seedance-2-mini", status: "ambiguous", endpoints: ["qflowhub.default", "kie.default"] },
+    { request: "seedance:one", capability: "@qflow/seedance@1#seedance-2-mini", checked: "capability", status: "ambiguous", endpoints: ["qflowhub.default", "kie.default"] },
   ] } });
   assert.match(verbose, /@qflow\/seedance@1#seedance-2-mini\n\s+qflowhub\.default, kie\.default all offer it/u);
 });

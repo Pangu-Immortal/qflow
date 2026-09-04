@@ -1,12 +1,11 @@
 import { defineEndpointPackage } from "@qflow/endpoint-kit";
 import type { EndpointInvocationContext, ImmediateEndpointHandler } from "@qflow/endpoint-kit";
-import { geminiCapabilities, geminiModels, verifyGeminiRequest } from "@qflow/gemini";
+import { geminiCapabilities, geminiModels, geminiTypes, sealVisualObservation, verifyGeminiRequest } from "@qflow/gemini";
 import type { CapabilityRef } from "@qflow/protocol";
 import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-kit";
 import type { GeminiRequest } from "@qflow/gemini";
 import { canonicalize } from "@qflow/protocol";
 import type { CredentialRef } from "@qflow/runtime";
-import { sealText, textTypes } from "@qflow/text";
 
 import { createVertexGeminiGenerator, probeVertexModel, vertexModelId } from "./gemini.js";
 
@@ -89,7 +88,7 @@ export function createVertexProvider(options: CreateVertexProviderOptions) {
       parts.push({ inlineData: { mimeType: item.artifact.mediaType, data: Buffer.from(bytes).toString("base64") } });
     }
     const value = await generate({ parts, instruction: typed.instruction });
-    return { value: { kind: "inline", value: canonicalize(sealText(value)) } };
+    return { value: { kind: "inline", value: canonicalize(sealVisualObservation(value)) } };
   };
   return defineEndpointPackage({
     module: vertexProviderModuleRef,
@@ -108,10 +107,10 @@ export function createVertexProvider(options: CreateVertexProviderOptions) {
     defaultConcurrency: options.defaultConcurrency ?? 4,
     capabilities: geminiModels.map((model) => ({
       capability: geminiCapabilities[model],
-      returns: textTypes.text,
+      returns: geminiTypes.visualObservation,
       lifecycle: "immediate" as const,
       handler,
-      lane: model,
+      capacity: model,
     })),
   });
 }

@@ -2,9 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { EndpointRegistry } from "@qflow/driver-node";
-import { geminiCapabilities } from "@qflow/gemini";
+import { geminiCapabilities, geminiTypes } from "@qflow/gemini";
 import { credentialRef } from "@qflow/runtime";
-import { textTypes } from "@qflow/text";
 
 import { createVertexProvider } from "../src/provider.js";
 import { vertexModelId } from "../src/gemini.js";
@@ -20,7 +19,7 @@ test("Vertex Runtime provider exposes the same provider-neutral Gemini capabilit
     const resolution = registry.resolve({
       id: `need:${model}`,
       capability: geminiCapabilities[model],
-      returns: textTypes.text,
+      returns: geminiTypes.visualObservation,
       constraints: { instruction: "x", prompt: "x", media: [] },
       result: `record:${model}`,
     });

@@ -4,10 +4,9 @@ import test from "node:test";
 import { EndpointRegistry, MemoryResourceStore } from "@qflow/driver-node";
 import { defineEndpointPackage } from "@qflow/endpoint-kit";
 import type { AsyncEndpoint } from "@qflow/endpoint-kit";
-import { geminiCapabilities, sealGeminiRequest } from "@qflow/gemini";
+import { geminiCapabilities, geminiTypes, sealGeminiRequest } from "@qflow/gemini";
 import type { CanonicalValue, Need } from "@qflow/protocol";
 import { mimoTtsEndpoints } from "@qflow/mimo-tts";
-import { textTypes } from "@qflow/text";
 import { sealSeedanceRequest, seedanceEndpoints } from "@qflow/seedance";
 import { sealSpeechEvidenceAudio } from "@qflow/speech";
 import { speechEvidenceTypes } from "@qflow/speech-evidence";
@@ -183,7 +182,7 @@ test("QflowHub fulfills Gemini through the Runtime endpoint and uploads every me
   const request: Need = {
     id: "need:qflowhub-gemini",
     capability: geminiCapabilities["gemini-3.1-pro"],
-    returns: textTypes.text,
+    returns: geminiTypes.visualObservation,
     constraints: sealGeminiRequest({
       instruction: "Answer briefly.", prompt: "Inspect both references.",
       media: [{ artifact: image }, { artifact: video }],
@@ -215,7 +214,7 @@ test("QflowHub fulfills Gemini through the Runtime endpoint and uploads every me
     command: { kind: "fulfill-need", id: "command:qflowhub-gemini", need: request },
     need: request, resources, credentials: { apiKey: { secret: "test-key" } },
   });
-  assert.deepEqual(result.value, { kind: "inline", value: { value: "provider works" } });
+  assert.deepEqual(result.value, { kind: "inline", value: { text: "provider works" } });
   assert.deepEqual(uploads, ["image/png", "video/mp4"]);
   assert.deepEqual((generationBody?.contents as readonly unknown[]), [{ role: "user", parts: [
     { text: "Inspect both references." },
