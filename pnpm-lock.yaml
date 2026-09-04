@@ -1333,6 +1333,9 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
+      '@qflow/media-pipeline':
+        specifier: workspace:*
+        version: link:../media-pipeline
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
