@@ -120,18 +120,12 @@ importers:
       '@qflow/minimax-h3':
         specifier: workspace:*
         version: link:packages/minimax-h3
-      '@qflow/mock-media':
-        specifier: workspace:*
-        version: link:packages/mock-media
       '@qflow/nano-banana':
         specifier: workspace:*
         version: link:packages/nano-banana
       '@qflow/narrative':
         specifier: workspace:*
         version: link:packages/narrative
-      '@qflow/preview-mock':
-        specifier: workspace:*
-        version: link:packages/preview-mock
       '@qflow/program-space':
         specifier: workspace:*
         version: link:packages/program-space
@@ -1817,33 +1811,6 @@ importers:
         specifier: workspace:*
         version: link:../text
 
-  packages/mock-media:
-    dependencies:
-      '@qflow/artifact':
-        specifier: workspace:*
-        version: link:../artifact
-      '@qflow/elaborator':
-        specifier: workspace:*
-        version: link:../elaborator
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
-      '@qflow/program-space':
-        specifier: workspace:*
-        version: link:../program-space
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/run':
-        specifier: workspace:*
-        version: link:../run
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
-      '@qflow/speech':
-        specifier: workspace:*
-        version: link:../speech
-
   packages/model-kit:
     dependencies:
       '@qflow/artifact':
@@ -1909,51 +1876,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-
-  packages/preview-mock:
-    dependencies:
-      '@qflow/artifact':
-        specifier: workspace:*
-        version: link:../artifact
-      '@qflow/compiler-node':
-        specifier: workspace:*
-        version: link:../compiler-node
-      '@qflow/driver-node':
-        specifier: workspace:*
-        version: link:../driver-node
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
-      '@qflow/mock-media':
-        specifier: workspace:*
-        version: link:../mock-media
-      '@qflow/program-space':
-        specifier: workspace:*
-        version: link:../program-space
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/provider-media-local':
-        specifier: workspace:*
-        version: link:../provider-media-local
-      '@qflow/resource-store-fs':
-        specifier: workspace:*
-        version: link:../resource-store-fs
-      '@qflow/semantic-take-estimate':
-        specifier: workspace:*
-        version: link:../semantic-take-estimate
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
-      '@qflow/speech':
-        specifier: workspace:*
-        version: link:../speech
-      '@qflow/text':
-        specifier: workspace:*
-        version: link:../text
-      '@qflow/workspace':
-        specifier: workspace:*
-        version: link:../workspace
 
   packages/program-space:
     dependencies:
@@ -2231,9 +2153,6 @@ importers:
       '@qflow/media-pipeline':
         specifier: workspace:*
         version: link:../media-pipeline
-      '@qflow/mock-media':
-        specifier: workspace:*
-        version: link:../mock-media
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -3067,9 +2986,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/provider-media-local':
-        specifier: workspace:*
-        version: link:../provider-media-local
       '@qflow/ranking-studio':
         specifier: workspace:*
         version: link:../ranking-studio

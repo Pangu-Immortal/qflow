@@ -9,14 +9,10 @@ import {
   executeProjectSpeechEvidenceAudio,
   executeRenderTimelineAudio,
   executeRenderStillVideo,
-  executeRenderMockImage,
-  executeRenderMockVideo,
-  executeRenderMockSilence,
   executeTransformMedia,
 } from "@qflow/media-execution";
 import type { MediaExecutionEnvironment, MediaOperationResult } from "@qflow/media-execution";
 import { mediaPipelineCapabilities } from "@qflow/media-pipeline";
-import { mockMediaCapabilities } from "@qflow/mock-media";
 import { isStreamingResourceStore } from "@qflow/runtime";
 import { speechTypes } from "@qflow/speech";
 import { defineEndpointPackage } from "@qflow/endpoint-kit";
@@ -122,24 +118,6 @@ export function createLocalMediaProvider(config: CreateLocalMediaProviderOptions
         capability: mediaPipelineCapabilities.renderStill,
         returns: artifactTypes.blob,
         handler: operation(executeRenderStillVideo),
-      },
-      {
-        lifecycle: "immediate" as const,
-        capability: mockMediaCapabilities.image,
-        returns: artifactTypes.blob,
-        handler: operation(executeRenderMockImage),
-      },
-      {
-        lifecycle: "immediate" as const,
-        capability: mockMediaCapabilities.video,
-        returns: artifactTypes.blob,
-        handler: operation(executeRenderMockVideo),
-      },
-      {
-        lifecycle: "immediate" as const,
-        capability: mockMediaCapabilities.silence,
-        returns: artifactTypes.blob,
-        handler: operation(executeRenderMockSilence),
       },
       {
         lifecycle: "immediate" as const,
