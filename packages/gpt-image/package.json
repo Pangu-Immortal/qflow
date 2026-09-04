@@ -29,7 +29,6 @@
     "@qflow/run": "workspace:*",
     "@qflow/seedance": "workspace:*",
     "@qflow/spatial": "workspace:*",
-    "@qflow/speech": "workspace:*",
-    "@qflow/stand-in": "workspace:*"
+    "@qflow/speech": "workspace:*"
   }
 }

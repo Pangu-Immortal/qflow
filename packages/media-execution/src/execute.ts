@@ -32,7 +32,8 @@ import {
   } from "@qflow/protocol";
 import type { BlobRef, CanonicalValue, StoredValue } from "@qflow/protocol";
 
-import { renderStandInCard, standInCardNeed } from "./card.js";
+import { drawStandInSilence, renderStandInCard, standInCardNeed } from "./card.js";
+import { verifyStandInSilenceRequest } from "@qflow/stand-in";
 import { parseMediaInspection } from "./probe.js";
 import {
   compositeAnimatedWebpFrame,
@@ -856,6 +857,15 @@ export async function executeDrawStandInCard(
     putFile: async (path, mediaType) => await env.artifacts.putFile(path, mediaType) as unknown as CanonicalValue,
   }, request);
   return artifactResult(value as unknown as BlobRef);
+}
+
+/** Materialize the generic silent-audio Candidate selected by a Run. */
+export async function executeDrawStandInSilence(
+  env: MediaExecutionEnvironment,
+  constraints: CanonicalValue,
+): Promise<MediaOperationResult> {
+  verifyStandInSilenceRequest(constraints);
+  return artifactResult(await env.artifacts.put(drawStandInSilence(constraints.sampleFrames), "audio/wav"));
 }
 
 type TransformPlan = {

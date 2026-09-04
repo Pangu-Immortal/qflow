@@ -1459,9 +1459,6 @@ importers:
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
-      '@qflow/stand-in':
-        specifier: workspace:*
-        version: link:../stand-in
 
   packages/grok-imagine:
     dependencies:
@@ -1837,18 +1834,9 @@ importers:
       '@qflow/host':
         specifier: workspace:*
         version: link:../host
-      '@qflow/program-space':
-        specifier: workspace:*
-        version: link:../program-space
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/run':
-        specifier: workspace:*
-        version: link:../run
-      '@qflow/stand-in':
-        specifier: workspace:*
-        version: link:../stand-in
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
@@ -2944,12 +2932,27 @@ importers:
       '@qflow/component-kit':
         specifier: workspace:*
         version: link:../component-kit
+      '@qflow/elaborator':
+        specifier: workspace:*
+        version: link:../elaborator
       '@qflow/media':
         specifier: workspace:*
         version: link:../media
+      '@qflow/program-space':
+        specifier: workspace:*
+        version: link:../program-space
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@qflow/run':
+        specifier: workspace:*
+        version: link:../run
+      '@qflow/spatial':
+        specifier: workspace:*
+        version: link:../spatial
+      '@qflow/speech':
+        specifier: workspace:*
+        version: link:../speech
 
   packages/store-sqlite:
     dependencies:

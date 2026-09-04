@@ -13,7 +13,12 @@
   "dependencies": {
     "@qflow/artifact": "workspace:*",
     "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
     "@qflow/media": "workspace:*",
-    "@qflow/protocol": "workspace:*"
+    "@qflow/program-space": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/run": "workspace:*",
+    "@qflow/spatial": "workspace:*",
+    "@qflow/speech": "workspace:*"
   }
 }
