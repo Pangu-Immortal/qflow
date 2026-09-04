@@ -567,6 +567,15 @@ importers:
       '@qflow/compiler-node':
         specifier: workspace:*
         version: link:../compiler-node
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../component-kit
+      '@qflow/core':
+        specifier: workspace:*
+        version: link:../core
+      '@qflow/driver-node':
+        specifier: workspace:*
+        version: link:../driver-node
       '@qflow/elaborator':
         specifier: workspace:*
         version: link:../elaborator
@@ -588,6 +597,9 @@ importers:
       '@qflow/source':
         specifier: workspace:*
         version: link:../source
+      '@qflow/validation':
+        specifier: workspace:*
+        version: link:../validation
       '@qflow/workspace':
         specifier: workspace:*
         version: link:../workspace
