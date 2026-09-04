@@ -13,7 +13,10 @@
     "@qflow/elaborator": "workspace:*",
     "@qflow/generation": "workspace:*",
     "@qflow/host": "workspace:*",
+    "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
+    "@qflow/run": "workspace:*",
+    "@qflow/stand-in": "workspace:*",
     "@qflow/text": "workspace:*"
   }
 }

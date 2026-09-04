@@ -119,6 +119,7 @@
     "@qflow/semantic-track": "workspace:*",
     "@qflow/semantic-take-estimate": "workspace:*",
     "@qflow/spatial": "workspace:*",
+    "@qflow/stand-in": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/speech-alignment": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",

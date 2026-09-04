@@ -234,6 +234,9 @@ importers:
       '@qflow/speech-track-studio':
         specifier: workspace:*
         version: link:packages/speech-track-studio
+      '@qflow/stand-in':
+        specifier: workspace:*
+        version: link:packages/stand-in
       '@qflow/store-sqlite':
         specifier: workspace:*
         version: link:packages/store-sqlite
@@ -1456,6 +1459,9 @@ importers:
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
+      '@qflow/stand-in':
+        specifier: workspace:*
+        version: link:../stand-in
 
   packages/grok-imagine:
     dependencies:
@@ -1672,6 +1678,9 @@ importers:
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
+      '@qflow/stand-in':
+        specifier: workspace:*
+        version: link:../stand-in
 
   packages/media-pipeline:
     dependencies:
@@ -1828,9 +1837,18 @@ importers:
       '@qflow/host':
         specifier: workspace:*
         version: link:../host
+      '@qflow/program-space':
+        specifier: workspace:*
+        version: link:../program-space
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@qflow/run':
+        specifier: workspace:*
+        version: link:../run
+      '@qflow/stand-in':
+        specifier: workspace:*
+        version: link:../stand-in
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
@@ -2168,6 +2186,9 @@ importers:
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
+      '@qflow/stand-in':
+        specifier: workspace:*
+        version: link:../stand-in
     devDependencies:
       '@qflow/driver-node':
         specifier: workspace:*
@@ -2914,6 +2935,21 @@ importers:
       '@qflow/studio-adapter':
         specifier: workspace:*
         version: link:../studio-adapter
+
+  packages/stand-in:
+    dependencies:
+      '@qflow/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../component-kit
+      '@qflow/media':
+        specifier: workspace:*
+        version: link:../media
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
 
   packages/store-sqlite:
     dependencies:

@@ -1,0 +1,10 @@
+import { standInComponent, standInManifest } from "./index.js";
+
+export const qflowPackage = {
+  format: "qflow.node-package@1" as const,
+  modules: [{ manifest: standInManifest }],
+  components: [standInComponent],
+  hostFacets: [],
+};
+
+export default qflowPackage;

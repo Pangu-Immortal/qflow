@@ -24,6 +24,7 @@ export const qflowPackage = {
   components: [gptImageComponent],
   hostFacets: [
     gptImageDefinition.hostFacet,
+    ...(gptImageDefinition.runFragmentFacet === undefined ? [] : [gptImageDefinition.runFragmentFacet]),
     createMarkupSurfaceHostFacet({
       module: gptImageModuleRef,
     declaration: gptImageMarkupSurfaces.find((item) => item.name === "image")!,
