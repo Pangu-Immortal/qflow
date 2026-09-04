@@ -3240,9 +3240,6 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/mimo-tts':
-        specifier: workspace:*
-        version: link:../mimo-tts
       '@qflow/model-kit':
         specifier: workspace:*
         version: link:../model-kit
