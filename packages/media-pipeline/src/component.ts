@@ -1,5 +1,6 @@
 import { mediaComponent } from "@qflow/media";
-import type { ComponentPackage } from "@qflow/component-kit";
+import { plannedNeedInputs } from "@qflow/component-kit";
+import type { ComponentPackage, PlannedNeedFacet } from "@qflow/component-kit";
 import { synchronizedMediaSampleFrames, verifyMediaInspection, verifyMediaStreamSelection, verifyMuxedMedia, verifyRenderedVisual, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/media";
 import type { MediaInspection, MediaStreamSelection, MuxedMedia, RenderedVisual, SynchronizedMedia, TimelineAudio } from "@qflow/media";
 import { assertProgramClockIdentity } from "@qflow/program-space";
@@ -7,14 +8,14 @@ import type { ProgramClock, ProgramSpace } from "@qflow/program-space";
 import { assertSpeechDurationIdentity, speechEvidenceSampleBoundary } from "@qflow/speech";
 import type { SpeechDuration } from "@qflow/speech";
 import type { Composition } from "@qflow/composition";
-import type { BlobRef, CanonicalValue, StoredValue } from "@qflow/protocol";
+import type { BlobRef, CanonicalValue, CapabilityRef, ProducerRef, StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 
 import {
   compileAudioProgramPlan,
   verifyAudioProgramPlan,
 } from "./audio-plan.js";
-import { mediaPipelineProducers, mediaPipelineTypes } from "./manifest.js";
+import { mediaPipelineCapabilities, mediaPipelineProducers, mediaPipelineTypes } from "./manifest.js";
 import {
   selectMediaStreams,
   verifyMediaSelectionRequest,
@@ -56,6 +57,32 @@ function inline(value: StoredValue, subject: string): CanonicalValue {
 function blob(value: StoredValue, subject: string): BlobRef {
   if (value.kind !== "blob") throw new Error(`${subject} must be a BlobArtifact`);
   return value;
+}
+
+/** Preserve unresolved graph inputs without pretending a structured value is a file. */
+function plannedMediaNeed(
+  producer: ProducerRef,
+  port: string,
+  capability: CapabilityRef,
+  roles: Readonly<Record<string, string>> = {},
+): PlannedNeedFacet {
+  return {
+    producer,
+    port,
+    capability,
+    plan({ state, step }) {
+      return { constraints: {}, pendingInputs: plannedNeedInputs(state, step, roles) };
+    },
+    present(specification) {
+      const references: Record<string, number> = {};
+      for (const item of specification.pendingInputs) {
+        const role = item.role;
+        if (role === undefined) continue;
+        references[role] = (references[role] ?? 0) + 1;
+      }
+      return { fields: {}, references };
+    },
+  };
 }
 
 export const mediaPipelineComponent = {
@@ -310,6 +337,22 @@ export const mediaPipelineComponent = {
         };
       },
     },
+  ],
+  plannedNeeds: [
+    plannedMediaNeed(mediaPipelineProducers.inspect, "inspection", mediaPipelineCapabilities.inspect, { source: "media" }),
+    plannedMediaNeed(mediaPipelineProducers.normalize, "media", mediaPipelineCapabilities.normalize, { source: "media" }),
+    plannedMediaNeed(mediaPipelineProducers.transform, "video", mediaPipelineCapabilities.transform, { media: "video" }),
+    plannedMediaNeed(mediaPipelineProducers.extractAudio, "audio", mediaPipelineCapabilities.extractAudio, { source: "audio" }),
+    plannedMediaNeed(mediaPipelineProducers.extractFrame, "image", mediaPipelineCapabilities.extractFrame, { source: "video" }),
+    plannedMediaNeed(mediaPipelineProducers.renderStill, "video", mediaPipelineCapabilities.renderStill, { request: "image" }),
+    plannedMediaNeed(
+      mediaPipelineProducers.projectSpeechEvidenceAudio,
+      "evidenceAudio",
+      mediaPipelineCapabilities.projectSpeechEvidenceAudio,
+      { media: "audio" },
+    ),
+    plannedMediaNeed(mediaPipelineProducers.renderAudio, "audio", mediaPipelineCapabilities.renderAudio, { plan: "audio" }),
+    plannedMediaNeed(mediaPipelineProducers.mux, "media", mediaPipelineCapabilities.mux, { visual: "video", audio: "audio" }),
   ],
 } satisfies ComponentPackage;
 

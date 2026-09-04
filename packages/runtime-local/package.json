@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@qflow/resource-store-fs": "workspace:*",
-    "@qflow/build-result": "workspace:*",
     "@qflow/build-result-fs": "workspace:*",
     "@qflow/build-result-kit": "workspace:*",
     "@qflow/component-kit": "workspace:*",
@@ -28,6 +27,7 @@
     "@qflow/validation": "workspace:*"
   },
   "devDependencies": {
+    "@qflow/build-result": "workspace:*",
     "@qflow/credential-store-env": "workspace:*"
   }
 }

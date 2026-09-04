@@ -576,12 +576,6 @@ importers:
       '@qflow/elaborator':
         specifier: workspace:*
         version: link:../elaborator
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
-      '@qflow/model-kit':
-        specifier: workspace:*
-        version: link:../model-kit
       '@qflow/package-loader-node':
         specifier: workspace:*
         version: link:../package-loader-node
@@ -1708,6 +1702,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@qflow/run':
+        specifier: workspace:*
+        version: link:../run
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
@@ -2502,9 +2499,6 @@ importers:
 
   packages/runtime-local:
     dependencies:
-      '@qflow/build-result':
-        specifier: workspace:*
-        version: link:../build-result
       '@qflow/build-result-fs':
         specifier: workspace:*
         version: link:../build-result-fs
@@ -2548,6 +2542,9 @@ importers:
         specifier: workspace:*
         version: link:../validation
     devDependencies:
+      '@qflow/build-result':
+        specifier: workspace:*
+        version: link:../build-result
       '@qflow/credential-store-env':
         specifier: workspace:*
         version: link:../credential-store-env

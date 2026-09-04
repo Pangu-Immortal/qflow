@@ -19,6 +19,7 @@
     "@qflow/narrative": "workspace:*",
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
+    "@qflow/run": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/svs": "workspace:*",
     "@qflow/markup": "workspace:*"
