@@ -1,6 +1,7 @@
 import { artifactDependency, artifactTypes } from "@qflow/artifact";
 import type { CapabilityRef, ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
 import { textDependency, textTypes } from "@qflow/text";
+import { mediaPipelineDependency } from "@qflow/media-pipeline";
 
 export const geminiModuleRef = { name: "@qflow/gemini", version: "1" } as const;
 
@@ -62,7 +63,7 @@ export const geminiManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: geminiModuleRef.name,
   version: geminiModuleRef.version,
-  dependencies: [artifactDependency, textDependency],
+  dependencies: [artifactDependency, textDependency, mediaPipelineDependency],
   types: [{ name: geminiTypes.request.name }, { name: geminiTypes.draft.name }],
   capabilities: geminiModels.map((model) => ({ name: model, returns: textTypes.text })),
   producers: [
