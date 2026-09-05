@@ -11,6 +11,8 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
+    "@hyperframes/engine": "0.7.101",
+    "@hyperframes/producer": "0.7.101",
     "@qflow/endpoint-kit": "workspace:*",
     "@qflow/hyperframes": "workspace:*",
     "@qflow/media": "workspace:*",
@@ -19,8 +21,8 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/render-hyperframes": "workspace:*",
     "@qflow/runtime": "workspace:*",
-    "@qflow/runtime-kit": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
+    "@qflow/runtime-kit": "workspace:*",
     "hyperframes": "0.7.101"
   },
   "devDependencies": {

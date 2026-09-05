@@ -1,5 +1,5 @@
 import type { BlobRef } from "@qflow/protocol";
-import type { MediaInspection, MediaRational, MediaStreamSelection, RenderedVisual, TimelineAudio } from "@qflow/media";
+import type { MediaFrameRange, MediaInspection, MediaRational, MediaStreamSelection, RenderedVisual, TimelineAudio } from "@qflow/media";
 
 export type MediaSelectionRequest = {
   readonly video:
@@ -166,6 +166,7 @@ export type AudioProgramPlan = {
 
 export type RenderAudioNeed = {
   readonly plan: AudioProgramPlan;
+  readonly range?: MediaFrameRange;
 };
 
 export type MuxMediaNeed = {

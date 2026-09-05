@@ -373,6 +373,9 @@ function renderElement(
         `data-playback-rate="${sampledPlaybackRate(segment.rate, element.sampling!.sourceFrameRate, context.programNumerator, context.programDenominator)}"`,
         `data-qflow-source-frame="${run.sourceFrame.numerator}/${run.sourceFrame.denominator}"`,
         `data-qflow-source-rate="${segment.rate.numerator}/${segment.rate.denominator}"`,
+        `data-qflow-start-frame="${startFrame}"`,
+        `data-qflow-end-frame="${startFrame + durationFrames}"`,
+        `data-qflow-source-fps="${element.sampling!.sourceFrameRate.numerator}/${element.sampling!.sourceFrameRate.denominator}"`,
         `style="${escapeHtml(inlineStyle)}"`,
         attributes(element.attributes).trim(),
         "muted",
@@ -401,7 +404,9 @@ function renderElement(
       `height="${element.surface.height}"`,
     ].join(" ");
     if (element.surface.timing.kind === "still") return `<img ${common} ${surface} src="${source}"/>`;
-    return `<video ${common} ${surface} muted playsinline src="${source}"></video>`;
+    const timing = element.surface.timing;
+    const exact = `data-qflow-start-frame="${context.presentStartFrame}" data-qflow-end-frame="${context.presentStartFrame + timing.frameCount}" data-qflow-source-frame="0/1" data-qflow-source-rate="1/1" data-qflow-source-fps="${timing.frameRate.numerator}/${timing.frameRate.denominator}"`;
+    return `<video ${common} ${surface} ${exact} muted playsinline src="${source}"></video>`;
   }
 
   const media = [
@@ -413,7 +418,8 @@ function renderElement(
   ].filter(Boolean).join(" ");
   const source = escapeHtml(hyperframesResourceUri(element.artifact.resource));
   if (element.kind === "image") return `<img ${common} ${media} src="${source}"/>`;
-  return `<video ${common} ${media} src="${source}">${descendants}</video>`;
+  const exact = `data-qflow-start-frame="${context.presentStartFrame}" data-qflow-end-frame="${context.presentStartFrame + context.presentDurationFrames}" data-qflow-source-frame="0/1" data-qflow-source-rate="1/1" data-qflow-source-fps="${context.programNumerator}/${context.programDenominator}"`;
+  return `<video ${common} ${media} ${exact} src="${source}">${descendants}</video>`;
 }
 
 function renderVisualPresent(
