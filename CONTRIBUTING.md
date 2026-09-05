@@ -24,18 +24,18 @@ pnpm install --frozen-lockfile
 ```
 
 Live Builds additionally need Python 3.10–3.13, uv, ffmpeg and Chromium. The
-[Development Guide](https://docs.qflow.ai/guide/develop) lists what each one is for.
+[Development Guide](https://qflow.ai/guide/develop/) lists what each one is for.
 
 ## Make the change
 
 | Where you are working | Guide |
 | --- | --- |
-| A new Author Package | [Adding an Author Package](https://docs.qflow.ai/guide/author-packages) |
-| A new Provider | [Adding a Provider](https://docs.qflow.ai/guide/providers) |
-| Component internals | [Component Anatomy](https://docs.qflow.ai/guide/component-anatomy) |
-| Compilation, Runs and Builds | [Runtime](https://docs.qflow.ai/guide/runtime) |
-| Naming, module boundaries, wire data | [Conventions](https://docs.qflow.ai/guide/conventions) |
-| Tests and environment-gated suites | [Testing](https://docs.qflow.ai/guide/testing) |
+| A new Author Package | [Adding an Author Package](https://qflow.ai/guide/author-packages/) |
+| A new Provider | [Adding a Provider](https://qflow.ai/guide/providers/) |
+| Component internals | [Component Anatomy](https://qflow.ai/guide/component-anatomy/) |
+| Compilation, Runs and Builds | [Runtime](https://qflow.ai/guide/runtime/) |
+| Naming, module boundaries, wire data | [Conventions](https://qflow.ai/guide/conventions/) |
+| Tests and environment-gated suites | [Testing](https://qflow.ai/guide/testing/) |
 
 English and Chinese documentation live side by side under `docs/` and `docs/zh/`. A change to one
 page belongs with the change to its counterpart.

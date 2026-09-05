@@ -13,7 +13,7 @@
   &nbsp;&bull;&nbsp;
   <a href="https://qflow.ai/quickstart/"><strong>Quickstart</strong></a>
   &nbsp;&bull;&nbsp;
-  <a href="https://qflow.ai/develop/"><strong>Develop</strong></a>
+  <a href="https://qflow.ai/guide/develop/"><strong>Develop</strong></a>
   &nbsp;&bull;&nbsp;
   <a href="./README.zh-CN.md"><strong>简体中文</strong></a>
 </p>
@@ -168,7 +168,7 @@ unrelated videos is a great candidate for contribution. You can ask your Agent t
 Qflow's `packages/` folder, then submit it to us in a Pull Request. Ordinary one-off components can
 remain project-local.
 
-The [Development Guide](https://qflow.ai/develop/) covers the prerequisites, the daily
+The [Development Guide](https://qflow.ai/guide/develop/) covers the prerequisites, the daily
 commands and the repository layout.
 
 <table>
