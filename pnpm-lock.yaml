@@ -2449,9 +2449,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/provider-hyperframes-local':
-        specifier: workspace:*
-        version: link:../provider-hyperframes-local
       '@qflow/provider-qflowhub':
         specifier: workspace:*
         version: link:../provider-qflowhub
@@ -2461,9 +2458,6 @@ importers:
       '@qflow/provider-vertex':
         specifier: workspace:*
         version: link:../provider-vertex
-      '@qflow/render-hyperframes':
-        specifier: workspace:*
-        version: link:../render-hyperframes
       '@qflow/run-markup':
         specifier: workspace:*
         version: link:../run-markup
