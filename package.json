@@ -86,7 +86,7 @@
     "@qflow/media-pipeline": "workspace:*",
     "@qflow/media-track": "workspace:*",
     "@qflow/media-track-studio": "workspace:*",
-    "@qflow/mimo-tts": "workspace:*",
+    "@qflow/mimo-speech": "workspace:*",
     "@qflow/minimax-h3": "workspace:*",
     "@qflow/nano-banana": "workspace:*",
     "@qflow/narrative": "workspace:*",

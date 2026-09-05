@@ -8,7 +8,7 @@ const NANO_BANANA: ModuleRef = { name: "@qflow/nano-banana", version: "1" };
 const SEEDREAM: ModuleRef = { name: "@qflow/seedream", version: "1" };
 const MINIMAX: ModuleRef = { name: "@qflow/minimax-h3", version: "1" };
 const GROK: ModuleRef = { name: "@qflow/grok-imagine", version: "1" };
-const MIMO_TTS: ModuleRef = { name: "@qflow/mimo-tts", version: "1" };
+const MIMO_SPEECH: ModuleRef = { name: "@qflow/mimo-speech", version: "1" };
 
 const seedance = (name: string, model: string): GenerationWireMapping => ({
   capability: { module: SEEDANCE, name }, result: "video", routes: [{ model }],
@@ -109,10 +109,18 @@ export const hypiHubMappings: readonly GenerationWireMapping[] = [
     },
   },
   {
-    capability: { module: MIMO_TTS, name: "mimo-v2.5-tts-voicedesign" }, result: "audio", routes: [{ model: "mimo-v2.5-tts-voicedesign" }],
+    capability: { module: MIMO_SPEECH, name: "mimo-v2.5-tts-voicedesign" }, result: "audio", routes: [{ model: "mimo-v2.5-tts-voicedesign" }],
     fields: {
       text: { as: "value", field: "input" },
       voiceDescription: { as: "value", field: "voice_description" },
+    },
+  },
+  {
+    capability: { module: MIMO_SPEECH, name: "mimo-v2.5-tts-voiceclone" }, result: "audio", routes: [{ model: "mimo-v2.5-tts-voiceclone" }],
+    fields: {
+      text: { as: "value", field: "input" },
+      instruction: { as: "value", field: "prompt" },
+      voiceReference: { as: "urlArray", field: "reference_audio" },
     },
   },
 ];

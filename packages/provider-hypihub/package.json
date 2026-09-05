@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@qflow/driver-node": "workspace:*",
-    "@qflow/mimo-tts": "workspace:*",
+    "@qflow/mimo-speech": "workspace:*",
     "@qflow/seedance": "workspace:*",
     "@qflow/speech": "workspace:*"
   }
