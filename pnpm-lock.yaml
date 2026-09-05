@@ -2629,6 +2629,9 @@ importers:
       '@qflow/component-kit':
         specifier: workspace:*
         version: link:../component-kit
+      '@qflow/core':
+        specifier: workspace:*
+        version: link:../core
       '@qflow/driver-node':
         specifier: workspace:*
         version: link:../driver-node
@@ -2660,9 +2663,6 @@ importers:
       '@qflow/artifact-store-fs':
         specifier: workspace:*
         version: link:../artifact-store-fs
-      '@qflow/core':
-        specifier: workspace:*
-        version: link:../core
       '@qflow/credential-store-env':
         specifier: workspace:*
         version: link:../credential-store-env

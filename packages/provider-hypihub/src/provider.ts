@@ -14,6 +14,7 @@ import { createQflowHubGeminiGenerator } from "./gemini.js";
 import { hypiHubRouteForCapability, hypiHubRoutes } from "./routes.js";
 import { QflowHubUploader } from "./upload.js";
 import { transcribeWithQflowHub, whisperXAlignmentRequest } from "./whisperx.js";
+import { createQflowHubPricingClient } from "./pricing.js";
 
 export const hypiHubProviderModuleRef = { name: "@qflow/provider-qflowhub", version: "1" } as const;
 
@@ -293,9 +294,10 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
       throw new Error(guidedMessage(error), { cause: error });
     }
   };
-  return defineEndpointPackage({
+  const apiKey = options.apiKey ?? credentialRef("os", "qflowhub.oauth");
+  const endpointPackage = defineEndpointPackage({
     module: hypiHubProviderModuleRef, facet: "gateway", instance: options.instance ?? "qflowhub.default", pool: options.pool ?? options.instance ?? "qflowhub.default",
-    credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") }, credentialInputs: { apiKey: { label: "QflowHub login" } }, defaultConcurrency: options.defaultConcurrency ?? 3,
+    credentials: { apiKey }, credentialInputs: { apiKey: { label: "QflowHub login" } }, defaultConcurrency: options.defaultConcurrency ?? 3,
     capabilities: [
       ...hypiHubRoutes
       .filter((route) => options.audio !== false || route.media !== "audio")
@@ -318,4 +320,5 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
       },
     ],
   });
+  return Object.assign(endpointPackage, createQflowHubPricingClient({ client, apiKey }));
 }
