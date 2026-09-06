@@ -1,9 +1,12 @@
-# `@qflow/studio-adapter`
+# `qflow/studio-adapter`
 
 The stable companion-package ABI understood by Qflow Studio. It carries only
 presentation, lineage, inspector and interaction DTOs plus helpers that do not
 encode the official video UI policy. Domain computation and manifests do not depend on it;
 package activation can combine domain facets with a separate Companion implementation.
+
+External packages use the public imports below with `qflow` as a development dependency, then ship
+compiled JavaScript. The active Distribution supplies these APIs when Studio loads the component.
 
 ## A minimal project Track Companion
 
@@ -12,8 +15,8 @@ accepts a literal string `label` attribute. The Companion can reuse generic term
 adding package-specific presentation and one Inspector field:
 
 ```ts
-import { compositionTypes } from "@qflow/composition";
-import type { StudioTrackCompanion } from "@qflow/studio-adapter";
+import { compositionTypes } from "qflow/composition";
+import type { StudioTrackCompanion } from "qflow/studio-adapter";
 
 export const companions: readonly StudioTrackCompanion[] = [{
   id: "score-strip",
@@ -49,7 +52,7 @@ Merge the facet into the package's existing activation. In this example `authorC
 exports its existing modules, deterministic component and Markup facets:
 
 ```ts
-import { createStudioTrackCompanionHostFacet } from "@qflow/studio-adapter";
+import { createStudioTrackCompanionHostFacet } from "qflow/studio-adapter";
 import authorContribution from "./author-activation.js";
 import { companions } from "./studio.js";
 

@@ -21,6 +21,7 @@
     "@qflow/driver-node": "workspace:*",
     "@qflow/mimo-speech": "workspace:*",
     "@qflow/seedance": "workspace:*",
-    "@qflow/speech": "workspace:*"
+    "@qflow/speech": "workspace:*",
+    "@qflow/volcengine-matting": "workspace:*"
   }
 }

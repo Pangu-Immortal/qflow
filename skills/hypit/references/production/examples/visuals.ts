@@ -1,8 +1,8 @@
-import { sealVisualTrack } from "@qflow/composition";
-import type { FrameSpan } from "@qflow/composition";
-import type { FontArtifactRef } from "@qflow/media";
-import type { ProgramSpace } from "@qflow/program-space";
-import { VISUAL_IR_V1 } from "@qflow/visual-ir";
+import { sealVisualTrack } from "qflow/composition";
+import type { FrameSpan } from "qflow/composition";
+import type { FontArtifactRef } from "qflow/media";
+import type { ProgramSpace } from "qflow/program-space";
+import { VISUAL_IR_V1 } from "qflow/visual-ir";
 
 // The caller supplies its projected Window, resolved Frame and selected font faces.
 export function renderCard(input: {

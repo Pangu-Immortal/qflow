@@ -1,5 +1,9 @@
 # `@qflow/speech`
 
+External components use `qflow/speech` from their `qflow` development dependency. The package
+owns the types and helpers below; Source imports retain the `@qflow/speech@1` Module identity.
+
+
 Public contracts for speech duration, normalized semantic Takes and provider-neutral evidence audio.
 A `SemanticTake` contains one normalized media product, one authored Segment, its words and local
 frame anchors. Ordered Takes are assembled by `@qflow/speech-track` into a `SemanticTrack`, which is

@@ -1,6 +1,6 @@
-import type { SynchronizedMedia } from "@qflow/media";
-import type { Narrative, NarrativeExcerpt } from "@qflow/narrative";
-import { materializeSemanticTake } from "@qflow/speech";
+import type { SynchronizedMedia } from "qflow/media";
+import type { Narrative, NarrativeExcerpt } from "qflow/narrative";
+import { materializeSemanticTake } from "qflow/speech";
 
 // Expose this adapter through a project Producer/Surface with a take output.
 export function wordlessTake(

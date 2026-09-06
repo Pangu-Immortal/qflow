@@ -19,6 +19,18 @@ import type {
 } from "@qflow/runtime";
 import { capacityUnits, verifyCredentialRef } from "@qflow/runtime";
 
+export type { CanonicalValue, CapabilityRef, ModuleRef, StoredValue, TypeRef } from "@qflow/protocol";
+export type {
+  CapacityResourceClaim,
+  CredentialAcquisition,
+  CredentialRef,
+  CredentialValue,
+  OperationFailure,
+  OperationProgress,
+  OperationReceipt,
+  ResourceStore,
+} from "@qflow/runtime";
+
 export type Awaitable<T> = T | Promise<T>;
 
 export type EndpointFulfillment = {
