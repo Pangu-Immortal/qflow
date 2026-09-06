@@ -1,5 +1,5 @@
-import type { FontStackRef } from "@qflow/media";
-import type { SvsRecipe } from "@qflow/svs";
+import type { FontStackRef } from "qflow/media";
+import type { SvsRecipe } from "qflow/svs";
 
 /** The two values a Style decoder receives after author references are resolved. */
 export type ExampleStyleInput = {

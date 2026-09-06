@@ -4,6 +4,20 @@
   "description": "Qflow video authoring Distribution for AI agents",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
+  "exports": {
+    "./artifact": "./packages/artifact/src/index.ts",
+    "./author-kit": "./packages/author-kit/src/index.ts",
+    "./composition": "./packages/composition/src/index.ts",
+    "./media": "./packages/media/src/index.ts",
+    "./program-space": "./packages/program-space/src/index.ts",
+    "./semantic-track": "./packages/semantic-track/src/index.ts",
+    "./spatial": "./packages/spatial/src/index.ts",
+    "./studio-adapter": "./packages/studio-adapter/src/index.ts",
+    "./svs": "./packages/svs/src/index.ts",
+    "./temporal": "./packages/temporal/src/index.ts",
+    "./temporal-markup": "./packages/temporal-markup/src/index.ts",
+    "./visual-ir": "./packages/visual-ir/src/index.ts"
+  },
   "bin": {
     "qflow": "./bin/qflow.mjs",
     "qflow-studio": "./bin/qflow-studio.mjs"
@@ -51,6 +65,7 @@
   },
   "devDependencies": {
     "@qflow/artifact": "workspace:*",
+    "@qflow/author-kit": "workspace:*",
     "@qflow/resource-store-fs": "workspace:*",
     "@qflow/resource-store-s3": "workspace:*",
     "@qflow/build-result": "workspace:*",
@@ -77,6 +92,7 @@
     "@qflow/generation": "workspace:*",
     "@qflow/gemini": "workspace:*",
     "@qflow/gpt-image": "workspace:*",
+    "@qflow/gpt-image-kits": "workspace:*",
     "@qflow/grok-imagine": "workspace:*",
     "@qflow/hyperframes": "workspace:*",
     "@qflow/image-compose": "workspace:*",

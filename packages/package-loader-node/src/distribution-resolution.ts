@@ -46,6 +46,18 @@ function distributionPackageEntry(root: string, specifier: string): string | und
   return declared === undefined ? undefined : resolve(packageRoot, declared);
 }
 
+function distributionPublicEntry(root: string, specifier: string): string | undefined {
+  if (!specifier.startsWith("qflow/")) return undefined;
+  const manifestPath = join(root, "package.json");
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
+    readonly name?: string;
+    readonly exports?: Readonly<Record<string, string>>;
+  };
+  if (manifest.name !== "qflow") return undefined;
+  const declared = manifest.exports?.[`./${specifier.slice("qflow/".length)}`];
+  return declared === undefined ? undefined : resolve(root, declared);
+}
+
 /**
  * Let external project activations import official packages from a read-only Distribution checkout.
  * The @qflow namespace belongs to the active Distribution and cannot be shadowed by project installs.
@@ -59,7 +71,7 @@ export function installDistributionPackageResolution(roots: readonly string[]): 
   const rootUrls = installed.map((root) => pathToFileURL(`${root}/`).href);
   registerHooks({
     resolve(specifier, context, nextResolve) {
-      if (specifier.startsWith("@qflow/")) {
+      if (specifier.startsWith("@qflow/") || specifier.startsWith("qflow/")) {
         // A contributor checkout may resolve through workspace links. An installed
         // monolithic Distribution resolves from its own packages/services tree.
         // Accept ordinary resolution only when its real target remains inside this
@@ -73,7 +85,9 @@ export function installDistributionPackageResolution(roots: readonly string[]): 
           // Try the explicit Distribution resolvers below.
         }
         for (const root of installed) {
-          const entry = distributionPackageEntry(root, specifier);
+          const entry = specifier.startsWith("@qflow/")
+            ? distributionPackageEntry(root, specifier)
+            : distributionPublicEntry(root, specifier);
           if (entry !== undefined) return { url: pathToFileURL(entry).href, shortCircuit: true };
         }
         throw new Error(`Active Qflow Distribution does not provide ${specifier}`);
@@ -100,7 +114,7 @@ export function installExternalPackageResolution(roots: readonly string[]): void
   const parentUrls = externalInstalled.map((root) => pathToFileURL(join(root, "__qflow_external__.mjs")).href);
   registerHooks({
     resolve(specifier, context, nextResolve) {
-      if (specifier.startsWith("@qflow/") || !barePackageSpecifier(specifier)) {
+      if (specifier.startsWith("@qflow/") || specifier.startsWith("qflow/") || !barePackageSpecifier(specifier)) {
         return nextResolve(specifier, context);
       }
       try {
