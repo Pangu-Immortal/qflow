@@ -62,6 +62,12 @@ test("QflowHub declares its own credential acquisition flow", () => {
   assert.equal(credential?.acquisition?.tokenEndpoint, "https://qflow.ai/oauth/token");
 });
 
+test("QflowHub derives credential acquisition from its configured service origin", () => {
+  const [credential] = createQflowHubProvider({ baseUrl: "https://gateway.example.test/v1" }).credentials;
+  assert.equal(credential?.acquisition?.authorizationEndpoint, "https://gateway.example.test/oauth/consent");
+  assert.equal(credential?.acquisition?.tokenEndpoint, "https://gateway.example.test/oauth/token");
+});
+
 test("QflowHub doctor checks the authenticated catalogue only when actively invoked", async () => {
   let calls = 0;
   const diagnostics = await diagnoseQflowHubProvider({ fetch: async (input, init) => {

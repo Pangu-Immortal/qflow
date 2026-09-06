@@ -8,13 +8,14 @@ import {
 } from "@qflow/package-loader-node";
 import type { NodePackageSelectionRequest } from "@qflow/package-loader-node";
 import { EndpointRegistry, NodeDriver } from "@qflow/driver-node";
-import type { EndpointFulfillment, EndpointRegistrar, EndpointScheduling } from "@qflow/endpoint-kit";
+import type { EndpointCredential, EndpointFulfillment, EndpointRegistrar, EndpointScheduling } from "@qflow/endpoint-kit";
 import { endpointResourceClaims } from "@qflow/endpoint-kit";
 import { assertBuildId, canonicalize, canonicalStringify } from "@qflow/protocol";
 import type { CanonicalValue, CapabilityRef, Need } from "@qflow/protocol";
 import {
   CompositeCredentialStore,
   capacityUnits,
+  writableCredentialStore,
 } from "@qflow/runtime";
 import type { CredentialStore, CredentialValue, ResourceStore } from "@qflow/runtime";
 import { FileResourceStore } from "@qflow/resource-store-fs";
@@ -702,7 +703,7 @@ export async function invokeRuntimeConfigNeed(
   if (activation === undefined) throw new Error(`Endpoint ${registration.id} is not declared by ${absolute}`);
   const stores = await openCredentialStores(document, root, hostStateRoot, registry);
   try {
-    const credentials: Record<string, CredentialValue> = {};
+    const credentials: Record<string, EndpointCredential> = {};
     for (const slot of activation.endpoint.credentials) {
       const value = await stores.store.resolve(slot.ref);
       if (value === undefined) {
@@ -711,7 +712,13 @@ export async function invokeRuntimeConfigNeed(
             ? `Set ${slot.ref.key} in this process environment.`
             : `Configure it with: qflow auth login ${slot.endpoint} --runtime ${absolute}`}`);
       }
-      credentials[slot.slot] = value;
+      const writable = await writableCredentialStore(stores.store, slot.ref);
+      credentials[slot.slot] = {
+        ...value,
+        ...(writable === undefined ? {} : {
+          replace: async (replacement: CredentialValue) => await writable.put(slot.ref, replacement),
+        }),
+      };
     }
     return await registration.handler({
       command: { kind: "fulfill-need", id: `command:${need.id}`, need },

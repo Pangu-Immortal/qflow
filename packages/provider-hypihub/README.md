@@ -35,9 +35,9 @@ Gemini VLM is exposed as the Provider-neutral `@qflow/gemini` Runtime capability
 transcription is exposed as the same `@qflow/whisperx` alignment capability implemented by the local
 WhisperX Provider. An Author
 Source can select the exact model while the Runtime chooses QflowHub or Vertex. Existing embedded
-callers can still use the exported `createQflowHubGeminiGenerator`. Run `qflow auth login qflowhub.default --runtime qflow.runtime.json` to sign in with QflowHub OAuth (and optionally set `QFLOWHUB_BASE_URL`; either the origin or
-an existing `/v1`/`/v1beta` base is accepted) only when choosing QflowHub. The Runtime Provider also
-accepts the origin or either versioned base and normalizes it to `/v1`; missing or insufficient user
+callers can still use the exported `createQflowHubGeminiGenerator`. Run `qflow auth login qflowhub.default --runtime qflow.runtime.json` to sign in with QflowHub OAuth only when choosing QflowHub. A Profile may set `baseUrl`
+to the selected deployment's origin or an existing `/v1`/`/v1beta` base. The Runtime Provider
+normalizes it to `/v1`; missing or insufficient user
 credentials should be resolved at [qflow.ai](https://qflow.ai). Referenced image, audio and video
 Resources are uploaded through a session from `POST /v1/files/uploads`, followed by the private
 regional multipart instructions returned by QflowHub. The Provider follows the server-selected part
@@ -45,6 +45,12 @@ size and concurrency, retries only a failed part with a fresh signed URL, comple
 one upload, and then passes the returned HTTPS URL to generation, Gemini or transcription. One
 Resource identity is uploaded once within one Runtime operation. Qflow keeps no upload catalog or
 cross-Build cache. Embedded callers may replace this transport with `publicAssetUrl`.
+
+OAuth login stores the access token, refresh token and expiry as one opaque credential value. The
+Provider refreshes that value shortly before expiry or after an unauthorised response when the
+selected Store is writable. Its Endpoint receives only the credential slot it declared and a narrow
+operation for replacing that same slot; it cannot enumerate the Store, choose another key or read
+another Endpoint's credentials. A raw credential remains an ordinary static API key.
 
 The service currently requires whole-file and per-part SHA-256 values as fields of its signed upload
 protocol. They exist only while transferring bytes; Qflow never uses them as Resource identity,
