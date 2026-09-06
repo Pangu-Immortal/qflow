@@ -13,7 +13,7 @@ const image = {
 const resolve = async () => "data:image/png;base64,AQID";
 const resolveAudio = async () => "data:audio/wav;base64,AQID";
 
-test("QflowHub GPT image requests use canonical edit references and size dimensions", async () => {
+test("QflowHub GPT image requests use canonical edit references and the resolution tier", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "gpt-image-2");
   assert.ok(route);
   const result = await route.compile({
@@ -28,7 +28,7 @@ test("QflowHub GPT image requests use canonical edit references and size dimensi
   assert.deepEqual(result.input, {
     prompt: "edit",
     aspect_ratio: "1:1",
-    size: "1024x1024",
+    size: "1K",
     reference_images: [{ url: "data:image/png;base64,AQID" }],
   });
 });
