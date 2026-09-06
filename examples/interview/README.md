@@ -29,9 +29,9 @@ photographic image prompt stands in for this purpose-made graphic artwork.
 
 ```bash
 qflow check reference.svrun
-qflow measure reference.svml --segment manifest-rule --language en --pace fast --min 4 --max 15 --rounding ceil
-qflow measure reference.svml --segment real-estate-rule --language en --pace fast --min 4 --max 15 --rounding ceil
-qflow measure reference.svml --segment bitcoin-rule --language en --pace fast --min 4 --max 15 --rounding ceil
+qflow measure reference.svml --segment manifest-rule --language en --pace fast --rounding ceil
+qflow measure reference.svml --segment real-estate-rule --language en --pace fast --rounding ceil
+qflow measure reference.svml --segment bitcoin-rule --language en --pace fast --rounding ceil
 qflow plan reference.svrun --runtime ./qflow.runtime.json
 ```
 

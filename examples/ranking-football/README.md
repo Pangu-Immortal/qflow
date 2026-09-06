@@ -28,8 +28,8 @@ With a configured Runtime and installed Distribution, run from this directory:
 
 ```bash
 qflow check reference.svrun
-qflow measure reference.svml --segment ronaldo --language en --pace fast --min 4 --max 15 --rounding ceil
-qflow measure reference.svml --segment messi --language en --pace fast --min 4 --max 15 --rounding ceil
+qflow measure reference.svml --segment ronaldo --language en --pace fast --rounding ceil
+qflow measure reference.svml --segment messi --language en --pace fast --rounding ceil
 qflow plan reference.svrun --runtime ./qflow.runtime.json
 ```
 

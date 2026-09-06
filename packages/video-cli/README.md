@@ -39,7 +39,7 @@ file the caller chose:
 ```bash
 qflow observe <media…> --instruction <text|file> --prompt <text|file> --to notes/frame.md
 qflow transcribe reference.mp4 --to notes/reference.transcript.json [--language en|zh|es]
-qflow measure main.svml --segment hook --language en --pace normal --min 4 --max 15 --rounding round
+qflow measure main.svml --segment hook --language en --pace normal --rounding round
 ```
 
 `observe` uses the Profile's Gemini Endpoint and `transcribe` its `whisperx-alignment` Endpoint (after
