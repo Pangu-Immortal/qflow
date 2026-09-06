@@ -6,10 +6,13 @@ import type { AsyncEndpoint } from "@qflow/endpoint-kit";
 import { geminiCapabilities, sealGeminiRequest } from "@qflow/gemini";
 import type { CanonicalValue, Need } from "@qflow/protocol";
 import { mimoTtsEndpoints } from "@qflow/mimo-tts";
+import type { CredentialValue, WritableCredentialStore } from "@qflow/runtime";
+import { credentialRef } from "@qflow/runtime";
 import { textTypes } from "@qflow/text";
 import { sealSeedanceRequest, seedanceEndpoints } from "@qflow/seedance";
 
 import { createQflowHubProvider } from "../src/provider.js";
+import { decodeQflowHubOAuthCredential, encodeQflowHubOAuthCredential } from "../src/oauth.js";
 
 function need(constraints: CanonicalValue): Need {
   return {
@@ -122,6 +125,71 @@ test("QflowHub uploads referenced Artifacts once, submits their HTTPS URLs, and 
   const completed = await endpoint.poll({ ...common, handle: started.handle });
   assert.equal(completed.status, "completed");
   assert.equal(calls.length, 9);
+});
+
+test("QflowHub refreshes after a provider 401, retries with the new token, and persists rotation", async () => {
+  const request = need(sealSeedanceRequest("seedance-2-mini", {
+    prompt: ["A presenter turns toward camera."],
+    resolution: ["720p"], aspectRatio: ["16:9"], duration: [5],
+    generateAudio: [false], webSearch: [false],
+  }) as unknown as CanonicalValue);
+  const ref = credentialRef("os", "qflowhub.oauth");
+  const initialSecret = encodeQflowHubOAuthCredential({ accessToken: "old-access", refreshToken: "refresh-one" });
+  let saved: CredentialValue | undefined;
+  const credentialStore: WritableCredentialStore = {
+    owns() { return true; },
+    async resolve() { return saved; },
+    async put(_candidate, value) { saved = value; },
+    async delete() { return true; },
+  };
+  const requests: Array<{ readonly url: string; readonly authorization: string | undefined }> = [];
+  const fakeFetch: typeof globalThis.fetch = async (input, init) => {
+    const url = String(input);
+    const headers = init?.headers as Record<string, string> | undefined;
+    requests.push({ url, authorization: headers?.authorization });
+    if (url === "https://qflow.ai/oauth/token") {
+      assert.equal(init?.method, "POST");
+      assert.match(String(init?.body), /grant_type=refresh_token/iu);
+      return Response.json({ access_token: "fresh-access", refresh_token: "refresh-two", expires_in: 3600 });
+    }
+    if (url.endsWith("/v1/models/bytedance%2Fseedance-2-mini")) {
+      if (headers?.authorization === "Bearer old-access") return new Response("expired", { status: 401 });
+      assert.equal(headers?.authorization, "Bearer fresh-access");
+      return Response.json({ endpoints: ["videos"] });
+    }
+    if (url.endsWith("/v1/videos")) {
+      assert.equal(headers?.authorization, "Bearer fresh-access");
+      return Response.json({ id: "job_refresh_test", status: "queued" });
+    }
+    throw new Error(`Unexpected URL ${url}`);
+  };
+  const registry = new EndpointRegistry();
+  await createQflowHubProvider({ fetch: fakeFetch, pollIntervalMs: 0, requestTimeoutMs: 1_000 }).install(registry);
+  const resolution = registry.resolve(request);
+  assert.equal(resolution.status, "resolved");
+  assert.equal(resolution.registration.kind, "asynchronous");
+  const started = await resolution.registration.endpoint.start({
+    command: { kind: "fulfill-need", id: "command:refresh-test", need: request },
+    need: request,
+    artifacts: new MemoryArtifactStore(),
+    credentials: { apiKey: { secret: initialSecret } },
+    credentialStore,
+    operation: "operation:refresh-test",
+  });
+  assert.equal(started.status, "pending");
+  assert.deepEqual(requests.map((item) => [item.url, item.authorization]), [
+    ["https://qflow.ai/v1/models/bytedance%2Fseedance-2-mini", "Bearer old-access"],
+    ["https://qflow.ai/oauth/token", undefined],
+    ["https://qflow.ai/v1/models/bytedance%2Fseedance-2-mini", "Bearer fresh-access"],
+    ["https://qflow.ai/v1/videos", "Bearer fresh-access"],
+  ]);
+  assert(saved !== undefined);
+  const decoded = decodeQflowHubOAuthCredential(saved.secret);
+  assert.equal(decoded.format, "qflow.qflowhub-oauth@1");
+  assert.equal(decoded.accessToken, "fresh-access");
+  assert.equal(decoded.refreshToken, "refresh-two");
+  assert(typeof decoded.expiresAt === "number");
+  assert(decoded.expiresAt > Date.now());
 });
 
 test("QflowHub fulfills Gemini through the Runtime endpoint and uploads every media Artifact", async () => {

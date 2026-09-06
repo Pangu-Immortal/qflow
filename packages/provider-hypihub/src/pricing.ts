@@ -1,5 +1,6 @@
 import type { Need } from "@qflow/protocol";
 import type { CredentialRef, CredentialStore } from "@qflow/runtime";
+import type { QflowHubAuth } from "./oauth.js";
 
 import { hypiHubRouteForCapability } from "./routes.js";
 
@@ -19,7 +20,7 @@ export type QflowHubBuildQuote = {
 };
 
 type QflowHubPricingTransport = {
-  json(path: string, apiKey: string, init?: RequestInit): Promise<Record<string, unknown>>;
+  json(path: string, auth: QflowHubAuth, init?: RequestInit): Promise<Record<string, unknown>>;
 };
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -42,7 +43,7 @@ function capabilityKey(need: Need): string {
 
 async function quoteNeed(
   transport: QflowHubPricingTransport,
-  apiKey: string,
+  auth: QflowHubAuth,
   need: Need,
 ): Promise<QflowHubQuoteItem> {
   const route = hypiHubRouteForCapability(need.capability);
@@ -57,7 +58,7 @@ async function quoteNeed(
   if (typeof input.resolution === "string") dimensions.resolution = input.resolution;
   const hasReferenceVideo = typeof input.ref_video_url === "string"
     || (Array.isArray(input.reference_videos) && input.reference_videos.length > 0);
-  const response = await transport.json("/pricing/quote", apiKey, {
+  const response = await transport.json("/pricing/quote", auth, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
@@ -80,6 +81,7 @@ async function quoteNeed(
 export function createQflowHubPricingClient(options: {
   readonly client: QflowHubPricingTransport;
   readonly apiKey: CredentialRef;
+  readonly auth: (secret: string, credentials: CredentialStore) => QflowHubAuth;
 }): {
   quoteMany(needs: readonly Need[], credentials: CredentialStore): Promise<QflowHubBuildQuote>;
 } {
@@ -97,7 +99,8 @@ export function createQflowHubPricingClient(options: {
       const credential = await credentials.resolve(options.apiKey);
       assert(credential !== undefined && credential.secret.length > 0,
         "QflowHub login is unavailable; run qflow auth login for QflowHub");
-      const items = await Promise.all(needs.map((need) => quoteNeed(options.client, credential.secret, need)));
+      const auth = options.auth(credential.secret, credentials);
+      const items = await Promise.all(needs.map((need) => quoteNeed(options.client, auth, need)));
       return {
         format: "qflow.build-quote@1",
         status: "complete",
