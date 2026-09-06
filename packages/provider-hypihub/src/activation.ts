@@ -1,6 +1,7 @@
 import {
   createRuntimeEndpointAdapterFacet,
   runtimeConfigCredentialRef,
+  runtimeConfigActionLimits,
   runtimeConfigExact,
   runtimeConfigObject,
   runtimeConfigPositiveInteger,
@@ -18,6 +19,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
       "baseUrl",
       "apiKey",
       "defaultConcurrency",
+      "actionLimits",
       "capabilityConcurrency",
       "pollIntervalMs",
       "requestTimeoutMs",
@@ -38,6 +40,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
     }
     const apiKey = runtimeConfigCredentialRef(config.apiKey, "QflowHub apiKey");
     if (apiKey === undefined) throw new Error("QflowHub apiKey CredentialRef is required");
+    const actionLimits = runtimeConfigActionLimits(config.actionLimits);
     const defaultConcurrency = runtimeConfigPositiveInteger(config.defaultConcurrency, "QflowHub defaultConcurrency");
     const pollIntervalMs = runtimeConfigPositiveInteger(config.pollIntervalMs, "QflowHub pollIntervalMs");
     const requestTimeoutMs = runtimeConfigPositiveInteger(config.requestTimeoutMs, "QflowHub requestTimeoutMs");
@@ -58,6 +61,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
         ...(baseUrl === undefined ? {} : { baseUrl }),
         apiKey,
         ...(defaultConcurrency === undefined ? {} : { defaultConcurrency }),
+        ...(actionLimits === undefined ? {} : { actionLimits }),
         ...(capabilityConcurrency === undefined ? {} : { capabilityConcurrency }),
         ...(pollIntervalMs === undefined ? {} : { pollIntervalMs }),
         ...(requestTimeoutMs === undefined ? {} : { requestTimeoutMs }),

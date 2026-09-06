@@ -698,7 +698,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
     ],
     cancel: [
       colors.accent(colors.strong("qflow cancel")),
-      colors.dim("Withdraw one Build and honestly reconcile work already submitted to Providers."),
+      colors.dim("Stop one Build and request cancellation of submitted work when supported."),
       "",
       "  qflow cancel <build-id> [--runtime <profile>] [--reason <text>]",
     ],

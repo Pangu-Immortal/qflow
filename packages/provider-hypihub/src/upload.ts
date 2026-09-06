@@ -1,3 +1,4 @@
+import { requestDeadline } from "@qflow/runtime-kit";
 import { createHash } from "node:crypto";
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -92,15 +93,14 @@ export class QflowHubUploader {
   }
 
   async #json(path: string, apiKey: string, init: RequestInit = {}): Promise<Record<string, unknown>> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.#requestTimeoutMs);
+    const deadline = requestDeadline(this.#requestTimeoutMs);
     try {
-      const response = await this.#fetch(`${this.#baseUrl}${path}`, {
+      const response = await deadline.wait(this.#fetch(`${this.#baseUrl}${path}`, {
         ...init,
-        signal: controller.signal,
+        signal: deadline.signal,
         headers: { authorization: `Bearer ${apiKey}`, ...(init.headers ?? {}) },
-      });
-      const text = await response.text();
+      }));
+      const text = await deadline.wait(response.text());
       let body: unknown = {};
       try { body = text.length === 0 ? {} : JSON.parse(text); }
       catch { throw new Error(`QflowHub returned invalid JSON (${response.status})`); }
@@ -109,7 +109,7 @@ export class QflowHubUploader {
       }
       return object(body, "QflowHub response");
     } finally {
-      clearTimeout(timer);
+      deadline.finish();
     }
   }
 
@@ -162,19 +162,18 @@ export class QflowHubUploader {
       if (attempt > 1) {
         signed = (await this.#signParts(uploadId, [declaration], apiKey)).get(declaration.part_number) ?? {};
       }
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), this.#uploadPartTimeoutMs);
+      const deadline = requestDeadline(this.#uploadPartTimeoutMs);
       try {
         const url = requiredString(signed.url, "QflowHub signed upload URL");
         assertHTTPS(url, "QflowHub signed upload URL");
         const body = new ArrayBuffer(bytes.byteLength);
         new Uint8Array(body).set(bytes);
-        const response = await this.#fetch(url, {
+        const response = await deadline.wait(this.#fetch(url, {
           method: "PUT",
           headers: this.#signedHeaders(signed.headers, declaration),
           body,
-          signal: controller.signal,
-        });
+          signal: deadline.signal,
+        }));
         if (!response.ok) throw new Error(`S3 rejected upload part with HTTP ${response.status}`);
         const etag = response.headers.get("etag");
         assert(etag !== null && etag.length > 0,
@@ -192,7 +191,7 @@ export class QflowHubUploader {
           throw new Error(`QflowHub upload part ${declaration.part_number} failed after ${attempt} attempts`);
         }
       } finally {
-        clearTimeout(timer);
+        deadline.finish();
       }
     }
     throw new Error(`QflowHub upload part ${declaration.part_number} failed`);
