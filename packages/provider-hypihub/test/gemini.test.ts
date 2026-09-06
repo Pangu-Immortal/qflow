@@ -44,13 +44,16 @@ test("QflowHub Gemini uses native wire format for text, image and video parts", 
   ] }]);
 });
 
-test("QflowHub Gemini points unavailable models to QflowHub", async () => {
+test("QflowHub Gemini reports unavailable models without misdiagnosing authentication", async () => {
   const generate = createQflowHubGeminiGenerator({
     apiKey: "test-key",
     fetch: async () => new Response("missing", { status: 404 }),
   });
-  await assert.rejects(() => generate({ instruction: "x", parts: [{ text: "x" }] }),
-    /sign in to QflowHub at https:\/\/qflow\.ai with qflow auth login/iu);
+  await assert.rejects(() => generate({ instruction: "x", parts: [{ text: "x" }] }), (error) => {
+    assert.match(String(error), /HTTP 404/iu);
+    assert.doesNotMatch(String(error), /auth login/iu);
+    return true;
+  });
 });
 
 test("QflowHub Gemini retries upstream rate limits without reuploading files", async () => {

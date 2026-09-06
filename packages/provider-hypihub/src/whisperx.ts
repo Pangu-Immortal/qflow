@@ -3,6 +3,7 @@ import type { AlignedTranscriptEvidence, SpeechTranscriptPassage } from "@qflow/
 import type { ArtifactStore } from "@qflow/runtime";
 import { whisperXCapabilities } from "@qflow/whisperx";
 import type { WhisperXAlignmentRequest } from "@qflow/whisperx";
+import type { QflowHubAuth } from "./oauth.js";
 
 type RawWord = { readonly word?: unknown; readonly text?: unknown; readonly start?: unknown; readonly end?: unknown; readonly score?: unknown };
 type RawSegment = { readonly start?: unknown; readonly end?: unknown; readonly words?: unknown };
@@ -87,25 +88,25 @@ export function whisperXAlignmentRequest(value: unknown): WhisperXAlignmentReque
 
 export async function transcribeWithQflowHub(
   client: {
-    upload(artifact: WhisperXAlignmentRequest["audio"], artifacts: ArtifactStore, apiKey: string): Promise<string>;
-    transcribe(body: Record<string, unknown>, apiKey: string): Promise<QflowHubWhisperXResponse>;
+    upload(artifact: WhisperXAlignmentRequest["audio"], artifacts: ArtifactStore, auth: QflowHubAuth): Promise<string>;
+    transcribe(body: Record<string, unknown>, auth: QflowHubAuth): Promise<QflowHubWhisperXResponse>;
   },
   request: WhisperXAlignmentRequest,
   artifacts: ArtifactStore,
-  apiKey: string,
+  auth: QflowHubAuth,
   model: string,
 ): Promise<AlignedTranscriptEvidence> {
   const bytes = await artifacts.get(request.audio.digest);
   assert(bytes !== undefined && bytes.byteLength === request.audio.size,
     `QflowHub WhisperX evidence Artifact ${request.audio.digest} is unavailable or has changed`);
-  const url = await client.upload(request.audio, artifacts, apiKey);
+  const url = await client.upload(request.audio, artifacts, auth);
   return interpretQflowHubWhisperXResponse(await client.transcribe({
     model,
     url,
     language: request.language,
     response_format: "verbose_json",
     timestamp_granularities: ["word", "segment"],
-  }, apiKey), request.sampleFrames);
+  }, auth), request.sampleFrames);
 }
 
 export { speechEvidenceTypes, whisperXCapabilities };
