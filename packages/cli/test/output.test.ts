@@ -106,7 +106,7 @@ test("plan names the Provider and price page behind each request, and points at 
   assert.match(without, /Pass --runtime <profile>/u);
   assert.doesNotMatch(without, /Providers and price pages/u);
 
-  const output = capture(human, { kind: "plan", machine: { ...base, providerRequestCount: 2, localRequestCount: 1, unresolvedRequestCount: 1, providers: [
+  const output = capture(human, { kind: "plan", machine: { ...base, providerRequestCount: 2, localRequestCount: 1, unresolvedRequestCount: 0, unsupportedRequestCount: 1, providers: [
     {
       request: "seedance:one",
       capability: "@qflow/seedance@1#seedance-2-mini",
@@ -117,7 +117,17 @@ test("plan names the Provider and price page behind each request, and points at 
     },
     { request: "media:one", capability: "@qflow/media@1#inspect", status: "resolved", endpoint: "media.local", use: "@qflow/provider-media-local", pricing: { kind: "local" } },
     { request: "whisper:one", capability: "@qflow/whisperx@1#whisperx-alignment", status: "resolved", endpoint: "whisperx.remote", use: "@qflow/provider-example" },
-    { request: "image:one", capability: "@qflow/gpt-image@1#gpt-image-2", status: "unresolved" },
+    {
+      request: "image:one",
+      capability: "@qflow/gpt-image@1#gpt-image-2",
+      status: "unsupported",
+      endpoint: "qflowhub.default",
+      use: "@qflow/provider-qflowhub",
+      rejections: [{
+        endpoint: "qflowhub.default",
+        message: "transparent background is available only at 1K; requested 2K",
+      }],
+    },
   ], needs: [{
     request: "seedance:one",
     step: "video::component::presenter.generate",
@@ -130,7 +140,8 @@ test("plan names the Provider and price page behind each request, and points at 
   assert.match(output, /@qflow\/seedance#seedance-2-mini\n\s+qflowhub\.default \(@qflow\/provider-qflowhub\)\s+·\s+https:\/\/qflow\.ai\/commercial\/pricing\//u);
   assert.match(output, /media\.local .*·\s+local, no Provider charge/u);
   assert.match(output, /whisperx\.remote .*·\s+price source unknown/u);
-  assert.match(output, /gpt-image#gpt-image-2\n\s+no selected Endpoint accepts this request\n/u);
+  assert.match(output, /Unsupported\s+1/u);
+  assert.match(output, /gpt-image#gpt-image-2\n\s+qflowhub\.default: transparent background is available only at 1K; requested 2K\n/u);
   assert.match(output, /prompt 42 chars · duration 10 · resolution 720p · 1 image reference · input produced during Build/u);
   assert.doesNotMatch(output, /Pass --runtime/u);
   assert.doesNotMatch(output, /seedance@1#/u);
@@ -139,6 +150,45 @@ test("plan names the Provider and price page behind each request, and points at 
     { request: "seedance:one", capability: "@qflow/seedance@1#seedance-2-mini", status: "ambiguous", endpoints: ["qflowhub.default", "kie.default"] },
   ] } });
   assert.match(verbose, /@qflow\/seedance@1#seedance-2-mini\n\s+qflowhub\.default, kie\.default all offer it/u);
+});
+
+test("pricing presents Provider-owned material beside the corresponding Needs", () => {
+  const presentation = { kind: "pricing", machine: {
+    format: "qflow.cli-pricing@1",
+    run: "/project/build.svrun",
+    requestCount: 2,
+    pricing: [{
+      request: "seedance:one", capability: "@qflow/seedance@1#seedance-2", status: "resolved",
+      endpoint: "qflowhub.default", use: "@qflow/provider-qflowhub",
+      pricing: { kind: "page", url: "https://qflow.ai/commercial/pricing/" },
+      pricingDocuments: [{
+        source: "https://qflow.ai/v1/pricing?model=bytedance%2Fseedance-2",
+        data: { model: "bytedance/seedance-2", pricing: { mode: "per_second", per_second_usd: 0.1045 } },
+      }],
+    }, {
+      request: "image:one", capability: "@qflow/gpt-image@1#gpt-image-2", status: "resolved",
+      endpoint: "kie.default", use: "@qflow/provider-kie",
+      pricing: { kind: "page", url: "https://kie.ai/pricing" },
+    }],
+    needs: [{
+      request: "seedance:one", step: "video::component::presenter.generate", port: "generation",
+      capability: "@qflow/seedance@1#seedance-2", endpoint: "qflowhub.default",
+      summary: { fields: { duration: 5, resolution: "720p" }, references: {} }, pending: [],
+    }, {
+      request: "image:one", step: "video::component::portrait.generate", port: "generation",
+      capability: "@qflow/gpt-image@1#gpt-image-2", endpoint: "kie.default", pending: [],
+    }],
+  } } as const;
+  const output = capture(human, presentation);
+  assert.match(output, /Provider pricing information/u);
+  assert.match(output, /https:\/\/qflow\.ai\/v1\/pricing\?model=bytedance%2Fseedance-2/u);
+  assert.match(output, /use --json or --verbose for the Provider document/u);
+  assert.doesNotMatch(output, /"per_second_usd": 0\.1045/u);
+  assert.match(output, /duration 5 · resolution 720p/u);
+  assert.match(output, /Pricing page\s+https:\/\/kie\.ai\/pricing/u);
+
+  const verbose = capture({ ...human, verbose: true }, presentation);
+  assert.match(verbose, /"per_second_usd": 0\.1045/u);
 });
 
 test("run check treats historical reuse as a normal summary", () => {

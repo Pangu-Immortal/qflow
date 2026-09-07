@@ -23,6 +23,8 @@ const adapter = createRuntimeEndpointAdapterFacet({
       "capabilityConcurrency",
       "pollIntervalMs",
       "requestTimeoutMs",
+      "oauthRequestTimeoutMs",
+      "pricingRequestTimeoutMs",
       "operationTimeoutMs",
       "uploadPartTimeoutMs",
       "uploadPartAttempts",
@@ -44,6 +46,8 @@ const adapter = createRuntimeEndpointAdapterFacet({
     const defaultConcurrency = runtimeConfigPositiveInteger(config.defaultConcurrency, "QflowHub defaultConcurrency");
     const pollIntervalMs = runtimeConfigPositiveInteger(config.pollIntervalMs, "QflowHub pollIntervalMs");
     const requestTimeoutMs = runtimeConfigPositiveInteger(config.requestTimeoutMs, "QflowHub requestTimeoutMs");
+    const oauthRequestTimeoutMs = runtimeConfigPositiveInteger(config.oauthRequestTimeoutMs, "QflowHub oauthRequestTimeoutMs");
+    const pricingRequestTimeoutMs = runtimeConfigPositiveInteger(config.pricingRequestTimeoutMs, "QflowHub pricingRequestTimeoutMs");
     const operationTimeoutMs = runtimeConfigPositiveInteger(config.operationTimeoutMs, "QflowHub operationTimeoutMs");
     const uploadPartTimeoutMs = runtimeConfigPositiveInteger(config.uploadPartTimeoutMs, "QflowHub uploadPartTimeoutMs");
     const uploadPartAttempts = runtimeConfigPositiveInteger(config.uploadPartAttempts, "QflowHub uploadPartAttempts");
@@ -65,6 +69,8 @@ const adapter = createRuntimeEndpointAdapterFacet({
         ...(capabilityConcurrency === undefined ? {} : { capabilityConcurrency }),
         ...(pollIntervalMs === undefined ? {} : { pollIntervalMs }),
         ...(requestTimeoutMs === undefined ? {} : { requestTimeoutMs }),
+        ...(oauthRequestTimeoutMs === undefined ? {} : { oauthRequestTimeoutMs }),
+        ...(pricingRequestTimeoutMs === undefined ? {} : { pricingRequestTimeoutMs }),
         ...(operationTimeoutMs === undefined ? {} : { operationTimeoutMs }),
         ...(uploadPartTimeoutMs === undefined ? {} : { uploadPartTimeoutMs }),
         ...(uploadPartAttempts === undefined ? {} : { uploadPartAttempts }),
