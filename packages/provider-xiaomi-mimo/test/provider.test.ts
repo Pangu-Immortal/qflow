@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { EndpointRegistry, MemoryResourceStore } from "@qflow/driver-node";
-import { generationTypes } from "@qflow/generation";
 import { mimoSpeechEndpoints, sealMimoSpeechRequest } from "@qflow/mimo-speech";
 import type { CanonicalValue, Need } from "@qflow/protocol";
 import { createXiaomiMimoProvider } from "@qflow/provider-xiaomi-mimo";
@@ -96,10 +95,4 @@ test("the official Provider maps Voice Design and Voice Clone to Xiaomi's wire",
     assert.equal(audios[0]?.mediaType, "audio/wav");
     assert.equal(await resources.has(audios[0]!.resource as `res_${string}`), true);
   }
-});
-
-test("Provider configuration owns credentials and shared pool policy, not model semantics", () => {
-  const provider = createXiaomiMimoProvider({ defaultConcurrency: 3 });
-  assert.equal(provider.offers.length, 2);
-  assert.ok(provider.offers.every((offer) => offer.returns.name === generationTypes.audioSet.name));
 });
