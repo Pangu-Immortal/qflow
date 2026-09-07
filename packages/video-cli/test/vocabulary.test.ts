@@ -64,3 +64,15 @@ test("the command prints human and JSON views", async () => {
 
   await assert.rejects(runVocabularyCli(["vocabulary", "--tag", "x"], io().io, repositoryRoot), /name the package first/);
 });
+
+test("the human view distinguishes logical Modules contributed by one physical package", async () => {
+  const human = io();
+  await runVocabularyCli(["vocabulary", "@qflow/gpt-image", "--tag", "Image"], human.io, repositoryRoot);
+  assert.match(human.text(), /package  @qflow\/gpt-image/u);
+  assert.match(human.text(), /module   @qflow\/gpt-image@1/u);
+  assert.match(human.text(), /import   <import as="gpt" from="@qflow\/gpt-image@1"\/>/u);
+  assert.match(human.text(), /module   @qflow\/gpt-image\/clean@1/u);
+  assert.match(human.text(), /import   <import as="gpt" from="@qflow\/gpt-image\/clean@1"\/>/u);
+  assert.match(human.text(), /image  BlobArtifact \(@qflow\/artifact@1\)/u);
+  assert.doesNotMatch(human.text(), /\{"name":"image"/u);
+});
