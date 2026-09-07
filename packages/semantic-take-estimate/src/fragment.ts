@@ -2,7 +2,7 @@ import { estimateTypes } from "@qflow/estimate";
 import { sealGraphFragment } from "@qflow/elaborator";
 import { mediaTypes } from "@qflow/media";
 import { narrativeTypes } from "@qflow/narrative";
-import { speechTypes } from "@qflow/speech";
+import { speechProducers, speechTypes } from "@qflow/speech";
 
 import { semanticTakeEstimateProducers } from "./manifest.js";
 
@@ -28,4 +28,24 @@ export const semanticTakeEstimateFragment = sealGraphFragment({
     result: { kind: "output", name: "take" },
   }],
   exports: [{ name: "take", type: speechTypes.semanticTake, root: operation("materialize") }],
+});
+
+/** The zero-Token branch of the same preview Surface; media boundaries need no prediction policy. */
+export const semanticTakeEstimateBoundaryFragment = sealGraphFragment({
+  inputs: [
+    { name: "narrative", type: narrativeTypes.narrative },
+    { name: "segment", type: narrativeTypes.excerpt },
+    { name: "media", type: mediaTypes.synchronized },
+  ],
+  operations: [{
+    id: "materialize-boundaries",
+    producer: speechProducers.materializeSegmentBoundaries,
+    inputs: {
+      narrative: input("narrative"),
+      segment: input("segment"),
+      media: input("media"),
+    },
+    result: { kind: "output", name: "take" },
+  }],
+  exports: [{ name: "take", type: speechTypes.semanticTake, root: operation("materialize-boundaries") }],
 });
