@@ -21,7 +21,7 @@
   <import as="film" from="@qflow/film@1"/>
   <import as="render" from="@qflow/render-hyperframes@1"/>
   <import as="recipes" source="./tech-tier-recipes.svs"/>
-  <import as="speaker-kit" source="./kits/speaker-v1.svs"/>
+  <import as="speaker-kit" source="@qflow/seedance-kits/speaker"/>
 
   <!-- Each executive is one continuous spoken Segment and one generated Take.
        Every B-roll insert consumes an authored semantic Selection. -->

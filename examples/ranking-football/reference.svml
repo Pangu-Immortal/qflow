@@ -22,7 +22,7 @@
   <import as="render" from="@qflow/render-hyperframes@1"/>
   <import as="recipes" source="./recipes.svs"/>
   <import as="image-kit" source="@qflow/gpt-image-kits/phone-ugc-v1"/>
-  <import as="speaker-kit" source="./kits/speaker-v1.svs"/>
+  <import as="speaker-kit" source="@qflow/seedance-kits/speaker"/>
 
   <!-- The Program projection owns the complete board lifetime. Each discussed
        footballer's complete Segment projects its disjoint reveal window, so

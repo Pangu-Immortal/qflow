@@ -21,7 +21,7 @@
   <import as="film" from="@qflow/film@1"/>
   <import as="render" from="@qflow/render-hyperframes@1"/>
   <import as="recipes" source="./column-recipes.svs"/>
-  <import as="speaker-kit" source="./kits/speaker-v1.svs"/>
+  <import as="speaker-kit" source="@qflow/seedance-kits/speaker"/>
 
   <!-- Cue boundaries remain explicit author intent. The complete Messi and
        Ronaldo Segments are also the two disjoint Column reveal windows. -->
