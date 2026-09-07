@@ -11,6 +11,7 @@ import {
   mediaPipelineModuleRef,
   mediaPipelineMarkupSurfaces,
   stillVideoFragment,
+  clipTimeStillVideoFragment,
 } from "./index.js";
 
 export const qflowPackage = {
@@ -19,7 +20,10 @@ export const qflowPackage = {
   components: [mediaPipelineComponent],
   hostFacets: [createRunFragmentHostFacet({
     name: "@qflow/media-pipeline@1",
-    fragments: { "still-video": stillVideoFragment },
+    fragments: {
+      "still-video": stillVideoFragment,
+      "clip-time-still-video": clipTimeStillVideoFragment,
+    },
   }), createMarkupSurfaceHostFacet({
     module: mediaPipelineModuleRef,
     declaration: mediaPipelineMarkupSurfaces.find((item) => item.name === "synchronized-media")!,

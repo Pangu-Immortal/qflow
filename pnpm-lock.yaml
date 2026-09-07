@@ -2956,9 +2956,9 @@ importers:
       '@qflow/elaborator':
         specifier: workspace:*
         version: link:../elaborator
-      '@qflow/media':
+      '@qflow/media-pipeline':
         specifier: workspace:*
-        version: link:../media
+        version: link:../media-pipeline
       '@qflow/program-space':
         specifier: workspace:*
         version: link:../program-space
