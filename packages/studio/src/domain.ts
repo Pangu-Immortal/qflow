@@ -16,8 +16,7 @@ import type { LoadedPackage, NodePackageContribution } from "@qflow/package-load
 import { ModulePackageRegistry, NodeCompiler } from "@qflow/compiler-node";
 import type { ModuleRef, ResolvedModuleClosure } from "@qflow/protocol";
 import { TypeValidatorRegistry } from "@qflow/validation";
-import { createVideoCompiler, videoCliDistribution } from "@qflow/video-cli";
-import { NodeFilesystemWorkspace } from "@qflow/workspace-fs-node";
+import { createVideoCompiler, createVideoWorkspace, videoCliDistribution } from "@qflow/video-cli";
 
 export type StudioDomain = {
   readonly packages: readonly LoadedPackage[];
@@ -99,12 +98,20 @@ export async function loadStudioDomain(input: {
     contributions,
     compiler: createVideoCompiler({
       workspaceRoot: input.workspaceRoot,
+      packageRoot: input.packageRoot,
+      ...(videoCliDistribution.packageRoot === undefined
+        ? {}
+        : { distributionPackageRoot: videoCliDistribution.packageRoot }),
       packageContributions: contributions,
     }),
     createCompiler(registry) {
       if (registry === undefined) {
         return createVideoCompiler({
           workspaceRoot: input.workspaceRoot,
+          packageRoot: input.packageRoot,
+          ...(videoCliDistribution.packageRoot === undefined
+            ? {}
+            : { distributionPackageRoot: videoCliDistribution.packageRoot }),
           packageContributions: contributions,
         });
       }
@@ -113,7 +120,13 @@ export async function loadStudioDomain(input: {
         modules: moduleRegistry,
         frontends,
         validators,
-        workspace: new NodeFilesystemWorkspace({ root: input.workspaceRoot }),
+        workspace: createVideoWorkspace({
+          workspaceRoot: input.workspaceRoot,
+          packageRoot: input.packageRoot,
+          ...(videoCliDistribution.packageRoot === undefined
+            ? {}
+            : { distributionPackageRoot: videoCliDistribution.packageRoot }),
+        }),
       });
     },
     closure,

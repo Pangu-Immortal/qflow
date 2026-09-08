@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fixtureDigest } from "../../../test/fixture-digest.js";
+import { fixtureResource } from "../../../test/fixture-resource.js";
 
 import { artifactManifest, artifactTypes } from "@qflow/artifact";
 import {
@@ -30,7 +30,7 @@ import { exactModelMediaInputNames } from "@qflow/model-kit";
 import { mediaManifest } from "@qflow/media";
 import { narrativeManifest } from "@qflow/narrative";
 import { programSpaceManifest } from "@qflow/program-space";
-import type { CanonicalValue, Digest, ModuleManifest, StoredValue, TypeRef } from "@qflow/protocol";
+import type { CanonicalValue, ResourceId, ModuleManifest, StoredValue, TypeRef } from "@qflow/protocol";
 import { rasterManifest } from "@qflow/raster";
 import { createProvidedCandidate } from "@qflow/run";
 import {
@@ -41,12 +41,13 @@ import {
 } from "@qflow/seedance";
 import { speechManifest } from "@qflow/speech";
 import { spatialManifest } from "@qflow/spatial";
+import { standInManifest } from "@qflow/stand-in";
 import { svsManifest } from "@qflow/svs";
 import { textManifest } from "@qflow/text";
 
 const image = (name: string) => ({
   kind: "blob" as const,
-  digest: fixtureDigest(`image:${name}`),
+  resource: fixtureResource(`image:${name}`),
   size: 100,
   mediaType: "image/png",
 });
@@ -67,6 +68,7 @@ function fixture() {
     svsManifest,
     speechManifest,
     seedanceManifest,
+    standInManifest,
   ];
   const closure = createResolvedClosure(manifests);
   const gpt = gptImageEndpoints.image!;

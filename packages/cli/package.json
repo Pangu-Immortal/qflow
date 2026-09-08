@@ -8,7 +8,12 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@qflow/build-result": "workspace:*",
+    "@qflow/build-result-kit": "workspace:*",
     "@qflow/compiler-node": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/core": "workspace:*",
+    "@qflow/driver-node": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
@@ -16,7 +21,13 @@
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
     "@qflow/source": "workspace:*",
+    "@qflow/validation": "workspace:*",
     "@qflow/workspace": "workspace:*",
     "typescript": "5.9.3"
+  },
+  "devDependencies": {
+    "@qflow/markup": "workspace:*",
+    "@qflow/run-markup": "workspace:*",
+    "@qflow/workspace-fs-node": "workspace:*"
   }
 }

@@ -11,8 +11,11 @@
     "./worker-process": "./src/worker-process.ts"
   },
   "dependencies": {
-    "@qflow/core": "workspace:*",
+    "@qflow/resource-store-fs": "workspace:*",
+    "@qflow/build-result-fs": "workspace:*",
+    "@qflow/build-result-kit": "workspace:*",
     "@qflow/component-kit": "workspace:*",
+    "@qflow/core": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/endpoint-kit": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
@@ -24,7 +27,7 @@
     "@qflow/validation": "workspace:*"
   },
   "devDependencies": {
-    "@qflow/artifact-store-fs": "workspace:*",
+    "@qflow/build-result": "workspace:*",
     "@qflow/credential-store-env": "workspace:*"
   }
 }

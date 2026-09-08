@@ -16,7 +16,6 @@
     "@qflow/generation": "workspace:*",
     "@qflow/model-kit": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/speech": "workspace:*",
     "@qflow/text": "workspace:*",
     "@qflow/markup": "workspace:*"
   }

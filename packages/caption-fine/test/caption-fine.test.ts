@@ -8,7 +8,7 @@ import { captionDocument, parseScript } from "@qflow/script";
 import type { SpatialRegionTimeline } from "@qflow/spatial";
 import type { SvsRecipe } from "@qflow/svs";
 
-import { fixtureDigest } from "../../../test/fixture-digest.js";
+import { fixtureResource } from "../../../test/fixture-resource.js";
 import {
   fineCaptionParameters,
   fineCaptionStyle,
@@ -19,7 +19,7 @@ import {
 const font: FontArtifactRef = {
   sources: [{ artifact: {
     kind: "blob",
-    digest: fixtureDigest("caption-fine-font"),
+    resource: fixtureResource("caption-fine-font"),
     size: 1_024,
     mediaType: "font/woff2",
   } }],

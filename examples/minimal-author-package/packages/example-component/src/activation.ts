@@ -1,4 +1,4 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createMarkupSurfaceHostFacet } from "qflow/author-kit";
 import { decodeExampleSurface, exampleComponent, exampleManifest, exampleMarkupSurfaces, exampleModuleRef } from "./index.js";
 
 export const qflowPackage = {

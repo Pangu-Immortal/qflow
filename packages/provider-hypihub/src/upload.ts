@@ -1,3 +1,4 @@
+import { requestDeadline } from "@qflow/runtime-kit";
 import { createHash } from "node:crypto";
 
 import type { QflowHubAuth } from "./oauth.js";
@@ -55,7 +56,7 @@ class QflowHubHTTPError extends Error {
 export type QflowHubUploaderOptions = {
   readonly baseUrl: string;
   readonly requestTimeoutMs: number;
-  /** Whole files per origin/credential in this process. Defaults to 8; range 1..64. */
+  /** Whole files per origin/credential in this process. Defaults to 8; any positive safe integer. */
   readonly uploadConcurrency?: number;
   readonly uploadPartTimeoutMs?: number;
   readonly uploadPartAttempts?: number;
@@ -69,7 +70,6 @@ export type QflowHubUploadInput = {
   readonly mediaType: string;
   readonly filename?: string;
   readonly purpose?: string;
-  readonly sha256?: string;
 };
 
 type PartDeclaration = {
@@ -133,7 +133,6 @@ export class QflowHubUploader {
     this.baseUrl = apiBaseUrl(options.baseUrl);
     this.requestTimeout = requiredInteger(options.requestTimeoutMs, "QflowHub upload request timeout");
     this.uploadConcurrency = requiredInteger(options.uploadConcurrency ?? 8, "QflowHub uploadConcurrency");
-    assert(this.uploadConcurrency <= 64, "QflowHub uploadConcurrency must be within 1..64");
     this.uploadPartTimeout = requiredInteger(options.uploadPartTimeoutMs ?? 5 * 60_000,
       "QflowHub upload part timeout");
     this.uploadPartAttempts = requiredInteger(options.uploadPartAttempts ?? 3,
@@ -179,16 +178,15 @@ export class QflowHubUploader {
   }
 
   private async jsonOnce(path: string, auth: UploadAuth, init: RequestInit, timeoutMs: number, retryAuth = true): Promise<Record<string, unknown>> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const request = requestDeadline(timeoutMs);
     const deadline = Date.now() + timeoutMs;
     try {
-      const response = await this.fetcher(`${this.baseUrl}${path}`, {
+      const response = await request.wait(this.fetcher(`${this.baseUrl}${path}`, {
         ...init,
-        signal: controller.signal,
+        signal: request.signal,
         headers: { authorization: `Bearer ${await uploadToken(auth)}`, ...(init.headers ?? {}) },
-      });
-      const text = await response.text();
+      }));
+      const text = await request.wait(response.text());
       if (response.status === 401 && retryAuth && uploadCanRefresh(auth)) {
         await (auth as QflowHubAuth).refresh();
         return await this.jsonOnce(path, auth, init, Math.max(1, deadline - Date.now()), false);
@@ -205,12 +203,12 @@ export class QflowHubUploader {
         const retryAfter = response.headers.get("retry-after");
         const parsedRetry = retryAfter === null ? NaN : /^\d+$/u.test(retryAfter.trim())
           ? Number(retryAfter) * 1000 : Date.parse(retryAfter) - Date.now();
-        throw new QflowHubHTTPError(response.status, `QflowHub returned HTTP ${response.status}: ${text.slice(0, 300)}`,
+        throw new QflowHubHTTPError(response.status, `QflowHub returned HTTP ${response.status}: ${this.safeReason(text)}`,
           Number.isFinite(parsedRetry) ? Math.max(0, parsedRetry) : undefined, code);
       }
       return object(body, "QflowHub response");
     } finally {
-      clearTimeout(timer);
+      request.finish();
     }
   }
 
@@ -257,8 +255,7 @@ export class QflowHubUploader {
         const refreshed = await this.signParts(uploadId, [declaration], auth);
         capability = refreshed.get(declaration.part_number) ?? {};
       }
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), this.uploadPartTimeout);
+      const request = requestDeadline(this.uploadPartTimeout);
       const startedAt = Date.now();
       this.log(`part upload started upload=${uploadId} part=${declaration.part_number} bytes=${declaration.bytes} attempt=${attempt + 1}`);
       try {
@@ -266,12 +263,12 @@ export class QflowHubUploader {
         assertHTTPS(url, "QflowHub signed upload URL");
         const payload = new ArrayBuffer(body.byteLength);
         new Uint8Array(payload).set(body);
-        const response = await this.fetcher(url, {
+        const response = await request.wait(this.fetcher(url, {
           method: "PUT",
           headers: this.signedHeaders(capability.headers, declaration),
           body: payload,
-          signal: controller.signal,
-        });
+          signal: request.signal,
+        }));
         if (!response.ok) throw new Error(`S3 rejected upload part ${declaration.part_number} with HTTP ${response.status}`);
         const etag = response.headers.get("etag");
         assert(etag !== null && etag.length > 0, `S3 upload part ${declaration.part_number} returned no ETag`);
@@ -291,7 +288,7 @@ export class QflowHubUploader {
           await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
         }
       } finally {
-        clearTimeout(timer);
+        request.finish();
       }
     }
     // A presigned URL is a temporary credential, so never include the fetcher's URL-bearing error.
@@ -360,7 +357,7 @@ export class QflowHubUploader {
           this.log(`upload cancellation still pending upload=${uploadId} reason=${this.safeReason(cancelError)}`);
         }
       }
-      throw error;
+      throw new Error(this.safeReason(error));
     }
   }
 
@@ -371,14 +368,11 @@ export class QflowHubUploader {
   }
 
   private async uploadWithSlot(input: QflowHubUploadInput, auth: UploadAuth): Promise<string> {
-    assert(input.bytes.byteLength > 0, "QflowHub reference artifact is empty");
+    assert(input.bytes.byteLength > 0, "QflowHub reference Resource is empty");
     const startedAt = Date.now();
+    // Required wire checksum, not a Resource identity or a reuse key.
     const digest = createHash("sha256").update(input.bytes).digest("hex");
-    this.log(`upload started bytes=${input.bytes.byteLength} mime=${input.mediaType} digest=${digest.slice(0, 12)}`);
-    if (input.sha256 !== undefined) {
-      assert(input.sha256.toLowerCase().replace(/^sha256:/u, "") === digest,
-        "QflowHub reference artifact failed its SHA-256 check");
-    }
+    this.log(`upload started bytes=${input.bytes.byteLength} mime=${input.mediaType}`);
     let policy: Record<string, unknown>;
     const policyStartedAt = Date.now();
     this.log(`upload session request started bytes=${input.bytes.byteLength} mime=${input.mediaType}`);
@@ -387,7 +381,7 @@ export class QflowHubUploader {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          filename: input.filename ?? `${digest}.${extension(input.mediaType)}`,
+          filename: input.filename ?? `reference.${extension(input.mediaType)}`,
           bytes: input.bytes.byteLength,
           mime_type: input.mediaType,
           purpose: input.purpose ?? "reference",

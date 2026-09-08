@@ -11,9 +11,6 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/component-kit": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/markup": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/svs": "workspace:*",

@@ -1,8 +1,8 @@
-import { compositionTypes } from "@qflow/composition";
-import { artifactTypes } from "@qflow/artifact";
-import { sealGraphFragment } from "@qflow/elaborator";
-import { semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
-import { programSpaceTypes } from "@qflow/program-space";
+import { compositionTypes } from "qflow/composition";
+import { artifactTypes } from "qflow/artifact";
+import { sealGraphFragment } from "qflow/author-kit";
+import { semanticTrackProducers, semanticTrackTypes } from "qflow/semantic-track";
+import { programSpaceTypes } from "qflow/program-space";
 import { exampleProducers } from "./manifest.js";
 import { exampleTypes } from "./manifest.js";
 

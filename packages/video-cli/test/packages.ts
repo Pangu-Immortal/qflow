@@ -23,6 +23,7 @@ import speech from "../../speech/src/activation.js";
 import speechEvidence from "../../speech-evidence/src/activation.js";
 import semanticTrack from "../../semantic-track/src/activation.js";
 import spatial from "../../spatial/src/activation.js";
+import standIn from "../../stand-in/src/activation.js";
 import temporal from "../../temporal/src/activation.js";
 import visualIr from "../../visual-ir/src/activation.js";
 import svs from "../../svs/src/activation.js";
@@ -59,6 +60,7 @@ export const videoTestPackages = [
   bind("@qflow/speech-track", speechTrack),
   bind("@qflow/whisperx", whisperX),
   bind("@qflow/spatial", spatial),
+  bind("@qflow/stand-in", standIn),
   bind("@qflow/temporal", temporal),
   bind("@qflow/media-track", mediaTrack),
   bind("@qflow/typography-track", typographyTrack),

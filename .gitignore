@@ -67,7 +67,3 @@ examples/**/.svml/
 
 # Reverse-engineering scratch projects live outside the repository too
 /projects/*
-!/projects/qflowhub-provider-smoke/
-!/projects/qflowhub-provider-smoke/**
-/projects/qflowhub-provider-smoke/.qflow/
-/projects/qflowhub-provider-smoke/.DS_Store

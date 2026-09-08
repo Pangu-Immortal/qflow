@@ -1,34 +1,26 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CredentialValue, WritableCredentialStore } from "@qflow/runtime";
-import { credentialRef } from "@qflow/runtime";
+import type { EndpointCredential } from "@qflow/endpoint-kit";
+import { decodeOAuth2Credential, encodeOAuth2Credential } from "@qflow/runtime";
 
-import {
-  createQflowHubAuth,
-  decodeQflowHubOAuthCredential,
-  encodeQflowHubOAuthCredential,
-} from "../src/oauth.js";
+import { createQflowHubAuth } from "../src/oauth.js";
 
-test("QflowHub OAuth refreshes an expired token and persists rotated credentials", async () => {
-  const ref = credentialRef("memory", "qflowhub.oauth");
-  const values = new Map<string, CredentialValue>();
-  const store: WritableCredentialStore = {
-    owns(candidate) { return candidate.store === "memory"; },
-    async resolve(candidate) { return values.get(candidate.key); },
-    async put(candidate, value) { values.set(candidate.key, value); },
-    async delete(candidate) { return values.delete(candidate.key); },
-  };
+test("QflowHub rotates OAuth through only its declared credential slot", async () => {
+  let saved: string | undefined;
   const requests: URLSearchParams[] = [];
-  const auth = createQflowHubAuth({
-    secret: encodeQflowHubOAuthCredential({
+  const credential: EndpointCredential = {
+    secret: encodeOAuth2Credential({
       accessToken: "expired-access",
       refreshToken: "refresh-one",
       expiresAt: Date.now() - 1,
     }),
+    async replace(value) { saved = value.secret; },
+  };
+  const auth = createQflowHubAuth({
+    credential,
     baseUrl: "https://qflow.ai/v1",
-    credentialStore: store,
-    credentialRef: ref,
+    requestTimeoutMs: 1_000,
     fetch: async (_input, init) => {
       requests.push(new URLSearchParams(String(init?.body)));
       return Response.json({
@@ -43,22 +35,19 @@ test("QflowHub OAuth refreshes an expired token and persists rotated credentials
   assert.equal(requests.length, 1);
   assert.equal(requests[0]?.get("grant_type"), "refresh_token");
   assert.equal(requests[0]?.get("refresh_token"), "refresh-one");
-  const saved = values.get(ref.key);
   assert(saved !== undefined);
-  assert.deepEqual(decodeQflowHubOAuthCredential(saved.secret), {
-    format: "qflow.qflowhub-oauth@1",
-    accessToken: "fresh-access",
-    refreshToken: "refresh-two",
-    expiresAt: saved.expiresAt,
-  });
-  assert(saved.expiresAt !== undefined && saved.expiresAt > Date.now());
+  const decoded = decodeOAuth2Credential(saved);
+  assert.equal(decoded?.accessToken, "fresh-access");
+  assert.equal(decoded?.refreshToken, "refresh-two");
+  assert(decoded?.expiresAt !== undefined && decoded.expiresAt > Date.now());
 });
 
-test("raw QflowHub API keys remain backward compatible and are never refreshed", async () => {
+test("a static QflowHub API key remains an ordinary non-refreshing credential", async () => {
   const auth = createQflowHubAuth({
-    secret: "static-api-key",
+    credential: { secret: "static-api-key" },
     baseUrl: "https://qflow.ai",
-    fetch: async () => { throw new Error("static keys must not refresh"); },
+    requestTimeoutMs: 1_000,
+    fetch: async () => { throw new Error("static credentials do not refresh"); },
   });
   assert.equal(await auth.token(), "static-api-key");
   assert.equal(auth.canRefresh(), false);

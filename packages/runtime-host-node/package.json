@@ -8,6 +8,9 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@qflow/build-result": "workspace:*",
+    "@qflow/build-result-kit": "workspace:*",
+    "@qflow/driver-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-kit": "workspace:*",

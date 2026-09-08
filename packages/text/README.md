@@ -1,5 +1,8 @@
 # `@qflow/text`
 
+External components use `qflow/text` for graph Text types, template helpers and Producer references,
+with `qflow` as a development dependency. Source imports retain `@qflow/text@1`.
+
 Domain-neutral text values and deterministic text programs.
 
 This package does not own the `.svml` grammar, call models, or know what a prompt

@@ -39,7 +39,7 @@ selects its own Frontend in its mandatory header; no central parser knows every 
 @qflow/source                mandatory Source Header
 @qflow/elaborator            author declarations and Fragment expansion
 @qflow/run                   syntax-neutral Run Graph
-@qflow/validation            semantic admission
+@qflow/validation            semantic validation
 @qflow/host                  opaque Host-facet envelope
 @qflow/workspace             replaceable Source/Asset session
 @qflow/compiler-node         reference Node compiler Host
@@ -57,7 +57,7 @@ Reusable values and deterministic building blocks. They support video authoring 
 film's creative structure or call an external service.
 
 ```text
-@qflow/artifact              content-addressed bytes
+@qflow/artifact              Runtime-referenced byte values
 @qflow/component-kit         Producer and validator registration
 @qflow/text                  graph-native text templates
 @qflow/media                 media values
@@ -90,8 +90,8 @@ specific Provider deployment.
 @qflow/gpt-image             GPT Image model family
 @qflow/nano-banana           Nano Banana model family
 @qflow/seedream              Seedream model family
-@qflow/mimo-tts              Xiaomi MiMo VoiceDesign model + author Surface
-@qflow/estimate              duration estimation
+@qflow/mimo-speech           Xiaomi MiMo Voice Design and Voice Clone models + author Surfaces
+@qflow/estimate              creation-time speech measurement (qflow measure) and the estimate policy type
 @qflow/speech                shared speech products
 @qflow/speech-evidence       acoustic evidence products
 @qflow/speech-alignment      speech alignment
@@ -125,20 +125,21 @@ never on exact-model packages or the CLI.
 
 ```text
 @qflow/provider-kie                  KIE generation plus background removal
-@qflow/provider-qflowhub              QflowHub paid generation and Gemini VLM gateway
+@qflow/provider-qflowhub              QflowHub generation, WhisperX gateway
 @qflow/provider-media-local          local ffprobe/ffmpeg
 @qflow/provider-whisperx-local       local WhisperX service
 @qflow/provider-hyperframes-local    local Chrome rendering
 @qflow/provider-hyperframes-aws-lambda asynchronous distributed rendering
 @qflow/provider-image-opencv-local   local OpenCV Raster execution
 @qflow/provider-media-aws-lambda     synchronous AWS media execution
-@qflow/provider-xiaomi-mimo           official Xiaomi MiMo VoiceDesign API
+@qflow/provider-xiaomi-mimo           official Xiaomi MiMo Voice Design and Voice Clone API
 ```
 
 ### Layer 6: Runtime
 
-Domain-neutral execution ports plus replaceable deployment implementations. Runtime packages own
-queues, stores, credentials and process lifecycle; they never define author syntax.
+Domain-neutral execution ports plus replaceable deployment implementations. The local Runtime owns
+its queue, active stores and process lifecycle as one implementation; credentials, Endpoints and the
+project Build Result repository are the intentional package-selected boundaries.
 
 ```text
 @qflow/runtime               Scheduler, Worker and Store ports
@@ -148,8 +149,12 @@ queues, stores, credentials and process lifecycle; they never define author synt
 @qflow/runtime-host-node     Node Runtime Host ABI
 @qflow/runtime-local         local Worker and assembly
 @qflow/store-sqlite          SQLite state
-@qflow/artifact-store-fs     filesystem Artifacts
-@qflow/artifact-store-s3     S3 Artifacts
+@qflow/resource-store-fs     internal filesystem working Resources
+@qflow/resource-store-s3     library for Runtime implementations needing S3 working Resources
+@qflow/build-result          storage-neutral project Result model
+@qflow/build-result-kit      Build Result repository package ABI
+@qflow/build-result-fs       default project Result repository
+@qflow/build-result-s3       optional S3-compatible project Result repository
 @qflow/credential-store-env  environment credentials
 @qflow/credential-store-os      macOS Keychain or Windows Credential Locker
 ```
@@ -237,8 +242,10 @@ A physical package may expose independently activated facets:
 | `author` | Frontend, Surface, Graph Fragment | author vocabulary only | source `<import>` through the compiler Host |
 | `compute` | deterministic Producer, Type Validator | pure computation | compiler Host |
 | `endpoint` | privileged external capability | network, filesystem, process, credentials | Runtime Profile |
-| `infrastructure` | Scheduler, Worker and Store implementation | persistence, scheduling | Runtime Profile |
-| `application` | Host-specific interpretation such as a Studio Track Companion | only that application's UI/operations | explicit application profile |
+| `credential-store` | resolves explicitly named credentials | secret storage | Runtime Profile |
+| `result-repository` | completed Build Results | project history storage | project `qflow.results.json` |
+| `infrastructure` | Runtime Host, Scheduler and Worker implementation | persistence, scheduling | application Distribution |
+| `application` | Host-specific interpretation such as a Studio Track Companion | only that application's UI/operations | Distribution or selected Source package |
 
 A source `<import>` activates only author facets. It never grants network, filesystem, process,
 credential or queue authority.
@@ -246,16 +253,19 @@ credential or queue authority.
 ## Package selection
 
 Qflow does not maintain a package registry or a second package-resolution layer. npm or pnpm
-installs packages and owns their versions and integrity. Qflow has two explicit selection paths:
+installs packages and owns their versions and integrity. Each owner has one explicit selection path:
 
 | Selection | Packages activated |
 |---|---|
+| Application Distribution | Runtime Host and trusted bootstrap packages |
 | Source imports | Frontends, Surfaces, Producers and Validators |
-| Runtime Profile `use` | Runtime Hosts, infrastructure and Provider Endpoints |
-| Studio Profile `companionPackages` | project Companion packages selected for that Studio session |
+| Runtime Profile `credentials.*.use` / `endpoints.*.use` | Credential Stores and Provider Endpoints |
+| Project Result config `use` | one Build Result Repository |
+| Studio Distribution + selected Source packages | official Companions plus project Companions used by that Source closure |
 
 A Source import never grants network, filesystem, process, credential or queue authority. Those
-remain available only to packages explicitly selected by the Runtime Profile.
+remain available only to the Runtime Host and packages explicitly selected at environmental
+boundaries.
 
 ### Logical package addresses and Source discovery
 
@@ -274,15 +284,16 @@ Frontend implementations are not privileged fields in the physical package forma
 the ordinary `qflow.source-frontend@1` Host facet, exactly as Run Fragments, Markup Surfaces and
 Runtime Adapters advertise their own Host ABIs. Only the Source Host interprets that facet.
 
-Runtime Profiles follow the same rule. Each `use` selects a Runtime Host, Endpoint Adapter or
-Runtime Infrastructure ABI plus a logical name. A physical npm package advertises that logical
-offer. The generic CLI therefore
-does not contain a Provider registry, and different Adapter kinds may share
-a logical spelling without colliding.
+Runtime Profiles follow the same rule for the two facets they actually select. Each `use` names one
+Credential Store or Endpoint Adapter offer. Project Result configuration independently selects one
+Repository offer. The application Distribution supplies the Runtime Host itself; it is not repeated
+as a fake selector inside that Host's Profile. The generic CLI therefore contains neither a Provider
+registry nor a hard-coded Result Repository, and different Adapter kinds may share a logical spelling
+without colliding.
 
 The loader never downloads packages and never scans unrelated installed dependencies for plugins.
-It loads only packages selected by Source discovery or the Runtime Profile, plus exact Module
-dependencies declared by those packages.
+It loads only packages selected by Source discovery, environmental configuration or the application
+Distribution, plus exact Module dependencies declared by those packages.
 
 An authored project is a separate directory and Git/workspace boundary. Its explicit packages are
 resolved from its own `packages/` or installation; the active tool Distribution supplies the

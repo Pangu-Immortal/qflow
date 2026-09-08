@@ -4,15 +4,96 @@
   "description": "Qflow video authoring Distribution for AI agents",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
+  "exports": {
+    "./artifact": {
+      "types": "./dist/public/artifact.d.ts",
+      "import": "./packages/artifact/src/index.ts"
+    },
+    "./author-kit": {
+      "types": "./dist/public/author-kit.d.ts",
+      "import": "./packages/author-kit/src/index.ts"
+    },
+    "./caption": {
+      "types": "./dist/public/caption.d.ts",
+      "import": "./packages/caption/src/index.ts"
+    },
+    "./composition": {
+      "types": "./dist/public/composition.d.ts",
+      "import": "./packages/composition/src/index.ts"
+    },
+    "./endpoint-kit": {
+      "types": "./dist/public/endpoint-kit.d.ts",
+      "import": "./packages/endpoint-kit/src/index.ts"
+    },
+    "./generation": {
+      "types": "./dist/public/generation.d.ts",
+      "import": "./packages/generation/src/index.ts"
+    },
+    "./media": {
+      "types": "./dist/public/media.d.ts",
+      "import": "./packages/media/src/index.ts"
+    },
+    "./model-kit": {
+      "types": "./dist/public/model-kit.d.ts",
+      "import": "./packages/model-kit/src/index.ts"
+    },
+    "./narrative": {
+      "types": "./dist/public/narrative.d.ts",
+      "import": "./packages/narrative/src/index.ts"
+    },
+    "./program-space": {
+      "types": "./dist/public/program-space.d.ts",
+      "import": "./packages/program-space/src/index.ts"
+    },
+    "./runtime-kit": {
+      "types": "./dist/public/runtime-kit.d.ts",
+      "import": "./packages/runtime-kit/src/index.ts"
+    },
+    "./semantic-track": {
+      "types": "./dist/public/semantic-track.d.ts",
+      "import": "./packages/semantic-track/src/index.ts"
+    },
+    "./spatial": {
+      "types": "./dist/public/spatial.d.ts",
+      "import": "./packages/spatial/src/index.ts"
+    },
+    "./speech": {
+      "types": "./dist/public/speech.d.ts",
+      "import": "./packages/speech/src/index.ts"
+    },
+    "./studio-adapter": {
+      "types": "./dist/public/studio-adapter.d.ts",
+      "import": "./packages/studio-adapter/src/index.ts"
+    },
+    "./svs": {
+      "types": "./dist/public/svs.d.ts",
+      "import": "./packages/svs/src/index.ts"
+    },
+    "./temporal": {
+      "types": "./dist/public/temporal.d.ts",
+      "import": "./packages/temporal/src/index.ts"
+    },
+    "./temporal-markup": {
+      "types": "./dist/public/temporal-markup.d.ts",
+      "import": "./packages/temporal-markup/src/index.ts"
+    },
+    "./text": {
+      "types": "./dist/public/text.d.ts",
+      "import": "./packages/text/src/index.ts"
+    },
+    "./visual-ir": {
+      "types": "./dist/public/visual-ir.d.ts",
+      "import": "./packages/visual-ir/src/index.ts"
+    }
+  },
   "bin": {
     "qflow": "./bin/qflow.mjs",
-    "qflow-studio": "./bin/qflow-studio.mjs",
-    "qflow-preview-check": "./bin/qflow-preview-check.mjs",
-    "qflow-reference-video-tools": "./packages/reference-video-tools/bin/reference-video-tools.mjs"
+    "qflow-studio": "./bin/qflow-studio.mjs"
   },
   "packageManager": "pnpm@10.33.0",
   "files": [
     "bin",
+    "dist/public/**/*.d.ts",
     "packages/*/src/**/*",
     "packages/*/bin/**/*",
     "packages/*/runtime/**/*",
@@ -33,37 +114,42 @@
     "services/whisperx/src/**/*.py",
     "docs/public/qflow-logo-dark.svg",
     "docs/public/qflow-logo-light.svg",
+    "examples/minimal-author-package/README.md",
+    "examples/minimal-author-package/packages/*/package.json",
+    "examples/minimal-author-package/packages/*/tsconfig.json",
+    "examples/minimal-author-package/packages/*/README.md",
+    "examples/minimal-author-package/packages/*/src/**/*",
+    "examples/minimal-author-package/packages/*/preview/**/*",
     "README.md",
     "README.zh-CN.md",
     "LICENSE"
   ],
   "scripts": {
+    "build:public-types": "node scripts/build-public-types.mjs",
     "check": "tsc -p tsconfig.json --noEmit",
-    "lockfile:refresh": "node test/lockfile-refresh.mjs",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "test": "node test/run.mjs",
-    "test:release": "node --import tsx --test test/repository-hygiene.test.mjs",
     "test:whisperx-service": "uv run --project services/whisperx --frozen python -m unittest discover -s services/whisperx/tests -p \"test_*.py\"",
-    "test:browser-visual": "node test/run.mjs browser-visual",
     "test:image-opencv": "node test/run.mjs image-opencv",
-    "smoke:kie": "node --import tsx packages/provider-kie/test/live-smoke.ts",
     "qflow": "node bin/qflow.mjs",
     "studio": "pnpm --filter @qflow/studio exec node --import tsx start.ts",
-    "build:media-lambda": "pnpm --filter @qflow/media-lambda build",
-    "build:media-lambda-layer": "pnpm --filter @qflow/media-lambda build:layer"
+    "prepack": "npm run build:public-types"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12.0"
   },
   "devDependencies": {
     "@qflow/artifact": "workspace:*",
-    "@qflow/artifact-store-fs": "workspace:*",
-    "@qflow/artifact-store-s3": "workspace:*",
     "@qflow/audio-track": "workspace:*",
     "@qflow/audio-track-studio": "workspace:*",
+    "@qflow/author-kit": "workspace:*",
     "@qflow/background-removal": "workspace:*",
+    "@qflow/build-result": "workspace:*",
+    "@qflow/build-result-fs": "workspace:*",
+    "@qflow/build-result-kit": "workspace:*",
+    "@qflow/build-result-s3": "workspace:*",
     "@qflow/caption": "workspace:*",
     "@qflow/caption-fine": "workspace:*",
     "@qflow/caption-fine-studio": "workspace:*",
@@ -79,8 +165,8 @@
     "@qflow/film-studio": "workspace:*",
     "@qflow/fonts-open": "workspace:*",
     "@qflow/generation": "workspace:*",
-    "@qflow/gemini": "workspace:*",
     "@qflow/gpt-image": "workspace:*",
+    "@qflow/gpt-image-kits": "workspace:*",
     "@qflow/grok-imagine": "workspace:*",
     "@qflow/hyperframes": "workspace:*",
     "@qflow/image-compose": "workspace:*",
@@ -88,10 +174,9 @@
     "@qflow/interview-emoji-reveal": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/media-pipeline": "workspace:*",
-    "@qflow/mock-media": "workspace:*",
     "@qflow/media-track": "workspace:*",
     "@qflow/media-track-studio": "workspace:*",
-    "@qflow/mimo-tts": "workspace:*",
+    "@qflow/mimo-speech": "workspace:*",
     "@qflow/minimax-h3": "workspace:*",
     "@qflow/nano-banana": "workspace:*",
     "@qflow/narrative": "workspace:*",
@@ -99,19 +184,18 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/provider-hyperframes-aws-lambda": "workspace:*",
     "@qflow/provider-hyperframes-local": "workspace:*",
-    "@qflow/provider-image-opencv-local": "workspace:*",
     "@qflow/provider-qflowhub": "workspace:*",
+    "@qflow/provider-image-opencv-local": "workspace:*",
     "@qflow/provider-kie": "workspace:*",
-    "@qflow/provider-vertex": "workspace:*",
-    "@qflow/provider-media-aws-lambda": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
-    "@qflow/preview-mock": "workspace:*",
     "@qflow/provider-whisperx-local": "workspace:*",
     "@qflow/provider-xiaomi-mimo": "workspace:*",
     "@qflow/ranking": "workspace:*",
     "@qflow/ranking-studio": "workspace:*",
     "@qflow/raster": "workspace:*",
     "@qflow/render-hyperframes": "workspace:*",
+    "@qflow/resource-store-fs": "workspace:*",
+    "@qflow/resource-store-s3": "workspace:*",
     "@qflow/run-markup": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
     "@qflow/runtime-kit": "workspace:*",
@@ -123,14 +207,15 @@
     "@qflow/seedance": "workspace:*",
     "@qflow/seedance-kits": "workspace:*",
     "@qflow/seedream": "workspace:*",
-    "@qflow/semantic-track": "workspace:*",
     "@qflow/semantic-take-estimate": "workspace:*",
+    "@qflow/semantic-track": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/speech-alignment": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",
     "@qflow/speech-track": "workspace:*",
     "@qflow/speech-track-studio": "workspace:*",
+    "@qflow/stand-in": "workspace:*",
     "@qflow/store-sqlite": "workspace:*",
     "@qflow/studio-adapter": "workspace:*",
     "@qflow/svs": "workspace:*",
@@ -140,12 +225,17 @@
     "@qflow/typography-track": "workspace:*",
     "@qflow/typography-track-studio": "workspace:*",
     "@qflow/visual-ir": "workspace:*",
+    "@qflow/volcengine-matting": "workspace:*",
     "@qflow/whisperx": "workspace:*",
     "@types/node": "24.10.1",
-    "typescript": "5.9.3",
+    "rollup": "4.62.4",
+    "rollup-plugin-dts": "6.2.3",
     "vitepress": "^1.6.4"
   },
   "dependencies": {
-    "tsx": "4.21.0"
+    "cmu-pronouncing-dictionary": "3.0.0",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vite": "8.2.2"
   }
 }

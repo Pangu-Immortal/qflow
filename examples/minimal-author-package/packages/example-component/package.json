@@ -3,21 +3,25 @@
   "version": "0.0.0-dev",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "qflow": { "activation": "./src/activation.ts" },
-  "dependencies": {
-    "@qflow/artifact": "workspace:*",
-    "@qflow/component-kit": "workspace:*",
-    "@qflow/composition": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/media": "workspace:*",
-    "@qflow/markup": "workspace:*",
-    "@qflow/protocol": "workspace:*",
-    "@qflow/program-space": "workspace:*",
-    "@qflow/semantic-track": "workspace:*",
-    "@qflow/svs": "workspace:*",
-    "@qflow/temporal": "workspace:*",
-    "@qflow/temporal-markup": "workspace:*",
-    "@qflow/visual-ir": "workspace:*"
+  "files": [
+    "dist",
+    "preview",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./preview": "./preview/preview.svml"
+  },
+  "qflow": {
+    "activation": "./dist/activation.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "qflow": "workspace:*",
+    "typescript": "5.9.3"
   }
 }

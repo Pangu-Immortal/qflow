@@ -5,11 +5,11 @@
   "type": "module",
   "exports": {
     "./start": "./start.ts",
-    "./preview-check": "./preview-check.ts",
     "./src/*": "./src/*"
   },
   "dependencies": {
     "@qflow/audio-track-studio": "workspace:*",
+    "@qflow/build-result": "workspace:*",
     "@qflow/caption-fine-studio": "workspace:*",
     "@qflow/cli": "workspace:*",
     "@qflow/compiler-node": "workspace:*",
@@ -45,7 +45,6 @@
     "@qflow/video-cli": "workspace:*",
     "@qflow/workspace": "workspace:*",
     "@qflow/workspace-fs-node": "workspace:*",
-    "@qflow/provider-media-local": "workspace:*",
-    "vite": "5.4.21"
+    "vite": "8.2.2"
   }
 }

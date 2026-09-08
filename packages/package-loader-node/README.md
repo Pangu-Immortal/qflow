@@ -3,9 +3,15 @@
 Loads installed Qflow packages selected by source discovery or a Runtime Profile.
 
 The user's package manager owns installation, versions and package bytes. This loader resolves only
-the requested packages, imports their declared `qflow.activation` entry and validates the
-contribution boundary consumed by Qflow. It never scans the dependency tree for plugins and is
-not a package manager or registry.
+the requested packages. An implementation package selected by Source discovery or a Runtime
+Profile may expose `qflow.activation`; the loader imports that entry and validates the contribution
+boundary consumed by Qflow. It never scans the dependency tree for plugins and is not a package
+manager or registry.
+
+A data-only package may instead expose an exact Source subpath through ordinary package `exports`.
+The Host can resolve that one requested file without importing `qflow.activation` or granting the
+package executable authority. Package-internal relative Sources and assets remain confined to the
+package root. Executable activation and Source-data lookup are deliberately separate operations.
 
 Module dependencies declared by selected packages are loaded from ordinary installed dependencies.
 Syntax, components and Runtime facets remain inert until a matching Host ABI consumes them.
