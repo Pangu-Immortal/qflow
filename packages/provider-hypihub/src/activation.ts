@@ -15,7 +15,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
   activate(context) {
     if (context.pool === undefined) throw new Error("QflowHub Provider Pool is required");
     const config = runtimeConfigObject(context.config, "QflowHub");
-    runtimeConfigExact(config, ["baseUrl", "apiKey", "defaultConcurrency", "pollIntervalMs", "requestTimeoutMs", "audio", "whisperxModel"], "QflowHub");
+    runtimeConfigExact(config, ["baseUrl", "apiKey", "defaultConcurrency", "pollIntervalMs", "requestTimeoutMs", "uploadConcurrency", "audio", "whisperxModel"], "QflowHub");
     const baseUrl = runtimeConfigString(config.baseUrl, "QflowHub baseUrl");
     if (baseUrl !== undefined) {
       const url = new URL(baseUrl);
@@ -27,6 +27,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
     if (apiKey === undefined) throw new Error("QflowHub apiKey CredentialRef is required");
     const defaultConcurrency = runtimeConfigPositiveInteger(config.defaultConcurrency, "QflowHub defaultConcurrency");
     const pollIntervalMs = runtimeConfigPositiveInteger(config.pollIntervalMs, "QflowHub pollIntervalMs");
+    const uploadConcurrency = runtimeConfigPositiveInteger(config.uploadConcurrency, "QflowHub uploadConcurrency");
     const requestTimeoutMs = runtimeConfigPositiveInteger(config.requestTimeoutMs, "QflowHub requestTimeoutMs");
     const audio = runtimeConfigBoolean(config.audio, "QflowHub audio");
     const whisperxModel = runtimeConfigString(config.whisperxModel, "QflowHub whisperxModel");
@@ -39,6 +40,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
         ...(defaultConcurrency === undefined ? {} : { defaultConcurrency }),
         ...(pollIntervalMs === undefined ? {} : { pollIntervalMs }),
         ...(requestTimeoutMs === undefined ? {} : { requestTimeoutMs }),
+        ...(uploadConcurrency === undefined ? {} : { uploadConcurrency }),
         ...(audio === undefined ? {} : { audio }),
         ...(whisperxModel === undefined ? {} : { whisperxModel }),
       }),
