@@ -26,6 +26,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
       "oauthRequestTimeoutMs",
       "pricingRequestTimeoutMs",
       "operationTimeoutMs",
+      "uploadConcurrency",
       "uploadPartTimeoutMs",
       "uploadPartAttempts",
       "downloadAttempts",
@@ -47,6 +48,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
     const oauthRequestTimeoutMs = runtimeConfigPositiveInteger(config.oauthRequestTimeoutMs, "QflowHub oauthRequestTimeoutMs");
     const pricingRequestTimeoutMs = runtimeConfigPositiveInteger(config.pricingRequestTimeoutMs, "QflowHub pricingRequestTimeoutMs");
     const operationTimeoutMs = runtimeConfigPositiveInteger(config.operationTimeoutMs, "QflowHub operationTimeoutMs");
+    const uploadConcurrency = runtimeConfigPositiveInteger(config.uploadConcurrency, "QflowHub uploadConcurrency");
     const uploadPartTimeoutMs = runtimeConfigPositiveInteger(config.uploadPartTimeoutMs, "QflowHub uploadPartTimeoutMs");
     const uploadPartAttempts = runtimeConfigPositiveInteger(config.uploadPartAttempts, "QflowHub uploadPartAttempts");
     const downloadAttempts = runtimeConfigPositiveInteger(config.downloadAttempts, "QflowHub downloadAttempts");
@@ -68,6 +70,7 @@ const adapter = createRuntimeEndpointAdapterFacet({
         ...(oauthRequestTimeoutMs === undefined ? {} : { oauthRequestTimeoutMs }),
         ...(pricingRequestTimeoutMs === undefined ? {} : { pricingRequestTimeoutMs }),
         ...(operationTimeoutMs === undefined ? {} : { operationTimeoutMs }),
+        ...(uploadConcurrency === undefined ? {} : { uploadConcurrency }),
         ...(uploadPartTimeoutMs === undefined ? {} : { uploadPartTimeoutMs }),
         ...(uploadPartAttempts === undefined ? {} : { uploadPartAttempts }),
         ...(downloadAttempts === undefined ? {} : { downloadAttempts }),

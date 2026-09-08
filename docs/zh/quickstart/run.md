@@ -306,7 +306,7 @@ Runtime Profile 只选择 Credential Store、Endpoint 及其封闭配置。完�
 ### 1. 选择 Runtime
 
 ```bash
-cd examples/talking-head-aroll
+cd examples/podcast
 qflow runtime use qflow.runtime.json
 ```
 
@@ -329,11 +329,11 @@ Runtime 角色、Endpoint 配置、凭据是否存在和有界环境探测。它
 ### 3. 检查 Source 与计划
 
 ```bash
-qflow check main.svml
+qflow check reference.svml
 ```
 
 ```bash
-qflow plan build.svrun
+qflow plan reference.svrun
 ```
 
 在花费资金之前审查冻结的 BuildPlan。该计划展示调度器将发出的每个 Operation 和 Needs；选择
@@ -351,7 +351,7 @@ Runtime 后只预检这次计划真正需要的 Endpoint、凭据和外部程序
 ### 4. 提交 Build
 
 ```bash
-qflow build build.svrun --title first-cut --follow
+qflow build reference.svrun --title first-cut --follow
 ```
 
 不带 `--follow` 时，Build 在耐久提交后退出，后台 Worker 继续。带 `--follow` 时终端也只是观察者，并会报告 phase / Operation 数量变化；Ctrl-C 不会取消任务。
@@ -389,7 +389,7 @@ qflow inspect <build-id>
 ```bash
 qflow get <build-id> \
   --output final.video \
-  --to examples/talking-head-aroll/output/final.mp4
+  --to output/final.mp4
 ```
 
 `get` 把一个精确的 `build + output` 地址导出到必填的 `--to` 目的地。Scalar 写成 JSON 文件；
