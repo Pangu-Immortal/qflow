@@ -47,7 +47,7 @@ function apiBaseUrl(value: string): string {
 }
 
 class QflowHubHTTPError extends Error {
-  constructor(readonly status: number, message: string) {
+  constructor(readonly status: number, message: string, readonly retryAfterMs?: number, readonly code?: string) {
     super(message);
   }
 }
@@ -89,6 +89,22 @@ function assertHTTPS(value: string, subject: string): void {
   assert(protocol === "https:", `${subject} must use HTTPS`);
 }
 
+// A provider can upload references from several operations/uploader instances.
+// Bound whole file sessions, independently of each file's S3 part concurrency.
+const uploadGates = new Map<string, { active: number; waiting: (() => void)[] }>();
+async function acquireUploadSlot(origin: string, auth: UploadAuth): Promise<() => void> {
+  const key = `${origin}:${createHash("sha256").update(await uploadToken(auth)).digest("hex")}`;
+  let gate = uploadGates.get(key);
+  if (gate === undefined) { gate = { active: 0, waiting: [] }; uploadGates.set(key, gate); }
+  if (gate.active < 2) gate.active += 1;
+  else await new Promise<void>((resolve) => gate.waiting.push(resolve));
+  return () => {
+    const next = gate.waiting.shift();
+    if (next !== undefined) next();
+    else { gate.active -= 1; if (gate.active === 0) uploadGates.delete(key); }
+  };
+}
+
 /** Uploads media through QflowHub's session-negotiated private regional S3 multipart flow. */
 export class QflowHubUploader {
   readonly baseUrl: string;
@@ -119,25 +135,61 @@ export class QflowHubUploader {
     return message.replace(/https?:\/\/\S+/giu, "[redacted-url]").slice(0, 300);
   }
 
-  private async json(path: string, auth: UploadAuth, init: RequestInit = {}, retryAuth = true): Promise<Record<string, unknown>> {
+  private async json(path: string, auth: UploadAuth, init: RequestInit = {}): Promise<Record<string, unknown>> {
+    const existingSession = /^\/files\/uploads\/[^/]+(?:\/(?:parts|complete))?$/u.test(path);
+    const deadline = Date.now() + (existingSession ? Math.min(this.requestTimeout, 120_000) : this.requestTimeout);
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        return await this.jsonOnce(path, auth, init, Math.max(1, deadline - Date.now()));
+      } catch (error) {
+        const http = error instanceof QflowHubHTTPError ? error : undefined;
+        // Existing-session operations are idempotent. A new session may only
+        // be retried after an explicit 429 rejection, never an unknown result.
+        const retryable = http !== undefined
+          ? ([408, 429, 500, 502, 503, 504].includes(http.status)
+            || (http.status === 409 && http.code === "upload_incomplete"))
+          : existingSession;
+        const rejectedCreate = path === "/files/uploads" && http?.status === 429;
+        if (attempt >= 3 || !retryable || (!existingSession && !rejectedCreate)
+          || http?.code === "upload_daily_limit" || http?.code === "upload_storage_limit") throw error;
+        const delay = http?.retryAfterMs ?? 500 * 2 ** attempt;
+        // Respect a server's retry time; do not shorten it to fit our budget.
+        if (Date.now() + delay >= deadline) throw error;
+        this.log(`upload control retry method=${init.method ?? "GET"} path=${path} attempt=${attempt + 2} delay_ms=${delay}`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  private async jsonOnce(path: string, auth: UploadAuth, init: RequestInit, timeoutMs: number, retryAuth = true): Promise<Record<string, unknown>> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.requestTimeout);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const deadline = Date.now() + timeoutMs;
     try {
       const response = await this.fetcher(`${this.baseUrl}${path}`, {
         ...init,
         signal: controller.signal,
         headers: { authorization: `Bearer ${await uploadToken(auth)}`, ...(init.headers ?? {}) },
       });
+      const text = await response.text();
       if (response.status === 401 && retryAuth && uploadCanRefresh(auth)) {
         await (auth as QflowHubAuth).refresh();
-        return await this.json(path, auth, init, false);
+        return await this.jsonOnce(path, auth, init, Math.max(1, deadline - Date.now()), false);
       }
-      const text = await response.text();
       let body: unknown = {};
       try { body = text.length === 0 ? {} : JSON.parse(text); }
-      catch { throw new Error(`QflowHub returned invalid JSON (${response.status})`); }
+      catch {
+        if (response.ok) throw new Error(`QflowHub returned invalid JSON (${response.status})`);
+      }
       if (!response.ok) {
-        throw new QflowHubHTTPError(response.status, `QflowHub returned HTTP ${response.status}: ${text.slice(0, 300)}`);
+        const errorBody = body !== null && typeof body === "object" && "error" in body ? body.error : undefined;
+        const code = errorBody !== null && typeof errorBody === "object" && "code" in errorBody
+          && typeof errorBody.code === "string" ? errorBody.code : undefined;
+        const retryAfter = response.headers.get("retry-after");
+        const parsedRetry = retryAfter === null ? NaN : /^\d+$/u.test(retryAfter.trim())
+          ? Number(retryAfter) * 1000 : Date.parse(retryAfter) - Date.now();
+        throw new QflowHubHTTPError(response.status, `QflowHub returned HTTP ${response.status}: ${text.slice(0, 300)}`,
+          Number.isFinite(parsedRetry) ? Math.max(0, parsedRetry) : undefined, code);
       }
       return object(body, "QflowHub response");
     } finally {
@@ -231,28 +283,29 @@ export class QflowHubUploader {
 
   private async uploadDirect(bytes: Uint8Array, auth: UploadAuth, policy: Record<string, unknown>): Promise<string> {
     const uploadId = requiredString(policy.upload_id, "QflowHub upload id");
-    const partSize = requiredInteger(policy.part_size, "QflowHub upload part size");
-    const partCount = requiredInteger(policy.part_count, "QflowHub upload part count");
-    const requestedConcurrency = requiredInteger(policy.concurrency, "QflowHub upload concurrency");
-    assert(requestedConcurrency <= 8, "QflowHub upload concurrency exceeds 8");
-    assert(partCount <= 10_000, "QflowHub upload part count exceeds 10000");
-    assert(partCount === Math.ceil(bytes.byteLength / partSize), "QflowHub upload part count differs from the file size");
-    const declarations = Array.from({ length: partCount }, (_, index) => {
-      const start = index * partSize;
-      const part = bytes.subarray(start, Math.min(start + partSize, bytes.byteLength));
-      return {
-        part_number: index + 1,
-        bytes: part.byteLength,
-        checksum_sha256: createHash("sha256").update(part).digest("base64"),
-      };
-    });
-    this.log(`multipart upload negotiated upload=${uploadId} bytes=${bytes.byteLength} part_size=${partSize} parts=${partCount} concurrency=${requestedConcurrency}`);
     try {
+      const partSize = requiredInteger(policy.part_size, "QflowHub upload part size");
+      const partCount = requiredInteger(policy.part_count, "QflowHub upload part count");
+      const requestedConcurrency = requiredInteger(policy.concurrency, "QflowHub upload concurrency");
+      assert(requestedConcurrency <= 8, "QflowHub upload concurrency exceeds 8");
+      assert(partCount <= 10_000, "QflowHub upload part count exceeds 10000");
+      assert(partCount === Math.ceil(bytes.byteLength / partSize), "QflowHub upload part count differs from the file size");
+      const declarations = Array.from({ length: partCount }, (_, index) => {
+        const start = index * partSize;
+        const part = bytes.subarray(start, Math.min(start + partSize, bytes.byteLength));
+        return {
+          part_number: index + 1,
+          bytes: part.byteLength,
+          checksum_sha256: createHash("sha256").update(part).digest("base64"),
+        };
+      });
+      this.log(`multipart upload negotiated upload=${uploadId} bytes=${bytes.byteLength} part_size=${partSize} parts=${partCount} concurrency=${requestedConcurrency}`);
       const signed = await this.signParts(uploadId, declarations, auth);
       const completed = new Array<CompletedPart>(partCount);
       let cursor = 0;
+      let workerFailed = false;
       const worker = async (): Promise<void> => {
-        while (cursor < partCount) {
+        while (!workerFailed && cursor < partCount) {
           const index = cursor;
           cursor += 1;
           const declaration = declarations[index];
@@ -261,10 +314,15 @@ export class QflowHubUploader {
           const body = bytes.subarray(start, Math.min(start + partSize, bytes.byteLength));
           const capability = signed.get(declaration.part_number);
           assert(capability !== undefined, `QflowHub upload part ${declaration.part_number} was not signed`);
-          completed[index] = await this.putPart(uploadId, declaration, capability, body, auth);
+          try { completed[index] = await this.putPart(uploadId, declaration, capability, body, auth); }
+          catch (error) { workerFailed = true; throw error; }
         }
       };
-      await Promise.all(Array.from({ length: Math.min(requestedConcurrency, partCount) }, worker));
+      // Let in-flight part requests settle before cancellation; otherwise a
+      // surviving worker can keep uploading into a session we just aborted.
+      const results = await Promise.allSettled(Array.from({ length: Math.min(requestedConcurrency, partCount) }, worker));
+      const failed = results.find((result) => result.status === "rejected");
+      if (failed?.status === "rejected") throw failed.reason;
       const completeStartedAt = Date.now();
       this.log(`multipart complete started upload=${uploadId} parts=${partCount}`);
       const response = await this.json(`/files/uploads/${encodeURIComponent(uploadId)}/complete`, auth, {
@@ -279,12 +337,23 @@ export class QflowHubUploader {
     } catch (error) {
       this.log(`multipart upload failed upload=${uploadId} reason=${this.safeReason(error)}`);
       try { await this.json(`/files/uploads/${encodeURIComponent(uploadId)}`, auth, { method: "DELETE" }); }
-      catch { /* S3 Lifecycle is the final abort fallback. */ }
+      catch (cancelError) {
+        if (!(cancelError instanceof QflowHubHTTPError && (cancelError.status === 404
+          || (cancelError.status === 409 && cancelError.code === "upload_completed")))) {
+          this.log(`upload cancellation still pending upload=${uploadId} reason=${this.safeReason(cancelError)}`);
+        }
+      }
       throw error;
     }
   }
 
   async upload(input: QflowHubUploadInput, auth: UploadAuth): Promise<string> {
+    const release = await acquireUploadSlot(this.baseUrl, auth);
+    try { return await this.uploadWithSlot(input, auth); }
+    finally { release(); }
+  }
+
+  private async uploadWithSlot(input: QflowHubUploadInput, auth: UploadAuth): Promise<string> {
     assert(input.bytes.byteLength > 0, "QflowHub reference artifact is empty");
     const startedAt = Date.now();
     const digest = createHash("sha256").update(input.bytes).digest("hex");
