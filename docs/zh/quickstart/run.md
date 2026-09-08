@@ -216,7 +216,7 @@ CLI 必须先确定项目：显式 `--workspace` 直接给出边界；否则使�
 
 | 变量 | Provider / 用途 |
 |---|---|
-| QflowHub OAuth | QflowHub 付费生成、Gemini VLM 与 WhisperX 对齐；运行 `qflow auth login qflowhub.default --runtime qflow.runtime.json` 并在 https://qflow.ai 登录 |
+| QflowHub OAuth | QflowHub 付费生成、WhisperX 对齐；运行 `qflow auth login qflowhub.default --runtime qflow.runtime.json` 并在 https://qflow.ai 登录 |
 | `KIE_API_KEY` | 仅在显式选择 KIE Provider 时使用 |
 | `MIMO_API_KEY` | Xiaomi MiMo 音色设计或音色克隆；只有明确选择官方 Endpoint 时才需要 |
 

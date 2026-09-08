@@ -15,7 +15,6 @@
     "@qflow/credential-store-os": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/estimate": "workspace:*",
-    "@qflow/gemini": "workspace:*",
     "@qflow/generation": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/model-kit": "workspace:*",
@@ -31,6 +30,7 @@
     "@qflow/visual-ir": "workspace:*",
     "@qflow/whisperx": "workspace:*",
     "@qflow/workspace-fs-node": "workspace:*",
-    "@qflow/yt-dlp": "workspace:*"
+    "@qflow/yt-dlp": "workspace:*",
+    "sharp": "0.35.3"
   }
 }

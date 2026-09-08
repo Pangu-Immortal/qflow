@@ -251,7 +251,7 @@ variables referenced by the selected Runtime Profile:
 
 | Variable | Provider/use |
 |---|---|
-| QflowHub OAuth | QflowHub paid generation, Gemini VLM and WhisperX alignment; run `qflow auth login qflowhub.default --runtime qflow.runtime.json` |
+| QflowHub OAuth | QflowHub paid generation, WhisperX alignment; run `qflow auth login qflowhub.default --runtime qflow.runtime.json` |
 | `KIE_API_KEY` | Explicit KIE Provider only |
 | `MIMO_API_KEY` | Xiaomi MiMo Voice Design or Voice Clone, only when the official Endpoint is explicitly selected |
 

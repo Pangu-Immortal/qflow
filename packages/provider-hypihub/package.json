@@ -8,7 +8,6 @@
   "qflow": { "activation": "./src/activation.ts" },
   "dependencies": {
     "@qflow/endpoint-kit": "workspace:*",
-    "@qflow/gemini": "workspace:*",
     "@qflow/generation": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/runtime": "workspace:*",

@@ -117,7 +117,7 @@ Frontend；不存在一个认识全部语法的中央解析器。
 
 ```text
 @qflow/provider-kie                  KIE 生成与去背景
-@qflow/provider-qflowhub              QflowHub 生成、Gemini VLM 与 WhisperX 网关
+@qflow/provider-qflowhub              QflowHub 生成、WhisperX 网关
 @qflow/provider-media-local          local ffprobe/ffmpeg
 @qflow/provider-whisperx-local       local WhisperX service
 @qflow/provider-hyperframes-local    local Chrome rendering

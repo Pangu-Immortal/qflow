@@ -213,7 +213,7 @@ qflow runtime down
 `runtime init` writes the video Distribution's starter Profile to `qflow.runtime.json` and selects
 it for the resolved project. It refuses to overwrite an existing file. This is a local file operation:
 it installs no package, contacts no service, requests no credential and starts no Worker. The official
-starter selects QflowHub for remote generation, Gemini and WhisperX, plus local media processing and
+starter selects QflowHub for remote generation, WhisperX, plus local media processing and
 HyperFrames rendering. This is a Distribution default, not a Core rule; edit the Profile or select a
 different one when using BYOK or local Providers.
 
