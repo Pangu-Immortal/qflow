@@ -3,7 +3,6 @@ import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
 import type { FragmentOperation } from "@qflow/elaborator";
 import { semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
-import { spatialTypes } from "@qflow/spatial";
 import type { TypeRef } from "@qflow/protocol";
 
 import { speechTrackProducers, speechTrackTypes } from "./manifest.js";
@@ -27,9 +26,6 @@ export function createSpeechTrackFragment(options: SpeechTrackFragmentOptions) {
   addInput("header", speechTrackTypes.header);
   for (const take of options.takes) {
     addInput(take.takeName, speechTypes.semanticTake);
-    addInput(take.visual.frameName, spatialTypes.frame);
-    addInput(take.visual.fitName, spatialTypes.fit);
-    addInput(take.visual.visualSpecName, speechTrackTypes.visualSpec);
   }
   const operations: FragmentOperation[] = [{
     id: "track:set:empty",
@@ -46,9 +42,6 @@ export function createSpeechTrackFragment(options: SpeechTrackFragmentOptions) {
       inputs: {
         set: operation(current),
         take: input(take.takeName),
-        frame: input(take.visual.frameName),
-        fit: input(take.visual.fitName),
-        visualSpec: input(take.visual.visualSpecName),
       },
       result: { kind: "output", name: "set" },
     });
@@ -62,12 +55,6 @@ export function createSpeechTrackFragment(options: SpeechTrackFragmentOptions) {
       result: { kind: "output", name: "track" },
     },
     {
-      id: "track:visual-track",
-      producer: speechTrackProducers.projectVisual,
-      inputs: { track: operation("track:semantic"), set: operation(current) },
-      result: { kind: "output", name: "visual" },
-    },
-    {
       id: "track:audio-track",
       producer: semanticTrackProducers.projectAudio,
       inputs: { track: operation("track:semantic") },
@@ -79,9 +66,6 @@ export function createSpeechTrackFragment(options: SpeechTrackFragmentOptions) {
     operations,
     exports: [
       { name: "semantic", type: semanticTrackTypes.track, root: operation("track:semantic") },
-      {
-        name: "visual", type: compositionTypes.visualTrack, root: operation("track:visual-track"),
-      },
       {
         name: "audio", type: compositionTypes.audioTrack, root: operation("track:audio-track"),
       },

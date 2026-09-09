@@ -9,12 +9,10 @@ import {
   executeProjectSpeechEvidenceAudio,
   executeRenderTimelineAudio,
   executeRenderStillVideo,
-  executeDrawStandInCard,
   executeTransformMedia,
 } from "@qflow/media-execution";
 import type { MediaExecutionEnvironment, MediaOperationResult } from "@qflow/media-execution";
 import { mediaPipelineCapabilities } from "@qflow/media-pipeline";
-import { standInCapabilities } from "@qflow/stand-in";
 import { isStreamingResourceStore } from "@qflow/runtime";
 import { speechTypes } from "@qflow/speech";
 import { defineEndpointPackage } from "@qflow/endpoint-kit";
@@ -126,13 +124,6 @@ export function createLocalMediaProvider(config: CreateLocalMediaProviderOptions
         capability: mediaPipelineCapabilities.renderStill,
         returns: artifactTypes.blob,
         handler: operation(executeRenderStillVideo),
-      },
-      {
-        lifecycle: "immediate" as const,
-        transient: true,
-        capability: standInCapabilities.drawCard,
-        returns: artifactTypes.blob,
-        handler: operation(executeDrawStandInCard),
       },
       {
         lifecycle: "immediate" as const,

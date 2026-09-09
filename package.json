@@ -88,6 +88,10 @@
     "./visual-ir": {
       "types": "./dist/public/visual-ir.d.ts",
       "import": "./packages/visual-ir/src/index.ts"
+    },
+    "./hyperframes": {
+      "types": "./dist/public/hyperframes.d.ts",
+      "import": "./packages/hyperframes/src/index.ts"
     }
   },
   "bin": {
@@ -126,7 +130,12 @@
     "examples/minimal-author-package/packages/*/preview/**/*",
     "README.md",
     "README.zh-CN.md",
-    "LICENSE"
+    "LICENSE",
+    "examples/semantic-composition/README.md",
+    "examples/semantic-composition/packages/*/src/**/*",
+    "examples/semantic-composition/packages/*/package.json",
+    "examples/semantic-composition/packages/*/tsconfig.json",
+    "examples/semantic-composition/packages/*/README.md"
   ],
   "scripts": {
     "build:public-types": "node scripts/build-public-types.mjs",
@@ -212,7 +221,6 @@
     "@qflow/seedance": "workspace:*",
     "@qflow/seedance-kits": "workspace:*",
     "@qflow/seedream": "workspace:*",
-    "@qflow/semantic-take-estimate": "workspace:*",
     "@qflow/semantic-track": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/speech": "workspace:*",
@@ -220,7 +228,6 @@
     "@qflow/speech-evidence": "workspace:*",
     "@qflow/speech-track": "workspace:*",
     "@qflow/speech-track-studio": "workspace:*",
-    "@qflow/stand-in": "workspace:*",
     "@qflow/store-sqlite": "workspace:*",
     "@qflow/studio-adapter": "workspace:*",
     "@qflow/svs": "workspace:*",

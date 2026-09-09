@@ -11,7 +11,6 @@ import {
   mediaPipelineModuleRef,
   mediaPipelineMarkupSurfaces,
   stillVideoFragment,
-  clipTimeStillVideoFragment,
 } from "./index.js";
 
 export const qflowPackage = {
@@ -22,7 +21,6 @@ export const qflowPackage = {
     name: "@qflow/media-pipeline@1",
     fragments: {
       "still-video": stillVideoFragment,
-      "clip-time-still-video": clipTimeStillVideoFragment,
     },
   }), createMarkupSurfaceHostFacet({
     module: mediaPipelineModuleRef,

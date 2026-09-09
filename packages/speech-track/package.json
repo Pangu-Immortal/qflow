@@ -14,12 +14,9 @@
     "@qflow/component-kit": "workspace:*",
     "@qflow/composition": "workspace:*",
     "@qflow/elaborator": "workspace:*",
-    "@qflow/media-track": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/semantic-track": "workspace:*",
-    "@qflow/spatial": "workspace:*",
-    "@qflow/svs": "workspace:*",
     "@qflow/markup": "workspace:*"
   },
   "devDependencies": {

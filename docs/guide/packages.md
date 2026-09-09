@@ -95,7 +95,6 @@ specific Provider deployment.
 @qflow/speech                shared speech products
 @qflow/speech-evidence       acoustic evidence products
 @qflow/speech-alignment      speech alignment
-@qflow/semantic-take-estimate explicit syllable-weighted preview alignment
 @qflow/semantic-track        continuous semantic program skeleton
 @qflow/speech-track          ordered speech-take compilation
 @qflow/whisperx              WhisperX component

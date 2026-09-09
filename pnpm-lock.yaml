@@ -231,9 +231,6 @@ importers:
       '@qflow/seedream':
         specifier: workspace:*
         version: link:packages/seedream
-      '@qflow/semantic-take-estimate':
-        specifier: workspace:*
-        version: link:packages/semantic-take-estimate
       '@qflow/semantic-track':
         specifier: workspace:*
         version: link:packages/semantic-track
@@ -255,9 +252,6 @@ importers:
       '@qflow/speech-track-studio':
         specifier: workspace:*
         version: link:packages/speech-track-studio
-      '@qflow/stand-in':
-        specifier: workspace:*
-        version: link:packages/stand-in
       '@qflow/store-sqlite':
         specifier: workspace:*
         version: link:packages/store-sqlite
@@ -305,6 +299,18 @@ importers:
         version: 1.6.4(@algolia/client-search@5.56.0)(@types/node@24.10.1)(lightningcss@1.33.0)(postcss@8.5.28)(search-insights@2.17.3)(typescript@5.9.3)
 
   examples/minimal-author-package/packages/example-component:
+    devDependencies:
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
+      qflow:
+        specifier: workspace:*
+        version: link:../../../..
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  examples/semantic-composition/packages/responsive-explainer:
     devDependencies:
       '@types/node':
         specifier: 24.10.1
@@ -1681,9 +1687,6 @@ importers:
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
-      '@qflow/stand-in':
-        specifier: workspace:*
-        version: link:../stand-in
 
   packages/media-pipeline:
     dependencies:
@@ -2192,9 +2195,6 @@ importers:
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
-      '@qflow/stand-in':
-        specifier: workspace:*
-        version: link:../stand-in
     devDependencies:
       '@qflow/driver-node':
         specifier: workspace:*
@@ -2715,43 +2715,6 @@ importers:
         specifier: workspace:*
         version: link:../speech
 
-  packages/semantic-take-estimate:
-    dependencies:
-      '@qflow/component-kit':
-        specifier: workspace:*
-        version: link:../component-kit
-      '@qflow/elaborator':
-        specifier: workspace:*
-        version: link:../elaborator
-      '@qflow/estimate':
-        specifier: workspace:*
-        version: link:../estimate
-      '@qflow/markup':
-        specifier: workspace:*
-        version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
-      '@qflow/narrative':
-        specifier: workspace:*
-        version: link:../narrative
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/run':
-        specifier: workspace:*
-        version: link:../run
-      '@qflow/speech':
-        specifier: workspace:*
-        version: link:../speech
-      '@qflow/svs':
-        specifier: workspace:*
-        version: link:../svs
-    devDependencies:
-      '@qflow/script':
-        specifier: workspace:*
-        version: link:../script
-
   packages/semantic-track:
     dependencies:
       '@qflow/component-kit':
@@ -2870,24 +2833,15 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media-track':
-        specifier: workspace:*
-        version: link:../media-track
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
       '@qflow/semantic-track':
         specifier: workspace:*
         version: link:../semantic-track
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
-      '@qflow/svs':
-        specifier: workspace:*
-        version: link:../svs
     devDependencies:
       '@qflow/core':
         specifier: workspace:*
@@ -2913,36 +2867,6 @@ importers:
       '@qflow/studio-adapter':
         specifier: workspace:*
         version: link:../studio-adapter
-
-  packages/stand-in:
-    dependencies:
-      '@qflow/artifact':
-        specifier: workspace:*
-        version: link:../artifact
-      '@qflow/component-kit':
-        specifier: workspace:*
-        version: link:../component-kit
-      '@qflow/elaborator':
-        specifier: workspace:*
-        version: link:../elaborator
-      '@qflow/media-pipeline':
-        specifier: workspace:*
-        version: link:../media-pipeline
-      '@qflow/program-space':
-        specifier: workspace:*
-        version: link:../program-space
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/run':
-        specifier: workspace:*
-        version: link:../run
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
-      '@qflow/speech':
-        specifier: workspace:*
-        version: link:../speech
 
   packages/store-sqlite:
     dependencies:

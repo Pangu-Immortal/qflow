@@ -1,4 +1,4 @@
-import type { FrameSpan } from "@qflow/composition";
+import type { FrameSpan, VisualTimedSampling } from "@qflow/composition";
 import type { CompositableSurfaceRef, MediaRational } from "@qflow/media";
 import type { BlobRef } from "@qflow/protocol";
 import type {
@@ -95,6 +95,7 @@ export type MediaPaintLayerProgram = {
 export type MediaSampleLayerProgram = {
   readonly id: string;
   readonly kind: "sample";
+  readonly sampling?: VisualTimedSampling;
   readonly source: MediaVisualSource;
   readonly fit: ContentFit;
   readonly trim?: MediaVisualTrim;

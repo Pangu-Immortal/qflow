@@ -41,7 +41,6 @@ import {
 } from "@qflow/seedance";
 import { speechManifest } from "@qflow/speech";
 import { spatialManifest } from "@qflow/spatial";
-import { standInManifest } from "@qflow/stand-in";
 import { svsManifest } from "@qflow/svs";
 import { textManifest } from "@qflow/text";
 
@@ -68,7 +67,6 @@ function fixture() {
     svsManifest,
     speechManifest,
     seedanceManifest,
-    standInManifest,
   ];
   const closure = createResolvedClosure(manifests);
   const gpt = gptImageEndpoints.image!;
