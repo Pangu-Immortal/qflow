@@ -9,6 +9,7 @@
     "./cli": "./src/cli.ts"
   },
   "dependencies": {
+    "@qflow/browser-capture": "workspace:*",
     "@qflow/cli": "workspace:*",
     "@qflow/compiler-markup-node": "workspace:*",
     "@qflow/composition": "workspace:*",
