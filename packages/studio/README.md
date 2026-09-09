@@ -7,7 +7,7 @@ resulting Tracks with HyperFrames.
 
 ```bash
 cd /path/to/external-video-project
-qflow-studio --run build.svrun
+qflow studio --run build.svrun
 ```
 
 When `--runtime` is omitted, Studio reads the resolved project's `.qflow/runtime`
@@ -69,8 +69,8 @@ project nor its packages are added to the Qflow Distribution or contributor work
 The Host resolves selected project packages from the project first and official
 `@qflow/*` imports from the read-only tool Distribution. The `@qflow/*`
 namespace is Distribution-owned and cannot be shadowed by a project install.
-External Companions compile against `qflow/studio-adapter` and the other public `qflow/*`
-subpaths, with `qflow` as a development dependency. The active Distribution supplies those APIs
+External Companions compile against `@qflow/qflow/studio-adapter` and the other public `@qflow/qflow/*`
+subpaths, with `@qflow/qflow` as a development dependency. The active Distribution supplies those APIs
 at runtime. Ship the Companion's compiled JavaScript with its component package.
 
 The companion owns what its Track means: matching, required same-Surface values,

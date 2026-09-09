@@ -12,7 +12,7 @@ with independent captions remaining separate.
 
 ## Start from a complete package
 
-The installed `qflow` Distribution includes
+The installed `@qflow/qflow` Distribution includes
 [`examples/minimal-author-package/packages/example-component`](https://github.com/qflow-ai/qflow/tree/main/examples/minimal-author-package/packages/example-component).
 Copy that directory into your video's `packages/` directory. Give its package and Module your own
 scope and name, and replace the fixture's `workspace:*` Qflow development dependency with the
@@ -21,7 +21,7 @@ Distribution release used by the project.
 From the copied package directory:
 
 ```bash
-npm install --save-dev qflow@<selected-release>
+npm install --save-dev @qflow/qflow@<selected-release>
 npm run build
 ```
 
@@ -50,7 +50,7 @@ chosen names and the accepted values in the component's own vocabulary and READM
 
 ## Implement and inspect the scene
 
-Use `qflow/author-kit` for the author package API and public domain subpaths for the values you
+Use `@qflow/qflow/author-kit` for the author package API and public domain subpaths for the values you
 consume. [Component Anatomy](./component-anatomy.md) explains how the Manifest, Surface, Fragment and
 Producer cooperate. Keep project copy and media as inputs; draw the component's own panels, frames
 and decoration in its implementation.

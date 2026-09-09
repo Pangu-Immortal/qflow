@@ -1,9 +1,9 @@
-import type { StructuredElement, StructuredSurfaceHandler, SurfaceComponentDraft, SurfaceRecordDraft, SurfaceResolvedReference } from "qflow/author-kit";
+import type { StructuredElement, StructuredSurfaceHandler, SurfaceComponentDraft, SurfaceRecordDraft, SurfaceResolvedReference } from "@qflow/qflow/author-kit";
 import { exampleBoxFragment, exampleMediaFragment, exampleTextFragment } from "./fragment.js";
 import { exampleMarkupSurfaces, exampleTypes } from "./manifest.js";
-import { mediaTypes } from "qflow/media";
-import { svsRecipeType } from "qflow/svs";
-import { artifactTypes } from "qflow/artifact";
+import { mediaTypes } from "@qflow/qflow/media";
+import { svsRecipeType } from "@qflow/qflow/svs";
+import { artifactTypes } from "@qflow/qflow/artifact";
 
 function text(element: StructuredElement, name: string): string {
   const value = element.attributes[name];

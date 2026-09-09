@@ -14,7 +14,7 @@ test("one Distribution resolves its internal and public package spellings", () =
     resolve(process.cwd(), "packages/svs/src/index.ts"),
   );
   assert.equal(
-    resolveDistributionPackageImport(process.cwd(), "qflow/svs"),
+    resolveDistributionPackageImport(process.cwd(), "@qflow/qflow/svs"),
     resolve(process.cwd(), "packages/svs/src/index.ts"),
   );
   assert.equal(resolveDistributionPackageImport(process.cwd(), "example-package"), undefined);
@@ -22,8 +22,8 @@ test("one Distribution resolves its internal and public package spellings", () =
 
 test("an external Author Package imports the active Distribution public API", async () => {
   installDistributionPackageResolution([process.cwd()]);
-  const author = await import(String("qflow/author-kit")) as { readonly sealGraphFragment?: unknown };
-  const composition = await import(String("qflow/composition")) as { readonly sealVisualTrack?: unknown };
+  const author = await import(String("@qflow/qflow/author-kit")) as { readonly sealGraphFragment?: unknown };
+  const composition = await import(String("@qflow/qflow/composition")) as { readonly sealVisualTrack?: unknown };
   assert.equal(typeof author.sealGraphFragment, "function");
   assert.equal(typeof composition.sealVisualTrack, "function");
 });

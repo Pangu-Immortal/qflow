@@ -1,6 +1,6 @@
 # `@qflow/speech`
 
-External components use `qflow/speech` from their `qflow` development dependency. The package
+External components use `@qflow/qflow/speech` from their `@qflow/qflow` development dependency. The package
 owns the types and helpers below; Source imports retain the `@qflow/speech@1` Module identity.
 
 

@@ -18,7 +18,7 @@ interface and implementation; the execution system runs the resulting dependency
 | Provider Endpoint | Executes supported requests through an API or local tool | Runtime Profile |
 | Credential store | Resolves the named credentials for an Endpoint | Runtime Profile |
 | Result repository | Keeps a project's Build records and produced files | Project Result configuration |
-| Distribution | Supplies the executable applications and official packages | Installed `qflow` release |
+| Distribution | Supplies the executable applications and official packages | Installed `@qflow/qflow` release |
 
 For example, a Model describes a requested video, while a Provider maps that request to a service.
 A ranking component describes how a board behaves, while the renderer draws its contribution into
@@ -43,7 +43,7 @@ The consumer installs a chosen version and keeps its lockfile with the project.
 ## Installation and Source imports
 
 The Skill, executable Distribution and video project are installed and updated separately. The
-`qflow` Distribution includes the official author packages and public extension APIs. Its selected
+`@qflow/qflow` Distribution includes the official author packages and public extension APIs. Its selected
 Runtime adapters can prepare additional service dependencies through `qflow runtime up`; optional
 author assets can be installed with the precise `qflow packages install` command reported by the CLI.
 A project's own component dependencies are managed in that project.
@@ -55,8 +55,8 @@ install them.
 
 ## Write and share an extension
 
-An external package develops against public subpaths such as `qflow/author-kit`,
-`qflow/composition`, `qflow/model-kit` or `qflow/endpoint-kit`. Use the selected `qflow` release as a
+An external package develops against public subpaths such as `@qflow/qflow/author-kit`,
+`@qflow/qflow/composition`, `@qflow/qflow/model-kit` or `@qflow/qflow/endpoint-kit`. Use the selected `@qflow/qflow` release as a
 development dependency, compile the extension to JavaScript, and ship its own code and assets. Its
 `package.json` names an activation entry describing what it provides. The active Distribution
 supplies the public Qflow APIs when it loads the selected extension.

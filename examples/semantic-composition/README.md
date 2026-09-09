@@ -6,7 +6,7 @@ video continues playing. A projected Moment triggers the layout change; an indep
 Window defines the scene's lifetime. Captions and other independent contributions can remain peers.
 
 The package demonstrates HTML, CSS, SVG and frame-driven JavaScript inside one VisualTrack Present,
-with typed child video sampling and exact-font text. It uses public `qflow/*` imports. No component
+with typed child video sampling and exact-font text. It uses public `@qflow/qflow/*` imports. No component
 name is registered in Core or in the renderer.
 
 Copy the package into a video's `packages/`, select the installed Qflow version for its development
@@ -31,5 +31,5 @@ node bin/qflow.mjs build examples/semantic-composition/chat.svrun --workspace ex
 The Profile selects local HyperFrames and FFmpeg. Use the machine's prepared browser/media tools;
 there is no hosted generation account in this example. The final Output is `final.video`. The same
 Run can be opened in Studio, where its component lane and physical clock work without a Script lane.
-For an independent project, install `qflow`, copy the component into `packages/`, replace its workspace
+For an independent project, install `@qflow/qflow`, copy the component into `packages/`, replace its workspace
 dependency with the installed Qflow version, and build the package normally.

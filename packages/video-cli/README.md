@@ -105,7 +105,7 @@ what `--to` names and refuse to overwrite. `vocabulary` reads the installed
 manifests: every package with its tags and models, or one package's Surfaces with their attributes,
 children and example, or the value shapes a drawing Producer must emit.
 
-Install the `qflow` Distribution globally once. It resolves its own TypeScript loader and CLI, so it
+Install the `@qflow/qflow` Distribution globally once. It resolves its own TypeScript loader and CLI, so it
 neither invokes npm per command nor requires a project to contain Qflow's `package.json`.
 
 `qflow capture screenshot <url-or-file> --to <image>` saves browser material, and

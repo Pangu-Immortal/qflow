@@ -1,4 +1,4 @@
-# `qflow/author-kit`
+# `@qflow/qflow/author-kit`
 
 Small public framework API for an Author Package.
 
@@ -7,14 +7,14 @@ handlers, sealed Graph Fragments and Markup Surface handlers. Domain facts still
 owners—for example `@qflow/composition`, `@qflow/semantic-track` and `@qflow/spatial`. This package
 does not re-export the video vocabulary or turn those packages into one central object.
 
-`qflow/author-kit` contains no registry, package search, installer, Runtime, Provider or Studio
+`@qflow/qflow/author-kit` contains no registry, package search, installer, Runtime, Provider or Studio
 selection. Importing it makes no component visible. A project's Source explicitly selects an
 installed Author Package; the Host then consumes only the contribution exported by that package's
 declared activation entry.
 
-An external Author Package normally has one development dependency on the released `qflow`
-Distribution. It imports this boundary from `qflow/author-kit` and the relevant domain owners from
-subpaths such as `qflow/composition`, compiles its activation to JavaScript, and publishes only its
+An external Author Package normally has one development dependency on the released `@qflow/qflow`
+Distribution. It imports this boundary from `@qflow/qflow/author-kit` and the relevant domain owners from
+subpaths such as `@qflow/qflow/composition`, compiles its activation to JavaScript, and publishes only its
 own built files and assets. At execution time the active Qflow Distribution supplies those exact
 public subpaths. This keeps one framework implementation in the process and prevents a component
 tarball from carrying private copies of Core.

@@ -1,18 +1,18 @@
-import { assertAttributes, assertEmptyElement, canonicalize, createMarkupSurfaceHostFacet, sameType, sealGraphFragment, textAttribute } from "qflow/author-kit";
-import type { ComponentPackage, FragmentOperation, ModuleManifest, StructuredSurfaceHandler, SurfaceResolvedReference, TypeRef } from "qflow/author-kit";
-import { compositionTypes } from "qflow/composition";
-import { mediaTypes } from "qflow/media";
-import type { FontStackRef } from "qflow/media";
-import { programSpaceTypes } from "qflow/program-space";
-import type { ProgramSpace } from "qflow/program-space";
-import { semanticTrackTypes } from "qflow/semantic-track";
-import { spatialTypes } from "qflow/spatial";
-import type { CanvasSpace } from "qflow/spatial";
-import { assertTemporalInstantFor, temporalTypes } from "qflow/temporal";
-import type { TemporalInstant, TemporalWindow } from "qflow/temporal";
+import { assertAttributes, assertEmptyElement, canonicalize, createMarkupSurfaceHostFacet, sameType, sealGraphFragment, textAttribute } from "@qflow/qflow/author-kit";
+import type { ComponentPackage, FragmentOperation, ModuleManifest, StructuredSurfaceHandler, SurfaceResolvedReference, TypeRef } from "@qflow/qflow/author-kit";
+import { compositionTypes } from "@qflow/qflow/composition";
+import { mediaTypes } from "@qflow/qflow/media";
+import type { FontStackRef } from "@qflow/qflow/media";
+import { programSpaceTypes } from "@qflow/qflow/program-space";
+import type { ProgramSpace } from "@qflow/qflow/program-space";
+import { semanticTrackTypes } from "@qflow/qflow/semantic-track";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import type { CanvasSpace } from "@qflow/qflow/spatial";
+import { assertTemporalInstantFor, temporalTypes } from "@qflow/qflow/temporal";
+import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
 import { createTemporalInstantProjection, createTemporalSpace, createTemporalWindowProjection, resolveTemporalContext,
   temporalContextAttributeVocabulary, temporalInstantAttributeNames, temporalInstantAttributeVocabulary,
-  temporalWindowAttributeNames, temporalWindowAttributeVocabulary } from "qflow/temporal-markup";
+  temporalWindowAttributeNames, temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal-markup";
 import { renderChat } from "./render.js";
 import type { ChatOptions, Message } from "./render.js";
 

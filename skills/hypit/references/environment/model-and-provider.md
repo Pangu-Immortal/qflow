@@ -75,22 +75,22 @@ A custom Provider or Model can live in the project's `packages/` directory or ar
 package. Source selects Model contributions; the Runtime Profile selects Provider contributions by
 `use`. The package's `qflow.activation` entry supplies the corresponding facets to those hosts.
 
-The public APIs are supplied by the executable `qflow` Distribution:
+The public APIs are supplied by the executable `@qflow/qflow` Distribution:
 
 | Import | Responsibility |
 | --- | --- |
-| `qflow/author-kit` | Author Module, Surface, component, and Fragment declarations |
-| `qflow/model-kit` | Exact model requests and their Producer/Need construction |
-| `qflow/generation` | Shared generated-media inputs, results, validation, and wire-mapping helpers |
-| `qflow/endpoint-kit` | Capability handlers, credentials, receipts, and capacity declarations |
-| `qflow/runtime-kit` | Profile-selected activation, configuration, diagnostics, and Managed Programs |
+| `@qflow/qflow/author-kit` | Author Module, Surface, component, and Fragment declarations |
+| `@qflow/qflow/model-kit` | Exact model requests and their Producer/Need construction |
+| `@qflow/qflow/generation` | Shared generated-media inputs, results, validation, and wire-mapping helpers |
+| `@qflow/qflow/endpoint-kit` | Capability handlers, credentials, receipts, and capacity declarations |
+| `@qflow/qflow/runtime-kit` | Profile-selected activation, configuration, diagnostics, and Managed Programs |
 
 Each API's package README owns its exact fields and examples. Locate those files in the active
 Distribution reported by `qflow paths`: `packages/model-kit/README.md`,
 `packages/generation/README.md`, `packages/endpoint-kit/README.md`, and
 `packages/runtime-kit/README.md`. They ship with the executable; a repository checkout is unnecessary.
 
-Compile a TypeScript extension against the selected `qflow` development dependency and ship its
+Compile a TypeScript extension against the selected `@qflow/qflow` development dependency and ship its
 JavaScript and required assets. [Sharing a package](../production/component-sharing.md) explains direct
 tarball handoff and registry releases. Creating an implementation of an existing public extension
 point belongs in that package. Changing a shared port type, host protocol, or framework behavior is

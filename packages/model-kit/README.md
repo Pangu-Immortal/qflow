@@ -1,10 +1,10 @@
-# `qflow/model-kit`
+# `@qflow/qflow/model-kit`
 
 Author-model package helper for defining exact generated-media requests without repeating the
 nominal Type → Producer → Need → Graph Fragment shell.
 
-An external model package develops against the public `qflow/model-kit`, `qflow/generation`, and
-`qflow/author-kit` subpaths. The released `qflow` Distribution is its framework development
+An external model package develops against the public `@qflow/qflow/model-kit`, `@qflow/qflow/generation`, and
+`@qflow/qflow/author-kit` subpaths. The released `@qflow/qflow` Distribution is its framework development
 dependency; the model ships its own compiled JavaScript, Sources, and assets.
 
 ## Declare the authored request
@@ -12,8 +12,8 @@ dependency; the model ships its own compiled JavaScript, Sources, and assets.
 For example, a model's request can have one prompt and a chosen output shape:
 
 ```ts
-import { defineExactModelModule } from "qflow/model-kit";
-import { sealGenerationPortTable } from "qflow/generation";
+import { defineExactModelModule } from "@qflow/qflow/model-kit";
+import { sealGenerationPortTable } from "@qflow/qflow/generation";
 
 const ports = sealGenerationPortTable({
   model: "studio-image-v1",
@@ -38,7 +38,7 @@ Adding a new service for this request leaves the Model unchanged.
 The definition supplies the Module Manifest, component handlers, exact-model Host facet, and each
 endpoint's request Types and generation Fragment. Export the Manifest in the package activation's
 `modules`, the component in `components`, and its Host facet in `hostFacets`. An Author Surface uses
-`qflow/author-kit` to read Source and connects authored Text and media edges through
+`@qflow/qflow/author-kit` to read Source and connects authored Text and media edges through
 `createExactModelPrimaryGenerationFragment`. It publishes the resulting image, video, or audio as a
 normal Output. See the public function types for the returned values and Fragment inputs.
 

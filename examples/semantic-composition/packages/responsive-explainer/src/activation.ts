@@ -1,18 +1,18 @@
 import { assertAttributes, assertEmptyElement, canonicalize, createMarkupSurfaceHostFacet, sameType,
-  sealGraphFragment, textAttribute } from "qflow/author-kit";
-import type { ComponentPackage, ModuleManifest, StructuredSurfaceHandler, SurfaceResolvedReference, TypeRef } from "qflow/author-kit";
-import { compositionTypes } from "qflow/composition";
-import { mediaTypes } from "qflow/media";
-import type { FontStackRef } from "qflow/media";
-import { narrativeTypes } from "qflow/narrative";
-import { semanticTrackTypes } from "qflow/semantic-track";
-import type { SemanticTrack } from "qflow/semantic-track";
-import { spatialTypes } from "qflow/spatial";
-import type { CanvasSpace } from "qflow/spatial";
-import { temporalTypes } from "qflow/temporal";
-import type { TemporalInstant, TemporalWindow } from "qflow/temporal";
+  sealGraphFragment, textAttribute } from "@qflow/qflow/author-kit";
+import type { ComponentPackage, ModuleManifest, StructuredSurfaceHandler, SurfaceResolvedReference, TypeRef } from "@qflow/qflow/author-kit";
+import { compositionTypes } from "@qflow/qflow/composition";
+import { mediaTypes } from "@qflow/qflow/media";
+import type { FontStackRef } from "@qflow/qflow/media";
+import { narrativeTypes } from "@qflow/qflow/narrative";
+import { semanticTrackTypes } from "@qflow/qflow/semantic-track";
+import type { SemanticTrack } from "@qflow/qflow/semantic-track";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import type { CanvasSpace } from "@qflow/qflow/spatial";
+import { temporalTypes } from "@qflow/qflow/temporal";
+import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
 import { createTemporalInstantProjection, createTemporalWindowProjection, temporalWindowAttributeNames,
-  temporalWindowAttributeVocabulary } from "qflow/temporal-markup";
+  temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal-markup";
 import { renderExplainer } from "./render.js";
 import type { ExplainerOptions } from "./render.js";
 

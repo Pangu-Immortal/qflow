@@ -57,7 +57,7 @@ The following files are included in the Distribution and show how the responsibi
 | [Ranking Companion](../ranking-studio/src/index.ts) | Read the same program, present persistent rows and activation lanes, and connect edits to actual Source inputs. |
 
 A project component can use these relationships with its own behavior. External TypeScript uses
-`qflow/author-kit`, `qflow/temporal-markup` and the appropriate `qflow/*` domain APIs; the official
+`@qflow/qflow/author-kit`, `@qflow/qflow/temporal-markup` and the appropriate `@qflow/qflow/*` domain APIs; the official
 implementation's `@qflow/*` imports are internal workspace spellings. Copy the relevant idea into
 the project's own package, with its own Module identity, instead of editing the installed Ranking.
 

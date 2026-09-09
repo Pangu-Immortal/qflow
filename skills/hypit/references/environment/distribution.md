@@ -5,10 +5,10 @@ Read this to locate, install, or update the executable Qflow Distribution after 
 ## Keep three lifecycles separate
 
 The installed Skill supplies production judgment. The executable Distribution supplies `qflow`,
-`qflow-studio`, official packages, and Runtime hosts. A video project supplies the work's Sources,
+`qflow studio`, official packages, and Runtime hosts. A video project supplies the work's Sources,
 Runs, assets, local packages, Profile selection, and Results. They can live in unrelated locations
 and none is installed as a side effect of another. `npx skills add qflow-ai/qflow -g` installs the
-Skill's knowledge; the executable is the separate npm package `qflow`.
+Skill's knowledge; the executable is the separate npm package `@qflow/qflow`.
 
 ## Find the installation already available
 
@@ -26,8 +26,8 @@ a separate setup question from whether the executable is installed.
 If the shell cannot find `qflow`, inspect the project's and npm's global package records:
 
 ```bash
-npm ls qflow --depth=0
-npm ls --global qflow --depth=0
+npm ls @qflow/qflow --depth=0
+npm ls --global @qflow/qflow --depth=0
 npm prefix --global
 ```
 
@@ -42,13 +42,13 @@ launcher, and retain the working command and location in project notes when usef
 The usual machine-wide installation command for a published release is:
 
 ```bash
-npm install --global qflow
+npm install --global @qflow/qflow
 ```
 
 A project can instead keep Qflow in its own dependencies and lockfile:
 
 ```bash
-npm install --save-dev qflow
+npm install --save-dev @qflow/qflow
 npm exec --no -- qflow --help
 ```
 

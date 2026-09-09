@@ -22,19 +22,19 @@ Distribution reserves `@qflow/*`. A Source imports the package's logical Module 
 `<import as="score" from="@studio/score-strip@1"/>`. That `1` is not its npm release version.
 
 External Author Packages use the released Distribution's public subpaths. The small framework-facing
-surface is `qflow/author-kit`; domain values continue to come from their own owners:
+surface is `@qflow/qflow/author-kit`; domain values continue to come from their own owners:
 
 | Owner | Interface |
 | --- | --- |
-| `qflow/author-kit` | Module declarations, deterministic handlers, sealed Fragments and Markup Surface handlers |
-| `qflow/temporal-markup` | author-time semantic Window/Instant projection helpers |
-| `qflow/composition`, `qflow/visual-ir` | peer Track values and renderer-independent visual representation |
-| `qflow/studio-adapter` (optional, in Companion code) | editor entity projection, Inspector bindings and executed temporal lineage |
+| `@qflow/qflow/author-kit` | Module declarations, deterministic handlers, sealed Fragments and Markup Surface handlers |
+| `@qflow/qflow/temporal-markup` | author-time semantic Window/Instant projection helpers |
+| `@qflow/qflow/composition`, `@qflow/qflow/visual-ir` | peer Track values and renderer-independent visual representation |
+| `@qflow/qflow/studio-adapter` (optional, in Companion code) | editor entity projection, Inspector bindings and executed temporal lineage |
 
-The Author Package keeps one development dependency on `qflow`, compiles its activation to
+The Author Package keeps one development dependency on `@qflow/qflow`, compiles its activation to
 JavaScript, and publishes only its own files. The active Distribution supplies these subpaths at
 execution, so a component does not carry a second Core or choose its own framework version. This
-package remains the internal deterministic-handler owner; `qflow/author-kit` is the deliberately
+package remains the internal deterministic-handler owner; `@qflow/qflow/author-kit` is the deliberately
 small public composition boundary, not a facade for every video domain.
 
 An ESM package names its activation entry in `package.json`, for example
@@ -46,7 +46,7 @@ The activation module connects the implementation pieces; this is a wiring excer
 local Manifest, ComponentPackage and Surface declarations/handlers already exist:
 
 ```ts
-import { createMarkupSurfaceHostFacet } from "qflow/author-kit";
+import { createMarkupSurfaceHostFacet } from "@qflow/qflow/author-kit";
 import { manifest, moduleRef, surfaces } from "./manifest.js";
 import { component } from "./component.js";
 import { decodeTrack } from "./surface.js";

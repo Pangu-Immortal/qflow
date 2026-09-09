@@ -1,21 +1,21 @@
-# `qflow/endpoint-kit`
+# `@qflow/qflow/endpoint-kit`
 
 SDK for packages that fulfill exact external capabilities.
 
-External Provider packages import this public subpath from the `qflow` Distribution. Use `qflow` as
+External Provider packages import this public subpath from the `@qflow/qflow` Distribution. Use `@qflow/qflow` as
 a development dependency, compile the Provider to JavaScript, and ship its code plus any ordinary
 runtime dependencies. The active Distribution supplies this API when loading the package.
 No Qflow checkout is needed to develop or install the extension.
 
 ```ts
-import { defineEndpointPackage } from "qflow/endpoint-kit";
-import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "qflow/endpoint-kit";
-import { generationTypes, compileWireRequest, sealGeneratedImageSet } from "qflow/generation";
+import { defineEndpointPackage } from "@qflow/qflow/endpoint-kit";
+import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow/endpoint-kit";
+import { generationTypes, compileWireRequest, sealGeneratedImageSet } from "@qflow/qflow/generation";
 ```
 
 For an existing model, name its exact versioned Capability and expected result Type. Map its request
 ports into the service's wire format; the Provider need not import the model's implementation.
-`qflow/generation` supplies the common generated-media values and optional wire-mapping helpers.
+`@qflow/qflow/generation` supplies the common generated-media values and optional wire-mapping helpers.
 One Provider can implement multiple capabilities, and another Provider can implement those same
 capabilities. The Profile selects the implementation used by a project.
 

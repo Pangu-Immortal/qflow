@@ -1,11 +1,11 @@
-import { sealVisualTrack } from "qflow/composition";
-import type { VisualElement } from "qflow/composition";
-import { browserProgram } from "qflow/hyperframes";
-import type { FontStackRef } from "qflow/media";
-import type { ProgramSpace } from "qflow/program-space";
-import type { CanvasSpace } from "qflow/spatial";
-import { assertTemporalWindowFor } from "qflow/temporal";
-import type { TemporalInstant, TemporalWindow } from "qflow/temporal";
+import { sealVisualTrack } from "@qflow/qflow/composition";
+import type { VisualElement } from "@qflow/qflow/composition";
+import { browserProgram } from "@qflow/qflow/hyperframes";
+import type { FontStackRef } from "@qflow/qflow/media";
+import type { ProgramSpace } from "@qflow/qflow/program-space";
+import type { CanvasSpace } from "@qflow/qflow/spatial";
+import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
+import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
 
 export type Message = { id: string; sender: string; text: string; side: "left" | "right"; at: TemporalInstant };
 export type ChatOptions = { id: string; title: string; entranceFrames: number };

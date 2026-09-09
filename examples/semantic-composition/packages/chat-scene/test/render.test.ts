@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { BrowserProgram } from "qflow/hyperframes";
+import type { BrowserProgram } from "@qflow/qflow/hyperframes";
 import type { FontStackRef } from "@qflow/media";
 import type { ProgramSpace } from "@qflow/program-space";
 import { composeTemporalWindow, projectMomentInstant, projectProgramInstant } from "@qflow/temporal";

@@ -1,8 +1,8 @@
-import { sealVisualTrack } from "qflow/composition";
-import type { ProgramSpace } from "qflow/program-space";
-import { canonicalize } from "qflow/author-kit";
-import type { BlobRef, ComponentPackage, ProducerHandler, TypedRecord } from "qflow/author-kit";
-import { VISUAL_IR_V1 } from "qflow/visual-ir";
+import { sealVisualTrack } from "@qflow/qflow/composition";
+import type { ProgramSpace } from "@qflow/qflow/program-space";
+import { canonicalize } from "@qflow/qflow/author-kit";
+import type { BlobRef, ComponentPackage, ProducerHandler, TypedRecord } from "@qflow/qflow/author-kit";
+import { VISUAL_IR_V1 } from "@qflow/qflow/visual-ir";
 import { exampleProducers, exampleTypes } from "./manifest.js";
 
 const inline = <T>(record: { readonly value: { readonly kind: string; readonly value?: unknown } } | undefined): T => {

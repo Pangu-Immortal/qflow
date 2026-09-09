@@ -39,7 +39,7 @@ The original audio stays independently selectable as `speech.audio`.
 function computes state directly from local frame time, supporting direct seeking, range renders
 and independent workers.
 
-The package builds against `qflow` and emits JavaScript. In a standalone project, replace the
+The package builds against `@qflow/qflow` and emits JavaScript. In a standalone project, replace the
 repository's `workspace:*` development dependency with the Qflow version you use. Run `npm run build`
 and connect this directory through an ordinary `file:` dependency during development. Cross-project
 sharing can use a tarball or a versioned package under the owner's scope.

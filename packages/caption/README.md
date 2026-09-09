@@ -1,6 +1,6 @@
 # `@qflow/caption`
 
-External components use `qflow/caption` from their `qflow` development dependency. The package
+External components use `@qflow/qflow/caption` from their `@qflow/qflow` development dependency. The package
 owns the types and helpers below; Source imports retain the `@qflow/caption@1` Module identity.
 
 

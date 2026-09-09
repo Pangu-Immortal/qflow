@@ -5,7 +5,7 @@ description: Naming, module boundaries, TypeScript configuration and wire data.
 
 # Conventions
 
-These conventions describe work inside the Qflow repository. Project extensions use their owner's scope and the public `qflow/*` SDK subpaths; see [Packages and Extension](./packages.md).
+These conventions describe work inside the Qflow repository. Project extensions use their owner's scope and the public `@qflow/qflow/*` SDK subpaths; see [Packages and Extension](./packages.md).
 
 ## Naming
 

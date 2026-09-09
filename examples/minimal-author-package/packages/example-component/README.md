@@ -1,15 +1,15 @@
 # Example component fixture
 
 A small complete package for learning Manifest, Surface, Fragment, Producer and activation wiring. Framework-facing imports come from
-`qflow/author-kit`; video-domain imports use their owning `qflow/*` subpaths. Its only Qflow
-framework dependency is the released `qflow` Distribution; TypeScript and Node types are ordinary
+`@qflow/qflow/author-kit`; video-domain imports use their owning `@qflow/qflow/*` subpaths. Its only Qflow
+framework dependency is the released `@qflow/qflow` Distribution; TypeScript and Node types are ordinary
 build tooling. No Runtime dependency is bundled into its tarball.
 
 It contains a Module Manifest with nominal Types and deterministic Producers, validators, a structured
 Surface decoder returning `records`, `components`, `fragments` and `exports`, and sealed Fragments with
 literal `fragment-input`, `fragment-operation` and `output` references. `src/temporal.ts` shows the
-Surface-side `qflow/temporal-markup` Window/Moment projections; that package is distinct from the
-graph-side `qflow/temporal` Producers.
+Surface-side `@qflow/qflow/temporal-markup` Window/Moment projections; that package is distinct from the
+graph-side `@qflow/qflow/temporal` Producers.
 
 The Surfaces demonstrate a box, a text surface, a media slot and a Style decoder. The slot is a graph
 input; it is not a file bundled by the package. `preview/Box.png` is a real catalogue frame supplied
@@ -29,7 +29,7 @@ name. The checked-in fixture's `workspace:*` dependency connects it to the repos
 development. In the copied package, replace that development dependency with the selected release:
 
 ```bash
-npm install --save-dev qflow@<selected-release>
+npm install --save-dev @qflow/qflow@<selected-release>
 npm run build
 npm pack
 ```

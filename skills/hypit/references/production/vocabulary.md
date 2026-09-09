@@ -68,12 +68,12 @@ Keep the boundary useful:
 - Runtime Profiles own external execution and credentials;
 - Provider packages implement media tools and external services.
 
-Read the installed `qflow/author-kit` README for the public package boundary and a relevant component
+Read the installed `@qflow/qflow/author-kit` README for the public package boundary and a relevant component
 for an implementation example. Give the new package its own Module identity and use the project
 owner's scope; the selected Distribution owns the reserved `@qflow/*` namespace.
 
-TypeScript imports use public SDK paths such as `qflow/author-kit`, `qflow/composition`,
-`qflow/text`, `qflow/caption` or `qflow/studio-adapter`. Source imports instead name logical Modules,
+TypeScript imports use public SDK paths such as `@qflow/qflow/author-kit`, `@qflow/qflow/composition`,
+`@qflow/qflow/text`, `@qflow/qflow/caption` or `@qflow/qflow/studio-adapter`. Source imports instead name logical Modules,
 such as `@qflow/caption@1`. When learning from installed official source, translate its internal
 workspace imports to the corresponding public SDK paths in the project package.
 

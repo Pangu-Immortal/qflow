@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "24.10.1",
-    "qflow": "workspace:*",
+    "@qflow/qflow": "workspace:*",
     "typescript": "5.9.3"
   }
 }

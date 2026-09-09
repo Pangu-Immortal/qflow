@@ -1,11 +1,11 @@
-# `qflow/runtime-kit`
+# `@qflow/qflow/runtime-kit`
 
 Host facets for the two environmental choices a Local Runtime Profile may select:
 
 * an Endpoint implements external capabilities;
 * a Credential Store resolves explicit credential references.
 
-External packages use this public subpath from their `qflow` development dependency. The built
+External packages use this public subpath from their `@qflow/qflow` development dependency. The built
 package's `qflow.activation` entry exports a default package contribution with
 `format: "qflow.node-package@1"` and the declared `hostFacets`.
 

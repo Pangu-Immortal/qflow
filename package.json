@@ -1,5 +1,5 @@
 {
-  "name": "qflow",
+  "name": "@qflow/qflow",
   "version": "0.1.0",
   "description": "Qflow video authoring Distribution for AI agents",
   "license": "SEE LICENSE IN LICENSE",
@@ -95,8 +95,7 @@
     }
   },
   "bin": {
-    "qflow": "./bin/qflow.mjs",
-    "qflow-studio": "./bin/qflow-studio.mjs"
+    "qflow": "./bin/qflow.mjs"
   },
   "packageManager": "pnpm@10.33.0",
   "files": [
@@ -155,7 +154,7 @@
     "test:whisperx-service": "uv run --project services/whisperx --frozen python -m unittest discover -s services/whisperx/tests -p \"test_*.py\"",
     "test:image-opencv": "node test/run.mjs image-opencv",
     "qflow": "node bin/qflow.mjs",
-    "studio": "pnpm --filter @qflow/studio exec node --import tsx start.ts",
+    "studio": "node bin/qflow.mjs studio",
     "prepack": "npm run build:public-types"
   },
   "engines": {

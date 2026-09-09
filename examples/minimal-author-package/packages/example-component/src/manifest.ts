@@ -1,12 +1,12 @@
 import { readFile } from "node:fs/promises";
-import { compositionTypes } from "qflow/composition";
-import type { ModuleManifest, ProducerRef, TypeRef } from "qflow/author-kit";
-import { programSpaceTypes } from "qflow/program-space";
-import { semanticTrackTypes } from "qflow/semantic-track";
-import { temporalTypes } from "qflow/temporal";
-import { mediaTypes } from "qflow/media";
-import { svsRecipeType } from "qflow/svs";
-import { artifactTypes } from "qflow/artifact";
+import { compositionTypes } from "@qflow/qflow/composition";
+import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/author-kit";
+import { programSpaceTypes } from "@qflow/qflow/program-space";
+import { semanticTrackTypes } from "@qflow/qflow/semantic-track";
+import { temporalTypes } from "@qflow/qflow/temporal";
+import { mediaTypes } from "@qflow/qflow/media";
+import { svsRecipeType } from "@qflow/qflow/svs";
+import { artifactTypes } from "@qflow/qflow/artifact";
 
 const previewImage = (file: string) => ({
   mediaType: "image/png",
