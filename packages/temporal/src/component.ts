@@ -2,6 +2,7 @@ import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-
 import { canonicalize } from "@qflow/protocol";
 import type { StoredValue } from "@qflow/protocol";
 import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import type { ProgramSpace } from "@qflow/program-space";
 import type { SemanticTrack } from "@qflow/semantic-track";
 
 import {
@@ -30,7 +31,7 @@ export const temporalComponent = {
     { producer: temporalProducers.projectProgramInstant, handler: ({ inputs }) => ({ outputs: { instant: output(projectProgramInstant({
       itemId: instantSpec(inputs).id,
       subjectId: instantSpec(inputs).subjectId,
-      semantic: inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
+      space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
       projection: instantSpec(inputs).projection,
       authority: instantSpec(inputs).authority,
     })) }, needs: {} }) },

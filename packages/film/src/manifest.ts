@@ -1,7 +1,8 @@
+import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { audioTrackSchema, compositionDependency, compositionTypes, visualTrackSchema } from "@qflow/composition";
 import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { semanticTrackDependency, semanticTrackTypes } from "@qflow/semantic-track";
+import { semanticTrackDependency } from "@qflow/semantic-track";
 import { spatialDependency, spatialTypes } from "@qflow/spatial";
 import { svsManifest, svsModuleRef, svsRecipeType } from "@qflow/svs";
 
@@ -55,9 +56,7 @@ export const filmMarkupSurfaces = [{
         { name: "canvas", kind: "reference", required: true,
           accepts: [spatialTypes.canvas],
           summary: "Selects the CanvasSpace that decides the Composition's dimensions." },
-        { name: "semantic", kind: "reference", required: true,
-          accepts: [semanticTrackTypes.track],
-          summary: "Selects the SemanticTrack that decides the Composition's duration and frame rate." },
+        ...temporalContextAttributeVocabulary,
         { name: "appearance", kind: "reference", required: true,
           accepts: [svsRecipeType],
           summary: "Selects the SVS Recipe that decides the clear color behind every Track.",

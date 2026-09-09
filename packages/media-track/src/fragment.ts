@@ -1,7 +1,7 @@
+import { programSpaceTypes } from "@qflow/program-space";
 import { artifactTypes } from "@qflow/artifact";
 import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
-import { semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
 import { spatialTypes } from "@qflow/spatial";
 import { temporalTypes } from "@qflow/temporal";
 
@@ -14,7 +14,7 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 export const stillMediaTrackFragment = sealGraphFragment({
   inputs: [
     { name: "header", type: mediaTrackTypes.header },
-    { name: "semantic", type: semanticTrackTypes.track },
+    { name: "space", type: programSpaceTypes.programSpace },
     { name: "canvas", type: spatialTypes.canvas },
     { name: "source", type: artifactTypes.blob },
     { name: "extent", type: spatialTypes.extent },
@@ -31,18 +31,15 @@ export const stillMediaTrackFragment = sealGraphFragment({
     }, result: { kind: "output", name: "layers" } },
     { id: "set", producer: mediaTrackProducers.createSet, inputs: {}, result: { kind: "output", name: "set" } },
     { id: "sounds", producer: mediaTrackProducers.createSounds, inputs: {}, result: { kind: "output", name: "sounds" } },
-    { id: "space", producer: semanticTrackProducers.projectProgramSpace, inputs: {
-      track: input("semantic"),
-    }, result: { kind: "output", name: "space" } },
     { id: "append", producer: mediaTrackProducers.appendItem, inputs: {
-      set: operation("set"), header: input("header"), space: operation("space"), canvas: input("canvas"), layers: operation("sample"),
+      set: operation("set"), header: input("header"), space: input("space"), canvas: input("canvas"), layers: operation("sample"),
       frame: input("frame"), spec: input("item-spec"), sounds: operation("sounds"), window: input("window"),
     }, result: { kind: "output", name: "set" } },
     { id: "finalize", producer: mediaTrackProducers.finalize, inputs: {
-      set: operation("append"), header: input("header"), space: operation("space"),
+      set: operation("append"), header: input("header"), space: input("space"),
     }, result: { kind: "output", name: "program" } },
     { id: "visual", producer: mediaTrackProducers.projectVisual, inputs: {
-      space: operation("space"), program: operation("finalize"),
+      space: input("space"), program: operation("finalize"),
     }, result: { kind: "output", name: "track" } },
   ],
   exports: [
@@ -52,10 +49,9 @@ export const stillMediaTrackFragment = sealGraphFragment({
 });
 
 export const renderMediaTrackFragment = sealGraphFragment({
-  inputs: [{ name: "semantic", type: semanticTrackTypes.track }, { name: "program", type: mediaTrackTypes.program }],
+  inputs: [{ name: "space", type: programSpaceTypes.programSpace }, { name: "program", type: mediaTrackTypes.program }],
   operations: [
-    { id: "space", producer: semanticTrackProducers.projectProgramSpace, inputs: { track: input("semantic") }, result: { kind: "output", name: "space" } },
-    { id: "visual", producer: mediaTrackProducers.projectVisual, inputs: { space: operation("space"), program: input("program") }, result: { kind: "output", name: "track" } },
+    { id: "visual", producer: mediaTrackProducers.projectVisual, inputs: { space: input("space"), program: input("program") }, result: { kind: "output", name: "track" } },
   ],
   exports: [{ name: "track", type: compositionTypes.visualTrack, root: operation("visual") }],
 });

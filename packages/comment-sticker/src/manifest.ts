@@ -1,3 +1,4 @@
+import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { readFile } from "node:fs/promises";
 
 import { artifactDependency, artifactTypes } from "@qflow/artifact";
@@ -6,7 +7,7 @@ import { fontArtifactSchema, mediaDependency, mediaTypes } from "@qflow/media";
 import { narrativeDependency } from "@qflow/narrative";
 import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { semanticTrackDependency, semanticTrackTypes } from "@qflow/semantic-track";
+import { semanticTrackDependency } from "@qflow/semantic-track";
 import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
@@ -276,8 +277,7 @@ export const commentStickerMarkupSurfaces = [
             summary: "Names the Track and prefixes every binding it publishes." },
           { name: "canvas", kind: "reference", required: true, accepts: [spatialTypes.canvas],
             summary: "Chooses the Canvas the cards are laid out on." },
-          { name: "semantic", kind: "reference", required: true, accepts: [semanticTrackTypes.track],
-            summary: "Chooses the SemanticTrack that owns the Program frame domain and resolves every temporal binding." },
+          ...temporalContextAttributeVocabulary,
         ],
         children: [
           { tag: "Sticker", cardinality: "many",

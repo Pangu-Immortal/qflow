@@ -1,10 +1,11 @@
+import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { readFile } from "node:fs/promises";
 
 import { compositionDependency, compositionTypes } from "@qflow/composition";
 import { narrativeDependency } from "@qflow/narrative";
 import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { semanticTrackDependency, semanticTrackTypes } from "@qflow/semantic-track";
+import { semanticTrackDependency } from "@qflow/semantic-track";
 import { spatialDependency, spatialTypes } from "@qflow/spatial";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
 import { temporalWindowAttributeVocabulary } from "@qflow/temporal-markup";
@@ -85,8 +86,7 @@ export const screenOverlayMarkupSurfaces = [
           summary: "Names this overlay so its Program and Track can be referenced elsewhere in the Source." },
         { name: "canvas", kind: "reference", required: true, accepts: [spatialTypes.canvas],
           summary: "Chooses the Canvas every item is painted across." },
-        { name: "semantic", kind: "reference", required: true, accepts: [semanticTrackTypes.track],
-          summary: "Chooses the SemanticTrack that owns the frame domain and resolves temporal bindings." },
+        ...temporalContextAttributeVocabulary,
       ],
       children: [
         { tag: "Flash", cardinality: "many",

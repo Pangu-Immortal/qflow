@@ -1,10 +1,11 @@
+import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { compositionDependency, compositionTypes } from "@qflow/composition";
 import { mediaDependency, mediaTypes } from "@qflow/media";
 import { narrativeDependency } from "@qflow/narrative";
 import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
 import { blobRefObjectSchema } from "@qflow/protocol";
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { semanticTrackDependency, semanticTrackTypes } from "@qflow/semantic-track";
+import { semanticTrackDependency } from "@qflow/semantic-track";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
 import { temporalWindowAttributeVocabulary } from "@qflow/temporal-markup";
 
@@ -75,10 +76,10 @@ export const audioTrackMarkupSurfaces = [{
     name: "track", tag: "Track", mode: "structured",
     outputs: [audioTrackTypes.header, audioTrackTypes.clipSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, audioTrackTypes.program, compositionTypes.audioTrack],
     vocabulary: {
-      summary: "One Audio Track: explicitly prepared audio Clips placed on a shared SemanticTrack and lowered to one ordinary peer AudioTrack.",
+      summary: "One Audio Track: explicitly prepared audio Clips placed on the selected film time axis and lowered to one ordinary peer AudioTrack.",
       attributes: [
         { name: "id", kind: "identifier", required: true, summary: "Names this Audio Track and prefixes the identity of every Clip that does not name itself." },
-        { name: "semantic", kind: "reference", required: true, accepts: [semanticTrackTypes.track], summary: "Selects the continuous semantic frame domain every Clip window resolves into." },
+        ...temporalContextAttributeVocabulary,
       ],
       children: [
         { tag: "Clip", cardinality: "many",

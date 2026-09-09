@@ -10,7 +10,7 @@ import { sealComposition, sealVisualTrack } from "@qflow/composition";
 import { sealProgramSpace } from "@qflow/program-space";
 
 test("staging cancels and joins sibling reads before exposing a failure", async () => {
-  const space = sealProgramSpace({ id: "space", narrativeId: "story", durationSec: 1,
+  const space = sealProgramSpace({ id: "space", durationSec: 1,
     frameRate: { numerator: 30, denominator: 1 } });
   const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
     presents: ["a", "b"].map((id, order) => ({ id, span: { startFrame: 0, endFrameExclusive: 30 }, stacking: { order, tieBreak: id },

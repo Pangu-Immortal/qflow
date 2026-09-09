@@ -1,10 +1,10 @@
+import { programSpaceTypes } from "@qflow/program-space";
 import { artifactTypes } from "@qflow/artifact";
 import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
 import type { FragmentOperation, GraphFragment } from "@qflow/elaborator";
 import { mediaTypes } from "@qflow/media";
 import { mediaTrackProducers, mediaTrackTypes } from "@qflow/media-track";
-import { semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
 import { spatialTypes } from "@qflow/spatial";
 import { temporalTypes } from "@qflow/temporal";
 
@@ -42,16 +42,10 @@ export function createDepthStackFragment(
     { name: "canvas", type: spatialTypes.canvas },
     { name: "frame", type: spatialTypes.frame },
     { name: "header", type: depthStackTypes.header },
-    { name: "semantic", type: semanticTrackTypes.track },
+    { name: "space", type: programSpaceTypes.programSpace },
     { name: "spec", type: depthStackTypes.spec },
   ];
   const operations: FragmentOperation[] = [
-    {
-      id: "space",
-      producer: semanticTrackProducers.projectProgramSpace,
-      inputs: { track: input("semantic") },
-      result: { kind: "output", name: "space" },
-    },
     {
       id: "cards",
       producer: depthStackProducers.createCards,
@@ -113,7 +107,7 @@ export function createDepthStackFragment(
       producer: depthStackProducers.appendCard,
       inputs: {
         set: cardSet,
-        space: operation("space"),
+        space: input("space"),
         material: operation(sampleId),
         label: input(card.labelName),
         spec: input(card.cardSpecName),
@@ -132,7 +126,7 @@ export function createDepthStackFragment(
       header: input("header"),
       frame: input("frame"),
       spec: input("spec"),
-      space: operation("space"),
+      space: input("space"),
       terminal: input(terminalName),
     },
     result: { kind: "output", name: "program" },
@@ -140,7 +134,7 @@ export function createDepthStackFragment(
   operations.push({
     id: "track",
     producer: depthStackProducers.render,
-    inputs: { canvas: input("canvas"), space: operation("space"), program: operation("program") },
+    inputs: { canvas: input("canvas"), space: input("space"), program: operation("program") },
     result: { kind: "output", name: "track" },
   });
   return sealGraphFragment({

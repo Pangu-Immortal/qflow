@@ -10,6 +10,7 @@
     "@qflow/composition": "workspace:*",
     "@qflow/film": "workspace:*",
     "@qflow/semantic-track": "workspace:*",
-    "@qflow/studio-adapter": "workspace:*"
+    "@qflow/studio-adapter": "workspace:*",
+    "@qflow/program-space": "workspace:*"
   }
 }

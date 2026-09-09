@@ -21,7 +21,8 @@
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/semantic-track": "workspace:*",
-    "@qflow/markup": "workspace:*"
+    "@qflow/markup": "workspace:*",
+    "@qflow/temporal-markup": "workspace:*"
   },
   "devDependencies": {
     "@qflow/core": "workspace:*",

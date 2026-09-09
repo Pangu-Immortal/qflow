@@ -12,6 +12,7 @@
     "@qflow/markup": "workspace:*",
     "@qflow/narrative": "workspace:*",
     "@qflow/semantic-track": "workspace:*",
-    "@qflow/temporal": "workspace:*"
+    "@qflow/temporal": "workspace:*",
+    "@qflow/program-space": "workspace:*"
   }
 }
