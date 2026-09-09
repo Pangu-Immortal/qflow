@@ -18,7 +18,7 @@ test("author check keeps the default summary compact and reserves Output types f
   const presentation = {
     kind: "check-author",
     machine: {
-      format: "qflow.cli-check@2",
+      format: "qflow.cli-check@1",
       sourceKind: "author",
       ok: true,
       source: "/project/main.svml",
@@ -41,7 +41,7 @@ test("author check keeps the default summary compact and reserves Output types f
 
 test("JSON mode writes exactly the stable command view", () => {
   const machine = {
-    format: "qflow.cli-doctor@3" as const,
+    format: "qflow.cli-doctor@1" as const,
     ok: false,
     project: "/project",
     profile: "/project/qflow.runtime.ts",
@@ -57,7 +57,7 @@ test("plan presents useful choices and readable requests without default graph i
   const presentation = {
     kind: "plan",
     machine: {
-      format: "qflow.cli-plan@3",
+      format: "qflow.cli-plan@1",
       ok: true,
       run: "/project/build.svrun",
       targetCount: 1,
@@ -91,7 +91,7 @@ test("plan presents useful choices and readable requests without default graph i
 
 test("plan names the Provider and price page behind each request, and points at --runtime when it cannot", () => {
   const base = {
-    format: "qflow.cli-plan@3",
+    format: "qflow.cli-plan@1",
     ok: true,
     run: "/project/build.svrun",
     targetCount: 1,
@@ -195,7 +195,7 @@ test("run check treats historical reuse as a normal summary", () => {
   const output = capture(human, {
     kind: "check-run",
     machine: {
-      format: "qflow.cli-check@2",
+      format: "qflow.cli-check@1",
       sourceKind: "run",
       ok: true,
       run: "/project/build.svrun",

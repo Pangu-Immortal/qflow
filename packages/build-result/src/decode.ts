@@ -186,7 +186,7 @@ export function decodeBuildResultManifest(
 ): BuildResultManifest {
   const id = buildId(build, "Build Result address");
   const item = object(value, subject);
-  if (item.format !== "qflow.build-result@2") throw new Error(`${subject} is not a Qflow Build Result`);
+  if (item.format !== "qflow.build-result@1") throw new Error(`${subject} is not a Qflow Build Result`);
   const source = object(item.source, `${subject}.source`);
   const run = item.run === undefined ? undefined : object(item.run, `${subject}.run`);
   const title = optionalText(item.title, `${subject}.title`);
@@ -207,7 +207,7 @@ export function decodeBuildResultManifest(
   }
   const failure = optionalString(item.failure, `${subject}.failure`);
   return {
-    format: "qflow.build-result@2",
+    format: "qflow.build-result@1",
     id,
     ...(title === undefined ? {} : { title }),
     ...(note === undefined ? {} : { note }),
