@@ -3,8 +3,6 @@ title: 代码规范
 description: 命名、模块边界、TypeScript 配置与 wire 数据。
 ---
 
-# 代码规范
-
 这些规范面向 Qflow 仓库内的工作。项目扩展使用所有者自己的 scope 和公开的 `@qflow/qflow/*` SDK 子路径，见 [包与扩展](./packages.md)。
 
 ## 命名

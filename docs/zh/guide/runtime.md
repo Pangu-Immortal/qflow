@@ -3,8 +3,6 @@ title: Runtime
 description: Qflow Source 与 Core 之外的执行边界。
 ---
 
-# Runtime
-
 Qflow 把四个决定分开：
 
 | 所有者 | 决定什么 |

@@ -3,8 +3,6 @@ title: Development Guide
 description: Getting started with Qflow development.
 ---
 
-# Development Guide
-
 ## Prerequisites
 
 | Tool | Version | Required for |

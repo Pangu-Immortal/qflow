@@ -3,8 +3,6 @@ title: Runtime
 description: The execution boundary outside Qflow source and Core.
 ---
 
-# Runtime
-
 Qflow keeps four decisions separate:
 
 | Owner | Decides |
