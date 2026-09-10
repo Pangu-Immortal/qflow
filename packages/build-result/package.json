@@ -8,6 +8,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@qflow/protocol": "workspace:*"
+    "@qflow/protocol": "workspace:*",
+    "koffi": "3.2.1"
   }
 }

@@ -43,6 +43,8 @@ export type DoctorOutput = {
   readonly ok: boolean;
   readonly project: string;
   readonly profile?: string;
+  readonly profileSource?: "argument" | "project" | "none";
+  readonly selectionFile?: string;
   readonly diagnosticCount: number;
   readonly diagnostics: readonly CliDiagnostic[];
   readonly omittedDiagnostics?: number;
@@ -272,9 +274,16 @@ function renderDoctor(view: Extract<CliPresentation, { kind: "doctor" }>, io: Cl
   const lines = [colors.accent(colors.strong("Qflow Doctor")), ""];
   lines.push(...facts([
     ["Project", shortPath(view.machine.project)],
-    ...(view.machine.profile === undefined ? [] : [["Profile", shortPath(view.machine.profile)] as const]),
+    ["Runtime Profile", view.machine.profile === undefined ? "not selected" : shortPath(view.machine.profile)],
+    ...(view.machine.profileSource === "argument"
+      ? [["Runtime selection", "command argument (this invocation only)"] as const]
+      : view.machine.selectionFile === undefined ? [] : [["Runtime selection", shortPath(view.machine.selectionFile)] as const]),
+    ["Scope", view.machine.profile === undefined ? "project Results only" : "selected Runtime and project Results"],
   ], colors));
   lines.push("");
+  if (view.machine.profile === undefined) {
+    lines.push("Select an existing Profile with qflow runtime use <profile>, or pass --runtime <profile> to check it.", "");
+  }
   if (view.machine.diagnostics.length === 0) {
     lines.push(heading("success", "No problems found", io, colors));
   } else {
@@ -770,7 +779,8 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow doctor")),
       colors.dim("Diagnose project Results and, when selected or supplied, one Runtime Profile."),
       "",
-      "  qflow doctor [<runtime-profile>] [--workspace <project>]",
+      "  qflow doctor [--runtime <profile>] [--workspace <project>]",
+      "  A positional Profile is also accepted in place of --runtime.",
       "  Without a Runtime Profile, checks only the project's selected Result Store.",
     ],
     plan: [
@@ -819,6 +829,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       "  qflow runtime down [<profile>]    stop the Worker; external programs keep running",
       "",
       "The project is resolved first. Selection is read only from that project's .qflow/runtime.",
+      "All runtime actions accept --workspace <project>; operational actions also accept --runtime <profile>.",
       "No Profile filename discovery or parent-project inheritance is performed.",
       "Remote Endpoints such as QflowHub are not started by this command; use doctor to test them.",
     ],
@@ -836,22 +847,26 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow programs")),
       colors.dim("Prepare and operate external programs declared by Endpoints in one Runtime Profile."),
       "",
-      "  qflow programs up [<profile>] [--max-wait-ms <ms>]",
-      "  qflow programs status [<profile>]",
-      "  qflow programs down [<profile>]",
+      "  qflow programs up [--runtime <profile>] [--workspace <project>] [--max-wait-ms <ms>]",
+      "  qflow programs status [--runtime <profile>] [--workspace <project>]",
+      "  qflow programs down [--runtime <profile>] [--workspace <project>]",
+      "  A positional Profile is also accepted in place of --runtime.",
     ],
     activity: [
       colors.accent(colors.strong("qflow activity")),
       colors.dim("Inspect active Builds and Provider pool capacity."),
       "",
-      "  qflow activity [--runtime <profile>] [--watch]",
-      "  qflow activity [--runtime <profile>] --watch --jsonl",
+      "  qflow activity [--workspace <project>] [--runtime <profile>] [--watch]",
+      "  qflow activity [--workspace <project>] [--runtime <profile>] --watch --jsonl",
     ],
     paths: [
       colors.accent(colors.strong("qflow paths")),
       colors.dim("Show project, Runtime and host state locations without creating them."),
       "",
-      "  qflow paths [--runtime <profile>]",
+      "  qflow paths [--workspace <project>] [--runtime <profile>]",
+      "  Shows whether Runtime selection comes from a command argument or the project's .qflow/runtime.",
+      "  Without --workspace, the nearest package.json above cwd defines the project (otherwise cwd).",
+      "  Relative command-line paths start at cwd, including when --workspace is supplied.",
     ],
     builds: [
       colors.accent(colors.strong("qflow builds")),
@@ -863,7 +878,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow status")),
       colors.dim("Show one Build now, or keep watching it without owning execution."),
       "",
-      "  qflow status <build-id> [--runtime <profile>] [--watch]",
+      "  qflow status <build-id> [--workspace <project>] [--runtime <profile>] [--watch]",
       "  --watch                   observe until a Result outcome or operator attention",
       "  --max-wait-ms <ms>        stop watching after a bounded wait",
     ],
@@ -892,14 +907,14 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow cancel")),
       colors.dim("Stop one Build and request cancellation of submitted work when supported."),
       "",
-      "  qflow cancel <build-id> [--runtime <profile>] [--reason <text>]",
+      "  qflow cancel <build-id> [--workspace <project>] [--runtime <profile>] [--reason <text>]",
     ],
     result: [
       colors.accent(colors.strong("qflow result")),
       colors.dim("Edit one Result, finish an interrupted Result write, or discard an incomplete submission."),
       "",
-      "  qflow result finish <build-id> [--runtime <profile>]",
-      "  qflow result discard <build-id> [--runtime <profile>]",
+      "  qflow result finish <build-id> [--workspace <project>] [--runtime <profile>]",
+      "  qflow result discard <build-id> [--workspace <project>] [--runtime <profile>]",
       "  qflow result edit <build-id> [--workspace <project>] [--title <text>] [--note <text>]",
       "                           [--highlight <output> ...]",
       "  --clear-title            remove the Result's human title",
@@ -913,6 +928,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       "  qflow auth status <endpoint-instance> [--runtime <profile>] [--slot <name>]",
       "  qflow auth login <endpoint-instance> [--runtime <profile>] [--slot <name>] [--from <secret-file>]",
       "  qflow auth logout <endpoint-instance> [--runtime <profile>] [--slot <name>]",
+      "  All auth actions accept --workspace <project> to use that project's selection.",
     ],
   };
   const selected = topics[topic];

@@ -56,6 +56,7 @@ function distribution(
       supportsFrontend: () => false,
       compileSource: async (entry: { readonly id: string }) => ({
         closure: { entry: entry.id, units: [] },
+        provenance: { format: "qflow.author-provenance@1", elements: [] },
         program: { closure: { format: "qflow.closure@1", modules: [{ manifest: {
           format: "qflow.module@1",
           name: "example.value",
