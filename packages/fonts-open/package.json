@@ -5,7 +5,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./studio": "./src/studio.ts"
   },
   "qflow": {
     "activation": "./src/activation.ts"
@@ -126,5 +127,8 @@
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/markup": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/studio-adapter": "workspace:*"
   }
 }
