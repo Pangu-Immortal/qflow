@@ -93,6 +93,9 @@ importers:
       '@qflow/deck-track-studio':
         specifier: workspace:*
         version: link:packages/deck-track-studio
+      '@qflow/elevenlabs-speech':
+        specifier: workspace:*
+        version: link:packages/elevenlabs-speech
       '@qflow/estimate':
         specifier: workspace:*
         version: link:packages/estimate
@@ -102,6 +105,9 @@ importers:
       '@qflow/film-studio':
         specifier: workspace:*
         version: link:packages/film-studio
+      '@qflow/fishaudio-speech':
+        specifier: workspace:*
+        version: link:packages/fishaudio-speech
       '@qflow/fonts-open':
         specifier: workspace:*
         version: link:packages/fonts-open
@@ -970,6 +976,27 @@ importers:
         specifier: workspace:*
         version: link:../source
 
+  packages/elevenlabs-speech:
+    dependencies:
+      '@qflow/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/model-kit':
+        specifier: workspace:*
+        version: link:../model-kit
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
+
   packages/endpoint-kit:
     dependencies:
       '@qflow/protocol':
@@ -1069,6 +1096,27 @@ importers:
       '@qflow/studio-adapter':
         specifier: workspace:*
         version: link:../studio-adapter
+
+  packages/fishaudio-speech:
+    dependencies:
+      '@qflow/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/model-kit':
+        specifier: workspace:*
+        version: link:../model-kit
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
 
   packages/fonts-open:
     dependencies:
@@ -2065,6 +2113,12 @@ importers:
       '@qflow/driver-node':
         specifier: workspace:*
         version: link:../driver-node
+      '@qflow/elevenlabs-speech':
+        specifier: workspace:*
+        version: link:../elevenlabs-speech
+      '@qflow/fishaudio-speech':
+        specifier: workspace:*
+        version: link:../fishaudio-speech
       '@qflow/mimo-speech':
         specifier: workspace:*
         version: link:../mimo-speech

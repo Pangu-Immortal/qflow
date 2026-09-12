@@ -9,6 +9,8 @@ const SEEDREAM: ModuleRef = { name: "@qflow/seedream", version: "1" };
 const MINIMAX: ModuleRef = { name: "@qflow/minimax-h3", version: "1" };
 const GROK: ModuleRef = { name: "@qflow/grok-imagine", version: "1" };
 const MIMO_SPEECH: ModuleRef = { name: "@qflow/mimo-speech", version: "1" };
+const FISHAUDIO_SPEECH: ModuleRef = { name: "@qflow/fishaudio-speech", version: "1" };
+const ELEVENLABS_SPEECH: ModuleRef = { name: "@qflow/elevenlabs-speech", version: "1" };
 
 const seedance = (name: string, model: string): GenerationWireMapping => ({
   capability: { module: SEEDANCE, name }, result: "video", routes: [{ model }],
@@ -130,6 +132,30 @@ export const hypiHubMappings: readonly GenerationWireMapping[] = [
       text: { as: "value", field: "input" },
       instruction: { as: "value", field: "prompt" },
       voiceReference: { as: "urlArray", field: "reference_audio" },
+    },
+  },
+  {
+    capability: { module: FISHAUDIO_SPEECH, name: "voice-design-1" }, result: "audio", routes: [{ model: "fishaudio/voice-design-1" }],
+    fields: {
+      text: { as: "value", field: "input" },
+      voiceDescription: { as: "value", field: "voice_description" },
+    },
+  },
+  {
+    capability: { module: FISHAUDIO_SPEECH, name: "voice-clone" }, result: "audio", routes: [{ model: "fishaudio/voice-clone" }],
+    // Fish Audio titles its transient cloned voice; the title has no authored meaning.
+    constants: { voice_description: "reference" },
+    fields: {
+      text: { as: "value", field: "input" },
+      instruction: { as: "value", field: "prompt" },
+      voiceReference: { as: "urlArray", field: "reference_audio" },
+    },
+  },
+  {
+    capability: { module: ELEVENLABS_SPEECH, name: "eleven_ttv_v3" }, result: "audio", routes: [{ model: "eleven_ttv_v3" }],
+    fields: {
+      text: { as: "value", field: "input" },
+      voiceDescription: { as: "value", field: "voice_description" },
     },
   },
 ];
