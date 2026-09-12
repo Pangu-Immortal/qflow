@@ -113,12 +113,14 @@ export type SemanticAnchor =
       readonly tokenId?: string;
     };
 
+/** Complete authored content; local views are projections of this value. */
 export type Narrative = {
   /** Author-visible `<script id>`; every exported semantic view retains it. */
   readonly id: string;
   readonly segments: readonly NarrativeSegment[];
   readonly tokens: readonly NarrativeToken[];
   readonly turns: readonly NarrativeTurn[];
+  readonly caption: CaptionDocument;
   readonly selections: readonly NarrativeSelection[];
   readonly moments: readonly NarrativeMoment[];
   readonly semanticIndex: {

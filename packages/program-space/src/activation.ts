@@ -1,6 +1,6 @@
 import { createMarkupSurfaceHostFacet } from "@qflow/markup";
 
-import { decodeClockSurface, decodeSpaceSurface } from "./surface.js";
+import { decodeClockSurface } from "./surface.js";
 import { programSpaceManifest, programSpaceMarkupSurfaces, programSpaceModuleRef } from "./index.js";
 
 export const qflowPackage = {
@@ -10,10 +10,6 @@ export const qflowPackage = {
     module: programSpaceModuleRef,
     declaration: programSpaceMarkupSurfaces.find((item) => item.name === "clock")!,
     handler: decodeClockSurface,
-  }), createMarkupSurfaceHostFacet({
-    module: programSpaceModuleRef,
-    declaration: programSpaceMarkupSurfaces.find((item) => item.name === "space")!,
-    handler: decodeSpaceSurface,
   })],
 };
 export default qflowPackage;

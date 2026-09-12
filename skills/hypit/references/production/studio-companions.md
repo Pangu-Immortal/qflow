@@ -36,7 +36,23 @@ it explains another authoring relationship, such as activation within a persiste
 
 An activation rectangle may end before the object disappears. Keep the activation's editable range
 and the object's continuing picture identity distinct. The installed Ranking Companion demonstrates
-this with board, reveal and activation lanes.
+this with the board and its independent reveals.
+
+## Put related rules in a Band
+
+A Track's `bands` are internal strips sharing its label. For example, Caption shows Cue content
+with a bottom band for Style Uses; Performance and Sound show placed Takes with their Uses below.
+The rule is a selectable entity with its own Window, even when overridden or currently empty.
+It remains one Use across gaps and content boundaries.
+
+```ts
+bands: [{ id: "uses", placement: "after", heightPx: 15, display: "label" }]
+// The projected Use entity selects: band: "uses"
+```
+
+Use `attachments` for independent child objects such as Ranking reveals. Use a Band for another
+aspect of the same Track such as its presentation choices. Both use ordinary entity selection,
+overlap order, field declarations and time editing. Each entity chooses one declared band or lane.
 
 ## Connect the picture to the entity
 
@@ -56,8 +72,7 @@ then be adjusted through its declared Inspector fields.
 
 Declare `bindings` for the actual author endpoints, then choose visible `inspector` fields. A
 binding can follow a shared authored Frame or Style through `referenced`, or an SVS Recipe through
-`recipe`. Use `parameterReferences` for an entity's actual reference, such as the Style selected
-for this Caption Cue. Shared values retain their shared effect when edited.
+`recipe`. Use `parameterReferences` for an entity's actual reference, when a derived entity points to a different authored object. Shared values retain their shared effect when edited.
 
 Where describes placement and layout. When describes timing, playback and motion. How describes
 appearance, content and sound. Each Companion chooses useful pages and sections within them.
@@ -69,7 +84,7 @@ appearance, content and sound. Each Companion chooses useful pages and sections 
 | `boolean` | An actual two-state choice. |
 | `select` | Preset, font, alignment or another finite choice, with readable labels. |
 | `color` | Exact hex color, optionally with suggested `swatches`. |
-| `list` / `record` | A schema-described ordered list or named set of values, edited as one Apply/Reset draft. |
+| `list` / `record` | A schema-described ordered list or named set of values, saved together when editing ends and the value is complete. |
 
 For a Surface with a literal `label` attribute, a minimal declaration is:
 
@@ -86,6 +101,24 @@ The Surface already owns `label`; the Companion exposes it. A width stored as `"
 An opacity stored as `0.78` can use `unit: "%", number: { scale: 100, minimum: 0, maximum: 100 }`:
 the control shows 78 and entering 42 writes 0.42. `unit` alone is a display label. Suffix handling
 retains an authored unit; it does not convert percentages to pixels.
+
+A Style can own its controls independently of the Track that consumes it. The Track declares
+`{ name: "style", companion: true }`; the Style's package contributes
+`createStudioCompanionHostFacet({ parameters: [{ id, match: { module, surface }, bindings, inspector }] })`.
+Its field names are local to that Style. Studio follows the reference and combines those fields
+with the Use's time controls. This works for a new project motion Style as well as a familiar
+framed presentation. Shared Style edits continue to affect its other Uses.
+
+A binding's typed `fallback` exposes an omitted default; first editing it writes the property or
+attribute into its owning source. A fallback function can express a dependent default from the
+authored properties. Choose useful valid defaults in the component's own vocabulary. Read-only
+facts and controls share Where, When and How; unpaged fields remain visible beside the active page.
+
+Related scalar attributes can share one `record` draft through a binding's `attributes` list and
+schema. Use object alternatives with a literal mode field when each choice needs different inputs;
+Once its required fields are complete, editing writes the chosen group together and removes unused members. Audio playback demonstrates
+this for its mode and stretch bounds. The package owns those alternatives; see
+the installed Studio adapter README, “Edit related attributes together,” for the exact declaration.
 
 Select options may be plain strings or `{ value, label, description, preview }` entries. Color and
 font previews are small visual hints; the actual option value is written. A font hint uses a family
@@ -121,7 +154,7 @@ Use the installed `packages/studio-adapter/README.md` for the complete minimal C
 activation example, `packages/studio/INSPECTOR.md` for field declarations, and
 `packages/temporal-markup/EDITING.md` for exact time-form behavior. These are package references
 inside the installed Distribution. Ranking, Caption Fine and Media Track Companions demonstrate
-persistent events, per-Cue styles and material occupancy respectively.
+persistent events, Cue content with Style Uses, and material occupancy respectively.
 
 Try the component in its actual Run: select a meaningful picture part, inspect the corresponding
 timeline entity, change an exposed value and inspect the owning Source and resulting picture.

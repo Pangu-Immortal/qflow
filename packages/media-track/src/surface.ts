@@ -1,4 +1,4 @@
-import { createTemporalSpace, resolveTemporalContext } from "@qflow/temporal-markup";
+import { resolveTemporalContext } from "@qflow/temporal-markup";
 import {
   assertEmptyElement as empty,
   assertAttributes as allowed,
@@ -85,7 +85,6 @@ type FragmentLayer =
 type FragmentSound = { readonly sourceName: string; readonly specName: string };
 
 type FragmentItem = {
-  readonly performance?: { readonly fitName: string; readonly sampleName: string };
   readonly suffix: string;
   readonly windowName: string;
   readonly frameName: string;
@@ -167,11 +166,11 @@ function createMediaTrackSurfaceFragment(inputTypes: readonly { readonly name: s
       spec = operation(bindId);
     }
     const common = {
-      set: operation(set), header: input("header"), space: input("space"), canvas: input("canvas"),
+      set: operation(set), header: input("header"), timeline: input("timeline"), canvas: input("canvas"),
       layers: operation(layers), frame: input(item.frameName), spec, sounds: operation(sounds), window: input(item.windowName),
     };
-    operations.push({ id: appendId, producer: item.performance === undefined ? mediaTrackProducers.appendItem : mediaTrackProducers.appendPerformance,
-      inputs: { ...common, ...(item.performance === undefined ? {} : { semantic: input("semantic"), fit: input(item.performance.fitName), sampleSpec: input(item.performance.sampleName) }) }, result: { kind: "output", name: "set" } });
+    operations.push({ id: appendId, producer: mediaTrackProducers.appendItem,
+      inputs: common, result: { kind: "output", name: "set" } });
     set = appendId;
   }
   for (const sequence of sequences) {
@@ -184,7 +183,7 @@ function createMediaTrackSurfaceFragment(inputTypes: readonly { readonly name: s
       const layers = appendLayers(operations, memberPrefix, member.layers);
       const appendId = `${memberPrefix}:append`;
       operations.push({ id: appendId, producer: mediaTrackProducers.appendMember, inputs: {
-        members: operation(members), space: input("space"), layers: operation(layers), spec: input(member.specName), activation: input(member.instantName),
+        members: operation(members), timeline: input("timeline"), layers: operation(layers), spec: input(member.specName), activation: input(member.instantName),
       }, result: { kind: "output", name: "members" } });
       members = appendId;
     }
@@ -199,7 +198,7 @@ function createMediaTrackSurfaceFragment(inputTypes: readonly { readonly name: s
       spec = operation(bindId);
     }
     const common = {
-      set: operation(set), header: input("header"), space: input("space"), canvas: input("canvas"),
+      set: operation(set), header: input("header"), timeline: input("timeline"), canvas: input("canvas"),
       members: operation(members), frame: input(sequence.frameName), spec, sounds: operation(sounds),
     };
     operations.push({ id: appendId, producer: mediaTrackProducers.appendSequence,
@@ -207,10 +206,10 @@ function createMediaTrackSurfaceFragment(inputTypes: readonly { readonly name: s
     set = appendId;
   }
   operations.push(
-    { id: "track:finalize", producer: mediaTrackProducers.finalize, inputs: { set: operation(set), header: input("header"), space: input("space") }, result: { kind: "output", name: "program" } },
-    { id: "track:visual", producer: mediaTrackProducers.projectVisual, inputs: { space: input("space"), program: operation("track:finalize") }, result: { kind: "output", name: "track" } },
+    { id: "track:finalize", producer: mediaTrackProducers.finalize, inputs: { set: operation(set), header: input("header"), timeline: input("timeline") }, result: { kind: "output", name: "program" } },
+    { id: "track:visual", producer: mediaTrackProducers.projectVisual, inputs: { timeline: input("timeline"), program: operation("track:finalize") }, result: { kind: "output", name: "track" } },
   );
-  if (audio) operations.push({ id: "track:audio", producer: mediaTrackProducers.projectAudio, inputs: { space: input("space"), program: operation("track:finalize") }, result: { kind: "output", name: "track" } });
+  if (audio) operations.push({ id: "track:audio", producer: mediaTrackProducers.projectAudio, inputs: { timeline: input("timeline"), program: operation("track:finalize") }, result: { kind: "output", name: "track" } });
   return sealGraphFragment({
     inputs: inputTypes,
     operations,
@@ -495,39 +494,33 @@ function sound(
 }
 
 export const decodeMediaTrackSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  allowed(element, ["id", "semantic", "space", "canvas"]);
+  allowed(element, ["id", "timeline", "canvas"]);
   const trackId = text(element, "id");
   const state = builder();
   const context = resolveTemporalContext({ element, resolveReference });
-  const time = createTemporalSpace({ id: trackId, element, ...context });
-  state.addReference("space", time.space);
+  state.addReference("timeline", context.timeline);
   state.addReference("canvas", reference(element.attributes.canvas, `${element.name}.canvas`, spatialTypes.canvas, resolveReference));
   const headerId = `${trackId}.header`;
   state.addRecord("header", headerId, mediaTrackTypes.header,
     sealMediaTrackHeader({ id: trackId }), element.range);
   const items: FragmentItem[] = [];
   const sequences: FragmentSequence[] = [];
-  const temporalComponents: SurfaceComponentDraft[] = [...time.components];
-  const temporalFragments: ReturnType<typeof createTemporalWindowProjection>["fragments"][number][] = [...time.fragments];
+  const temporalComponents: SurfaceComponentDraft[] = [];
+  const temporalFragments: ReturnType<typeof createTemporalWindowProjection>["fragments"][number][] = [];
   let itemIndex = 0;
   let sequenceIndex = 0;
   let hasAudio = false;
   for (const child of element.children) {
     if (child.kind === "text") {
-      if (child.value.trim().length > 0) throw new Error(`${element.name} accepts only Performance, Item and Sequence children.`);
+      if (child.value.trim().length > 0) throw new Error(`${element.name} accepts only Item and Sequence children.`);
       continue;
     }
-    const isPerformance = child.name.endsWith(":Performance") || child.name === "Performance";
-    if (isPerformance) {
-      if (context.semantic === undefined) throw new Error(`${child.name} requires semantic performance input.`);
-      if (state.inputs.semantic === undefined) state.addReference("semantic", context.semantic);
-    }
-    if (isPerformance || child.name.endsWith(":Item") || child.name === "Item") {
+    if (child.name.endsWith(":Item") || child.name === "Item") {
       itemIndex += 1;
       const itemSuffix = suffix(itemIndex);
       allowed(child, [
         "id", "frame", "appearance", "motion",
-        ...(isPerformance ? [] : ["image", "media", "surface", "extent", "source-audio", "audio-gain"]),
+        "image", "media", "surface", "extent", "source-audio", "audio-gain",
         "clip", ...temporalWindowAttributeNames,
       ]);
       const id = optionalText(child, "id") ?? `${trackId}.item.${itemSuffix}`;
@@ -539,23 +532,12 @@ export const decodeMediaTrackSurface: StructuredSurfaceHandler = ({ element, res
       }
       const motionRecipe = child.attributes.motion === undefined ? undefined
         : recipe(reference(child.attributes.motion, `${child.name}.motion`, svsRecipeType, resolveReference), `${child.name}.motion`);
-      const temporal = createTemporalWindowProjection({ id, element: child, ...context, space: time.space, resolveReference });
+      const temporal = createTemporalWindowProjection({ id, element: child, ...context, resolveReference });
       state.records.push(...temporal.records); temporalComponents.push(...temporal.components); temporalFragments.push(...temporal.fragments);
-      const performance = isPerformance ? {
-        fitName: `item-${itemSuffix}-fit`, sampleName: `item-${itemSuffix}-sample`,
-      } : undefined;
-      const directSource = isPerformance ? undefined : declaredVisualSource(child, resolveReference);
-      validateUnitChildren(child, isPerformance || directSource !== undefined, true);
-      if (performance !== undefined) {
-        state.addRecord(performance.fitName, `${id}.fit`, spatialTypes.fit, decodeMediaFit(appearance), child.range);
-        if (appearance.properties.playback !== undefined || appearance.properties["trim-start"] !== undefined || appearance.properties["trim-end"] !== undefined) {
-          throw new Error(`${child.name} follows the performance's source time. Select its interval with during or start/end.`);
-        }
-        state.addRecord(performance.sampleName, `${id}.sample`, mediaTrackTypes.sampleLayerSpec,
-          decodeMediaSampleSpec(appearance, "content", "timed", decodeSamplingMotion(child, true), true), child.range);
-      }
+      const directSource = declaredVisualSource(child, resolveReference);
+      validateUnitChildren(child, directSource !== undefined, true);
       const layers = unitLayers(state, { trackId, unitSuffix: `item-${itemSuffix}`, element: child, appearance,
-        ...(directSource === undefined ? {} : { directSource }), allowFramePaint: true, allowEmpty: isPerformance }, resolveReference);
+        ...(directSource === undefined ? {} : { directSource }), allowFramePaint: true, allowEmpty: false }, resolveReference);
       const selectedAudio = sourceAudio(child);
       const specName = `item-${itemSuffix}-spec`;
       const windowName = `item-${itemSuffix}-window`;
@@ -572,12 +554,12 @@ export const decodeMediaTrackSurface: StructuredSurfaceHandler = ({ element, res
         }
       }
       if (selectedAudio !== undefined || fragmentSounds.length > 0) hasAudio = true;
-      items.push({ suffix: itemSuffix, windowName, frameName, specName, ...(performance === undefined ? {} : { performance }),
+      items.push({ suffix: itemSuffix, windowName, frameName, specName,
         ...(clipPathName === undefined ? {} : { clipPathName }), layers, sounds: fragmentSounds });
       continue;
     }
     if (!(child.name.endsWith(":Sequence") || child.name === "Sequence")) {
-      throw new Error(`${element.name} accepts only Performance, Item and Sequence children.`);
+      throw new Error(`${element.name} accepts only Item and Sequence children.`);
     }
     sequenceIndex += 1;
     const sequenceSuffix = suffix(sequenceIndex);
@@ -611,7 +593,7 @@ export const decodeMediaTrackSurface: StructuredSurfaceHandler = ({ element, res
     for (const [index, member] of memberElements.entries()) {
       const memberSuffix = suffix(index + 1);
       allowed(member, ["id", "image", "media", "surface", "extent", "appearance", ...temporalInstantAttributeNames, "source-audio", "audio-gain"]);
-      const temporal = createTemporalInstantProjection({ id: `${id}.${memberIds[index]}`, subjectId: memberIds[index]!, element: member, ...context, space: time.space, resolveReference });
+      const temporal = createTemporalInstantProjection({ id: `${id}.${memberIds[index]}`, subjectId: memberIds[index]!, element: member, ...context, resolveReference });
       state.records.push(...temporal.records); temporalComponents.push(...temporal.components); temporalFragments.push(...temporal.fragments);
       const memberAppearance = member.attributes.appearance === undefined ? appearance
         : recipe(reference(member.attributes.appearance, `${member.name}.appearance`, svsRecipeType, resolveReference), `${member.name}.appearance`);
@@ -641,7 +623,7 @@ export const decodeMediaTrackSurface: StructuredSurfaceHandler = ({ element, res
     }
     if (sequenceSounds.length > 0) hasAudio = true;
     const terminalTemporal = createTemporalInstantProjection({
-      id: `${id}.terminal`, subjectId: id, element: child, ...context, space: time.space, resolveReference,
+      id: `${id}.terminal`, subjectId: id, element: child, ...context, resolveReference,
       semanticAttribute: "until", boundaryAttribute: "until-boundary", projectedAttribute: false,
       boundaryFallback: "end",
     });
@@ -656,7 +638,7 @@ export const decodeMediaTrackSurface: StructuredSurfaceHandler = ({ element, res
     sequences.push({ suffix: sequenceSuffix, terminalName, frameName, specName,
       ...(clipPathName === undefined ? {} : { clipPathName }), members, sounds: sequenceSounds });
   }
-  if (items.length === 0 && sequences.length === 0) throw new Error(`${element.name} requires at least one Performance, Item or Sequence.`);
+  if (items.length === 0 && sequences.length === 0) throw new Error(`${element.name} requires at least one Item or Sequence.`);
   const fragment = createMediaTrackSurfaceFragment(state.inputTypes, items, sequences, hasAudio);
   return {
     records: state.records,

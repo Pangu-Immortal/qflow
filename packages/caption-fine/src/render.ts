@@ -1,3 +1,4 @@
+import type { Timeline } from "@qflow/timeline";
 import { assertCaptionProgramForDocument } from "@qflow/caption";
 import type { CaptionProgram } from "@qflow/caption";
 import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/composition";
@@ -14,7 +15,6 @@ import type {
 } from "@qflow/composition";
 import type { CaptionAlignmentUnit, CaptionDocument } from "@qflow/narrative";
 import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
 import { assertSpatialRegionTimeline } from "@qflow/spatial";
 import type { CanvasSpace, SpatialFrame, SpatialRegionTimeline } from "@qflow/spatial";
 
@@ -639,7 +639,7 @@ function structuralRowCount(
 
 /**
  * Acoustic Word windows may overlap. Preserve those measurements in the
- * SemanticTrack, but give every current-only visual state one unambiguous
+ * Timeline, but give every current-only visual state one unambiguous
  * owner: as soon as the next authored unit starts, the previous one stops.
  */
 function exclusiveActivationFrames(
@@ -788,8 +788,8 @@ function cueElements(
       const next = atoms[prefixIndex + 1];
       const nextStart = next === undefined ? durationFrames : atomFrames.get(next.id)?.start;
       if (nextStart === undefined) throw new Error("Fine Caption is missing timing for the next Atom");
-      // A no-break space inside an atom keeps its words on one row; the boundaries between atoms
-      // take an ordinary space. Both are spaced only where the surfaces meeting there call for one.
+      // A no-break timeline inside an atom keeps its words on one row; the boundaries between atoms
+      // take an ordinary timeline. Both are spaced only where the surfaces meeting there call for one.
       const prefixText = joinSurfaces(
         atoms.slice(0, prefixIndex + 1).map((prefixAtom, index) => {
           for (const wordId of prefixAtom.wordIds) {
@@ -1069,33 +1069,32 @@ export function renderFineCaption(
   schedule: FineCaptionSchedule,
   program: CaptionProgram,
   document: CaptionDocument,
-  space: ProgramSpace,
+  timeline: Timeline,
   regions?: SpatialRegionTimeline,
 ): VisualTrack {
   assertFineCaptionSchedule(schedule);
   assertCaptionProgramForDocument(program, document);
   if (schedule.documentId !== document.id) throw new Error("Fine Caption received another CaptionDocument");
-  if (program.wordRuns.length !== 0) {
-    throw new Error("Fine Caption accepts one uniform token rule and cannot consume word-specific Style runs");
-  }
-  assertProgramSpaceIdentity(space);
-  if (schedule.spaceId !== space.id || schedule.narrativeId !== document.narrativeId) {
+
+  assertProgramSpaceIdentity(timeline);
+  if (schedule.spaceId !== timeline.id || schedule.narrativeId !== document.narrativeId) {
     throw new Error("Fine Caption inputs belong to different ProgramSpaces or Narratives");
   }
   const styles = new Map(program.styles.map((style) => [style.id, style]));
   const wordText = new Map(document.words.map((word) => [word.id, word.text]));
   const atomById = new Map(document.units.map((atom) => [atom.id, atom]));
   for (const style of styles.values()) {
+    if (style.rendering === null) continue;
     if (style.rendering.family !== FINE_CAPTION_FAMILY) {
       throw new Error(`Fine Caption cannot render Style family ${style.rendering.family}`);
     }
     assertFineCaptionParameters(style.rendering.parameters as unknown as FineCaptionParameters);
   }
-  const totalFrames = programSpaceFrameCount(space);
+  const totalFrames = programSpaceFrameCount(timeline);
   const regionTracks = regions === undefined ? undefined : (() => {
     assertSpatialRegionTimeline(regions);
     if (regions.frameCount !== totalFrames) {
-      throw new Error(`Fine Caption regions cover ${regions.frameCount} Frames but ProgramSpace has ${totalFrames}`);
+      throw new Error(`Fine Caption regions cover ${regions.frameCount} Frames but Timeline has ${totalFrames}`);
     }
     return new Map(regions.tracks.map((track) => [track.id, track]));
   })();
@@ -1105,6 +1104,7 @@ export function renderFineCaption(
     const resolvedAtoms = atoms.map((atom) => atom!);
     const style = styles.get(cue.styleId);
     if (style === undefined) throw new Error(`Fine Caption Cue ${cue.id} references unknown Style ${cue.styleId}`);
+    if (style.rendering === null) return [];
     const parameters = style.rendering.parameters as unknown as FineCaptionParameters;
     const startFrame = Math.max(0, cue.visibleStartFrame);
     const measuredEnd = Math.min(totalFrames, cue.visibleEndFrameExclusive);
@@ -1130,16 +1130,17 @@ export function renderFineCaption(
     return [{
       id: cue.id,
       span: { startFrame, endFrameExclusive },
+      visibility: cue.visibility,
       stacking: { order: parameters.stackingOrder, tieBreak: `${program.id}:${cue.id}` },
       elements: cueElements(resolvedAtoms, atomFrames, parameters, wordText, durationFrames, cue.styleId, trackedPlacement),
     }];
   });
   const track = sealVisualTrack({
-    programSpaceId: space.id,
+    programSpaceId: timeline.id,
     visualIr: "qflow.visual-ir@1",
     id: program.id,
     presents,
   });
-  assertVisualTrackIdentity(track, space);
+  assertVisualTrackIdentity(track, timeline);
   return track;
 }

@@ -1,4 +1,5 @@
-import { programSpaceTypes } from "@qflow/program-space";
+import { timelineTypes } from "@qflow/timeline";
+
 import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
 import type { FragmentOperation, GraphFragment } from "@qflow/elaborator";
@@ -56,7 +57,7 @@ export function createRankingFragment(
   const selected = definition(variant);
   const inputs: Array<GraphFragment["inputs"][number]> = [
     { name: "header", type: rankingTypes.header },
-    { name: "space", type: programSpaceTypes.programSpace },
+    { name: "timeline", type: timelineTypes.track },
     { name: "outer", type: temporalTypes.window },
     ...(variant === "top-three" ? [
       { name: "terminal", type: temporalTypes.instant },
@@ -133,7 +134,7 @@ export function createRankingFragment(
     operations.push({
       id: "schedule",
       producer: variant === "column" ? rankingProducers.columnSchedule : rankingProducers.tierSchedule,
-      inputs: { header: input("header"), items: specs, space: input("space"), outer: input("outer"), windows: candidates },
+      inputs: { header: input("header"), items: specs, timeline: input("timeline"), outer: input("outer"), windows: candidates },
       result: { kind: "output", name: "schedule" },
     });
   } else {
@@ -141,7 +142,7 @@ export function createRankingFragment(
     id: "schedule",
     producer: rankingProducers.schedule,
     inputs: {
-      header: input("header"), items: specs, space: input("space"),
+      header: input("header"), items: specs, timeline: input("timeline"),
         outer: input("outer"), candidates, terminal: input("terminal"),
     },
     result: { kind: "output", name: "schedule" },
@@ -160,7 +161,7 @@ export function createRankingFragment(
   operations.push({
     id: "visual",
     producer: selected.render,
-    inputs: { space: input("space"), program: operation("program") },
+    inputs: { timeline: input("timeline"), program: operation("program") },
     result: { kind: "output", name: "track" },
   });
   const hasAudio = sound.appearName !== undefined || sound.moveName !== undefined;
@@ -189,7 +190,7 @@ export function createRankingFragment(
     }
     operations.push({
       id: "audio", producer: rankingProducers.renderAudio,
-      inputs: { space: input("space"), events: operation("events"), style: input("sound-style"), sounds },
+      inputs: { timeline: input("timeline"), events: operation("events"), style: input("sound-style"), sounds },
       result: { kind: "output", name: "track" },
     });
   }
@@ -200,7 +201,10 @@ export function createRankingFragment(
       { name: "schedule", type: rankingTypes.schedule, root: operation("schedule") },
       { name: "program", type: selected.program, root: operation("program") },
       { name: "visual", type: compositionTypes.visualTrack, root: operation("visual") },
-      ...(hasAudio ? [{ name: "audio", type: compositionTypes.audioTrack, root: operation("audio") }] : []),
+      ...(hasAudio ? [
+        { name: "events", type: rankingTypes.soundEvents, root: operation("events") },
+        { name: "audio", type: compositionTypes.audioTrack, root: operation("audio") },
+      ] : []),
     ],
   });
 }

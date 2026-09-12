@@ -1,3 +1,5 @@
+import { assertAudioPresentation } from "./audio-presentation.js";
+import type { AudioPresentation } from "./audio-presentation.js";
 import { canonicalStringify, isResourceId } from "@qflow/protocol";
 import type { BlobRef, CanonicalValue } from "@qflow/protocol";
 
@@ -361,6 +363,8 @@ export type VisualPresent = {
   /** Optional domain entity implemented by this renderer Present. */
   readonly subjectId?: string;
   readonly span: FrameSpan;
+  /** Optional visible subranges in program frames; span remains the animation and sampling origin. */
+  readonly visibility?: readonly FrameSpan[];
   /** Absolute paint position for this Present, not for its authoring Track. */
   readonly stacking: {
     readonly order: number;
@@ -380,7 +384,7 @@ export type VisualTrack = {
   readonly presents: readonly VisualPresent[];
 };
 
-export type AudioClip = {
+export type AudioClip = AudioPresentation & {
   readonly id: string;
   /** Optional domain entity implemented by this renderer Clip. */
   readonly subjectId?: string;
@@ -935,6 +939,12 @@ function assertPresent(present: VisualPresent, programSpace: ProgramSpace | unde
   assertNonEmpty(present.id, `${trackId} Present id`);
   if (present.subjectId !== undefined) assertNonEmpty(present.subjectId, `${trackId}.${present.id} subjectId`);
   assertFrameSpan(present.span, totalFrames, `${trackId}.${present.id}.span`);
+  let previousEnd = present.span.startFrame;
+  for (const span of present.visibility ?? []) {
+    assertFrameSpan(span, present.span.endFrameExclusive, `${trackId}.${present.id}.visibility`);
+    if (span.startFrame < previousEnd) throw new Error(`${trackId}.${present.id} visibility must be ordered within its span.`);
+    previousEnd = span.endFrameExclusive;
+  }
   assertNonEmpty(present.stacking.tieBreak, `${trackId}.${present.id} stacking tieBreak`);
   if (!Number.isSafeInteger(present.stacking.order)) {
     throw new Error(`${trackId}.${present.id} has invalid stacking order.`);
@@ -1236,6 +1246,7 @@ function visualTrackContent(value: Omit<VisualTrack, "kind">): VisualTrack {
         id: present.id,
         ...(present.subjectId === undefined ? {} : { subjectId: present.subjectId }),
         span: { ...present.span },
+        ...(present.visibility === undefined ? {} : { visibility: present.visibility.map(span => ({ ...span })) }),
         stacking: { ...present.stacking },
         elements: [...present.elements].map(normalizeElement).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id)),
       }))
@@ -1263,6 +1274,8 @@ function audioTrackContent(value: Omit<AudioTrack, "kind">): AudioTrack {
         gain: clip.gain,
         fadeInSamples: clip.fadeInSamples,
         fadeOutSamples: clip.fadeOutSamples,
+        ...(clip.gainEnvelope === undefined ? {} : { gainEnvelope: clip.gainEnvelope.map(point => ({ ...point })) }),
+        ...(clip.audibility === undefined ? {} : { audibility: clip.audibility.map(span => ({ ...span })) }),
       }))
       .sort((a, b) => a.target.startSample - b.target.startSample || a.id.localeCompare(b.id)),
   };
@@ -1337,6 +1350,7 @@ export function assertAudioTrackIdentity(track: AudioTrack, programSpace?: Progr
     if (!Number.isFinite(clip.gain) || clip.gain < 0 || clip.gain > 64) {
       throw new Error(`${track.id}.${clip.id} gain is invalid.`);
     }
+    assertAudioPresentation(clip, clip.target, totalSamples);
     const targetLength = clip.target.endSampleExclusive - clip.target.startSample;
     if (!Number.isSafeInteger(clip.fadeInSamples) || clip.fadeInSamples < 0 || clip.fadeInSamples > targetLength
       || !Number.isSafeInteger(clip.fadeOutSamples) || clip.fadeOutSamples < 0

@@ -3,7 +3,7 @@ import { compositionComponent, compositionManifest } from "@qflow/composition";
 import { mediaComponent, mediaManifest } from "@qflow/media";
 import { narrativeManifest } from "@qflow/narrative";
 import { programSpaceManifest } from "@qflow/program-space";
-import { semanticTrackManifest } from "@qflow/semantic-track";
+import { timelineManifest } from "@qflow/timeline";
 import { spatialComponent, spatialManifest } from "@qflow/spatial";
 import { speechManifest } from "@qflow/speech";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
@@ -20,7 +20,7 @@ export const videoContractManifests = [
   speechManifest,
   speechEvidenceManifest,
   svsManifest,
-  semanticTrackManifest,
+  timelineManifest,
   spatialManifest,
   temporalManifest,
   visualIrManifest,

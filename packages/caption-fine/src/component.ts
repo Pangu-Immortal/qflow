@@ -1,7 +1,7 @@
+import type { Timeline } from "@qflow/timeline";
 import type { CaptionProgram, TimedCaptionProjection } from "@qflow/caption";
 import type { ComponentPackage } from "@qflow/component-kit";
 import type { CaptionDocument } from "@qflow/narrative";
-import type { ProgramSpace } from "@qflow/program-space";
 import type { StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 import type { SpatialRegionTimeline } from "@qflow/spatial";
@@ -36,7 +36,7 @@ export const captionFineComponent = {
           inline<FineCaptionSchedule>(inputs.schedule?.value, "FineCaptionSchedule"),
           inline<CaptionProgram>(inputs.program?.value, "CaptionProgram"),
           inline<CaptionDocument>(inputs.document?.value, "CaptionDocument"),
-          inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+          inline<Timeline>(inputs.timeline?.value, "Timeline"),
         )) } },
         needs: {},
       }),
@@ -48,7 +48,7 @@ export const captionFineComponent = {
           inline<FineCaptionSchedule>(inputs.schedule?.value, "FineCaptionSchedule"),
           inline<CaptionProgram>(inputs.program?.value, "CaptionProgram"),
           inline<CaptionDocument>(inputs.document?.value, "CaptionDocument"),
-          inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+          inline<Timeline>(inputs.timeline?.value, "Timeline"),
           inline<SpatialRegionTimeline>(inputs.regions?.value, "SpatialRegionTimeline"),
         )) } },
         needs: {},

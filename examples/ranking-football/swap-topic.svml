@@ -2,14 +2,16 @@
 
 <svml>
   <import from="@qflow/script@1"/>
+  <import as="sound" from="@qflow/sound@1"/>
   <import as="text" from="@qflow/text@1"/>
   <import as="asset" from="@qflow/media@1"/>
   <import as="gpt" from="@qflow/gpt-image@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
-  <import as="speech" from="@qflow/speech-track@1"/>
+  <import as="time" from="@qflow/timeline-author@1"/>
   <import as="media-track" from="@qflow/media-track@1"/>
+  <import as="performance" from="@qflow/performance@1"/>
   <import as="audio-track" from="@qflow/audio-track@1"/>
   <import as="caption" from="@qflow/caption@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
@@ -219,16 +221,21 @@
   <whisperx:SemanticTake id="sam-semantic" narrative={story}
     segment={story.segment.sam} media={sam-media.media} language="en"/>
 
-  <speech:Track id="speech">
-    <speech:Take source={elon-semantic.take}/>
-    <speech:Take source={sam-semantic.take}/>
-  </speech:Track>
-  <media-track:Track id="speech-picture" semantic={speech.semantic} canvas={vertical}>
-    <media-track:Performance during="program" frame={speech-frame}
-      appearance={recipes.media.performance}/>
-  </media-track:Track>
-  <audio-track:Track id="music-bed" semantic={speech.semantic}>
-    <audio-track:Clip source={soundtrack-media.media} during="program"
+  <time:Timeline id="speech" clock={clock}>
+    <time:Take source={elon-semantic.take}/>
+    <time:Take source={sam-semantic.take}/>
+  </time:Timeline>
+
+  <sound:Style id="speech-sound-style"/>
+  <sound:Track id="speech-sound" timeline={speech.timeline}>
+    <sound:Use style={speech-sound-style}/>
+  </sound:Track>
+  <performance:Style id="speech-picture-style" frame={speech-frame} appearance={recipes.media.performance}/>
+  <performance:Track id="speech-picture" timeline={speech.timeline} canvas={vertical}>
+    <performance:Use style={speech-picture-style} during="program"/>
+  </performance:Track>
+  <audio-track:Track id="music-bed" timeline={speech.timeline}>
+    <audio-track:Item source={soundtrack-media.media} during="program"
       playback="once-start" gain="0.12" fade-in="300ms" fade-out="600ms"/>
   </audio-track:Track>
 
@@ -236,7 +243,7 @@
   <fonts:Stack id="tier-font" family="inter" weight="400" style="normal"/>
   <ranking:TierBoardStyle id="tier-style" recipe={recipes.ranking.tech}
     font={tier-font}/>
-  <ranking:TierBoard id="tech-tiers" semantic={speech.semantic}
+  <ranking:TierBoard id="tech-tiers" timeline={speech.timeline}
     canvas={vertical} frame={tier-frame}
     during="program" style={tier-style}
     appear-sound={ranking-appear-media.media}
@@ -254,7 +261,7 @@
       icon={sam-icon.image} during={story.segment.sam}/>
   </ranking:TierBoard>
 
-  <media-track:Track id="broll" semantic={speech.semantic} canvas={vertical}>
+  <media-track:Track id="broll" timeline={speech.timeline} canvas={vertical}>
     <media-track:Item id="money-rain" image={broll-money-rain.image}
       extent={money-rain-extent} during={story.selection.money-rain}
       frame={money-rain-frame} appearance={recipes.media.money-rain}
@@ -311,21 +318,22 @@
 
   <caption-fine:Style id="caption-style" recipe={recipes.caption.primary}
     font={display-font}/>
-  <caption:Program id="caption-program" document={story.caption}
-    narrative={story} default={caption-style}/>
-  <caption-fine:Track id="captions" document={story.caption}
-    semantic={speech.semantic} program={caption-program}/>
 
-  <film:Film id="main" canvas={vertical} semantic={speech.semantic}
+  <caption-fine:Track id="captions" document={story.caption}
+    timeline={speech.timeline}>
+    <caption-fine:Use style={caption-style}/>
+  </caption-fine:Track>
+
+  <film:Film id="main" canvas={vertical} timeline={speech.timeline}
     appearance={recipes.film.vertical}>
     <film:Track source={speech-picture.visual}/>
-    <film:Track source={speech.audio}/>
+    <film:Track source={speech-sound.audio}/>
     <film:Track source={tech-tiers.visual}/>
     <film:Track source={tech-tiers.audio}/>
     <film:Track source={broll.visual}/>
     <film:Track source={captions.track}/>
-    <film:Track source={music-bed.track}/>
+    <film:Track source={music-bed.audio}/>
   </film:Film>
   <render:Video id="final" composition={main.composition}
-    semantic={speech.semantic}/>
+    timeline={speech.timeline}/>
 </svml>

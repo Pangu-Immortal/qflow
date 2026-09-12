@@ -1,5 +1,5 @@
+import type { Timeline } from "@qflow/timeline";
 import { assertProgramSpaceIdentity } from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
 import { assertCanvasSpace } from "@qflow/spatial";
 import type { CanvasSpace } from "@qflow/spatial";
 import { assertAudioTrackIdentity, assertCompositionIdentity, assertVisualTrackIdentity, sealComposition } from "@qflow/composition";
@@ -64,7 +64,7 @@ export function createFilmTrackSet(): FilmTrackSet {
   });
 }
 
-function appendTrack(set: FilmTrackSet, programSpace: ProgramSpace, track: Track): FilmTrackSet {
+function appendTrack(set: FilmTrackSet, programSpace: Timeline, track: Track): FilmTrackSet {
   assertFilmTrackSetIdentity(set);
   assertProgramSpaceIdentity(programSpace);
   if (track.kind === "visual") assertVisualTrackIdentity(track, programSpace);
@@ -78,18 +78,18 @@ function appendTrack(set: FilmTrackSet, programSpace: ProgramSpace, track: Track
   });
 }
 
-export function appendFilmVisualTrack(set: FilmTrackSet, programSpace: ProgramSpace, track: VisualTrack): FilmTrackSet {
+export function appendFilmVisualTrack(set: FilmTrackSet, programSpace: Timeline, track: VisualTrack): FilmTrackSet {
   return appendTrack(set, programSpace, track);
 }
 
-export function appendFilmAudioTrack(set: FilmTrackSet, programSpace: ProgramSpace, track: AudioTrack): FilmTrackSet {
+export function appendFilmAudioTrack(set: FilmTrackSet, programSpace: Timeline, track: AudioTrack): FilmTrackSet {
   return appendTrack(set, programSpace, track);
 }
 
 export function compileFilmComposition(
   program: FilmProgram,
   canvas: CanvasSpace,
-  programSpace: ProgramSpace,
+  programSpace: Timeline,
   set: FilmTrackSet,
 ): Composition {
   assertFilmProgramIdentity(program);

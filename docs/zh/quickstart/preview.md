@@ -21,7 +21,7 @@ qflow studio --run build.svrun
 | `--workspace <directory>` | 设置 Source 访问与修改的项目边界。 |
 | `--port <number>` | 指定浏览器服务端口，默认请求 `5179`。 |
 
-所选目标需要指向一个 Film 及其时间来源。说话表演可以提供 SemanticTrack，动画可以使用作者声明的 ProgramSpace，两者都支持视觉组件与属性编辑。显示编排所需的素材应已通过 Run 提供。Studio 可以完成所选 Runtime 支持的媒体准备；生成和编码渲染通过 `qflow build` 提交。
+所选目标需要指向一个 Film 及其时间来源。说话表演可以提供 Timeline，动画可以使用作者声明的 ProgramSpace，两者都支持视觉组件与属性编辑。显示编排所需的素材应已通过 Run 提供。Studio 可以完成所选 Runtime 支持的媒体准备；生成和编码渲染通过 `qflow build` 提交。
 
 ## 浏览项目
 

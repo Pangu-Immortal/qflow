@@ -56,7 +56,7 @@ Output paths are package vocabulary, not inferred from the element's tag:
 - an imported `media:Image id="logo"` publishes `{logo}`;
 - `gpt:Image id="portrait"` publishes `{portrait.image}`;
 - `pipeline:Normalize id="prepared"` publishes `{prepared.media}`;
-- `speech:Track id="speech"` publishes `{speech.semantic}` and `{speech.audio}`.
+- `time:Timeline id="speech"` publishes `{speech.timeline}`. Performance and Sound separately publish the picture and sound contributions selected in Film.
 
 Inspect `qflow vocabulary` for the actual Surface's exports and use the published path it reports.
 Public bindings can be authored Records or realizable Logical Outputs. Script,

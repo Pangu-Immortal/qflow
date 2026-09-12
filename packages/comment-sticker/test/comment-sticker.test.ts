@@ -1,7 +1,8 @@
+import { sealTimeline } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
-import { semanticTrackFixture } from "../../../test/semantic-track-fixture.js";
+import { timelineFixture } from "../../../test/timeline-fixture.js";
 import { projectProgramWindow } from "../../../test/temporal-fixture.js";
 
 import { artifactTypes } from "@qflow/artifact";
@@ -9,7 +10,7 @@ import { compileHyperframesDocument } from "@qflow/hyperframes";
 import type { FontArtifactRef, FontStackRef } from "@qflow/media";
 import { mediaTypes } from "@qflow/media";
 import { sealProgramSpace } from "@qflow/program-space";
-import { semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineProducers, timelineTypes } from "@qflow/timeline";
 import { spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import type { SvsRecipe } from "@qflow/svs";
@@ -50,9 +51,9 @@ const style = decodeCommentStickerStyle(recipe, fonts, "social-comment");
 const frame = { xPx: 80, yPx: 140, widthPx: 920, heightPx: 360 };
 const canvas = { widthPx: 1080, heightPx: 1920,
   origin: "top-left" as const, xDirection: "right" as const, yDirection: "down" as const, pixelAspect: "square" as const };
-const space = sealProgramSpace({ id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } });
+const space = sealTimeline({ items: [], id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } });
 const header = sealCommentStickerHeader({ id: "comments" });
-const semantic = semanticTrackFixture(space);
+const semantic = timelineFixture(space);
 
 function item(id: string) {
   return sealCommentStickerItemSpec({
@@ -170,7 +171,7 @@ test("Track Surface lowers mixed program and semantic Stickers to a finite expli
   const blob = { kind: "blob" as const, resource: fixtureResource("comment-avatar"), size: 128, mediaType: "image/png" };
   const refs = new Map<string, SurfaceResolvedReference>([
     ["video.canvas", authored("video.canvas", spatialTypes.canvas, canvas)],
-    ["video.semantic", authored("video.semantic", semanticTrackTypes.track, semantic)],
+    ["video.timeline", authored("video.timeline", timelineTypes.track, semantic)],
     ["layout.comment", authored("layout.comment", spatialTypes.frame, frame)],
     ["social", authored("social", commentStickerTypes.style, style)],
     ["avatar", authored("avatar", artifactTypes.blob, blob)],
@@ -178,7 +179,7 @@ test("Track Surface lowers mixed program and semantic Stickers to a finite expli
   ]);
   const result = await decodeCommentStickerTrackSurface({
     sourceName: "fixture.svml",
-    element: parsed(`<comment:Track id="comments" canvas={video.canvas} semantic={video.semantic}>
+    element: parsed(`<comment:Track id="comments" canvas={video.canvas} timeline={video.timeline}>
       <comment:Sticker id="one" comment={copy} frame={layout.comment} style={social} avatar={avatar} author="@viewer" meta="Featured" during="program"/>
     </comment:Track>`),
     resolveReference: (path) => refs.get(path),
@@ -195,8 +196,7 @@ test("Track Surface lowers mixed program and semantic Stickers to a finite expli
     temporalProducers.projectProgramInstant.name,
     temporalProducers.projectProgramInstant.name,
     temporalProducers.composeWindow.name,
-    semanticTrackProducers.projectProgramSpace.name,
-    commentStickerProducers.render.name,
+        commentStickerProducers.render.name,
   ].sort());
   assert.equal(result.components.find((component) => component.outputs.track !== undefined)?.outputs.track, "comments.track");
 });

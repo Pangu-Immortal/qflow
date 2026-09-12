@@ -1,4 +1,4 @@
-import { createTemporalSpace, resolveTemporalContext } from "@qflow/temporal-markup";
+import { resolveTemporalContext } from "@qflow/temporal-markup";
 import { mediaTypes } from "@qflow/media";
 import type {
   StructuredElement,
@@ -85,8 +85,10 @@ function numeric(element: StructuredElement, name: string, fallback?: number): n
   return value;
 }
 
+export const audioItemDefaults = { playback: "once", gain: 1, "fade-in": "0f", "fade-out": "0f" } as const;
+
 function occupancy(element: StructuredElement): AudioOccupancy {
-  switch (text(element, "playback", "once")) {
+  switch (text(element, "playback", audioItemDefaults.playback)) {
     case "once":
     case "once-start": return { mode: "once", align: "start" };
     case "once-end": return { mode: "once", align: "end" };
@@ -104,10 +106,9 @@ function occupancy(element: StructuredElement): AudioOccupancy {
 }
 
 export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  allowed(element, ["id", "semantic", "space"]);
+  allowed(element, ["id", "timeline"]);
   const id = text(element, "id");
   const context = resolveTemporalContext({ element, resolveReference });
-  const time = createTemporalSpace({ id: id, element, ...context });
   const headerId = `${id}.header`;
   const records: SurfaceRecordDraft[] = [{
     id: headerId,
@@ -115,20 +116,20 @@ export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, res
     value: { kind: "inline", value: sealAudioTrackHeader({ id }) },
     range: element.range,
   }];
-  const temporalComponents: SurfaceComponentDraft[] = [...time.components];
-  const temporalFragments: ReturnType<typeof createTemporalWindowProjection>["fragments"][number][] = [...time.fragments];
+  const temporalComponents: SurfaceComponentDraft[] = [];
+  const temporalFragments: ReturnType<typeof createTemporalWindowProjection>["fragments"][number][] = [];
   const fragmentItems: Parameters<typeof createAudioTrackFragment>[0][number][] = [];
   const inputs: Record<string, { kind: "record"; id: string } | { kind: "component-output"; component: string; output: string }> = {
     header: { kind: "record", id: headerId },
-    space: time.space.ref,
+    timeline: context.timeline.ref,
   };
   let itemIndex = 0;
   for (const child of element.children) {
     if (child.kind === "text") {
-      if (child.value.trim()) throw new Error(`${element.name} accepts only Clip children.`);
+      if (child.value.trim()) throw new Error(`${element.name} accepts only Item children.`);
       continue;
     }
-    if (!child.name.endsWith(":Clip") && child.name !== "Clip") throw new Error(`${element.name} accepts only Clip children.`);
+    if (!child.name.endsWith(":Item") && child.name !== "Item") throw new Error(`${element.name} accepts only Item children.`);
     if (child.children.some((node) => node.kind === "element" || node.value.trim())) throw new Error(`${child.name} must be empty.`);
     allowed(child, [
       "id", "source", ...temporalWindowAttributeNames,
@@ -136,9 +137,9 @@ export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, res
     ]);
     itemIndex += 1;
     const suffix = String(itemIndex).padStart(4, "0");
-    const clipId = optionalText(child, "id") ?? `${id}.clip.${suffix}`;
+    const clipId = optionalText(child, "id") ?? `${id}.item.${suffix}`;
     const source = resolved(child.attributes.source, `${child.name}.source`, mediaTypes.synchronized, resolveReference);
-    const temporal = createTemporalWindowProjection({ id: clipId, element: child, ...context, space: time.space, resolveReference });
+    const temporal = createTemporalWindowProjection({ id: clipId, element: child, ...context, resolveReference });
     records.push(...temporal.records);
     temporalComponents.push(...temporal.components);
     temporalFragments.push(...temporal.fragments);
@@ -155,22 +156,22 @@ export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, res
       },
       occupancy: playback,
       mix: {
-        gain: numeric(child, "gain", 1),
-        fadeIn: duration(text(child, "fade-in", "0f"), `${child.name}.fade-in`),
-        fadeOut: duration(text(child, "fade-out", "0f"), `${child.name}.fade-out`),
+        gain: numeric(child, "gain", audioItemDefaults.gain),
+        fadeIn: duration(text(child, "fade-in", audioItemDefaults["fade-in"]), `${child.name}.fade-in`),
+        fadeOut: duration(text(child, "fade-out", audioItemDefaults["fade-out"]), `${child.name}.fade-out`),
       },
     });
     const windowName = `item-${suffix}-window`;
     inputs[windowName] = temporal.ref;
     const mediaName = `item-${suffix}-media`;
     const specName = `item-${suffix}-spec`;
-    const specId = `${id}.clip.${suffix}.spec`;
+    const specId = `${id}.item.${suffix}.spec`;
     records.push({ id: specId, type: audioTrackTypes.clipSpec, value: { kind: "inline", value: clipSpec }, range: child.range });
     inputs[mediaName] = source.ref;
     inputs[specName] = { kind: "record", id: specId };
     fragmentItems.push({ mediaName, specName, windowName });
   }
-  if (fragmentItems.length === 0) throw new Error(`${element.name} requires at least one Clip.`);
+  if (fragmentItems.length === 0) throw new Error(`${element.name} requires at least one Item.`);
   const fragment = createAudioTrackFragment(fragmentItems);
   return {
     records,
@@ -178,10 +179,10 @@ export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, res
       id,
       fragment: fragment.id,
       inputs,
-      outputs: { program: `${id}.program`, track: `${id}.track` },
+      outputs: { program: `${id}.program`, audio: `${id}.audio` },
       range: element.range,
     }],
     fragments: [...temporalFragments, fragment],
-    exports: [`${id}.program`, `${id}.track`],
+    exports: [`${id}.program`, `${id}.audio`],
   };
 };

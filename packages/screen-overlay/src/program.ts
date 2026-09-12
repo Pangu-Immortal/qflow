@@ -1,7 +1,7 @@
+import type { Timeline } from "@qflow/timeline";
 import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/composition";
 import type { VisualAnimation, VisualElement, VisualStyleDeclaration, VisualTrack } from "@qflow/composition";
 import { assertProgramSpaceIdentity } from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
 import { canonicalize } from "@qflow/protocol";
 import { assertCanvasSpace } from "@qflow/spatial";
 import type { CanvasSpace } from "@qflow/spatial";
@@ -107,11 +107,11 @@ export function assertScreenOverlaySet(value: ScreenOverlaySet): void {
 }
 
 function realized(
-  set: ScreenOverlaySet, header: ScreenOverlayHeader, space: ProgramSpace, spec: ScreenOverlayItemSpec,
+  set: ScreenOverlaySet, header: ScreenOverlayHeader, timeline: Timeline, spec: ScreenOverlayItemSpec,
   window: ProjectedWindow,
 ): ScreenOverlaySet {
   assertScreenOverlaySet(set); assertScreenOverlayHeader(header); assertScreenOverlayItemSpec(spec);
-  assertTemporalWindowFor(window, { subjectId: spec.id, space });
+  assertTemporalWindowFor(window, { subjectId: spec.id, space: timeline });
   const addition = {
     id: window.id,
     subjectId: spec.id,
@@ -128,11 +128,11 @@ function realized(
 export function appendProjectedScreenOverlay(
   set: ScreenOverlaySet,
   header: ScreenOverlayHeader,
-  space: ProgramSpace,
+  timeline: Timeline,
   spec: ScreenOverlayItemSpec,
   window: ProjectedWindow,
 ): ScreenOverlaySet {
-  return realized(set, header, space, spec, window);
+  return realized(set, header, timeline, spec, window);
 }
 export function sealScreenOverlayProgram(value: ScreenOverlayProgram): ScreenOverlayProgram {
   const normalized = { id: value.id,
@@ -307,15 +307,15 @@ function overlayElements(content: ScreenOverlayComponent, canvas: CanvasSpace, d
   }
 }
 
-export function renderScreenOverlay(canvas: CanvasSpace, space: ProgramSpace, program: ScreenOverlayProgram): VisualTrack {
-  assertCanvasSpace(canvas); assertProgramSpaceIdentity(space); assertScreenOverlayProgram(program);
+export function renderScreenOverlay(canvas: CanvasSpace, timeline: Timeline, program: ScreenOverlayProgram): VisualTrack {
+  assertCanvasSpace(canvas); assertProgramSpaceIdentity(timeline); assertScreenOverlayProgram(program);
   const track = sealVisualTrack({
-    programSpaceId: space.id, visualIr: "qflow.visual-ir@1", id: program.id,
+    programSpaceId: timeline.id, visualIr: "qflow.visual-ir@1", id: program.id,
     presents: program.items.map((item) => ({
       id: item.id, subjectId: item.subjectId, span: { ...item.span }, stacking: { ...item.stacking },
       elements: overlayElements(item.content, canvas, item.span.endFrameExclusive - item.span.startFrame),
     })),
   });
-  assertVisualTrackIdentity(track, space);
+  assertVisualTrackIdentity(track, timeline);
   return track;
 }

@@ -180,6 +180,7 @@ export function narrativeMomentValue(moment: ParsedNarrative["moments"][number],
 export function narrativeValue(parsed: ParsedNarrative, id: string): CanonicalValue {
   return canonicalize({
     id,
+    caption: captionDocument(parsed, `${id}.caption`, id),
     segments: parsed.segments.map((segment) => ({
       id: segment.id,
       startAnchorId: segment.startAnchorId,

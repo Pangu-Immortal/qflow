@@ -347,6 +347,6 @@ generation:
 </seedance:ReferenceVideo>
 ```
 
-Each `seedance:ReferenceVideo` produces a `{*.video}` output that feeds into `speech:Track` in the
+Each `seedance:ReferenceVideo` produces a `{*.video}` output that feeds into `time:Timeline` in the
 next stage. Different takes can use different reference images while sharing the same voice timbre
 and prompt Recipe.

@@ -1,8 +1,8 @@
 # Designing a good component
 
-Read this when a video needs a new visual role, shared state or expressive structure. Design it with
-the taste of a director and the care of someone who will use it in a real composition. A useful
-component makes a particular idea legible and gives its author clear ways to direct that idea.
+Read this when deciding how to organize a picture, a transition or a recurring visual system.
+Design it with the taste of a director and the care of someone who will use it in a real composition.
+A useful component makes a particular idea legible and gives its author clear ways to direct it.
 
 [Graphic composition](../playbooks/craft/graphic-compositions.md) owns visual hierarchy and motion;
 [Track authoring](track-authoring.md) owns the implementation. A new Caption family also draws on
@@ -15,15 +15,30 @@ ranking accumulates, or a phrase lands with particular emphasis. Explain what ap
 there, what changes, and what the viewer should retain afterward. That explanation suggests both
 the visual design and the component boundary.
 
+Existing components are useful expressions of familiar relationships. Use one when its behavior
+fits, or define a project component for the role this work needs. Its content and timing can vary
+while the relationship remains clear. A new component can combine existing helpers with its own
+drawing and animation; ordinary authoring includes both using and extending that vocabulary.
+
 A board whose rows share layout and persistent state benefits from one component. An independent
 photo and title can remain peer Tracks. An object that survives several camera cuts keeps the same
 authored identity while its state develops. Let shared behavior define the unit.
 
 A performance moving from full screen into a side viewport and a diagram filling the released space
 can share one component. It owns their relative layout, overlap, masking and coordinated motion.
-A-roll names the performance carrying semantic time; it does not reserve the picture for Speech
-Track. Ordinary presentation can reuse Media; a new relationship can be authored directly. A
+A-roll supplies the performed passage; visual ownership follows the behavior being designed.
+Existing footage can use [Performance Styles](performance.md); independent assets use Media. A
 one-off scene is a useful component too. Caption and independent overlays can remain separate.
+
+Decompose a scene further where its parts have meaningful independent responsibilities. Keep
+coordinated geometry, state and transitions together where that makes their behavior clear. Internal
+functions and subcomponents can organize this code without each becoming another Track or package.
+The useful division preserves the relationship through change; more layers alone do not improve it.
+
+Consider the change the user actually wants. If the product changes, the comparison's content may
+change while its explanatory behavior remains. If delivery changes, its spoken reveal should move
+with the relevant Moment. If a presenter and a diagram exchange space, their shared layout should
+remain coordinated. These relationships suggest the inputs and boundaries worth authoring.
 
 Choose visual grouping and timing independently. A combined scene can respond to spoken Moments;
 separate Tracks can share an authored event. What belongs together on the canvas does not decide
@@ -35,8 +50,9 @@ behavior can keep these visuals together; [Caption authoring](caption-authoring.
 specialized text inputs and the same freedom to compose.
 
 Give a reusable scene the prepared performance, its outer Window and the Moment that changes its
-layout. Replacing a product or rewriting the Script then changes content and semantic anchors while
-preserving the behavior. The final frame positions come from the selected Takes.
+layout through the Timeline and shared temporal projections. Replacing a product or rewriting the
+Script then changes content and semantic anchors while preserving the behavior. The final frame
+positions come from the placed Takes.
 
 Sketch its intended Source use with this video's actual content. The tag and its children should
 read like a concise account of the visual idea: which subjects are compared, which answer is already
@@ -46,7 +62,7 @@ helps reveal a missing relationship before it becomes rendering code.
 ## Let meaning drive the behavior
 
 Prefer Script Selections, Moments and Segments for events that respond to the argument or performance.
-The Surface projects them through the accepted SemanticTrack; the component consumes the resulting
+The Surface projects them through the accepted Timeline; the component consumes the resulting
 Windows or Instants. A different delivery can then move the event while preserving its purpose.
 Explicit time remains useful for an authored lead, a short entrance or another clock-based decision.
 In a pure MG piece, name the events that carry its meaning and direct their reading rhythm. A useful

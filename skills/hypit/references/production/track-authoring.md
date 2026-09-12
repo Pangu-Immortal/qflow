@@ -24,7 +24,7 @@ the component more usefully than a long list of decorative parameters.
 This existing answer-strip vocabulary illustrates a concrete choice:
 
 ```svml
-<emoji:Track id="answers" semantic={speech.semantic} canvas={canvas}
+<emoji:Track id="answers" timeline={speech.timeline} canvas={canvas}
   style={answer-style} placeholder={question-icon} during="program">
   <emoji:Item id="known" icon={known-icon} preset="true"/>
   <emoji:Item id="surprise" icon={answer-icon} at={story.moment.reveal}/>
@@ -37,15 +37,15 @@ repeated updates or simultaneous events.
 
 ## Keep selection, projection and consumption distinct
 
-Script names meaning: a Selection, Segment or Moment. The semantic timeline supplies where that
-meaning occurred in the produced media. The consuming component's Surface lowers its authored timing
+Script names meaning: a Selection, Segment or Moment. The Timeline supplies where that
+event falls after its prepared media is placed. The consuming component's Surface lowers its authored timing
 form into a projection subgraph, which resolves an Instant or Window in the program's frame space.
 The component's own Fragment and Producers then decide what to do with that value.
 
 ```text
-Script Selection / Segment / Moment + SemanticTrack
+Script Selection / Segment / Moment + Timeline
                          ↓ component Surface creates projection
-                ProgramSpace + Window / Instant
+                Timeline + Window / Instant
                          ↓ component Fragment / Producer consumption
               media occupancy, graphic state, sound or effect
 ```
@@ -54,11 +54,11 @@ This separation lets one Moment drive an answer reveal, a short sound and a flas
 receives its own appropriate projection, but all refer to the same authored event. Changed speech
 moves the event without asking each component to search for a word or inspect the Script parser.
 
-For a component that also serves authored animation, `resolveTemporalContext` and `createTemporalSpace`
-from `@qflow/qflow/temporal-markup` supply the chosen film clock. Clock expressions project directly through
-that space; Script references use its semantic context. The drawing code consumes the resolved
-values in either case. The installed `examples/semantic-composition/packages/chat-scene` demonstrates
-repeated content children with their own events and a program drawn entirely in code.
+Use `resolveTemporalContext` from `@qflow/qflow/temporal-markup` to resolve the component's
+`timeline` input. Pass that same Timeline to its Fragment and Producers, alongside projected
+Instants/Windows. A component can combine literal times and word-bound events without switching time
+models. The installed `examples/semantic-composition/packages/chat-scene` demonstrates repeated
+content children with their own events and a picture drawn entirely in code.
 
 For a Window consumer, `during={story.selection.example}` can take both semantic boundaries.
 `at={story.moment.answer} for="8f"` starts a short effect at a Moment. An Instant consumer may accept
@@ -85,31 +85,22 @@ The interview's project emoji strip illustrates this design: one outer Window, o
 items, a placeholder asset and one icon per answer. Each Moment changes its own slot. The Track does
 not decide when the spoken answer occurred; it consumes the already projected event.
 
-## Author an alternative performance assembly
+## Use the Timeline's existing placement model
 
-The installed Speech Track expresses one particular and useful assembly: every Segment-local
-SemanticTake keeps its complete span, and Source order forms one continuous prefix-sum
-`SemanticTrack`. Its original audio follows that assembly. Visual components consume its prepared materials.
+The [Timeline](timeline.md) places intact prepared Takes at native speed. Sequential placement,
+head/interior/tail space and simultaneous Takes share the same data type. A project scene consumes
+its range, media samples and semantic events through ordinary projection helpers.
 
-A work may intentionally need interruptions, overlapping dialogue, a time-consuming transition or
-another performance-time relationship. That is a legitimate project Track when it makes the edited
-media, semantic positions, visual projection and audio ownership explicit. If its output still is the
-standard `SemanticTrack`, it must satisfy that type's continuous item semantics so existing consumers
-can trust it. A genuinely different timeline meaning belongs to a project-owned type with matching
-projection Surfaces or an explicit adapter to the standard type. Source then selects that component
-normally; neither Core nor the default Speech Track needs a special case.
-
-Design the author Surface from the intended relationship rather than exposing low-level overlap
-arithmetic by default. The implementation can accept prepared performances, edit or combine them at
-its declared boundary, and publish only the outputs it can define unambiguously. Caption, MG, Media
-and Effects receive its declared semantic projections rather than inferring overlap from picture;
-sound routing makes deliberate simultaneous speech visible rather than accidental.
+A different material operation, such as trimming or retiming a performance, changes the local media
+and its preparation. A display operation, such as crossfading two available sources, belongs to the
+visual scope owning them. Keep these decisions distinct so a layout change preserves source timing
+and a material change establishes truthful local evidence.
 
 ## Make spatial decisions equally explicit
 
 CanvasSpace identifies the coordinate system. SpatialFrame, anchors, extents and fitting describe
 where content goes and how its intrinsic shape occupies that place. RegionTimeline supplies authored
-per-frame regions in a chosen Canvas. These are distinct from ProgramSpace, which owns the clock.
+per-frame regions in a chosen Canvas. These are distinct from Timeline, which owns the complete time range.
 
 Keep image dimensions, placement and crop transformations visible so a measured head or a reserved
 MG area maps into the actual composition. Do not hardcode a global 9:16 canvas, fixed speaker side,
@@ -132,7 +123,7 @@ that answers the current question. A new component may use fewer operations or d
 
 The Surface exposes author intent and lowers its supported temporal forms through shared projection
 helpers such as `createTemporalWindowProjection` and `createTemporalInstantProjection`. The Fragment
-wires those projections, explicit ProgramSpace/Canvas and authored values into the component's
+wires those projections, the shared Timeline/Canvas and authored values into the component's
 Producers. The Producer consumes the resulting time and geometry and owns the visual/state behavior;
 Studio consumes that published meaning for presentation and editing.
 
@@ -154,13 +145,12 @@ The useful pieces of a project package are:
 | Vocabulary and preview | Explain the role and show a recognizable, configured example |
 | Optional Studio Companion | Project meaningful editor entities, real parameter bindings and temporal lineage without changing video rendering |
 
-Resolve the Track's `semantic` or `space` through `resolveTemporalContext`, then use
-`createTemporalSpace` once to obtain the shared ProgramSpace. A spoken composition normally supplies
-`semantic={speech.semantic}`; an authored animation can supply `space={animation}`. This choice
-belongs to the Surface. The visual Producer consumes space and projected time, not Script syntax.
+Resolve the Track's `timeline` through `resolveTemporalContext` and wire `context.timeline.ref`
+directly to its Timeline input. Words and source footage are available where prepared Takes provide
+them. The visual Producer consumes Timeline and projected times, not Script syntax.
 
 For each Window, call `createTemporalWindowProjection`; for an event, use
-`createTemporalInstantProjection`. Pass the resolved context, the shared `space`, the child element
+`createTemporalInstantProjection`. Pass the resolved context, the child element
 and `resolveReference`. Preserve all returned `records`, `components` and `fragments`, and wire the
 returned `ref` into the domain Fragment. The common `at` accepts a Moment or an authored duration
 from program start. Selection and Segment boundaries use `boundary="start"` or `boundary="end"`.
@@ -169,7 +159,7 @@ A Moment needs the semantic context that locates its Script anchor.
 Keep each child's `subjectId` meaningful to the component while qualifying graph ids by its owning
 Track, so multiple instances can coexist. A finite create/append/finalize graph supports any authored
 number of messages or cards with ordinary fixed Producer ports. The exact helpers and vocabulary
-live in `@qflow/qflow/temporal-markup`; the `@example/chat-scene` package demonstrates both time sources.
+live in `@qflow/qflow/temporal-markup`; the `@example/chat-scene` package demonstrates authored and semantic events on one Timeline.
 
 A scene may publish computed event times when another component needs them, just as it publishes a
 Track. This shares pre-render data. When the author already specifies a common trigger, consumers
@@ -206,3 +196,12 @@ A designed still alone cannot establish that behavior. For stateful MG, a few me
 checks around activation and exit are more useful than snapshots of every implementation detail.
 Also check a second instance, a differently sized Frame and direct seeking into the middle when
 those exercise the new behavior.
+
+## A reusable performance presentation
+
+When the behavior presents existing Timeline footage, [Performance Styles](performance.md) offer
+an occurrence model with broad and local Uses. A Style binds a typed fragment's additional inputs;
+each Use supplies Timeline, Canvas and its original Window. The fragment exports a VisualTrack.
+This supports project-owned HTML behavior and explicit extra events or material without introducing
+a new Track protocol. A larger scene that coordinates footage and independent graphics can remain
+its own component. Both paths use the same rendering capabilities.

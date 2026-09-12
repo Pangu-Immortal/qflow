@@ -1,4 +1,5 @@
-import { programSpaceTypes } from "@qflow/program-space";
+import { timelineTypes } from "@qflow/timeline";
+
 import { artifactTypes } from "@qflow/artifact";
 import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
@@ -14,7 +15,7 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 export const stillMediaTrackFragment = sealGraphFragment({
   inputs: [
     { name: "header", type: mediaTrackTypes.header },
-    { name: "space", type: programSpaceTypes.programSpace },
+    { name: "timeline", type: timelineTypes.track },
     { name: "canvas", type: spatialTypes.canvas },
     { name: "source", type: artifactTypes.blob },
     { name: "extent", type: spatialTypes.extent },
@@ -32,14 +33,14 @@ export const stillMediaTrackFragment = sealGraphFragment({
     { id: "set", producer: mediaTrackProducers.createSet, inputs: {}, result: { kind: "output", name: "set" } },
     { id: "sounds", producer: mediaTrackProducers.createSounds, inputs: {}, result: { kind: "output", name: "sounds" } },
     { id: "append", producer: mediaTrackProducers.appendItem, inputs: {
-      set: operation("set"), header: input("header"), space: input("space"), canvas: input("canvas"), layers: operation("sample"),
+      set: operation("set"), header: input("header"), timeline: input("timeline"), canvas: input("canvas"), layers: operation("sample"),
       frame: input("frame"), spec: input("item-spec"), sounds: operation("sounds"), window: input("window"),
     }, result: { kind: "output", name: "set" } },
     { id: "finalize", producer: mediaTrackProducers.finalize, inputs: {
-      set: operation("append"), header: input("header"), space: input("space"),
+      set: operation("append"), header: input("header"), timeline: input("timeline"),
     }, result: { kind: "output", name: "program" } },
     { id: "visual", producer: mediaTrackProducers.projectVisual, inputs: {
-      space: input("space"), program: operation("finalize"),
+      timeline: input("timeline"), program: operation("finalize"),
     }, result: { kind: "output", name: "track" } },
   ],
   exports: [
@@ -49,9 +50,9 @@ export const stillMediaTrackFragment = sealGraphFragment({
 });
 
 export const renderMediaTrackFragment = sealGraphFragment({
-  inputs: [{ name: "space", type: programSpaceTypes.programSpace }, { name: "program", type: mediaTrackTypes.program }],
+  inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: mediaTrackTypes.program }],
   operations: [
-    { id: "visual", producer: mediaTrackProducers.projectVisual, inputs: { space: input("space"), program: input("program") }, result: { kind: "output", name: "track" } },
+    { id: "visual", producer: mediaTrackProducers.projectVisual, inputs: { timeline: input("timeline"), program: input("program") }, result: { kind: "output", name: "track" } },
   ],
   exports: [{ name: "track", type: compositionTypes.visualTrack, root: operation("visual") }],
 });

@@ -1,7 +1,7 @@
 # `@qflow/ranking`
 
-The Track Surface accepts `semantic={speech.semantic}` or `space={animation}`. Semantic context
-resolves Script Selections and Moments; authored space supports clock-based animation. Shared `at`
+The Track Surface accepts `timeline={program.timeline}`. The same Timeline supports authored
+positions and, where prepared Takes supply evidence, Script Selections and Moments. Shared `at`
 inputs accept a Moment or a time such as `2s`; `at` with `for` produces a Window where required.
 
 Ranking boards that follow the argument of a video: introduce an item, give its verdict, and retain
@@ -20,12 +20,12 @@ where the selected schedule requires succession. Ending a reveal does not remove
 
 ## Bind the ranking to the target Script
 
-This excerpt assumes the Script, SemanticTrack, Canvas, Frame and Style have been declared:
+This excerpt assumes the Script, Timeline, Canvas, Frame and Style have been declared:
 
 ```svml
 <import as="ranking" from="@qflow/ranking@1"/>
 
-<ranking:Column id="priorities" semantic={speech.semantic} canvas={vertical}
+<ranking:Column id="priorities" timeline={speech.timeline} canvas={vertical}
   frame={layout.ranking} during={story.segment.ranking} style={ranking-style}>
   <ranking:ColumnItem rank="1" label="Winner" during={story.selection.winner}/>
   <ranking:ColumnItem rank="2" preset="true" label="Already placed"/>
@@ -38,7 +38,9 @@ Window. TopThree instead accepts item `at` projections and a board `terminal` pr
 can supply the intended trigger.
 
 Each board publishes `.schedule`, `.program` and `.visual`. Optional normalized `appear-sound` or
-`move-sound` inputs add `.audio` where that form supports them. Include the wanted visual and audio
+`move-sound` inputs add `.events` and `.audio` where that form supports them.
+The event plan drives the audio from the same appearance and movement timing
+as the visual animation. Include the wanted visual and audio
 outputs as peers in Film. Labels can be literal or graph Text; Styles are typed SVS Recipes with
 exact fonts. Use `qflow vocabulary @qflow/ranking --tag Column` (or another declared tag) for its
 attributes, children, outputs and configured example.
@@ -50,7 +52,7 @@ The following files are included in the Distribution and show how the responsibi
 | File | What to learn from it |
 | --- | --- |
 | [surface.ts](src/surface.ts) | `rankingSurface` resolves author inputs, projects the outer and item times through `createTemporalWindowProjection` / `createTemporalInstantProjection`, and retains the returned drafts and references. |
-| [fragment.ts](src/fragment.ts) | `createRankingFragment` receives ProgramSpace and wires typed content, time, layout and Style inputs into finite operations. |
+| [fragment.ts](src/fragment.ts) | `createRankingFragment` receives Timeline and wires typed content, time, layout and Style inputs into finite operations. |
 | [schedule.ts](src/schedule.ts) | Compute reveal, activation and settled spans from the projected times. |
 | [component.ts](src/component.ts) and [render.ts](src/render.ts) | Build the ranking program and produce picture and optional sound from that schedule. |
 | [manifest.ts](src/manifest.ts) and [activation.ts](src/activation.ts) | Publish Types, Producers, Surface vocabulary and package contributions. |

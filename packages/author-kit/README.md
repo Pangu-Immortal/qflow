@@ -4,7 +4,7 @@ Small public framework API for an Author Package.
 
 It joins four stable authoring boundaries: nominal Module declarations, deterministic component
 handlers, sealed Graph Fragments and Markup Surface handlers. Domain facts still come from their
-owners—for example `@qflow/composition`, `@qflow/semantic-track` and `@qflow/spatial`. This package
+owners—for example `@qflow/composition`, `@qflow/timeline` and `@qflow/spatial`. This package
 does not re-export the video vocabulary or turn those packages into one central object.
 
 `@qflow/qflow/author-kit` contains no registry, package search, installer, Runtime, Provider or Studio

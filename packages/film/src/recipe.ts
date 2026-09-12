@@ -1,7 +1,8 @@
+import type { Timeline } from "@qflow/timeline";
 import type { SvsRecipe } from "@qflow/svs";
 
 /**
- * The Film Recipe owns Film appearance only. Canvas geometry and ProgramSpace
+ * The Film Recipe owns Film appearance only. Canvas geometry and Timeline
  * remain separate graph inputs and cannot be smuggled into a stylesheet.
  */
 

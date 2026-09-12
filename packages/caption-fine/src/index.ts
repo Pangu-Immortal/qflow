@@ -17,3 +17,5 @@ export {
 } from "./style.js";
 export { decodeFineCaptionStyleSurface, decodeFineCaptionTrackSurface } from "./surface.js";
 export type * from "./types.js";
+
+export { fineCaptionEditableDefaults } from "./recipe.js";

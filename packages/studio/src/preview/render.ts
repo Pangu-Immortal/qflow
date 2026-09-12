@@ -45,7 +45,11 @@ export function renderPreview(input: RenderInput): string {
       data-loop="${clip.source.loop}"
       data-phase="${clip.source.phaseSample / 48_000}"
       data-playback-rate="${clip.playbackRate}"
-      data-gain="${clip.gain}"></audio>`;
+      data-gain="${clip.gain}"
+      data-presentation="${encodeURIComponent(JSON.stringify({
+        gainEnvelope: clip.gainEnvelope, audibility: clip.audibility,
+        fadeInSamples: clip.fadeInSamples, fadeOutSamples: clip.fadeOutSamples,
+      }))}"></audio>`;
     }).join("");
   return injectRuntimeShim(html, audio);
 }

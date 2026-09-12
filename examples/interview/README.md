@@ -65,7 +65,10 @@ After `vertical` is declared, add its measured timeline and connect it to the ex
 ```svml
 <space:RegionTimeline id="wife-heads" within={vertical} recipe={heads.heads.wife}/>
 <caption-fine:Track id="captions" document={story.caption}
-  semantic={speech.semantic} program={caption-program} regions={wife-heads}/>
+  timeline={speech.timeline} regions={wife-heads}>
+  <caption-fine:Use style={caption-boy-style}/>
+  <caption-fine:Use role="WIFE" style={caption-wife-style}/>
+</caption-fine:Track>
 ```
 
 Replace the existing `captions` declaration with the connected one. The Recipe contains a WIFE Role

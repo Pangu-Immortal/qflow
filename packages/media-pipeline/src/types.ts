@@ -1,3 +1,4 @@
+import type { AudioPresentation } from "@qflow/composition";
 import type { BlobRef } from "@qflow/protocol";
 import type { MediaFrameRange, MediaInspection, MediaRational, MediaStreamSelection, RenderedVisual, TimelineAudio } from "@qflow/media";
 
@@ -134,7 +135,7 @@ export type ProjectSpeechEvidenceAudioNeed = {
   readonly evidenceSampleFrames: number;
 };
 
-export type AudioProgramClip = {
+export type AudioProgramClip = AudioPresentation & {
   readonly id: string;
   readonly artifact: BlobRef;
   readonly targetStartSample: number;

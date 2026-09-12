@@ -7,9 +7,11 @@ does not carry a private visual role.
 
 ```xml
 <caption-fine:Style id="primary" recipe={recipes.caption.primary} font={caption-font}/>
-<caption:Program id="captions" document={story.caption} narrative={story} default={primary}/>
+
 <caption-fine:Track id="captions-track" document={story.caption}
-  semantic={speech.semantic} program={captions}/>
+  timeline={speech.timeline}>
+    <caption-fine:Use style={primary}/>
+  </caption-fine:Track>
 ```
 
 An optional Spatial Region Timeline replaces only the moving placement point. The timeline is authored
@@ -20,7 +22,9 @@ and a later Run can reuse the same media and alignment while changing placement:
 ```xml
 <space:RegionTimeline id="heads" within={vertical} recipe={tracking.heads.default}/>
 <caption-fine:Track id="captions-track" document={story.caption}
-  semantic={speech.semantic} program={captions} regions={heads}/>
+  timeline={speech.timeline} regions={heads}>
+    <caption-fine:Use style={primary}/>
+  </caption-fine:Track>
 ```
 
 With `regions`, every Cue must carry one Script Role. When the Region Timeline contains a measured region for that
@@ -45,16 +49,17 @@ One SVS Recipe freezes three public dimensions:
 
 Caption first projects authored Script units onto semantic Word timing. Fine then produces an
 explicit visible Schedule and renders that Schedule. Lead and tail never change the semantic Word
-times used by Karaoke.
+times used by Karaoke. Later Uses mask earlier presentation, including Hidden. The final visibility
+is clipped to the winning Use Window while the original Cue envelope and animations are preserved.
 
 The Fine Schedule preserves the Caption projection's ProgramSpace, Narrative and document identities.
 The renderer rejects any mismatched Space or document. Studio may expose lead, tail and handoff as
 ordinary parameter edits, but Cue rectangles remain read-only semantic evidence.
 
-Script segments, turns, Style changes and `||` author Cue grouping. Fine rejects word-specific Style
-runs. A caption whose Cue contains structural roles or
+Script segments, turns and `||` organize complete Cues. Timed Uses select presentation without
+changing that grouping. Fine applies uniform rules to the words of a Cue. A caption whose Cue contains structural roles or
 relationships—such as an independently arranged oversized keyword and supporting phrase—can use
-a new project Caption family. Reuse the common [Caption document, Program and timing](../caption/README.md),
+a new project Caption family. Reuse the common [Caption content, timed Uses and timing](../caption/README.md),
 and implement the new schedule and rendering behavior in that package. This is ordinary component
 authorship; different colors or fonts alone can remain Fine Style choices.
 
@@ -119,5 +124,5 @@ The Qflow Skill's Caption craft page owns grouping and visual direction.
 primary face or a `<caption-fine:Fallback font={...}/>` child, just like a bundled face. See
 [Media font assets](../media/README.md#font-files) and [the open catalog](../fonts-open/README.md).
 
-The [Fine Studio Companion](../caption-fine-studio/src/index.ts) reads the same schedule and per-Cue
-Style references. It presents the actual Cue timing and exposes supported Style edits in the Inspector.
+The [Fine Studio Companion](../caption-fine-studio/src/index.ts) reads the same schedule and authored Use
+Style references. It presents the actual Cue timing and exposes Use timing and supported Style edits in the Inspector.

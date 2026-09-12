@@ -12,20 +12,20 @@ or editor metadata. A graph-qualified projection `id` and its author-facing `sub
 on purpose.
 
 Author syntax does not live here. `@qflow/temporal-markup` lowers SVML timing forms into ordinary
-Instant projection and Window composition operations. The graph supplies ProgramSpace separately;
-domain components receive only ProgramSpace plus the resulting Instant or Window and never locate a
+Instant projection and Window composition operations. The graph supplies one Timeline;
+domain components receive that Timeline plus the resulting Instant or Window and never locate a
 Selection, Segment or Moment themselves.
 
 Every official consumer verifies the projection at its public boundary: `subjectId` must name the
-domain object being built, both endpoints must retain one ProgramSpace, and that identity
-must equal the explicitly supplied ProgramSpace. ProgramSpace is therefore an ordinary graph input
+domain object being built, both endpoints must retain one time-range identity, and that identity
+must equal the explicitly supplied Timeline. Timeline is therefore an ordinary graph input
 to the consumer, not ambient renderer state.
 
 Temporal rejects Instants outside ProgramSpace and Windows that are reversed or empty. It does not
 clip or repair author time. The package also provides sibling-window validation and triggered-stage
 scheduling, but no renderer, Provider, media policy or Studio behavior.
 
-Program-bound projection receives ProgramSpace directly. Semantic-bound projection receives the
-SemanticTrack that locates its Script anchors. Both produce the same Instant type; program-bound
+All projection Producers receive Timeline. Program-bound projection uses its complete range;
+semantic-bound projection locates its Script anchors. Both produce the same Instant type; program-bound
 sources have no Narrative identity. A Window can combine a semantic endpoint with a program endpoint
 on the same time axis. `absolute` expressions may include a duration offset, as used by `at`/`for`.

@@ -9,3 +9,6 @@ export {
 } from "./identity.js";
 export { captionDocumentSchema, narrativeExcerptSchema, narrativeMomentSchema, narrativeSchema, narrativeSelectionSchema } from "./schema.js";
 export type * from "./types.js";
+
+export { narrativeAnchorTokenBoundary, narrativeSelectionTokenRange, narrativeTokensForSelection } from "./selection.js";
+export type { NarrativeTokenRange } from "./selection.js";

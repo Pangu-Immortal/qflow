@@ -6,8 +6,8 @@ owns the types and helpers below; Source imports retain the `@qflow/speech@1` Mo
 
 Public contracts for speech duration, normalized semantic Takes and provider-neutral evidence audio.
 A `SemanticTake` contains one normalized media product, one authored Segment, its words and local
-frame anchors. Ordered Takes are assembled by `@qflow/speech-track` into a `SemanticTrack`, which is
-the program's continuous semantic skeleton. `SpeechEvidenceAudio` carries canonical 16 kHz WAV bytes
+frame anchors. Ordered Takes are assembled by `@qflow/timeline-author` into a `Timeline`, which is
+the complete Program range and Take placements, including gaps or overlap. `SpeechEvidenceAudio` carries canonical 16 kHz WAV bytes
 and their exact sample count; it never carries Script or Segment identity.
 
 The package also owns deterministic boundary materialization for a Segment with no Tokens. It maps

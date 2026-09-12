@@ -40,6 +40,16 @@ replace an item, add to a collection, or temporarily cover it. Document the syst
 its changes in time. Camera boundaries help navigation; meaning and continuity determine which
 things belong together.
 
+Build an account of behavior that can become an editable production. A fixed screen image may be
+the evidence the passage needs; a changing comparison also needs its arrivals, states and handoffs.
+Retain what the objects do together as well as what each looks like. Several implementations can
+express the observed behavior, so the account need not guess the original author's source code or
+component structure.
+The useful result is an explanatory model for this commission: which relationships should remain
+when its person, product or wording changes, and which choices should be redesigned. Record the
+observed behavior before choosing how the target will implement it. A picture, text and motion that
+work together may become one component; repeated appearances may be states of that same object.
+
 ## Make time visible
 
 Use `qflow transcribe` when understanding a spoken reference. Its wording and word-level times give
@@ -129,7 +139,7 @@ distant moments relate. Keep the reference's facts and your interpretation disti
 ordinary prose.
 
 `TIMELINE.md` carries time-locatable realization. Organize it into sections named by source-media
-time and a meaningful phase. Within each, connect the active layers and their detailed behavior to
+time and a meaningful phase. Within each, connect the active objects and their detailed behavior to
 the words or actions they serve. An account should let someone find the event, understand its
 expression and implement an appropriate counterpart. For example:
 
@@ -170,6 +180,12 @@ performance establish their time. [Script and time](script-and-time.md) owns tha
 For generated camera imagery, [image direction](../playbooks/craft/image-direction.md#compress-the-idea-into-decisive-anchors)
 turns the observed appearance into a coherent styling and scene direction, with the decisive details
 the target needs. The reference notes retain the observations behind those choices.
+
+For the designed picture, use [component design](../production/component-design.md) to turn the
+target's relationships into useful objects, parameters and events. A system can span several shots;
+one shot can contain several independent systems. Choose the new component boundaries from shared
+behavior, with the details required to realize it. [Direction and its inputs](../production/system.md#give-each-part-the-direction-it-can-realize)
+connects the whole creative design to its separate material and composition instructions.
 
 The recorded account should explain the whole piece from opening to close and make its distinct
 visual systems and their changes locatable. It should be concrete enough to direct the new work:

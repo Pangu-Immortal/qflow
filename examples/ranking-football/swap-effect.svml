@@ -2,14 +2,16 @@
 
 <svml>
   <import from="@qflow/script@1"/>
+  <import as="sound" from="@qflow/sound@1"/>
   <import as="text" from="@qflow/text@1"/>
   <import as="asset" from="@qflow/media@1"/>
   <import as="gpt" from="@qflow/gpt-image@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
-  <import as="speech" from="@qflow/speech-track@1"/>
+  <import as="time" from="@qflow/timeline-author@1"/>
   <import as="media-track" from="@qflow/media-track@1"/>
+  <import as="performance" from="@qflow/performance@1"/>
   <import as="audio-track" from="@qflow/audio-track@1"/>
   <import as="caption" from="@qflow/caption@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
@@ -176,16 +178,21 @@
   <whisperx:SemanticTake id="ronaldo-semantic" narrative={story}
     segment={story.segment.ronaldo} media={ronaldo-media.media} language="en"/>
 
-  <speech:Track id="speech">
-    <speech:Take source={messi-semantic.take}/>
-    <speech:Take source={ronaldo-semantic.take}/>
-  </speech:Track>
-  <media-track:Track id="speech-picture" semantic={speech.semantic} canvas={vertical}>
-    <media-track:Performance during="program" frame={speech-frame}
-      appearance={recipes.media.performance}/>
-  </media-track:Track>
-  <audio-track:Track id="music-bed" semantic={speech.semantic}>
-    <audio-track:Clip source={soundtrack-media.media} during="program"
+  <time:Timeline id="speech" clock={clock}>
+    <time:Take source={messi-semantic.take}/>
+    <time:Take source={ronaldo-semantic.take}/>
+  </time:Timeline>
+
+  <sound:Style id="speech-sound-style"/>
+  <sound:Track id="speech-sound" timeline={speech.timeline}>
+    <sound:Use style={speech-sound-style}/>
+  </sound:Track>
+  <performance:Style id="speech-picture-style" frame={speech-frame} appearance={recipes.media.performance}/>
+  <performance:Track id="speech-picture" timeline={speech.timeline} canvas={vertical}>
+    <performance:Use style={speech-picture-style} during="program"/>
+  </performance:Track>
+  <audio-track:Track id="music-bed" timeline={speech.timeline}>
+    <audio-track:Item source={soundtrack-media.media} during="program"
       playback="once-start" gain="0.12" fade-in="300ms" fade-out="600ms"/>
   </audio-track:Track>
 
@@ -193,7 +200,7 @@
   <fonts:Stack id="column-font" family="inter" weight="700" style="normal"/>
   <ranking:ColumnStyle id="column-style" recipe={recipes.ranking.football-column}
     font={column-font}/>
-  <ranking:Column id="football-column" semantic={speech.semantic}
+  <ranking:Column id="football-column" timeline={speech.timeline}
     canvas={vertical} frame={column-frame} during="program" style={column-style}
     appear-sound={ranking-appear-media.media}
     move-sound={ranking-move-media.media}>
@@ -219,7 +226,7 @@
       icon={messi-icon.image} during={story.segment.messi}/>
   </ranking:Column>
 
-  <media-track:Track id="broll" semantic={speech.semantic} canvas={vertical}>
+  <media-track:Track id="broll" timeline={speech.timeline} canvas={vertical}>
     <media-track:Item id="pitch-pov" image={broll-pitch-pov.image}
       extent={pitch-pov-extent} during={story.selection.pitch-pov}
       frame={pitch-pov-frame} appearance={recipes.media.pitch-pov}
@@ -252,21 +259,22 @@
 
   <caption-fine:Style id="caption-style" recipe={recipes.caption.primary}
     font={display-font}/>
-  <caption:Program id="caption-program" document={story.caption}
-    narrative={story} default={caption-style}/>
-  <caption-fine:Track id="captions" document={story.caption}
-    semantic={speech.semantic} program={caption-program}/>
 
-  <film:Film id="main" canvas={vertical} semantic={speech.semantic}
+  <caption-fine:Track id="captions" document={story.caption}
+    timeline={speech.timeline}>
+    <caption-fine:Use style={caption-style}/>
+  </caption-fine:Track>
+
+  <film:Film id="main" canvas={vertical} timeline={speech.timeline}
     appearance={recipes.film.vertical}>
     <film:Track source={speech-picture.visual}/>
-    <film:Track source={speech.audio}/>
+    <film:Track source={speech-sound.audio}/>
     <film:Track source={football-column.visual}/>
     <film:Track source={football-column.audio}/>
     <film:Track source={broll.visual}/>
     <film:Track source={captions.track}/>
-    <film:Track source={music-bed.track}/>
+    <film:Track source={music-bed.audio}/>
   </film:Film>
   <render:Video id="final" composition={main.composition}
-    semantic={speech.semantic}/>
+    timeline={speech.timeline}/>
 </svml>

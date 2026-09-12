@@ -1,3 +1,4 @@
+import { timelineTypes } from "@qflow/timeline";
 import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { readFile } from "node:fs/promises";
 
@@ -19,9 +20,9 @@ import {
   mediaTrackTypes,
 } from "@qflow/media-track";
 import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
-import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { semanticTrackDependency } from "@qflow/semantic-track";
+import { timelineDependency } from "@qflow/timeline";
 import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
@@ -118,7 +119,7 @@ export const depthStackProgramSchema: ValueSchema = object({
 const finalizeInputs = [
   { name: "set", type: depthStackTypes.cardSet }, { name: "header", type: depthStackTypes.header },
   { name: "frame", type: spatialTypes.frame }, { name: "spec", type: depthStackTypes.spec },
-  { name: "space", type: programSpaceTypes.programSpace },
+  { name: "timeline", type: timelineTypes.track },
 ] as const;
 
 export const depthStackMarkupSurfaces = [
@@ -386,7 +387,7 @@ export const depthStackMarkupSurfaces = [
         ],
         example: `<deck:DepthStack
   id="proof-stack"
-  semantic={speech.semantic}
+  timeline={speech.timeline}
   canvas={vertical}
   frame={layout.proof-stack}
   until={story.selection.proof}
@@ -408,7 +409,7 @@ export const depthStackMarkupSurfaces = [
 
 export const depthStackManifest: ModuleManifest = {
   format: "qflow.module@1", name: depthStackModuleRef.name, version: depthStackModuleRef.version,
-  dependencies: [narrativeDependency, programSpaceDependency, semanticTrackDependency, spatialDependency, temporalDependency, mediaDependency, mediaTrackDependency, compositionDependency, textDependency],
+  dependencies: [narrativeDependency, timelineDependency, spatialDependency, temporalDependency, mediaDependency, mediaTrackDependency, compositionDependency, textDependency],
   types: [
     { name: depthStackTypes.header.name },
     { name: depthStackTypes.spec.name },
@@ -422,7 +423,7 @@ export const depthStackManifest: ModuleManifest = {
     { name: depthStackProducers.bindLabelText.name, inputs: [{ name: "style", type: depthStackTypes.cardLabelStyle }, { name: "content", type: textTypes.text }], outputs: [{ name: "label", type: depthStackTypes.cardLabel }], needs: [] },
     { name: depthStackProducers.createCards.name, inputs: [], outputs: [{ name: "set", type: depthStackTypes.cardSet }], needs: [] },
     { name: depthStackProducers.appendCard.name, inputs: [
-      { name: "set", type: depthStackTypes.cardSet }, { name: "space", type: programSpaceTypes.programSpace }, { name: "material", type: mediaTrackTypes.layerSet },
+      { name: "set", type: depthStackTypes.cardSet }, { name: "timeline", type: timelineTypes.track }, { name: "material", type: mediaTrackTypes.layerSet },
       { name: "label", type: depthStackTypes.cardLabel }, { name: "spec", type: depthStackTypes.cardSpec },
       { name: "activation", type: temporalTypes.instant },
     ], outputs: [{ name: "set", type: depthStackTypes.cardSet }], needs: [] },
@@ -430,7 +431,7 @@ export const depthStackManifest: ModuleManifest = {
       inputs: [...finalizeInputs, { name: "terminal", type: temporalTypes.instant }],
       outputs: [{ name: "program", type: depthStackTypes.program }], needs: [] },
     { name: depthStackProducers.render.name, inputs: [
-      { name: "canvas", type: spatialTypes.canvas }, { name: "space", type: programSpaceTypes.programSpace },
+      { name: "canvas", type: spatialTypes.canvas }, { name: "timeline", type: timelineTypes.track },
       { name: "program", type: depthStackTypes.program },
     ], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],

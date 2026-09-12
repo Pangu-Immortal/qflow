@@ -1,6 +1,6 @@
 import type { CanonicalValue, ValueSchema } from "@qflow/protocol";
 import { formatSvsValue } from "@qflow/svs";
-import type { StudioInspectorField, StudioParameterOption, StudioNumberPresentation } from "@qflow/studio-adapter";
+import type { StudioInspectorField, StudioParameterControl, StudioParameterOption, StudioNumberPresentation } from "@qflow/studio-adapter";
 
 export const parameterOption = (option: StudioParameterOption): Exclude<StudioParameterOption, string> =>
   typeof option === "string" ? { value: option, label: option } : option;
@@ -118,4 +118,46 @@ export function serializeParameterValue(value: CanonicalValue, language: "svml" 
   if (typeof value === "string") return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("'", "&apos;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   throw new Error(`${language.toUpperCase()} parameter bindings currently accept scalar values only.`);
+}
+
+/** Record alternatives are selected by an explicitly literal-valued field. */
+export function parameterRecordVariants(schema: ValueSchema): readonly {
+  key: string; value: CanonicalValue; schema: Extract<ValueSchema, { kind: "object" }>;
+}[] {
+  if (schema.kind !== "oneOf" || !schema.variants.every(variant => variant.kind === "object")) return [];
+  const records = schema.variants as readonly Extract<ValueSchema, { kind: "object" }>[];
+  const key = Object.keys(records[0]?.fields ?? {}).find(name => records.every(record => record.fields[name]?.schema.kind === "literal")
+    && new Set(records.map(record => JSON.stringify((record.fields[name]!.schema as { value: CanonicalValue }).value))).size === records.length);
+  return key === undefined ? [] : records.map(record => ({ key, value: (record.fields[key]!.schema as { value: CanonicalValue }).value, schema: record }));
+}
+
+export function parameterRecordSchema(schema: ValueSchema, value: CanonicalValue): Extract<ValueSchema, { kind: "object" }> | undefined {
+  if (schema.kind === "object") return schema;
+  if (value === null || Array.isArray(value) || typeof value !== "object") return undefined;
+  return parameterRecordVariants(schema).find(variant => (value as Readonly<Record<string, CanonicalValue>>)[variant.key] === variant.value)?.schema;
+}
+
+/** Replace only a Companion-declared group; unrelated attributes and child content survive. */
+export function serializeAttributeGroup(field: StudioInspectorField, value: CanonicalValue): string {
+  const group = field.edit?.attributes;
+  if (!group || value === null || Array.isArray(value) || typeof value !== "object") throw new Error("Expected an attribute record.");
+  const entries = Object.entries(value);
+  if (entries.some(([name]) => !Object.hasOwn(group.ranges, name))) throw new Error("Attribute is outside this group.");
+  let text = field.edit!.source.preimage;
+  const ranges = Object.values(group.ranges).filter((range): range is NonNullable<typeof range> => range !== null);
+  for (const range of ranges.sort((a, b) => b.start - a.start)) text = text.slice(0, range.start) + text.slice(range.end);
+  const attributes = entries.map(([name, held]) => ` ${name}="${serializeParameterValue(held, field.edit!.language)}"`).join("");
+  return text.slice(0, group.insertionOffset) + attributes + text.slice(group.insertionOffset);
+}
+
+export function parameterControlForSchema(schema: ValueSchema | undefined): StudioParameterControl | undefined {
+  if (schema === undefined) return undefined;
+  if (schema.kind === "boolean") return "boolean";
+  if (schema.kind === "number") return "number";
+  if (schema.kind === "string") return schema.enum === undefined
+    ? schema.format === "color" ? "color" : "text"
+    : "select";
+  if (schema.kind === "array") return "list";
+  if (schema.kind === "object" || parameterRecordVariants(schema).length > 0) return "record";
+  return undefined;
 }

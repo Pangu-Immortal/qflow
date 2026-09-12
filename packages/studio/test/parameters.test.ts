@@ -278,7 +278,7 @@ test("nested declared references reach the font attribute, not the referring Sty
 });
 
 test("a derived entity follows its actual Style and Companion-owned Recipe presentation", () => {
-  const main = "<caption-fine:Track id=\"captions\" program={caption-program}/>";
+  const main = "<scene:Track id=\"captions\" layout={baseline-layout}/>";
   const sheet = `<sheet version="1">
   caption.alt { x: 0.4; handoff: overlap; colors: ["#FF3F56", "#FFA72D"]; }
 </sheet>`;
@@ -304,12 +304,12 @@ test("a derived entity follows its actual Style and Companion-owned Recipe prese
   });
   const track = placement({
     id: "captions", module: "@qflow/caption-fine", surface: "track",
-    references: { program: "caption-program" },
-    resolvedReferences: { program: "main::record::caption-program" },
+    references: { layout: "baseline-layout" },
+    resolvedReferences: { layout: "main::record::baseline-layout" },
   });
-  const program = placement({
-    id: "caption-program", module: "@qflow/caption", surface: "program",
-    references: {}, outputs: ["main::record::caption-program"],
+  const layout = placement({
+    id: "baseline-layout", module: "@example/layout", surface: "layout",
+    references: {}, outputs: ["main::record::baseline-layout"],
   });
   const style = placement({
     id: "alternate-caption", module: "@qflow/caption-fine", surface: "style",
@@ -339,7 +339,7 @@ test("a derived entity follows its actual Style and Companion-owned Recipe prese
     id: "captions:cue:2", authoredId: "captions", presentId: "cue:2", display: { title: "cue:2", layers: [] },
     startFrame: 0, endFrameExclusive: 10, stackOrder: 70,
     elementRange: track.range,
-    parameterReferences: { program: "alternate-caption" },
+    parameterReferences: { layout: "alternate-caption" },
   } as const;
   const parameters = sourceBindingsForDraft({
     root: "/workspace",
@@ -348,10 +348,10 @@ test("a derived entity follows its actual Style and Companion-owned Recipe prese
       { path: "recipes.svs", text: sheet, language: "svs" },
     ],
     placement: track,
-    placements: [track, program, style],
+    placements: [track, layout, style],
     draft,
     declarations: [{
-      name: "program",
+      name: "layout",
       recipe: {
         through: ["recipe"],
         bindings: [
@@ -365,19 +365,19 @@ test("a derived entity follows its actual Style and Companion-owned Recipe prese
   });
   const inspector = inspectorFieldsForBindings(draft, parameters, [
     {
-      binding: "program.x", label: "X", domain: "where", page: { id: "placement", label: "Placement" },
+      binding: "layout.x", label: "X", domain: "where", page: { id: "placement", label: "Placement" },
       section: { id: "region", label: "Region" }, control: "number",
     },
     {
-      binding: "program.handoff", label: "Handoff", domain: "when", page: { id: "cue", label: "Cue" },
+      binding: "layout.handoff", label: "Handoff", domain: "when", page: { id: "cue", label: "Cue" },
       section: { id: "envelope", label: "Envelope" }, control: "select", options: ["cut", "overlap"],
     },
     {
-      binding: "program.colors", label: "Colors", domain: "how", page: { id: "paint", label: "Paint" },
+      binding: "layout.colors", label: "Colors", domain: "how", page: { id: "paint", label: "Paint" },
       section: { id: "palette", label: "Palette" },
     },
     {
-      binding: "program.fallback-colors", label: "Fallback Colors", domain: "how", page: { id: "paint", label: "Paint" },
+      binding: "layout.fallback-colors", label: "Fallback Colors", domain: "how", page: { id: "paint", label: "Paint" },
       section: { id: "palette", label: "Palette" },
     },
   ]);
@@ -385,14 +385,38 @@ test("a derived entity follows its actual Style and Companion-owned Recipe prese
   assert.deepEqual(inspector.map(({ binding, domain, section, control, options }) => ({
     binding, domain, section: section.id, control, options,
   })), [
-    { binding: "program.x", domain: "where", section: "region", control: "number", options: undefined },
-    { binding: "program.handoff", domain: "when", section: "envelope", control: "select", options: ["cut", "overlap"] },
-    { binding: "program.colors", domain: "how", section: "palette", control: "list", options: undefined },
-    { binding: "program.fallback-colors", domain: "how", section: "palette", control: "list", options: undefined },
+    { binding: "layout.x", domain: "where", section: "region", control: "number", options: undefined },
+    { binding: "layout.handoff", domain: "when", section: "envelope", control: "select", options: ["cut", "overlap"] },
+    { binding: "layout.colors", domain: "how", section: "palette", control: "list", options: undefined },
+    { binding: "layout.fallback-colors", domain: "how", section: "palette", control: "list", options: undefined },
   ]);
   assert.deepEqual(inspector[2]?.value, ["#FF3F56", "#FFA72D"]);
   assert.deepEqual(inspector[3]?.value, ["#000000"]);
-  assert.equal(inspector[3]?.source.preimage, "");
-  assert.match(inspector[3]?.source.prefix ?? "", /fallback-colors/u);
+  assert.equal(inspector[3]?.edit?.source.preimage, "");
+  assert.match(inspector[3]?.edit?.source.prefix ?? "", /fallback-colors/u);
   assert.ok(parameters.every((parameter) => parameter.source.path === "recipes.svs"));
+});
+
+
+test("Inspector keeps selected read-only bindings and computed facts beside editable fields", () => {
+  const source = { path: "main.svml", range: { start: 0, end: 4 }, preimage: "wide" };
+  const fields = inspectorFieldsForBindings({
+    id: "use", authoredId: "use", display: { title: "Use", layers: [] },
+    startFrame: 15, endFrameExclusive: 90, stackOrder: 0,
+    inspector: [{ id: "range", label: "Range", domain: "when", section: { id: "placement", label: "Placement" }, value: "15–90", unit: "f" }],
+  }, [
+    { id: "style", binding: "style", name: "style", value: "wide", language: "svml", writable: false, source },
+    { id: "width", binding: "frame.width", name: "width", value: "78%", language: "svml", writable: true, source },
+    { id: "private", binding: "private", name: "private", value: "unexposed", language: "svml", writable: false, source },
+  ], [
+    { binding: "style", label: "Style", domain: "how", section: { id: "style", label: "Style" }, control: "text" },
+    { binding: "frame.width", label: "Width", domain: "where", section: { id: "placement", label: "Placement" }, control: "number" },
+  ]);
+  assert.equal(fields.length, 3);
+  assert.equal(fields[0]?.value, "wide");
+  assert.equal(fields[0]?.edit, undefined);
+  assert.equal(fields[1]?.edit?.source, source);
+  assert.equal(fields[2]?.value, "15–90");
+  assert.equal(fields[2]?.edit, undefined);
+  assert.equal(fields[2]?.binding, undefined);
 });

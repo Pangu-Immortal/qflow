@@ -1,3 +1,4 @@
+import { timelineTypes } from "@qflow/timeline";
 import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { readFile } from "node:fs/promises";
 
@@ -5,9 +6,9 @@ import { artifactDependency } from "@qflow/artifact";
 import { compositionDependency, compositionTypes } from "@qflow/composition";
 import { mediaDependency, mediaTypes } from "@qflow/media";
 import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
-import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { semanticTrackDependency } from "@qflow/semantic-track";
+import { timelineDependency } from "@qflow/timeline";
 import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import { temporalDependency, temporalInstantSchema, temporalTypes, temporalWindowSchema } from "@qflow/temporal";
@@ -487,7 +488,7 @@ const allRankingMarkupSurfaces = [
           "Every other property is refused by name.",
         ],
       } },
-    { name: "tier", tag: "TierBoard", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, rankingTypes.schedule, rankingTypes.tierProgram, compositionTypes.visualTrack, compositionTypes.audioTrack],
+    { name: "tier", tag: "TierBoard", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, rankingTypes.schedule, rankingTypes.tierProgram, compositionTypes.visualTrack, rankingTypes.soundEvents, compositionTypes.audioTrack],
       vocabulary: {
         summary: "Places Items into tier rows from preset state or explicit reveal Selections, and publishes the board and the Tracks it renders to.",
         appearance:
@@ -537,11 +538,13 @@ const allRankingMarkupSurfaces = [
             summary: "The resolved board: its Frame, Style, Schedule and ordered Items." },
           { name: "visual", type: compositionTypes.visualTrack,
             summary: "The rendered board, an ordinary peer VisualTrack." },
+          { name: "events", type: rankingTypes.soundEvents,
+            summary: "Animation-linked sound events, published when a sound is authored." },
           { name: "audio", type: compositionTypes.audioTrack,
             summary: "The rendered board sound, published only when a sound is authored." },
         ],
         example: `<ranking:TierBoardStyle id="tier-style" recipe={recipes.ranking.tier} font={ui-font}/>
-<ranking:TierBoard id="tiers" semantic={speech.semantic} canvas={vertical} frame={board-frame}
+<ranking:TierBoard id="tiers" timeline={speech.timeline} canvas={vertical} frame={board-frame}
   during="program"
   style={tier-style}>
   <ranking:TierItem id="row-regen" tier="s" preset="true" icon={icon-regen}/>
@@ -555,7 +558,7 @@ const allRankingMarkupSurfaces = [
           "Authoring either sound also connects the Style's `.sound` output, so `style` must name a TierBoardStyle written in this Source.",
         ],
       } },
-    { name: "column", tag: "Column", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, rankingTypes.textItemShell, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, rankingTypes.schedule, rankingTypes.columnProgram, compositionTypes.visualTrack, compositionTypes.audioTrack],
+    { name: "column", tag: "Column", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, rankingTypes.textItemShell, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, rankingTypes.schedule, rankingTypes.columnProgram, compositionTypes.visualTrack, rankingTypes.soundEvents, compositionTypes.audioTrack],
       vocabulary: {
         summary: "Places rows by explicit rank, reveals each non-preset row in its own Segment or Selection, and publishes the board and the Tracks it renders to.",
         appearance:
@@ -605,11 +608,13 @@ const allRankingMarkupSurfaces = [
             summary: "The resolved board: its Frame, Style, Schedule and ordered Items." },
           { name: "visual", type: compositionTypes.visualTrack,
             summary: "The rendered board, an ordinary peer VisualTrack." },
+          { name: "events", type: rankingTypes.soundEvents,
+            summary: "Animation-linked sound events, published when a sound is authored." },
           { name: "audio", type: compositionTypes.audioTrack,
             summary: "The rendered board sound, published only when a sound is authored." },
         ],
         example: `<ranking:ColumnStyle id="board-style" recipe={recipes.ranking.board} font={ui-font}/>
-<ranking:Column id="board" semantic={speech.semantic} canvas={vertical} frame={board-frame}
+<ranking:Column id="board" timeline={speech.timeline} canvas={vertical} frame={board-frame}
   during={story.segment.ranking}
   style={board-style}>
   <ranking:ColumnItem id="row-regen" rank="1" label="ReGen" icon={icon-regen} during={story.selection.regen}/>
@@ -624,7 +629,7 @@ const allRankingMarkupSurfaces = [
           "Authoring either sound also connects the Style's `.sound` output, so `style` must name a ColumnStyle written in this Source.",
         ],
       } },
-    { name: "top-three", tag: "TopThree", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, rankingTypes.textItemShell, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, rankingTypes.schedule, rankingTypes.topThreeProgram, compositionTypes.visualTrack, compositionTypes.audioTrack],
+    { name: "top-three", tag: "TopThree", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, rankingTypes.textItemShell, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, rankingTypes.schedule, rankingTypes.topThreeProgram, compositionTypes.visualTrack, rankingTypes.soundEvents, compositionTypes.audioTrack],
       vocabulary: {
         summary: "Fills a podium one slot at a time at the Moment owned by each Item, and publishes the board and the Tracks it renders to.",
         appearance:
@@ -667,11 +672,13 @@ const allRankingMarkupSurfaces = [
             summary: "The resolved board: its Frame, Style, Schedule and ordered Items." },
           { name: "visual", type: compositionTypes.visualTrack,
             summary: "The rendered board, an ordinary peer VisualTrack." },
+          { name: "events", type: rankingTypes.soundEvents,
+            summary: "Animation-linked sound events, published when a sound is authored." },
           { name: "audio", type: compositionTypes.audioTrack,
             summary: "The rendered board sound, published only when a sound is authored." },
         ],
         example: `<ranking:TopThreeStyle id="podium-style" recipe={recipes.ranking.podium} font={ui-font}/>
-<ranking:TopThree id="podium" semantic={speech.semantic} frame={board-frame}
+<ranking:TopThree id="podium" timeline={speech.timeline} frame={board-frame}
   during={story.selection.board} terminal={story.moment.done}
   style={podium-style}>
   <ranking:TopThreeItem id="slot-gold" label="ReGen" icon={icon-regen} at={story.moment.regen}/>
@@ -692,7 +699,7 @@ export const rankingMarkupSurfaces = allRankingMarkupSurfaces;
 
 export const rankingManifest: ModuleManifest = {
   format: "qflow.module@1", name: rankingModuleRef.name, version: rankingModuleRef.version,
-  dependencies: [artifactDependency, mediaDependency, narrativeDependency, programSpaceDependency, semanticTrackDependency, spatialDependency, temporalDependency, compositionDependency, textDependency],
+  dependencies: [artifactDependency, mediaDependency, narrativeDependency, timelineDependency, spatialDependency, temporalDependency, compositionDependency, textDependency],
   types: [
     { name: rankingTypes.header.name },
     { name: rankingTypes.itemSpec.name },
@@ -729,7 +736,7 @@ export const rankingManifest: ModuleManifest = {
     ], outputs: [{ name: "set", type: rankingTypes.triggeredCandidates }], needs: [] },
     { name: rankingProducers.schedule.name, inputs: [
       { name: "header", type: rankingTypes.header }, { name: "items", type: rankingTypes.itemSpecs },
-      { name: "space", type: programSpaceTypes.programSpace },
+      { name: "timeline", type: timelineTypes.track },
       { name: "outer", type: temporalTypes.window }, { name: "candidates", type: rankingTypes.triggeredCandidates },
       { name: "terminal", type: temporalTypes.instant },
     ], outputs: [{ name: "schedule", type: rankingTypes.schedule }], needs: [] },
@@ -742,7 +749,7 @@ export const rankingManifest: ModuleManifest = {
     ], outputs: [{ name: "set", type: rankingTypes.tierWindows }], needs: [] },
     { name: rankingProducers.tierSchedule.name, inputs: [
       { name: "header", type: rankingTypes.header }, { name: "items", type: rankingTypes.itemSpecs },
-      { name: "space", type: programSpaceTypes.programSpace },
+      { name: "timeline", type: timelineTypes.track },
       { name: "outer", type: temporalTypes.window }, { name: "windows", type: rankingTypes.tierWindows },
     ], outputs: [{ name: "schedule", type: rankingTypes.schedule }], needs: [] },
     { name: rankingProducers.createColumnWindows.name, inputs: [], outputs: [
@@ -754,7 +761,7 @@ export const rankingManifest: ModuleManifest = {
     ], outputs: [{ name: "set", type: rankingTypes.columnWindows }], needs: [] },
     { name: rankingProducers.columnSchedule.name, inputs: [
       { name: "header", type: rankingTypes.header }, { name: "items", type: rankingTypes.itemSpecs },
-      { name: "space", type: programSpaceTypes.programSpace },
+      { name: "timeline", type: timelineTypes.track },
       { name: "outer", type: temporalTypes.window }, { name: "windows", type: rankingTypes.columnWindows },
     ], outputs: [{ name: "schedule", type: rankingTypes.schedule }], needs: [] },
     ...([
@@ -788,7 +795,7 @@ export const rankingManifest: ModuleManifest = {
       { name: eventProducer.name, inputs: [
         { name: "schedule", type: rankingTypes.schedule }, { name: "style", type: styleType }, { name: "specs", type: rankingTypes.itemSpecs },
       ], outputs: [{ name: "events", type: rankingTypes.soundEvents }], needs: [] },
-      { name: renderProducer.name, inputs: [{ name: "space", type: programSpaceTypes.programSpace }, { name: "program", type: programType }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+      { name: renderProducer.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: programType }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
     ]),
     { name: rankingProducers.createSounds.name, inputs: [], outputs: [{ name: "sounds", type: rankingTypes.sounds }], needs: [] },
     ...([
@@ -798,7 +805,7 @@ export const rankingManifest: ModuleManifest = {
       name: producer.name, inputs: [{ name: "sounds", type: rankingTypes.sounds }, { name: "media", type: mediaTypes.synchronized }], outputs: [{ name: "sounds", type: rankingTypes.sounds }], needs: [],
     })),
     { name: rankingProducers.renderAudio.name, inputs: [
-      { name: "space", type: programSpaceTypes.programSpace }, { name: "events", type: rankingTypes.soundEvents },
+      { name: "timeline", type: timelineTypes.track }, { name: "events", type: rankingTypes.soundEvents },
       { name: "style", type: rankingTypes.soundStyle }, { name: "sounds", type: rankingTypes.sounds },
     ], outputs: [{ name: "track", type: compositionTypes.audioTrack }], needs: [] },
   ],

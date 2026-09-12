@@ -1,7 +1,8 @@
+import { sealTimeline } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
-import { semanticTrackFixture } from "../../../test/semantic-track-fixture.js";
+import { timelineFixture } from "../../../test/timeline-fixture.js";
 import { projectSelectionWindow } from "../../../test/temporal-fixture.js";
 
 import { spatialComponent, videoContractManifests } from "../../../test/support/video-domain.js";
@@ -16,7 +17,7 @@ import type { NarrativeSelectionRef } from "@qflow/narrative";
 import { sealProgramSpace } from "@qflow/program-space";
 import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
 import type { ModuleManifest } from "@qflow/protocol";
-import { semanticTrackDependency, semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineDependency, timelineTypes } from "@qflow/timeline";
 import {
   appendProjectedTextItem,
   bindAreaTextPlacement,
@@ -49,10 +50,10 @@ import { sealText, textComponent, textDependency, textManifest, textTypes } from
 import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup";
 import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
 
-const space = sealProgramSpace({ id: "test-space", durationSec: 5,
+const space = sealTimeline({ items: [], id: "test-space", durationSec: 5,
   frameRate: { numerator: 30, denominator: 1 },
 });
-const semantic = semanticTrackFixture(space, { anchors: [
+const semantic = timelineFixture(space, { anchors: [
   { identity: "selection:start", frame: 30 },
   { identity: "selection:end", frame: 60 },
 ] });
@@ -258,7 +259,7 @@ test("Text Mask explicitly consumes one authored Text Program and one owned stil
   })), /must be materialized by an independent package/u);
 });
 
-test("TypographyTrackProgram rejects a frame span outside ProgramSpace", () => {
+test("TypographyTrackProgram rejects a frame span outside Timeline", () => {
   const program = sealTypographyTrackProgram({
 
     id: "invalid-text",
@@ -272,10 +273,10 @@ test("TypographyTrackProgram rejects a frame span outside ProgramSpace", () => {
       motion: stillTextMotion(),
     }],
   });
-  assert.throws(() => renderTypographyTrack(space, program), /outside ProgramSpace/u);
+  assert.throws(() => renderTypographyTrack(space, program), /outside Timeline/u);
 });
 
-test("Selection Text consumes explicit Selection, SemanticTrack, Style, Motion and Placement edges", () => {
+test("Selection Text consumes explicit Selection, Timeline, Style, Motion and Placement edges", () => {
   const selection: NarrativeSelectionRef = {
     narrativeId: "script",
     id: "callout",
@@ -312,7 +313,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
     name: "inputs", tag: "Inputs", mode: "structured",
     outputs: [
       svsRecipeType,
-      semanticTrackTypes.track,
+      timelineTypes.track,
       spatialTypes.point,
       spatialTypes.frame,
       spatialTypes.path,
@@ -326,7 +327,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
     name: fixtureModule.name,
     version: fixtureModule.version,
     dependencies: [
-      semanticTrackDependency,
+      timelineDependency,
       spatialDependency,
       mediaDependency,
       {
@@ -384,7 +385,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
         } },
         range: element.range,
       },
-      { id: "semantic", type: semanticTrackTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
       { id: "title-point", type: spatialTypes.point, value: { kind: "inline", value: { xPx: 540, yPx: 120 } }, range: element.range },
       { id: "body-frame", type: spatialTypes.frame, value: { kind: "inline", value: { xPx: 80, yPx: 220, widthPx: 920, heightPx: 520 } }, range: element.range },
       { id: "arc", type: spatialTypes.path, value: { kind: "inline", value: { commands: [
@@ -435,17 +436,17 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
             <text:Keyframe at="1" opacity="1"/>
           </text:Sequence>
         </text:Motion>
-        <text:Track id="titles" semantic={semantic}>
+        <text:Track id="titles" timeline={semantic}>
           <text:Point id="hook" content={copy} placement={title-point} style={poster} during="program"/>
           <text:Area id="body" placement={body-frame} style={poster} motion={arrive} during="program">
             <text:P id="first">Rich <text:Span style={poster}>inline text</text:Span><text:Break/>wraps.</text:P>
           </text:Area>
           <text:Path id="arc-title" placement={arc} style={poster} during="program">Along the path</text:Path>
         </text:Track>
-        <text:Track id="mask-shape" semantic={semantic}>
+        <text:Track id="mask-shape" timeline={semantic}>
           <text:Area id="mask-word" placement={body-frame} style={mask-shape-style} during="program">MASK</text:Area>
         </text:Track>
-        <text:Mask id="masked-titles" semantic={semantic} text={mask-shape.program} material={material}/>
+        <text:Mask id="masked-titles" timeline={semantic} text={mask-shape.program} material={material}/>
       </svml>`,
     },
     closure,
@@ -607,13 +608,13 @@ test("a paragraph's source indentation is not part of its words", async () => {
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
     outputs: [
-      svsRecipeType, semanticTrackTypes.track, spatialTypes.frame,
+      svsRecipeType, timelineTypes.track, spatialTypes.frame,
       mediaTypes.fontArtifact, textTypes.text,
     ],
   } as const;
   const fixtureManifest: ModuleManifest = {
     format: "qflow.module@1", name: fixtureModule.name, version: fixtureModule.version,
-    dependencies: [semanticTrackDependency, spatialDependency, mediaDependency,
+    dependencies: [timelineDependency, spatialDependency, mediaDependency,
       { module: { name: svsManifest.name, version: svsManifest.version } }, textDependency],
     types: [], capabilities: [], producers: [],
   };
@@ -627,7 +628,7 @@ test("a paragraph's source indentation is not part of its words", async () => {
           path: "text.editorial", properties: { "stack-order": 70, size: 44, "line-height": 1.15,
             "inline-size": "fixed", "block-size": "fixed", wrap: "word", overflow: "shrink", "minimum-scale": 0.65 } } },
         range: element.range },
-      { id: "semantic", type: semanticTrackTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
       { id: "body-frame", type: spatialTypes.frame, value: { kind: "inline", value: { xPx: 80, yPx: 220, widthPx: 920, heightPx: 520 } }, range: element.range },
       { id: "exact-font", type: mediaTypes.fontArtifact, value: { kind: "inline", value: exactTestFont }, range: element.range },
     ],
@@ -654,7 +655,7 @@ test("a paragraph's source indentation is not part of its words", async () => {
           <text:Style id="poster" recipe={editorial} font={exact-font}>
             <text:Fill color="#f8fafc"/>
           </text:Style>
-          <text:Track id="titles" semantic={semantic}>
+          <text:Track id="titles" timeline={semantic}>
             <text:Area id="body" placement={body-frame} style={poster} during="program">
               <text:P id="first">
                 Top 5 Most Popular

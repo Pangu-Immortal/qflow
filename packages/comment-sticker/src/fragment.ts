@@ -1,4 +1,5 @@
-import { programSpaceTypes } from "@qflow/program-space";
+import { timelineTypes } from "@qflow/timeline";
+
 import { artifactTypes } from "@qflow/artifact";
 import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
@@ -82,7 +83,7 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
       inputs: {
         set: operation(current),
         header: input("header"),
-        space: input("space"),
+        timeline: input("timeline"),
         frame: input(item.frameName),
         style: input(item.styleName),
         window: input(item.windowName),
@@ -104,7 +105,7 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
     {
       id: "comment:track",
       producer: commentStickerProducers.render,
-      inputs: { canvas: input("canvas"), space: input("space"), program: operation("comment:program") },
+      inputs: { canvas: input("canvas"), timeline: input("timeline"), program: operation("comment:program") },
       result: { kind: "output", name: "track" },
     },
   );
@@ -112,7 +113,7 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
     inputs: [
       { name: "canvas", type: spatialTypes.canvas },
       { name: "header", type: commentStickerTypes.header },
-      { name: "space", type: programSpaceTypes.programSpace },
+      { name: "timeline", type: timelineTypes.track },
       ...[...types].map(([inputName, type]) => ({ name: inputName, type })),
     ],
     operations,

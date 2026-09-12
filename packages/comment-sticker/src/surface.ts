@@ -1,4 +1,4 @@
-import { createTemporalSpace, resolveTemporalContext } from "@qflow/temporal-markup";
+import { resolveTemporalContext } from "@qflow/temporal-markup";
 import { artifactTypes } from "@qflow/artifact";
 import { mediaTypes } from "@qflow/media";
 import type { FontStackRef } from "@qflow/media";
@@ -88,11 +88,10 @@ export const decodeCommentStickerStyleSurface: StructuredSurfaceHandler = ({ ele
 };
 
 export const decodeCommentStickerTrackSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  allowed(element, ["id", "canvas", "semantic"], ["id", "canvas", "semantic"]);
+  allowed(element, ["id", "canvas", "timeline"], ["id", "canvas", "timeline"]);
   const id = text(element, "id");
   const canvas = reference(element.attributes.canvas, `${element.name}.canvas`, spatialTypes.canvas, resolveReference);
   const context = resolveTemporalContext({ element, resolveReference });
-  const time = createTemporalSpace({ id: id, element, ...context });
   const headerId = `${id}.__header`;
   const records: SurfaceRecordDraft[] = [{
     id: headerId,
@@ -100,9 +99,9 @@ export const decodeCommentStickerTrackSurface: StructuredSurfaceHandler = ({ ele
     value: { kind: "inline", value: sealCommentStickerHeader({ id }) },
     range: element.range,
   }];
-  const temporalComponents: SurfaceComponentDraft[] = [...time.components];
-  const temporalFragments: ReturnType<typeof createTemporalWindowProjection>["fragments"][number][] = [...time.fragments];
-  const inputs: Record<string, typeof canvas.ref> = { canvas: canvas.ref, header: { kind: "record", id: headerId }, space: time.space.ref };
+  const temporalComponents: SurfaceComponentDraft[] = [];
+  const temporalFragments: ReturnType<typeof createTemporalWindowProjection>["fragments"][number][] = [];
+  const inputs: Record<string, typeof canvas.ref> = { canvas: canvas.ref, header: { kind: "record", id: headerId }, timeline: context.timeline.ref };
   const items: Parameters<typeof createCommentStickerFragment>[0][number][] = [];
   for (const child of element.children) {
     if (child.kind === "text") {
@@ -113,7 +112,7 @@ export const decodeCommentStickerTrackSurface: StructuredSurfaceHandler = ({ ele
     if (child.children.some((node) => node.kind === "element")) throw new Error(`${child.name} accepts plain comment text only.`);
     allowed(child, ["id", "comment", "frame", "style", "avatar", "author", "header", "meta", ...TIMING], ["id", "frame", "style"]);
     const itemId = text(child, "id");
-    const temporal = createTemporalWindowProjection({ id: itemId, element: child, ...context, space: time.space, resolveReference });
+    const temporal = createTemporalWindowProjection({ id: itemId, element: child, ...context, resolveReference });
     records.push(...temporal.records); temporalComponents.push(...temporal.components); temporalFragments.push(...temporal.fragments);
     const suffix = String(items.length + 1).padStart(4, "0");
     const frame = reference(child.attributes.frame, `${child.name}.frame`, spatialTypes.frame, resolveReference);

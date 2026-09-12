@@ -8,16 +8,23 @@ With prepared Takes, a Canvas and an exact FontStack already available:
 ```svml
 <import as="explainer" from="@example/responsive-explainer@1"/>
 
-<speech:Track id="speech">
-  <speech:Take source={opening.take}/>
-  <speech:Take source={explanation.take}/>
-</speech:Track>
-<explainer:Scene id="scene" semantic={speech.semantic} canvas={canvas} font={font}
+<time:Clock id="clock" frame-rate="30"/>
+<time:Timeline id="speech" clock={clock}>
+  <time:Take source={opening.take}/>
+  <time:Take source={explanation.take}/>
+</time:Timeline>
+<explainer:Scene id="scene" timeline={speech.timeline} canvas={canvas} font={font}
   during="program" reveal={story.moment.demonstrate} title="Make room for meaning"
   transition-frames="24" stack-order="0"/>
-<film:Film id="main" canvas={canvas} semantic={speech.semantic} appearance={look.film}>
+<import as="sound" from="@qflow/sound@1"/>
+<sound:Style id="voice-style"/>
+<sound:Track id="voice" timeline={speech.timeline}>
+  <sound:Use style={voice-style}/>
+</sound:Track>
+
+<film:Film id="main" canvas={canvas} timeline={speech.timeline} appearance={look.film}>
   <film:Track source={scene.visual}/>
-  <film:Track source={speech.audio}/>
+  <film:Track source={voice.audio}/>
   <film:Track source={captions.track}/>
 </film:Film>
 ```
@@ -28,11 +35,11 @@ the Script or using another delivery changes the projected frame while retaining
 `transition-frames` is the duration of that change, separate from the scene's lifetime. `stack-order`
 places this scene among other contributions. The caller supplies its title and exact fonts.
 
-`projectSemanticMedia` selects all intersecting prepared Takes. Each video's target interval is
+`projectTimelineMedia` selects all intersecting prepared Takes. Each video's target interval is
 Present-local and its source offset is preserved. The parent viewport changes size and position;
 playback is never restarted by the layout change. The component owns the diagram and the viewport,
 so its internal overlap, rounded clipping and backdrop blur are ordinary HTML/CSS relationships.
-The original audio stays independently selectable as `speech.audio`.
+Sound independently presents the existing audio as `voice.audio`.
 
 `src/activation.ts` declares the Module, Surface, semantic projections and Producer Fragment.
 `src/render.ts` emits a browser program with HTML slots for typed video and text children. Its render

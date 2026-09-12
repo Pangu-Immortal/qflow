@@ -1,5 +1,5 @@
+import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage } from "@qflow/component-kit";
-import type { ProgramSpace } from "@qflow/program-space";
 import type { CanvasSpace } from "@qflow/spatial";
 import type { AudioTrack, VisualTrack } from "@qflow/composition";
 import type { StoredValue } from "@qflow/protocol";
@@ -28,7 +28,7 @@ export const filmComponent = {
       handler: ({ inputs }) => ({
         outputs: { set: { kind: "inline", value: canonicalize(appendFilmVisualTrack(
           inline<FilmTrackSet>(inputs.set?.value, "FilmTrackSet"),
-          inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+          inline<Timeline>(inputs.timeline?.value, "Timeline"),
           inline<VisualTrack>(inputs.track?.value, "VisualTrack"),
         )) } },
         needs: {},
@@ -39,7 +39,7 @@ export const filmComponent = {
       handler: ({ inputs }) => ({
         outputs: { set: { kind: "inline", value: canonicalize(appendFilmAudioTrack(
           inline<FilmTrackSet>(inputs.set?.value, "FilmTrackSet"),
-          inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+          inline<Timeline>(inputs.timeline?.value, "Timeline"),
           inline<AudioTrack>(inputs.track?.value, "AudioTrack"),
         )) } },
         needs: {},
@@ -51,7 +51,7 @@ export const filmComponent = {
         outputs: { composition: { kind: "inline", value: canonicalize(compileFilmComposition(
           inline<FilmProgram>(inputs.program?.value, "FilmProgram"),
           inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"),
-          inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+          inline<Timeline>(inputs.timeline?.value, "Timeline"),
           inline<FilmTrackSet>(inputs.set?.value, "FilmTrackSet"),
         )) } },
         needs: {},

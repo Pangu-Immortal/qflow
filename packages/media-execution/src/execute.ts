@@ -1,3 +1,4 @@
+import { audioPresentationFilter } from "./audio-presentation.js";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
@@ -556,6 +557,7 @@ function audioClipFilter(clip: AudioProgramClip, inputIndex: number, outputIndex
     ...(clip.fadeOutSamples === 0 ? [] : [
       `afade=t=out:start_sample=${length - clip.fadeOutSamples}:nb_samples=${clip.fadeOutSamples}`,
     ]),
+    ...audioPresentationFilter(clip),
     // Crop after tempo, looping and envelopes, keeping their original phase.
     `atrim=start_sample=${left - clip.targetStartSample}:end_sample=${right - clip.targetStartSample}`,
     "asetpts=N/SR/TB",

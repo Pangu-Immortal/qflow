@@ -1,13 +1,14 @@
+import { sealTimeline } from "@qflow/timeline";
 import { compositionComponent, spatialComponent, videoContractManifests } from "../../../test/support/video-domain.js";
 import { registerTypeValidatorFacets } from "@qflow/component-kit";
 import { programSpaceDependency, programSpaceTypes, sealProgramSpace } from "@qflow/program-space";
-import { semanticTrackDependency, semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineDependency, timelineProducers, timelineTypes } from "@qflow/timeline";
 import { compositionDependency, compositionTypes, sealAudioTrack, sealVisualTrack } from "@qflow/composition";
 import type { Track } from "@qflow/composition";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
-import { semanticTrackFixture } from "../../../test/semantic-track-fixture.js";
+import { timelineFixture } from "../../../test/timeline-fixture.js";
 
 import { createResolvedClosure, sealBuildRequest, start } from "@qflow/core";
 import {
@@ -42,14 +43,14 @@ const fixtureModule = { name: "example.film-fixture", version: "1" } as const;
 const fixtureSurfaceDigest = fixtureResource("example.film-fixture/inputs-surface@1");
 const fixtureSurface = {
   name: "inputs", tag: "Inputs", mode: "structured",
-  outputs: [semanticTrackTypes.track, compositionTypes.visualTrack, compositionTypes.audioTrack],
+  outputs: [timelineTypes.track, compositionTypes.visualTrack, compositionTypes.audioTrack],
 } as const;
 const fixtureManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: fixtureModule.name,
   version: fixtureModule.version,
   dependencies: [
-    semanticTrackDependency,
+    timelineDependency,
     compositionDependency,
   ],
   types: [],
@@ -57,10 +58,10 @@ const fixtureManifest: ModuleManifest = {
   producers: [],
 };
 
-const space = sealProgramSpace({ id: "test-space", durationSec: 2,
+const space = sealTimeline({ items: [], id: "test-space", durationSec: 2,
   frameRate: { numerator: 30, denominator: 1 },
 });
-const semantic = semanticTrackFixture(space);
+const semantic = timelineFixture(space);
 const visual = sealVisualTrack({ programSpaceId: "test-space",
   visualIr: "qflow.visual-ir@1",
   id: "visual",
@@ -103,7 +104,7 @@ async function compileFilm(options: { readonly styles?: string } = {}) {
   const surfaces = new MarkupSurfaceRegistry();
   surfaces.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
-      { id: "semantic", type: semanticTrackTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
       { id: "visual", type: compositionTypes.visualTrack, value: { kind: "inline", value: visual }, range: element.range },
       { id: "audio", type: compositionTypes.audioTrack, value: { kind: "inline", value: audio }, range: element.range },
     ],
@@ -139,7 +140,7 @@ async function compileFilm(options: { readonly styles?: string } = {}) {
       <import as="recipes" source="./recipes.svs"/>
       <fixture:Inputs/>
       <space:Canvas id="vertical" width="1080" height="1920"/>
-      <film:Film id="main" canvas={vertical} semantic={semantic} appearance={recipes.film.vertical}>
+      <film:Film id="main" canvas={vertical} timeline={semantic} appearance={recipes.film.vertical}>
         <film:Track source={visual}/><film:Track source={audio}/>
       </film:Film>
     </svml>`),
@@ -170,8 +171,7 @@ test("the official Film Surface validates SVS and lowers dynamic peer Tracks", a
     filmProducers.appendAudioTrack.name,
     filmProducers.appendVisualTrack.name,
     filmProducers.compileComposition.name,
-    semanticTrackProducers.projectProgramSpace.name,
-  ].sort());
+      ].sort());
 });
 
 test("Film rejects an invalid package-owned Recipe during check", async () => {

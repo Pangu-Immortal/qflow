@@ -20,7 +20,7 @@
     "@qflow/media-pipeline": "workspace:*",
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/semantic-track": "workspace:*",
+    "@qflow/timeline": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/temporal-markup": "workspace:*"
   },

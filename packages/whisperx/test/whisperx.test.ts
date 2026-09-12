@@ -38,6 +38,7 @@ test("WhisperX receives normalized bytes without authored Segment truth", () => 
 test("the real-media Surface materializes an empty Segment from its media domain", async () => {
   const narrative: Narrative = {
     id: "wordless-real",
+    caption: { id: "wordless-real.caption", narrativeId: "wordless-real", units: [], words: [], cueBreaks: [] },
     segments: [{
       id: "pause",
       startAnchorId: "pause:start",

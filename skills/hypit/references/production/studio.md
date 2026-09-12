@@ -15,8 +15,8 @@ qflow studio --run build.svrun
 
 Supply `--runtime <profile>` when intentionally using a different Profile from the project's
 `qflow runtime use` selection. Studio needs a Run whose selected targets reach one Film with resolved
-composition and time. Speech-led work includes a Script lane; a pure animation's ProgramSpace supplies
-the clock for its component lanes. An image-generation-only Run is not a Film view; several distinct
+composition and time. The Timeline supplies the clock and any placed Script anchors for component
+lanes, including a pure animation with no Takes. An image-generation-only Run is not a Film view; several distinct
 Films need separate Runs or sessions.
 
 Open the URL actually printed by the process and retain it with the Run it serves. The default
@@ -54,14 +54,17 @@ include when the user wants to continue editing on another machine.
 | Source | The exact Run, Author and imported Source/Recipe files. Select a file and use Edit source; changes save automatically, and Cmd/Ctrl+S saves immediately. Check save/error state. This is not a project filesystem browser. |
 | Preview | The selected Film composition rendered by HyperFrames in the browser. Play or seek with the transport or timeline. Selecting a component-declared visual part selects its corresponding timeline entity; adjust its exposed position in the Inspector. |
 | Timeline | Semantic Segments, Selections and Moments, plus the component-projected Track entities and their visible intervals, materials or event lanes. A rectangle may describe occupancy, activation or persistent visibility; read the component's meaning. |
-| Inspector | With nothing selected, project, Canvas, time and Run facts. For a selected entity, only its declared adjustable fields, organized under Where, How and When where applicable. |
+| Inspector | With nothing selected, project, Canvas, time and Run facts. For a selected entity, its declared read-only facts and adjustable fields, organized under Where, When and How where applicable. |
 | Tasks | One card per Build, grouped into ongoing and finished. Active status and progress come from the selected Runtime; completed, failed and cancelled Builds come from project Results. Cards retain the source Run, times and any failure or attention reason. |
 | Artifacts | Image, video and audio file Outputs from project Results, including those already published by ongoing Builds. Use the sidebar to choose all media, videos, images or audio. View media on a Build opens its Outputs; opening the Artifacts tab returns to project media. Composite Outputs such as normalized media and Semantic Takes stay intact and do not add their internal files to this gallery. Click a card to view it in the central preview; video and audio have playback and a time slider. Back to composition returns to the existing composition position. Previewing a file does not select it as a Candidate in the Run. |
 
 A declared lane stays one row even when items overlap. Later items cover earlier ones at equal
 stacking order; selecting an item brings its full rectangle forward within that lane. This changes
 editor selection, not the Film's paint order. The same behavior applies to attached child lanes.
-When semantic time is present, its lane stays below the time ruler while the other lanes scroll.
+The time ruler and its Segment, Word and Selection/Moment bands form one pinned Timeline area.
+Empty information bands are omitted; a work without Segments keeps the ordinary time ruler.
+Select an overlapping object to bring it forward, or right-click the overlap to choose one covered
+by its peers. This changes editor selection, not the composition.
 
 Open either library tab or click Refresh to read its latest state. These lists do not poll.
 Refresh replaces the view; scrolling to the end loads more. Media categories query matching files
@@ -92,8 +95,8 @@ for inspecting the composition as encoded media; choose the view that helps answ
 Inspector fields and timeline handles write back to actual Source endpoints. A field can live in a
 referenced Frame, Style or SVS Recipe rather than on the selected Track tag. Editing a shared Recipe
 changes every consumer that uses it; create and select a separate authored instance when the design
-needs independent variation. Lists and records have a local draft with Apply and Reset; Apply writes
-the complete validated value. Check save status and the resulting preview.
+needs independent variation. Lists and records save their complete validated value when editing ends. Required fields that are
+still incomplete remain in the editor with a completion hint. Check save status and the resulting preview.
 
 Where groups position, size, fitting and layout. When groups timing, playback, trims and motion.
 How groups content, typography, color, effects and audio levels. Components name their own pages

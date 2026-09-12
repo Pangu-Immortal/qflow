@@ -8,6 +8,8 @@ and edge cases.
 
 [Source syntax](../production/source-syntax.md) covers the surrounding imports, references, Recipes
 and Runs; [Tracks](../production/tracks.md) covers the consumers of Script meaning.
+[Timeline authoring](../production/timeline.md) places Takes, allows gaps and overlaps, and declares
+the complete work, including pure MG with no Script.
 [Media preparation](../production/media.md) explains connecting actual footage to a Segment, and
 [Runs](../production/runs.md) explains targeting material and reusing produced Takes.
 
@@ -45,7 +47,8 @@ Alignment Unit. `||` ends one on-screen Caption Cue after that unit and lets the
 
 A Cue is a timed block of displayed speech, not a line of text. Its Caption family and Recipe may
 wrap that block over one or more lines, reveal or highlight its words, and give the block an entrance,
-exit or handoff. Segment boundaries, Role turns and Caption Style changes already separate Cues.
+exit or handoff. Segment boundaries and Role turns already separate Cues. Caption Use windows can change a
+Style midway through a Cue while preserving its content and original word times.
 Use `||` when the same Segment, turn and Style still needs another deliberate reading handoff. The
 [Caption craft](../playbooks/craft/captions.md#design-cue-rhythm-with-the-caption-system) owns how the
 picture, language, family and Recipe shape that decision.
@@ -65,8 +68,8 @@ The author-facing forms are:
 | `@proof ... @/proof` | A Selection: one named semantic range. |
 | `@claim!` | A Moment: one named semantic point. |
 
-A Script contains one or more uniquely named lower-case Segments. A paired Segment carries prose;
-the self-closing form carries a wordless passage. A Role Cue is a bare turn marker rather than a
+A Script contains one or more uniquely named lower-case Segments. A paired Segment can carry prose
+or be wordless; the self-closing form also carries a wordless passage. A Role Cue is a bare turn marker rather than a
 paired element: the next Role Cue begins the next turn, and closing the Segment ends the final turn
 and resets its Role. When a Segment uses Roles, place the first Role before that Segment's first
 spoken text. One Segment can contain several Role turns without requiring several generated Takes.
@@ -184,8 +187,10 @@ Script also represents passages without speech:
 `empty` is an ordinary Segment name; a name such as `product-detail` can express the passage's role.
 No words does not mean no semantics: the Segment retains its identity and start/end anchors. Its
 associated normalized media determines the duration, and its SemanticTake has an empty word array.
-The same SemanticTrack and Track timing vocabulary apply to a wordless passage or an entire
+The same Timeline and Track timing vocabulary apply to a wordless passage or an entire
 piece made from prepared media. The empty tag itself declares neither a zero-length interval nor a duration.
+For an interval made only of component animation, use Timeline placement and extent instead; it
+needs no media-backed Segment. Spoken, wordless-media and graphics-only passages can share one work.
 
 Choose Segment boundaries from natural production passages and delivery length, not from every
 picture cut. One Segment and Take can carry several speaking turns, camera cuts or a split-screen
@@ -204,7 +209,7 @@ A chat animation, diagram or kinetic-text piece can instead be drawn entirely by
 messages and changes still carry meaning; the author chooses when the audience receives them and
 how long they need to read. Keep content and event timing together in the owning component's Source.
 An event can have an identity such as `question` or `reveal` and an authored `at="2.6s"` without
-inventing spoken words or a media-backed Segment. Film time is declared through ProgramSpace;
+inventing spoken words or a media-backed Segment. Film time is declared through a Timeline with an explicit end and zero Takes;
 [composition and rendering](../production/rendering.md#compose-an-authored-animation) shows the form.
 
 Choose timing per relationship, not once for the whole video. A spoken Moment can introduce a chat
@@ -252,7 +257,7 @@ applies this judgment to the selected model's request range.
 
 Measurement balances the intended speaking density and sizes generation; it supplies no timeline
 anchors. Once a Take is accepted, normalize it, align its actual speech to its Script Segment, and
-assemble the resulting SemanticTakes into the SemanticTrack. The literal duration answers how much
+assemble the resulting SemanticTakes into the Timeline. The literal duration answers how much
 media to request. The aligned words answer where Caption, B-roll, MG, and Effects belong in that actual
 media. Alignment measures real word positions inside that media envelope; it does not reproduce an
 estimated distribution of words.
@@ -263,7 +268,7 @@ Speech-rate measurement has no role there; the resulting media still determines 
 ## Bind meaning to Script identities
 
 For a picture, Caption treatment, MG state, sound, or effect that belongs to spoken meaning, author a
-Selection or Moment and use the consuming component's Surface to project it through the SemanticTrack.
+Selection or Moment and use the consuming component's Surface to project it through the Timeline.
 Use explicit seconds for genuinely clock-based or speechless design.
 
 Selections may overlap, cross, or span Segments; they are named semantic ranges rather than nested
@@ -296,9 +301,9 @@ B-roll windows that should also own the pause between words, choose which neighb
 owns that gap through the explicit affinities; [B-roll craft](../playbooks/craft/b-roll.md) shows the
 shared-boundary forms.
 
-The consuming component's Surface projects the authored identity through the real SemanticTrack.
+The consuming component's Surface projects the authored identity through the real Timeline.
 For example, `during={story.selection.proof}` on a visual Item makes that Surface construct a Window.
-A persistent MG reveal can use `at={story.moment.claim}` to consume an Instant; an Audio Clip uses
+A persistent MG reveal can use `at={story.moment.claim}` to consume an Instant; an Audio Item uses
 `at={story.moment.claim} for="600ms"` to occupy a Window. The component's Fragment and Producers
 consume that value and own playback, visible duration, animation, and state behavior; Script supplies
 the meaning and its Anchors.
@@ -343,7 +348,7 @@ behavior.
 
 Reference archives keep original seconds and explain which original words or content events an item
 serves. The target Source names the intended relation against the target Script. After the target's
-actual audio is aligned, the SemanticTrack supplies its frames. Do not copy a reference timestamp into
+actual audio is aligned, the Timeline supplies its frames. Do not copy a reference timestamp into
 the target or preserve an incidental lead/lag unless that offset itself is part of the design.
 
 ## Connect reference understanding to audiovisual composition

@@ -23,33 +23,6 @@ const semanticAnchor: ValueSchema = { kind: "oneOf", variants: [
     kind: { schema: { kind: "literal", value: "program-end" } },
   }),
 ] };
-export const narrativeSchema: ValueSchema = object({
-  id: { schema: string },
-  segments: { schema: { kind: "array", minItems: 1, items: object({
-    id: { schema: string }, startAnchorId: { schema: string },
-    endAnchorId: { schema: string }, tokenStart: { schema: integer }, tokenEndExclusive: { schema: integer },
-  }) } },
-  tokens: { schema: { kind: "array", items: object({
-    id: { schema: string }, segmentId: { schema: string },
-    startAnchorId: { schema: string }, endAnchorId: { schema: string },
-    text: { schema: string }, normalized: { schema: string },
-  }) } },
-  turns: { schema: { kind: "array", items: object({
-    id: { schema: string }, segmentId: { schema: string }, role: { schema: string, optional: true },
-    tokenStart: { schema: integer }, tokenEndExclusive: { schema: integer },
-  }) } },
-  selections: { schema: { kind: "array", items: object({
-    id: { schema: string }, startAnchorId: { schema: string }, endAnchorId: { schema: string },
-  }) } },
-  moments: { schema: { kind: "array", items: object({
-    id: { schema: string }, anchorId: { schema: string },
-  }) } },
-  semanticIndex: { schema: object({
-
-    anchors: { schema: { kind: "array", minItems: 2, items: semanticAnchor } },
-  }) },
-});
-
 export const narrativeExcerptSchema: ValueSchema = object({
   narrativeId: { schema: string },
   kind: { schema: { kind: "literal", value: "segment" } }, id: { schema: string },
@@ -77,6 +50,34 @@ export const captionDocumentSchema: ValueSchema = object({
   words: { schema: { kind: "array", items: captionDisplayWord } },
   cueBreaks: { schema: { kind: "array", items: captionCueBreak } },
 });
+export const narrativeSchema: ValueSchema = object({
+  id: { schema: string },
+  caption: { schema: captionDocumentSchema },
+  segments: { schema: { kind: "array", minItems: 1, items: object({
+    id: { schema: string }, startAnchorId: { schema: string },
+    endAnchorId: { schema: string }, tokenStart: { schema: integer }, tokenEndExclusive: { schema: integer },
+  }) } },
+  tokens: { schema: { kind: "array", items: object({
+    id: { schema: string }, segmentId: { schema: string },
+    startAnchorId: { schema: string }, endAnchorId: { schema: string },
+    text: { schema: string }, normalized: { schema: string },
+  }) } },
+  turns: { schema: { kind: "array", items: object({
+    id: { schema: string }, segmentId: { schema: string }, role: { schema: string, optional: true },
+    tokenStart: { schema: integer }, tokenEndExclusive: { schema: integer },
+  }) } },
+  selections: { schema: { kind: "array", items: object({
+    id: { schema: string }, startAnchorId: { schema: string }, endAnchorId: { schema: string },
+  }) } },
+  moments: { schema: { kind: "array", items: object({
+    id: { schema: string }, anchorId: { schema: string },
+  }) } },
+  semanticIndex: { schema: object({
+
+    anchors: { schema: { kind: "array", minItems: 2, items: semanticAnchor } },
+  }) },
+});
+
 export const narrativeMomentSchema: ValueSchema = object({
   narrativeId: { schema: string },
   id: { schema: string },

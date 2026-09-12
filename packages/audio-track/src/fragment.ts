@@ -1,4 +1,5 @@
-import { programSpaceTypes } from "@qflow/program-space";
+import { timelineTypes } from "@qflow/timeline";
+
 import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
 import type { FragmentOperation } from "@qflow/elaborator";
@@ -32,7 +33,7 @@ export function createAudioTrackFragment(items: readonly AudioTrackFragmentItem[
       id,
       producer: audioTrackProducers.appendItem,
       inputs: {
-        set: operation(current), header: input("header"), space: input("space"),
+        set: operation(current), header: input("header"), timeline: input("timeline"),
         media: input(item.mediaName), spec: input(item.specName),
         window: input(item.windowName),
       },
@@ -42,18 +43,18 @@ export function createAudioTrackFragment(items: readonly AudioTrackFragmentItem[
   });
   operations.push(
     { id: "audio:program", producer: audioTrackProducers.finalize, inputs: { set: operation(current), header: input("header") }, result: { kind: "output", name: "program" } },
-    { id: "audio:track", producer: audioTrackProducers.render, inputs: { space: input("space"), program: operation("audio:program") }, result: { kind: "output", name: "track" } },
+    { id: "audio:track", producer: audioTrackProducers.render, inputs: { timeline: input("timeline"), program: operation("audio:program") }, result: { kind: "output", name: "track" } },
   );
   return sealGraphFragment({
     inputs: [
       { name: "header", type: audioTrackTypes.header },
-      { name: "space", type: programSpaceTypes.programSpace },
+      { name: "timeline", type: timelineTypes.track },
       ...[...inputTypes].map(([inputName, type]) => ({ name: inputName, type })),
     ],
     operations,
     exports: [
       { name: "program", type: audioTrackTypes.program, root: operation("audio:program") },
-      { name: "track", type: compositionTypes.audioTrack, root: operation("audio:track") },
+      { name: "audio", type: compositionTypes.audioTrack, root: operation("audio:track") },
     ],
   });
 }

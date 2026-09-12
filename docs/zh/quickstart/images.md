@@ -95,4 +95,4 @@ description: 在图片流向生成器或 Track 之前，对它做合成、校正
 <matte:Portrait id="cutout" source={performance.video}/>
 ```
 
-将 `cutout.video` 归一化，准备进入时间线。如果它建立说话节目的语义骨架，再把准备好的媒体与 Script Segment 对齐，通过 Speech Track 装配。画面由 Media Track 或项目场景按选择的位置、绘制顺序呈现。作为 B-roll 时，归一化后的抠像可以直接进入 Media Track。抠像改变画面背景，具体角色由编排决定。
+将 `cutout.video` 归一化，准备进入时间线。如果它建立说话节目的语义骨架，再把准备好的媒体与 Script Segment 对齐，通过 Timeline assembly 装配。画面由 Media Track 或项目场景按选择的位置、绘制顺序呈现。作为 B-roll 时，归一化后的抠像可以直接进入 Media Track。抠像改变画面背景，具体角色由编排决定。

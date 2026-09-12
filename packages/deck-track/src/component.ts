@@ -1,7 +1,7 @@
+import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
 import { canonicalize } from "@qflow/protocol";
 import type { StoredValue } from "@qflow/protocol";
-import type { ProgramSpace } from "@qflow/program-space";
 import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
 import type { TemporalInstant } from "@qflow/temporal";
 import type { MediaLayerSet } from "@qflow/media-track";
@@ -32,7 +32,7 @@ function finalizeInputs(inputs: ProducerHandlerContext["inputs"]) {
     header: inline<DepthStackHeader>(inputs.header?.value, "DepthStackHeader"),
     frame: inline<SpatialFrame>(inputs.frame?.value, "SpatialFrame"),
     spec: inline<DepthStackSpec>(inputs.spec?.value, "DepthStackSpec"),
-    space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+    timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
   };
 }
 
@@ -53,7 +53,7 @@ export const depthStackComponent = {
       producer: depthStackProducers.appendCard,
       handler: ({ inputs }) => ({ outputs: { set: output(appendDepthStackCard(
         inline<DepthStackCardSet>(inputs.set?.value, "DepthStackCardSet"),
-        inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        inline<Timeline>(inputs.timeline?.value, "Timeline"),
         inline<MediaLayerSet>(inputs.material?.value, "MediaLayerSet"),
         inline<DepthStackCardLabel>(inputs.label?.value, "DepthStackCardLabel"),
         inline<DepthStackCardSpec>(inputs.spec?.value, "DepthStackCardSpec"),
@@ -66,7 +66,7 @@ export const depthStackComponent = {
         const value = finalizeInputs(inputs);
         return { outputs: { program: output(finalizeDepthStack(
           value.set, value.header, value.frame, value.spec,
-          inline<TemporalInstant>(inputs.terminal?.value, "TemporalInstant"), value.space,
+          inline<TemporalInstant>(inputs.terminal?.value, "TemporalInstant"), value.timeline,
         )) }, needs: {} };
       },
     },
@@ -74,7 +74,7 @@ export const depthStackComponent = {
       producer: depthStackProducers.render,
       handler: ({ inputs }) => ({ outputs: { track: output(renderDepthStack(
         inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"),
-        inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        inline<Timeline>(inputs.timeline?.value, "Timeline"),
         inline<DepthStackProgram>(inputs.program?.value, "DepthStackProgram"),
       )) }, needs: {} }),
     },

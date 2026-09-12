@@ -1,0 +1,20 @@
+{
+  "name": "@qflow/sound-studio",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "dependencies": {
+    "@qflow/timeline": "workspace:*",
+    "@qflow/temporal": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/studio-adapter": "workspace:*",
+    "@qflow/sound": "workspace:*"
+  }
+}

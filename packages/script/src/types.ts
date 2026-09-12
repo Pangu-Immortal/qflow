@@ -77,7 +77,7 @@ export type ParsedCaptionRegion = {
 
 export type ParsedNarrative = Omit<
   Narrative,
-  "id" | "segments" | "tokens" | "turns" | "selections" | "moments"
+  "id" | "segments" | "tokens" | "turns" | "selections" | "moments" | "caption"
 > & {
   /** Exact Script body range, used only for source-preserving Program-boundary edits. */
   readonly sourceRange: SourceRange;

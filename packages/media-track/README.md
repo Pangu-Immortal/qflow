@@ -1,61 +1,28 @@
 # `@qflow/media-track`
 
-The Track Surface accepts `semantic={speech.semantic}` or `space={animation}`. Semantic context
-resolves Script Selections and Moments; authored space supports clock-based animation. Shared `at`
+The Track Surface accepts `timeline={program.timeline}`. The same Timeline supports authored
+positions and, where prepared Takes supply evidence, Script Selections and Moments. Shared `at`
 inputs accept a Moment or a time such as `2s`; `at` with `for` produces a Window where required.
-`Performance` still needs `semantic`, which supplies its ordered prepared footage.
+[Performance](../performance/README.md) separately obtains existing footage and source positions from Timeline.
 
 Place images, prepared video or compositable surfaces over the semantic timeline. B-roll is a common
-use: the picture can illustrate a phrase while the A-roll's speech continues. Performance presents the semantic material as a full picture, inset or cutout.
+use: the picture can illustrate a phrase while the A-roll's speech continues.
 Media Items own independently timed pictures;
 a Sequence owns one visual slot whose Members replace each other through Handoffs.
 
-The Markup Track takes `canvas` and a time source (`semantic` or `space`). Its Surface projects
+The Markup Track takes `canvas` and `timeline`. Its Surface projects
 authored Selections, Moments, Segments or clock expressions into Windows and Instants. The component
-consumes those projected times with Frames, media and appearance; its Fragment receives ProgramSpace.
+consumes those projected times with Frames, media and appearance; its Fragment receives the same Timeline.
 
 Moving media enters after [normalization](../media-pipeline/README.md), with the intended streams and
 frame clock already selected. Still images use their actual intrinsic Extent. Placement, fitting,
 sampling and motion remain separate authored choices.
 
-## Display a semantic performance
+## Present existing Timeline footage
 
-```svml
-<media:Track id="performance" semantic={speech.semantic} canvas={canvas}>
-  <media:Performance during="program" frame={layout.full}
-    appearance={look.performance}/>
-</media:Track>
-```
-
-`Performance` displays the prepared material in its enclosing Track's `semantic` input. `during`
-selects the whole program, a Segment or a Selection; the other Window forms work as usual. One
-Performance can span any number of Takes. Each plays at its original program position: if a Take
-begins at program second 5, a Window from seconds 7 to 10 shows source seconds 2 to 5. An audio-only
-interval contributes no picture. The presentation shares one frame, appearance and lifecycle across
-Take boundaries.
-
-Its appearance Recipe needs `stack-order` and can set fit, crop anchors, opacity, filters, clipping,
-padding, border, shadow and frame paint. `motion` moves the framed presentation, and `Sampling`
-children transform the fitted picture over the complete selected Window, without restarting at
-Take boundaries. `Sound` children attach prepared effects to its entrance or exit. Its original
-sound is independently available as `speech.audio` for Film. Use an Item with direct `media` for
-independent playback or source trim; Performance preserves the semantic assembly's source timing.
-
-```svml
-<media:Performance during={story.segment.explanation} frame={layout.full}
-  appearance={look.performance}>
-  <media:Sampling at="start" zoom="1"/>
-  <media:Sampling at="end" zoom="1.08"/>
-</media:Performance>
-```
-
-This excerpt belongs inside the same Media Track. Its selected passage determines the appearance
-interval, while the two Sampling keys direct a gradual push-in inside the unchanged Frame.
-
-For a fixed card, full picture, circle or cutout this is ordinary Media presentation. If video and
-graphics must resize, mask or move together, write a project component that owns that relationship.
-`projectSemanticMedia` supplies the same material spans to its drawing function. The component can
-use a browser program from `@qflow/qflow/hyperframes` while Caption and independent overlays remain peers.
+[Performance](../performance/README.md) obtains existing footage from Timeline and applies broad
+and local Use rules. Use Media Items here for independently supplied assets and playback choices.
+Both reuse the same geometry and fitting capabilities.
 
 ## Place the frame, then fit its contents
 
@@ -115,10 +82,10 @@ a deliberate pan or rotation may reveal the backing or lower layers.
 ## Author Items and replacement Sequences
 
 These excerpts assume the imports, named assets, normalized media, Frames, Extents, Script,
-SemanticTrack and Recipes are already declared:
+Timeline and Recipes are already declared:
 
 ```svml
-<media-track:Track id="coverage" semantic={speech.semantic} canvas={vertical}>
+<media-track:Track id="coverage" timeline={speech.timeline} canvas={vertical}>
   <media-track:Item image={photo} extent={photo-extent} frame={full-frame}
     during={story.selection.example} appearance={recipes.media.still}/>
   <media-track:Item media={clip-media.media} frame={full-frame}
@@ -132,7 +99,7 @@ Appearance owns stack order, fit, clipping and source sampling; a `motion` Recip
 movement. `Sampling` children can move the sampled content inside the Frame independently.
 
 ```svml
-<media-track:Track id="cards" semantic={speech.semantic} canvas={vertical}>
+<media-track:Track id="cards" timeline={speech.timeline} canvas={vertical}>
   <media-track:Sequence id="steps" frame={card-frame} appearance={recipes.media.card}
     until={story.selection.demo} until-boundary="end">
     <media-track:Member id="one" image={first} extent={card-extent}
@@ -177,7 +144,7 @@ separately controls which source frames it occupies there. `playback` defaults t
 `trim-start` and `trim-end` are a pair of integer source-frame boundaries, with an exclusive end.
 Omit both to use the full source. The playback rules apply to the trimmed range when present.
 For `stretch`, the source-frame advance is `sourceLength / targetLength`. For native playback, moving
-media has already been normalized to ProgramSpace's frame rate, so one program frame advances one
+media has already been normalized to Timeline's frame rate, so one program frame advances one
 source frame. These are source sampling choices; they do not move a Selection's semantic boundaries.
 
 A two-second Item can use the beginning of a four-second generated clip without requesting a

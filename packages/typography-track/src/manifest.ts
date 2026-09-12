@@ -1,9 +1,11 @@
+import { timelineTypes } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { readFile } from "node:fs/promises";
 
 import { narrativeDependency } from "@qflow/narrative";
-import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
-import { semanticTrackDependency } from "@qflow/semantic-track";
+
+import { timelineDependency } from "@qflow/timeline";
 import {
   compositionDependency,
   compositionTypes,
@@ -423,7 +425,7 @@ export const typographyTrackMarkupSurfaces = [
     },
     { name: "track", tag: "Track", mode: "structured", outputs: [typographyTrackTypes.header, typographyTrackTypes.itemSpec, typographyTrackTypes.plainItemSpec, typographyTrackTypes.motion, typographyTrackTypes.set, typographyTrackTypes.placement, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, typographyTrackTypes.program, compositionTypes.visualTrack],
       vocabulary: {
-        summary: "One Typography Track: independently placed and timed text items on a shared ProgramSpace, lowered to one addressable TypographyTrackProgram and one peer VisualTrack.",
+        summary: "One Typography Track: independently placed and timed text items on a shared Timeline, lowered to one addressable TypographyTrackProgram and one peer VisualTrack.",
         appearance: "Text alone on an otherwise empty Canvas: the glyphs, plus whatever Paint the Style puts around them — fills, outlines, glows, shadows and rounded, bordered, optionally tailed boxes drawn behind the frame, paragraph, line, run, word or grapheme. Each item holds its own region of the Canvas: a Point item is one unwrapped block that hugs its text and hangs off a single coordinate by its inline and block anchors, an Area item flows and wraps inside a rectangle under its own alignment, columns, clipping and overflow, and a Path item strings the glyphs along a curve, on one side of it, turning with it or standing upright. Items switch on and off at their own frame windows and overlap in the stacking order their Styles declare, so titles, labels and captions can occupy different corners at once and outlast or outlive one another. While an item is on screen it plays its Motion: the whole block translating, scaling, rotating, skewing, fading, blurring, recoloring or wiping open from an edge, and its paragraphs, lines, runs, words or graphemes arriving one behind another in a staggered run.",
         preview: previewImage("Track.png"),
         attributes: [
@@ -475,7 +477,7 @@ export const typographyTrackMarkupSurfaces = [
           { name: "track", type: compositionTypes.visualTrack,
             summary: "The rendered text, an ordinary peer VisualTrack." },
         ],
-        example: `<text:Track id="titles" semantic={speech.semantic}>
+        example: `<text:Track id="titles" timeline={speech.timeline}>
   <text:Area id="title" placement={title-frame} style={title-style} during="program">
     EDIT MEANING, NOT TIMELINES
   </text:Area>
@@ -514,7 +516,7 @@ export const typographyTrackMarkupSurfaces = [
           { name: "track", type: compositionTypes.visualTrack,
             summary: "The masked picture, an ordinary peer VisualTrack." },
         ],
-        example: `<text:Mask id="masked-titles" semantic={speech.semantic} text={mask-shape.program} material={material}/>`,
+        example: `<text:Mask id="masked-titles" timeline={speech.timeline} text={mask-shape.program} material={material}/>`,
         notes: [
           "A Mask is written empty and accepts no children.",
           "The material must be a still Surface; a timed material is refused and materializes through an independent package.",
@@ -529,7 +531,7 @@ export const typographyTrackManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: typographyTrackModuleRef.name,
   version: typographyTrackModuleRef.version,
-  dependencies: [narrativeDependency, programSpaceDependency, semanticTrackDependency, spatialDependency, mediaDependency, compositionDependency, textDependency, temporalDependency],
+  dependencies: [narrativeDependency, timelineDependency, spatialDependency, mediaDependency, compositionDependency, textDependency, temporalDependency],
   types: [
     { name: typographyTrackTypes.style.name },
     { name: typographyTrackTypes.motion.name },
@@ -548,9 +550,9 @@ export const typographyTrackManifest: ModuleManifest = {
     { name: typographyTrackProducers.bindArea.name, inputs: [{ name: "frame", type: spatialTypes.frame }], outputs: [{ name: "placement", type: typographyTrackTypes.placement }], needs: [] },
     { name: typographyTrackProducers.bindPath.name, inputs: [{ name: "path", type: spatialTypes.path }], outputs: [{ name: "placement", type: typographyTrackTypes.placement }], needs: [] },
     { name: typographyTrackProducers.createSet.name, inputs: [], outputs: [{ name: "set", type: typographyTrackTypes.set }], needs: [] },
-    { name: typographyTrackProducers.appendItem.name, inputs: [{ name: "set", type: typographyTrackTypes.set }, { name: "header", type: typographyTrackTypes.header }, { name: "space", type: programSpaceTypes.programSpace }, { name: "placement", type: typographyTrackTypes.placement }, { name: "spec", type: typographyTrackTypes.itemSpec }, { name: "style", type: typographyTrackTypes.style }, { name: "motion", type: typographyTrackTypes.motion }, { name: "window", type: temporalTypes.window }], outputs: [{ name: "set", type: typographyTrackTypes.set }], needs: [] },
+    { name: typographyTrackProducers.appendItem.name, inputs: [{ name: "set", type: typographyTrackTypes.set }, { name: "header", type: typographyTrackTypes.header }, { name: "timeline", type: timelineTypes.track }, { name: "placement", type: typographyTrackTypes.placement }, { name: "spec", type: typographyTrackTypes.itemSpec }, { name: "style", type: typographyTrackTypes.style }, { name: "motion", type: typographyTrackTypes.motion }, { name: "window", type: temporalTypes.window }], outputs: [{ name: "set", type: typographyTrackTypes.set }], needs: [] },
     { name: typographyTrackProducers.finalize.name, inputs: [{ name: "header", type: typographyTrackTypes.header }, { name: "set", type: typographyTrackTypes.set }], outputs: [{ name: "program", type: typographyTrackTypes.program }], needs: [] },
-    { name: typographyTrackProducers.render.name, inputs: [{ name: "space", type: programSpaceTypes.programSpace }, { name: "program", type: typographyTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
-    { name: typographyTrackProducers.renderMask.name, inputs: [{ name: "space", type: programSpaceTypes.programSpace }, { name: "program", type: typographyTrackTypes.program }, { name: "material", type: mediaTypes.compositableSurface }, { name: "spec", type: typographyTrackTypes.maskSpec }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+    { name: typographyTrackProducers.render.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: typographyTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+    { name: typographyTrackProducers.renderMask.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: typographyTrackTypes.program }, { name: "material", type: mediaTypes.compositableSurface }, { name: "spec", type: typographyTrackTypes.maskSpec }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };

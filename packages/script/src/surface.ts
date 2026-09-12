@@ -1,6 +1,5 @@
 import { ScriptSyntaxError } from "./error.js";
 import {
-  captionDocumentValue,
   narrativeDialogueTextValue,
   narrativeSegmentExcerptValue,
   narrativeMomentValue,
@@ -73,6 +72,8 @@ export function decodeScriptSurface(input: ScriptSurfaceInput): ScriptSurfaceOut
     input.source.slice(input.contentStart, close.start),
     input.contentStart,
   );
+  const narrative = narrativeValue(parsed, rawId);
+  const caption = (narrative as { readonly caption: import("@qflow/protocol").CanonicalValue }).caption;
   const captionId = `${rawId}.caption`;
   return {
     nextOffset: close.end,
@@ -80,7 +81,7 @@ export function decodeScriptSurface(input: ScriptSurfaceInput): ScriptSurfaceOut
       {
         id: rawId,
         type: narrativeType,
-        value: { kind: "inline", value: narrativeValue(parsed, rawId) },
+        value: { kind: "inline", value: narrative },
         range: { start: input.openingStart, end: close.end },
       },
       ...parsed.segments.map((segment) => ({
@@ -106,7 +107,7 @@ export function decodeScriptSurface(input: ScriptSurfaceInput): ScriptSurfaceOut
       {
         id: captionId,
         type: captionDocumentType,
-        value: { kind: "inline" as const, value: captionDocumentValue(parsed, captionId, rawId) },
+        value: { kind: "inline" as const, value: caption },
         range: { start: input.openingStart, end: close.end },
       },
       ...parsed.selections.map((selection) => ({

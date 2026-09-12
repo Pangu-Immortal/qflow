@@ -11,9 +11,10 @@ seconds. In Qflow, A-roll names the performance that makes a spoken Segment time
 a visible A-roll whose picture and sound are performed together, or an audio-only A-roll whose
 independent speech carries the passage while other Tracks supply the picture.
 
-The A-roll does not fit itself onto an earlier program timeline. By performing the Segment, it gives
-that passage real time; the other Segment performances together create the program's semantic time.
-[Tracks](../../production/tracks.md#semantic-takes-supply-the-media-timeline) owns the exact
+Performing the Segment gives that passage its duration and local word times. Timeline assembly
+places it within the complete work, ordinarily after the previous Take, or at an authored position.
+The work can also contain graphics-only passages before, between or after those performances.
+[Tracks](../../production/tracks.md#place-prepared-takes-on-the-timeline) owns the exact
 SemanticTake assembly and projection mechanism.
 
 This gives a practical question: **who is speaking this Segment?** For visible A-roll, that person's
@@ -27,17 +28,16 @@ own their own lines even while another picture covers them. Visual handoffs, cov
 and Effects are authored against the time that performance established. If an edit changes the
 performance's actual length, prepare and align the edited media before assembly.
 
-A wordless Segment is the important edge of the same model. Nobody speaks, so it has no speaking
-A-roll, but it still has authored meaning. Its prepared media supplies the Segment's start and end,
-and its SemanticTake carries an empty word array into the same SemanticTrack. Here semantic means the
-authored identity and relationships of the passage, not a requirement that it contain speech.
+A wordless Segment can identify a real performed passage, such as a dance or reaction. Its prepared
+media supplies start/end boundaries without spoken words. A graphics-only interval can instead
+occupy the Timeline directly, with no Take. Choose from the content the passage actually uses.
 
 ## Keep the performance role separate from the picture
 
 A-roll is not the bottom layer, the largest rectangle, or the currently visible face. Its
 SemanticTake retains the role when its picture is full-frame, one half of a split, a circular inset,
 a moving cutout, or completely covered by B-roll or MG. A large app recording can be the primary
-picture while a small presenter in a corner supplies the semantic timeline and speech.
+picture while a small presenter in a corner supplies the passage's words and timing.
 
 The covering B-roll may even show the same person doing a silent lifestyle action. Seeing a person
 while hearing words does not by itself make that picture the speaking Take or create a new speech
@@ -61,11 +61,11 @@ the listening rhythm. For ordinary creator speech, podcast turns, interviews and
 makes a direct join between the prepared Segment Takes a practical starting point. Visual coverage
 and effects can still cross that seam without changing the underlying speech time.
 
-This is a directing judgment, not a ban on another temporal design. Deliberate interruption,
-overlapping dialogue, musical phrasing or another work may call for a different assembly. A project
-component can own that operation and publish the explicit semantic, visual and audio outputs its
-consumers need. [Track authoring](../../production/track-authoring.md#author-an-alternative-performance-assembly)
-explains the type boundary; the default Speech Track remains the simple lossless assembly.
+Deliberate interruption, overlapping dialogue or musical phrasing can use the Timeline's explicit
+Take positions. [Timeline authoring](../../production/timeline.md) supports gaps and overlaps directly.
+The sources retain their local timing; a crossfade or other coordinated picture treatment belongs
+to the visual component owning that behavior. Sequential placement remains the concise ordinary
+choice for creator speech.
 
 ## Give a recurring person one accepted voice
 

@@ -1,8 +1,8 @@
 import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
 import type { ProgramSpace } from "@qflow/program-space";
-import { projectSemanticProgramSpace } from "@qflow/semantic-track";
-import type { SemanticTrack } from "@qflow/semantic-track";
+import { projectTimelineSpace } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 
 import { locateMoment, locateProgram, locateSegment, locateSelection } from "./location.js";
 import { add, compare, durationInFrames, quantizeBoundary, rational } from "./rational.js";
@@ -169,17 +169,17 @@ function projectedInstant(
 export function projectSelectionInstant(input: {
   readonly itemId: string;
   readonly subjectId: string;
-  readonly semantic: SemanticTrack;
+  readonly timeline: Timeline;
   readonly selection: NarrativeSelectionRef;
   readonly projection: TemporalInstantExpression;
   readonly authority: TemporalInstantSpec["authority"];
 }): ProjectedInstant {
-  const space = projectSemanticProgramSpace(input.semantic);
-  const program = locateProgram(input.semantic);
-  const selection = locateSelection(input.semantic, input.selection);
+  const space = projectTimelineSpace(input.timeline);
+  const program = locateProgram(input.timeline);
+  const selection = locateSelection(input.timeline, input.selection);
   return projectedInstant(
     { id: input.itemId, subjectId: input.subjectId, projection: input.projection, authority: input.authority },
-    { spaceId: space.id, narrativeId: input.semantic.narrativeId, kind: "selection", id: selection.id },
+    { spaceId: space.id, narrativeId: input.selection.narrativeId, kind: "selection", id: selection.id },
     projectTemporalInstant(input.projection, { program, selection }, space),
   );
 }
@@ -187,17 +187,17 @@ export function projectSelectionInstant(input: {
 export function projectMomentInstant(input: {
   readonly itemId: string;
   readonly subjectId: string;
-  readonly semantic: SemanticTrack;
+  readonly timeline: Timeline;
   readonly moment: NarrativeMomentRef;
   readonly projection: TemporalInstantExpression;
   readonly authority: TemporalInstantSpec["authority"];
 }): ProjectedInstant {
-  const space = projectSemanticProgramSpace(input.semantic);
-  const program = locateProgram(input.semantic);
-  const moment = locateMoment(input.semantic, input.moment);
+  const space = projectTimelineSpace(input.timeline);
+  const program = locateProgram(input.timeline);
+  const moment = locateMoment(input.timeline, input.moment);
   return projectedInstant(
     { id: input.itemId, subjectId: input.subjectId, projection: input.projection, authority: input.authority },
-    { spaceId: space.id, narrativeId: input.semantic.narrativeId, kind: "moment", id: moment.id },
+    { spaceId: space.id, narrativeId: input.moment.narrativeId, kind: "moment", id: moment.id },
     projectTemporalInstant(input.projection, { program, moment }, space),
   );
 }
@@ -205,11 +205,11 @@ export function projectMomentInstant(input: {
 export function projectProgramInstant(input: {
   readonly itemId: string;
   readonly subjectId: string;
-  readonly space: ProgramSpace;
+  readonly timeline: Timeline;
   readonly projection: TemporalInstantExpression;
   readonly authority: TemporalInstantSpec["authority"];
 }): ProjectedInstant {
-  const space = input.space;
+  const space = projectTimelineSpace(input.timeline);
   const program = { id: "program" as const, start: { frame: 0 }, end: { frame: programSpaceFrameCount(space) } };
   return projectedInstant(
     { id: input.itemId, subjectId: input.subjectId, projection: input.projection, authority: input.authority },
@@ -221,17 +221,17 @@ export function projectProgramInstant(input: {
 export function projectSegmentInstant(input: {
   readonly itemId: string;
   readonly subjectId: string;
-  readonly semantic: SemanticTrack;
+  readonly timeline: Timeline;
   readonly segment: NarrativeExcerpt;
   readonly projection: TemporalInstantExpression;
   readonly authority: TemporalInstantSpec["authority"];
 }): ProjectedInstant {
-  const space = projectSemanticProgramSpace(input.semantic);
-  const program = locateProgram(input.semantic);
-  const segment = locateSegment(input.semantic, input.segment);
+  const space = projectTimelineSpace(input.timeline);
+  const program = locateProgram(input.timeline);
+  const segment = locateSegment(input.timeline, input.segment);
   return projectedInstant(
     { id: input.itemId, subjectId: input.subjectId, projection: input.projection, authority: input.authority },
-    { spaceId: space.id, narrativeId: input.semantic.narrativeId, kind: "segment", id: segment.id },
+    { spaceId: space.id, narrativeId: input.segment.narrativeId, kind: "segment", id: segment.id },
     projectTemporalInstant(input.projection, { program, segment }, space),
   );
 }

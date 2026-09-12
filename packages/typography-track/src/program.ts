@@ -1,5 +1,5 @@
+import type { Timeline } from "@qflow/timeline";
 import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
 import {
   assertSpatialFrame,
   assertSpatialPath,
@@ -304,7 +304,7 @@ function append(
 export function appendProjectedTextItem(
   set: TypographyTrackSet,
   header: TypographyTrackHeader,
-  space: ProgramSpace,
+  timeline: Timeline,
   placement: TextPlacement,
   spec: TextItemSpec,
   style: TextStyle,
@@ -312,7 +312,7 @@ export function appendProjectedTextItem(
   window: ProjectedWindow,
 ): TypographyTrackSet {
   assertTextPlacement(placement);
-  assertTemporalWindowFor(window, { subjectId: spec.id, space });
+  assertTemporalWindowFor(window, { subjectId: spec.id, space: timeline });
   return append(set, header, spec, style, motion, placement.geometry, window);
 }
 
@@ -332,18 +332,18 @@ export function sealTypographyTrackProgram(value: TypographyTrackProgram): Typog
   return programContent(value);
 }
 
-export function assertTypographyTrackProgramIdentity(program: TypographyTrackProgram, space: ProgramSpace): void {
-  assertProgramSpaceIdentity(space);
+export function assertTypographyTrackProgramIdentity(program: TypographyTrackProgram, timeline: Timeline): void {
+  assertProgramSpaceIdentity(timeline);
   nonEmpty(program.id, "TypographyTrackProgram id");
   if (program.items.length === 0) throw new Error("TypographyTrackProgram has no Items.");
-  const total = programSpaceFrameCount(space);
+  const total = programSpaceFrameCount(timeline);
   const ids = new Set<string>();
   for (const item of program.items) {
     nonEmpty(item.id, "Text Item id");
     if (ids.has(item.id)) throw new Error(`TypographyTrackProgram repeats ${item.id}.`);
     ids.add(item.id);
     if (item.span.startFrame < 0 || item.span.endFrameExclusive <= item.span.startFrame || item.span.endFrameExclusive > total) {
-      throw new Error(`${item.id} is outside ProgramSpace.`);
+      throw new Error(`${item.id} is outside Timeline.`);
     }
     assertGeometry(item.geometry);
     assertDocument(item.document, `${item.id} document`);
@@ -556,10 +556,10 @@ function elements(item: TextItem): VisualElement[] {
   return [root, motion, terminalTextElement(item, "motion", 2)];
 }
 
-export function renderTypographyTrack(space: ProgramSpace, program: TypographyTrackProgram): VisualTrack {
-  assertTypographyTrackProgramIdentity(program, space);
+export function renderTypographyTrack(timeline: Timeline, program: TypographyTrackProgram): VisualTrack {
+  assertTypographyTrackProgramIdentity(program, timeline);
   const track = sealVisualTrack({
-    programSpaceId: space.id,
+    programSpaceId: timeline.id,
     visualIr: "qflow.visual-ir@1",
     id: program.id,
     presents: program.items.map((item) => ({
@@ -569,24 +569,24 @@ export function renderTypographyTrack(space: ProgramSpace, program: TypographyTr
       elements: elements(item),
     })),
   });
-  assertVisualTrackIdentity(track, space);
+  assertVisualTrackIdentity(track, timeline);
   return track;
 }
 
 export function renderTextMaskTrack(
-  space: ProgramSpace,
+  timeline: Timeline,
   program: TypographyTrackProgram,
   material: CompositableSurfaceRef,
   spec: TextMaskSpec,
 ): VisualTrack {
-  assertTypographyTrackProgramIdentity(program, space);
+  assertTypographyTrackProgramIdentity(program, timeline);
   assertCompositableSurfaceRef(material);
   assertTextMaskSpec(spec);
   if (material.timing.kind !== "still") {
     throw new Error("Official Text Mask requires one explicit still material Surface; timed materials use an independent package.");
   }
   const track = sealVisualTrack({
-    programSpaceId: space.id,
+    programSpaceId: timeline.id,
     visualIr: "qflow.visual-ir@1",
     id: spec.id,
     presents: program.items.map((item) => {
@@ -617,6 +617,6 @@ export function renderTextMaskTrack(
       };
     }),
   });
-  assertVisualTrackIdentity(track, space);
+  assertVisualTrackIdentity(track, timeline);
   return track;
 }

@@ -1,4 +1,4 @@
-import { mediaTrackMarkupSurfaces, mediaTrackModuleRef, mediaTrackTypes } from "@qflow/media-track";
+import { mediaAppearanceDefaults, mediaTrackMarkupSurfaces, mediaTrackModuleRef, mediaTrackTypes } from "@qflow/media-track";
 import type { MediaLayerProgram, MediaTrackProgram } from "@qflow/media-track";
 import { compositionTypes } from "@qflow/composition";
 import { sameType } from "@qflow/protocol";
@@ -10,7 +10,7 @@ import type {
   StudioMaterialPreview,
   StudioSourceBindingDeclaration,
 } from "@qflow/studio-adapter";
-import { artifactPreview, childEntities, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalSemanticSource } from "@qflow/studio-adapter";
+import { artifactPreview, authoredItemTitle, childEntities, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalSemanticSource } from "@qflow/studio-adapter";
 
 const frameParameters: readonly StudioSourceBindingDeclaration[] = [
   { name: "within" },
@@ -70,13 +70,15 @@ const mediaPercentProperties = new Set(["frame-x", "frame-y", "content-x", "cont
 const mediaPixelProperties = new Set(["fit-offset-x", "fit-offset-y", "radius", "blur", "border-width"]);
 
 function mediaRecipe(name: "appearance" | "motion"): {
-  readonly bindings: readonly { readonly name: string }[];
+  readonly bindings: readonly import("@qflow/studio-adapter").StudioRecipeBindingDeclaration[];
   readonly inspector: readonly StudioInspectorFieldDeclaration[];
 } {
   const attribute = mediaItemAttributes.find((candidate) => candidate.name === name);
   const properties = attribute !== undefined && "recipe" in attribute ? attribute.recipe : [];
   return {
-    bindings: properties.map(({ name: property }) => ({ name: property })),
+    bindings: properties.map(({ name: property }) => ({ name: property,
+      ...(Object.hasOwn(mediaAppearanceDefaults, property) ? { fallback: mediaAppearanceDefaults[property as keyof typeof mediaAppearanceDefaults] } : {}),
+    })),
     inspector: properties.map((property) => {
       const placement = mediaPlacement.get(property.name);
       if (placement === undefined) throw new Error(`Media Studio has no explicit Inspector declaration for ${property.name}.`);
@@ -99,7 +101,8 @@ function mediaRecipe(name: "appearance" | "motion"): {
   };
 }
 
-const mediaAppearanceRecipe = mediaRecipe("appearance");
+export const mediaAppearanceStudioFields = mediaRecipe("appearance");
+const mediaAppearanceRecipe = mediaAppearanceStudioFields;
 const mediaMotionRecipe = mediaRecipe("motion");
 
 function materialPreview(
@@ -153,15 +156,16 @@ function projectMedia(context: StudioTrackCompanionContext): readonly StudioEnti
       const semanticSource = temporalSemanticSource(temporal);
       return {
         ...entity,
+        display: {
+          ...entity.display,
+          title: authoredItemTitle(context, entity.authoredId, item.sourceTypes, ["image", "media", "surface"]),
+          ...(item.preview === undefined ? {} : {
+            layers: [previewLayer(item.preview, facet === "audio" ? "waveform" : item.preview.kind === "video" ? "storyboard" : "repeat-x")],
+          }),
+        },
         ...(semanticSource?.id === undefined
           ? {}
           : { markerId: semanticSource.id }),
-        ...(item.preview === undefined ? {} : {
-          display: {
-            ...entity.display,
-            layers: [previewLayer(item.preview, facet === "audio" ? "waveform" : item.preview.kind === "video" ? "storyboard" : "repeat-x")],
-          },
-        }),
         ...(temporal === undefined ? {} : { temporal }),
       };
     });
@@ -178,6 +182,7 @@ const commonInspector: readonly StudioInspectorFieldDeclaration[] = [
   {
     binding: "audio-gain", label: "Audio Gain", domain: "how",
     page: { id: "audio", label: "Audio" }, section: { id: "audio", label: "Audio" }, control: "number",
+    unit: "%", number: { scale: 100, minimum: 0, step: 1 },
   },
   {
     binding: "until-boundary", label: "Until Boundary", domain: "when",

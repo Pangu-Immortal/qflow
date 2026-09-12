@@ -1,3 +1,4 @@
+import { timelineTypes } from "@qflow/timeline";
 import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { readFile } from "node:fs/promises";
 
@@ -5,9 +6,9 @@ import { artifactDependency, artifactTypes } from "@qflow/artifact";
 import { compositionDependency, compositionTypes } from "@qflow/composition";
 import { fontArtifactSchema, mediaDependency, mediaTypes } from "@qflow/media";
 import { narrativeDependency } from "@qflow/narrative";
-import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { semanticTrackDependency } from "@qflow/semantic-track";
+import { timelineDependency } from "@qflow/timeline";
 import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
@@ -134,7 +135,7 @@ export const commentStickerProgramSchema: ValueSchema = object({
 });
 const appendInputs = [
   { name: "set", type: commentStickerTypes.set }, { name: "header", type: commentStickerTypes.header },
-  { name: "space", type: programSpaceTypes.programSpace },
+  { name: "timeline", type: timelineTypes.track },
   { name: "frame", type: spatialTypes.frame }, { name: "style", type: commentStickerTypes.style },
   { name: "spec", type: commentStickerTypes.itemSpec },
   { name: "content", type: commentStickerTypes.content }, { name: "window", type: temporalTypes.window },
@@ -311,7 +312,7 @@ export const commentStickerMarkupSurfaces = [
             summary: "That Program rendered as one VisualTrack." },
         ],
         example: `
-<comment:Track id="comments" canvas={vertical} semantic={speech.semantic}>
+<comment:Track id="comments" canvas={vertical} timeline={speech.timeline}>
   <comment:Sticker id="one" frame={comment-frame} style={social} avatar={viewer-avatar}
     author="@viewer" meta="Featured" during={story.selection.reaction}>
     Wait, it pinned the caption to the word, not the second.
@@ -334,7 +335,7 @@ export const commentStickerManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: commentStickerModuleRef.name,
   version: commentStickerModuleRef.version,
-  dependencies: [artifactDependency, narrativeDependency, programSpaceDependency, semanticTrackDependency, spatialDependency, temporalDependency, mediaDependency, compositionDependency, textDependency],
+  dependencies: [artifactDependency, narrativeDependency, timelineDependency, spatialDependency, temporalDependency, mediaDependency, compositionDependency, textDependency],
   types: [
     { name: commentStickerTypes.header.name },
     { name: commentStickerTypes.style.name },
@@ -366,7 +367,7 @@ export const commentStickerManifest: ModuleManifest = {
       needs: [],
     })),
     { name: commentStickerProducers.finalize.name, inputs: [{ name: "set", type: commentStickerTypes.set }, { name: "header", type: commentStickerTypes.header }], outputs: [{ name: "program", type: commentStickerTypes.program }], needs: [] },
-    { name: commentStickerProducers.render.name, inputs: [{ name: "canvas", type: spatialTypes.canvas }, { name: "space", type: programSpaceTypes.programSpace }, { name: "program", type: commentStickerTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+    { name: commentStickerProducers.render.name, inputs: [{ name: "canvas", type: spatialTypes.canvas }, { name: "timeline", type: timelineTypes.track }, { name: "program", type: commentStickerTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };
 

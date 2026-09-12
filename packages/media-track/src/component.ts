@@ -1,10 +1,8 @@
-import { appendMediaPerformance } from "./performance.js";
-import type { SemanticTrack } from "@qflow/semantic-track";
+import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
 import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef, StoredValue } from "@qflow/protocol";
-import type { ProgramSpace } from "@qflow/program-space";
 import type { CanvasSpace, ContentFit, IntrinsicExtent, SpatialFrame, SpatialPath } from "@qflow/spatial";
 import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
@@ -54,7 +52,7 @@ function itemInputs(inputs: ProducerHandlerContext["inputs"]) {
   return {
     set: inline<MediaTrackSet>(inputs.set?.value, "MediaTrackSet"),
     header: inline<MediaTrackHeader>(inputs.header?.value, "MediaTrackHeader"),
-    space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+    timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
     canvas: inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"),
     layers: inline<MediaLayerSet>(inputs.layers?.value, "MediaLayerSet"),
     frame: inline<SpatialFrame>(inputs.frame?.value, "SpatialFrame"),
@@ -67,7 +65,7 @@ function itemInputs(inputs: ProducerHandlerContext["inputs"]) {
 function memberInputs(inputs: ProducerHandlerContext["inputs"]) {
   return {
     members: inline<MediaSequenceMemberSet>(inputs.members?.value, "MediaSequenceMemberSet"),
-    space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+    timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
     layers: inline<MediaLayerSet>(inputs.layers?.value, "MediaLayerSet"),
     spec: inline<MediaSequenceMemberSpec>(inputs.spec?.value, "MediaSequenceMemberSpec"),
     activation: inline<TemporalInstant>(inputs.activation?.value, "TemporalInstant"),
@@ -78,7 +76,7 @@ function sequenceInputs(inputs: ProducerHandlerContext["inputs"]) {
   return {
     set: inline<MediaTrackSet>(inputs.set?.value, "MediaTrackSet"),
     header: inline<MediaTrackHeader>(inputs.header?.value, "MediaTrackHeader"),
-    space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+    timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
     canvas: inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"),
     members: inline<MediaSequenceMemberSet>(inputs.members?.value, "MediaSequenceMemberSet"),
     frame: inline<SpatialFrame>(inputs.frame?.value, "SpatialFrame"),
@@ -90,10 +88,6 @@ function sequenceInputs(inputs: ProducerHandlerContext["inputs"]) {
 
 export const mediaTrackComponent = {
   producers: [
-    { producer: mediaTrackProducers.appendPerformance, handler: ({ inputs }) => ({ outputs: { set: output(appendMediaPerformance(
-      itemInputs(inputs), inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
-      inline<ContentFit>(inputs.fit?.value, "ContentFit"), inline<MediaSampleLayerSpec>(inputs.sampleSpec?.value, "MediaSampleLayerSpec"),
-    )) }, needs: {} }) },
     { producer: mediaTrackProducers.createLayers, handler: () => ({ outputs: { layers: output(createMediaLayerSet()) }, needs: {} }) },
     { producer: mediaTrackProducers.appendPaintLayer, handler: ({ inputs }) => ({ outputs: { layers: output(appendMediaPaintLayer(
       inline<MediaLayerSet>(inputs.layers?.value, "MediaLayerSet"),
@@ -121,7 +115,7 @@ export const mediaTrackComponent = {
     { producer: mediaTrackProducers.createSet, handler: () => ({ outputs: { set: output(createMediaTrackSet()) }, needs: {} }) },
     { producer: mediaTrackProducers.appendItem, handler: ({ inputs }) => {
       const value = itemInputs(inputs);
-      return { outputs: { set: output(appendMediaItem(value.set, value.header, value.space, value.canvas, value.layers, value.frame, value.spec, value.sounds, value.window)) }, needs: {} };
+      return { outputs: { set: output(appendMediaItem(value.set, value.header, value.timeline, value.canvas, value.layers, value.frame, value.spec, value.sounds, value.window)) }, needs: {} };
     } },
     { producer: mediaTrackProducers.bindItemClipPath, handler: ({ inputs }) => ({ outputs: { spec: output(bindMediaItemClipPath(
       inline<MediaItemSpec>(inputs.spec?.value, "MediaItemSpec"),
@@ -135,24 +129,24 @@ export const mediaTrackComponent = {
     { producer: mediaTrackProducers.appendMember, handler: ({ inputs }) => {
       const value = memberInputs(inputs);
       return { outputs: { members: output(appendMediaSequenceMember(
-        value.members, value.space, value.layers, value.spec, value.activation,
+        value.members, value.timeline, value.layers, value.spec, value.activation,
       )) }, needs: {} };
     } },
     { producer: mediaTrackProducers.appendSequence, handler: ({ inputs }) => {
       const value = sequenceInputs(inputs);
       return { outputs: { set: output(appendMediaSequence(
-        value.set, value.header, value.space, value.canvas, value.members, value.frame, value.spec, value.sounds, value.terminal,
+        value.set, value.header, value.timeline, value.canvas, value.members, value.frame, value.spec, value.sounds, value.terminal,
       )) }, needs: {} };
     } },
     { producer: mediaTrackProducers.finalize, handler: ({ inputs }) => ({ outputs: { program: output(finalizeMediaTrack(
       inline<MediaTrackSet>(inputs.set?.value, "MediaTrackSet"), inline<MediaTrackHeader>(inputs.header?.value, "MediaTrackHeader"),
-      inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+      inline<Timeline>(inputs.timeline?.value, "Timeline"),
     )) }, needs: {} }) },
     { producer: mediaTrackProducers.projectVisual, handler: ({ inputs }) => ({ outputs: { track: output(projectMediaVisualTrack(
-      inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"), inline<MediaTrackProgram>(inputs.program?.value, "MediaTrackProgram"),
+      inline<Timeline>(inputs.timeline?.value, "Timeline"), inline<MediaTrackProgram>(inputs.program?.value, "MediaTrackProgram"),
     )) }, needs: {} }) },
     { producer: mediaTrackProducers.projectAudio, handler: ({ inputs }) => ({ outputs: { track: output(projectMediaAudioTrack(
-      inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"), inline<MediaTrackProgram>(inputs.program?.value, "MediaTrackProgram"),
+      inline<Timeline>(inputs.timeline?.value, "Timeline"), inline<MediaTrackProgram>(inputs.program?.value, "MediaTrackProgram"),
     )) }, needs: {} }) },
   ],
   validators: [{

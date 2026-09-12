@@ -2,7 +2,7 @@
 
 Read this when a work needs a new relationship among its spoken words, layout and motion.
 [Caption craft](../playbooks/craft/captions.md) owns readability and directing judgment;
-[Caption styling and coverage](caption-program.md) owns applying Styles and Mutes;
+[Caption styling and coverage](caption-presentation.md) owns applying visible and hidden Styles;
 [Track authoring](track-authoring.md) owns project package wiring.
 [Fonts and text](fonts-and-text.md) explains exact font resources and fallbacks;
 [component visuals](component-visuals.md) explains the final drawing representation.
@@ -45,40 +45,39 @@ and evaluate its state at the requested frame. Keep separately useful overlays a
 ## Keep the existing text and timing chain
 
 ```text
-Script → CaptionDocument (display words, alignment units, authored Cue breaks)
-Styles + Role / Selection / word-attribute applications → CaptionProgram
-CaptionDocument + CaptionProgram + SemanticTrack → TimedCaptionProjection
-projection + family parameters → explicit family schedule
-schedule + document + program + ProgramSpace → VisualTrack
+Script → CaptionDocument (displayed words, Cue breaks and word attributes)
+CaptionDocument + Timeline → complete timed Cues and original word times
+Track Uses → resolved time windows, Styles and optional speaker filters
+complete Cues + Uses + family parameters → family schedule → VisualTrack
 ```
 
-Use `@qflow/qflow/caption` for the common Program and timing helpers and `@qflow/qflow/narrative` for the Script's
-document and unit types. The common Caption layer handles display-versus-spoken
-wording, N:M alignment units and complete-unit Selection boundaries. Do not transcribe again,
-rebuild timing by splitting a string, or use the video model's requested duration as speech evidence.
-The package README explains the extension inputs and points to their owning implementations.
-
-The ordinary Program Surface remains useful with a new family's Styles:
+Use `@qflow/qflow/caption` for content timing and Use coverage, and `@qflow/qflow/narrative` for
+Script document types. A family Track accepts `document`, `timeline` and ordered `Use` children:
 
 ```svml
-<caption:Program id="captions" document={story.caption} narrative={story}
-  default={base-style}>
-  <caption:Use role="GUEST" style={guest-style}/>
-  <caption:Use selection={story.selection.punchline} style={punchline-style}/>
-</caption:Program>
+<keyword:Track id="captions" document={story.caption} timeline={film.timeline}>
+  <keyword:Use style={base-style}/>
+  <keyword:Use role="GUEST" style={guest-style}/>
+  <keyword:Use during={story.selection.punchline} style={punchline-style}/>
+</keyword:Track>
 ```
 
-These names assume Styles have already been declared by the chosen family. They are complete Style
-applications, not CSS inheritance. For word-specific roles, Script can mark `useful{emphasis}` and
-`caption:Use attribute="emphasis"` can select a Style. The new family must deliberately interpret
-the resulting word runs; Fine rejects them. A structural word role should not be guessed by the
-renderer from spelling, capitalization or “the third word.”
+These names assume the project family and its Styles have been declared. Reuse the common time
+projection helpers for `during`, `at`/`for`, `until`/`for` and `start`/`end`. A Use has the same
+meaning regardless of the family. `role` filters whose content it presents within that window.
+
+For a keyword layout, Script can mark `useful{emphasis}`. The family reads that attribute from the
+CaptionDocument and gives it a visual role within the complete Cue. The word role and the time
+window answer different questions; an emphasis attribute does not invent another time language.
 
 ## Design a family-specific schedule
 
 Separate measured speech time from visible time. Preserve each alignment unit's measured boundaries
 and identity; resolve lead, tail, stagger, hold and handoff into an explicit schedule before rendering.
-The renderer draws that schedule and does not silently add another tail or reorder Cues.
+The renderer draws that schedule. Preserve a Cue's original animation origin and apply the
+winning Use window as a separate visibility mask. A window starting midway through a Cue still
+receives the complete Cue and original word times. It can change appearance without restarting
+karaoke or text reveal.
 
 For a “large keyword plus supporting phrase” family, the schedule might identify each Cue's display
 words, its emphasized word ids, their measured units and the visible interval of the two groups.
@@ -103,29 +102,30 @@ effect from following spoken characters. Keep within-glyph wiping an explicit vi
 Use uneven unit durations and a pause in a short example to check that the chosen effect follows
 the intended clock.
 
-`caption:Mute` suppresses selected display units while preserving speech. A new family should use
-the common mute application when scheduling, as Fine does. Validate that schedule, document, narrative
-and ProgramSpace belong together; do not silently accept timing from another video.
+`caption:Hidden` supplies a Style with `rendering: null`. It takes part in later-Use precedence,
+clearing this Track's presentation in its window; a later visible Use can restore a smaller window.
+Use `captionUseVisibility` to resolve that coverage for each Cue's speaker. The content projection
+retains all Cues regardless of Style. Empty or uncovered time naturally produces no drawing.
 
 ## Give Style, layout and rendering clear owners
 
 The Style Surface validates a Recipe and exact font references, then emits the common Caption Style
-shape with the new family's name and parameters. The Track Surface accepts the document, semantic
-timeline and Caption Program; its Fragment performs the common timing join and its own schedule and
-render operations. Register the new family's Producers and any new schedule Type in its own package.
+shape with the new family's name and parameters. The Track Surface accepts the document,
+Timeline and timed Use children; its Fragment assembles the Uses, performs the common timing join,
+and runs its own schedule and render operations. Register the new family's Producers and any new schedule Type in its own package.
 
 The renderer owns typography, structural relationships, stacking and motion. Use the existing text
 shaping and Visual IR facilities with explicit font resources, including selected local font files,
 so the same faces reach the rendering machine.
-Read `@qflow/caption-fine`'s `fragment.ts`, `schedule.ts` and `render.ts` as separate implementation
+Read `@qflow/caption-fine`'s `surface.ts`, `schedule.ts` and `render.ts` as separate implementation
 examples. Reuse the common parts and replace the actual family behavior, including its parameter
 validation; renaming Fine while retaining its uniform-word assumption will not implement a structural
 keyword treatment.
 
-The common Program does not automatically dispatch Styles to different renderers. Fine rejects a
-foreign family. A new family can provide its own ordinary and emphasized treatments in one Program;
-if the work combines separate Caption Tracks, author their coverage or mutes so the same words do
-not appear twice. Define any mixed-family support explicitly in the component that implements it.
+The chosen family interprets its own Styles. Fine handles its uniform-flow Styles; a structural
+family handles its own layouts. Each Track is independent, so multiple Tracks can intentionally
+show captions together or use complementary coverage. Mixed-family rendering, if useful, belongs
+to the component that implements it.
 
 If this family supports spatial tracking, take an explicit RegionTimeline and map it into the actual
 composition. Define subject matching and absent-region behavior. Detection belongs to the measurement
@@ -143,6 +143,7 @@ and authored word roles editable in the project. The package adds its rendering 
 consuming the existing Script, Caption and semantic-time owners.
 
 For live Cue entities and Inspector editing, add a [Studio Companion](studio.md#give-a-project-component-a-useful-companion)
-that consumes the family's actual schedule, CaptionDocument and Program. Preserve the selected
-Style reference for each Cue rather than exposing one misleading global Style. Caption Fine's
+that presents complete Cue content and authored Uses as separate lanes. Read the Track's resolved
+Use collection, retain each child's Source range and temporal lineage, and expose the referenced
+Style on that Use. Caption Fine's
 Companion is a useful example of these relationships; the new family's layout stays in its renderer.

@@ -1,3 +1,4 @@
+import type { Timeline } from "@qflow/timeline";
 import {
   assertFontArtifactRef,
 } from "@qflow/media";
@@ -6,11 +7,7 @@ import {
   assertMediaLayerSet,
   assertMediaLifecycleMotion,
 } from "@qflow/media-track";
-import {
-  assertProgramSpaceIdentity,
-  programSpaceFrameCount,
-} from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
+import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
 import { canonicalize } from "@qflow/protocol";
 import { verifyText } from "@qflow/text";
 import type { Text } from "@qflow/text";
@@ -229,13 +226,13 @@ function appendDepthStackCardAtFrame(
 
 export function appendDepthStackCard(
   set: DepthStackCardSet,
-  space: ProgramSpace,
+  timeline: Timeline,
   material: DepthStackCardSet["cards"][number]["material"],
   label: DepthStackCardLabel,
   spec: DepthStackCardSpec,
   activation: TemporalInstant,
 ): DepthStackCardSet {
-  assertTemporalInstantFor(activation, { subjectId: spec.id, space });
+  assertTemporalInstantFor(activation, { subjectId: spec.id, space: timeline });
   return appendDepthStackCardAtFrame(set, material, label, spec, activation.frame);
 }
 
@@ -245,13 +242,13 @@ function finalizeDepthStackAtFrame(
   frame: SpatialFrame,
   spec: DepthStackSpec,
   terminalFrame: number,
-  space: ProgramSpace,
+  timeline: Timeline,
 ): DepthStackProgram {
   assertDepthStackCardSet(set);
   assertDepthStackHeader(header);
   assertSpatialFrame(frame);
   assertDepthStackSpec(spec);
-  assertProgramSpaceIdentity(space);
+  assertProgramSpaceIdentity(timeline);
   assert(set.cards.length > 0, "DepthStack requires at least one Card.");
   const first = set.cards[0]!;
   const program: DepthStackProgram = {
@@ -263,7 +260,7 @@ function finalizeDepthStackAtFrame(
     spec: structuredClone(spec),
     cards: structuredClone(set.cards),
   };
-  assertDepthStackProgramIdentity(program, space);
+  assertDepthStackProgramIdentity(program, timeline);
   return canonicalize(program) as unknown as DepthStackProgram;
 }
 
@@ -273,10 +270,10 @@ export function finalizeDepthStack(
   frame: SpatialFrame,
   spec: DepthStackSpec,
   terminal: TemporalInstant,
-  space: ProgramSpace,
+  timeline: Timeline,
 ): DepthStackProgram {
-  assertTemporalInstantFor(terminal, { subjectId: header.id, space });
-  return finalizeDepthStackAtFrame(set, header, frame, spec, terminal.frame, space);
+  assertTemporalInstantFor(terminal, { subjectId: header.id, space: timeline });
+  return finalizeDepthStackAtFrame(set, header, frame, spec, terminal.frame, timeline);
 }
 
 export function assertDepthStackProgram(program: DepthStackProgram): void {
@@ -307,10 +304,10 @@ export function assertDepthStackProgram(program: DepthStackProgram): void {
   }
 }
 
-export function assertDepthStackProgramIdentity(program: DepthStackProgram, space: ProgramSpace): void {
-  assertProgramSpaceIdentity(space);
+export function assertDepthStackProgramIdentity(program: DepthStackProgram, timeline: Timeline): void {
+  assertProgramSpaceIdentity(timeline);
   assertDepthStackProgram(program);
-  assert(program.terminalFrame <= programSpaceFrameCount(space), "DepthStack terminal is outside ProgramSpace.");
+  assert(program.terminalFrame <= programSpaceFrameCount(timeline), "DepthStack terminal is outside Timeline.");
 }
 
 function modulo(value: number, size: number): number {

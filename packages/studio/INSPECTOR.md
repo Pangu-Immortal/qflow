@@ -18,7 +18,20 @@ its color is How, and the object's frame is Where. One field has one owner and o
 ## Controls describe the editing task
 
 `bindings` exposes actual author endpoints; `inspector` chooses which to show. A resolved field is
-shown only when its binding is writable. The finite controls are independent of the three domains:
+shown when selected by the Companion, including read-only bindings. The interface orders available
+domains as Where, When, How. Read-only values and editable controls share the same sections.
+
+A projected entity may supply a few computed `inspector` facts without binding them to Source:
+
+```ts
+inspector: [{ id: "range", label: "Range", domain: "when",
+  section: { id: "placement", label: "Placement" }, value: "15–105", unit: "f" }]
+```
+
+The resolved DTO carries an `edit: { language, source }` only for writable author fields.
+The UI uses plain selectable text otherwise; the server requires that endpoint for writes.
+Choose facts that explain the selected object or its controls. Component headers organize lanes;
+the selected entities own their details. The finite controls are independent of the three domains:
 
 | Control | Use |
 | --- | --- |
@@ -30,7 +43,7 @@ shown only when its binding is writable. The finite controls are independent of 
 | `list` | An ordered value described by an array schema, such as a palette or repeated settings. |
 | `record` | Named values described by an object schema, such as one shadow's parameters. |
 
-Lists and records retain Apply/Reset drafts. Their schema owns value shape. There is no separate
+Lists and records save complete, valid values when editing ends. Incomplete edits show a completion hint; their schema owns value shape. There is no separate
 palette database, font control protocol, generic CSS editor, or component-supplied DOM renderer.
 Use text for an expression whose parts cannot meaningfully be edited as one number.
 

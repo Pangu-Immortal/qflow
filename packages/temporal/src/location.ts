@@ -2,11 +2,11 @@ import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from
 import { programSpaceFrameCount } from "@qflow/program-space";
 import {
   momentFrame,
-  projectSemanticProgramSpace,
+  projectTimelineSpace,
   segmentFrameSpan,
   selectionFrameSpan,
-} from "@qflow/semantic-track";
-import type { SemanticTrack } from "@qflow/semantic-track";
+} from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 
 import type {
   LocatedMoment,
@@ -22,10 +22,10 @@ function assertLocatedFrame(frame: number, totalFrames: number, label: string): 
 }
 
 export function locateSelection(
-  semantic: SemanticTrack,
+  semantic: Timeline,
   selection: NarrativeSelectionRef,
 ): LocatedSelection {
-  const space = projectSemanticProgramSpace(semantic);
+  const space = projectTimelineSpace(semantic);
   const totalFrames = programSpaceFrameCount(space);
   const span = selectionFrameSpan(semantic, selection);
   assertLocatedFrame(span.startFrame, totalFrames, `NarrativeSelection ${selection.id} start`);
@@ -34,26 +34,26 @@ export function locateSelection(
 }
 
 export function locateMoment(
-  semantic: SemanticTrack,
+  semantic: Timeline,
   moment: NarrativeMomentRef,
 ): LocatedMoment {
-  const space = projectSemanticProgramSpace(semantic);
+  const space = projectTimelineSpace(semantic);
   const totalFrames = programSpaceFrameCount(space);
   const frame = momentFrame(semantic, moment);
   assertLocatedFrame(frame, totalFrames, `NarrativeMoment ${moment.id} cue`);
   return { id: moment.id, cue: { frame } };
 }
 
-export function locateProgram(semantic: SemanticTrack): LocatedProgram {
-  const space = projectSemanticProgramSpace(semantic);
+export function locateProgram(semantic: Timeline): LocatedProgram {
+  const space = projectTimelineSpace(semantic);
   return { id: "program", start: { frame: 0 }, end: { frame: programSpaceFrameCount(space) } };
 }
 
 export function locateSegment(
-  semantic: SemanticTrack,
+  semantic: Timeline,
   segment: NarrativeExcerpt,
 ): LocatedSegment {
-  const space = projectSemanticProgramSpace(semantic);
+  const space = projectTimelineSpace(semantic);
   const totalFrames = programSpaceFrameCount(space);
   const span = segmentFrameSpan(semantic, segment);
   assertLocatedFrame(span.startFrame, totalFrames, `Narrative Segment ${segment.id} start`);

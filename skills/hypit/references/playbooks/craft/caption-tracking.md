@@ -41,9 +41,9 @@ the first or largest face alone can attach the guest's Caption to the interviewe
 
 Transform the useful observations into ordinary project data, with these decisions explicit:
 
-- **Clock:** resample onto the actual ProgramSpace frame rate. For concatenated normalized Takes,
-  the local-to-global offset is the sum of preceding Takes' actual frame counts, not their requested
-  generation durations. Final-video measurements are already on the global timeline.
+- **Clock:** resample onto the Timeline's frame rate. A Take-local observation becomes global by
+  adding that Take's actual placement start, including any authored gap or overlap. Sequential
+  placement uses preceding prepared durations. Final-video measurements already use the global clock.
 - **Geometry:** convert detector edges to `[x, y, width, height]` using width `right - left` and height
   `bottom - top`. If measurement used another resolution, crop, inset or split-screen panel, map the
   box through that actual placement before normalizing it to the final Canvas.
@@ -83,7 +83,9 @@ these transformations reproducible when needed, taking explicit media, clock and
 ```svml
 <space:RegionTimeline id="heads" within={vertical} recipe={tracking.heads.default}/>
 <caption-fine:Track id="captions" document={story.caption}
-  semantic={speech.semantic} program={caption-program} regions={heads}/>
+  timeline={speech.timeline} regions={heads}>
+  <caption-fine:Use style={caption-style}/>
+</caption-fine:Track>
 ```
 
 The RegionTimeline's ids match Script Roles. Fine places a single-Role Cue at that region's top

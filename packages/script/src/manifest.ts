@@ -32,7 +32,7 @@ export const scriptMarkupSurfaces = [
       text: "The element's own content is the Script body: named Segments holding prose, Role Cues, Dual Text, flat token attributes, and zero-width Selection and Moment markers. It carries no timecode, no media reference and no generation parameter.",
       ports: [
         { name: "", type: narrativeType,
-          summary: "The whole authored Narrative, addressed by the element's own id." },
+          summary: "The complete authored Narrative, including speech structure, semantic anchors and its CaptionDocument, addressed by the element's own id." },
         { name: "segment.<id>", type: narrativeExcerptType,
           summary: "One Segment as a narrow Excerpt, used to associate a generated Take with that Segment." },
         { name: "segment.<id>.dialogue", type: textTypes.text,
@@ -40,7 +40,7 @@ export const scriptMarkupSurfaces = [
         { name: "segment.<id>.speech", type: textTypes.text,
           summary: "One Segment as pronunciation only, with Role Cue labels dropped." },
         { name: "caption", type: captionDocumentType,
-          summary: "The complete Script-owned CaptionDocument: display Words, N:M Alignment Units, Cue breaks and speech correspondence." },
+          summary: "The Narrative's CaptionDocument exported as a narrow view: display Words, N:M Alignment Units, Cue breaks and speech correspondence." },
         { name: "selection.<id>", type: narrativeSelectionType,
           summary: "One named range over the Narrative, reusable wherever a Selection is read." },
         { name: "moment.<id>", type: narrativeMomentType,

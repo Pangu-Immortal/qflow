@@ -9,6 +9,7 @@ import type {
   StudioIcon,
   StudioEditHandle,
   StudioLaneDescription,
+  StudioTrackBand,
   StudioMaterialPreview,
   StudioInspectorField,
   StudioInspectorDomain,
@@ -63,6 +64,7 @@ export type StudioTrackBinding = {
   readonly companion: string;
   /** Studio-local partition key for an attached projection. */
   readonly attachmentId?: string;
+  readonly bands?: readonly Omit<StudioTrackBand, "bindings" | "inspector">[];
   readonly lane: StudioLaneDescription;
   readonly authoredTag?: string;
   readonly references: readonly { readonly name: string; readonly type: string }[];
@@ -95,6 +97,8 @@ export type Clip = {
   readonly presentId?: string;
   /** The authored id this Present is named after, when it names one. */
   readonly authoredId: string;
+  readonly selectionGroup?: string;
+  readonly band?: string;
   /** The Script marker that placed it, when something said put it there. */
   readonly markerId?: string;
   readonly display: StudioEntityDisplay;
@@ -281,8 +285,6 @@ export type StudioSnapshot = {
   /** The Tracks, compiled into the document the renderer photographs. */
   readonly preview: { readonly kind: "hyperframes"; readonly srcdoc: string };
   readonly provenance: {
-    /** Where the timeline came from. The frame domain always shares its source. */
-    readonly timing: "measured" | "authored";
     readonly picture: "resolved";
     /** What the badges above are standing for, in one sentence. */
     readonly note: string;

@@ -1,7 +1,7 @@
 # Emoji Reveal
 
-The Track Surface accepts `semantic={speech.semantic}` or `space={animation}`. Semantic context
-resolves Script Selections and Moments; authored space supports clock-based animation. Shared `at`
+The Track Surface accepts `timeline={program.timeline}`. The same Timeline supports authored
+positions and, where prepared Takes supply evidence, Script Selections and Moments. Shared `at`
 inputs accept a Moment or a time such as `2s`; `at` with `for` produces a Window where required.
 
 Reusable Qflow author vocabulary for a top-of-frame icon answer strip.
@@ -21,7 +21,7 @@ answers remain and later slots remain unanswered.
 
 <emoji:Style id="emoji-strip" recipe={styles.emoji-strip}/>
 
-<emoji:Track id="rules" semantic={speech.semantic} canvas={vertical}
+<emoji:Track id="rules" timeline={speech.timeline} canvas={vertical}
   style={emoji-strip} placeholder={question-icon} during="program">
   <emoji:Item id="manifest" icon={manifest-icon} preset="true"/>
   <emoji:Item id="real-estate" icon={real-estate-icon} at={story.moment.real-estate}/>
@@ -30,7 +30,7 @@ answers remain and later slots remain unanswered.
 ```
 
 `Selection`, `Segment`, numeric instants and a `boundary` fallback are deliberately not part of an
-Item's vocabulary. The component consumes only `ProgramSpace`, the projected outer Window and the
+Item's vocabulary. The component consumes the shared `Timeline`, the projected outer Window and the
 projected Instants; it does not interpret Script semantics itself and has no Studio dependency.
 
 The bundled preview icons come from [Tabler Icons](https://tabler.io/icons), distributed under the

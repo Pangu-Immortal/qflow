@@ -12,7 +12,7 @@ covers Caption, Media, Typography and Audio Track authoring.
 Caption uses a Script-owned document and a replaceable Style family:
 
 ```text
-Script CaptionDocument → Caption Program → SemanticTrack timing → Style-family Track
+Script CaptionDocument + Timeline → complete timed Cues → Use presentation
 ```
 
 ```svml
@@ -105,7 +105,7 @@ Recipe—not a second renderer.
 With `wrap: word`, Fine wraps between complete Alignment Units and falls back inside a single
 over-wide display unit so it cannot escape the Region. `max-words-per-line` constructs explicit rows;
 when `max-lines` is present, a Cue that would construct more rows is rejected instead of having its
-text or Paint clipped. Cue boundaries come from Script segments, turns, Style changes and authored
+text or Paint clipped. Cue boundaries come from Script segments, turns and authored
 `||`.
 
 Fine is the uniform-flow family: every token follows the same Recipe and may differ only by time,
@@ -117,37 +117,22 @@ CJK dialogue can be written directly. For a display-only emoji that still follow
 author the correspondence explicitly, such as `<🌐 | globe>`; the system will not invent a spoken
 word for a bare symbol.
 
-### caption:Program
-
-The Program starts from the complete ordered CaptionDocument emitted by Script. One explicit default
-Style covers every Alignment Unit. Ordered `Use` rules replace the Style on a Role or a semantic
-Selection, with the last match winning.
-
-```svml
-<caption:Program id="caption-program" document={story.caption} narrative={story}
-  default={primary-caption}>
-  <caption:Use role="ALICE" style={alice-caption}/>
-  <caption:Use role="BOB" style={bob-caption}/>
-  <caption:Use selection={story.selection.product-demo}
-    style={dialogue-caption}/>
-  <caption:Mute selection={story.selection.private}/>
-</caption:Program>
-```
-
-`role=` is a convenient query for a word subset, not a temporal condition. `selection=` projects
-the public semantic Selection to complete Caption Alignment Units before timing. Partial ownership
-of an indivisible N:M Dual Text unit is rejected. `Mute` uses the same projection and does not
-regroup authored Cues.
-
 ### caption-fine:Track
 
+Caption content comes from Script and Timeline. Uses choose presentation in time; later Uses replace earlier treatments inside their windows, including Hidden.
+
 ```svml
-<caption-fine:Track id="captions" document={story.caption}
-  semantic={speech.semantic} program={caption-program}/>
+<caption:Hidden id="hidden"/>
+<caption-fine:Track id="captions" document={story.caption} timeline={speech.timeline}>
+  <caption-fine:Use style={primary-caption}/>
+  <caption-fine:Use role="ALICE" style={alice-caption}/>
+  <caption-fine:Use role="BOB" style={bob-caption}/>
+  <caption-fine:Use during={story.selection.product-demo} style={dialogue-caption}/>
+  <caption-fine:Use during={story.selection.private} style={hidden}/>
+</caption-fine:Track>
 ```
 
-Caption joins each complete unit to the independent SemanticTrack. Fine then renders all default
-and override Styles into one ordinary peer `VisualTrack`: `{captions.track}`.
+`||` organizes Cues. A window can start inside a Cue while retaining its complete text and original word timing. `role` filters the speaker independently of time. `at`/`for`, `until`/`for` and `start`/`end` use the same time language as other tracks.
 
 ## Media overlays and B-roll
 
@@ -181,7 +166,7 @@ Placement is an explicit Spatial Frame edge; appearance and motion remain reusab
 <pipeline:Normalize id="product-media" source={product-motion.video}
   video="primary-moving" audio="none" span-authority="video" frame-rate="30"/>
 
-<media-track:Track id="product-broll" semantic={speech.semantic} canvas={vertical}>
+<media-track:Track id="product-broll" timeline={speech.timeline} canvas={vertical}>
   <media-track:Item media={product-media.media} frame={product-frame}
     during={story.selection.product-demo}
     appearance={recipes.media.product}
@@ -215,8 +200,8 @@ image or a video.
 
 ## Audio tracks
 
-`@qflow/audio-track` places explicitly prepared audio on the same ProgramSpace as the visual
-Tracks. A `Clip` consumes `SynchronizedMedia`; normalize a declared or generated audio Blob first,
+`@qflow/audio-track` places explicitly prepared audio on the same Timeline as the visual
+Tracks. An `Item` consumes `SynchronizedMedia`; normalize a declared or generated audio Blob first,
 then choose its exact program window and occupancy:
 
 ```svml
@@ -228,8 +213,8 @@ then choose its exact program window and occupancy:
 <pipeline:Normalize id="music-media" source={music}
   video="none" audio="default" span-authority="audio" frame-rate="30"/>
 
-<audio:Track id="music-bed" semantic={speech.semantic}>
-  <audio:Clip source={music-media.media} during="program"
+<audio:Track id="music-bed" timeline={speech.timeline}>
+  <audio:Item source={music-media.media} during="program"
     playback="loop-end" gain="0.28" fade-in="600ms" fade-out="800ms"/>
 </audio:Track>
 ```
@@ -237,16 +222,16 @@ then choose its exact program window and occupancy:
 | Attribute | Required | Description |
 |---|---|---|
 | `Track.id` | yes | Stable Audio Track identity |
-| `Track.semantic` | yes | SemanticTrack that defines the exact sample and frame domain |
-| `Clip.source` | yes | Explicitly selected and normalized `SynchronizedMedia` |
+| `Track.timeline` | yes | Timeline that defines the exact sample and frame domain |
+| `Item.source` | yes | Explicitly selected and normalized `SynchronizedMedia` |
 | `during`, `at`/`for`, or `start`/`end` | exactly one form | Whole-program, Selection, Moment, or explicit window |
 | `playback` | no | `once`, `once-end`, `loop`, `loop-end`, or bounded `stretch` |
 | `trim-start`, `trim-end` | no | Exact source trim |
-| `gain`, `fade-in`, `fade-out` | no | Explicit per-clip mix values |
+| `gain`, `fade-in`, `fade-out` | no | Explicit per-item mix values |
 
 The package performs no automatic extraction, normalization, ducking, or bus routing. Multiple
-Clips in one Track and multiple peer Audio Tracks remain independent inputs to Film. The output is
-`{music-bed.track}`, an ordinary `AudioTrack`.
+Items in one Track and multiple peer Audio Tracks remain independent inputs to Film. The output is
+`{music-bed.audio}`, an ordinary `AudioTrack`.
 
 ## Text overlays
 
@@ -267,7 +252,7 @@ Container for text items.
   left="6%" top="6%" right="94%" bottom="16%"/>
 <fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
-<text:Track id="titles" semantic={speech.semantic}>
+<text:Track id="titles" timeline={speech.timeline}>
   <text:Area id="title" placement={title-frame} style={title-style} during="program">
     EDIT MEANING, NOT TIMELINES
   </text:Area>
@@ -277,7 +262,7 @@ Container for text items.
 | Attribute | Required | Description |
 |---|---|---|
 | `id` | yes | Unique identifier |
-| `semantic` | yes | SemanticTrack from `speech:Track` — also resolves Selection-based item timing |
+| `semantic` | yes | Timeline from `time:Timeline` — also resolves Selection-based item timing |
 
 ### text:Point, text:Area and text:Path
 
@@ -303,7 +288,7 @@ or a Selection reference for semantic timing:
 
 ```svml
 <text:Style id="callout-style" recipe={recipes.text.callout} font={title-font}/>
-<text:Track id="callout" semantic={speech.semantic}>
+<text:Track id="callout" timeline={speech.timeline}>
   <text:Area id="callout-copy" placement={callout-frame}
     style={callout-style} during={story.selection.callout}>
     EXACTLY THE RIGHT MOMENT
@@ -315,7 +300,7 @@ Graph-produced copy remains visible as an edge:
 
 ```svml
 <wording:Value id="headline">EXACTLY THE RIGHT MOMENT</wording:Value>
-<text:Track id="callout" semantic={speech.semantic}>
+<text:Track id="callout" timeline={speech.timeline}>
   <text:Area id="callout-copy" content={headline}
     placement={callout-frame} style={callout-style} during="program"/>
 </text:Track>
@@ -350,7 +335,7 @@ family is refused by name.
 
 | Attribute | Takes |
 |---|---|
-| `semantic` | the SemanticTrack the board is timed against |
+| `semantic` | the Timeline the board is timed against |
 | `frame` | a `space:Frame` — the board's declared placement |
 | `during` | the timing form declared by the selected component |
 | `style` | the matching style record, and only that variant's |
@@ -377,7 +362,7 @@ Each variant takes its own, at least one, and ids must be unique within a board.
 
 ```svml
 <ranking:ColumnStyle id="board-style" recipe={recipes.ranking.board} font={ui-font}/>
-<ranking:Column id="board" semantic={speech.semantic} canvas={vertical} frame={board-frame}
+<ranking:Column id="board" timeline={speech.timeline} canvas={vertical} frame={board-frame}
   during={story.selection.board} style={board-style}>
   <ranking:ColumnItem id="row-regen" rank="1" label="ReGen" icon={icon-regen}
     during={story.selection.regen-reveal}/>
@@ -426,7 +411,7 @@ give both and it is refused. `size`, `color`, `align`, `block` and `padding` are
 
 ```svml
 <space:Frame id="deck-frame" within={vertical} left="44%" top="60%" right="98%" bottom="88%"/>
-<deck:DepthStack id="deck" semantic={speech.semantic} canvas={vertical}
+<deck:DepthStack id="deck" timeline={speech.timeline} canvas={vertical}
   frame={deck-frame} appearance={recipes.deck.stack} until={story.moment.done}>
   <deck:Card id="card-spatial" source={icon-spatial} extent={square} at={story.moment.deal-one}/>
   <deck:Card id="card-type" source={icon-type} extent={square} at={story.moment.deal-two}/>
@@ -445,14 +430,14 @@ effect bound to its own window.
 <import as="screen" from="@qflow/screen-overlay@1"/>
 ```
 
-`screen:Track` takes `id`, `canvas` and one time source: `semantic` or `space`. Its children are the effects, at least one, each
+`screen:Track` takes `id`, `canvas` and `timeline`. Its children are the effects, at least one, each
 empty, each with a required `z` for stacking order and a window that is one of:
 
 | Window | Written |
 |---|---|
 | The whole programme | `during="program"` |
-| A Selection | `during={story.selection.x}` on an item whose Track has `semantic={speech.semantic}` |
-| A Moment, for a length | `at={story.moment.x} for="12f"` on an item whose Track has `semantic={speech.semantic}` |
+| A Selection | `during={story.selection.x}` on an item whose Track has `timeline={speech.timeline}` |
+| A Moment, for a length | `at={story.moment.x} for="12f"` on an item whose Track has `timeline={speech.timeline}` |
 | An explicit span | `start="…" end="…"`, optionally against a `selection=` or `moment=` |
 
 Lengths are `12f`, `250ms` or `1.5s`. A Selection
@@ -466,7 +451,7 @@ required attributes, such as `color` / `intensity` / `attack` / `hold` / `decay`
 None have defaults: an effect states its whole shape or is refused.
 
 ```svml
-<screen:Track id="effects" semantic={speech.semantic} canvas={vertical}>
+<screen:Track id="effects" timeline={speech.timeline} canvas={vertical}>
   <screen:Flash during={story.selection.overlay} z="80"
     color="#ffffff" intensity="0.6" attack="2" hold="2" decay="6"/>
 </screen:Track>
@@ -487,8 +472,7 @@ optional metadata line.
 card's whole appearance — background, border, radius, tail, avatar, the three text rows, and the
 enter/hold/exit motion — and every key has a default, so a recipe may set only what it changes.
 
-`comment:Track` takes `id`, `canvas` and one time source: `semantic` for performance time or `space`
-for authored animation.
+`comment:Track` takes `id`, `canvas` and `timeline` for the complete work.
 
 `comment:Sticker` requires `id`, `frame` and `style`, and takes the same windows as a screen overlay
 above. Its copy is either the `comment=` attribute or the element's own text — both is refused. The
@@ -497,7 +481,7 @@ image, and there is no `z`: stacking order comes from the recipe's `stack-order`
 
 ```svml
 <comment:Style id="social" recipe={recipes.comment} font={ui-font}/>
-<comment:Track id="comments" canvas={vertical} semantic={speech.semantic}>
+<comment:Track id="comments" canvas={vertical} timeline={speech.timeline}>
   <comment:Sticker id="one" frame={comment-frame} style={social} avatar={viewer-avatar}
     author="@viewer" meta="Featured" during={story.selection.reaction}>
     Wait, it pinned the caption to the word, not the second.
@@ -526,10 +510,12 @@ All four track families together in one source file:
 <fonts:Stack id="caption-font" family="inter" weight="700" style="normal"/>
 <fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
 <caption-fine:Style id="base-caption" recipe={recipes.caption.base} font={caption-font}/>
-<caption:Program id="caption-program" document={story.caption} narrative={story}
-  default={base-caption}/>
+<caption:Hidden id="hidden"/>
+
 <caption-fine:Track id="captions" document={story.caption}
-  semantic={speech.semantic} program={caption-program}/>
+  timeline={speech.timeline}>
+    <caption-fine:Use style={base-caption}/>
+  </caption-fine:Track>
 
 <!-- Shared placement is an explicit edge, separate from Text appearance. -->
 <space:Canvas id="vertical" width="1080" height="1920"/>
@@ -541,14 +527,14 @@ All four track families together in one source file:
 <!-- Media: one ordinary Item used editorially as B-roll -->
 <pipeline:Normalize id="card-media" source={motion.video}
   video="primary-moving" audio="none" span-authority="video" frame-rate="30"/>
-<media-track:Track id="cards" semantic={speech.semantic} canvas={vertical}>
+<media-track:Track id="cards" timeline={speech.timeline} canvas={vertical}>
   <media-track:Item media={card-media.media} frame={card-frame}
     during={story.selection.demo} appearance={recipes.media.card} motion={recipes.motion.card}/>
 </media-track:Track>
 
 <!-- Text: persistent title overlay -->
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
-<text:Track id="titles" semantic={speech.semantic}>
+<text:Track id="titles" timeline={speech.timeline}>
   <text:Area id="meaning" placement={title-frame} style={title-style} during="program">
     MEANING
   </text:Area>
@@ -558,19 +544,25 @@ All four track families together in one source file:
 <media:Audio id="music" src="./assets/music.wav"/>
 <pipeline:Normalize id="music-media" source={music}
   video="none" audio="default" span-authority="audio" frame-rate="30"/>
-<audio:Track id="music-bed" semantic={speech.semantic}>
-  <audio:Clip source={music-media.media} during="program"
+<audio:Track id="music-bed" timeline={speech.timeline}>
+  <audio:Item source={music-media.media} during="program"
     playback="loop-end" gain="0.28" fade-in="600ms" fade-out="800ms"/>
 </audio:Track>
 
 <!-- All peer tracks feed into Film -->
-<film:Film id="main" canvas={vertical} semantic={speech.semantic} appearance={recipes.film.vertical}>
+<import as="sound" from="@qflow/sound@1"/>
+<sound:Style id="voice-style"/>
+<sound:Track id="voice" timeline={speech.timeline}>
+  <sound:Use style={voice-style}/>
+</sound:Track>
+
+<film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
   <film:Track source={performance.visual}/>
-  <film:Track source={speech.audio}/>
+  <film:Track source={voice.audio}/>
   <film:Track source={cards.visual}/>
   <film:Track source={captions.track}/>
   <film:Track source={titles.track}/>
-  <film:Track source={music-bed.track}/>
+  <film:Track source={music-bed.audio}/>
 </film:Film>
 ```
 

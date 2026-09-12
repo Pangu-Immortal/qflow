@@ -1,3 +1,4 @@
+import { appendMediaPerformance } from "@qflow/performance";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
@@ -8,16 +9,16 @@ import { compileHyperframesDocument } from "@qflow/hyperframes";
 import type { Narrative } from "@qflow/narrative";
 import { parseScript, narrativeValue } from "@qflow/script";
 import { materializeSemanticTake } from "@qflow/speech";
-import { appendSpeechTrackTake, assembleSpeechTrack, createSpeechTrackSet,
-  sealSpeechTrackHeader } from "@qflow/speech-track";
-import { projectSemanticProgramSpace } from "@qflow/semantic-track";
-import { appendMediaPerformance, appendMediaItem, appendTimedMediaLayer, createMediaLayerSet, createMediaSoundSet, createMediaTrackSet,
+import { appendTimelineAuthorTake, assembleTimelineAuthor, createTimelineAuthorSet,
+  sealTimelineAuthorHeader } from "@qflow/timeline-author";
+import { projectTimelineSpace } from "@qflow/timeline";
+import { appendMediaItem, appendTimedMediaLayer, createMediaLayerSet, createMediaSoundSet, createMediaTrackSet,
   finalizeMediaTrack, projectMediaVisualTrack, sealMediaItemSpec, sealMediaSampleLayerSpec, sealMediaTrackHeader } from "@qflow/media-track";
 import { projectProgramWindow } from "../../../test/temporal-fixture.js";
 import { MemoryResourceStore, ffmpegBytes, normalizeTestVideo, transparentVideoFixture, writeTestArtifact } from "../../../test/alpha-video-fixture.js";
 import { renderHyperframesVisual } from "../src/index.js";
 
-test("transparent normalized media composites through both SemanticTake/Speech Track and Media Track in Chrome", {
+test("transparent normalized media composites through both SemanticTake/Timeline and Media Track in Chrome", {
   skip: process.env.QFLOW_BROWSER_TESTS !== "1",
 }, async () => {
   const directory = process.env.QFLOW_ALPHA_PROOF_DIR ?? await mkdtemp(join(tmpdir(), "qflow-alpha-render-"));
@@ -44,9 +45,9 @@ test("transparent normalized media composites through both SemanticTake/Speech T
     const fit = { sizing: "contain" as const, framePoint: { x: 0.5, y: 0.5 }, contentPoint: { x: 0.5, y: 0.5 },
       offsetPx: { x: 0, y: 0 }, constraint: "bounded" as const };
     const frame = { xPx: 0, yPx: 0, widthPx: 96, heightPx: 64 };
-    const set = appendSpeechTrackTake(createSpeechTrackSet(), take);
-    const semantic = assembleSpeechTrack(sealSpeechTrackHeader({ id: "speech" }), set);
-    const space = projectSemanticProgramSpace(semantic);
+    const set = appendTimelineAuthorTake(createTimelineAuthorSet(), take);
+    const semantic = assembleTimelineAuthor(sealTimelineAuthorHeader({ id: "speech" }), set, { frameRate: media.timeline.frameRate });
+    const space = semantic;
     const header = sealMediaTrackHeader({ id: "broll" });
     const layers = appendTimedMediaLayer(createMediaLayerSet(), broll, fit, sealMediaSampleLayerSpec({ id: "cutout",
       occupancy: { mode: "once", align: "start" },
@@ -62,11 +63,11 @@ test("transparent normalized media composites through both SemanticTake/Speech T
       }));
     const performanceHeader = sealMediaTrackHeader({ id: "performance" });
     const performanceSpec = { ...spec, id: "performance", stackingOrder: 1 };
-    const performance = appendMediaPerformance({ set: createMediaTrackSet(), header: performanceHeader, space,
+    const performance = appendMediaPerformance({ set: createMediaTrackSet(), header: performanceHeader, timeline: semantic,
       canvas: { widthPx: 192, heightPx: 64, origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square" },
       layers: createMediaLayerSet(), frame, spec: performanceSpec, sounds: createMediaSoundSet(),
       window: projectProgramWindow({ itemId: performanceSpec.id, semantic, projection: { start: { ref: "program.start" }, end: { ref: "program.end" } } }),
-    }, semantic, fit, sealMediaSampleLayerSpec({ id: "content", occupancy: { mode: "once", align: "start" },
+    }, fit, sealMediaSampleLayerSpec({ id: "content", occupancy: { mode: "once", align: "start" },
       appearance: { opacity: 1, filter: { blurPx: 0, brightness: 1, contrast: 1, saturation: 1 } } }));
     const speechVisual = projectMediaVisualTrack(space, finalizeMediaTrack(performance, performanceHeader, space));
     const brollVisual = projectMediaVisualTrack(space, finalizeMediaTrack(items, header, space));

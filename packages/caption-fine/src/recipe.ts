@@ -118,3 +118,10 @@ export const fineCaptionRecipeSchema: ValueSchema = {
     required.has(name) ? { schema: schemaFor(name) } : { schema: schemaFor(name), optional: true },
   ])),
 };
+
+/** Static authored defaults; dependent paint values retain their decoder relationships. */
+export const fineCaptionEditableDefaults = {
+  opacity: 1, "stroke-width": 0, "shadow-opacity": 0, "glow-opacity": 0,
+  karaoke: "off", "karaoke-transition": "step", "active-box": "off",
+  "underline": "off", "active-underline": "off",
+} as const;

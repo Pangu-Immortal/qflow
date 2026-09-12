@@ -1,7 +1,7 @@
+import type { Timeline } from "@qflow/timeline";
 import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/composition";
 import type { VisualAnimation, VisualElement, VisualTrack } from "@qflow/composition";
 import { assertProgramSpaceIdentity } from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef } from "@qflow/protocol";
 import { assertCanvasSpace } from "@qflow/spatial";
@@ -67,11 +67,11 @@ export function assertEmojiRevealSet(value: EmojiRevealSet): void {
   }
 }
 
-export function appendEmojiRevealItem(set: EmojiRevealSet, space: ProgramSpace, spec: EmojiRevealItemSpec, icon: BlobRef, activation: TemporalInstant): EmojiRevealSet {
-  assertEmojiRevealSet(set); assertProgramSpaceIdentity(space); assertEmojiRevealItemSpec(spec);
+export function appendEmojiRevealItem(set: EmojiRevealSet, timeline: Timeline, spec: EmojiRevealItemSpec, icon: BlobRef, activation: TemporalInstant): EmojiRevealSet {
+  assertEmojiRevealSet(set); assertProgramSpaceIdentity(timeline); assertEmojiRevealItemSpec(spec);
   assert(!spec.preset, `Emoji Reveal Item ${spec.id} with preset=true cannot have an activation.`);
   assertIconImage(icon, `Emoji Reveal Item ${spec.id} icon`);
-  assertTemporalInstantFor(activation, { subjectId: spec.id, space });
+  assertTemporalInstantFor(activation, { subjectId: spec.id, space: timeline });
   assert(!set.items.some((item) => item.spec.id === spec.id), `Duplicate Emoji Reveal Item ${spec.id}.`);
   return { items: [...set.items, { spec: structuredClone(spec), icon: structuredClone(icon), activation: structuredClone(activation) }] };
 }
@@ -85,11 +85,11 @@ export function appendPresetEmojiRevealItem(set: EmojiRevealSet, spec: EmojiReve
 }
 
 export function finalizeEmojiReveal(
-  header: EmojiRevealHeader, space: ProgramSpace, outer: TemporalWindow, style: EmojiRevealStyle, placeholder: BlobRef, set: EmojiRevealSet,
+  header: EmojiRevealHeader, timeline: Timeline, outer: TemporalWindow, style: EmojiRevealStyle, placeholder: BlobRef, set: EmojiRevealSet,
 ): EmojiRevealProgram {
-  assertEmojiRevealHeader(header); assertProgramSpaceIdentity(space); assertEmojiRevealStyle(style); assertEmojiRevealSet(set);
+  assertEmojiRevealHeader(header); assertProgramSpaceIdentity(timeline); assertEmojiRevealStyle(style); assertEmojiRevealSet(set);
   assertIconImage(placeholder, "Emoji Reveal placeholder");
-  assertTemporalWindowFor(outer, { subjectId: header.id, space });
+  assertTemporalWindowFor(outer, { subjectId: header.id, space: timeline });
   assert(set.items.length > 0, "Emoji Reveal requires at least one Item.");
   let previous = outer.span.startFrame - 1;
   let revealStarted = false;
@@ -106,7 +106,7 @@ export function finalizeEmojiReveal(
     previous = frame;
   }
   const program: EmojiRevealProgram = {
-    id: header.id, programSpaceId: space.id, outer: structuredClone(outer), style: structuredClone(style),
+    id: header.id, programSpaceId: timeline.id, outer: structuredClone(outer), style: structuredClone(style),
     placeholder: structuredClone(placeholder), items: structuredClone(set.items),
   };
   assertEmojiRevealProgram(program);
@@ -183,10 +183,10 @@ function iconElement(input: {
   };
 }
 
-export function renderEmojiReveal(canvas: CanvasSpace, space: ProgramSpace, program: EmojiRevealProgram): VisualTrack {
-  assertCanvasSpace(canvas); assertProgramSpaceIdentity(space); assertEmojiRevealProgram(program);
-  assert(program.programSpaceId === space.id, "EmojiRevealProgram belongs to another ProgramSpace.");
-  assertTemporalWindowFor(program.outer, { subjectId: program.id, space });
+export function renderEmojiReveal(canvas: CanvasSpace, timeline: Timeline, program: EmojiRevealProgram): VisualTrack {
+  assertCanvasSpace(canvas); assertProgramSpaceIdentity(timeline); assertEmojiRevealProgram(program);
+  assert(program.programSpaceId === timeline.id, "EmojiRevealProgram belongs to another Timeline.");
+  assertTemporalWindowFor(program.outer, { subjectId: program.id, space: timeline });
   const { style } = program;
   const count = program.items.length;
   const width = style.paddingXPx * 2 + style.slotSizePx * count + style.gapPx * (count - 1);
@@ -234,9 +234,9 @@ export function renderEmojiReveal(canvas: CanvasSpace, space: ProgramSpace, prog
     );
   });
   const track = sealVisualTrack({
-    programSpaceId: space.id, visualIr: "qflow.visual-ir@1", id: program.id,
+    programSpaceId: timeline.id, visualIr: "qflow.visual-ir@1", id: program.id,
     presents: [{ id: program.id, subjectId: program.id, span: { ...program.outer.span },
       stacking: { order: style.stackingOrder, tieBreak: program.id }, elements }],
   });
-  assertVisualTrackIdentity(track, space); return track;
+  assertVisualTrackIdentity(track, timeline); return track;
 }

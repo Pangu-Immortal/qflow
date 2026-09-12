@@ -16,8 +16,16 @@ function segmentNarrative(narrative: Narrative, excerpt: NarrativeExcerpt): Narr
     throw new Error(`NarrativeExcerpt ${excerpt.id} does not describe its authored Segment.`);
   }
   const tokens = narrative.tokens.slice(segment.tokenStart, segment.tokenEndExclusive);
+  const units = narrative.caption.units.filter((unit) => unit.segmentId === segment.id);
+  const unitIds = new Set(units.map((unit) => unit.id));
   return {
     id: narrative.id,
+    caption: {
+      ...narrative.caption,
+      units,
+      words: narrative.caption.words.filter((word) => unitIds.has(word.unitId)),
+      cueBreaks: narrative.caption.cueBreaks.filter((cue) => unitIds.has(cue.afterUnitId)),
+    },
     segments: [{ ...segment, tokenStart: 0, tokenEndExclusive: tokens.length }],
     tokens,
     turns: narrative.turns

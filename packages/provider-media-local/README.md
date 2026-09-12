@@ -37,7 +37,7 @@ These are this FFmpeg implementation's intermediate encodings; Source and Track 
 to use ordinary SynchronizedMedia. Transform currently emits opaque MP4, so perform trim/retime
 before matting when the resulting clip needs transparency.
 
-The result is ordinary SynchronizedMedia. Speech Track and Media Track consume its transparent
+The result is ordinary SynchronizedMedia. Timeline assembly and Media Track consume its transparent
 picture through their existing visual outputs; choosing the A-roll or B-roll role belongs to the
 Source. Local HyperFrames extracts alpha-preserving PNGs and composites them against the authored
 Canvas and lower visual layers before encoding the final MP4.

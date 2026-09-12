@@ -5,7 +5,6 @@ import type {
   StudioInspectorFieldDeclaration,
   StudioSourceBinding,
   StudioSourceBindingDeclaration,
-  StudioParameterControl,
   StudioRecipeReferenceBindingDeclaration,
   StudioEntityDraft,
   StudioEditSource,
@@ -17,6 +16,11 @@ import type {
   StudioTimelineGesture,
 } from "@qflow/studio-adapter";
 import { parseSvs } from "@qflow/svs";
+import { parseOpeningTag } from "@qflow/markup";
+import { parameterControlForSchema, parameterRecordSchema } from "./parameter-values.js";
+import type { CanonicalValue } from "@qflow/protocol";
+
+import type { StudioCompanionRegistry } from "./studio-registry.js";
 
 import type { Range } from "./shared.js";
 import type { Placement } from "./observe.js";
@@ -30,6 +34,7 @@ export type StudioSourceFile = {
 };
 
 type AuthorElement = {
+  readonly range: Range;
   readonly authorElement?: string;
   readonly authorEndpoints: Readonly<Record<string, string>>;
   readonly id?: string;
@@ -48,6 +53,7 @@ function authoredElements(placements: readonly Placement[]): readonly AuthorElem
       ...(placement.authorElement === undefined ? {} : { authorElement: placement.authorElement }),
       authorEndpoints: placement.authorEndpoints ?? {},
       ...(placement.id === undefined ? {} : { id: placement.id }),
+      range: placement.range,
       sourcePath: placement.sourcePath,
       attributes: placement.attributes,
       references: placement.referenceAttributes,
@@ -60,6 +66,7 @@ function authoredElements(placements: readonly Placement[]): readonly AuthorElem
       ...(child.authorElement === undefined ? {} : { authorElement: child.authorElement }),
       authorEndpoints: child.authorEndpoints ?? {},
       ...(child.id === undefined ? {} : { id: child.id }),
+      range: child.range,
       sourcePath: child.sourcePath,
       attributes: child.attributes,
       references: child.referenceAttributes,
@@ -175,7 +182,8 @@ function recipeParameters(input: {
   return input.recipe.bindings.flatMap((declaration): readonly StudioSourceBinding[] => {
     const property = recipe.properties.find((candidate) => candidate.name === declaration.name);
     if (property === undefined) {
-      if (declaration.fallback === undefined) return [];
+      const fallback = typeof declaration.fallback === "function" ? declaration.fallback(recipe.value.properties) : declaration.fallback;
+      if (fallback === undefined) return [];
       const close = recipe.range.end - 1;
       const lineStart = Math.max(source.text.lastIndexOf("\n", close - 1), source.text.lastIndexOf("\r", close - 1)) + 1;
       const closeIndent = source.text.slice(lineStart, close);
@@ -189,7 +197,7 @@ function recipeParameters(input: {
         id: `${input.draft.id}:${input.referenceName}:${declaration.name}`,
         binding: `${input.referenceName}.${declaration.name}`,
         name: declaration.name,
-        value: declaration.fallback,
+        value: fallback,
         ...(declaration.schema === undefined ? {} : { schema: declaration.schema }),
         language: "svs" as const,
         writable: declaration.writable ?? true,
@@ -220,6 +228,57 @@ function recipeParameters(input: {
   });
 }
 
+function attributeGroup(file: StudioSourceFile, target: AuthorElement, draft: StudioEntityDraft,
+  declaration: StudioSourceBindingDeclaration, binding: string, root: string): readonly StudioSourceBinding[] {
+  if (declaration.schema === undefined) throw new Error(`Attribute group ${binding} needs a schema.`);
+  const tag = parseOpeningTag({ name: file.path, text: file.text }, target.range.start);
+  const sourceRange = { start: target.range.start, end: tag.end };
+  const preimage = file.text.slice(sourceRange.start, sourceRange.end);
+  const opening = /^<[\w:.-]+/u.exec(preimage);
+  if (!opening) throw new Error(`Cannot locate opening tag for ${binding}.`);
+  const fallback = typeof declaration.fallback === "function" ? declaration.fallback(target.attributes) : declaration.fallback;
+  const value: Record<string, CanonicalValue> = fallback !== null && typeof fallback === "object" && !Array.isArray(fallback) ? { ...(fallback as Readonly<Record<string, CanonicalValue>>) } : {};
+  const ranges: Record<string, Range | null> = {};
+  let writable = declaration.writable === true;
+  for (const name of declaration.attributes!) {
+    const range = target.attributeValueRanges[name];
+    ranges[name] = null;
+    if (range === undefined) continue;
+    if (target.references[name] !== undefined) { writable = false; value[name] = target.references[name]!; continue; }
+    value[name] = target.attributes[name] ?? target.references[name] ?? "";
+    const before = file.text.slice(target.range.start, range.start);
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const prefix = new RegExp(`\\s+${escaped}\\s*=\\s*["']$`, "u").exec(before);
+    if (!prefix) throw new Error(`Cannot locate scalar attribute ${name}.`);
+    ranges[name] = { start: prefix.index, end: range.end - target.range.start + 1 };
+  }
+  const schema = parameterRecordSchema(declaration.schema, value);
+  for (const [name, held] of Object.entries(value)) {
+    if (target.references[name] !== undefined || typeof held !== "string") continue;
+    const kind = schema?.fields[name]?.schema.kind;
+    if (kind === "number" && held.trim() !== "") value[name] = Number(held);
+    if (kind === "boolean" && (held === "true" || held === "false")) value[name] = held === "true";
+  }
+  return [{ id: `${draft.id}:${binding}`, binding, name: declaration.name, value, schema: declaration.schema,
+    language: file.language, writable, source: { path: relative(root, sourceAbsolute(root, target.sourcePath)),
+      range: sourceRange, preimage }, attributes: { insertionOffset: opening[0].length, ranges } }];
+}
+
+function omittedAttribute(file: StudioSourceFile, target: AuthorElement, draft: StudioEntityDraft,
+  declaration: StudioSourceBindingDeclaration, binding: string, root: string): readonly StudioSourceBinding[] {
+  const value = typeof declaration.fallback === "function" ? declaration.fallback(target.attributes) : declaration.fallback;
+  if (value === undefined) return [];
+  const tag = /^<[\w:.-]+/u.exec(file.text.slice(target.range.start));
+  if (tag === null) throw new Error(`Cannot locate opening tag for ${binding}.`);
+  const at = target.range.start + tag[0].length;
+  return [{ id: `${draft.id}:${binding}`, binding, name: declaration.name, value,
+    ...(declaration.schema === undefined ? {} : { schema: declaration.schema }),
+    language: file.language, writable: declaration.writable === true,
+    source: { path: relative(root, sourceAbsolute(root, target.sourcePath)),
+      range: { start: at, end: at }, preimage: "", prefix: ` ${declaration.name}="`, suffix: '"' },
+  }];
+}
+
 function referencedParameters(input: {
   readonly root: string;
   readonly files: readonly StudioSourceFile[];
@@ -238,16 +297,25 @@ function referencedParameters(input: {
   const file = sourceFor(input.root, target.sourcePath, input.files);
   if (file === undefined) return [];
   return input.declarations.flatMap((declaration) => {
+    if (declaration.attributes) return attributeGroup(file, target, input.draft, declaration, `${input.referenceName}.${declaration.name}`, input.root);
     const nestedPath = target.references[declaration.name];
-    const nested = nestedPath === undefined || declaration.referenced === undefined ? [] : referencedParameters({
+    const referenced = nestedPath === undefined || declaration.referenced === undefined ? [] : referencedParameters({
       root: input.root, files: input.files, draft: input.draft, placements: input.placements,
       referenceName: `${input.referenceName}.${declaration.name}`,
       referencePath: nestedPath,
       ...(target.resolvedReferences[declaration.name] === undefined ? {} : { referenceRef: target.resolvedReferences[declaration.name] }),
       declarations: declaration.referenced,
     });
+    const recipe = nestedPath === undefined || declaration.recipe === undefined ? [] : recipeParameters({
+      root: input.root, files: input.files, draft: input.draft, placements: input.placements,
+      current: file, referenceName: `${input.referenceName}.${declaration.name}`,
+      referencePath: nestedPath,
+      ...(target.resolvedReferences[declaration.name] === undefined ? {} : { referenceRef: target.resolvedReferences[declaration.name] }), recipe: declaration.recipe,
+      through: declaration.recipe.through ?? [],
+    });
+    const nested = [...referenced, ...recipe];
     const range = target.attributeValueRanges[declaration.name];
-    if (range === undefined) return nested;
+    if (range === undefined) return [...omittedAttribute(file, target, input.draft, declaration, `${input.referenceName}.${declaration.name}`, input.root), ...nested];
     const preimage = file.text.slice(range.start, range.end);
     const reference = target.references[declaration.name];
     const value = reference === undefined ? (target.attributes[declaration.name] ?? preimage) : reference;
@@ -288,6 +356,37 @@ function parameterReference(
   return ref === undefined ? { path } : { path, ref };
 }
 
+/** Resolve only references opted into by the consuming Companion. */
+export function composeParameterDeclarations(input: {
+  readonly placement: StudioPlacement | undefined;
+  readonly draft: StudioEntityDraft;
+  readonly placements: readonly Placement[];
+  readonly registry: StudioCompanionRegistry;
+  readonly bindings: readonly StudioSourceBindingDeclaration[];
+  readonly inspector: readonly StudioInspectorFieldDeclaration[];
+}): { bindings: readonly StudioSourceBindingDeclaration[]; inspector: readonly StudioInspectorFieldDeclaration[] } {
+  const inspector = [...input.inspector];
+  const element = input.placement === undefined ? undefined : elementFor(input.placement, input.draft);
+  const expand = (declarations: readonly StudioSourceBindingDeclaration[], owner: AuthorElement | undefined,
+    prefix: string, seen: ReadonlySet<string>): readonly StudioSourceBindingDeclaration[] => declarations.map(declaration => {
+    const path = prefix ? `${prefix}.${declaration.name}` : declaration.name;
+    const reference = prefix ? owner?.references[declaration.name] : input.draft.parameterReferences?.[declaration.name] ?? owner?.references[declaration.name];
+    const resolved = !prefix && input.draft.parameterReferences?.[declaration.name] !== undefined ? undefined : owner?.resolvedReferences[declaration.name];
+    const target = input.placements.find(candidate => resolved !== undefined
+      ? candidate.records.includes(resolved) || candidate.outputs.includes(resolved)
+      : candidate.id === reference && candidate.sourcePath === owner?.sourcePath);
+    const companion = declaration.companion && target !== undefined
+      ? input.registry.parameterCompanionFor(target.module, target.surface) : undefined;
+    const key = target?.authorElement ?? `${target?.sourcePath}:${target?.range.start}`;
+    if (companion !== undefined && seen.has(key)) throw new Error(`Circular Studio parameter reference at ${path}.`);
+    if (companion !== undefined) inspector.push(...companion.inspector.map(field => ({ ...field, binding: `${path}.${field.binding}` })));
+    const next = target === undefined ? undefined : elementFor(target, { ...input.draft, authoredId: target.id ?? "", elementRange: target.range });
+    const nested = [...(declaration.referenced ?? []), ...(companion?.bindings ?? [])];
+    return { ...declaration, referenced: expand(nested, next, path, new Set([...seen, key])) };
+  });
+  return { bindings: expand(input.bindings, element, "", new Set()), inspector };
+}
+
 /**
  * Expose only attributes a package explicitly registered. The source range is
  * still discovered by the generic markup frontend, while the meaning and
@@ -310,8 +409,9 @@ export function sourceBindingsForDraft(input: {
 
   const direct = input.declarations.flatMap((declaration) => {
     const name = declaration.name;
+    if (declaration.attributes) return attributeGroup(file, element, input.draft, declaration, name, input.root);
     const range = element.attributeValueRanges[name];
-    if (range === undefined) return [];
+    if (range === undefined) return omittedAttribute(file, element, input.draft, declaration, name, input.root);
     const preimage = file.text.slice(range.start, range.end);
     const reference = element.references[name];
     const value = reference === undefined
@@ -372,29 +472,17 @@ export function sourceBindingsForDraft(input: {
   return [...direct, ...recipes];
 }
 
-function controlForSchema(schema: StudioSourceBinding["schema"]): StudioParameterControl | undefined {
-  if (schema === undefined) return undefined;
-  if (schema.kind === "boolean") return "boolean";
-  if (schema.kind === "number") return "number";
-  if (schema.kind === "string") return schema.enum === undefined
-    ? schema.format === "color" ? "color" : "text"
-    : "select";
-  if (schema.kind === "array") return "list";
-  if (schema.kind === "object") return "record";
-  return undefined;
-}
-
-/** Resolve the Companion's visible field table against real writable bindings. */
+/** Resolve the Companion's visible field table against real bindings and entity facts. */
 export function inspectorFieldsForBindings(
   draft: StudioEntityDraft,
   bindings: readonly StudioSourceBinding[],
   declarations: readonly StudioInspectorFieldDeclaration[],
 ): readonly StudioInspectorField[] {
   const byBinding = new Map(bindings.map((binding) => [binding.binding, binding] as const));
-  return declarations.flatMap((declaration): readonly StudioInspectorField[] => {
+  const fields = declarations.flatMap((declaration): readonly StudioInspectorField[] => {
     const binding = byBinding.get(declaration.binding);
-    if (binding === undefined || !binding.writable) return [];
-    const control = declaration.control ?? controlForSchema(binding.schema);
+    if (binding === undefined) return [];
+    const control = declaration.control ?? (binding.attributes ? "record" : parameterControlForSchema(binding.schema));
     if (control === undefined) {
       throw new Error(`Studio Inspector binding ${declaration.binding} has neither a control nor a supported public schema.`);
     }
@@ -408,10 +496,12 @@ export function inspectorFieldsForBindings(
       ...(declaration.options !== undefined || schemaOptions === undefined
         ? {}
         : { options: schemaOptions }),
-      language: binding.language,
-      source: binding.source,
+      ...(binding.writable ? { edit: { language: binding.language, source: binding.source, ...(binding.attributes ? { attributes: binding.attributes } : {}) } } : {}),
     }];
   });
+  return [...fields, ...(draft.inspector ?? []).map((fact): StudioInspectorField => ({
+    ...fact, id: `${draft.id}:inspector:fact:${fact.id}`, control: "text",
+  }))];
 }
 
 /** Runtime authority, rather than a Companion allowlist, makes timing fields writable. */

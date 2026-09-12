@@ -1,4 +1,4 @@
-import type { ProgramSpace } from "@qflow/program-space";
+import type { ProgramClock } from "@qflow/program-space";
 
 import type { TemporalDuration } from "./types.js";
 
@@ -51,9 +51,9 @@ function safeInteger(value: number, label: string): bigint {
   return BigInt(value);
 }
 
-export function durationInFrames(duration: TemporalDuration, space: ProgramSpace): Rational {
-  const frameNumerator = safeInteger(space.frameRate.numerator, "ProgramSpace frame-rate numerator");
-  const frameDenominator = safeInteger(space.frameRate.denominator, "ProgramSpace frame-rate denominator");
+export function durationInFrames(duration: TemporalDuration, space: ProgramClock): Rational {
+  const frameNumerator = safeInteger(space.frameRate.numerator, "ProgramClock frame-rate numerator");
+  const frameDenominator = safeInteger(space.frameRate.denominator, "ProgramClock frame-rate denominator");
   switch (duration.unit) {
     case "frames":
       return rational(safeInteger(duration.value, "Frame duration"));

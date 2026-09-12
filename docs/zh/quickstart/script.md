@@ -103,7 +103,7 @@ dialogue `Text` 包含 Role Cue 前缀，speech `Text` 和 CaptionDocument 会�
 如果确实要显示 at-sign，请写成 `\@`。
 
 `||` 是 **Caption Cue Break** 语法，只能位于完整对齐单元之间，不能写进 Dual Text 或切开
-N:M 单元。字幕稍后才把 CaptionDocument 与 SemanticTrack 汇合得到帧时间。
+N:M 单元。字幕稍后才把 CaptionDocument 与 Timeline 汇合得到帧时间。
 
 ### 扁平词属性
 
@@ -178,7 +178,7 @@ Selection 不要求像 XML 标签那样嵌套，它们可以互相交叉：
 
 Selection 标记是零宽度的，不会出现在任何文本投影中。它们编译为带有
 `startAnchorId`/`endAnchorId` 的 `NarrativeSelection`。Script 本身不包含秒数或帧号——时间
-信息来自 SemanticTrack 对齐。
+信息来自 Timeline 对齐。
 
 其他组件通过 `{story.selection.problem}` 引用 Selection，将视觉内容绑定到叙事中的语义时刻。
 

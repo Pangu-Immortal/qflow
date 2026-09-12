@@ -1,3 +1,4 @@
+import type { Timeline } from "@qflow/timeline";
 import {
   assertAudioTrackIdentity,
   assertVisualTrackIdentity,
@@ -5,13 +6,7 @@ import {
   sealVisualTrack,
 } from "@qflow/composition";
 import type { AudioClip, AudioTrack, VisualTrack } from "@qflow/composition";
-import {
-  assertProgramSpaceIdentity,
-  programFrameSampleBoundary,
-  programSpaceFrameCount,
-  programSpaceSampleFrames,
-} from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
+import { assertProgramSpaceIdentity, programFrameSampleBoundary, programSpaceFrameCount, programSpaceSampleFrames } from "@qflow/program-space";
 import { canonicalize, isResourceId } from "@qflow/protocol";
 import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
 import type { CanvasSpace } from "@qflow/spatial";
@@ -125,7 +120,7 @@ export function assertMediaTrackSet(value: MediaTrackSet): void {
 function realizedItems(
   set: MediaTrackSet,
   header: MediaTrackHeader,
-  space: ProgramSpace,
+  timeline: Timeline,
   canvas: CanvasSpace,
   layers: MediaLayerSet,
   frame: MediaItemProgram["frame"],
@@ -135,13 +130,13 @@ function realizedItems(
 ): MediaTrackSet {
   assertMediaTrackSet(set);
   assertMediaTrackHeader(header);
-  assertProgramSpaceIdentity(space);
+  assertProgramSpaceIdentity(timeline);
   assertCanvasSpace(canvas);
   assertMediaLayerSet(layers);
   assert(layers.layers.length > 0, `Media Item ${spec.id} requires at least one layer.`);
   assertSpatialFrame(frame);
   assertMediaItemSpec(spec);
-  assertTemporalWindowFor(window, { subjectId: spec.id, space });
+  assertTemporalWindowFor(window, { subjectId: spec.id, space: timeline });
   assertMediaSoundSet(sounds);
   assert(!sounds.sounds.some((sound) => sound.trigger.kind === "handoff"),
     `Media Item ${spec.id} cannot own a Handoff sound.`);
@@ -177,7 +172,7 @@ function realizedItems(
 export function appendMediaItem(
   set: MediaTrackSet,
   header: MediaTrackHeader,
-  space: ProgramSpace,
+  timeline: Timeline,
   canvas: CanvasSpace,
   layers: MediaLayerSet,
   frame: MediaItemProgram["frame"],
@@ -185,29 +180,29 @@ export function appendMediaItem(
   sounds: MediaSoundSet,
   window: ProjectedWindow,
 ): MediaTrackSet {
-  return realizedItems(set, header, space, canvas, layers, frame, spec, sounds, window);
+  return realizedItems(set, header, timeline, canvas, layers, frame, spec, sounds, window);
 }
 
-function assertSampleLayerForSpace(layer: MediaSampleLayerProgram, space: ProgramSpace, label: string): void {
+function assertSampleLayerForSpace(layer: MediaSampleLayerProgram, timeline: Timeline, label: string): void {
   assertMediaVisualSource(layer.source, `${label}.source`);
   const timing = layer.source.kind === "timed" ? { frameRate: layer.source.frameRate, frameCount: layer.source.frameCount }
     : layer.source.kind === "surface" && layer.source.surface.timing.kind === "frames"
       ? layer.source.surface.timing : undefined;
   if (timing === undefined) return;
-  assert(timing.frameRate.numerator === space.frameRate.numerator
-    && timing.frameRate.denominator === space.frameRate.denominator,
-  `${label} is not normalized to ProgramSpace frame rate.`);
+  assert(timing.frameRate.numerator === timeline.frameRate.numerator
+    && timing.frameRate.denominator === timeline.frameRate.denominator,
+  `${label} is not normalized to Timeline frame rate.`);
   if (layer.trim !== undefined) assertMediaVisualTrim(layer.trim, timing.frameCount, `${label}.trim`);
   assert(layer.occupancy !== undefined, `${label} requires occupancy.`);
   assertMediaVisualOccupancy(layer.occupancy, `${label}.occupancy`);
 }
 
-function assertItem(item: MediaItemProgram, space: ProgramSpace, label: string): void {
+function assertItem(item: MediaItemProgram, timeline: Timeline, label: string): void {
   assertMediaIdentity(item.id, `${label}.id`);
   assertMediaIdentity(item.subjectId, `${label}.subjectId`);
   assert(Number.isSafeInteger(item.span.startFrame) && Number.isSafeInteger(item.span.endFrameExclusive)
     && item.span.startFrame >= 0 && item.span.endFrameExclusive > item.span.startFrame
-    && item.span.endFrameExclusive <= programSpaceFrameCount(space), `${label}.span is invalid.`);
+    && item.span.endFrameExclusive <= programSpaceFrameCount(timeline), `${label}.span is invalid.`);
   assertSpatialFrame(item.frame);
   assertMediaFramePresentation(item.presentation, `${label}.presentation`);
   assertMediaLifecycleMotion(item.motion, item.span.endFrameExclusive - item.span.startFrame, `${label}.motion`);
@@ -217,7 +212,7 @@ function assertItem(item: MediaItemProgram, space: ProgramSpace, label: string):
   assert(item.layers.length > 0, `${label} requires layers.`);
   const layerSet: MediaLayerSet = { layers: item.layers };
   assertMediaLayerSet(layerSet);
-  for (const layer of item.layers) if (layer.kind === "sample") assertSampleLayerForSpace(layer, space, `${label}.${layer.id}`);
+  for (const layer of item.layers) if (layer.kind === "sample") assertSampleLayerForSpace(layer, timeline, `${label}.${layer.id}`);
   if (item.sourceAudio !== undefined) {
     const selected = item.layers.find((layer) => layer.id === item.sourceAudio!.fromLayer);
     assert(selected?.kind === "sample" && selected.source.kind === "timed" && selected.source.audio !== undefined,
@@ -230,7 +225,7 @@ function assertItem(item: MediaItemProgram, space: ProgramSpace, label: string):
 function appendMediaSequenceAtFrame(
   set: MediaTrackSet,
   header: MediaTrackHeader,
-  space: ProgramSpace,
+  timeline: Timeline,
   canvas: CanvasSpace,
   members: MediaSequenceMemberSet,
   frame: MediaSequenceProgram["frame"],
@@ -241,7 +236,7 @@ function appendMediaSequenceAtFrame(
   assertMediaTrackSet(set);
   assertMediaSequenceMemberSet(members);
   assertMediaSequenceSpec(spec);
-  const sequence = resolveMediaSequence(header, space, canvas, members, frame, spec, sounds, terminalFrame);
+  const sequence = resolveMediaSequence(header, timeline, canvas, members, frame, spec, sounds, terminalFrame);
   assert(!set.items.some((item) => item.id === sequence.id)
     && !set.sequences.some((item) => item.id === sequence.id),
   `Media Track ${header.id} already contains ${sequence.id}.`);
@@ -251,7 +246,7 @@ function appendMediaSequenceAtFrame(
 export function appendMediaSequence(
   set: MediaTrackSet,
   header: MediaTrackHeader,
-  space: ProgramSpace,
+  timeline: Timeline,
   canvas: CanvasSpace,
   members: MediaSequenceMemberSet,
   frame: MediaSequenceProgram["frame"],
@@ -259,13 +254,13 @@ export function appendMediaSequence(
   sounds: MediaSoundSet,
   terminal: TemporalInstant,
 ): MediaTrackSet {
-  assertTemporalInstantFor(terminal, { subjectId: spec.id, space });
-  return appendMediaSequenceAtFrame(set, header, space, canvas, members, frame, spec, sounds, terminal.frame);
+  assertTemporalInstantFor(terminal, { subjectId: spec.id, space: timeline });
+  return appendMediaSequenceAtFrame(set, header, timeline, canvas, members, frame, spec, sounds, terminal.frame);
 }
 
-function assertSequence(sequence: MediaSequenceProgram, space: ProgramSpace, label: string): void {
+function assertSequence(sequence: MediaSequenceProgram, timeline: Timeline, label: string): void {
   assertMediaIdentity(sequence.id, `${label}.id`);
-  assert(sequence.span.startFrame >= 0 && sequence.span.endFrameExclusive <= programSpaceFrameCount(space)
+  assert(sequence.span.startFrame >= 0 && sequence.span.endFrameExclusive <= programSpaceFrameCount(timeline)
     && sequence.span.endFrameExclusive > sequence.span.startFrame
     && sequence.terminalFrame === sequence.span.endFrameExclusive, `${label}.span is invalid.`);
   assertSpatialFrame(sequence.frame);
@@ -288,7 +283,7 @@ function assertSequence(sequence: MediaSequenceProgram, space: ProgramSpace, lab
     const layerSet: MediaLayerSet = { layers: member.layers };
     assertMediaLayerSet(layerSet);
     for (const layer of member.layers) if (layer.kind === "sample") {
-      assertSampleLayerForSpace(layer, space, `${label}.members.${index}.${layer.id}`);
+      assertSampleLayerForSpace(layer, timeline, `${label}.members.${index}.${layer.id}`);
     }
     if (member.sourceAudio !== undefined) {
       const selected = member.layers.find((layer) => layer.id === member.sourceAudio!.fromLayer);
@@ -323,13 +318,13 @@ function normalizeProgram(value: MediaTrackProgram): MediaTrackProgram {
   };
 }
 
-export function sealMediaTrackProgram(value: MediaTrackProgram, space: ProgramSpace): MediaTrackProgram {
+export function sealMediaTrackProgram(value: MediaTrackProgram, timeline: Timeline): MediaTrackProgram {
   const normalized = normalizeProgram(value);
-  assertMediaTrackProgramIdentity(normalized, space);
+  assertMediaTrackProgramIdentity(normalized, timeline);
   return canonicalize(normalized) as unknown as MediaTrackProgram;
 }
 
-export function finalizeMediaTrack(set: MediaTrackSet, header: MediaTrackHeader, space: ProgramSpace): MediaTrackProgram {
+export function finalizeMediaTrack(set: MediaTrackSet, header: MediaTrackHeader, timeline: Timeline): MediaTrackProgram {
   assertMediaTrackSet(set);
   assertMediaTrackHeader(header);
   assert(set.items.length + set.sequences.length > 0, "Media Track requires at least one Item or Sequence.");
@@ -338,7 +333,7 @@ export function finalizeMediaTrack(set: MediaTrackSet, header: MediaTrackHeader,
     id: header.id,
     items: set.items,
     sequences: set.sequences,
-  }, space);
+  }, timeline);
 }
 
 export function assertMediaTrackProgram(value: MediaTrackProgram): void {
@@ -347,26 +342,26 @@ export function assertMediaTrackProgram(value: MediaTrackProgram): void {
     && value.items.length + value.sequences.length > 0, "MediaTrackProgram is empty.");
 }
 
-export function assertMediaTrackProgramIdentity(value: MediaTrackProgram, space: ProgramSpace): void {
+export function assertMediaTrackProgramIdentity(value: MediaTrackProgram, timeline: Timeline): void {
   assertMediaTrackProgram(value);
-  assertProgramSpaceIdentity(space);
+  assertProgramSpaceIdentity(timeline);
   const ids = new Set<string>();
   for (const item of value.items) {
     assert(!ids.has(item.id), `MediaTrackProgram repeats ${item.id}.`);
     ids.add(item.id);
-    assertItem(item, space, `Media Item ${item.id}`);
+    assertItem(item, timeline, `Media Item ${item.id}`);
   }
   for (const sequence of value.sequences) {
     assert(!ids.has(sequence.id), `MediaTrackProgram repeats ${sequence.id}.`);
     ids.add(sequence.id);
-    assertSequence(sequence, space, `Media Sequence ${sequence.id}`);
+    assertSequence(sequence, timeline, `Media Sequence ${sequence.id}`);
   }
 }
 
-export function projectMediaVisualTrack(space: ProgramSpace, program: MediaTrackProgram): VisualTrack {
-  assertMediaTrackProgramIdentity(program, space);
+export function projectMediaVisualTrack(timeline: Timeline, program: MediaTrackProgram): VisualTrack {
+  assertMediaTrackProgramIdentity(program, timeline);
   const track = sealVisualTrack({
-    programSpaceId: space.id,
+    programSpaceId: timeline.id,
     visualIr: "qflow.visual-ir@1",
     id: program.id,
     presents: [
@@ -375,12 +370,12 @@ export function projectMediaVisualTrack(space: ProgramSpace, program: MediaTrack
       subjectId: item.subjectId,
       span: { ...item.span },
       stacking: { ...item.stacking },
-      elements: lowerMediaItemElements(item, space),
+      elements: lowerMediaItemElements(item, timeline),
       })),
-      ...program.sequences.flatMap((sequence) => lowerMediaSequencePresents(sequence, space)),
+      ...program.sequences.flatMap((sequence) => lowerMediaSequencePresents(sequence, timeline)),
     ],
   });
-  assertVisualTrackIdentity(track, space);
+  assertVisualTrackIdentity(track, timeline);
   return track;
 }
 
@@ -394,7 +389,7 @@ function sourceSampleBoundary(frame: number, frameCount: number, sampleFrames: n
 
 function sourceAudioClip(
   value: Pick<MediaItemProgram, "id" | "subjectId" | "span" | "layers" | "sourceAudio">,
-  space: ProgramSpace,
+  timeline: Timeline,
   fades: { readonly inSamples: number; readonly outSamples: number } = { inSamples: 0, outSamples: 0 },
 ): AudioClip | undefined {
   if (value.sourceAudio === undefined) return undefined;
@@ -409,8 +404,8 @@ function sourceAudioClip(
   const trim = layer.trim ?? { startFrame: 0, endFrameExclusive: source.frameCount };
   const sourceStart = sourceSampleBoundary(trim.startFrame, source.frameCount, audio.sampleFrames);
   const sourceEnd = sourceSampleBoundary(trim.endFrameExclusive, source.frameCount, audio.sampleFrames);
-  const targetWindowStart = programFrameSampleBoundary(space, value.span.startFrame, 48_000);
-  const targetWindowEnd = programFrameSampleBoundary(space, value.span.endFrameExclusive, 48_000);
+  const targetWindowStart = programFrameSampleBoundary(timeline, value.span.startFrame, 48_000);
+  const targetWindowEnd = programFrameSampleBoundary(timeline, value.span.endFrameExclusive, 48_000);
   const targetFrames = value.span.endFrameExclusive - value.span.startFrame;
   const sourceFrames = trim.endFrameExclusive - trim.startFrame;
   let targetStart = targetWindowStart;
@@ -423,10 +418,10 @@ function sourceAudioClip(
   if (layer.occupancy.mode === "once" || layer.occupancy.mode === "hold") {
     const playedFrames = Math.min(targetFrames, sourceFrames);
     if (layer.occupancy.align === "start") {
-      targetEnd = programFrameSampleBoundary(space, value.span.startFrame + playedFrames, 48_000);
+      targetEnd = programFrameSampleBoundary(timeline, value.span.startFrame + playedFrames, 48_000);
       clipSourceEnd = sourceSampleBoundary(trim.startFrame + playedFrames, source.frameCount, audio.sampleFrames);
     } else {
-      targetStart = programFrameSampleBoundary(space, value.span.endFrameExclusive - playedFrames, 48_000);
+      targetStart = programFrameSampleBoundary(timeline, value.span.endFrameExclusive - playedFrames, 48_000);
       clipSourceStart = sourceSampleBoundary(trim.endFrameExclusive - playedFrames, source.frameCount, audio.sampleFrames);
     }
   } else if (layer.occupancy.mode === "loop") {
@@ -466,12 +461,12 @@ function soundClip(
   source: MediaSoundSource,
   gain: number,
   point: number,
-  space: ProgramSpace,
+  timeline: Timeline,
 ): AudioClip {
-  const total = programSpaceSampleFrames(space, 48_000);
-  const targetStart = programFrameSampleBoundary(space, point, 48_000);
+  const total = programSpaceSampleFrames(timeline, 48_000);
+  const targetStart = programFrameSampleBoundary(timeline, point, 48_000);
   const audible = Math.min(source.sampleFrames, Math.max(0, total - targetStart));
-  assert(audible > 0, `Media sound ${id} begins outside ProgramSpace.`);
+  assert(audible > 0, `Media sound ${id} begins outside Timeline.`);
   return {
     id,
     artifact: structuredClone(source.artifact),
@@ -493,18 +488,18 @@ function soundClip(
 
 function edgeSoundClips(
   value: Pick<MediaItemProgram, "id" | "span" | "motion" | "sounds">,
-  space: ProgramSpace,
+  timeline: Timeline,
 ): AudioClip[] {
   return value.sounds.flatMap((sound) => {
     if (sound.trigger.kind === "handoff") return [];
     const point = sound.trigger.kind === "enter"
       ? value.span.startFrame
       : value.span.endFrameExclusive - (value.motion.exit?.durationFrames ?? 0);
-    return [soundClip(`${value.id}:${sound.id}`, sound.source, sound.gain, point, space)];
+    return [soundClip(`${value.id}:${sound.id}`, sound.source, sound.gain, point, timeline)];
   });
 }
 
-function sequenceAudioClips(sequence: MediaSequenceProgram, space: ProgramSpace): AudioClip[] {
+function sequenceAudioClips(sequence: MediaSequenceProgram, timeline: Timeline): AudioClip[] {
   const sourceClips = sequence.members.flatMap((member, index) => {
     if (member.sourceAudio === undefined) return [];
     const incoming = sequence.handoffs[index - 1];
@@ -515,12 +510,12 @@ function sequenceAudioClips(sequence: MediaSequenceProgram, space: ProgramSpace)
         ? outgoing.span.endFrameExclusive : member.logicalSpan.endFrameExclusive,
     };
     const fadeInSamples = incoming?.audio === "crossfade"
-      ? programFrameSampleBoundary(space, incoming.span.endFrameExclusive, 48_000)
-        - programFrameSampleBoundary(space, incoming.span.startFrame, 48_000)
+      ? programFrameSampleBoundary(timeline, incoming.span.endFrameExclusive, 48_000)
+        - programFrameSampleBoundary(timeline, incoming.span.startFrame, 48_000)
       : 0;
     const fadeOutSamples = outgoing?.audio === "crossfade"
-      ? programFrameSampleBoundary(space, outgoing.span.endFrameExclusive, 48_000)
-        - programFrameSampleBoundary(space, outgoing.span.startFrame, 48_000)
+      ? programFrameSampleBoundary(timeline, outgoing.span.endFrameExclusive, 48_000)
+        - programFrameSampleBoundary(timeline, outgoing.span.startFrame, 48_000)
       : 0;
     const clip = sourceAudioClip({
       id: `${sequence.id}:${member.id}`,
@@ -528,7 +523,7 @@ function sequenceAudioClips(sequence: MediaSequenceProgram, space: ProgramSpace)
       span,
       layers: member.layers,
       sourceAudio: member.sourceAudio,
-    }, space, { inSamples: fadeInSamples, outSamples: fadeOutSamples });
+    }, timeline, { inSamples: fadeInSamples, outSamples: fadeOutSamples });
     return clip === undefined ? [] : [clip];
   });
   const handoffSounds = sequence.sounds.flatMap((sound) => {
@@ -537,7 +532,7 @@ function sequenceAudioClips(sequence: MediaSequenceProgram, space: ProgramSpace)
     const handoff = sequence.handoffs.find((candidate) => candidate.id === handoffId)!;
     return [soundClip(
       `${sequence.id}:${sound.id}`, sound.source, sound.gain,
-      sequence.members.find((member) => member.id === handoff.toMemberId)!.activationFrame, space,
+      sequence.members.find((member) => member.id === handoff.toMemberId)!.activationFrame, timeline,
     )];
   });
   return [
@@ -547,19 +542,19 @@ function sequenceAudioClips(sequence: MediaSequenceProgram, space: ProgramSpace)
       span: sequence.span,
       motion: sequence.motion,
       sounds: sequence.sounds,
-    }, space),
+    }, timeline),
     ...handoffSounds,
   ];
 }
 
-export function projectMediaAudioTrack(space: ProgramSpace, program: MediaTrackProgram): AudioTrack {
-  assertMediaTrackProgramIdentity(program, space);
+export function projectMediaAudioTrack(timeline: Timeline, program: MediaTrackProgram): AudioTrack {
+  assertMediaTrackProgramIdentity(program, timeline);
   const clips = program.items.flatMap((item) => {
-    const source = sourceAudioClip(item, space);
-    return [...(source === undefined ? [] : [source]), ...edgeSoundClips(item, space)];
-  }).concat(program.sequences.flatMap((sequence) => sequenceAudioClips(sequence, space)));
+    const source = sourceAudioClip(item, timeline);
+    return [...(source === undefined ? [] : [source]), ...edgeSoundClips(item, timeline)];
+  }).concat(program.sequences.flatMap((sequence) => sequenceAudioClips(sequence, timeline)));
   assert(clips.length > 0, `Media Program ${program.id} has no explicitly authored audio projection.`);
-  const track = sealAudioTrack({ programSpaceId: space.id, id: `${program.id}:audio`, clips });
-  assertAudioTrackIdentity(track, space);
+  const track = sealAudioTrack({ programSpaceId: timeline.id, id: `${program.id}:audio`, clips });
+  assertAudioTrackIdentity(track, timeline);
   return track;
 }

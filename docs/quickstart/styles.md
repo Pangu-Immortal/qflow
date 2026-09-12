@@ -60,7 +60,7 @@ Referenced by `film:Film` via the `appearance` attribute:
 
 ```svml
 <space:Canvas id="vertical" width="1080" height="1920"/>
-<film:Film id="main" canvas={vertical} semantic={speech.semantic} appearance={recipes.film.vertical}>
+<film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
 ```
 
 ## Caption Fine
@@ -133,17 +133,18 @@ caption.bob {
 }
 ```
 
-Then assign them via `caption:Program`:
+Then select them with timed Uses in the Track:
 
 ```svml
 <fonts:Stack id="caption-font" family="inter" weight="600" style="normal"/>
 <caption-fine:Style id="default-caption" recipe={recipes.caption.dialogue} font={caption-font}/>
 <caption-fine:Style id="alice-caption" recipe={recipes.caption.alice} font={caption-font}/>
 <caption-fine:Style id="bob-caption" recipe={recipes.caption.bob} font={caption-font}/>
-<caption:Program id="caption-program" document={story.caption} default={default-caption}>
-  <caption:Use role="ALICE" style={alice-caption}/>
-  <caption:Use role="BOB" style={bob-caption}/>
-</caption:Program>
+<caption-fine:Track id="captions" document={story.caption} timeline={speech.timeline}>
+  <caption-fine:Use style={default-caption}/>
+  <caption-fine:Use role="ALICE" style={alice-caption}/>
+  <caption-fine:Use role="BOB" style={bob-caption}/>
+</caption-fine:Track>
 ```
 
 ## Media Track
@@ -400,5 +401,5 @@ This file is imported once in the `.svml` source and its values are referenced t
 <caption-fine:Style id="primary-caption" recipe={recipes.caption.primary} font={caption-font}/>
 
 <space:Canvas id="vertical" width="720" height="1280"/>
-<film:Film id="main" canvas={vertical} semantic={speech.semantic} appearance={recipes.film.vertical}>
+<film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
 ```

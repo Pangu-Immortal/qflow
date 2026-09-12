@@ -26,3 +26,8 @@ instead of reimplementing media semantics per deployment.
 
 This is not an author package, Provider, queue or Core extension. It performs no endpoint selection,
 credential lookup or SVML parsing.
+
+Audio gain envelopes and audible subranges are evaluated per sample after tempo/looping and Clip
+fades, before the requested range is cropped. Original source and envelope progress therefore survive
+local silence and range rendering. This is generic AudioProgramPlan execution, independent of author
+component or Style names.

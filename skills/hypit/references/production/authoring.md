@@ -16,8 +16,8 @@ and [Caption authoring](caption-authoring.md) explain creating a new project com
 
 Begin with the work the Treatment describes, not with a package inventory. Identify:
 
-- the Script passages and speaking roles;
-- the A-roll performances that give those passages semantic time, and the B-roll that supports them;
+- the Script passages and speaking roles, where the work has speech;
+- the performances and other material the work needs, and their placement on its complete Timeline;
 - the Caption, Typography, MG, Effect, and Audio systems that act with them;
 - the semantic relations that should follow words, phrases, pauses, or content events;
 - the genuinely clock-based events;
@@ -36,8 +36,9 @@ other layers will follow,
 These pages establish what the authored relationship should accomplish. Installed vocabulary then
 supplies the exact language for expressing it.
 
-Author those relationships explicitly. Script Selections and Moments carry meaning through produced
-speech into real time. Track and Film elements arrange the resulting picture and sound. One Source
+Author those relationships explicitly. Script Selections and Moments carry meaning through placed
+performances into real time; authored positions locate independently timed events on the same Timeline.
+Track and Film elements arrange the resulting picture and sound. One Source
 carries the whole creative program; its cuts are relationships inside that program.
 
 When a role first leads to an installed Surface in the current work, query its actual declaration

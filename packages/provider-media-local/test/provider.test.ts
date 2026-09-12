@@ -903,3 +903,43 @@ test("audio range preserves loop phase, tempo and intersected fades from the ful
     assert.ok(maximumError <= 1, `Selected audio differs by ${maximumError} PCM units`);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test("audio envelopes and audible regions preserve sample phase through gaps and range renders", { skip: !hasMediaBinaries }, async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-audio-presentation-"));
+  try {
+    const resources = new MemoryResourceStore();
+    const source = await resources.put(rampWav(4800), "audio/wav");
+    const plan = sealAudioProgramPlan({
+      frameRate: { numerator: 30, denominator: 1 }, frameCount: 12, sampleRate: 48000, sampleFrames: 19200,
+      clips: [{ id: "voice", artifact: source, targetStartSample: 1600, targetEndSampleExclusive: 17600,
+        sourceSampleFrames: 4800, sourceStartSample: 0, sourceEndSampleExclusive: 4800,
+        sourceLoop: true, sourcePhaseSample: 0, playbackRate: 1, pitch: "preserve", gain: 1,
+        fadeInSamples: 0, fadeOutSamples: 0,
+        gainEnvelope: [{ sample: 1600, gain: 0 }, { sample: 17600, gain: 1 }],
+        audibility: [{ startSample: 1600, endSampleExclusive: 4800 }, { startSample: 8000, endSampleExclusive: 17600 }],
+      }], mix: { normalize: false, limiter: "none" },
+    });
+    const pcm = async (name: string, range?: { startFrame: number; endFrameExclusive: number }) => {
+      const value = await fulfillInline(resources, need(`need:${name}`, mediaPipelineCapabilities.renderAudio,
+        mediaTypes.timelineAudio, canonicalize({ plan, ...(range === undefined ? {} : { range }) })));
+      verifyTimelineAudio(value);
+      const path = join(root, `${name}.wav`), raw = join(root, `${name}.raw`);
+      await writeFile(path, (await resources.get((value as unknown as TimelineAudio).artifact.resource))!);
+      await run("ffmpeg", ["-v", "error", "-y", "-i", path, "-f", "s16le", raw]);
+      return readFile(raw);
+    };
+    const full = await pcm("full");
+    for (const sample of [0, 1599, 4800, 6400, 7999, 17600, 18000]) assert.equal(full.readInt16LE(sample * 4), 0);
+    for (const sample of [1600, 2401, 4799, 8000, 8001, 12000, 17599]) {
+      const local = sample - 1600;
+      const expected = (local % 4800 + 1) * local / 16000;
+      assert.ok(Math.abs(full.readInt16LE(sample * 4) - expected) <= 1, `Wrong envelope or source phase at ${sample}`);
+    }
+    const selected = await pcm("selected", { startFrame: 4, endFrameExclusive: 10 });
+    const expected = full.subarray(6400 * 4, 16000 * 4);
+    assert.equal(selected.length, expected.length);
+    for (let index = 0; index < selected.length; index += 2) {
+      assert.ok(Math.abs(selected.readInt16LE(index) - expected.readInt16LE(index)) <= 1);
+    }
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

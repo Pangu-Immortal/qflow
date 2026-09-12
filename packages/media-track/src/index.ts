@@ -1,6 +1,7 @@
 export { mediaTrackComponent } from "./component.js";
 export {
   decodeMediaFit,
+  decodeMediaItemSpec,
   decodeMediaFramePaint,
   decodeMediaMotion,
   decodeMediaPresentation,
@@ -46,7 +47,6 @@ export {
 } from "./sounds.js";
 export { appendMediaItem, appendMediaSequence, bindMediaItemClipPath, bindMediaSequenceClipPath, assertMediaItemSpec, assertMediaTrackHeader, assertMediaTrackProgram, assertMediaTrackProgramIdentity, assertMediaTrackSet, createMediaTrackSet, finalizeMediaTrack, projectMediaAudioTrack, projectMediaVisualTrack, sealMediaItemSpec, sealMediaTrackHeader, sealMediaTrackProgram } from "./program.js";
 export { resolveVisualSampling } from "./sampling.js";
-export { appendMediaPerformance } from "./performance.js";
 export { decodeMediaSamplingKeyframe, decodeMediaTrackSurface } from "./surface.js";
 export {
   appendMediaSequenceMember,
@@ -63,3 +63,5 @@ export {
   sequenceMemberHandoffAnimation,
 } from "./sequence.js";
 export type * from "./types.js";
+
+export { mediaAppearanceDefaults } from "./author.js";

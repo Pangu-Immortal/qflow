@@ -8,7 +8,7 @@ export {
 export type { CaptionUnitSubset } from "./display.js";
 export { captionWordsForAttribute } from "./display.js";
 export { captionComponent } from "./component.js";
-export { captionTimingFragment, plannedCaptionTimingFragment } from "./fragment.js";
+export { captionTimingFragment } from "./fragment.js";
 export {
   captionProgramSchema,
   captionStyleSchema,
@@ -19,15 +19,16 @@ export {
   captionProducers,
   captionTypes,
 } from "./manifest.js";
-export { decodeCaptionProgramSurface } from "./surface.js";
+export { decodeHiddenCaptionStyleSurface } from "./surface.js";
 export {
   assertCaptionProgram,
   assertCaptionProgramForDocument,
   assertCaptionStyle,
-  resolveCaptionProgram,
+  appendCaptionUse,
   sealCaptionProgram,
   sealCaptionStyle,
 } from "./style.js";
-export type { CaptionMuteApplication, CaptionStyleApplication, CaptionWordStyleApplication } from "./style.js";
-export { applyCaptionMute, assertTimedCaptionProjection, temporalizeCaptionDocument } from "./temporalize.js";
+export { assertTimedCaptionProjection, temporalizeCaptionDocument } from "./temporalize.js";
 export type * from "./types.js";
+
+export { captionUseVisibility } from "./visibility.js";

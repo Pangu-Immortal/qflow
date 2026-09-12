@@ -34,6 +34,7 @@ export async function loadStudioCompanionRegistry(input: {
     {
       films: contributions.flatMap((item) => item.films),
       scripts: contributions.flatMap((item) => item.scripts),
+      parameters: contributions.flatMap((item) => item.parameters),
     },
   );
 }

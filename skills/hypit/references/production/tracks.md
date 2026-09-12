@@ -11,10 +11,11 @@ implementation, read [Track authoring](track-authoring.md); for a new Caption fa
 
 | Role | Owns | Common published values |
 | --- | --- | --- |
-| SemanticTrack | The ordered media timeline and aligned semantic locations; it draws nothing | Usually `speech.semantic` |
-| Speech Track | Ordered semantic performances and their original sound | `.semantic`, `.audio` |
-| Media Track | Framed images, semantic performances, prepared moving media, or authored surfaces; B-roll is one use | `.program`, `.visual`, optional `.audio` |
-| Audio Track | Independently timed music, ambience and effects | `.program`, `.track` |
+| Timeline | Complete time range and placed Takes, with any semantic evidence; it draws nothing | `.timeline` |
+| Performance | Existing Timeline footage, with broad and local presentation Uses | `.visual` |
+| Media Track | Independently supplied images, prepared moving media, or authored surfaces; B-roll is one use | `.program`, `.visual`, optional `.audio` |
+| Sound | Existing Timeline audio, with broad and local presentation Uses | `.audio` |
+| Audio Track | Independently timed music, ambience and effects | `.program`, `.audio` |
 | Caption | Script-derived display text presented with speech | Fine publishes `.schedule`, `.track` |
 | Typography / Text | Titles, labels and other independently authored text | `.program`, `.track` |
 | Semantic MG | A board, comparison, reveal or another system responding to meaning | Package-owned; often `.program` and a visual Track |
@@ -35,9 +36,9 @@ exposes an appropriate projection form on its own Surface:
 ```
 
 Here `during` belongs to `media-track:Item`. While lowering that element, Media Track's Surface
-resolves the Selection and SemanticTrack, creates the temporal projection Records and Fragment, and
+resolves the Selection and Timeline, creates the temporal projection Records and Fragment, and
 wires the projected `Window` into Media Track's own Fragment. The projection subgraph resolves the
-Selection's start and end Anchors against the selected SemanticTrack and composes the resulting
+Selection's start and end Anchors against the selected Timeline and composes the resulting
 Instants into that Window.
 
 The Media Track's internal Producers consume the Window together with the media, Frame and authored
@@ -52,7 +53,7 @@ projection forms its behavior can honestly consume.
 
 ```text
 Script Selection / Moment / Segment
-                 ↓ component Surface projection through SemanticTrack
+                 ↓ component Surface projection through Timeline
            Window / Instant
                  ↓ component Fragment and Producers
        occupancy, playback, state, sound or visual behavior
@@ -63,26 +64,17 @@ inspect or deliver and changes none of these relationships. [Script and time](..
 owns Selection, Moment and shared projection spellings; each selected Surface's vocabulary says which
 forms that component exposes.
 
-## Semantic Takes supply the media timeline
+## Place prepared Takes on the Timeline
 
-Script Segments have authored order and meaning but no program positions. Each spoken Segment is
-associated with the local media performance carrying it; normalization establishes that media's
-frame envelope, and alignment locates the Segment's words and anchors inside it. That self-contained
-value is a SemanticTake. Speech Track places the Takes in Source order and translates every local
-position by the lengths before it. The resulting SemanticTrack is the program's semantic time.
+Each SemanticTake holds local prepared media and the Script Segment's local word/boundary positions.
+[Timeline authoring](timeline.md) places those Takes: sequentially by default, or with authored
+starts that leave gaps or overlap. The complete Timeline can extend before and after all Takes.
+A wholly authored animation uses the same Timeline with zero Takes and an explicit end.
 
-```text
-Segment A + its local media  → SemanticTake A ┐
-Segment B + its local media  → SemanticTake B ├─ Source order → SemanticTrack
-Segment C + its local media  → SemanticTake C ┘
-```
-
-Speech Track is therefore not placing A-roll on an independently maintained master timeline. The
-ordered Takes create the timeline that Caption, MG, Media, Typography, Audio and Effects project
-through. The official Speech Track uses each complete local media span and joins the next Take at its
-end; it creates no gap or duration-consuming overlap. An edit that trims or retimes a performance
-belongs before its alignment. A visual handoff that does not change the performance media remains an
-ordinary visual composition on the resulting program time.
+Caption, MG, Media, Typography, Audio and Effects share `timeline={program.timeline}`. Word-related
+events retain Selection/Moment bindings; independent events can use authored positions. Source
+overlap provides simultaneous content. Its visible presentation or crossfade belongs to the visual
+component, not assembly. Original audio follows the same placements and remains silent in gaps.
 
 For the usual spoken production, the performance carrying each Segment is the A-roll. In a podcast,
 the participants' turns belong to that shared performance timeline; each visible speaker does not
@@ -92,40 +84,39 @@ assembled work. [Voice and performance](../playbooks/craft/voice-and-performance
 between visible A-roll, covered visible A-roll and audio-only A-roll.
 
 A-roll can be a circular presenter inset or a moving cutout over a demonstration. Its role is
-semantic: it carries the Script. Speech Track assembles its time and original sound; the visual
-component decides how to present its prepared material.
+semantic: it carries the Script. Timeline assembly places its prepared material and semantic evidence; Performance and Sound
+independently decide how its pictures and audio are presented.
 
 ```svml
-<speech:Track id="speech">
-  <speech:Take source={opening-take}/>
-  <speech:Take source={answer-take}/>
-</speech:Track>
-<media-track:Track id="performance" semantic={speech.semantic} canvas={canvas}>
-  <media-track:Performance during="program" frame={layout.full}
-    appearance={look.performance}/>
-</media-track:Track>
+<time:Clock id="clock" frame-rate="30"/>
+<time:Timeline id="speech" clock={clock}>
+  <time:Take source={opening-take}/>
+  <time:Take source={answer-take}/>
+</time:Timeline>
+<sound:Style id="voice-style"/>
+<sound:Track id="voice" timeline={speech.timeline}>
+  <sound:Use style={voice-style}/>
+</sound:Track>
+<performance:Style id="performance-style" frame={layout.full} appearance={look.performance}/>
+  <performance:Track id="performance" timeline={speech.timeline} canvas={canvas}>
+    <performance:Use style={performance-style} during="program"/>
+  </performance:Track>
 ```
 
 The imports, Canvas, Frame, Recipe and prepared SemanticTakes exist in this excerpt. The Media
 Recipe specifies `stack-order`, fitting and frame presentation. Select `performance.visual` and
-`speech.audio` in Film. The material is generated once and remains the same performance.
+`voice.audio` from the Sound Track in Film. The material is generated once and remains the same performance.
 
-The Track's `semantic` supplies the performance and the time context for all its children.
-`Performance` displays that performance's picture; `Item` places an independently supplied image,
-media source or layered composition. Both use `during` to choose their display interval.
-
-`Performance during="program"` shows all the Takes in order under one frame and lifecycle.
-Use `during={story.segment.explanation}` or a Selection to show only the corresponding passage.
-If a Take begins at program second 5, a Window from seconds 7 to 10 shows source seconds 2 to 5;
-the source offset preserves synchronization with `speech.audio`. Media fitting, clipping, decoration,
-`motion` and `Sampling` control presentation. Use an Item with direct `media` for independent
-playback or source trim.
+[Performance](performance.md) owns broad and local presentation Uses. Its Timeline supplies source
+positions; an interval from program seconds 7 to 10 samples source seconds 2 to 5 when that Take
+starts at second 5. Ordinary Styles reuse Media geometry and appearance; project Styles can define
+movement and mixing. Media Items retain independent playback and source trim.
 
 A moving performance viewport and its neighboring diagram may belong in one component because they
 share a layout change. That component consumes prepared material and projected Moments or Windows,
 then draws their shared state. Independent Caption and coverage remain separate when useful.
 Its Surface can expose a Scene, Item or another useful authoring unit. Inside the component,
-`projectSemanticMedia` supplies the intersecting prepared Takes, their program spans and their source
+`projectTimelineMedia` supplies the intersecting prepared Takes, their program spans and their source
 offsets, so changing the layout preserves playback alignment.
 [Component design](component-design.md) explains where to draw these boundaries;
 [drawing a component](component-visuals.md#compose-video-and-graphics-in-one-browser-program) explains
@@ -133,18 +124,18 @@ HTML, CSS and frame-driven code inside one visual contribution.
 
 Semantic structure also supports a wordless passage. It has no speaking A-roll, yet a named empty
 Script Segment receives its actual boundaries from prepared media and remains addressable through
-the assembled SemanticTrack. Semantic identity here means that the work can refer to the passage and
+the assembled Timeline. Semantic identity here means that the work can refer to the passage and
 its boundaries; it does not classify the passage or require spoken words.
 [Media preparation](media.md#empty-segments-use-their-media-boundaries) owns that construction.
 
-Every Take contributes its Segment boundaries to the assembled semantic time. When its prepared
-media has no audio stream, Speech Track emits no audio clip for that Take. A visual consumer skips
-an audio-only Take while preserving its place in semantic time.
+Every Take contributes its placed Segment boundaries to the Timeline. When its prepared
+media has no audio stream, Sound has no audio candidate from that Take. A visual consumer skips
+the missing source picture of an audio-only Take while its time and speech remain available.
 
 ## Coverage has a Window and a separate playback choice
 
 ```svml
-<media-track:Track id="coverage" semantic={speech.semantic} canvas={canvas}>
+<media-track:Track id="coverage" timeline={speech.timeline} canvas={canvas}>
   <media-track:Item image={portrait.image} extent={portrait-extent}
     frame={layout.full} during={story.selection.example} appearance={look.still}/>
   <media-track:Item media={prepared-broll.media}
@@ -184,12 +175,19 @@ the same speech twice. A silent covering image does not mute the performance bel
 
 ## Sound, text and Caption answer different events
 
-An Audio Clip takes normalized audio-bearing media. `gain` is a linear multiplier; fades and trim
+[Sound](sound.md) presents audio already placed on the Timeline, including local silence, gain
+changes and explicit source blends. Audio Track supplies independent sources.
+
+An Audio Item takes normalized audio-bearing media. `gain` is a linear multiplier; fades and trim
 are explicit. Normalizing input media does not automatically balance or duck the complete mix.
+Like Media Track, Audio Track places independent Items and accepts the shared timing forms.
+Its `.audio` output connects to Film. Overlapping Audio Items mix; visual Items compose by draw
+order. An explicit Item `id` gives Studio a recognizable name; unnamed Items display their source
+reference while retaining independent timing and editing identities.
 
 ```svml
-<audio:Track id="effects" semantic={speech.semantic}>
-  <audio:Clip source={reveal-sound.media} at={story.moment.reveal} for="600ms"
+<audio:Track id="effects" timeline={speech.timeline}>
+  <audio:Item source={reveal-sound.media} at={story.moment.reveal} for="600ms"
     playback="once" gain="0.45" fade-in="0f" fade-out="3f"/>
 </audio:Track>
 ```
@@ -201,8 +199,8 @@ valid for events independent of speech even in a speaking video.
 Typography uses exact fonts, its own Style and Point/Area/Path placement. Graph Text and rich inline
 content are alternatives. A rich Span Style replaces that run's typography rather than cascading
 CSS properties. A headline held over several sentences is generally Typography. Caption instead
-reads `story.caption`, applies a Caption Program and joins to `speech.semantic`; Role overrides,
-Selection overrides and authored `||` breaks retain Script as the wording owner.
+joins `story.caption` to `speech.timeline`; timed Uses choose presentation while authored `||`
+breaks retain Script as the content-grouping owner.
 
 [Fonts and text](fonts-and-text.md) covers exact faces, fallbacks, Emoji and Typography placement.
 
@@ -210,8 +208,7 @@ Selection overrides and authored `||` breaks retain Script as the wording owner.
 
 `@qflow/caption-fine` is the usual fine-grained Caption renderer. Its Recipe exposes placement,
 font and size, glyph and box Paint, wrapping, active-word coloring, Cue and token motion, lead/tail
-and handoff. Script supplies display wording, Roles and `||` Cue breaks; `@qflow/caption` applies
-Styles and joins that document to the actual semantic timing. Fine publishes a visible `.schedule`
+and handoff. Script supplies display wording, Roles and `||` Cue breaks; `@qflow/caption` joins that document to the actual semantic timing. Fine publishes a visible `.schedule`
 and a rendered `.track`.
 
 Use those controls for the appearance and rhythm they express. When the design needs a different
@@ -222,8 +219,7 @@ can be chosen directly for a new visual role; making one is ordinary production 
 
 For the selected family's exact attributes and Recipes, use `qflow vocabulary @qflow/caption-fine`
 and its installed README. [Caption craft](../playbooks/craft/captions.md) explains reading rhythm;
-[Caption styling and coverage](caption-program.md) explains Role and Selection overrides, whole
-Segments, word-specific styles and Mute;
+[Caption styling and coverage](caption-presentation.md) explains timed Uses, Role filters, mid-Cue Style changes and hiding;
 [Caption tracking](../playbooks/craft/caption-tracking.md) explains measured moving placement.
 
 ## Persistent MG is more than another timed image
@@ -245,9 +241,9 @@ uses that same separation when designing a new semantic component.
 
 ## Assemble the intended peers
 
-Film's domain assembly receives a Canvas, a ProgramSpace and a Film Recipe. The current `film:Film`
-Surface takes `canvas`, `appearance` and a time source: `semantic` derives the space from the
-performance; `space` selects an authored ProgramSpace. Pure MG can consist entirely of visual
+Film's domain assembly receives a Canvas, a Timeline and a Film Recipe. The current `film:Film`
+Surface takes `canvas`, `appearance` and `timeline={program.timeline}`. Its Timeline supplies the
+complete range and any semantic evidence. Pure MG can consist entirely of visual
 components. [Rendering](rendering.md#compose-an-authored-animation) shows the complete time setup.
 Include each desired visual and audio
 output explicitly. Listing a Track later does not move it to the front: absolute stacking is authored

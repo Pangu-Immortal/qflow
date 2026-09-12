@@ -106,7 +106,8 @@ ordered layers, `startFrame`, `endFrameExclusive` and `stackOrder`. Useful optio
 
 | Field/helper | Purpose |
 | --- | --- |
-| `presentation` | Name the entity's role and choose `standard`, `group` or `point` chrome |
+| `selectionGroup` | Link disjoint displayed intervals of one author entity; selection highlights them together without changing their independent timing |
+| `presentation` | Name the entity's role and choose `standard`, `group`, `point` or `compact` chrome (a single-line primary label) |
 | `textLayer(text)` | Put explicit domain text in the timeline body |
 | `previewLayer(artifactPreview(kind, resource), layout)` | Show a declared image/video/audio Resource with a finite layout; Studio resolves transport |
 | `renderIds` | Relate an entity to its actual rendered elements |
@@ -114,6 +115,7 @@ ordered layers, `startFrame`, `endFrameExclusive` and `stackOrder`. Useful optio
 | `temporal` | Carry the executed Instant/Window lineage and its edit authority |
 | `lane` and Companion `attachments` | Put child entities on a declared additional lane, with its own bindings and Inspector |
 | `childEntities` / `authoredChildFor` | Resolve children from public identity and exact Spec Types rather than source order guesses |
+| `authoredItemTitle` | Prefer an explicit author id, then a source reference from the attributes chosen by the Companion; presentation leaves editing identity unchanged |
 
 Use the program's frame space and half-open intervals. Persistent visibility and its activation are
 different facts: a board item can remain visible until the board ends while its reveal occupies only
@@ -152,12 +154,11 @@ physical package identity, so executable package code cannot impersonate an
 official Companion. The Source closure selects project packages; Studio does not
 scan `node_modules` for plugins or use Runtime Profiles to select Companions.
 
-The same host facet can contribute Film and Script boundary companions. A Film companion declares
-the accepted `timeSources` (author attribute and Type) and its terminal Tracks. Film accepts either
-a SemanticTrack or a declared ProgramSpace. Track Companion context includes `semantic` when the
-time source supplies a semantic timeline; pure animation leaves it undefined. A Script companion owns
-raw source observation and marker adjustment. Studio core only matches and invokes these declarations;
-it does not import either domain package.
+The same host facet can contribute Film, Script and parameter Companions. A Film Companion
+identifies its Timeline and terminal Tracks. The Timeline supplies the program range; semantic
+rows are populated when it carries Script anchors. A Script Companion owns source observation,
+projection of its values into Studio's segment/word/marker rows, and marker adjustment. Studio
+consumes that projection without reading the Script package's Narrative representation.
 
 For a domain item whose Spec is consumed beside a Window or Instant, call
 `temporalLineageFor(context, item.id, "window")` using the actual projection input name. Attach the
@@ -172,8 +173,8 @@ Inspector editing deliberately has two declarations:
 
 - `bindings` names exact author endpoints, including explicit reference paths
   into authored elements or SVS Recipes. A binding is not visible by itself;
-- `inspector` selects writable bindings and gives them a `where`, `how` or
-  `when` domain, an optional package-owned page, a section and one of Studio's
+- `inspector` selects bindings and gives them a `where`, `when` or
+  `how` domain, an optional package-owned page, a section and one of Studio's
   finite controls (`text`, `number`, `boolean`, `select`, `color`, `list` or
   `record`). A domain Recipe may declare a shared canonical-value schema; the
   companion chooses its presentation while Studio derives and validates the
@@ -181,8 +182,11 @@ Inspector editing deliberately has two declarations:
 
 This keeps source traversal, timeline inverses and editor presentation from
 silently becoming one policy. Studio resolves the declarations against the
-current Source closure, publishes only real writable fields, renders all DOM
-and CSS itself, and commits changes through `parameter.adjust`.
+current Source closure. Visible read-only bindings render as text alongside editable fields.
+A projected entity can also supply `inspector` values with an `id`, `label`, `domain`, `section`
+and `value`, such as its resolved interval. These facts need no Source endpoint.
+Only resolved fields with an `edit` endpoint accept `parameter.adjust`. Studio renders all DOM
+and CSS itself; grouping does not grant edit authority.
 
 Fields can declare `number` display scaling, supported suffixes, limits and step; `unit` alone is
 only a label. Select options can carry separate scalar values, labels, descriptions and color/font
@@ -205,3 +209,118 @@ is selected, its field reaches the correct Source or Recipe, and changing it rec
 For semantic handles, verify the exact marker and its other consumers too. Read-only derived timing
 is preferable to an invented inverse. The Companion explains the component; its Producers remain
 responsible for identical video behavior in Studio, seeking and encoded rendering.
+
+Compact chrome uses `display.title` as its complete single-line content: a Cue can put its subtitle
+text there and a Use can put its Style name there. It has no separate thumbnail/body region or
+inline duration. Time remains in the tooltip and Companion-selected Inspector facts. Tone and lane
+height are independent declarations; compact does not recognize Caption or Use names.
+
+Choose lane tones explicitly. The `blue-muted`, `green-muted`, `magenta-muted`
+and `orange-muted` palette entries provide quieter rows within the same color
+family. For example, content and its presentation Uses can share a hue while
+the Uses take the muted tone. Studio does not derive tone from attachment depth
+or the entity name.
+
+### Internal bands and child Tracks
+
+A Track can place independently timed entities in internal `bands`. These strips share its label
+and meet without gaps. Use them for aspects of the same content, such as a bottom strip of
+presentation rules. Keep `attachments` for independently represented child objects with their own
+labels, such as a ranking board's reveals. These declarations affect Studio presentation only.
+
+```ts
+{
+  lane: { heightPx: 60 },
+  bands: [{
+    id: "rules",
+    placement: "after",
+    heightPx: 15,
+    display: "label",
+    bindings: [{ name: "style" }],
+    inspector: [{
+      binding: "style", label: "Style", domain: "how", control: "text",
+      section: { id: "presentation", label: "Presentation" },
+    }],
+  }],
+}
+```
+
+The projection puts `band: "rules"` on the corresponding entity drafts. Other entities remain in
+the main content area. A band can be `before` or `after` that area; declarations retain their order
+within each placement. `display: "label"` fills the strip with entity titles, while `"content"`
+retains the entity's normal chrome and body. An optional `tone` selects another palette entry;
+omission inherits the Track tone. Heights are independent, so a label band can match the 15px
+standard item header.
+
+An entity selects either an internal `band` or a child `lane`. Bands retain their own intervals,
+overlap ordering, selection, Inspector declarations and temporal writeback. A rule spanning three
+content blocks stays one entity; Studio does not split it at content boundaries. Band entities stay
+in the Track's `clips` collection, so ordinary selection and editing use the same identities.
+
+### Parameters owned by referenced objects
+
+A consumer opts a reference into its owner's parameter Companion:
+
+```ts
+bindings: [{ name: "style", companion: true }]
+```
+
+The package that authors the referenced object contributes through
+`createStudioCompanionHostFacet({ parameters: [...] })`:
+
+```ts
+{
+  id: "slide",
+  match: { module: myModule, surface: "slide" },
+  bindings: [{ name: "distance", writable: true, fallback: 0.25 }],
+  inspector: [{
+    binding: "distance", label: "Travel", domain: "where",
+    section: { id: "path", label: "Path" }, control: "number",
+    unit: "%", number: { scale: 100 },
+  }],
+}
+```
+
+Studio resolves the actual reference and matches its Module/Surface. It prefixes this object's
+bindings and fields under the consumer reference; the example becomes `style.distance`.
+Nested `referenced` and `recipe` bindings use the same composition. The Use retains its own
+Window and time gestures. Several Uses referencing one Style edit the same source object.
+A project Style can therefore publish controls without replacing the Performance, Sound or
+Caption Track Companion. No parameter Companion means the reference remains visible with only
+its consumer-declared fields.
+
+A source or Recipe binding may declare a typed `fallback`, or a function of the authored
+properties for a dependent default. For example, Sound's end gain follows its start gain until
+authored explicitly. The field displays the fallback; the first edit inserts the attribute/property
+in its owning SVML/SVS file. Source recompilation remains the owner of current values.
+Only expose omitted defaults whose insertion preserves valid author semantics; geometry inputs
+whose legality depends on a different Frame form can remain tied to the authored form.
+
+Fields without `page` remain visible alongside the selected named page within Where, When or How.
+Read-only and editable fields can share a section. Each package chooses a small useful field set.
+
+### Edit related attributes together
+
+A source binding can expose several scalar attributes as one `record` field:
+
+```ts
+{ name: "layout", writable: true, attributes: ["mode", "columns"],
+  fallback: { mode: "flow" },
+  schema: { kind: "oneOf", variants: [
+    { kind: "object", fields: { mode: { schema: { kind: "literal", value: "flow" } } } },
+    { kind: "object", fields: {
+      mode: { schema: { kind: "literal", value: "grid" } },
+      columns: { schema: { kind: "number", integer: true, minimum: 1 } },
+    } },
+  ] } }
+```
+
+The synthetic binding name is editor vocabulary; it creates no `layout` Source attribute.
+The field's `control: "record"` saves a complete, valid value when editing ends. Object alternatives with a shared, distinct
+literal field provide a mode selector; selecting one prepares that alternative's fields.
+Incomplete values stay in the editor with a completion hint until the required fields are filled.
+Only the declared attributes are replaced together. Omitted members are removed, while unrelated
+attributes, references and child content survive. Existing references within the group remain
+read-only. Domain validation still owns valid author values; existing transactions reject an
+invalid edit without leaving invalid Source behind. Source grouping is available on direct and
+referenced element bindings and stays data-only across the editor boundary.

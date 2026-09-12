@@ -132,8 +132,8 @@ handles allow it, a choice lists the other anchors at the same frame; horizontal
 cannot distinguish them. That explicit choice uses the same Script adjustment operation as dragging.
 
 Segment overlap or gaps can change temporal order without changing Script order. Stop construction
-must not assume contiguous Segments. The current SemanticTrack implementation still concatenates
-Take durations; introducing explicit Take placement is separate work.
+must not assume contiguous Segments. Timeline places each prepared Take independently; semantic
+stops use those placed anchor frames, including coincident anchors from overlapping Takes.
 
 ## Selection, projection, and consumption
 

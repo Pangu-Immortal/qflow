@@ -173,6 +173,8 @@ export type FineCaptionParameters = {
 };
 
 export type FineCaptionScheduledCue = {
+  readonly cueId: string;
+  readonly visibility: readonly { readonly startFrame: number; readonly endFrameExclusive: number }[];
   readonly id: string;
   readonly styleId: string;
   readonly semanticStartFrame: number;

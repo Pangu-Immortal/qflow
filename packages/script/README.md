@@ -53,8 +53,8 @@ The Surface exports one full Narrative plus narrow, immutable views:
 - `script.moment.<id>` is a reusable explicit Moment.
 
 `@qflow/caption` projects `script.selection.<id>` or a Role onto complete Caption Alignment Units;
-it then joins those units to a SemanticTrack for frame timing. Seedance consumes dialogue `Text`,
-Estimate and TTS consume speech `Text`, and Speech Track consumes the Segment excerpt. None imports
+it then joins those units to a Timeline for frame timing. Seedance consumes dialogue `Text`,
+Estimate and TTS consume speech `Text`, and semantic preparation consumes the Segment excerpt. None imports
 Script's parser AST. Another authoring package may produce the same ordinary Text, Narrative and
 CaptionDocument contracts.
 
@@ -157,3 +157,16 @@ distinct boundaries writable.
 Writeback reparses the result to retain the intended identities and unchanged narrative/caption
 content. These checks concern authored order, not frame order. A consumer's temporal projection
 determines whether the resulting Instant or Window is usable.
+
+## Complete authored content and narrow exports
+
+The root `story` Record contains the complete Narrative: speech structure, semantic references and
+its CaptionDocument. `story.caption`, `story.selection.<id>`, Segment excerpts and dialogue/speech
+Text outputs remain explicit narrow exports derived from that content. Caption rendering can read
+the document and Timeline. Timed Uses change its presentation; their semantic references are
+projected through the same Timeline as other components. Word attributes remain in the document
+for families that give those words structural visual roles.
+
+For content lookup, use the Narrative package's `narrativeTokensForSelection` or
+`narrativeSelectionTokenRange`. These query authored order; Timeline separately locates the same
+anchors in the assembled video. No timestamps or display Styles enter the Script value.

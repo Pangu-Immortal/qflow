@@ -1,7 +1,8 @@
+import { sealTimeline } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
-import { semanticTrackFixture } from "../../../test/semantic-track-fixture.js";
+import { timelineFixture } from "../../../test/timeline-fixture.js";
 import { projectMomentWindow, projectProgramWindow, projectSelectionWindow } from "../../../test/temporal-fixture.js";
 import type { TemporalWindowProjection } from "../../../test/temporal-fixture.js";
 
@@ -32,7 +33,7 @@ import { narrativeManifest } from "@qflow/narrative";
 import { compileAudioProgramPlan } from "@qflow/media-pipeline";
 import { programSpaceDependency, programSpaceManifest, programSpaceTypes, sealProgramSpace } from "@qflow/program-space";
 import type { ModuleManifest } from "@qflow/protocol";
-import { projectSemanticProgramSpace, semanticTrackDependency, semanticTrackManifest, semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
+import { projectTimelineSpace, timelineDependency, timelineManifest, timelineProducers, timelineTypes } from "@qflow/timeline";
 import { temporalProducers } from "@qflow/temporal";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { speechManifest } from "@qflow/speech";
@@ -43,11 +44,11 @@ import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup
 import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
 import { visualIrManifest } from "@qflow/visual-ir";
 
-const space = sealProgramSpace({ id: "test-space", durationSec: 10,
+const space = sealTimeline({ items: [], id: "test-space", durationSec: 10,
   frameRate: { numerator: 30, denominator: 1 },
 });
 const header = sealAudioTrackHeader({ id: "sound" });
-const semantic = semanticTrackFixture(space, { narrativeId: "test-narrative", anchors: [
+const semantic = timelineFixture(space, { narrativeId: "test-narrative", anchors: [
   { identity: "a", frame: 30 }, { identity: "b", frame: 60 },
   { identity: "c", frame: 90 }, { identity: "d", frame: 120 },
 ] });
@@ -87,32 +88,32 @@ function spec(overrides: Partial<TestAudioClipSpec> = {}): TestAudioClipSpec {
 }
 
 function appendProgramAudioItem(
-  set: AudioTrackSet, trackHeader: typeof header, semanticTrack: typeof semantic,
+  set: AudioTrackSet, trackHeader: typeof header, timeline: typeof semantic,
   source: SynchronizedMedia, authored: TestAudioClipSpec,
 ): AudioTrackSet {
   const { projection, ...clip } = authored;
-  return appendProjectedAudioItem(set, trackHeader, projectSemanticProgramSpace(semanticTrack), source, clip, projectProgramWindow({
-    itemId: clip.id, semantic: semanticTrack, projection,
+  return appendProjectedAudioItem(set, trackHeader, timeline, source, clip, projectProgramWindow({
+    itemId: clip.id, semantic: timeline, projection,
   }));
 }
 
 function appendSelectionAudioItem(
-  set: AudioTrackSet, trackHeader: typeof header, semanticTrack: typeof semantic,
+  set: AudioTrackSet, trackHeader: typeof header, timeline: typeof semantic,
   source: SynchronizedMedia, selection: NarrativeSelectionRef, authored: TestAudioClipSpec,
 ): AudioTrackSet {
   const { projection, ...clip } = authored;
-  return appendProjectedAudioItem(set, trackHeader, projectSemanticProgramSpace(semanticTrack), source, clip, projectSelectionWindow({
-    itemId: clip.id, semantic: semanticTrack, selection, projection,
+  return appendProjectedAudioItem(set, trackHeader, timeline, source, clip, projectSelectionWindow({
+    itemId: clip.id, semantic: timeline, selection, projection,
   }));
 }
 
 function appendMomentAudioItem(
-  set: AudioTrackSet, trackHeader: typeof header, semanticTrack: typeof semantic,
+  set: AudioTrackSet, trackHeader: typeof header, timeline: typeof semantic,
   source: SynchronizedMedia, moment: NarrativeMomentRef, authored: TestAudioClipSpec,
 ): AudioTrackSet {
   const { projection, ...clip } = authored;
-  return appendProjectedAudioItem(set, trackHeader, projectSemanticProgramSpace(semanticTrack), source, clip, projectMomentWindow({
-    itemId: clip.id, semantic: semanticTrack, moment, projection,
+  return appendProjectedAudioItem(set, trackHeader, timeline, source, clip, projectMomentWindow({
+    itemId: clip.id, semantic: timeline, moment, projection,
   }));
 }
 
@@ -248,9 +249,9 @@ test("dynamic Fragment keeps every material and temporal dependency as an explic
     { mediaName: "impact", specName: "impact-spec", windowName: "impact-window" },
   ]);
   assert.deepEqual(fragment.inputs.map((input) => input.name), [
-    "header", "impact", "impact-spec", "impact-window", "music", "music-spec", "music-window", "space", "voice", "voice-spec", "voice-window",
+    "header", "impact", "impact-spec", "impact-window", "music", "music-spec", "music-window", "timeline", "voice", "voice-spec", "voice-window",
   ]);
-  assert.equal(fragment.exports[1]?.name, "track");
+  assert.ok(fragment.exports.some((output) => output.name === "audio" && output.type.name === compositionTypes.audioTrack.name));
 });
 
 test("the self-described Audio Surface parses into the same finite Producer graph", async () => {
@@ -258,13 +259,13 @@ test("the self-described Audio Surface parses into the same finite Producer grap
   const fixtureSurfaceDigest = fixtureResource("example.audio-inputs/surface@1");
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
-    outputs: [mediaTypes.synchronized, semanticTrackTypes.track],
+    outputs: [mediaTypes.synchronized, timelineTypes.track],
   } as const;
   const fixtureManifest: ModuleManifest = {
     format: "qflow.module@1",
     name: fixtureModule.name,
     version: fixtureModule.version,
-    dependencies: [mediaDependency, semanticTrackDependency],
+    dependencies: [mediaDependency, timelineDependency],
     types: [],
     capabilities: [],
     producers: [],
@@ -278,7 +279,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
     svsManifest,
     spatialManifest,
     speechEvidenceManifest,
-    semanticTrackManifest,
+    timelineManifest,
     temporalManifest,
     visualIrManifest,
     compositionManifest,
@@ -289,7 +290,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
   registry.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
       { id: "source", type: mediaTypes.synchronized, value: { kind: "inline", value: media("surface", 48_000) }, range: element.range },
-      { id: "semantic", type: semanticTrackTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
     ],
     components: [],
     fragments: [],
@@ -315,8 +316,8 @@ test("the self-described Audio Surface parses into the same finite Producer grap
         <import as="fixture" from="example.audio-inputs@1"/>
         <import as="audio" from="@qflow/audio-track@1"/>
         <fixture:Inputs/>
-        <audio:Track id="sound" semantic={semantic}>
-          <audio:Clip source={source} during="program" playback="loop-end" gain="0.5" fade-in="2f" fade-out="3f"/>
+        <audio:Track id="sound" timeline={semantic}>
+          <audio:Item source={source} during="program" playback="loop-end" gain="0.5" fade-in="2f" fade-out="3f"/>
         </audio:Track>
       </svml>`,
     },
@@ -325,7 +326,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
     admitRecord: createRecordAdmitter(validators),
     resolveSource() { throw new Error("Audio fixture has no source imports."); },
   });
-  const trackExport = resolveCompiledSourceExport(compiled, "sound.track", compositionTypes.audioTrack);
+  const trackExport = resolveCompiledSourceExport(compiled, "sound.audio", compositionTypes.audioTrack);
   assert.equal(trackExport.ref.kind, "logical-output");
   const build = start(compiled.program, compiled.graph, sealBuildRequest({
     targets: [{ output: trackExport.ref.kind === "logical-output" ? trackExport.ref.id : "" }],
@@ -337,7 +338,6 @@ test("the self-described Audio Surface parses into the same finite Producer grap
     temporalProducers.projectProgramInstant.name,
     temporalProducers.projectProgramInstant.name,
     temporalProducers.composeWindow.name,
-    semanticTrackProducers.projectProgramSpace.name,
-    audioTrackProducers.render.name,
+        audioTrackProducers.render.name,
   ].sort());
 });

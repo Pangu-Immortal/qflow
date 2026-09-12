@@ -73,13 +73,17 @@ transient processing require the selected Runtime.
 ## Opening and editing a session
 
 The selected targets must reach one Film and its resolved time source. Studio rejects several
-distinct Films in one view; use separate Runs/sessions for those. A SemanticTrack supplies the
-Script lane and performance timing, including wordless Segments with media spans. A declared
-ProgramSpace supplies authored animation time without a Script lane. Both show their component
-tracks and use the same rendering and parameter-editing machinery. When the snapshot contains
-a semantic timeline, its lane and label stay pinned directly below the time ruler while
-component tracks scroll. Its presence follows the resolved semantic timeline, including
-wordless content, rather than a component name or the presence of spoken words.
+distinct Films in one view; use separate Runs/sessions for those. A Timeline supplies the
+placed material and semantic timing, including wordless Segments. The ruler always shows program
+time. When placed Segments are present, its left Timeline header spans the time ticks and the
+Segment, Word and Selection/Moment bands. Empty Word or marker bands are omitted based on the
+whole work, not the visible window or playhead. With no Segments, only the ordinary time ruler remains.
+The complete ruler area stays pinned while component tracks scroll.
+
+Semantic objects retain declaration-order drawing within each band. Their fine borders distinguish
+adjacent and overlapping intervals without inventing time gaps. Selection raises an object above
+its peers; playback highlighting changes color without changing that order. Right-click an overlap
+to choose a covered object. These are editor presentation rules, independent of Film paint order.
 
 Open the URL printed by Vite. Studio requests port 5179 by default, accepts `--port`,
 and Vite can choose another available port when it is occupied. Reuse that process
@@ -90,10 +94,13 @@ package code or imports that introduce new packages. Browser refresh does not re
 server-side package modules.
 
 The Source pane can edit the selected `.svml`, `.svs` or `.svrun` file. The Inspector
-shows project facts when no entity is selected and only declared writable fields for
+shows project facts when no entity is selected and declared facts and author fields for
 the selected entity. A reference can resolve to a shared Frame or Recipe, so one edit
-may affect several consumers. Structured fields use Apply/Reset for their local draft.
+may affect several consumers. Structured fields save together when editing ends and the value is complete; missing required values stay in the editor with a completion hint.
 Check save status; source conflicts reject stale edits rather than overwrite newer files.
+
+The Timeline owns the editor's complete range; displayed objects do not extend it. Take placement
+and complete extent are reference information in Studio.
 
 Timeline gestures use explicit temporal authority. Moving a shared Selection or
 Moment edits Script and moves its consumers after recompilation. A parameter-based
@@ -137,12 +144,11 @@ at runtime. Ship the Companion's compiled JavaScript with its component package.
 The companion owns what its Track means: matching, required same-Surface values,
 entities, lane range, finite chrome, title and ordered text/material layers,
 source bindings, Inspector fields and executed temporal lineage. Inspector fields
-select real writable bindings and organize them under the Studio-owned
-`Where / How / When` domains, optional companion-owned pages and sections. A
+select real bindings or package-owned facts and organize them under the Studio-owned
+`Where / When / How` domains, optional companion-owned pages and sections. A
 source binding is never shown merely because Studio can reach it. Material layers carry a
-Resource id or Surface identity, never a Studio HTTP URL. Studio always owns
-time formatting and transport resolution, so chrome and material cannot hide a
-title or its time.
+Resource id or Surface identity, never a Studio HTTP URL. Studio owns time formatting and transport resolution. Compact chrome shows one primary label;
+computed time remains available in its tooltip rather than competing with that label.
 Studio owns session-wide behavior and chrome: Companion assembly, single-row overlap display,
 fallback defaults, selection treatment, playback, zoom,
 scrolling, the finite Inspector control set and source mutation transport. A
@@ -184,3 +190,11 @@ semantics.
 
 Read [`@qflow/studio-adapter`](../studio-adapter/README.md) for the Companion ABI,
 project activation example, value projection and Inspector declarations.
+
+## Composition audio preview
+
+The preview consumes generic AudioClips: source sampling, fixed gain, program-sample gain envelopes,
+audibility regions and target-relative fades. Web Audio gain nodes schedule the independent factors
+on the same clock, including silence and amplification above unity. Visual video elements stay muted;
+the Film's selected AudioTracks own composition sound. Seeking is silent. This path is independent of
+which component emitted a clip.

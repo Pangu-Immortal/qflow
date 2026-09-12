@@ -153,6 +153,12 @@ importers:
       '@qflow/narrative':
         specifier: workspace:*
         version: link:packages/narrative
+      '@qflow/performance':
+        specifier: workspace:*
+        version: link:packages/performance
+      '@qflow/performance-studio':
+        specifier: workspace:*
+        version: link:packages/performance-studio
       '@qflow/program-space':
         specifier: workspace:*
         version: link:packages/program-space
@@ -234,9 +240,12 @@ importers:
       '@qflow/seedream':
         specifier: workspace:*
         version: link:packages/seedream
-      '@qflow/semantic-track':
+      '@qflow/sound':
         specifier: workspace:*
-        version: link:packages/semantic-track
+        version: link:packages/sound
+      '@qflow/sound-studio':
+        specifier: workspace:*
+        version: link:packages/sound-studio
       '@qflow/spatial':
         specifier: workspace:*
         version: link:packages/spatial
@@ -249,12 +258,6 @@ importers:
       '@qflow/speech-evidence':
         specifier: workspace:*
         version: link:packages/speech-evidence
-      '@qflow/speech-track':
-        specifier: workspace:*
-        version: link:packages/speech-track
-      '@qflow/speech-track-studio':
-        specifier: workspace:*
-        version: link:packages/speech-track-studio
       '@qflow/store-sqlite':
         specifier: workspace:*
         version: link:packages/store-sqlite
@@ -273,6 +276,12 @@ importers:
       '@qflow/text':
         specifier: workspace:*
         version: link:packages/text
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:packages/timeline
+      '@qflow/timeline-author':
+        specifier: workspace:*
+        version: link:packages/timeline-author
       '@qflow/typography-track':
         specifier: workspace:*
         version: link:packages/typography-track
@@ -325,7 +334,31 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  examples/semantic-composition/packages/performance-styles:
+    devDependencies:
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../../../..
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   examples/semantic-composition/packages/responsive-explainer:
+    devDependencies:
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../../../..
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  examples/semantic-composition/packages/sound-styles:
     devDependencies:
       '@qflow/qflow':
         specifier: workspace:*
@@ -369,15 +402,15 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/temporal':
         specifier: workspace:*
         version: link:../temporal
       '@qflow/temporal-markup':
         specifier: workspace:*
         version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
     devDependencies:
       '@qflow/artifact':
         specifier: workspace:*
@@ -523,9 +556,12 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
+      '@qflow/temporal':
         specifier: workspace:*
-        version: link:../semantic-track
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
     devDependencies:
       '@qflow/program-space':
         specifier: workspace:*
@@ -572,15 +608,21 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
       '@qflow/svs':
         specifier: workspace:*
         version: link:../svs
+      '@qflow/temporal':
+        specifier: workspace:*
+        version: link:../temporal
+      '@qflow/temporal-markup':
+        specifier: workspace:*
+        version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
     devDependencies:
       '@qflow/script':
         specifier: workspace:*
@@ -588,6 +630,9 @@ importers:
 
   packages/caption-fine-studio:
     dependencies:
+      '@qflow/caption':
+        specifier: workspace:*
+        version: link:../caption
       '@qflow/caption-fine':
         specifier: workspace:*
         version: link:../caption-fine
@@ -603,6 +648,9 @@ importers:
       '@qflow/studio-adapter':
         specifier: workspace:*
         version: link:../studio-adapter
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
 
   packages/cli:
     dependencies:
@@ -694,9 +742,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -712,6 +757,9 @@ importers:
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
     devDependencies:
       '@qflow/hyperframes':
         specifier: workspace:*
@@ -896,9 +944,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -914,6 +959,9 @@ importers:
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
     devDependencies:
       '@qflow/core':
         specifier: workspace:*
@@ -1017,9 +1065,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -1029,6 +1074,9 @@ importers:
       '@qflow/temporal-markup':
         specifier: workspace:*
         version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
     devDependencies:
       '@qflow/core':
         specifier: workspace:*
@@ -1063,12 +1111,12 @@ importers:
       '@qflow/program-space':
         specifier: workspace:*
         version: link:../program-space
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/studio-adapter':
         specifier: workspace:*
         version: link:../studio-adapter
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
 
   packages/fonts-open:
     dependencies:
@@ -1655,9 +1703,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -1670,6 +1715,9 @@ importers:
       '@qflow/temporal-markup':
         specifier: workspace:*
         version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
 
   packages/markup:
     dependencies:
@@ -1787,9 +1835,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -1802,6 +1847,9 @@ importers:
       '@qflow/temporal-markup':
         specifier: workspace:*
         version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
 
   packages/media-track-studio:
     dependencies:
@@ -1925,6 +1973,75 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+
+  packages/performance:
+    dependencies:
+      '@qflow/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../component-kit
+      '@qflow/composition':
+        specifier: workspace:*
+        version: link:../composition
+      '@qflow/elaborator':
+        specifier: workspace:*
+        version: link:../elaborator
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/media':
+        specifier: workspace:*
+        version: link:../media
+      '@qflow/media-track':
+        specifier: workspace:*
+        version: link:../media-track
+      '@qflow/narrative':
+        specifier: workspace:*
+        version: link:../narrative
+      '@qflow/program-space':
+        specifier: workspace:*
+        version: link:../program-space
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/spatial':
+        specifier: workspace:*
+        version: link:../spatial
+      '@qflow/svs':
+        specifier: workspace:*
+        version: link:../svs
+      '@qflow/temporal':
+        specifier: workspace:*
+        version: link:../temporal
+      '@qflow/temporal-markup':
+        specifier: workspace:*
+        version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
+
+  packages/performance-studio:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:*
+        version: link:../composition
+      '@qflow/media-track-studio':
+        specifier: workspace:*
+        version: link:../media-track-studio
+      '@qflow/performance':
+        specifier: workspace:*
+        version: link:../performance
+      '@qflow/studio-adapter':
+        specifier: workspace:*
+        version: link:../studio-adapter
+      '@qflow/temporal':
+        specifier: workspace:*
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
 
   packages/program-space:
     dependencies:
@@ -2319,9 +2436,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -2337,6 +2451,9 @@ importers:
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
     devDependencies:
       '@qflow/core':
         specifier: workspace:*
@@ -2401,12 +2518,12 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/temporal-markup':
         specifier: workspace:*
         version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
     devDependencies:
       '@qflow/core':
         specifier: workspace:*
@@ -2602,9 +2719,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -2614,6 +2728,9 @@ importers:
       '@qflow/temporal-markup':
         specifier: workspace:*
         version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
     devDependencies:
       '@qflow/artifact':
         specifier: workspace:*
@@ -2670,6 +2787,12 @@ importers:
 
   packages/script-studio:
     dependencies:
+      '@qflow/narrative':
+        specifier: workspace:*
+        version: link:../narrative
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
       '@qflow/script':
         specifier: workspace:*
         version: link:../script
@@ -2752,7 +2875,7 @@ importers:
         specifier: workspace:*
         version: link:../speech
 
-  packages/semantic-track:
+  packages/sound:
     dependencies:
       '@qflow/component-kit':
         specifier: workspace:*
@@ -2760,9 +2883,12 @@ importers:
       '@qflow/composition':
         specifier: workspace:*
         version: link:../composition
-      '@qflow/media':
+      '@qflow/elaborator':
         specifier: workspace:*
-        version: link:../media
+        version: link:../elaborator
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
       '@qflow/narrative':
         specifier: workspace:*
         version: link:../narrative
@@ -2772,9 +2898,33 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/speech':
+      '@qflow/temporal':
         specifier: workspace:*
-        version: link:../speech
+        version: link:../temporal
+      '@qflow/temporal-markup':
+        specifier: workspace:*
+        version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
+
+  packages/sound-studio:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:*
+        version: link:../composition
+      '@qflow/sound':
+        specifier: workspace:*
+        version: link:../sound
+      '@qflow/studio-adapter':
+        specifier: workspace:*
+        version: link:../studio-adapter
+      '@qflow/temporal':
+        specifier: workspace:*
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
 
   packages/source:
     dependencies:
@@ -2856,55 +3006,6 @@ importers:
         specifier: workspace:*
         version: link:../protocol
 
-  packages/speech-track:
-    dependencies:
-      '@qflow/component-kit':
-        specifier: workspace:*
-        version: link:../component-kit
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
-      '@qflow/elaborator':
-        specifier: workspace:*
-        version: link:../elaborator
-      '@qflow/markup':
-        specifier: workspace:*
-        version: link:../markup
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
-      '@qflow/speech':
-        specifier: workspace:*
-        version: link:../speech
-    devDependencies:
-      '@qflow/core':
-        specifier: workspace:*
-        version: link:../core
-      '@qflow/script':
-        specifier: workspace:*
-        version: link:../script
-      '@qflow/text':
-        specifier: workspace:*
-        version: link:../text
-      '@qflow/validation':
-        specifier: workspace:*
-        version: link:../validation
-
-  packages/speech-track-studio:
-    dependencies:
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
-      '@qflow/speech-track':
-        specifier: workspace:*
-        version: link:../speech-track
-      '@qflow/studio-adapter':
-        specifier: workspace:*
-        version: link:../studio-adapter
-
   packages/store-sqlite:
     dependencies:
       '@qflow/core':
@@ -2967,12 +3068,12 @@ importers:
       '@qflow/media-track-studio':
         specifier: workspace:*
         version: link:../media-track-studio
-      '@qflow/narrative':
-        specifier: workspace:*
-        version: link:../narrative
       '@qflow/package-loader-node':
         specifier: workspace:*
         version: link:../package-loader-node
+      '@qflow/performance-studio':
+        specifier: workspace:*
+        version: link:../performance-studio
       '@qflow/program-space':
         specifier: workspace:*
         version: link:../program-space
@@ -2997,15 +3098,12 @@ importers:
       '@qflow/script-studio':
         specifier: workspace:*
         version: link:../script-studio
-      '@qflow/semantic-track':
+      '@qflow/sound-studio':
         specifier: workspace:*
-        version: link:../semantic-track
+        version: link:../sound-studio
       '@qflow/speech':
         specifier: workspace:*
         version: link:../speech
-      '@qflow/speech-track-studio':
-        specifier: workspace:*
-        version: link:../speech-track-studio
       '@qflow/studio-adapter':
         specifier: workspace:*
         version: link:../studio-adapter
@@ -3015,6 +3113,9 @@ importers:
       '@qflow/temporal':
         specifier: workspace:*
         version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
       '@qflow/typography-track-studio':
         specifier: workspace:*
         version: link:../typography-track-studio
@@ -3073,9 +3174,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
+      '@qflow/timeline':
         specifier: workspace:*
-        version: link:../semantic-track
+        version: link:../timeline
 
   packages/temporal-markup:
     dependencies:
@@ -3091,12 +3192,12 @@ importers:
       '@qflow/program-space':
         specifier: workspace:*
         version: link:../program-space
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/temporal':
         specifier: workspace:*
         version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
 
   packages/text:
     dependencies:
@@ -3118,6 +3219,73 @@ importers:
       '@qflow/svs':
         specifier: workspace:*
         version: link:../svs
+
+  packages/timeline:
+    dependencies:
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../component-kit
+      '@qflow/composition':
+        specifier: workspace:*
+        version: link:../composition
+      '@qflow/media':
+        specifier: workspace:*
+        version: link:../media
+      '@qflow/narrative':
+        specifier: workspace:*
+        version: link:../narrative
+      '@qflow/program-space':
+        specifier: workspace:*
+        version: link:../program-space
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/speech':
+        specifier: workspace:*
+        version: link:../speech
+
+  packages/timeline-author:
+    dependencies:
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../component-kit
+      '@qflow/elaborator':
+        specifier: workspace:*
+        version: link:../elaborator
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/program-space':
+        specifier: workspace:*
+        version: link:../program-space
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/speech':
+        specifier: workspace:*
+        version: link:../speech
+      '@qflow/temporal':
+        specifier: workspace:*
+        version: link:../temporal
+      '@qflow/temporal-markup':
+        specifier: workspace:*
+        version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
+    devDependencies:
+      '@qflow/core':
+        specifier: workspace:*
+        version: link:../core
+      '@qflow/script':
+        specifier: workspace:*
+        version: link:../script
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
+      '@qflow/validation':
+        specifier: workspace:*
+        version: link:../validation
 
   packages/transport-aws-lambda:
     dependencies:
@@ -3154,9 +3322,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/semantic-track':
-        specifier: workspace:*
-        version: link:../semantic-track
       '@qflow/spatial':
         specifier: workspace:*
         version: link:../spatial
@@ -3172,6 +3337,9 @@ importers:
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
       '@qflow/visual-ir':
         specifier: workspace:*
         version: link:../visual-ir

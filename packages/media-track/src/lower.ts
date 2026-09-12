@@ -1,10 +1,10 @@
+import type { Timeline } from "@qflow/timeline";
 import type {
   VisualAnimation,
   VisualElement,
   VisualStyleDeclaration,
   VisualTimedSampling,
 } from "@qflow/composition";
-import type { ProgramSpace } from "@qflow/program-space";
 import { fitContent } from "@qflow/spatial";
 import type { SpatialFrame, SpatialPath } from "@qflow/spatial";
 
@@ -133,7 +133,7 @@ function sampleElements(
   item: MediaItemProgram,
   parent: string,
   order: { value: number },
-  space: ProgramSpace,
+  timeline: Timeline,
   samplingOverrides: Readonly<Record<string, VisualTimedSampling>>,
   samplingAnimationOverrides: Readonly<Record<string, VisualAnimation | null>>,
 ): VisualElement[] {
@@ -209,7 +209,7 @@ function sampleElements(
     }];
   }
   const sampling = samplingOverrides[layer.id] ?? layer.sampling ?? resolveVisualSampling({
-      space,
+      timeline,
       sourceFrameRate: sourceTiming.frameRate,
       sourceFrameCount: sourceTiming.frameCount,
       targetFrameCount: durationFrames,
@@ -244,12 +244,12 @@ function layerElements(
   item: MediaItemProgram,
   parent: string,
   order: { value: number },
-  space: ProgramSpace,
+  timeline: Timeline,
   samplingOverrides: Readonly<Record<string, VisualTimedSampling>>,
   samplingAnimationOverrides: Readonly<Record<string, VisualAnimation | null>>,
 ): VisualElement[] {
   if (layer.kind === "sample") {
-    return sampleElements(layer, item, parent, order, space, samplingOverrides, samplingAnimationOverrides);
+    return sampleElements(layer, item, parent, order, timeline, samplingOverrides, samplingAnimationOverrides);
   }
   return [{
     id: layer.id,
@@ -271,7 +271,7 @@ function layerElements(
 /** Lower one independent Item through the fixed wrapper stack from the Media spec. */
 export function lowerMediaItemElements(
   item: MediaItemProgram,
-  space: ProgramSpace,
+  timeline: Timeline,
   options: {
     readonly includeHandoffWrapper?: boolean;
     readonly handoffAnimation?: VisualAnimation;
@@ -326,7 +326,7 @@ export function lowerMediaItemElements(
       item,
       frame,
       order,
-      space,
+      timeline,
       options.samplingOverrides ?? {},
       options.samplingAnimationOverrides ?? {},
     ));

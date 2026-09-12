@@ -1,6 +1,6 @@
 import type { Clip, StudioFailure, StudioInspectorDomain, StudioSnapshot } from "../shared.js";
 import type { CanonicalValue, ValueSchema } from "@qflow/protocol";
-import { parameterAuthorValue, parameterNumber, parameterOption, validateParameterValue } from "../parameter-values.js";
+import { parameterAuthorValue, parameterControlForSchema, parameterNumber, parameterOption, parameterRecordSchema, parameterRecordVariants, validateParameterValue } from "../parameter-values.js";
 import { createCodePane } from "./code.js";
 import { icon } from "./icons.js";
 import { createLibraryPane } from "./library.js";
@@ -154,7 +154,7 @@ const domainPresentation: Readonly<Record<StudioInspectorDomain, { readonly labe
   how: { label: "How", icon: "how" },
   when: { label: "When", icon: "when" },
 };
-const domainOrder: readonly StudioInspectorDomain[] = ["where", "how", "when"];
+const domainOrder: readonly StudioInspectorDomain[] = ["where", "when", "how"];
 const inspectorDomainByEntity = new Map<string, StudioInspectorDomain>();
 const inspectorPageByEntity = new Map<string, string>();
 
@@ -230,8 +230,8 @@ document.addEventListener("keydown", (event) => {
 }, true);
 
 function selectControl(
-  entityId: string,
   parameter: Clip["inspector"][number],
+  change: (value: CanonicalValue) => void,
 ): HTMLElement {
   const control = document.createElement("div");
   control.className = "parameter-select parameter-control";
@@ -286,7 +286,7 @@ function selectControl(
       }
       close(false);
       trigger.focus();
-      commitControl(entityId, parameter, option.value);
+      change(option.value);
     });
     return item;
   });
@@ -437,7 +437,8 @@ function fieldLabel(name: string): string {
 
 function blankValue(schema: ValueSchema): CanonicalValue {
   if (schema.kind === "string") return "";
-  if (schema.kind === "number" || schema.kind === "null" || schema.kind === "literal" || schema.kind === "oneOf") return null;
+  if (schema.kind === "literal") return schema.value;
+  if (schema.kind === "number" || schema.kind === "null" || schema.kind === "oneOf") return null;
   if (schema.kind === "boolean") return false;
   if (schema.kind === "array") return [];
   if (schema.kind === "object") return Object.fromEntries(Object.entries(schema.fields)
@@ -452,31 +453,12 @@ function scalarDraftControl(
   held: CanonicalValue | undefined,
   change: (value: CanonicalValue) => void,
 ): HTMLElement {
-  if (schema.kind === "string" && schema.format === "color") {
-    return colorValueControl(label, typeof held === "string" ? held : "", change, true);
-  }
-  const input = document.createElement("input");
-  input.className = "parameter-value parameter-structured-value";
-  input.setAttribute("aria-label", label);
-  input.spellcheck = false;
-  if (schema.kind === "boolean") {
-    input.type = "checkbox";
-    input.checked = held === true;
-    input.addEventListener("change", () => change(input.checked));
-    return input;
-  }
-  input.type = "text";
-  if (schema.kind === "number") input.inputMode = "decimal";
-  input.value = held === undefined || held === null ? "" : textValue(held);
-  input.addEventListener("input", () => {
-    if (schema.kind === "number") {
-      const number = Number(input.value);
-      change(input.value.trim().length === 0 || !Number.isFinite(number) ? null : number);
-    } else {
-      change(input.value);
-    }
-  });
-  return input;
+  return parameterControl("", {
+    id: label, label, domain: "how", section: { id: "record", label: "" },
+    control: parameterControlForSchema(schema) ?? "text",
+    ...(schema.kind === "string" && schema.enum !== undefined ? { options: schema.enum } : {}),
+    schema, value: held ?? null,
+  }, change);
 }
 
 function recordDraftControl(
@@ -490,30 +472,34 @@ function recordDraftControl(
   const fields = document.createElement("div");
   fields.className = "parameter-record-fields";
   for (const [name, field] of Object.entries(schema.fields)) {
-    const row = document.createElement("label");
-    row.className = "parameter-record-field";
-    const copy = document.createElement("span");
-    copy.textContent = fieldLabel(name);
-    row.append(copy, scalarDraftControl(fieldLabel(name), field.schema, record[name], (next) => {
+    if (field.schema.kind === "literal") continue;
+    fields.append(scalarDraftControl(fieldLabel(name), field.schema, record[name], (next) => {
       record = { ...record, [name]: next };
       change(record);
     }));
-    fields.append(row);
   }
   return fields;
 }
 
-function structuredControl(entityId: string, parameter: Clip["inspector"][number]): HTMLElement {
-  const schema = parameter.schema;
+function structuredControl(entityId: string, parameter: Clip["inspector"][number], change: (value: CanonicalValue) => void): HTMLElement {
+  const declaredSchema = parameter.schema;
   const shell = document.createElement("div");
   shell.className = "parameter-structured";
-  if (schema === undefined || (schema.kind !== "array" && schema.kind !== "object")) return shell;
+  if (declaredSchema === undefined || (declaredSchema.kind !== "array" && declaredSchema.kind !== "object" && !parameterRecordVariants(declaredSchema).length)) return shell;
   let draft = structuredClone(parameter.value);
-  let refreshDecisions = (): void => {};
+  const notice = document.createElement("div");
+  notice.className = "parameter-structured-notice";
+  notice.setAttribute("role", "status");
+  const save = (): void => {
+    const changed = !sameValue(draft, parameter.value);
+    notice.hidden = !changed || valid();
+    notice.textContent = "Complete the required fields with valid values to save.";
+    if (changed && valid()) change(draft);
+  };
 
   const valid = (): boolean => {
     try {
-      validateParameterValue(draft, schema, parameter.label);
+      validateParameterValue(draft, declaredSchema, parameter.label);
       return true;
     } catch {
       return false;
@@ -522,6 +508,21 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
 
   const render = (): void => {
     shell.replaceChildren();
+    const variants = parameterRecordVariants(declaredSchema);
+    const schema = declaredSchema.kind === "array" ? declaredSchema : parameterRecordSchema(declaredSchema, draft);
+    if (schema === undefined) return;
+    if (variants.length) {
+      const active = variants.find(variant => variant.schema === schema)!;
+      shell.append(parameterControl(entityId, {
+        ...parameter, control: "select", value: variants.indexOf(active),
+        options: variants.map((variant, index) => ({ value: index, label: textValue(variant.value) })),
+      }, (next) => {
+        if (next === variants.indexOf(active)) return;
+        draft = blankValue(variants[Number(next)]!.schema);
+        render();
+        save();
+      }));
+    }
     const summary = document.createElement("div");
     summary.className = "parameter-structured-summary";
     const count = document.createElement("span");
@@ -529,7 +530,7 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
       ? `${draft.length} ${draft.length === 1 ? "item" : "items"}`
       : "Structured value";
     summary.append(count);
-    shell.append(summary);
+    if (schema.kind === "array") shell.append(summary);
 
     if (schema.kind === "array") {
       const list = Array.isArray(draft) ? draft : [];
@@ -542,12 +543,12 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
           ? recordDraftControl(schema.items, item, (next) => {
               const current = Array.isArray(draft) ? draft : [];
               draft = current.map((candidate, heldIndex) => heldIndex === index ? next : candidate);
-              refreshDecisions();
+              save();
             })
           : scalarDraftControl(`${parameter.label} ${index + 1}`, schema.items, item, (next) => {
               const current = Array.isArray(draft) ? draft : [];
               draft = current.map((candidate, heldIndex) => heldIndex === index ? next : candidate);
-              refreshDecisions();
+              save();
             });
         const actions = document.createElement("span");
         actions.className = "parameter-list-actions";
@@ -557,6 +558,7 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
           reordered.splice(index + offset, 0, moving!);
           draft = reordered;
           render();
+          save();
         };
         const up = document.createElement("button");
         up.type = "button";
@@ -579,6 +581,7 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
           const current = Array.isArray(draft) ? draft : [];
           draft = current.filter((_, heldIndex) => heldIndex !== index);
           render();
+          save();
         });
         actions.append(up, down, remove);
         row.append(editor, actions);
@@ -588,7 +591,7 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
     } else {
       shell.append(recordDraftControl(schema, draft, (next) => {
         draft = next;
-        refreshDecisions();
+        save();
       }));
     }
 
@@ -605,69 +608,81 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
         const current = Array.isArray(draft) ? draft : [];
         draft = [...current, blankValue(schema.items)];
         render();
+        save();
       });
       footer.append(add);
     }
-    const decisions = document.createElement("span");
-    decisions.className = "parameter-structured-decisions";
-    const reset = document.createElement("button");
-    reset.type = "button";
-    reset.textContent = "Reset";
-    reset.disabled = sameValue(draft, parameter.value);
-    reset.addEventListener("click", () => {
-      draft = structuredClone(parameter.value);
-      render();
-    });
-    const apply = document.createElement("button");
-    apply.type = "button";
-    apply.className = "primary";
-    apply.textContent = "Apply";
-    apply.addEventListener("click", () => commitControl(entityId, parameter, draft));
-    refreshDecisions = () => {
-      reset.disabled = sameValue(draft, parameter.value);
-      apply.disabled = reset.disabled || !valid();
-    };
-    refreshDecisions();
-    decisions.append(reset, apply);
-    footer.append(decisions);
-    shell.append(footer);
+    if (schema.kind === "array") shell.append(footer);
+    notice.hidden = sameValue(draft, parameter.value) || valid();
+    shell.append(notice);
   };
   render();
   return shell;
 }
 
-function parameterControl(entityId: string, parameter: Clip["inspector"][number]): HTMLElement {
+function parameterControl(
+  entityId: string,
+  parameter: Clip["inspector"][number],
+  change?: (value: CanonicalValue) => void,
+): HTMLElement {
+  const editable = parameter.edit !== undefined || change !== undefined;
+  const commit = change ?? ((value: CanonicalValue) => commitControl(entityId, parameter, value));
+  if (editable && parameter.control === "record" && parameter.schema !== undefined && parameterRecordVariants(parameter.schema).length) {
+    return structuredControl(entityId, parameter, commit);
+  }
   const row = document.createElement("div");
-  row.className = `parameter-row parameter-editable control-${parameter.control}`;
+  row.className = `parameter-row ${!editable ? "parameter-readonly" : "parameter-editable"} control-${parameter.control}`;
   const name = document.createElement("span");
   name.className = "parameter-label";
   name.textContent = parameter.label;
   name.title = parameter.summary ?? parameter.label;
   const right = document.createElement("span");
   right.className = "parameter-right parameter-control";
+  if (!editable) {
+    const value = document.createElement("span");
+    value.className = "parameter-display";
+    let displayValue = textValue(parameter.value);
+    let unitLabel = parameter.unit;
+    if (parameter.control === "number") {
+      try {
+        const numeric = parameterNumber(change && parameter.value === null ? 0 : parameter.value, parameter.number);
+        displayValue = String(numeric.value);
+        unitLabel = numeric.suffix || parameter.unit;
+      } catch { /* Keep the actual value visible when it is not a scalar. */ }
+    } else if (parameter.control === "select") {
+      displayValue = parameter.options?.map(parameterOption).find(option => option.value === parameter.value)?.label ?? displayValue;
+    }
+    value.textContent = displayValue;
+    right.append(value);
+    if (unitLabel !== undefined) {
+      const unit = document.createElement("small"); unit.textContent = unitLabel; right.append(unit);
+    }
+    row.append(name, right);
+    return row;
+  }
   let unitLabel = parameter.unit;
   if (parameter.control === "select") {
-    right.append(selectControl(entityId, parameter));
+    right.append(selectControl(parameter, commit));
   } else if (parameter.control === "color") {
     right.append(colorValueControl(parameter.label, textValue(parameter.value), (next) => {
-      commitControl(entityId, parameter, next);
+      commit(next);
     }));
     if (parameter.swatches?.length) {
       const palette = document.createElement("span"); palette.className = "parameter-swatches";
       for (const color of parameter.swatches) {
         const swatch = document.createElement("button"); swatch.type = "button";
         swatch.style.backgroundColor = color; swatch.title = color; swatch.setAttribute("aria-label", `Use ${color}`);
-        swatch.addEventListener("click", () => commitControl(entityId, parameter, color)); palette.append(swatch);
+        swatch.addEventListener("click", () => commit(color)); palette.append(swatch);
       }
       right.append(palette);
     }
   } else if (parameter.control === "list" || parameter.control === "record") {
-    right.append(structuredControl(entityId, parameter));
+    right.append(structuredControl(entityId, parameter, commit));
   } else {
     if (parameter.multiline && parameter.control === "text") {
       const value = document.createElement("textarea"); value.className = "parameter-value parameter-multiline";
       value.value = textValue(parameter.value); value.setAttribute("aria-label", parameter.label);
-      value.addEventListener("change", () => commitControl(entityId, parameter, value.value)); right.append(value);
+      value.addEventListener("change", () => commit(value.value)); right.append(value);
       row.append(name, right); return row;
     }
     const value = document.createElement("input");
@@ -678,8 +693,8 @@ function parameterControl(entityId: string, parameter: Clip["inspector"][number]
     if (value.type === "checkbox") value.checked = parameter.value === true || parameter.value === "true";
     else if (parameter.control === "number") {
       try {
-        const numeric = parameterNumber(parameter.value, parameter.number);
-        value.type = "number"; value.inputMode = "decimal"; value.value = String(numeric.value);
+        const numeric = parameterNumber(change && parameter.value === null ? 0 : parameter.value, parameter.number);
+        value.type = "number"; value.inputMode = "decimal"; value.value = change && parameter.value === null ? "" : String(numeric.value);
         const schema = parameter.schema?.kind === "number" ? parameter.schema : undefined;
         const scale = parameter.number?.scale ?? 1;
         const minimum = parameter.number?.minimum ?? (schema?.minimum === undefined ? undefined : schema.minimum * scale);
@@ -698,11 +713,12 @@ function parameterControl(entityId: string, parameter: Clip["inspector"][number]
     if (!value.title) value.title = parameter.summary ?? parameter.label;
     value.addEventListener("change", () => {
       if (value.type === "checkbox") {
-        commitControl(entityId, parameter, value.checked);
+        commit(value.checked);
       } else if (parameter.control === "number") {
-        if (value.reportValidity()) commitControl(entityId, parameter, value.valueAsNumber);
+        if (change) commit(Number.isFinite(value.valueAsNumber) ? value.valueAsNumber : null);
+        else if (value.reportValidity()) commit(value.valueAsNumber);
       } else {
-        commitControl(entityId, parameter, value.value);
+        commit(value.value);
       }
     });
     right.append(value);
@@ -802,7 +818,7 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
     defaultWorkspaceHeading();
     const empty = document.createElement("div");
     empty.className = "inspector-empty";
-    empty.textContent = "No adjustable parameters";
+    empty.textContent = "No details for this selection";
     inspector.replaceChildren(empty);
     return;
   }
@@ -813,17 +829,22 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
 
   const domainFields = clip.inspector.filter((field) => field.domain === activeDomain);
   const pages = new Map<string, { readonly label: string; readonly fields: typeof domainFields }>();
-  for (const field of domainFields) {
-    const id = field.page?.id ?? "default";
+  const commonFields = domainFields.filter(field => field.page === undefined);
+  for (const field of domainFields.filter(field => field.page !== undefined)) {
+    const id = field.page!.id;
     const page = pages.get(id) ?? { label: field.page?.label ?? "", fields: [] };
     pages.set(id, { ...page, fields: [...page.fields, field] });
   }
   const pageIds = [...pages.keys()];
+  if (pageIds.length === 0) {
+    inspector.replaceChildren(...parameterGroups(clip.id, commonFields));
+    return;
+  }
   const memoryKey = `${clip.id}:${activeDomain}`;
   const rememberedPage = inspectorPageByEntity.get(memoryKey);
   const activePage = rememberedPage !== undefined && pages.has(rememberedPage) ? rememberedPage : pageIds[0]!;
   inspectorPageByEntity.set(memoryKey, activePage);
-  const page = pages.get(activePage)!;
+  const page = pages.get(activePage);
   const subtabs = document.createElement("div");
   subtabs.className = "inspector-subtabs";
   if (pageIds.length > 1) {
@@ -841,7 +862,7 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
       return button;
     }));
   }
-  inspector.replaceChildren(...(pageIds.length > 1 ? [subtabs] : []), ...parameterGroups(clip.id, page.fields));
+  inspector.replaceChildren(...(pageIds.length > 1 ? [subtabs] : []), ...parameterGroups(clip.id, [...commonFields, ...(page?.fields ?? [])]));
 }
 
 function renderSemanticInspector(snapshot: StudioSnapshot, segmentId: string): void {
@@ -850,7 +871,7 @@ function renderSemanticInspector(snapshot: StudioSnapshot, segmentId: string): v
   defaultWorkspaceHeading();
   const empty = document.createElement("div");
   empty.className = "inspector-empty";
-  empty.textContent = "No adjustable parameters";
+  empty.textContent = "No details for this selection";
   inspector.replaceChildren(empty);
 }
 

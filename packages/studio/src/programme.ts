@@ -4,13 +4,13 @@ import { sameType } from "@qflow/protocol";
 import type { Composition } from "@qflow/composition";
 import { compositionTypes } from "@qflow/composition";
 import {
-  projectSemanticProgramSpace,
+  projectTimelineSpace,
   semanticAnchorFrames,
-  semanticTrackSpans,
-} from "@qflow/semantic-track";
-import type { SemanticTrack } from "@qflow/semantic-track";
-import { semanticTrackTypes } from "@qflow/semantic-track";
-import { assertProgramSpaceIdentity, programSpaceTypes } from "@qflow/program-space";
+  timelineSpans,
+} from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
+import { timelineTypes } from "@qflow/timeline";
+import { assertProgramSpaceIdentity } from "@qflow/program-space";
 import type { ProgramSpace } from "@qflow/program-space";
 import type { StudioResolvedTrack, StudioTemporalBinding } from "@qflow/studio-adapter";
 import type { RuntimeHostTransientExecution } from "@qflow/runtime-host-node";
@@ -36,7 +36,6 @@ export type Preview = {
   readonly values: ReadonlyMap<string, unknown>;
   readonly temporalBindings: ReadonlyMap<string, readonly StudioTemporalBinding[]>;
   readonly composition: Composition;
-  readonly timing: "measured" | "authored";
   readonly narrativeId?: string;
   readonly timingOutput?: { readonly name: string; readonly ref: string };
   readonly timingCandidateId?: string;
@@ -173,11 +172,11 @@ export async function preview(input: {
   const timingType = timingOutput?.typeRef ?? timingRecord?.type;
   const timingValue = selectedValue(executed.state, input.timeRef);
   if (timingValue?.kind !== "inline" || timingType === undefined) throw new Error("Studio requires a resolved film time source.");
-  const semantic = sameType(timingType, semanticTrackTypes.track) ? timingValue.value as unknown as SemanticTrack : undefined;
-  if (semantic === undefined && !sameType(timingType, programSpaceTypes.programSpace)) throw new Error("Unsupported Studio time source.");
-  const spans = semantic === undefined ? [] : semanticTrackSpans(semantic);
-  const anchors = semantic === undefined ? new Map<string, number>() : semanticAnchorFrames(semantic);
-  const space = semantic === undefined ? timingValue.value as unknown as ProgramSpace : projectSemanticProgramSpace(semantic);
+  if (!sameType(timingType, timelineTypes.track)) throw new Error("Studio requires the declared Timeline.");
+  const semantic = timingValue.value as unknown as Timeline;
+  const spans = timelineSpans(semantic);
+  const anchors = semanticAnchorFrames(semantic);
+  const space = projectTimelineSpace(semantic);
   assertProgramSpaceIdentity(space);
   const rate = space.frameRate;
   const compositionValue = selectedValue(executed.state, input.compositionRef);
@@ -227,22 +226,8 @@ export async function preview(input: {
     const stored = selectedValue(executed.state, target.ref);
     if (stored?.kind === "inline") values.set(target.ref, stored.value);
   }
-  // Author Records are already deterministic inline values from this exact
-  // compilation. Studio Track Companions may need them to name a resolved projection
-  // (for example Caption cue text); exposing them here avoids recomputing the
-  // domain value or turning a Record into a fake graph target.
-  for (const placement of input.source.observations.placements) {
-    for (const value of placement.values) {
-      const suffixes = [`::record::${value.id}`, `::output::${value.id}`];
-      for (const reference of input.projections.flatMap((projection) => projection.trace.references)) {
-        if (suffixes.some((suffix) => reference.ref.endsWith(suffix))) values.set(reference.ref, value.value);
-      }
-    }
-  }
-  // Script is a raw Surface, so its inline Records are not among the structured
-  // element observations above. They are still ordinary Author values from
-  // the same compilation and are needed to turn Caption atom ids back into the
-  // text the author actually sees.
+  // Author records from this compilation already carry exact qualified references.
+  // Expose referenced inline values to Companions without guessing their owner by suffix.
   for (const record of input.source.compiled.program.records) {
     if (record.value.kind !== "inline") continue;
     if (input.projections.some((projection) => projection.trace.references
@@ -257,8 +242,7 @@ export async function preview(input: {
     values,
     temporalBindings,
     composition,
-    timing: semantic === undefined ? "authored" : "measured",
-    ...(semantic === undefined ? {} : { narrativeId: semantic.narrativeId }),
+    ...(semantic.narrativeId === undefined ? {} : { narrativeId: semantic.narrativeId }),
     timingOutput: { name: timingOutput?.name ?? space.id, ref: input.timeRef },
     ...(timingCandidateId === undefined ? {} : { timingCandidateId }),
     timingCandidateOrigin: timingCandidateId === undefined ? "source" : "run",

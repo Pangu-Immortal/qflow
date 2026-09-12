@@ -2,7 +2,7 @@ import { captionProducers, captionTypes } from "@qflow/caption";
 import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
 import { narrativeTypes } from "@qflow/narrative";
-import { semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineTypes } from "@qflow/timeline";
 import { spatialTypes } from "@qflow/spatial";
 
 import { captionFineProducers, captionFineTypes } from "./manifest.js";
@@ -14,21 +14,15 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 export const fineCaptionTrackFragment = sealGraphFragment({
   inputs: [
     { name: "document", type: narrativeTypes.captionDocument },
-    { name: "semantic", type: semanticTrackTypes.track },
+    { name: "timeline", type: timelineTypes.track },
     { name: "program", type: captionTypes.program },
   ],
   operations: [
     {
-      id: "caption:space",
-      producer: semanticTrackProducers.projectProgramSpace,
-      inputs: { track: input("semantic") },
-      result: { kind: "output", name: "space" },
-    },
-    {
       id: "caption:temporalize-document",
       producer: captionProducers.temporalizeDocument,
       inputs: {
-        document: input("document"), semantic: input("semantic"), program: input("program"),
+        document: input("document"), timeline: input("timeline"),
       },
       result: { kind: "output", name: "caption" },
     },
@@ -45,7 +39,7 @@ export const fineCaptionTrackFragment = sealGraphFragment({
       producer: captionFineProducers.render,
       inputs: {
         schedule: operation("caption-fine:schedule"), program: input("program"),
-        document: input("document"), space: operation("caption:space"),
+        document: input("document"), timeline: input("timeline"),
       },
       result: { kind: "output", name: "track" },
     },
@@ -68,22 +62,16 @@ export const fineCaptionTrackFragment = sealGraphFragment({
 export const fineCaptionRegionTrackFragment = sealGraphFragment({
   inputs: [
     { name: "document", type: narrativeTypes.captionDocument },
-    { name: "semantic", type: semanticTrackTypes.track },
+    { name: "timeline", type: timelineTypes.track },
     { name: "program", type: captionTypes.program },
     { name: "regions", type: spatialTypes.regionTimeline },
   ],
   operations: [
     {
-      id: "caption:space",
-      producer: semanticTrackProducers.projectProgramSpace,
-      inputs: { track: input("semantic") },
-      result: { kind: "output", name: "space" },
-    },
-    {
       id: "caption:temporalize-document",
       producer: captionProducers.temporalizeDocument,
       inputs: {
-        document: input("document"), semantic: input("semantic"), program: input("program"),
+        document: input("document"), timeline: input("timeline"),
       },
       result: { kind: "output", name: "caption" },
     },
@@ -100,7 +88,7 @@ export const fineCaptionRegionTrackFragment = sealGraphFragment({
       producer: captionFineProducers.renderWithRegions,
       inputs: {
         schedule: operation("caption-fine:schedule"), program: input("program"),
-        document: input("document"), space: operation("caption:space"), regions: input("regions"),
+        document: input("document"), timeline: input("timeline"), regions: input("regions"),
       },
       result: { kind: "output", name: "track" },
     },

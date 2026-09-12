@@ -461,7 +461,7 @@ function renderVisualPresent(
     emittedFilterIds,
     stableId,
   });
-  return `<div class="clip qflow-visual-present" data-qflow-track-id="${escapeHtml(track.id)}" data-qflow-present-id="${escapeHtml(present.id)}" data-qflow-stack-order="${present.stacking.order}" data-qflow-stack-tie="${escapeHtml(present.stacking.tieBreak)}" data-track-index="${stackIndex}" data-start="${start}" data-duration="${duration}" style="position:absolute;inset:0;z-index:${stackIndex};overflow:hidden;pointer-events:none">${contents}</div>`;
+  return `<div class="clip qflow-visual-present" data-qflow-track-id="${escapeHtml(track.id)}" data-qflow-present-id="${escapeHtml(present.id)}" data-qflow-stack-order="${present.stacking.order}" data-qflow-stack-tie="${escapeHtml(present.stacking.tieBreak)}" data-track-index="${stackIndex}" data-start="${start}" data-duration="${duration}" style="position:absolute;inset:0;z-index:${stackIndex};overflow:hidden;pointer-events:none">${present.visibility === undefined ? contents : `<div data-qflow-visibility="${escapeHtml(JSON.stringify(present.visibility))}" style="position:absolute;inset:0">${contents}</div>`}</div>`;
 }
 
 function renderAnimationRules(track: VisualTrack, present: VisualPresent, stableId: StableDomId): string[] {
@@ -667,6 +667,18 @@ function emitHtml(composition: Composition, programSpace: ProgramSpace): string 
   }]));
   const programCss = programs.map(entry => `@scope (#${entry.id}) { ${entry.program.css ?? ""} }`).join("\n");
   const programRuntime = programs.length === 0 ? "" : `<script>${browserProgramScript(programs, numerator, denominator)}</script>`;
+  const visibilityRuntime = visuals.some(({ present }) => present.visibility !== undefined) ? `<script>
+(() => {
+  const entries = [...document.querySelectorAll('[data-qflow-visibility]')].map(element => ({ element, spans: JSON.parse(element.dataset.qflowVisibility) }));
+  const apply = time => {
+    const frame = Math.round(Number(time || 0) * ${numerator} / ${denominator});
+    // A presentation mask controls painting, not layout or animation existence.
+    // display:none removes CSS animations and prevents hidden text from being measured.
+    for (const { element, spans } of entries) element.style.opacity = spans.some(s => frame >= s.startFrame && frame < s.endFrameExclusive) ? '' : '0';
+  };
+  apply(0);
+  window.addEventListener('hf-seek', event => apply(event.detail?.time));
+})();</script>` : "";
   const duration = frameSeconds(programSpaceFrameCount(programSpace), numerator, denominator);
   const fps = fpsRational(numerator, denominator);
   const frameCount = programSpaceFrameCount(programSpace);
@@ -693,7 +705,8 @@ function emitHtml(composition: Composition, programSpace: ProgramSpace): string 
 <body>
   <div data-composition-id="${escapeHtml(composition.id)}" data-start="0" data-no-timeline data-width="${composition.canvas.width}" data-height="${composition.canvas.height}" data-duration="${duration}" data-fps="${fps}" data-qflow-frame-count="${frameCount}">
     ${visualHtml}
-  </div>${programRuntime}${animationRuntime}${textRuntime}
+  </div>${programRuntime}
+  ${visibilityRuntime}${animationRuntime}${textRuntime}
 </body>
 </html>
 `;

@@ -1,9 +1,11 @@
+import { projectScriptTimeline } from "./projection.js";
 import { adjustScriptMoment, adjustScriptSelection, parseScript, scriptModuleRef } from "@qflow/script";
 import type { StudioScriptCompanion } from "@qflow/studio-adapter";
 
 export const scriptStudioCompanions: readonly StudioScriptCompanion[] = [{
   id: "script",
   match: { module: scriptModuleRef, surface: "script" },
+  project: projectScriptTimeline,
   observe(input) {
     const narrativeId = input.attributes.id ?? "script";
     if (typeof narrativeId !== "string" || narrativeId.length === 0) return undefined;

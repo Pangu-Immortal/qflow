@@ -1,3 +1,4 @@
+import { sealTimeline } from "@qflow/timeline";
 import { compositionComponent, videoContractManifests } from "../../../test/support/video-domain.js";
 import { artifactTypes } from "@qflow/artifact";
 import {
@@ -11,7 +12,7 @@ import type { Composition } from "@qflow/composition";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
-import { semanticTrackFixture } from "../../../test/semantic-track-fixture.js";
+import { timelineFixture } from "../../../test/timeline-fixture.js";
 
 import {
   createResolvedClosure,
@@ -79,15 +80,15 @@ import {
   MarkupSurfaceRegistry,
 } from "@qflow/markup";
 import {
-  semanticTrackComponent,
-  semanticTrackDependency,
-  semanticTrackTypes,
-} from "@qflow/semantic-track";
+  timelineComponent,
+  timelineDependency,
+  timelineTypes,
+} from "@qflow/timeline";
 
-const space = sealProgramSpace({ id: "test-space", durationSec: 2,
+const space = sealTimeline({ items: [], id: "test-space", durationSec: 2,
   frameRate: { numerator: 30, denominator: 1 },
 });
-const semantic = semanticTrackFixture(space);
+const semantic = timelineFixture(space);
 const composition = sealComposition({
   id: "render-test",
   canvas: { width: 1080, height: 1920, clearColor: "#000000" },
@@ -114,7 +115,7 @@ const compositionRecord = await admitRecord(closure, sealRecord({
 }), validatorRegistry());
 const spaceRecord = await admitRecord(closure, sealRecord({
   id: "space",
-  type: programSpaceTypes.programSpace,
+  type: timelineTypes.track,
   value: stored(space),
 }), validatorRegistry());
 const linked = link(closure, [compositionRecord, spaceRecord]);
@@ -123,7 +124,7 @@ const instance = elaborateGraphFragment(linked, renderHyperframesFragment, {
   fragment: renderHyperframesFragment.id,
   inputs: {
     composition: { kind: "record", id: compositionRecord.id },
-    space: { kind: "record", id: spaceRecord.id },
+    timeline: { kind: "record", id: spaceRecord.id },
   },
 });
 const contribution = bindAuthorFragment(instance, { video: "final.video" });
@@ -140,7 +141,7 @@ function producerRegistry(): ProducerRegistry {
   registerProducerFacets(registry, mediaPipelineComponent.producers);
   registerProducerFacets(registry, hyperframesComponent.producers);
   registerProducerFacets(registry, renderHyperframesComponent.producers);
-  registerProducerFacets(registry, semanticTrackComponent.producers);
+  registerProducerFacets(registry, timelineComponent.producers);
   return registry;
 }
 
@@ -156,6 +157,7 @@ function validatorRegistry(): TypeValidatorRegistry {
 test("HyperFrames rendering is an explicit exact Need after ordinary document compilation", async () => {
   assert.deepEqual(build().plan.steps.map((step) => step.producer.name).sort(), [
     hyperframesProducers.compile.name,
+    "project-program-space",
     renderHyperframesProducers.requestVisual.name,
     mediaPipelineProducers.planAudio.name,
     mediaPipelineProducers.renderAudio.name,
@@ -311,13 +313,13 @@ const fixtureModule = { name: "example.composition-fixture", version: "1" } as c
 const fixtureSurfaceDigest = fixtureResource("example.composition-fixture/surface@1");
 const fixtureSurface = {
   name: "composition", tag: "Composition", mode: "structured",
-  outputs: [compositionTypes.composition, semanticTrackTypes.track],
+  outputs: [compositionTypes.composition, timelineTypes.track],
 } as const;
 const fixtureManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: fixtureModule.name,
   version: fixtureModule.version,
-  dependencies: [compositionDependency, semanticTrackDependency],
+  dependencies: [compositionDependency, timelineDependency],
   types: [],
   capabilities: [],
   producers: [],
@@ -344,7 +346,7 @@ test(`the ${selectedRange ? "selected" : "full"} rendered video remains an ordin
   surfaces.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
       { id: "composition", type: compositionTypes.composition, value: stored(composition), range: element.range },
-      { id: "semantic", type: semanticTrackTypes.track, value: stored(semantic), range: element.range },
+      { id: "semantic", type: timelineTypes.track, value: stored(semantic), range: element.range },
     ],
     components: [],
     fragments: [],
@@ -374,7 +376,7 @@ test(`the ${selectedRange ? "selected" : "full"} rendered video remains an ordin
       <import as="render" from="@qflow/render-hyperframes@1"/>
       <import as="media" from="@qflow/media-pipeline@1"/>
       <fixture:Composition/>
-      <render:Video id="final" composition={composition} semantic={semantic} ${selectedRange ? 'start-frame="15" end-frame-exclusive="45"' : ""}/>
+      <render:Video id="final" composition={composition} timeline={semantic} ${selectedRange ? 'start-frame="15" end-frame-exclusive="45"' : ""}/>
       <media:ExtractFrame id="poster" source={final.video} video="primary-moving" at="last"/>
     </svml>`),
     closure: sourceClosure,
@@ -413,7 +415,7 @@ test("selected render frames reach both visual and audio Needs through the ordin
   const selected = elaborateGraphFragment(program, fragment, {
     id: "selected", fragment: fragment.id, inputs: {
       composition: { kind: "record", id: compositionRecord.id },
-      space: { kind: "record", id: spaceRecord.id },
+      timeline: { kind: "record", id: spaceRecord.id },
       range: { kind: "record", id: rangeRecord.id },
     },
   });

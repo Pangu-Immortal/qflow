@@ -1,7 +1,9 @@
+import { appendMediaPerformance } from "@qflow/performance";
+import { sealTimeline } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
-import { semanticTrackFixture } from "../../../test/semantic-track-fixture.js";
+import { timelineFixture } from "../../../test/timeline-fixture.js";
 import { projectMomentWindow, projectProgramWindow, projectSegmentWindow, projectSelectionWindow } from "../../../test/temporal-fixture.js";
 import type { TemporalWindowProjection } from "../../../test/temporal-fixture.js";
 
@@ -13,7 +15,6 @@ import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
 import { artifactTypes } from "@qflow/artifact";
 import { narrativeTypes } from "@qflow/narrative";
 import {
-  appendMediaPerformance,
   appendMediaPaintLayer,
   appendMediaSound,
   appendMediaItem,
@@ -57,14 +58,14 @@ import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative
 import { sealProgramSpace } from "@qflow/program-space";
 import { programSpaceTypes } from "@qflow/program-space";
 import type { BlobRef } from "@qflow/protocol";
-import { semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineTypes } from "@qflow/timeline";
 import { spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import type { SvsRecipe } from "@qflow/svs";
 import type { StructuredElement, StructuredNode, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/markup";
 import type { TemporalWindow } from "@qflow/temporal";
 
-const space = sealProgramSpace({ id: "test-space", durationSec: 4,
+const space = sealTimeline({ items: [], id: "test-space", durationSec: 4,
   frameRate: { numerator: 30, denominator: 1 },
 });
 const canvas = {
@@ -76,7 +77,7 @@ const canvas = {
   pixelAspect: "square" as const,
 };
 const header = sealMediaTrackHeader({ id: "proof" });
-const semantic = semanticTrackFixture(space, {
+const semantic = timelineFixture(space, {
   segments: [
     { id: "opening", frameCount: 30 },
     { id: "answer", frameCount: 60 },
@@ -133,44 +134,44 @@ function itemSpec(overrides: Partial<TestMediaItemSpec> = {}): TestMediaItemSpec
 }
 
 function appendProgramMediaItem(
-  set: ReturnType<typeof createMediaTrackSet>, trackHeader: typeof header, semanticTrack: typeof semantic,
+  set: ReturnType<typeof createMediaTrackSet>, trackHeader: typeof header, timeline: typeof semantic,
   canvasSpace: typeof canvas, layers: MediaLayerSet, frameValue: typeof frame, authored: MediaItemSpec | TestMediaItemSpec,
   sounds: ReturnType<typeof createMediaSoundSet>,
 ) {
   const projection = "projection" in authored ? authored.projection : defaultItemProjection;
   const { projection: _ignored, ...spec } = authored as TestMediaItemSpec;
   return appendMediaItem(set, trackHeader, space, canvasSpace, layers, frameValue, spec, sounds,
-    projectProgramWindow({ itemId: spec.id, semantic: semanticTrack, projection }));
+    projectProgramWindow({ itemId: spec.id, semantic: timeline, projection }));
 }
 
 function appendSelectionMediaItem(
-  set: ReturnType<typeof createMediaTrackSet>, trackHeader: typeof header, semanticTrack: typeof semantic,
+  set: ReturnType<typeof createMediaTrackSet>, trackHeader: typeof header, timeline: typeof semantic,
   canvasSpace: typeof canvas, layers: MediaLayerSet, frameValue: typeof frame, selection: NarrativeSelectionRef,
   authored: TestMediaItemSpec, sounds: ReturnType<typeof createMediaSoundSet>,
 ) {
   const { projection, ...spec } = authored;
   return appendMediaItem(set, trackHeader, space, canvasSpace, layers, frameValue, spec, sounds,
-    projectSelectionWindow({ itemId: spec.id, semantic: semanticTrack, selection, projection }));
+    projectSelectionWindow({ itemId: spec.id, semantic: timeline, selection, projection }));
 }
 
 function appendSegmentMediaItem(
-  set: ReturnType<typeof createMediaTrackSet>, trackHeader: typeof header, semanticTrack: typeof semantic,
+  set: ReturnType<typeof createMediaTrackSet>, trackHeader: typeof header, timeline: typeof semantic,
   canvasSpace: typeof canvas, layers: MediaLayerSet, frameValue: typeof frame, segment: { narrativeId: string; kind: "segment"; id: string; tokenStart: number; tokenEndExclusive: number },
   authored: TestMediaItemSpec, sounds: ReturnType<typeof createMediaSoundSet>,
 ) {
   const { projection, ...spec } = authored;
   return appendMediaItem(set, trackHeader, space, canvasSpace, layers, frameValue, spec, sounds,
-    projectSegmentWindow({ itemId: spec.id, semantic: semanticTrack, segment, projection }));
+    projectSegmentWindow({ itemId: spec.id, semantic: timeline, segment, projection }));
 }
 
 function appendMomentMediaItem(
-  set: ReturnType<typeof createMediaTrackSet>, trackHeader: typeof header, semanticTrack: typeof semantic,
+  set: ReturnType<typeof createMediaTrackSet>, trackHeader: typeof header, timeline: typeof semantic,
   canvasSpace: typeof canvas, layers: MediaLayerSet, frameValue: typeof frame, moment: NarrativeMomentRef,
   authored: TestMediaItemSpec, sounds: ReturnType<typeof createMediaSoundSet>,
 ) {
   const { projection, ...spec } = authored;
   return appendMediaItem(set, trackHeader, space, canvasSpace, layers, frameValue, spec, sounds,
-    projectMomentWindow({ itemId: spec.id, semantic: semanticTrack, moment, projection }));
+    projectMomentWindow({ itemId: spec.id, semantic: timeline, moment, projection }));
 }
 
 function stillLayers(): MediaLayerSet {
@@ -692,20 +693,20 @@ test("visual-only normalized video never creates an implicit audio branch", () =
 
 test("timed visual occupancy resolves every alignment into exact source-frame segments", () => {
   const sampling = (occupancy: Parameters<typeof resolveVisualSampling>[0]["occupancy"]) =>
-    resolveVisualSampling({ space, sourceFrameRate: { numerator: 30, denominator: 1 }, sourceFrameCount: 30, targetFrameCount: 50, occupancy });
+    resolveVisualSampling({ timeline: space, sourceFrameRate: { numerator: 30, denominator: 1 }, sourceFrameCount: 30, targetFrameCount: 50, occupancy });
   assert.deepEqual(sampling({ mode: "once", align: "start" }).segments.map((item) => item.target), [{ startFrame: 0, endFrameExclusive: 30 }]);
   assert.deepEqual(sampling({ mode: "once", align: "end" }).segments.map((item) => item.target), [{ startFrame: 20, endFrameExclusive: 50 }]);
   assert.deepEqual(sampling({ mode: "loop", align: "end" }).segments[0]?.sourceFrame, { numerator: 10, denominator: 1 });
   assert.deepEqual(sampling({ mode: "stretch" }).segments[0]?.rate, { numerator: 3, denominator: 5 });
   assert.throws(() => resolveVisualSampling({
-    space, sourceFrameRate: { numerator: 24, denominator: 1 }, sourceFrameCount: 24, targetFrameCount: 30,
+    timeline: space, sourceFrameRate: { numerator: 24, denominator: 1 }, sourceFrameCount: 24, targetFrameCount: 30,
     occupancy: { mode: "once", align: "start" },
-  }), /normalized to ProgramSpace frame rate/u);
+  }), /normalized to Timeline frame rate/u);
 });
 
 test("the graph keeps every source, extent, fit, frame, time and appearance input explicit", () => {
   assert.deepEqual(stillMediaTrackFragment.inputs.map((input) => input.name), [
-    "canvas", "extent", "fit", "frame", "header", "item-spec", "sample-spec", "source", "space", "window",
+    "canvas", "extent", "fit", "frame", "header", "item-spec", "sample-spec", "source", "timeline", "window",
   ]);
 });
 
@@ -726,7 +727,7 @@ test("the Media author Surface emits explicit graph edges for layers, semantic t
   });
   const references = new Map<string, SurfaceResolvedReference>([
     ["canvas", plain("canvas", spatialTypes.canvas)],
-    ["semantic", plain("semantic", semanticTrackTypes.track)],
+    ["semantic", plain("semantic", timelineTypes.track)],
     ["frame", plain("frame", spatialTypes.frame)],
     ["clip-path", plain("clip-path", spatialTypes.path)],
     ["still", plain("still", artifactTypes.blob)],
@@ -748,7 +749,7 @@ test("the Media author Surface emits explicit graph edges for layers, semantic t
     ["motion", appearance("motion", { enter: "slide", "enter-frames": 12, "enter-easing": "ease-out", "enter-direction": "up", "enter-origin": "outside-canvas" })],
     ["handoff", appearance("handoff", { operator: "crossfade", "duration-frames": 10, "boundary-ratio": 0.5, audio: "cut" })],
   ]);
-  const root = node("media:Track", { id: "editorial", semantic: ref("semantic"), canvas: ref("canvas") }, [
+  const root = node("media:Track", { id: "editorial", timeline: ref("semantic"), canvas: ref("canvas") }, [
     node("media:Item", { id: "still-card", image: ref("still"), extent: ref("extent"), frame: ref("frame"), clip: ref("clip-path"), appearance: ref("still-style"), during: "program" }),
     node("media:Item", { id: "segment-card", image: ref("still"), extent: ref("extent"), frame: ref("frame"), appearance: ref("still-style"), during: ref("answer-segment") }),
     node("media:Item", { id: "proof", frame: ref("frame"), appearance: ref("card-style"), motion: ref("motion"), during: ref("selection"), "source-audio": "video", "audio-gain": "0.8" }, [
@@ -759,12 +760,12 @@ test("the Media author Surface emits explicit graph edges for layers, semantic t
       ]),
       node("media:Sound", { id: "proof-enter", source: ref("sfx"), at: "enter", gain: "0.5" }),
     ]),
-    node("media:Performance", { id: "presenter", frame: ref("frame"), clip: ref("clip-path"), appearance: ref("still-style"), motion: ref("motion"), during: ref("answer-segment") }, [
+    node("media:Item", { image: ref("still"), extent: ref("extent"), id: "presenter", frame: ref("frame"), clip: ref("clip-path"), appearance: ref("still-style"), motion: ref("motion"), during: ref("answer-segment") }, [
       node("media:Sampling", { at: "start", zoom: "1" }),
       node("media:Sampling", { at: "end", zoom: "1.08", x: "6" }),
       node("media:Sound", { id: "presenter-enter", source: ref("sfx"), at: "enter" }),
     ]),
-    node("media:Performance", { id: "inset", frame: ref("frame"), appearance: ref("still-style"), at: "12f", for: "2s" }),
+    node("media:Item", { image: ref("still"), extent: ref("extent"), id: "inset", frame: ref("frame"), appearance: ref("still-style"), at: "12f", for: "2s" }),
     node("media:Sequence", { id: "steps", frame: ref("frame"), appearance: ref("sequence-style"), until: ref("terminal"), "until-boundary": "end" }, [
       node("media:Member", { id: "one", image: ref("still"), extent: ref("extent"), at: ref("cue1") }),
       node("media:Member", { id: "two", surface: ref("surface"), appearance: ref("surface-style"), at: ref("cue2") }),
@@ -785,10 +786,6 @@ test("the Media author Surface emits explicit graph edges for layers, semantic t
   const producers = fragment.operations.map((entry) => entry.producer.name);
   assert.ok(producers.includes("append-still-media-layer"));
   assert.ok(producers.includes("append-media-item"));
-  const performanceOperation = fragment.operations.find(entry => entry.producer.name === "append-media-performance");
-  assert.deepEqual(performanceOperation?.inputs.semantic, { kind: "fragment-input", name: "semantic" });
-  assert.equal(fragment.inputs.filter(entry => entry.type.name === semanticTrackTypes.track.name).length, 1);
-  assert.equal(fragment.operations.filter(entry => entry.producer.name === "append-media-performance").length, 2);
   assert.ok(producers.includes("append-timed-media-layer"));
   assert.ok(producers.includes("append-surface-media-layer"));
   assert.ok(producers.includes("append-media-paint-layer"));
@@ -811,14 +808,6 @@ test("the Media author Surface emits explicit graph edges for layers, semantic t
   assert.ok(fragment.inputs.some((entry) => entry.type.name === spatialTypes.path.name));
   const itemSpecs = result.records.filter((entry) => entry.type.name === "MediaItemSpec");
   assert.equal(itemSpecs.length, 5);
-  const performanceSample = result.records.find(entry => entry.id === "presenter.sample");
-  assert.ok(performanceSample?.value.kind === "inline");
-  assert.deepEqual((performanceSample.value.value as unknown as { samplingMotion: unknown }).samplingMotion, {
-    keyframes: [
-      { atProgress: 0, zoom: 1, offsetX: 0, offsetY: 0, rotationDeg: 0 },
-      { atProgress: 1, zoom: 1.08, offsetX: 6, offsetY: 0, rotationDeg: 0 },
-    ],
-  });
   const selected = itemSpecs[2]!.value.kind === "inline"
     ? itemSpecs[2]!.value.value as unknown as MediaItemSpec
     : undefined;
@@ -997,15 +986,15 @@ test("Sequence fails atomically on malformed order, topology, envelope and three
 
 
 test("Performance keeps source positions and continuous picture motion across Takes", () => {
-  const performance = { ...semantic, items: semantic.items.map(item => ({ take: { ...item.take,
+  const performance = { ...semantic, items: semantic.items.map(item => ({ startFrame: item.startFrame, take: { ...item.take,
     media: { ...item.take.media, visual: { artifact: { ...source, mediaType: "video/mp4" }, width: 720, height: 1280 } },
   } })) };
   const window = projectProgramWindow({ itemId: "performance", semantic: performance,
     projection: { start: { ref: "absolute", at: { unit: "frames", value: 20 } },
       end: { ref: "absolute", at: { unit: "frames", value: 100 } } } });
-  const set = appendMediaPerformance({ set: createMediaTrackSet(), header, space, canvas, frame,
+  const set = appendMediaPerformance({ set: createMediaTrackSet(), header, timeline: performance, canvas, frame,
     layers: createMediaLayerSet(), spec: itemSpec({ id: "performance" }), sounds: createMediaSoundSet(), window },
-    performance, fit, sealMediaSampleLayerSpec({ id: "content", appearance, occupancy: { mode: "once", align: "start" },
+    fit, sealMediaSampleLayerSpec({ id: "content", appearance, occupancy: { mode: "once", align: "start" },
       samplingMotion: { keyframes: [
         { atProgress: 0, zoom: 1, offsetX: 0, offsetY: 0, rotationDeg: 0 },
         { atProgress: 1, zoom: 1.08, offsetX: 0, offsetY: -18, rotationDeg: 0 },

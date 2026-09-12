@@ -1,7 +1,7 @@
+import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef, StoredValue } from "@qflow/protocol";
-import type { ProgramSpace } from "@qflow/program-space";
 import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
 import type { Text } from "@qflow/text";
 
@@ -28,7 +28,7 @@ function common(inputs: Record<string, { readonly value: StoredValue } | undefin
   return {
     set: inline<CommentStickerSet>(inputs.set?.value, "CommentStickerSet"),
     header: inline<CommentStickerHeader>(inputs.header?.value, "CommentStickerHeader"),
-    space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+    timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
     frame: inline<SpatialFrame>(inputs.frame?.value, "SpatialFrame"),
     style: inline<CommentStickerStyle>(inputs.style?.value, "CommentStickerStyle"),
     spec: inline<CommentStickerItemSpec>(inputs.spec?.value, "CommentStickerItemSpec"),
@@ -69,7 +69,7 @@ export const commentStickerComponent = {
       handler: ({ inputs }: ProducerHandlerContext) => {
         const values = common(inputs);
         return { outputs: { set: output(appendProjectedCommentSticker(
-          values.set, values.header, values.space, values.frame, values.style, values.spec, values.content, values.window,
+          values.set, values.header, values.timeline, values.frame, values.style, values.spec, values.content, values.window,
           avatar ? inline<BlobRef>(inputs.avatar?.value, "Comment Sticker avatar") : undefined,
         )) }, needs: {} };
       },
@@ -85,7 +85,7 @@ export const commentStickerComponent = {
       producer: commentStickerProducers.render,
       handler: ({ inputs }) => ({ outputs: { track: output(renderCommentSticker(
         inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"),
-        inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        inline<Timeline>(inputs.timeline?.value, "Timeline"),
         inline<CommentStickerProgram>(inputs.program?.value, "CommentStickerProgram"),
       )) }, needs: {} }),
     },

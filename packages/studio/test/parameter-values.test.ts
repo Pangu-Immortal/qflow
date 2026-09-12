@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { StudioInspectorField } from "@qflow/studio-adapter";
-import { parameterAuthorValue, parameterNumber, parameterOption, serializeParameterValue, validateParameterValue } from "../src/parameter-values.js";
+import { parameterAuthorValue, parameterControlForSchema, parameterNumber, parameterOption, serializeParameterValue, validateParameterValue } from "../src/parameter-values.js";
 
 const field = (overrides: Partial<StudioInspectorField>): StudioInspectorField => ({
   id: "width", binding: "frame.width", label: "Width", domain: "where", section: { id: "size", label: "Size" },
-  control: "number", value: "78%", language: "svml", source: { path: "main.svml", range: { start: 0, end: 3 }, preimage: "78%" },
+  control: "number", value: "78%", edit: { language: "svml", source: { path: "main.svml", range: { start: 0, end: 3 }, preimage: "78%" } },
   number: { suffixes: ["%", "px"] }, ...overrides,
 });
 
@@ -23,7 +23,7 @@ test("numeric editing separates units and restores the authored unit without con
 });
 
 test("percentage display and schema validation apply on opposite sides of the translation", () => {
-  const opacity = field({ value: .78, language: "svs", unit: "%", number: { scale: 100, minimum: 0, maximum: 100 },
+  const opacity = field({ value: .78, unit: "%", number: { scale: 100, minimum: 0, maximum: 100 },
     schema: { kind: "number", minimum: 0, maximum: 1 } });
   assert.equal(parameterNumber(opacity.value, opacity.number).value, 78);
   assert.equal(parameterNumber(.55, opacity.number).value, 55);
@@ -47,4 +47,14 @@ test("SVML parameter text escapes attribute delimiters while SVS keeps its own c
   const text = 'Say "hello" & <look> at Bob\'s';
   assert.equal(serializeParameterValue(text, "svml"), "Say &quot;hello&quot; &amp; &lt;look&gt; at Bob&apos;s");
   assert.equal(serializeParameterValue(text, "svs"), JSON.stringify(text));
+});
+
+
+test("top-level and nested parameter fields share schema-to-control selection", () => {
+  assert.equal(parameterControlForSchema({ kind: "string", enum: ["left", "right"] }), "select");
+  assert.equal(parameterControlForSchema({ kind: "string", format: "color" }), "color");
+  assert.equal(parameterControlForSchema({ kind: "boolean" }), "boolean");
+  assert.equal(parameterControlForSchema({ kind: "number" }), "number");
+  assert.equal(parameterControlForSchema({ kind: "object", fields: {} }), "record");
+  assert.equal(parameterControlForSchema({ kind: "array", items: { kind: "string" } }), "list");
 });

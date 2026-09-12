@@ -9,10 +9,8 @@ import type {
   SurfaceResolvedReference,
 } from "@qflow/markup";
 import { narrativeTypes } from "@qflow/narrative";
-import { programSpaceTypes } from "@qflow/program-space";
-import { createTemporalSpace } from "./space.js";
 export * from "./space.js";
-import { semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineTypes } from "@qflow/timeline";
 import {
   temporalProducers,
   temporalTypes,
@@ -41,6 +39,9 @@ export const temporalWindowAttributeVocabulary: readonly SurfaceAttributeVocabul
     summary: "Sets a projected start expression; write it together with end." },
   { name: "end", kind: "literal", required: false,
     summary: "Sets a projected end expression; write it together with start." },
+  ...["start-source", "end-source"].map(name => ({ name, kind: "reference" as const, required: false,
+    accepts: [narrativeTypes.selection, narrativeTypes.excerpt, narrativeTypes.moment],
+    summary: "Binds this endpoint's semantic source independently; its expression determines the boundary." })),
   { name: "selection", kind: "reference", required: false, accepts: [narrativeTypes.selection],
     summary: "Resolves selection.start or selection.end used by a projected start/end expression." },
   { name: "segment", kind: "reference", required: false, accepts: [narrativeTypes.excerpt],
@@ -205,12 +206,13 @@ function sourceReference(
   element: StructuredElement,
   kind: SourceKind,
   resolveReference: ResolveReference,
+  attribute = kind as string,
 ): SurfaceResolvedReference | undefined {
   if (kind === "program") return undefined;
   const expected = kind === "selection"
     ? narrativeTypes.selection
     : kind === "segment" ? narrativeTypes.excerpt : narrativeTypes.moment;
-  return resolve(element.attributes[kind], `${element.name}.${kind}`, expected, resolveReference);
+  return resolve(element.attributes[attribute], `${element.name}.${attribute}`, expected, resolveReference);
 }
 
 function projectionFragment(input: {
@@ -224,8 +226,7 @@ function projectionFragment(input: {
     ? [["instant", input.start] as const]
     : [["start", input.start] as const, ["end", input.end] as const];
   const inputs = [
-    { name: "space", type: programSpaceTypes.programSpace },
-    ...(endpoints.some(([, endpoint]) => endpoint.source !== "program") ? [{ name: "semantic", type: semanticTrackTypes.track }] : []),
+    { name: "timeline", type: timelineTypes.track },
     ...endpoints.map(([name]) => ({ name: `${name}-spec`, type: temporalTypes.instantSpec })),
     ...endpoints.flatMap(([name, endpoint]) => endpoint.source === "program" ? [] : [{
       name: `${name}-${endpoint.source}`,
@@ -241,7 +242,7 @@ function projectionFragment(input: {
         : endpoint.source === "segment" ? temporalProducers.projectSegmentInstant
           : temporalProducers.projectMomentInstant,
     inputs: {
-      ...(endpoint.source === "program" ? { space: fragmentInput("space") } : { semantic: fragmentInput("semantic") }),
+      timeline: fragmentInput("timeline"),
       spec: fragmentInput(`${name}-spec`),
       ...(endpoint.source === "program" ? {} : {
         [endpoint.source]: fragmentInput(`${name}-${endpoint.source}`),
@@ -274,15 +275,10 @@ function projectionDraft(input: {
   readonly id: string;
   readonly subjectId?: string;
   readonly element: StructuredElement;
-  readonly semantic?: SurfaceResolvedReference;
-  readonly space?: SurfaceResolvedReference;
+  readonly timeline: SurfaceResolvedReference;
   readonly start: InstantDraft;
   readonly end?: InstantDraft;
 }): TemporalMarkupProjection {
-  if ([input.start, input.end].some((endpoint) => endpoint !== undefined && endpoint.source !== "program") && input.semantic === undefined) {
-    throw new Error(`${input.element.name} needs semantic to resolve this Script reference.`);
-  }
-  const time = createTemporalSpace(input);
   const output = input.end === undefined ? "instant" : "window";
   const subjectId = input.subjectId ?? input.id;
   if (subjectId.length === 0) throw new Error("Temporal projection subjectId must not be empty.");
@@ -291,8 +287,7 @@ function projectionDraft(input: {
   const records: SurfaceRecordDraft[] = [];
   const componentInputs: SurfaceComponentDraft["inputs"] extends infer _T
     ? Record<string, SurfaceResolvedReference["ref"] | { readonly kind: "record"; readonly id: string }>
-    : never = { space: time.space.ref, ...(input.semantic === undefined ? {} : { semantic: input.semantic.ref }) };
-  if ([input.start, input.end].every((endpoint) => endpoint === undefined || endpoint.source === "program")) delete componentInputs.semantic;
+    : never = { timeline: input.timeline.ref };
   const endpoints = input.end === undefined
     ? [["instant", input.start] as const]
     : [["start", input.start] as const, ["end", input.end] as const];
@@ -327,14 +322,14 @@ function projectionDraft(input: {
   }
   return {
     records,
-    components: [...time.components, {
+    components: [{
       id: componentId,
       fragment: fragment.id,
       inputs: componentInputs,
       outputs: { [output]: `${input.id}.__temporal.${output}` },
       range: input.element.range,
     }],
-    fragments: [...time.fragments, fragment],
+    fragments: [fragment],
     ref: { kind: "component-output", component: componentId, output },
   };
 }
@@ -344,8 +339,7 @@ export function createTemporalWindowProjection(input: {
   readonly id: string;
   readonly subjectId?: string;
   readonly element: StructuredElement;
-  readonly semantic?: SurfaceResolvedReference;
-  readonly space?: SurfaceResolvedReference;
+  readonly timeline: SurfaceResolvedReference;
   readonly resolveReference: ResolveReference;
 }): TemporalMarkupProjection {
   const { element, resolveReference } = input;
@@ -422,13 +416,15 @@ export function createTemporalWindowProjection(input: {
   const endExpression = parseTemporalInstant(end, `${element.name}.end`);
   const startSource = expressionSource(startExpression);
   const endSource = expressionSource(endExpression);
+  const startBinding = element.attributes["start-source"] === undefined ? startSource : "start-source";
+  const endBinding = element.attributes["end-source"] === undefined ? endSource : "end-source";
   rejectUnusedTemporalAttributes(element, temporalWindowAttributeNames, [
     "start", "end",
-    ...(startSource === "program" ? [] : [startSource]),
-    ...(endSource === "program" ? [] : [endSource]),
+    ...(startSource === "program" ? [] : [startBinding]),
+    ...(endSource === "program" ? [] : [endBinding]),
   ]);
-  const startReference = startSource === "program" ? undefined : sourceReference(element, startSource, resolveReference);
-  const endReference = endSource === "program" ? undefined : sourceReference(element, endSource, resolveReference);
+  const startReference = sourceReference(element, startSource, resolveReference, startBinding);
+  const endReference = sourceReference(element, endSource, resolveReference, endBinding);
   return projectionDraft({
     ...input,
     start: {
@@ -451,8 +447,7 @@ export function createTemporalInstantProjection(input: {
   readonly id: string;
   readonly subjectId?: string;
   readonly element: StructuredElement;
-  readonly semantic?: SurfaceResolvedReference;
-  readonly space?: SurfaceResolvedReference;
+  readonly timeline: SurfaceResolvedReference;
   readonly resolveReference: ResolveReference;
   readonly semanticAttribute?: string;
   readonly boundaryAttribute?: string;

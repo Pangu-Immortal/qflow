@@ -1,7 +1,7 @@
 # `@qflow/comment-sticker`
 
-The Track Surface accepts `semantic={speech.semantic}` or `space={animation}`. Semantic context
-resolves Script Selections and Moments; authored space supports clock-based animation. Shared `at`
+The Track Surface accepts `timeline={program.timeline}`. The same Timeline supports authored
+positions and, where prepared Takes supply evidence, Script Selections and Moments. Shared `at`
 inputs accept a Moment or a time such as `2s`; `at` with `for` produces a Window where required.
 
 An author package for timed social-comment cards. It publishes an ordinary `VisualTrack` containing
@@ -21,7 +21,7 @@ The author surface keeps the three independent concerns visible:
 
 <comment:Style id="social-comment" recipe={styles.comment} font={fonts.ui}/>
 
-<comment:Track id="comments" canvas={video.canvas} semantic={speech.semantic}>
+<comment:Track id="comments" canvas={video.canvas} timeline={speech.timeline}>
   <comment:Sticker
     id="opening-comment"
     comment={comment-copy}

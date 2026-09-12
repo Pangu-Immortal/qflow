@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compositionTypes } from "@qflow/composition";
-import { semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineTypes } from "@qflow/timeline";
 import type { StudioFilmCompanion, StudioPlacement } from "@qflow/studio-adapter";
 
 import type { CompiledSource } from "../src/compile.js";
@@ -15,7 +15,7 @@ const filmModule = { name: "@example/film", version: "1" } as const;
 const companion: StudioFilmCompanion = {
   id: "film",
   match: { module: filmModule, surface: "film", outputType: compositionTypes.composition },
-  timeSources: [{ attribute: "semantic", type: semanticTrackTypes.track }, { attribute: "space", type: programSpaceTypes.programSpace }],
+  timeSources: [{ attribute: "semantic", type: timelineTypes.track }, { attribute: "space", type: programSpaceTypes.programSpace }],
   tracks: { childSurface: "Track", sourceAttribute: "source", types: [compositionTypes.visualTrack] },
 };
 

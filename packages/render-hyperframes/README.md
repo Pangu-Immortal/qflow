@@ -1,14 +1,14 @@
 # `@qflow/render-hyperframes`
 
-The Surface accepts `semantic={speech.semantic}` for performance time or `space={animation}` for an
-authored ProgramSpace. Its Fragment receives `space` directly; rendering does not require Script
-or prepared performance media. Both time sources use the same frame and audio pipeline.
+The Surface accepts `timeline={program.timeline}` and projects its complete ProgramSpace.
+Its Fragment receives that range as `space`; rendering works with partial, overlapping or absent
+semantic coverage through the same frame and audio pipeline.
 
 Explicit author and capability boundary for final HyperFrames video rendering.
 
 The package owns `<render:Video composition={...}/>` and lowers it to ordinary Operations that:
 
-1. obtain the `ProgramSpace` from the semantic input and compile the referenced `Composition` into a `HyperframesDocument`;
+1. obtain the `ProgramSpace` from the Timeline input and compile the referenced `Composition` into a `HyperframesDocument`;
 2. request a silent, frame-exact `RenderedVisual`;
 3. compile every peer `AudioTrack` into one `AudioProgramPlan`;
 4. request an exact 48 kHz `TimelineAudio`;
@@ -43,7 +43,7 @@ stream with the declared canvas, rational frame rate and frame count.
 Select a contiguous interval using zero-based, half-open frame bounds:
 
 ```xml
-<render:Video id="preview" composition={main.composition} semantic={speech.semantic}
+<render:Video id="preview" composition={main.composition} timeline={speech.timeline}
   start-frame="240" end-frame-exclusive="360"/>
 ```
 

@@ -3,7 +3,7 @@ import { mediaDependency, mediaTypes } from "@qflow/media";
 import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
 import { svsModuleRef, svsRecipeType } from "@qflow/svs";
 import { speechDependency, speechTypes } from "@qflow/speech";
-import { compositionDependency, compositionTypes } from "@qflow/composition";
+import { compositionDependency, compositionTypes, audioSampleSpanSchema, audioGainEnvelopeSchema } from "@qflow/composition";
 import { artifactTypes } from "@qflow/artifact";
 import type {
   CapabilityRef,
@@ -237,6 +237,8 @@ export const audioProgramPlanSchema: ValueSchema = {
         gain: { schema: { kind: "number", minimum: 0, maximum: 64 } },
         fadeInSamples: { schema: integer },
         fadeOutSamples: { schema: integer },
+        gainEnvelope: { schema: audioGainEnvelopeSchema, optional: true },
+        audibility: { schema: { kind: "array", items: audioSampleSpanSchema }, optional: true },
       },
     } } },
     mix: { schema: {

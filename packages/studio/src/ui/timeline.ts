@@ -147,11 +147,20 @@ export function createTimeline(store: Store): Timeline {
   let paintFrame = 0;
   let rebuildFrame = 0;
   const readableWordLabels = new Set<string>();
+  let selectedWord: string | undefined;
+  let overlapMenu: HTMLElement | undefined;
+  const closeOverlapMenu = () => { overlapMenu?.remove(); overlapMenu = undefined; };
+  element.addEventListener("pointerdown", event => {
+    if (!overlapMenu?.contains(event.target as Node)) closeOverlapMenu();
+  });
+  element.addEventListener("keydown", event => { if (event.key === "Escape") closeOverlapMenu(); });
+  body.addEventListener("scroll", closeOverlapMenu);
   let clipNodes: readonly {
     readonly node: HTMLElement;
     readonly start: number;
     readonly end: number;
     readonly id: string;
+    readonly selectionGroup?: string;
   }[] = [];
   let semanticNodes: readonly {
     readonly node: HTMLElement;
@@ -301,7 +310,7 @@ export function createTimeline(store: Store): Timeline {
         const from = place(preview.startFrame, state.snapshot.space.frameCount, zoom.window());
         const to = place(preview.endFrameExclusive, state.snapshot.space.frameCount, zoom.window());
         activeEdit.node.style.left = `${from * 100}%`;
-        activeEdit.node.style.width = `max(2px, calc(${Math.max(0, to - from) * 100}% - ${itemMetrics.gapPx}px))`;
+        activeEdit.node.style.width = `max(2px, ${Math.max(0, to - from) * 100}%)`;
       }
       return;
     }
@@ -479,29 +488,32 @@ export function createTimeline(store: Store): Timeline {
     .sort((left, right) => (left.binding.lane.order ?? 0) - (right.binding.lane.order ?? 0));
 
   const buildSemanticLane = (snapshot: StudioSnapshot): void => {
-    if (snapshot.semantic === undefined) {
+    if (snapshot.semantic === undefined || snapshot.semantic.segments.length === 0) {
       return;
     }
     const presentation = snapshot.semantic.presentation;
-    // This is one semantic ruler group, not a regular Film lane. Its three
-    // bands share the same inner inset as ordinary items, so the first pixel
-    // of the semantic content aligns with the first pixel of the label card.
-    const laneHeight = presentation.lane.heightPx;
-    const bandHeight = Math.max(1, (laneHeight - itemMetrics.insetYPx * 2) / 3);
+    const bandHeight = Math.max(1, (presentation.lane.heightPx - itemMetrics.insetYPx * 2) / 3);
+    const bands = [
+      { kind: "segment", height: bandHeight },
+      ...(snapshot.semantic.tokens.length > 0 ? [{ kind: "word", height: bandHeight }] : []),
+      ...(snapshot.semantic.selections.length + snapshot.semantic.moments.length > 0
+        ? [{ kind: "intent", height: bandHeight }] : []),
+    ];
+    const laneHeight = bands.reduce((height, band) => height + band.height, itemMetrics.insetYPx * 2);
     const label = createTrackLabel(
-      presentation.label ?? "Semantic",
+      presentation.label ?? "Timeline",
       presentation.tone,
       presentation.icon,
-      `${snapshot.semantic.segments.length} take${snapshot.semantic.segments.length === 1 ? "" : "s"}`,
+      `${snapshot.semantic.segments.length} segment${snapshot.semantic.segments.length === 1 ? "" : "s"}`,
       laneHeight,
     );
     label.classList.add("track-label-semantic");
+    label.style.height = `calc(var(--timeline-ruler-height) + ${laneHeight}px)`;
     labels.append(label);
 
     const lane = document.createElement("div");
     lane.className = `lane semantic-lane track-tone-${presentation.tone}`;
     lane.style.height = `${laneHeight}px`;
-    lane.style.setProperty("--semantic-band-height", `${bandHeight}px`);
     const laneWidth = lanes.clientWidth;
     const nextSemanticNodes: {
       node: HTMLElement;
@@ -511,12 +523,15 @@ export function createTimeline(store: Store): Timeline {
       kind: "segment" | "word" | "selection" | "moment";
     }[] = [];
 
-    const bands = ["segment", "word", "intent"] as const;
-    for (const [index, kind] of bands.entries()) {
+    let bandTop = itemMetrics.insetYPx;
+    for (const { kind, height } of bands) {
       const band = document.createElement("div");
       band.className = `semantic-band semantic-band-${kind}`;
-      band.style.top = `${itemMetrics.insetYPx + index * bandHeight}px`;
+      band.style.top = `${bandTop}px`;
+      band.style.setProperty("--semantic-band-height", `${height}px`);
+      band.setAttribute("aria-label", kind === "intent" ? "Selections and Moments" : kind === "word" ? "Words" : "Segments");
       lane.append(band);
+      bandTop += height;
     }
     const segmentBand = lane.querySelector<HTMLElement>(".semantic-band-segment")!;
     const wordBand = lane.querySelector<HTMLElement>(".semantic-band-word")!;
@@ -535,7 +550,7 @@ export function createTimeline(store: Store): Timeline {
       node.dataset.semanticSegment = segment.id;
       node.style.left = `${from * 100}%`;
       const segmentWidth = Math.max(0, to - from) * 100;
-      node.style.width = `max(2px, calc(${segmentWidth}% - ${itemMetrics.gapPx}px))`;
+      node.style.width = `max(2px, ${segmentWidth}%)`;
       node.title = segment.id;
       const segmentLabel = document.createElement("span");
       segmentLabel.className = "semantic-segment-label";
@@ -575,12 +590,12 @@ export function createTimeline(store: Store): Timeline {
       word.setAttribute("aria-label", token.text);
       word.style.left = `${wordFrom * 100}%`;
       const wordWidth = Math.max(0, wordTo - wordFrom);
-      word.style.width = `max(1px, calc(${wordWidth * 100}% - ${itemMetrics.gapPx}px))`;
+      word.style.width = `max(1px, ${wordWidth * 100}%)`;
       word.title = token.text;
       const text = document.createElement("span");
       text.className = "semantic-word-label";
       text.textContent = token.text;
-      const wordWidthPx = Math.max(1, wordWidth * laneWidth - itemMetrics.gapPx);
+      const wordWidthPx = Math.max(1, wordWidth * laneWidth);
       const textWidthPx = measuredText(token.text);
       const contentWidthPx = Math.max(0, wordWidthPx - wordLabelPaddingPx * 2);
       const wasReadable = readableWordLabels.has(token.id);
@@ -596,6 +611,8 @@ export function createTimeline(store: Store): Timeline {
       word.append(wordContent);
       word.addEventListener("click", (event) => {
         event.stopPropagation();
+        store.clearSelection();
+        selectedWord = token.id;
         store.seek(token.startFrame, "timeline");
       });
       nextSemanticNodes.push({ node: word, id: token.id, start: token.startFrame, end: token.endFrameExclusive, kind: "word" });
@@ -611,7 +628,7 @@ export function createTimeline(store: Store): Timeline {
       node.tabIndex = 0;
       node.setAttribute("aria-label", `Selection ${selection.id}`);
       node.style.left = `${from * 100}%`;
-      node.style.width = `max(2px, calc(${Math.max(0, to - from) * 100}% - ${itemMetrics.gapPx}px))`;
+      node.style.width = `max(2px, ${Math.max(0, to - from) * 100}%)`;
       node.title = selection.id;
       const selectionLabel = document.createElement("span");
       selectionLabel.className = "semantic-selection-label";
@@ -645,6 +662,33 @@ export function createTimeline(store: Store): Timeline {
       intentBand.append(node);
       nextSemanticNodes.push({ node, id: moment.id, start: moment.frame, end: moment.frame + 1, kind: "moment" });
     }
+    lane.addEventListener("contextmenu", event => {
+      const hits = nextSemanticNodes.filter(({ node }) => {
+        const rect = node.getBoundingClientRect();
+        return event.clientX >= rect.left && event.clientX < rect.right
+          && event.clientY >= rect.top && event.clientY < rect.bottom;
+      });
+      if (hits.length < 2) return;
+      event.preventDefault();
+      closeOverlapMenu();
+      const menu = document.createElement("div");
+      menu.className = "timeline-overlap-menu";
+      menu.setAttribute("role", "menu");
+      menu.setAttribute("aria-label", "Overlapping timeline objects");
+      for (const hit of [...hits].reverse()) {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.setAttribute("role", "menuitem");
+        option.textContent = hit.node.getAttribute("aria-label") ?? hit.id;
+        option.addEventListener("click", () => { closeOverlapMenu(); hit.node.click(); });
+        menu.append(option);
+      }
+      element.append(menu);
+      menu.style.left = `${Math.max(0, Math.min(event.clientX, window.innerWidth - menu.offsetWidth - 8))}px`;
+      menu.style.top = `${Math.max(0, Math.min(event.clientY, window.innerHeight - menu.offsetHeight - 8))}px`;
+      overlapMenu = menu;
+      menu.querySelector("button")?.focus();
+    });
     rows.append(lane);
     semanticNodes = nextSemanticNodes;
   };
@@ -652,118 +696,139 @@ export function createTimeline(store: Store): Timeline {
   const buildTrack = (
     snapshot: StudioSnapshot,
     track: StudioSnapshot["tracks"][number],
-    nextClipNodes: { node: HTMLElement; start: number; end: number; id: string }[],
+    nextClipNodes: { node: HTMLElement; start: number; end: number; id: string; selectionGroup?: string }[],
     attached = false,
   ): void => {
+    const trackBands = track.binding.bands ?? [];
+    const banded = trackBands.length > 0;
+    const layout = [
+      ...trackBands.filter(band => band.placement === "before"),
+      { id: undefined, heightPx: track.binding.lane.heightPx, display: "content" as const, tone: track.binding.tone },
+      ...trackBands.filter(band => band.placement === "after"),
+    ];
+    const totalHeight = layout.reduce((sum, band) => sum + band.heightPx, 0)
+      + (banded ? 2 * itemMetrics.insetYPx : 0);
     const tone = track.binding.tone;
-    const laneHeight = track.binding.lane.heightPx;
     const displayedItems = track.clips.length;
     const label = createTrackLabel(
       displayTrackName(track),
       tone,
       track.binding.icon,
       `${displayedItems} item${displayedItems === 1 ? "" : "s"}`,
-      laneHeight,
+      totalHeight,
       attached,
     );
     label.classList.add(`track-facet-${track.binding.facet}`);
     labels.append(label);
 
-    const lane = document.createElement("div");
-    lane.className = `lane track-tone-${tone} track-facet-${track.binding.facet}${attached ? " lane-attached" : ""}`;
-    lane.style.height = `${laneHeight}px`;
-    lane.style.setProperty("--lane-height", `${laneHeight}px`);
-    const laneWidth = lanes.clientWidth;
+    const trackBody = document.createElement("div");
+    trackBody.className = banded ? "timeline-track timeline-track-banded" : "timeline-track";
+    trackBody.dataset.track = track.id;
+    trackBody.style.height = `${totalHeight}px`;
     const materialMounts: {
       readonly target: HTMLElement;
       readonly preview: Extract<StudioSnapshot["tracks"][number]["clips"][number]["display"]["layers"][number], { readonly kind: "preview" }>["preview"];
     }[] = [];
-    // Stable order preserves Companion projection order when stack levels tie.
-    for (const clip of [...track.clips].sort((a, b) => a.stackOrder - b.stackOrder)) {
-      const from = place(clip.startFrame, snapshot.space.frameCount, zoom.window());
-      const to = place(clip.endFrameExclusive, snapshot.space.frameCount, zoom.window());
-      if (to <= 0 || from >= 1) continue;
-      const node = document.createElement("button");
-      node.type = "button";
-      node.className = `clip clip-tone-${tone} clip-facet-${track.binding.facet} clip-chrome-${clip.presentation.chrome}`;
-      node.classList.toggle("clip-editable", clip.editHandles.some((handle) => handle.enabled));
-      node.dataset.clip = clip.id;
-      node.setAttribute("aria-label", clip.display.title);
-      node.style.left = `${from * 100}%`;
-      node.style.width = `max(2px, calc(${Math.max(0, to - from) * 100}% - ${itemMetrics.gapPx}px))`;
-      const visibleWidthPx = visibleItemWidth(from, to, laneWidth);
-      node.classList.toggle("clip-preview-wide", visibleWidthPx >= 92);
-      node.title = `${clip.display.title} · ${clip.startFrame}-${clip.endFrameExclusive}f`;
-      node.innerHTML = `<span class="clip-head"><span class="clip-name"></span><span class="clip-meta"></span></span><span class="clip-body"><span class="clip-layers" aria-hidden="true"></span><span class="clip-phases"></span></span><span class="clip-selection" aria-hidden="true"></span>`;
-      const layers = node.querySelector<HTMLElement>(".clip-layers")!;
-      clip.display.layers.forEach((layer, index) => {
-        const layerNode = document.createElement("span");
-        layerNode.className = `clip-layer clip-layer-${layer.kind} clip-layer-role-${layer.role}`;
-        layerNode.style.zIndex = String(index + 1);
-        if (layer.kind === "text") {
-          layerNode.textContent = layer.text;
-        } else {
-          layerNode.classList.add(`clip-layer-layout-${layer.layout}`);
-          materialMounts.push({ target: layerNode, preview: layer.preview });
+    for (const band of layout) {
+      const tone = band.tone ?? track.binding.tone;
+      const laneHeight = band.heightPx;
+      const lane = document.createElement("div");
+      lane.className = `lane track-tone-${tone} track-facet-${track.binding.facet}${attached ? " lane-attached" : ""}`;
+      lane.style.height = `${laneHeight}px`;
+      if (banded) lane.classList.add("track-band", `track-band-${band.display}`);
+      if (band.id !== undefined) lane.dataset.band = band.id;
+      lane.style.setProperty("--lane-height", `${laneHeight}px`);
+      const laneWidth = lanes.clientWidth;
+      // Stable order preserves Companion projection order when stack levels tie.
+      for (const clip of track.clips.filter(clip => clip.band === band.id).sort((a, b) => a.stackOrder - b.stackOrder)) {
+        const from = place(clip.startFrame, snapshot.space.frameCount, zoom.window());
+        const to = place(clip.endFrameExclusive, snapshot.space.frameCount, zoom.window());
+        if (to <= 0 || from >= 1) continue;
+        const node = document.createElement("button");
+        node.type = "button";
+        node.className = `clip clip-tone-${tone} clip-facet-${track.binding.facet} clip-chrome-${clip.presentation.chrome}`;
+        node.classList.toggle("clip-editable", clip.editHandles.some((handle) => handle.enabled));
+        node.dataset.clip = clip.id;
+        node.setAttribute("aria-label", clip.display.title);
+        node.style.left = `${from * 100}%`;
+        node.style.width = `max(2px, ${Math.max(0, to - from) * 100}%)`;
+        const visibleWidthPx = visibleItemWidth(from, to, laneWidth);
+        node.classList.toggle("clip-preview-wide", visibleWidthPx >= 92);
+        node.title = `${clip.display.title} · ${clip.startFrame}-${clip.endFrameExclusive}f`;
+        node.innerHTML = `<span class="clip-head"><span class="clip-name"></span><span class="clip-meta"></span></span><span class="clip-body"><span class="clip-layers" aria-hidden="true"></span><span class="clip-phases"></span></span><span class="clip-boundary" aria-hidden="true"></span><span class="clip-selection" aria-hidden="true"></span>`;
+        const layers = node.querySelector<HTMLElement>(".clip-layers")!;
+        clip.display.layers.forEach((layer, index) => {
+          const layerNode = document.createElement("span");
+          layerNode.className = `clip-layer clip-layer-${layer.kind} clip-layer-role-${layer.role}`;
+          layerNode.style.zIndex = String(index + 1);
+          if (layer.kind === "text") {
+            layerNode.textContent = layer.text;
+          } else {
+            layerNode.classList.add(`clip-layer-layout-${layer.layout}`);
+            materialMounts.push({ target: layerNode, preview: layer.preview });
+          }
+          layers.append(layerNode);
+        });
+        const phaseLayer = node.querySelector<HTMLElement>(".clip-phases")!;
+        for (const phase of clip.temporal?.phases ?? []) {
+          if (phase.endFrameExclusive <= clip.startFrame || phase.startFrame >= clip.endFrameExclusive) continue;
+          const phaseNode = document.createElement("span");
+          phaseNode.className = `clip-phase clip-phase-${phase.role}`;
+          phaseNode.style.left = `${(phase.startFrame - clip.startFrame) / Math.max(1, clip.endFrameExclusive - clip.startFrame) * 100}%`;
+          phaseNode.style.width = `${(phase.endFrameExclusive - phase.startFrame) / Math.max(1, clip.endFrameExclusive - clip.startFrame) * 100}%`;
+          phaseLayer.append(phaseNode);
         }
-        layers.append(layerNode);
-      });
-      const phaseLayer = node.querySelector<HTMLElement>(".clip-phases")!;
-      for (const phase of clip.temporal?.phases ?? []) {
-        if (phase.endFrameExclusive <= clip.startFrame || phase.startFrame >= clip.endFrameExclusive) continue;
-        const phaseNode = document.createElement("span");
-        phaseNode.className = `clip-phase clip-phase-${phase.role}`;
-        phaseNode.style.left = `${(phase.startFrame - clip.startFrame) / Math.max(1, clip.endFrameExclusive - clip.startFrame) * 100}%`;
-        phaseNode.style.width = `${(phase.endFrameExclusive - phase.startFrame) / Math.max(1, clip.endFrameExclusive - clip.startFrame) * 100}%`;
-        phaseLayer.append(phaseNode);
-      }
-      const metaText = clip.presentation.chrome === "point"
-        ? `${(clip.startFrame / fps(snapshot)).toFixed(2)}s`
-        : `${((clip.endFrameExclusive - clip.startFrame) / fps(snapshot)).toFixed(2)}s`;
-      const headerLabel = node.querySelector<HTMLElement>(".clip-name")!;
-      node.querySelector(".clip-meta")!.textContent = metaText;
-      headerLabel.textContent = clip.display.title;
-      node.addEventListener("pointerdown", (event) => {
-        const rect = node.getBoundingClientRect();
-        const edge = Math.min(8, Math.max(4, rect.width / 3));
-        const nearStart = event.clientX - rect.left <= edge;
-        const nearEnd = rect.right - event.clientX <= edge;
-        const handle = clip.editHandles.find((candidate) =>
-          candidate.enabled
-          && ((candidate.gesture === "trim-start" && nearStart)
-            || (candidate.gesture === "trim-end" && nearEnd)
-            || (candidate.gesture === "move" && !nearStart && !nearEnd)));
-        if (handle !== undefined
-          && (handle.gesture === "move" || handle.gesture === "trim-start" || handle.gesture === "trim-end")) {
-          event.stopPropagation();
-          const pointerFrame = handle.coordinate === "semantic-anchor"
-            ? rawFrameAt(event.clientX)
-            : frameAt(event.clientX);
-          activeEdit = {
-            clip,
-            handle,
-            startFrame: pointerFrame,
-            pointerId: event.pointerId,
-            node,
-            originalLeft: node.style.left,
-            originalWidth: node.style.width,
-          };
-          node.classList.add("editing");
-          try { lanes.setPointerCapture(event.pointerId); } catch { /* local pointer */ }
+        const metaText = clip.presentation.chrome === "point"
+          ? `${(clip.startFrame / fps(snapshot)).toFixed(2)}s`
+          : `${((clip.endFrameExclusive - clip.startFrame) / fps(snapshot)).toFixed(2)}s`;
+        const headerLabel = node.querySelector<HTMLElement>(".clip-name")!;
+        node.querySelector(".clip-meta")!.textContent = metaText;
+        headerLabel.textContent = clip.display.title;
+        node.addEventListener("pointerdown", (event) => {
+          const rect = node.getBoundingClientRect();
+          const edge = Math.min(8, Math.max(4, rect.width / 3));
+          const nearStart = event.clientX - rect.left <= edge;
+          const nearEnd = rect.right - event.clientX <= edge;
+          const handle = clip.editHandles.find((candidate) =>
+            candidate.enabled
+            && ((candidate.gesture === "trim-start" && nearStart)
+              || (candidate.gesture === "trim-end" && nearEnd)
+              || (candidate.gesture === "move" && !nearStart && !nearEnd)));
+          if (handle !== undefined
+            && (handle.gesture === "move" || handle.gesture === "trim-start" || handle.gesture === "trim-end")) {
+            event.stopPropagation();
+            const pointerFrame = handle.coordinate === "semantic-anchor"
+              ? rawFrameAt(event.clientX)
+              : frameAt(event.clientX);
+            activeEdit = {
+              clip,
+              handle,
+              startFrame: pointerFrame,
+              pointerId: event.pointerId,
+              node,
+              originalLeft: node.style.left,
+              originalWidth: node.style.width,
+            };
+            node.classList.add("editing");
+            try { lanes.setPointerCapture(event.pointerId); } catch { /* local pointer */ }
+            store.select(clip.id, "timeline");
+            return;
+          }
           store.select(clip.id, "timeline");
-          return;
-        }
-        store.select(clip.id, "timeline");
-      });
-      node.addEventListener("dblclick", () => store.seek(clip.startFrame, "timeline"));
-      nextClipNodes.push({ node, start: clip.startFrame, end: clip.endFrameExclusive, id: clip.id });
-      lane.append(node);
+        });
+        node.addEventListener("dblclick", () => store.seek(clip.startFrame, "timeline"));
+        nextClipNodes.push({ node, start: clip.startFrame, end: clip.endFrameExclusive, id: clip.id, ...(clip.selectionGroup === undefined ? {} : { selectionGroup: clip.selectionGroup }) });
+        lane.append(node);
+      }
+      trackBody.append(lane);
     }
-    rows.append(lane);
+    rows.append(trackBody);
+    // Cached storyboards render synchronously and need connected, measurable targets.
     for (const item of materialMounts) mountMaterialPreview(item.target, item.preview);
   };
 
   const build = (snapshot: StudioSnapshot): void => {
+    closeOverlapMenu();
     const scrollTop = body.scrollTop;
     labels.replaceChildren();
     rows.replaceChildren();
@@ -771,9 +836,9 @@ export function createTimeline(store: Store): Timeline {
     const corner = document.createElement("div");
     corner.className = "label-corner";
     corner.textContent = "";
-    labels.append(corner);
+    if (snapshot.semantic === undefined || snapshot.semantic.segments.length === 0) labels.append(corner);
     buildSemanticLane(snapshot);
-    const nextClipNodes: { node: HTMLElement; start: number; end: number; id: string }[] = [];
+    const nextClipNodes: { node: HTMLElement; start: number; end: number; id: string; selectionGroup?: string }[] = [];
     for (const track of snapshot.tracks) {
       const attachedTo = track.binding.lane.attachedTo;
       if (attachedTo !== undefined) continue;
@@ -804,8 +869,10 @@ export function createTimeline(store: Store): Timeline {
     playhead.classList.toggle("outside", position < 0 || position > lanes.clientWidth);
     playheadGrip.classList.toggle("outside", position < 0 || position > lanes.clientWidth);
     timelineTime.textContent = frameTimecode(snapshot, head.frame);
+    const chosen = selection.kind === "clip" ? store.clip(selection.clipId) : undefined;
     for (const item of clipNodes) {
-      const selected = selection.kind === "clip" && selection.clipId === item.id;
+      const selected = chosen !== undefined && (chosen.id === item.id
+        || (chosen.selectionGroup !== undefined && chosen.selectionGroup === item.selectionGroup));
       item.node.classList.toggle("selected", selected);
       item.node.setAttribute("aria-pressed", String(selected));
       item.node.classList.toggle("live", head.frame >= item.start && head.frame < item.end);
@@ -815,7 +882,8 @@ export function createTimeline(store: Store): Timeline {
         (item.kind === "segment" || item.kind === "selection")
         && head.frame >= item.start && head.frame < item.end);
       item.node.classList.toggle("current", item.kind === "word" && head.frame >= item.start && head.frame < item.end);
-      const selected = (item.kind === "segment"
+      const selected = (item.kind === "word" && selectedWord === item.id && selection.kind === "none")
+        || (item.kind === "segment"
         && selection.kind === "semantic-segment" && selection.segmentId === item.id)
         || (item.kind === "selection"
           && selection.kind === "semantic-selection" && selection.selectionId === item.id)
@@ -862,6 +930,7 @@ export function createTimeline(store: Store): Timeline {
   zoom.subscribe(scheduleBuild);
   store.subscribe((value) => {
     state = value;
+    if (value.selection.kind !== "none") selectedWord = undefined;
     if (value.snapshot.revision !== built) {
       built = value.snapshot.revision;
       build(value.snapshot);

@@ -1,8 +1,9 @@
+import { sealTimeline } from "@qflow/timeline";
 import { compositionComponent, spatialComponent, videoContractManifests } from "../../../test/support/video-domain.js";
 import { registerTypeValidatorFacets } from "@qflow/component-kit";
 import { programSpaceTypes, sealProgramSpace } from "@qflow/program-space";
-import { projectSemanticProgramSpace, semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
-import type { SemanticTrack } from "@qflow/semantic-track";
+import { projectTimelineSpace, timelineProducers, timelineTypes } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import { compositionTypes, sealAudioTrack, sealVisualTrack } from "@qflow/composition";
 import type { Composition, Track } from "@qflow/composition";
 import type { FontArtifactRef } from "@qflow/media";
@@ -10,7 +11,7 @@ import { sealCanvasSpace, spatialTypes } from "@qflow/spatial";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
-import { semanticTrackFixture } from "../../../test/semantic-track-fixture.js";
+import { timelineFixture } from "../../../test/timeline-fixture.js";
 
 import {
   createResolvedClosure,
@@ -34,10 +35,10 @@ import { renderTypographyTrack, sealTypographyTrackProgram, stillTextMotion, typ
 import type { TextStyle } from "@qflow/typography-track";
 import { admitRecord, TypeValidatorRegistry } from "@qflow/validation";
 
-const space = sealProgramSpace({ id: "test-space", durationSec: 4,
+const space = sealTimeline({ items: [], id: "test-space", durationSec: 4,
   frameRate: { numerator: 30, denominator: 1 },
 });
-const semantic = semanticTrackFixture(space);
+const semantic = timelineFixture(space);
 
 function validatorRegistry(): TypeValidatorRegistry {
   const registry = new TypeValidatorRegistry();
@@ -133,8 +134,9 @@ const closure = createResolvedClosure([
   typographyTrackManifest,
 ]);
 const records = await Promise.all([
-  sealRecord({ id: "space", type: programSpaceTypes.programSpace, value: stored(space) }),
-  sealRecord({ id: "semantic", type: semanticTrackTypes.track, value: stored(semantic) }),
+  sealRecord({ id: "render-space", type: programSpaceTypes.programSpace, value: stored(projectTimelineSpace(space)) }),
+  sealRecord({ id: "timeline", type: timelineTypes.track, value: stored(space) }),
+  sealRecord({ id: "semantic", type: timelineTypes.track, value: stored(semantic) }),
   sealRecord({ id: "canvas", type: spatialTypes.canvas, value: stored(canvas) }),
   sealRecord({ id: "film-program", type: filmTypes.program, value: stored(filmProgram) }),
   sealRecord({ id: "text-program", type: typographyTrackTypes.program, value: stored(textProgram) }),
@@ -147,7 +149,7 @@ const textInstance = elaborateGraphFragment(linked, typographyTrackFragment, {
   id: "title",
   fragment: typographyTrackFragment.id,
   inputs: {
-    space: { kind: "record", id: "space" },
+    timeline: { kind: "record", id: "timeline" },
     program: { kind: "record", id: "text-program" },
   },
 });
@@ -167,7 +169,7 @@ const filmInstance = elaborateGraphFragment(linked, filmFragment, {
   inputs: {
     program: { kind: "record", id: "film-program" },
     canvas: { kind: "record", id: "canvas" },
-    space: { kind: "record", id: "space" },
+    timeline: { kind: "record", id: "timeline" },
     title: { kind: "logical-output", id: "title.track" },
     background: { kind: "record", id: "background" },
     audio: { kind: "record", id: "audio" },
@@ -181,7 +183,7 @@ const hyperframesInstance = elaborateGraphFragment(linked, hyperframesDocumentFr
   fragment: hyperframesDocumentFragment.id,
   inputs: {
     composition: { kind: "logical-output", id: "main.composition" },
-    space: { kind: "record", id: "space" },
+    space: { kind: "record", id: "render-space" },
   },
 });
 const hyperframesContribution = bindAuthorFragment(hyperframesInstance, {
@@ -227,13 +229,13 @@ test("Film stops at Composition and Hyperframes remains an ordinary downstream F
 
 test("the Driver folds peer Tracks, then independently compiles the Composition", async () => {
   const registry = new ProducerRegistry();
-  registry.registerProducer(semanticTrackProducers.projectProgramSpace, ({ inputs }) => ({
-    outputs: { space: stored(projectSemanticProgramSpace(inline(inputs.track) as SemanticTrack)) },
+  registry.registerProducer(timelineProducers.projectProgramSpace, ({ inputs }) => ({
+    outputs: { space: stored(projectTimelineSpace(inline(inputs.track) as Timeline)) },
     needs: {},
   }));
   registry.registerProducer(typographyTrackProducers.render, ({ inputs }) => ({
     outputs: { track: stored(renderTypographyTrack(
-      inline(inputs.space) as typeof space,
+      inline(inputs.timeline) as typeof space,
       inline(inputs.program) as typeof textProgram,
     )) },
     needs: {},
@@ -245,7 +247,7 @@ test("the Driver folds peer Tracks, then independently compiles the Composition"
   registry.registerProducer(filmProducers.appendVisualTrack, ({ inputs }) => ({
     outputs: { set: stored(appendFilmVisualTrack(
       inline(inputs.set) as never,
-      inline(inputs.space) as typeof space,
+      inline(inputs.timeline) as typeof space,
       inline(inputs.track) as never,
     )) },
     needs: {},
@@ -253,7 +255,7 @@ test("the Driver folds peer Tracks, then independently compiles the Composition"
   registry.registerProducer(filmProducers.appendAudioTrack, ({ inputs }) => ({
     outputs: { set: stored(appendFilmAudioTrack(
       inline(inputs.set) as never,
-      inline(inputs.space) as typeof space,
+      inline(inputs.timeline) as typeof space,
       inline(inputs.track) as never,
     )) },
     needs: {},
@@ -262,7 +264,7 @@ test("the Driver folds peer Tracks, then independently compiles the Composition"
     outputs: { composition: stored(compileFilmComposition(
       inline(inputs.program) as never,
       inline(inputs.canvas) as typeof canvas,
-      inline(inputs.space) as typeof space,
+      inline(inputs.timeline) as typeof space,
       inline(inputs.set) as never,
     )) },
     needs: {},

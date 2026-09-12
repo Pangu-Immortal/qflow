@@ -1,7 +1,7 @@
-import { createStudioTrackCompanionHostFacet } from "@qflow/studio-adapter";
-import { captionFineStudioTrackCompanions } from "./index.js";
+import { createStudioCompanionHostFacet } from "@qflow/studio-adapter";
+import { captionFineStudioTrackCompanions, captionFineStudioParameterCompanions } from "./index.js";
 
 export default {
   format: "qflow.node-package@1" as const,
-  hostFacets: [createStudioTrackCompanionHostFacet(captionFineStudioTrackCompanions)],
+  hostFacets: [createStudioCompanionHostFacet({ tracks: captionFineStudioTrackCompanions, parameters: captionFineStudioParameterCompanions })],
 };

@@ -1,7 +1,8 @@
+import { sealTimeline } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
-import { semanticTrackFixture } from "../../../test/semantic-track-fixture.js";
+import { timelineFixture } from "../../../test/timeline-fixture.js";
 import { projectProgramWindow } from "../../../test/temporal-fixture.js";
 
 import { artifactManifest } from "@qflow/artifact";
@@ -29,7 +30,7 @@ import {
   sealScreenOverlayItemSpec,
 } from "@qflow/screen-overlay";
 import type { ScreenOverlayComponent } from "@qflow/screen-overlay";
-import { semanticTrackDependency, semanticTrackManifest, semanticTrackProducers, semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineDependency, timelineManifest, timelineProducers, timelineTypes } from "@qflow/timeline";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { speechManifest } from "@qflow/speech";
 import { sealCanvasSpace, spatialComponent, spatialDependency, spatialManifest, spatialTypes } from "@qflow/spatial";
@@ -43,10 +44,10 @@ const canvas = sealCanvasSpace({
   widthPx: 1080, heightPx: 1920,
   origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square",
 });
-const space = sealProgramSpace({ id: "test-space", durationSec: 2, frameRate: { numerator: 30, denominator: 1 },
+const space = sealTimeline({ items: [], id: "test-space", durationSec: 2, frameRate: { numerator: 30, denominator: 1 },
 });
 const header = sealScreenOverlayHeader({ id: "screen" });
-const semantic = semanticTrackFixture(space);
+const semantic = timelineFixture(space);
 const components: readonly ScreenOverlayComponent[] = [
   { kind: "flash", color: "#ffffff", intensity: 0.9, attackFrames: 2, holdFrames: 3, decayFrames: 5 },
   { kind: "color-wash", color: "#2244ff", opacity: 0.2 },
@@ -124,7 +125,7 @@ test("overlay Tracks interleave with peer Tracks only through absolute stacking"
 
 test("the Screen Overlay Fragment publishes its Program and peer VisualTrack", () => {
   const fragment = createScreenOverlayFragment([{ specName: "spec", windowName: "window" }]);
-  assert.deepEqual(fragment.inputs.map((input) => input.name), ["canvas", "header", "space", "spec", "window"]);
+  assert.deepEqual(fragment.inputs.map((input) => input.name), ["canvas", "header", "spec", "timeline", "window"]);
   assert.deepEqual(fragment.exports.map((output) => [output.name, output.type.name]), [
     ["program", "ScreenOverlayProgram"],
     ["track", "VisualTrack"],
@@ -136,13 +137,13 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
   const fixtureSurfaceDigest = fixtureResource("example.screen-inputs/surface@1");
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
-    outputs: [spatialTypes.canvas, semanticTrackTypes.track],
+    outputs: [spatialTypes.canvas, timelineTypes.track],
   } as const;
   const fixtureManifest: ModuleManifest = {
     format: "qflow.module@1",
     name: fixtureModule.name,
     version: fixtureModule.version,
-    dependencies: [spatialDependency, semanticTrackDependency],
+    dependencies: [spatialDependency, timelineDependency],
     types: [],
     capabilities: [],
     producers: [],
@@ -154,7 +155,7 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
     programSpaceManifest,
     speechManifest,
     speechEvidenceManifest,
-    semanticTrackManifest,
+    timelineManifest,
     spatialManifest,
     svsManifest,
     temporalManifest,
@@ -167,7 +168,7 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
   registry.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
       { id: "canvas", type: spatialTypes.canvas, value: { kind: "inline", value: canvas }, range: element.range },
-      { id: "semantic", type: semanticTrackTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
     ],
     components: [],
     fragments: [],
@@ -193,7 +194,7 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
         <import as="fixture" from="example.screen-inputs@1"/>
         <import as="screen" from="@qflow/screen-overlay@1"/>
         <fixture:Inputs/>
-        <screen:Track id="screen-fx" canvas={canvas} semantic={semantic}>
+        <screen:Track id="screen-fx" canvas={canvas} timeline={semantic}>
           <screen:Flash during="program" z="70" color="#ffffff" intensity="0.9" attack="2" hold="3" decay="5"/>
         </screen:Track>
       </svml>`,
@@ -215,7 +216,6 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
     temporalProducers.projectProgramInstant.name,
     temporalProducers.projectProgramInstant.name,
     temporalProducers.composeWindow.name,
-    semanticTrackProducers.projectProgramSpace.name,
-    screenOverlayProducers.render.name,
+        screenOverlayProducers.render.name,
   ].sort());
 });

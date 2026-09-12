@@ -1,8 +1,7 @@
 # `@qflow/film`
 
-The Surface accepts `semantic={speech.semantic}` for performance time or `space={animation}` for an
-authored ProgramSpace. Its Fragment receives `space` directly; rendering does not require Script
-or prepared performance media. Both time sources use the same frame and audio pipeline.
+The Surface, Fragment and assembly Producers receive the same Timeline through a `timeline` input.
+Partial, overlapping or absent semantic coverage all use that complete range.
 
 Official package-owned assembly layer between peer Tracks and the generic Composition waist.
 Film is an ordinary author component and an optional Target, not a Core root or a privileged video
@@ -21,9 +20,9 @@ belongs to each Present's absolute stacking key.
 
 The official Structured Surface validates an imported generic SVS Recipe into a nominal
 `FilmProgram`, receives CanvasSpace and the selected time source through separate explicit edges,
-projects ProgramSpace when that source is a SemanticTrack, type-checks
+passes the Timeline directly, type-checks
 each `<film:Track source={...}/>` reference and generates the finite fold. CanvasSpace is the only
-dimension truth, ProgramSpace is the only frame-rate truth, and FilmProgram owns only assembly
+dimension truth, Timeline is the only time-range truth, and FilmProgram owns only assembly
 identity and clear color.
 Child order is organizational: Track and Present identity, timing and absolute stacking remain in
 their own typed values. Final rendering is a separate author package and capability.
@@ -31,10 +30,16 @@ their own typed values. Final rendering is a separate author package and capabil
 For example, after the named inputs are declared:
 
 ```svml
-<film:Film id="main" canvas={vertical} semantic={speech.semantic}
+<import as="sound" from="@qflow/sound@1"/>
+<sound:Style id="voice-style"/>
+<sound:Track id="voice" timeline={speech.timeline}>
+  <sound:Use style={voice-style}/>
+</sound:Track>
+
+<film:Film id="main" canvas={vertical} timeline={speech.timeline}
   appearance={recipes.film.vertical}>
   <film:Track source={performance.visual}/>
-  <film:Track source={speech.audio}/>
+  <film:Track source={voice.audio}/>
   <film:Track source={coverage.visual}/>
   <film:Track source={captions.track}/>
   <film:Track source={music.track}/>

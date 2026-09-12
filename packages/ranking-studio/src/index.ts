@@ -1,7 +1,8 @@
 import { openFontStudioFields } from "@qflow/fonts-open/studio";
 import { rankingMarkupSurfaces, rankingModuleRef, rankingTypes } from "@qflow/ranking";
-import type { RankingProgram, RankingSchedule } from "@qflow/ranking";
+import type { RankingProgram, RankingSchedule, RankingSoundEventPlan } from "@qflow/ranking";
 import { compositionTypes } from "@qflow/composition";
+import type { AudioTrack } from "@qflow/composition";
 import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-adapter";
 import { artifactPreview, authoredChildFor, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalSemanticSource } from "@qflow/studio-adapter";
 
@@ -13,9 +14,12 @@ const frameParameters: readonly StudioSourceBindingDeclaration[] = [
   ...["left", "top", "right", "bottom", "x", "y", "width", "height"].map((name) => ({ name, writable: true })),
 ];
 
-function rankingProperties(surface: "column-style" | "tier-style" | "top-three-style") {
-  return rankingMarkupSurfaces.find((candidate) => candidate.name === surface)
-    ?.vocabulary.attributes.find((attribute) => attribute.name === "recipe")?.recipe ?? [];
+const soundProperties = new Set(["appear-gain", "move-gain", "sound-fade-frames"]);
+
+function rankingProperties(surface: "column-style" | "tier-style" | "top-three-style", audio = false) {
+  return (rankingMarkupSurfaces.find((candidate) => candidate.name === surface)
+    ?.vocabulary.attributes.find((attribute) => attribute.name === "recipe")?.recipe ?? [])
+    .filter((property) => soundProperties.has(property.name) === audio);
 }
 
 function title(name: string): string {
@@ -92,11 +96,11 @@ function rankingInspector(surface: "column-style" | "tier-style" | "top-three-st
   })];
 }
 
-function rankingStyle(surface: "column-style" | "tier-style" | "top-three-style"): StudioSourceBindingDeclaration {
+function rankingStyle(surface: "column-style" | "tier-style" | "top-three-style", audio = false): StudioSourceBindingDeclaration {
   return {
     name: "style",
-    referenced: [fontInspector.binding],
-    recipe: { through: ["recipe"], bindings: rankingProperties(surface).map(({ name, schema, fallback }) => ({
+    ...(audio ? {} : { referenced: [fontInspector.binding] }),
+    recipe: { through: ["recipe"], bindings: rankingProperties(surface, audio).map(({ name, schema, fallback }) => ({
       name,
       schema,
       ...(fallback === undefined ? {} : { fallback }),
@@ -159,9 +163,56 @@ function projectRanking(context: StudioTrackCompanionContext): readonly StudioEn
 
 const commonBindings: readonly StudioSourceBindingDeclaration[] = [
   { name: "frame", referenced: frameParameters },
-  { name: "appear-sound" },
-  { name: "move-sound" },
 ];
+
+function projectRankingAudio(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+  const events = requiredSurfaceValue(context, "events") as RankingSoundEventPlan;
+  const byId = new Map(events.events.map((event) => [event.id, event]));
+  const clips = new Map((context.track.value as AudioTrack).clips.map((clip) => [clip.id, clip]));
+  const boardId = context.placement?.id ?? context.track.outputRef;
+  return context.spans.map((span): StudioEntityDraft => {
+    const event = byId.get(span.id);
+    const clip = clips.get(span.id);
+    if (event === undefined || clip === undefined) throw new Error(`Ranking sound ${span.id} has no event or audio clip.`);
+    const child = authoredChildFor(context, event.itemId, [rankingTypes.itemSpec, rankingTypes.textItemShell]);
+    const label = child?.attributes.label ?? event.itemId;
+    const phase = event.kind === "appear" ? "Appear" : "Move";
+    return {
+      id: `${context.track.outputRef}:entity:${event.id}`,
+      authoredId: boardId,
+      display: { title: `${label} · ${phase}`, layers: [previewLayer(artifactPreview("audio", clip.artifact.resource), "waveform")] },
+      startFrame: span.startFrame, endFrameExclusive: span.endFrameExclusive, stackOrder: span.stackOrder,
+      ...(context.placement === undefined ? {} : { elementRange: context.placement.range }),
+      presentation: { entity: "ranking-sound", chrome: "standard" },
+      inspector: [{
+        id: "trigger", label: "Trigger", domain: "when", page: { id: "sound", label: "Sound" }, section: { id: "event", label: "Event" },
+        value: `${label} · ${phase} · ${event.frame}f`,
+        summary: "Follows the Ranking item's animation event. Adjust its visual timing to move the sound with it.",
+      }],
+    };
+  });
+}
+
+function rankingAudioCompanion(surface: "column" | "tier" | "top-three"): StudioTrackCompanion {
+  const style = `${surface}-style` as const;
+  return {
+    id: `${surface}-audio`, role: "track",
+    output: { type: compositionTypes.audioTrack, surface, modules: [rankingModuleRef] },
+    family: "audio", tone: "green", label: "Ranking Sounds", icon: "waveform",
+    lane: { heightPx: 48 }, requiredValues: ["events"],
+    bindings: [{ name: "appear-sound" }, ...(surface === "top-three" ? [] : [{ name: "move-sound" }]), rankingStyle(style, true)],
+    inspector: rankingProperties(style, true).map((property) => ({
+      binding: `style.${property.name}`, label: property.name === "sound-fade-frames" ? "Fade In" : title(property.name),
+      ...rankingInspectorPlacement[property.name as keyof typeof rankingInspectorPlacement],
+      control: "number",
+      ...(property.name === "sound-fade-frames"
+        ? { unit: "f", number: { minimum: 0, step: 1 } }
+        : { unit: "%", number: { scale: 100, minimum: 0, step: 1 } }),
+      summary: "Shared by every matching sound event using this Ranking style.",
+    })),
+    project: projectRankingAudio,
+  };
+}
 
 const frameInspector: readonly StudioInspectorFieldDeclaration[] = frameParameters
   .filter(({ writable }) => writable === true)
@@ -171,6 +222,7 @@ const frameInspector: readonly StudioInspectorFieldDeclaration[] = frameParamete
   }));
 
 export const rankingStudioTrackCompanions: readonly StudioTrackCompanion[] = [
+  ...(["column", "tier", "top-three"] as const).map(rankingAudioCompanion),
   {
     id: "column", role: "track",
     output: { type: compositionTypes.visualTrack, surface: "column", modules: [rankingModuleRef] },

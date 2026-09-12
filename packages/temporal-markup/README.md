@@ -2,11 +2,11 @@
 
 Shared SVML author-time projection helpers for `@qflow/temporal`. The Surface lowers authored
 Selection, Segment, Moment or explicit clock expressions to ordinary Instant projections and Window
-composition. A domain consumer receives the projected values and explicit ProgramSpace; it does not
+composition. A domain consumer receives the projected values and the shared Timeline; it does not
 locate Script words or infer a semantic source inside its renderer.
 
 The package exports `createTemporalWindowProjection`, `createTemporalInstantProjection`,
-`resolveTemporalContext`, `createTemporalSpace`, attribute vocabulary, and the exact duration/instant parsers. These are helpers for component
+`resolveTemporalContext`, attribute vocabulary, and the exact duration/instant parsers. These are helpers for component
 Surfaces, not standalone author tags or a new Track.
 
 The editing behavior is specified in [Author-directed time editing](EDITING.md).
@@ -15,15 +15,15 @@ write target for each supported gesture.
 
 ## Time context
 
-A Track Surface can accept `semantic={speech.semantic}` or `space={animation}`. Resolve that choice
-with `resolveTemporalContext({ element, resolveReference })`, and pass the result to
-`createTemporalSpace({ id, element, ...context })`. Preserve its component and fragment drafts.
-Supply `...context, space: time.space` to each temporal projection helper, and pass `time.space.ref`
-to the domain Fragment. Its input Type is `programSpaceTypes.programSpace`.
+A Track Surface accepts `timeline={program.timeline}`. Resolve it with
+`resolveTemporalContext({ element, resolveReference })` and pass that context to each temporal
+projection helper. Wire `context.timeline.ref` directly into the component Fragment's Timeline port.
+Preserve the projections' returned records, components and fragments.
 
-A semantic context locates Script references and supplies the performance's time axis. A declared
-space supplies a clock for authored animation. Literal times and program boundaries work in either
-context. A Script reference needs `semantic` to locate it; the renderer never invents that mapping.
+The context contains one required `timeline` reference. Program time and Script references both
+project against it. Pure animation uses a zero-Take Timeline with an authored extent. Script events
+use the anchors provided by its placed Takes. Drawing Producers receive that same Timeline and the
+projected Instants/Windows; they need no Script parser or separate time-range input.
 
 ## Window forms
 
@@ -70,10 +70,26 @@ can deliberately admit only that form; consumers need not expose unrelated tempo
 
 The Surface supplies an author-facing `subjectId` for the actual item whose time is being projected,
 separately from graph-qualified operation ids. The graph wires the resulting Instant or Window and
-ProgramSpace into the consumer. Keep projection outside the domain Producer: it consumes resolved
+Timeline into the consumer. Keep projection outside the domain Producer: it consumes resolved
 time and implements its own schedule or state, while the shared temporal protocol retains where that
 time came from. An outer lifetime and child activations are separate inputs when a component persists
 between events.
 
 Script's `@`, `~@`, close markers and Moment syntax belong to `@qflow/script`; media playback belongs
 to `@qflow/media-track`; a graphic component's reveal or preset semantics belong to that component.
+
+## Independently bound endpoints
+
+For a Window whose endpoints refer to different semantic sources, use `start-source` and
+`end-source`. The expression still states the kind and boundary; each binding supplies that source:
+
+```svml
+<example:Item start-source={story.segment.next} start="segment.start"
+  end-source={story.segment.previous} end="segment.end"/>
+```
+
+This describes an overlapping physical interval without authoring a backwards Script Selection.
+The same endpoint bindings accept Selections or Moments with their corresponding expressions.
+`segment`, `selection` and `moment` remain convenient shared bindings when both expressions use the
+same source. Explicit expressions retain local parameter writeback; these bindings do not move the
+referenced Script anchors when the expression's offset is edited.

@@ -28,7 +28,7 @@ export const decodeExampleSurface: StructuredSurfaceHandler = ({ element, resolv
     if (recipe.record?.value.kind !== "inline" || font.record?.value.kind !== "inline") throw new Error("Style references must resolve to inline records.");
     return { records: [{ id, type: exampleTypes.style, value: { kind: "inline", value: { recipe: recipe.record.value.value, fonts: font.record.value.value } }, range: element.range }], components: [], fragments: [], exports: [id] };
   }
-  const semantic = reference(element, "semantic", resolveReference);
+  const timeline = reference(element, "timeline", resolveReference);
   const surface = exampleMarkupSurfaces.find((item) => item.tag === element.name.split(":").at(-1));
   if (surface === undefined) throw new Error(`Unknown example surface ${element.name}`);
   const fragment = surface.name === "box" ? exampleBoxFragment : surface.name === "text" ? exampleTextFragment : exampleMediaFragment;
@@ -36,6 +36,6 @@ export const decodeExampleSurface: StructuredSurfaceHandler = ({ element, resolv
   const record: SurfaceRecordDraft = { id: `${id}.value`, type, value: { kind: "inline", value: { id } }, range: element.range };
   const media = element.attributes.media === undefined ? undefined : reference(element, "media", resolveReference);
   if (media !== undefined && (media.type.module.name !== artifactTypes.blob.module.name || media.type.name !== artifactTypes.blob.name)) throw new Error(`${element.name}.media must be a Blob Artifact.`);
-  const component: SurfaceComponentDraft = { id, fragment: fragment.id, inputs: { semantic: semantic.ref, ...(media === undefined ? {} : { media: media.ref }) }, outputs: { track: `${id}.track` }, range: element.range };
+  const component: SurfaceComponentDraft = { id, fragment: fragment.id, inputs: { timeline: timeline.ref, ...(media === undefined ? {} : { media: media.ref }) }, outputs: { track: `${id}.track` }, range: element.range };
   return { records: [record], components: [component], fragments: [fragment], exports: [`${id}.value`, `${id}.track`] };
 };

@@ -4,10 +4,9 @@ import type { Narrative } from "@qflow/narrative";
 import { captionDocument, narrativeValue, parseScript } from "@qflow/script";
 import { alignSemanticTake } from "../../speech-alignment/src/index.js";
 import { interpretWhisperXTranscript } from "../../whisperx/src/index.js";
-import { appendSpeechTrackTake, assembleSpeechTrack, createSpeechTrackSet, sealSpeechTrackHeader } from "../../speech-track/src/index.js";
-import { selectionFrameSpan } from "@qflow/semantic-track";
+import { appendTimelineAuthorTake, assembleTimelineAuthor, createTimelineAuthorSet, sealTimelineAuthorHeader } from "../../timeline-author/src/index.js";
+import { selectionFrameSpan } from "@qflow/timeline";
 import { temporalizeCaptionDocument } from "../src/index.js";
-import type { CaptionProgram } from "../src/index.js";
 import { fixtureResource } from "../../../test/fixture-resource.js";
 
 test("Chinese Script, WhisperX response, semantic assembly and captions preserve words, cue breaks and timing", () => {
@@ -19,7 +18,7 @@ test("Chinese Script, WhisperX response, semantic assembly and captions preserve
   // These fixtures test transport and mapping, not acoustic recognition accuracy.
   const phrases = ["用ElevenLabs做视频真方便", "今年二零二六年这个很好"];
   const durations = [4000, 3000];
-  let set = createSpeechTrackSet();
+  let set = createTimelineAuthorSet();
   const evidenceWindows: Array<Array<[number, number]>> = [];
   for (const [index, segment] of narrative.segments.entries()) {
     let cursor = 100;
@@ -40,16 +39,10 @@ test("Chinese Script, WhisperX response, semantic assembly and captions preserve
       audio: { artifact: { kind: "blob", resource: fixtureResource(`zh:${index}`), size: 1, mediaType: "audio/wav" } },
     }, { passages: interpretWhisperXTranscript({ language: "zh", segments: [{ start: 0,
       end: durations[index]! / 1000, words }] }, sampleFrames) });
-    set = appendSpeechTrackTake(set, take);
+    set = appendTimelineAuthorTake(set, take);
   }
-  const semantic = assembleSpeechTrack(sealSpeechTrackHeader({ id: "speech" }), set);
-  const program: CaptionProgram = {
-    id: "captions", documentId: document.id,
-    styles: [{ id: "plain", rendering: { family: "test-caption@1", parameters: {} } }],
-    runs: [{ id: "all", styleId: "plain", unitIds: document.units.map(unit => unit.id) }],
-    wordRuns: [], mutedUnitIds: [],
-  };
-  const projection = temporalizeCaptionDocument(document, semantic, program);
+  const semantic = assembleTimelineAuthor(sealTimelineAuthorHeader({ id: "speech" }), set, { frameRate: { numerator: 1000, denominator: 1 } });
+  const projection = temporalizeCaptionDocument(document, semantic);
   const wordText = new Map(document.words.map(word => [word.id, word.text]));
   const unitText = new Map(document.units.map(unit => [unit.id, unit.wordIds.map(id => wordText.get(id)!).join("")]));
   assert.deepEqual(projection.cues.map(cue => cue.units.map(unit => unitText.get(unit.unitId)).join("")),
@@ -68,4 +61,5 @@ test("Chinese Script, WhisperX response, semantic assembly and captions preserve
   assert.deepEqual(windowsFor("這"), [[4000 + second[7]![0], 4000 + second[7]![1]]]);
   assert.deepEqual(windowsFor("個"), [[4000 + second[8]![0], 4000 + second[8]![1]]]);
   assert.equal(document.units[0]!.role, "HOST");
+
 });

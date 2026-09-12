@@ -1,4 +1,5 @@
-import { programSpaceTypes } from "@qflow/program-space";
+import { timelineTypes } from "@qflow/timeline";
+
 import { compositionTypes } from "@qflow/composition";
 import type { VisualTrack } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
@@ -11,14 +12,14 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 /** Provider-free official lowering from TypographyTrackProgram to one peer VisualTrack. */
 export const typographyTrackFragment = sealGraphFragment({
   inputs: [
-    { name: "space", type: programSpaceTypes.programSpace },
+    { name: "timeline", type: timelineTypes.track },
     { name: "program", type: typographyTrackTypes.program },
   ],
   operations: [
     {
       id: "render",
       producer: typographyTrackProducers.render,
-      inputs: { space: input("space"), program: input("program") },
+      inputs: { timeline: input("timeline"), program: input("program") },
       result: { kind: "output", name: "track" },
     },
   ],

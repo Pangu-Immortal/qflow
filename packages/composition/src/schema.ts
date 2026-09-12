@@ -170,13 +170,16 @@ export const visualSurfaceSchema: ValueSchema = object({ ...base, kind: { schema
 export const visualProgramSchema: ValueSchema = object({ ...base, kind: { schema: { kind: "literal", value: "program" } }, program: { schema: object({ format: { schema: string }, payload: { schema: object({}, true) }, artifacts: { schema: { kind: "array", items: mediaBlobRef } } }) } });
 export const visualElementSchema: ValueSchema = { kind: "oneOf", variants: [visualBoxSchema, visualMaskSchema, visualTextSchema, textFlowElement, pathTextElement, visualImageSchema, visualVideoSchema, visualSurfaceSchema, visualProgramSchema] };
 const span = object({ startFrame: { schema: integer }, endFrameExclusive: { schema: integer } });
-const present = object({ id: { schema: string }, span: { schema: span }, stacking: { schema: object({ order: { schema: signedInteger }, tieBreak: { schema: string } }) }, elements: { schema: { kind: "array", minItems: 1, items: visualElementSchema } } });
+const present = object({ id: { schema: string }, subjectId: { schema: string, optional: true }, span: { schema: span }, visibility: { schema: { kind: "array", items: span }, optional: true }, stacking: { schema: object({ order: { schema: signedInteger }, tieBreak: { schema: string } }) }, elements: { schema: { kind: "array", minItems: 1, items: visualElementSchema } } });
 export const visualTrackSchema: ValueSchema = object({ kind: { schema: { kind: "literal", value: "visual" } }, programSpaceId: { schema: string }, visualIr: { schema: { kind: "literal", value: VISUAL_IR_V1 } }, id: { schema: string }, presents: { schema: { kind: "array", items: present } } });
-const audioSampleSpan = object({ startSample: { schema: integer }, endSampleExclusive: { schema: { kind: "number", integer: true, minimum: 1 } } });
+export const audioSampleSpanSchema = object({ startSample: { schema: integer }, endSampleExclusive: { schema: { kind: "number", integer: true, minimum: 1 } } });
+export const audioGainEnvelopeSchema: ValueSchema = { kind: "array", minItems: 1, items: object({
+  sample: { schema: integer }, gain: { schema: { kind: "number", minimum: 0, maximum: 64 } },
+}) };
 const audioClip = object({
   id: { schema: string },
   artifact: { schema: audioBlobRef },
-  target: { schema: audioSampleSpan },
+  target: { schema: audioSampleSpanSchema },
   source: { schema: object({
     sampleFrames: { schema: { kind: "number", integer: true, minimum: 1 } },
     startSample: { schema: integer },
@@ -189,6 +192,8 @@ const audioClip = object({
   gain: { schema: { kind: "number", minimum: 0, maximum: 64 } },
   fadeInSamples: { schema: integer },
   fadeOutSamples: { schema: integer },
+  gainEnvelope: { schema: audioGainEnvelopeSchema, optional: true },
+  audibility: { schema: { kind: "array", items: audioSampleSpanSchema }, optional: true },
 });
 export const audioTrackSchema: ValueSchema = object({ kind: { schema: { kind: "literal", value: "audio" } }, programSpaceId: { schema: string }, id: { schema: string }, clips: { schema: { kind: "array", items: audioClip } } });
 export const compositionSchema: ValueSchema = object({ id: { schema: string }, canvas: { schema: object({ width: { schema: integer }, height: { schema: integer }, clearColor: { schema: string } }) }, tracks: { schema: { kind: "array", items: { kind: "oneOf", variants: [visualTrackSchema, audioTrackSchema] } } } });

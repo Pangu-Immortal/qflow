@@ -1,6 +1,6 @@
 import { programFrameSampleBoundary, programSpaceFrameCount } from "@qflow/program-space";
 import type { ProgramSpace } from "@qflow/program-space";
-import { assertCompositionIdentity } from "@qflow/composition";
+import { assertCompositionIdentity, assertAudioPresentation } from "@qflow/composition";
 import type { Composition } from "@qflow/composition";
 import { canonicalize, isResourceId } from "@qflow/protocol";
 
@@ -62,6 +62,7 @@ export function verifyAudioProgramPlan(value: unknown): asserts value is AudioPr
     assert(clip.pitch === "preserve", `AudioProgramPlan clip ${clip.id} pitch policy is invalid`);
     assert(Number.isFinite(clip.gain) && clip.gain >= 0 && clip.gain <= 64,
       `AudioProgramPlan clip ${clip.id} gain is invalid`);
+    assertAudioPresentation(clip, { startSample: clip.targetStartSample, endSampleExclusive: clip.targetEndSampleExclusive }, item.sampleFrames);
     const length = clip.targetEndSampleExclusive - clip.targetStartSample;
     assert(Number.isSafeInteger(clip.fadeInSamples) && clip.fadeInSamples >= 0 && clip.fadeInSamples <= length
       && Number.isSafeInteger(clip.fadeOutSamples) && clip.fadeOutSamples >= 0 && clip.fadeOutSamples <= length,
@@ -100,6 +101,8 @@ export function compileAudioProgramPlan(composition: Composition, programSpace: 
         gain: clip.gain,
         fadeInSamples: clip.fadeInSamples,
         fadeOutSamples: clip.fadeOutSamples,
+        ...(clip.gainEnvelope === undefined ? {} : { gainEnvelope: clip.gainEnvelope }),
+        ...(clip.audibility === undefined ? {} : { audibility: clip.audibility }),
       };
     }));
   return sealAudioProgramPlan({

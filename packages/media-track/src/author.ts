@@ -182,12 +182,18 @@ export function decodeMediaSampleSpec(
 }
 
 /** Decode visual-only sample styling without choosing playback or source trim. */
+/** Public authored defaults shared by decoding and optional editor fields. */
+export const mediaAppearanceDefaults = {
+  opacity: 1, blur: 0, brightness: 1, contrast: 1, saturation: 1,
+  clip: "frame", radius: 0,
+} as const;
+
 export function decodeMediaSampleAppearance(recipe: SvsRecipe): MediaSampleAppearance {
   return {
-    opacity: number(recipe, "opacity", 1),
+    opacity: number(recipe, "opacity", mediaAppearanceDefaults.opacity),
     filter: {
-      blurPx: number(recipe, "blur", 0), brightness: number(recipe, "brightness", 1),
-      contrast: number(recipe, "contrast", 1), saturation: number(recipe, "saturation", 1),
+      blurPx: number(recipe, "blur", mediaAppearanceDefaults.blur), brightness: number(recipe, "brightness", mediaAppearanceDefaults.brightness),
+      contrast: number(recipe, "contrast", mediaAppearanceDefaults.contrast), saturation: number(recipe, "saturation", mediaAppearanceDefaults.saturation),
     },
   };
 }
@@ -236,10 +242,10 @@ export function decodeMediaMotion(recipe: SvsRecipe | undefined): MediaLifecycle
 }
 
 export function decodeMediaPresentation(recipe: SvsRecipe): MediaFramePresentation {
-  const clip = oneOf(recipe, "clip", ["none", "frame", "rounded"] as const, "frame");
+  const clip = oneOf(recipe, "clip", ["none", "frame", "rounded"] as const, mediaAppearanceDefaults.clip);
   const borderWidth = number(recipe, "border-width", 0);
   return {
-    clip: clip === "rounded" ? { kind: "rounded", radiusPx: number(recipe, "radius", 0) } : { kind: clip },
+    clip: clip === "rounded" ? { kind: "rounded", radiusPx: number(recipe, "radius", mediaAppearanceDefaults.radius) } : { kind: clip },
     padding: padding(recipe),
     ...(borderWidth === 0 ? {} : { border: {
       widthPx: borderWidth,
@@ -278,7 +284,7 @@ export function decodeMediaFramePaint(recipe: SvsRecipe, id: string): MediaPaint
 export function decodeMediaPaintSpec(recipe: SvsRecipe, id: string): MediaPaintLayerSpec {
   assertKeys(recipe, ["paint", "opacity"]);
   return sealMediaPaintLayerSpec({
-    id, paint: paint(recipe), opacity: number(recipe, "opacity", 1),
+    id, paint: paint(recipe), opacity: number(recipe, "opacity", mediaAppearanceDefaults.opacity),
   });
 }
 

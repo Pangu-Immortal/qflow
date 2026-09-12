@@ -1,12 +1,13 @@
+import { timelineTypes } from "@qflow/timeline";
 import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { readFile } from "node:fs/promises";
 
 import { artifactDependency, artifactTypes } from "@qflow/artifact";
 import { compositionDependency, compositionTypes } from "@qflow/composition";
 import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
-import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { semanticTrackDependency } from "@qflow/semantic-track";
+import { timelineDependency } from "@qflow/timeline";
 import { spatialDependency, spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import { temporalDependency, temporalInstantSchema, temporalTypes, temporalWindowSchema } from "@qflow/temporal";
@@ -107,7 +108,7 @@ export const emojiRevealMarkupSurfaces = [
           recipe: recipe.map(([name, fallback, summary]) => ({ name, required: false, fallback, summary })) },
       ],
       example: `<emoji:Style id="emoji-strip" recipe={styles.emoji-strip}/>` ,
-      notes: ["The Style owns appearance and placement, but never semantic timing."],
+      notes: ["The Style owns appearance and placement, but never event timing."],
     } },
   { name: "track", tag: "Track", mode: "structured",
     outputs: [emojiRevealTypes.header, emojiRevealTypes.itemSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, emojiRevealTypes.program, compositionTypes.visualTrack],
@@ -133,7 +134,7 @@ export const emojiRevealMarkupSurfaces = [
         { name: "program", type: emojiRevealTypes.program, summary: "The adaptive strip with its projected outer Window and fully traced Moment activations." },
         { name: "track", type: compositionTypes.visualTrack, summary: "That Program rendered as an ordinary VisualTrack." },
       ],
-      example: `<emoji:Track id="rules" semantic={speech.semantic} canvas={vertical} style={emoji-strip} placeholder={question-icon} during="program">
+      example: `<emoji:Track id="rules" timeline={speech.timeline} canvas={vertical} style={emoji-strip} placeholder={question-icon} during="program">
   <emoji:Item id="manifest" icon={manifest-icon} preset="true"/>
   <emoji:Item id="real-estate" icon={real-estate-icon} at={story.moment.real-estate}/>
   <emoji:Item id="bitcoin" icon={bitcoin-icon} at={story.moment.bitcoin}/>
@@ -148,7 +149,7 @@ export const emojiRevealMarkupSurfaces = [
 
 export const emojiRevealManifest: ModuleManifest = {
   format: "qflow.module@1", name: emojiRevealModuleRef.name, version: emojiRevealModuleRef.version,
-  dependencies: [artifactDependency, narrativeDependency, programSpaceDependency, semanticTrackDependency, spatialDependency, temporalDependency, compositionDependency],
+  dependencies: [artifactDependency, narrativeDependency, timelineDependency, spatialDependency, temporalDependency, compositionDependency],
   types: [
     { name: emojiRevealTypes.header.name }, { name: emojiRevealTypes.style.name },
     { name: emojiRevealTypes.itemSpec.name }, { name: emojiRevealTypes.set.name }, { name: emojiRevealTypes.program.name },
@@ -157,16 +158,16 @@ export const emojiRevealManifest: ModuleManifest = {
   producers: [
     { name: emojiRevealProducers.createSet.name, inputs: [], outputs: [{ name: "set", type: emojiRevealTypes.set }], needs: [] },
     { name: emojiRevealProducers.appendItem.name,
-      inputs: [{ name: "set", type: emojiRevealTypes.set }, { name: "space", type: programSpaceTypes.programSpace }, { name: "spec", type: emojiRevealTypes.itemSpec }, { name: "icon", type: artifactTypes.blob }, { name: "activation", type: temporalTypes.instant }],
+      inputs: [{ name: "set", type: emojiRevealTypes.set }, { name: "timeline", type: timelineTypes.track }, { name: "spec", type: emojiRevealTypes.itemSpec }, { name: "icon", type: artifactTypes.blob }, { name: "activation", type: temporalTypes.instant }],
       outputs: [{ name: "set", type: emojiRevealTypes.set }], needs: [] },
     { name: emojiRevealProducers.appendPresetItem.name,
       inputs: [{ name: "set", type: emojiRevealTypes.set }, { name: "spec", type: emojiRevealTypes.itemSpec }, { name: "icon", type: artifactTypes.blob }],
       outputs: [{ name: "set", type: emojiRevealTypes.set }], needs: [] },
     { name: emojiRevealProducers.finalize.name,
-      inputs: [{ name: "header", type: emojiRevealTypes.header }, { name: "space", type: programSpaceTypes.programSpace }, { name: "outer", type: temporalTypes.window }, { name: "style", type: emojiRevealTypes.style }, { name: "placeholder", type: artifactTypes.blob }, { name: "set", type: emojiRevealTypes.set }],
+      inputs: [{ name: "header", type: emojiRevealTypes.header }, { name: "timeline", type: timelineTypes.track }, { name: "outer", type: temporalTypes.window }, { name: "style", type: emojiRevealTypes.style }, { name: "placeholder", type: artifactTypes.blob }, { name: "set", type: emojiRevealTypes.set }],
       outputs: [{ name: "program", type: emojiRevealTypes.program }], needs: [] },
     { name: emojiRevealProducers.render.name,
-      inputs: [{ name: "canvas", type: spatialTypes.canvas }, { name: "space", type: programSpaceTypes.programSpace }, { name: "program", type: emojiRevealTypes.program }],
+      inputs: [{ name: "canvas", type: spatialTypes.canvas }, { name: "timeline", type: timelineTypes.track }, { name: "program", type: emojiRevealTypes.program }],
       outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };

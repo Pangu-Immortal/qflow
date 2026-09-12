@@ -111,7 +111,7 @@ is rejected. Escape it as `\@` when the at-sign should be shown.
 
 `||` is the **Caption Cue Break** syntax. It records a boundary between complete Alignment Units;
 it cannot appear inside Dual Text or split an N:M unit. Cue timing is still obtained later by
-joining the CaptionDocument to the SemanticTrack.
+joining the CaptionDocument to the Timeline.
 
 ### Flat token attributes
 
@@ -190,7 +190,7 @@ Selections are not required to nest like XML tags. They can cross each other:
 
 Selection markers are zero-width and never appear in any text projection. They compile into one
 `NarrativeSelection` with `startAnchorId` and `endAnchorId`. Script itself contains no seconds or
-frame numbers — timing comes from SemanticTrack alignment.
+frame numbers — timing comes from Timeline alignment.
 
 Other components reference Selections via `{story.selection.problem}` to bind visual content to
 semantic moments in the narrative.

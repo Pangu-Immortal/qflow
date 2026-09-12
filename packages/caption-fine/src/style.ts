@@ -8,6 +8,7 @@ import type { SvsRecipe } from "@qflow/svs";
 import type { FineCaptionGlyphPaint, FineCaptionParameters } from "./types.js";
 import {
   fineCaptionOneShotMotions,
+  fineCaptionEditableDefaults,
   fineCaptionOptionalRecipeProperties,
   fineCaptionRequiredRecipeProperties,
 } from "./recipe.js";
@@ -104,14 +105,14 @@ function glyphPaint(recipe: SvsRecipe, prefix: "" | "active-", base?: FineCaptio
   return {
     fill: color(recipe, `${prefix}fill`, prefix === "active-" ? "#FFD54A" : base?.fill),
     ...(gradient === undefined ? {} : { gradient }),
-    opacity: number(recipe, `${prefix}opacity`, base?.opacity ?? 1),
+    opacity: number(recipe, `${prefix}opacity`, base?.opacity ?? fineCaptionEditableDefaults.opacity),
     stroke: {
       color: color(recipe, `${prefix}stroke-color`, baseStroke?.color ?? "#000000"),
-      widthPx: number(recipe, `${prefix}stroke-width`, baseStroke?.widthPx ?? 0),
+      widthPx: number(recipe, `${prefix}stroke-width`, baseStroke?.widthPx ?? fineCaptionEditableDefaults["stroke-width"]),
     },
     shadow: {
       color: color(recipe, `${prefix}shadow-color`, baseShadow?.color ?? "#000000"),
-      opacity: number(recipe, `${prefix}shadow-opacity`, baseShadow?.opacity ?? 0),
+      opacity: number(recipe, `${prefix}shadow-opacity`, baseShadow?.opacity ?? fineCaptionEditableDefaults["shadow-opacity"]),
       offsetXPx: number(recipe, `${prefix}shadow-x`, baseShadow?.offsetXPx ?? 0),
       offsetYPx: number(recipe, `${prefix}shadow-y`, baseShadow?.offsetYPx ?? 0),
       blurPx: number(recipe, `${prefix}shadow-blur`, baseShadow?.blurPx ?? 0),
@@ -125,7 +126,7 @@ function glyphPaint(recipe: SvsRecipe, prefix: "" | "active-", base?: FineCaptio
     },
     glow: {
       color: color(recipe, `${prefix}glow-color`, baseGlow?.color ?? "#FFFFFF"),
-      opacity: number(recipe, `${prefix}glow-opacity`, baseGlow?.opacity ?? 0),
+      opacity: number(recipe, `${prefix}glow-opacity`, baseGlow?.opacity ?? fineCaptionEditableDefaults["glow-opacity"]),
       blurPx: number(recipe, `${prefix}glow-blur`, baseGlow?.blurPx ?? 0),
       spreadPx: number(recipe, `${prefix}glow-spread`, baseGlow?.spreadPx ?? 0),
     },
@@ -216,13 +217,13 @@ export function fineCaptionParameters(
     basePaint,
     activePaint: glyphPaint(recipe, "active-", basePaint),
     underline: {
-      mode: choice(recipe, "underline", ["off", "always"] as const, "off"),
+      mode: choice(recipe, "underline", ["off", "always"] as const, fineCaptionEditableDefaults["underline"]),
       color: color(recipe, "underline-color", basePaint.fill),
       thicknessPx: number(recipe, "underline-thickness", 2),
       offsetPx: number(recipe, "underline-offset", 4),
     },
     activeUnderline: {
-      mode: choice(recipe, "active-underline", ["off", "current", "trail"] as const, "off"),
+      mode: choice(recipe, "active-underline", ["off", "current", "trail"] as const, fineCaptionEditableDefaults["active-underline"]),
       color: color(recipe, "active-underline-color", "#FFD54A"),
       thicknessPx: number(recipe, "active-underline-thickness", 3),
       offsetPx: number(recipe, "active-underline-offset", 4),
@@ -244,11 +245,11 @@ export function fineCaptionParameters(
       },
     },
     karaoke: {
-      mode: choice(recipe, "karaoke", ["off", "current", "trail"] as const, "off"),
-      transition: choice(recipe, "karaoke-transition", ["step", "wipe"] as const, "step"),
+      mode: choice(recipe, "karaoke", ["off", "current", "trail"] as const, fineCaptionEditableDefaults["karaoke"]),
+      transition: choice(recipe, "karaoke-transition", ["step", "wipe"] as const, fineCaptionEditableDefaults["karaoke-transition"]),
     },
     activeBox: {
-      mode: choice(recipe, "active-box", ["off", "current", "trail"] as const, "off"),
+      mode: choice(recipe, "active-box", ["off", "current", "trail"] as const, fineCaptionEditableDefaults["active-box"]),
       continuity: choice(recipe, "active-box-continuity", ["isolated", "joined"] as const, "isolated"),
       background: color(recipe, "active-box-background", "#FFD54A"),
       borderColor: color(recipe, "active-box-border-color", "#00000000"),

@@ -40,17 +40,6 @@ export const programSpaceManifest: ModuleManifest = {
 export const programSpaceDependency = { module: programSpaceModuleRef } as const;
 export const programSpaceMarkupSurfaces = [
   { name: "clock", tag: "Clock", mode: "structured", outputs: [programSpaceTypes.clock] },
-  { name: "space", tag: "Space", mode: "structured", outputs: [programSpaceTypes.programSpace],
-    vocabulary: {
-      summary: "Declares a film's frame rate and authored duration, for animation whose timing is directed without a performance.",
-      attributes: [
-        { name: "id", kind: "identifier", required: true, summary: "Names the shared film time axis." },
-        { name: "frame-rate", kind: "literal", required: true, summary: "Frames per second, such as 30 or 30000/1001." },
-        { name: "duration", kind: "literal", required: true, summary: "Total duration in seconds, milliseconds or frames, such as 8s or 240f; ends on a frame boundary." },
-      ],
-      example: '<time:Space id="animation" frame-rate="30" duration="8s"/>',
-    },
-  },
 ] as const;
 
 export function sealProgramClock(value: ProgramClock): ProgramClock {
@@ -105,3 +94,5 @@ export function assertProgramSpaceIdentity(programSpace: ProgramSpace): void {
   }
   programSpaceFrameCount(programSpace);
 }
+
+export { decodeClockSurface } from "./surface.js";

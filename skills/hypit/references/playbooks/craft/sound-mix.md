@@ -55,7 +55,7 @@ every available effect to every cut quickly exhausts the listener. A tactile pro
 depend on delicate contact and material texture. Preserve those small sounds and match their onset
 to the visible action rather than burying them under a generic impact.
 
-An independent sound can use an Audio Clip at a Script Moment with a deliberate duration. A sound
+An independent sound can use an Audio Item at a Script Moment with a deliberate duration. A sound
 intrinsic to a Media Item or Sequence transition can use that component's enter, exit or Handoff
 trigger. The component owns that event relationship. [Tracks](../../production/tracks.md) gives a
 Clip example; `@qflow/audio-track` and `@qflow/media-track` own exact playback and trigger syntax.
@@ -70,3 +70,8 @@ an audible transition even when the picture changes gently.
 Give speech its complete phrase and let effect tails finish naturally. Use fades and overlaps to
 carry the intended handoff. Keep the mix coherent across the piece: clear speech, a consistent sound
 palette, and emphasis reserved for the moments that deserve it.
+
+For an existing performed passage, [Sound](../../production/sound.md) supplies local Uses for gain,
+silence and source handoffs while retaining its playback position. A crossfade Style names the two
+sources it blends; the selected Window controls its duration. Independent music and effects keep
+their own Audio Tracks.

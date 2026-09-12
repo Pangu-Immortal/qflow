@@ -1,5 +1,6 @@
 import type {
   StudioTrackCompanion,
+  StudioParameterCompanion,
   StudioTrackCompanionContext,
   StudioEditHandle,
   StudioEntityDraft,
@@ -8,6 +9,7 @@ import type {
   StudioViewRole,
   StudioResolvedTrack,
   StudioScriptAdjustment,
+  StudioScriptProjectionInput,
   StudioScriptCompanion,
   StudioScriptSourceMap,
   StudioSourceBindingDeclaration,
@@ -18,7 +20,7 @@ import { parameterOption } from "./parameter-values.js";
 import { compositionTypes } from "@qflow/composition";
 import { sameModule, sameType } from "@qflow/protocol";
 import type { ModuleRef, TypeRef } from "@qflow/protocol";
-import { semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineTypes } from "@qflow/timeline";
 
 import type { Placement } from "./observe.js";
 import type { Clip, StudioTrackBinding } from "./shared.js";
@@ -29,9 +31,9 @@ const flatLane = {
   heightPx: 52,
 };
 
-const tones = new Set(["blue", "green", "teal", "violet", "magenta", "orange", "orange-muted", "neutral"]);
+const tones = new Set(["blue", "blue-muted", "green", "green-muted", "teal", "violet", "magenta", "magenta-muted", "orange", "orange-muted", "neutral"]);
 const icons = new Set(["brand", "captions", "component", "layers", "ranking", "text", "timeline", "video", "waveform"]);
-const chromes = new Set(["standard", "group", "point"]);
+const chromes = new Set(["standard", "group", "point", "compact"]);
 const layouts = new Set(["repeat-x", "cover", "contain", "storyboard", "waveform"]);
 const inspectorDomains = new Set(["where", "how", "when"]);
 const inspectorControls = new Set<string>(studioParameterControls);
@@ -100,6 +102,17 @@ function validateCompanionVocabulary(companion: StudioTrackCompanion): void {
     throw new Error(`Studio Track Companion ${companion.id} selects unsupported icon ${companion.icon}`);
   }
   validateInspector(`Studio Track Companion ${companion.id}`, companion.bindings, companion.inspector);
+  const bandIds = new Set<string>();
+  for (const band of companion.bands ?? []) {
+    if (!band.id.trim() || bandIds.has(band.id)) throw new Error(`Studio Companion ${companion.id} has a duplicate or empty band id`);
+    bandIds.add(band.id);
+    if (!Number.isFinite(band.heightPx) || band.heightPx <= 0
+      || !["before", "after"].includes(band.placement) || !["label", "content"].includes(band.display)) {
+      throw new Error(`Studio Companion ${companion.id} band ${band.id} has invalid layout`);
+    }
+    if (band.tone !== undefined && !tones.has(band.tone)) throw new Error(`Studio Companion ${companion.id} band ${band.id} has unsupported tone`);
+    validateInspector(`Studio Companion ${companion.id} band ${band.id}`, band.bindings, band.inspector);
+  }
   for (const attachment of companion.attachments ?? []) {
     if (attachment.tone !== undefined && !tones.has(attachment.tone)) {
       throw new Error(`Studio Track Companion ${companion.id} attachment ${attachment.id} selects unsupported tone ${attachment.tone}`);
@@ -112,6 +125,10 @@ function validateCompanionVocabulary(companion: StudioTrackCompanion): void {
 }
 
 function validateDraftVocabulary(companion: StudioTrackCompanion, draft: StudioEntityDraft): void {
+  if (draft.band !== undefined && (draft.lane !== undefined || !companion.bands?.some(band => band.id === draft.band))) {
+    throw new Error(`Studio Companion ${companion.id} entity ${draft.id} must select one declared band within its own Track`);
+  }
+
   if (draft.display === undefined || typeof draft.display.title !== "string" || draft.display.title.trim().length === 0) {
     throw new Error(`Studio Track Companion ${companion.id} entity ${draft.id} has no display title`);
   }
@@ -168,6 +185,7 @@ function specificity(companion: StudioTrackCompanion): number {
 
 /** Immutable interpretation assembled for one project session. */
 export class StudioCompanionRegistry {
+  readonly #parameters: readonly StudioParameterCompanion[];
   readonly #tracks: readonly StudioTrackCompanion[];
   readonly #films: readonly StudioFilmCompanion[];
   readonly #scripts: readonly StudioScriptCompanion[];
@@ -177,6 +195,7 @@ export class StudioCompanionRegistry {
     options: {
       readonly films?: readonly StudioFilmCompanion[];
       readonly scripts?: readonly StudioScriptCompanion[];
+      readonly parameters?: readonly StudioParameterCompanion[];
     } = {},
   ) {
     const ids = new Set<string>();
@@ -197,9 +216,21 @@ export class StudioCompanionRegistry {
         ids.add(companion.id);
       }
     }
+    this.#parameters = Object.freeze([...(options.parameters ?? [])]);
+    for (const companion of this.#parameters) {
+      if (ids.has(companion.id)) throw new Error(`Studio Parameter Companion id is repeated: ${companion.id}`);
+      ids.add(companion.id);
+      validateInspector(`Studio Parameter Companion ${companion.id}`, companion.bindings, companion.inspector);
+    }
     this.#tracks = Object.freeze([...tracks]);
     this.#films = Object.freeze(films);
     this.#scripts = Object.freeze(scripts);
+  }
+
+  parameterCompanionFor(module: ModuleRef, surface: string): StudioParameterCompanion | undefined {
+    const found = this.#parameters.filter(companion => sameModule(companion.match.module, module) && companion.match.surface === surface);
+    if (found.length > 1) throw new Error(`Studio Parameter companions are ambiguous for ${module.name}#${surface}.`);
+    return found[0];
   }
 
   filmCompanionFor(
@@ -232,6 +263,12 @@ export class StudioCompanionRegistry {
     return companion === undefined || found === undefined
       ? undefined
       : { ...found, companion: companion.id };
+  }
+
+  projectScript(input: StudioScriptProjectionInput) {
+    const companion = this.#scripts.find(item => item.id === input.source.companion);
+    if (companion?.project === undefined) throw new Error(`Script Companion ${input.source.companion} does not provide a timeline projection.`);
+    return companion.project(input);
   }
 
   adjustScript(input: {
@@ -286,7 +323,7 @@ export class StudioCompanionRegistry {
     readonly icon: StudioTrackBinding["icon"];
     readonly lane: StudioTrackBinding["lane"];
   } {
-    const companion = this.trackCompanionFor(semanticTrackTypes.track, undefined, []);
+    const companion = this.trackCompanionFor(timelineTypes.track, undefined, []);
     return {
       family: companion?.family ?? "semantic",
       tone: companion?.tone ?? "teal",
@@ -334,7 +371,7 @@ export class StudioCompanionRegistry {
   bindTrack(track: StudioResolvedTrack): StudioTrackBinding {
     const companion = this.#trackCompanion(track);
     // A Companion may provide a deliberate presentation label for a facet
-    // (e.g. Speech Visual / Speech Audio). Authored ids remain the fallback
+    // (e.g. a component’s picture and sound outputs). Authored ids remain the fallback
     // for ordinary user-named tracks.
     const label = companion.label ?? track.trace.authoredId;
     return {
@@ -346,6 +383,7 @@ export class StudioCompanionRegistry {
       icon: companion.icon ?? (sameType(track.typeRef, compositionTypes.audioTrack) ? "waveform" : "layers"),
       companion: companion.id,
       lane: companion.lane ?? flatLane,
+      ...(companion.bands === undefined ? {} : { bands: companion.bands.map(({ bindings: _bindings, inspector: _inspector, ...band }) => band) }),
       ...(track.trace.placement === undefined ? {} : { authoredTag: track.trace.placement }),
       references: track.trace.references.map(({ name, type }) => ({ name, type })),
     };
@@ -360,7 +398,7 @@ export class StudioCompanionRegistry {
       : { kind: "preview", role: "decoration", preview, layout: "repeat-x" };
     const projected: readonly StudioEntityDraft[] = companion.poster?.source !== "surface-preview" || surfaceLayer === undefined
       ? drafts
-      : drafts.map((draft) => draft.lane !== undefined
+      : drafts.map((draft) => draft.lane !== undefined || draft.band !== undefined
       ? draft
       : {
           ...draft,
@@ -377,8 +415,10 @@ export class StudioCompanionRegistry {
     track: StudioResolvedTrack,
     placement: Placement | undefined,
     lane?: string,
+    band?: string,
   ) {
     const companion = this.#trackCompanion(track);
+    if (band !== undefined) return companion.bands?.find(item => item.id === band)?.bindings ?? [];
     if (lane !== undefined) {
       return companion.attachments?.find((attachment) => attachment.id === lane)?.bindings ?? [];
     }
@@ -389,8 +429,10 @@ export class StudioCompanionRegistry {
     track: StudioResolvedTrack,
     placement: Placement | undefined,
     lane?: string,
+    band?: string,
   ) {
     const companion = this.#trackCompanion(track);
+    if (band !== undefined) return companion.bands?.find(item => item.id === band)?.inspector ?? [];
     if (lane !== undefined) {
       return companion.attachments?.find((attachment) => attachment.id === lane)?.inspector ?? [];
     }
@@ -410,6 +452,8 @@ export function sealStudioClip(
     id: draft.id.startsWith(`${outputRef}:`) ? draft.id : `${outputRef}:${draft.id}`,
     ...(draft.presentId === undefined ? {} : { presentId: draft.presentId }),
     authoredId: draft.authoredId,
+    ...(draft.band === undefined ? {} : { band: draft.band }),
+    ...(draft.selectionGroup === undefined ? {} : { selectionGroup: draft.selectionGroup }),
     ...(draft.markerId === undefined ? {} : { markerId: draft.markerId }),
     display: draft.display,
     startFrame: draft.startFrame,

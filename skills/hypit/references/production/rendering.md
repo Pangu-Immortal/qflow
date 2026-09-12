@@ -15,19 +15,25 @@ With the named inputs already declared:
 <import as="film" from="@qflow/film@1"/>
 <import as="render" from="@qflow/render-hyperframes@1"/>
 
-<film:Film id="main" canvas={canvas} semantic={speech.semantic}
+<import as="sound" from="@qflow/sound@1"/>
+<sound:Style id="voice-style"/>
+<sound:Track id="voice" timeline={speech.timeline}>
+  <sound:Use style={voice-style}/>
+</sound:Track>
+
+<film:Film id="main" canvas={canvas} timeline={speech.timeline}
   appearance={look.film.main}>
   <film:Track source={performance.visual}/>
-  <film:Track source={speech.audio}/>
+  <film:Track source={voice.audio}/>
   <film:Track source={coverage.visual}/>
   <film:Track source={captions.track}/>
   <film:Track source={music.track}/>
 </film:Film>
-<render:Video id="final" composition={main.composition} semantic={speech.semantic}/>
+<render:Video id="final" composition={main.composition} timeline={speech.timeline}/>
 ```
 
 An example Film Recipe is `film.main { background: #18212A; }`. Canvas supplies the picture dimensions;
-the SemanticTrack supplies program time. Include each wanted audio output explicitly. A covering
+the Timeline supplies program time. Include each wanted audio output explicitly. A covering
 picture leaves the included performance audio audible. Layer order is authored in the Tracks'
 Presents, so moving these Film children does not reorder the picture.
 
@@ -37,34 +43,35 @@ A compatible Composition from another component can also feed the render Surface
 ## Compose an authored animation
 
 A Film needs a time axis, whether or not it contains speech or prepared media. For a speech-led piece,
-continue to pass `semantic={speech.semantic}`: it provides both the real performance time and the
-context in which Tracks resolve Script references. For a pure MG piece, declare a ProgramSpace and
-pass `space` to the components, Film and Render:
+continue to pass `timeline={speech.timeline}`: it provides both the real performance time and the
+context in which Tracks resolve Script references. For a pure MG piece, use the same Timeline with
+an explicit end and zero Takes, and pass it to the components, Film and Render:
 
 ```svml
-<import as="time" from="@qflow/program-space@1"/>
-<time:Space id="animation" frame-rate="30" duration="8s"/>
+<import as="time" from="@qflow/timeline-author@1"/>
+<time:Clock id="animation-clock" frame-rate="30"/>
+<time:Timeline id="animation" clock={animation-clock} end="8s"/>
 
 <!-- conversation is the project's own visual component. -->
-<chat:Scene id="conversation" space={animation} canvas={canvas} font={font}
+<chat:Scene id="conversation" timeline={animation.timeline} canvas={canvas} font={font}
   during="program" title="Launch crew">
   <chat:Message id="question" sender="Maya" side="left" at="0.5s" text="Ready?"/>
   <chat:Message id="answer" sender="Leo" side="right" at="2s" text="Let's go."/>
 </chat:Scene>
-<film:Film id="main" canvas={canvas} space={animation} appearance={look.film.main}>
+<film:Film id="main" canvas={canvas} timeline={animation.timeline} appearance={look.film.main}>
   <film:Track source={conversation.track}/>
 </film:Film>
-<render:Video id="final" composition={main.composition} space={animation}/>
+<render:Video id="final" composition={main.composition} timeline={animation.timeline}/>
 ```
 
-The example assumes the Canvas, font, Film Recipe and project package are declared. `time:Space`
+The example assumes the Canvas, font, Film Recipe and project package are declared. Timeline's `end`
 accepts seconds, milliseconds or frames and must end on a frame boundary. `Clock` remains the
 separate duration-free input for normalizing real media. Drawing code produces the picture at each
 requested frame; the Film's background supplies the canvas color. With no AudioTrack, the delivered
 video is silent. Render ranges and worker settings apply in the same way as for spoken work.
 
-Media, Typography, Audio and the graphic Tracks accept this same time context. A Media Performance
-specifically needs its SemanticTrack because that is where its prepared footage resides. Caption
+Media, Typography, Audio and the graphic Tracks accept this same Timeline. Performance obtains
+any available prepared footage from it. Caption
 uses its speech-linked document; authored chat text belongs to the chat scene. The working example
 `examples/semantic-composition/chat.svml` and its `@example/chat-scene` package show the complete
 code-only composition, including scrolling and arbitrary message arrivals.
@@ -72,7 +79,7 @@ code-only composition, including scrolling and arbitrary message arrivals.
 ## Choose a render interval in frames
 
 ```svml
-<render:Video id="detail" composition={main.composition} semantic={speech.semantic}
+<render:Video id="detail" composition={main.composition} timeline={speech.timeline}
   start-frame="240" end-frame-exclusive="360"/>
 ```
 

@@ -16,3 +16,6 @@ export {
 export { assertAudioTrackIdentity, assertCompositionIdentity, assertVisualTrackIdentity, sealAudioTrack, sealComposition, sealVisualTrack } from "./track.js";
 export { animatableLocalStyles } from "./track.js";
 export type * from "./track.js";
+
+export * from "./audio-presentation.js";
+export { audioSampleSpanSchema, audioGainEnvelopeSchema } from "./schema.js";

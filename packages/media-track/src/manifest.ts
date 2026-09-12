@@ -1,3 +1,4 @@
+import type { Timeline } from "@qflow/timeline";
 import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { visualTimedSamplingSchema } from "@qflow/composition";
 import { readFile } from "node:fs/promises";
@@ -10,9 +11,9 @@ import {
   mediaTypes,
 } from "@qflow/media";
 import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
-import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { semanticTrackDependency, semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineDependency, timelineTypes } from "@qflow/timeline";
 import {
   contentFitSchema,
   intrinsicExtentSchema,
@@ -48,7 +49,6 @@ export const mediaTrackTypes = {
 } satisfies Record<string, TypeRef>;
 
 export const mediaTrackProducers = {
-  appendPerformance: { module: mediaTrackModuleRef, name: "append-media-performance" },
   createLayers: { module: mediaTrackModuleRef, name: "create-media-layer-set" },
   appendPaintLayer: { module: mediaTrackModuleRef, name: "append-media-paint-layer" },
   appendStillLayer: { module: mediaTrackModuleRef, name: "append-still-media-layer" },
@@ -256,18 +256,18 @@ export const mediaTrackHeaderSchema: ValueSchema = object({
 
 const itemInputs = [
   { name: "set", type: mediaTrackTypes.set }, { name: "header", type: mediaTrackTypes.header },
-  { name: "space", type: programSpaceTypes.programSpace }, { name: "canvas", type: spatialTypes.canvas },
+  { name: "timeline", type: timelineTypes.track }, { name: "canvas", type: spatialTypes.canvas },
   { name: "layers", type: mediaTrackTypes.layerSet },
   { name: "frame", type: spatialTypes.frame }, { name: "spec", type: mediaTrackTypes.itemSpec },
   { name: "sounds", type: mediaTrackTypes.soundSet }, { name: "window", type: temporalTypes.window },
 ] as const;
 const memberInputs = [
-  { name: "members", type: mediaTrackTypes.memberSet }, { name: "space", type: programSpaceTypes.programSpace }, { name: "layers", type: mediaTrackTypes.layerSet },
+  { name: "members", type: mediaTrackTypes.memberSet }, { name: "timeline", type: timelineTypes.track }, { name: "layers", type: mediaTrackTypes.layerSet },
   { name: "spec", type: mediaTrackTypes.memberSpec }, { name: "activation", type: temporalTypes.instant },
 ] as const;
 const sequenceInputs = [
   { name: "set", type: mediaTrackTypes.set }, { name: "header", type: mediaTrackTypes.header },
-  { name: "space", type: programSpaceTypes.programSpace }, { name: "canvas", type: spatialTypes.canvas },
+  { name: "timeline", type: timelineTypes.track }, { name: "canvas", type: spatialTypes.canvas },
   { name: "members", type: mediaTrackTypes.memberSet },
   { name: "frame", type: spatialTypes.frame }, { name: "spec", type: mediaTrackTypes.sequenceSpec },
   { name: "sounds", type: mediaTrackTypes.soundSet }, { name: "terminal", type: temporalTypes.instant },
@@ -368,7 +368,7 @@ export const mediaTrackMarkupSurfaces = [{
       temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, mediaTrackTypes.program,
       compositionTypes.visualTrack, compositionTypes.audioTrack],
     vocabulary: {
-      summary: "Show the semantic performance, place independent media Items, and compose replacement Sequences on a shared film time axis and Canvas. Publishes a VisualTrack and, when audio is authored, an AudioTrack.",
+      summary: "Show the timeline performance, place independent media Items, and compose replacement Sequences on a shared film time axis and Canvas. Publishes a VisualTrack and, when audio is authored, an AudioTrack.",
       appearance: "Pictures and layered compositions occupy authored Frames on the Canvas. Each source is scaled and aligned inside its Frame's border and padding; a contain fit can leave space, while cover can crop. Paint and sampled Layers draw in Source order under a shared rectangular, rounded or Path clip, with optional border and shadows. Lifecycle motion moves the framed unit; Sampling pans, zooms or rotates the picture inside it. Each Item has an independent window. A Sequence shares one outer Frame while Members replace its contents through cut, crossfade, push, wipe, cover or page-turn Handoffs. Source playback determines whether moving content covers the whole assigned span. Absolute stack order decides which overlapping unit draws in front.",
       preview: previewImage("Track.png"),
       attributes: [
@@ -379,23 +379,6 @@ export const mediaTrackMarkupSurfaces = [{
           summary: "Chooses the Canvas every Frame on this Track is measured inside." },
       ],
       children: [
-        { tag: "Performance", cardinality: "many",
-          summary: "Shows the enclosing Track's semantic performance during a chosen interval, preserving each Take's original source position under one frame and continuous motion. Accepts Sampling and Sound children.",
-          attributes: [
-            { name: "id", kind: "identifier", required: false,
-              summary: "Names this presentation; otherwise its identity follows the shared Item/Performance order." },
-            { name: "frame", kind: "reference", required: true, accepts: [spatialTypes.frame],
-              summary: "Places the performance picture on the Canvas." },
-            { name: "appearance", kind: "reference", required: true, accepts: [svsRecipeType],
-              summary: "Uses the Media fitting, picture styling, frame paint, clipping, border and shadow properties. Source time follows the semantic performance.",
-              recipe: appearanceRecipeProperties.filter(property => !["playback", "trim-start", "trim-end"].includes(property.name)) },
-            { name: "motion", kind: "reference", required: false, accepts: [svsRecipeType],
-              summary: "Moves the whole framed presentation over its Window, across Take boundaries.",
-              recipe: motionRecipeProperties },
-            { name: "clip", kind: "reference", required: false, accepts: [spatialTypes.path],
-              summary: "Clips the presentation to an authored Path." },
-            ...temporalWindowAttributeVocabulary,
-          ] },
         { tag: "Item", cardinality: "many",
           summary: "One independently timed picture on its own Frame, from a direct source or ordered Paint and Layer children, carrying its own Sampling and Sound children.",
           attributes: [
@@ -458,19 +441,18 @@ export const mediaTrackMarkupSurfaces = [{
       example: `<pipeline:Normalize id="cutaway-bags" source={bags-take.video}
   video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 
-<media-track:Track id="cutaways" semantic={speech.semantic} canvas={vertical}>
-  <media-track:Performance during="program" frame={full} appearance={recipes.media.presenter}/>
+<media-track:Track id="cutaways" timeline={speech.timeline} canvas={vertical}>
+  <media-track:Item media={prepared.media} during="program" frame={full} appearance={recipes.media.clip}/>
   <media-track:Item id="bags" media={cutaway-bags.media} during={story.selection.bags}
     frame={full} appearance={recipes.media.cutaway} motion={recipes.motion.cut}/>
 </media-track:Track>`,
       notes: [
-        "A Track requires at least one Performance, Item or Sequence and accepts no text content.",
-        "Performance and Item use one window form: `during`, `at` with `for`, `until` with `for`, or `start` with `end`. Bind `selection`, `segment` and/or `moment` only when the start/end expressions use them; different endpoints can use different bindings.",
-        "Performance uses the Track's existing semantic input. `during=\"program\"` shows all its prepared Takes in order; a Segment or Selection shows that interval at the corresponding source positions. Speech Track.audio independently supplies the original sound. Sampling pans, zooms or rotates the fitted picture across the whole selected Window.",
+        "A Track requires at least one Item or Sequence and accepts no text content.",
+        "Item use one window form: `during`, `at` with `for`, `until` with `for`, or `start` with `end`. Bind `selection`, `segment` and/or `moment` only when the start/end expressions use them; different endpoints can use different bindings.",
         "A point expression is `program.start`, `program.end`, `selection.start`, `selection.end`, `segment.start`, `segment.end` or `moment.cue`, each optionally offset by `+` or `-` and a duration, or a bare duration read as an absolute position.",
         "A unit that names a direct source names exactly one of `image`, `media` or `surface`; `extent` is required with `image` and refused otherwise.",
         "`audio-gain` is refused without selected source audio.",
-        "`clip` is refused on a Performance, Item or Sequence whose Recipe already states a clip.",
+        "`clip` is refused on a Item or Sequence whose Recipe already states a clip.",
         "An `appearance` or `motion` Recipe is refused when it carries a property outside its own set.",
         "`playback`, `trim-start` and `trim-end` are refused on durationless still material, and `trim-start` and `trim-end` are written together or not at all.",
         "An `enter` or an `exit` operator requires its own `enter-frames` or `exit-frames`.",
@@ -575,8 +557,7 @@ export const mediaTrackManifest: ModuleManifest = {
     artifactDependency,
     mediaDependency,
     narrativeDependency,
-    programSpaceDependency,
-    semanticTrackDependency,
+    timelineDependency,
     temporalDependency,
     spatialDependency,
     compositionDependency,
@@ -606,18 +587,15 @@ export const mediaTrackManifest: ModuleManifest = {
     { name: mediaTrackProducers.createSounds.name, inputs: [], outputs: [{ name: "sounds", type: mediaTrackTypes.soundSet }], needs: [] },
     { name: mediaTrackProducers.appendSound.name, inputs: [{ name: "sounds", type: mediaTrackTypes.soundSet }, { name: "source", type: mediaTypes.synchronized }, { name: "spec", type: mediaTrackTypes.soundSpec }], outputs: [{ name: "sounds", type: mediaTrackTypes.soundSet }], needs: [] },
     { name: mediaTrackProducers.createSet.name, inputs: [], outputs: [{ name: "set", type: mediaTrackTypes.set }], needs: [] },
-    { name: mediaTrackProducers.appendPerformance.name, inputs: [...itemInputs,
-      { name: "semantic", type: semanticTrackTypes.track }, { name: "fit", type: spatialTypes.fit },
-      { name: "sampleSpec", type: mediaTrackTypes.sampleLayerSpec }], outputs: [{ name: "set", type: mediaTrackTypes.set }], needs: [] },
     { name: mediaTrackProducers.appendItem.name, inputs: itemInputs, outputs: [{ name: "set", type: mediaTrackTypes.set }], needs: [] },
     { name: mediaTrackProducers.bindItemClipPath.name, inputs: [{ name: "spec", type: mediaTrackTypes.itemSpec }, { name: "path", type: spatialTypes.path }], outputs: [{ name: "spec", type: mediaTrackTypes.itemSpec }], needs: [] },
     { name: mediaTrackProducers.bindSequenceClipPath.name, inputs: [{ name: "spec", type: mediaTrackTypes.sequenceSpec }, { name: "path", type: spatialTypes.path }], outputs: [{ name: "spec", type: mediaTrackTypes.sequenceSpec }], needs: [] },
     { name: mediaTrackProducers.createMembers.name, inputs: [], outputs: [{ name: "members", type: mediaTrackTypes.memberSet }], needs: [] },
     { name: mediaTrackProducers.appendMember.name, inputs: memberInputs, outputs: [{ name: "members", type: mediaTrackTypes.memberSet }], needs: [] },
     { name: mediaTrackProducers.appendSequence.name, inputs: sequenceInputs, outputs: [{ name: "set", type: mediaTrackTypes.set }], needs: [] },
-    { name: mediaTrackProducers.finalize.name, inputs: [{ name: "set", type: mediaTrackTypes.set }, { name: "header", type: mediaTrackTypes.header }, { name: "space", type: programSpaceTypes.programSpace }], outputs: [{ name: "program", type: mediaTrackTypes.program }], needs: [] },
-    { name: mediaTrackProducers.projectVisual.name, inputs: [{ name: "space", type: programSpaceTypes.programSpace }, { name: "program", type: mediaTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
-    { name: mediaTrackProducers.projectAudio.name, inputs: [{ name: "space", type: programSpaceTypes.programSpace }, { name: "program", type: mediaTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.audioTrack }], needs: [] },
+    { name: mediaTrackProducers.finalize.name, inputs: [{ name: "set", type: mediaTrackTypes.set }, { name: "header", type: mediaTrackTypes.header }, { name: "timeline", type: timelineTypes.track }], outputs: [{ name: "program", type: mediaTrackTypes.program }], needs: [] },
+    { name: mediaTrackProducers.projectVisual.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: mediaTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+    { name: mediaTrackProducers.projectAudio.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: mediaTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.audioTrack }], needs: [] },
   ],
 };
 

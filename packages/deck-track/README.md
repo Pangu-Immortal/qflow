@@ -1,7 +1,7 @@
 # `@qflow/deck-track`
 
-The Track Surface accepts `semantic={speech.semantic}` or `space={animation}`. Semantic context
-resolves Script Selections and Moments; authored space supports clock-based animation. Shared `at`
+The Track Surface accepts `timeline={program.timeline}`. The same Timeline supports authored
+positions and, where prepared Takes supply evidence, Script Selections and Moments. Shared `at`
 inputs accept a Moment or a time such as `2s`; `at` with `for` produces a Window where required.
 
 The official, deliberately narrow depth-stack Deck author package.
@@ -19,7 +19,7 @@ Media layer lowerer, but Deck is not a Media mode and exports only an ordinary p
 
 <deck:DepthStack
   id="proof-stack"
-  semantic={speech.semantic}
+  timeline={speech.timeline}
   canvas={vertical}
   frame={layout.proof-stack}
   until={story.selection.proof}

@@ -51,3 +51,24 @@ A Composition carries its id, Canvas with clear color, and peer Tracks. The Trac
 ProgramSpace identity; assembly and rendering receive the corresponding time domain separately.
 `@qflow/film` is one author-facing way to assemble it;
 `@qflow/render-hyperframes` consumes it to produce a video.
+
+### Visibility without a new playback origin
+
+A VisualPresent may supply `visibility`, an ordered list of non-overlapping subranges in program
+frames, all inside its `span`. Omission means the full span; an empty list means never visible.
+`span` continues to define local animation and media-sampling time. This permits rule overrides or
+other partial visibility without cutting a program into restarted copies. HyperFrames applies the
+visibility independently when seeking; custom HTML and typed media keep their original clocks.
+
+## Audio presentation on the program clock
+
+AudioClip optionally carries `gainEnvelope: { sample, gain }[]` and
+`audibility: { startSample, endSampleExclusive }[]`. Both use absolute 48 kHz program samples.
+Envelope points have strictly increasing sample positions and interpolate linearly, holding the
+outer endpoint gains. They multiply the existing Clip gain and fades. Audible subranges are ordered,
+disjoint and inside the original target; omission means the whole target, an empty list means silence.
+`audioEnvelopeGainAt` evaluates the envelope; `assertAudioPresentation` checks these values.
+
+Original target and source sampling remain intact when presentation is partially hidden. Range
+rendering applies envelopes and masks before cropping. These fields express generic sound behavior;
+source selection and Style/Use precedence belong to author components such as Sound.

@@ -35,6 +35,12 @@ presentation, language or accent, pitch, texture and articulation can sharpen th
 Choose the few that settle the casting; this is not a field list to fill out. Cultural or character
 shorthand earns its place through the sound it evokes.
 
+Translate the character's role in the piece into audible qualities. Wanting the viewer to trust a
+claim can inform clear articulation and thoughtful emphasis; the request should carry that chosen
+sound and manner of speaking. Music, graphic reveals and the later mix receive their own direction.
+[Direction and its inputs](../../production/system.md#give-each-part-the-direction-it-can-realize)
+explains this relationship between the whole design and the individual request.
+
 For example:
 
 ```text

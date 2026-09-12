@@ -2,8 +2,7 @@ import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-
 import { canonicalize } from "@qflow/protocol";
 import type { StoredValue } from "@qflow/protocol";
 import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
-import type { ProgramSpace } from "@qflow/program-space";
-import type { SemanticTrack } from "@qflow/semantic-track";
+import type { Timeline } from "@qflow/timeline";
 
 import {
   composeTemporalWindow,
@@ -31,14 +30,14 @@ export const temporalComponent = {
     { producer: temporalProducers.projectProgramInstant, handler: ({ inputs }) => ({ outputs: { instant: output(projectProgramInstant({
       itemId: instantSpec(inputs).id,
       subjectId: instantSpec(inputs).subjectId,
-      space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+      timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
       projection: instantSpec(inputs).projection,
       authority: instantSpec(inputs).authority,
     })) }, needs: {} }) },
     { producer: temporalProducers.projectSelectionInstant, handler: ({ inputs }) => ({ outputs: { instant: output(projectSelectionInstant({
       itemId: instantSpec(inputs).id,
       subjectId: instantSpec(inputs).subjectId,
-      semantic: inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
+      timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
       selection: inline<NarrativeSelectionRef>(inputs.selection?.value, "NarrativeSelection"),
       projection: instantSpec(inputs).projection,
       authority: instantSpec(inputs).authority,
@@ -46,7 +45,7 @@ export const temporalComponent = {
     { producer: temporalProducers.projectSegmentInstant, handler: ({ inputs }) => ({ outputs: { instant: output(projectSegmentInstant({
       itemId: instantSpec(inputs).id,
       subjectId: instantSpec(inputs).subjectId,
-      semantic: inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
+      timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
       segment: inline<NarrativeExcerpt>(inputs.segment?.value, "NarrativeExcerpt"),
       projection: instantSpec(inputs).projection,
       authority: instantSpec(inputs).authority,
@@ -54,7 +53,7 @@ export const temporalComponent = {
     { producer: temporalProducers.projectMomentInstant, handler: ({ inputs }) => ({ outputs: { instant: output(projectMomentInstant({
       itemId: instantSpec(inputs).id,
       subjectId: instantSpec(inputs).subjectId,
-      semantic: inline<SemanticTrack>(inputs.semantic?.value, "SemanticTrack"),
+      timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
       moment: inline<NarrativeMomentRef>(inputs.moment?.value, "NarrativeMoment"),
       projection: instantSpec(inputs).projection,
       authority: instantSpec(inputs).authority,

@@ -1,11 +1,12 @@
+import { timelineTypes } from "@qflow/timeline";
 import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { compositionDependency, compositionTypes } from "@qflow/composition";
 import { mediaDependency, mediaTypes } from "@qflow/media";
 import { narrativeDependency } from "@qflow/narrative";
-import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+
 import { blobRefObjectSchema } from "@qflow/protocol";
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { semanticTrackDependency } from "@qflow/semantic-track";
+import { timelineDependency } from "@qflow/timeline";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
 import { temporalWindowAttributeVocabulary } from "@qflow/temporal-markup";
 
@@ -68,7 +69,7 @@ export const audioTrackProgramSchema: ValueSchema = object({
 
 const baseInputs = [
   { name: "set", type: audioTrackTypes.set }, { name: "header", type: audioTrackTypes.header },
-  { name: "space", type: programSpaceTypes.programSpace }, { name: "media", type: mediaTypes.synchronized },
+  { name: "timeline", type: timelineTypes.track }, { name: "media", type: mediaTypes.synchronized },
   { name: "spec", type: audioTrackTypes.clipSpec }, { name: "window", type: temporalTypes.window },
 ] as const;
 
@@ -76,20 +77,20 @@ export const audioTrackMarkupSurfaces = [{
     name: "track", tag: "Track", mode: "structured",
     outputs: [audioTrackTypes.header, audioTrackTypes.clipSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, audioTrackTypes.program, compositionTypes.audioTrack],
     vocabulary: {
-      summary: "One Audio Track: explicitly prepared audio Clips placed on the selected film time axis and lowered to one ordinary peer AudioTrack.",
+      summary: "One Audio Track: explicitly prepared audio Items placed on the selected film time axis and lowered to one ordinary peer AudioTrack.",
       attributes: [
-        { name: "id", kind: "identifier", required: true, summary: "Names this Audio Track and prefixes the identity of every Clip that does not name itself." },
+        { name: "id", kind: "identifier", required: true, summary: "Names this Audio Track and prefixes the identity of every Item that does not name itself." },
         ...temporalContextAttributeVocabulary,
       ],
       children: [
-        { tag: "Clip", cardinality: "many",
+        { tag: "Item", cardinality: "many",
           summary: "Places one SynchronizedMedia source on an exact program window with its own trim, occupancy and mix.",
           attributes: [
             { name: "id", kind: "identifier", required: false,
-              summary: "Names this Clip; the Track derives `<track>.clip.<index>` when it is absent." },
+              summary: "Names this Item; the Track derives `<track>.item.<index>` when it is absent." },
             { name: "source", kind: "reference", required: true,
               accepts: [mediaTypes.synchronized],
-              summary: "Selects the explicitly prepared audio this Clip plays." },
+              summary: "Selects the explicitly prepared audio this Item plays." },
             ...temporalWindowAttributeVocabulary,
             { name: "trim-start", kind: "literal", required: false,
               summary: "Sets the source start position; defaults to the source beginning." },
@@ -103,7 +104,7 @@ export const audioTrackMarkupSurfaces = [{
             { name: "max-rate", kind: "literal", required: false,
               summary: "Bounds the fastest rate bounded stretch may use." },
             { name: "gain", kind: "literal", required: false,
-              summary: "Scales this Clip by a linear gain; defaults to `1`." },
+              summary: "Scales this Item by a linear gain; defaults to `1`." },
             { name: "fade-in", kind: "literal", required: false,
               summary: "Fixes the exact fade-in length; defaults to `0f`." },
             { name: "fade-out", kind: "literal", required: false,
@@ -112,15 +113,15 @@ export const audioTrackMarkupSurfaces = [{
       ],
       ports: [
         { name: "program", type: audioTrackTypes.program, summary: "The resolved sample-exact item list this Track renders from." },
-        { name: "track", type: compositionTypes.audioTrack, summary: "The rendered AudioTrack that Film composes with its peers." },
+        { name: "audio", type: compositionTypes.audioTrack, summary: "The rendered AudioTrack that Film composes with its peers." },
       ],
-      example: `<audio:Track id="music-bed" semantic={speech.semantic}>
-  <audio:Clip source={music-media.media} during="program"
+      example: `<audio:Track id="music-bed" timeline={speech.timeline}>
+  <audio:Item source={music-media.media} during="program"
     playback="loop-end" gain="0.28" fade-in="600ms" fade-out="800ms"/>
 </audio:Track>`,
       notes: [
-        "A Track requires at least one Clip, and neither a Track nor a Clip accepts text content.",
-        "A Clip states exactly one window form: `during`, `at` with `for`, `until` with `for`, or `start` with `end`.",
+        "A Track requires at least one Item, and neither a Track nor a Item accepts text content.",
+        "A Item states exactly one window form: `during`, `at` with `for`, `until` with `for`, or `start` with `end`.",
         "A point expression is `program.start`, `program.end`, `selection.start`, `selection.end`, `segment.start`, `segment.end` or `moment.cue`, each optionally offset by `+` or `-` and a duration, or a bare duration read as an absolute position.",
         "Bind selection, segment and/or moment only when the start/end expressions use them; different endpoints can use different bindings.",
         "`min-rate` and `max-rate` are rejected unless `playback` is `stretch`.",
@@ -133,7 +134,7 @@ export const audioTrackManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: audioTrackModuleRef.name,
   version: audioTrackModuleRef.version,
-  dependencies: [mediaDependency, narrativeDependency, programSpaceDependency, semanticTrackDependency, temporalDependency, compositionDependency],
+  dependencies: [mediaDependency, narrativeDependency, timelineDependency, temporalDependency, compositionDependency],
   types: [
     { name: audioTrackTypes.header.name },
     { name: audioTrackTypes.clipSpec.name },
@@ -145,7 +146,7 @@ export const audioTrackManifest: ModuleManifest = {
     { name: audioTrackProducers.createSet.name, inputs: [], outputs: [{ name: "set", type: audioTrackTypes.set }], needs: [] },
     { name: audioTrackProducers.appendItem.name, inputs: [...baseInputs], outputs: [{ name: "set", type: audioTrackTypes.set }], needs: [] },
     { name: audioTrackProducers.finalize.name, inputs: [{ name: "set", type: audioTrackTypes.set }, { name: "header", type: audioTrackTypes.header }], outputs: [{ name: "program", type: audioTrackTypes.program }], needs: [] },
-    { name: audioTrackProducers.render.name, inputs: [{ name: "space", type: programSpaceTypes.programSpace }, { name: "program", type: audioTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.audioTrack }], needs: [] },
+    { name: audioTrackProducers.render.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: audioTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.audioTrack }], needs: [] },
   ],
 };
 export const audioTrackDependency = { module: audioTrackModuleRef } as const;

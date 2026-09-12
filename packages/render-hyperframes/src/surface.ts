@@ -1,4 +1,4 @@
-import { createTemporalSpace, resolveTemporalContext } from "@qflow/temporal-markup";
+import { resolveTemporalContext } from "@qflow/temporal-markup";
 import { compositionTypes } from "@qflow/composition";
 import { mediaTypes, verifyMediaFrameRange } from "@qflow/media";
 import type {
@@ -25,7 +25,7 @@ function referenceAttribute(element: StructuredElement, name: string): string {
 
 export const decodeHyperframesRenderSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
   const names = Object.keys(element.attributes).sort();
-  if (names.some((name) => !["composition", "id", "semantic", "space", "start-frame", "end-frame-exclusive"].includes(name))) {
+  if (names.some((name) => !["composition", "id", "timeline", "start-frame", "end-frame-exclusive"].includes(name))) {
     throw new Error(`${element.name} contains unsupported attributes`);
   }
   if (element.children.some((child) => child.kind === "element" || child.value.trim().length > 0)) {
@@ -40,7 +40,7 @@ export const decodeHyperframesRenderSurface: StructuredSurfaceHandler = ({ eleme
     || composition.type.name !== compositionTypes.composition.name) {
     throw new Error(`${element.name}.composition must reference Composition`);
   }
-  const time = createTemporalSpace({ id, element, ...resolveTemporalContext({ element, resolveReference }) });
+  const context = resolveTemporalContext({ element, resolveReference });
   const selected = element.attributes["start-frame"] !== undefined || element.attributes["end-frame-exclusive"] !== undefined;
   const frame = (name: string): number => {
     const text = stringAttribute(element, name);
@@ -53,13 +53,13 @@ export const decodeHyperframesRenderSurface: StructuredSurfaceHandler = ({ eleme
   const rangeId = `${id}.frame-range`;
   return {
     records: range === undefined ? [] : [{ id: rangeId, type: mediaTypes.frameRange, value: { kind: "inline", value: range }, range: element.range }],
-    components: [...time.components, {
+    components: [{
       id,
       fragment: fragment.id,
-      inputs: { composition: composition.ref, space: time.space.ref, ...(selected ? { range: { kind: "record" as const, id: rangeId } } : {}) },
+      inputs: { composition: composition.ref, timeline: context.timeline.ref, ...(selected ? { range: { kind: "record" as const, id: rangeId } } : {}) },
       outputs: { video: `${id}.video` },
       range: element.range,
     }],
-    fragments: [...time.fragments, fragment],
+    fragments: [fragment],
   };
 };

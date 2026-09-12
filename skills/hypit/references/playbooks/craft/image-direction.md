@@ -46,6 +46,24 @@ sleeve may be incidental. If the sleeve exposes a featured watch, preserve that 
 the details the new work depends on, and let its new person and camera realize the shared style.
 More painstaking description does not by itself make the direction more faithful or attractive.
 
+## Describe the picture being made
+
+Translate the complete design into what this image should contain. A later comparison board may
+motivate placing a person on the right. In the image prompt, describe that placement and a natural
+scene relationship, such as a table entering the lower-left corner. The board's own content and
+animation belong to its component. The image receives the visible consequence of the design.
+
+High-level anchors still direct the picture: soft goth specifies styling, idol-like beauty specifies
+the kind and strength of appeal, and a Korean street-side café specifies a recognizable setting.
+Keep that compression. For an action or interaction, choose what actually appears. If water should
+be poured, direct that action; if only a gesture is intended, describe the hand gesture itself.
+Resolve figurative or uncertain wording when taking it literally would add the wrong prop or event.
+
+The requested output determines what belongs. A photographed sign or a generated graphic can include
+its intended lettering and symbols. A photographic source for a later composite receives its own
+person, scene and camera view. [Direction and its inputs](../../production/system.md#give-each-part-the-direction-it-can-realize)
+explains how these local instructions retain the whole design.
+
 ## Four paragraphs, four responsibilities
 
 For a complete character-and-scene camera image, use this order:

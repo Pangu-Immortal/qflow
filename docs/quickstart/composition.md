@@ -19,9 +19,15 @@ retains its own timed appearances and paint order; sound is included through the
 
 ```svml
 <space:Canvas id="vertical" width="1080" height="1920"/>
-<film:Film id="main" canvas={vertical} semantic={speech.semantic} appearance={recipes.film.vertical}>
+<import as="sound" from="@qflow/sound@1"/>
+<sound:Style id="voice-style"/>
+<sound:Track id="voice" timeline={speech.timeline}>
+  <sound:Use style={voice-style}/>
+</sound:Track>
+
+<film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
   <film:Track source={performance.visual}/>
-  <film:Track source={speech.audio}/>
+  <film:Track source={voice.audio}/>
   <film:Track source={captions.track}/>
   <film:Track source={product-broll.visual}/>
   <film:Track source={titles.track}/>
@@ -32,8 +38,7 @@ retains its own timed appearances and paint order; sound is included through the
 |---|---|---|
 | `id` | yes | Unique identifier |
 | `canvas` | yes | Explicit CanvasSpace shared with Track layout |
-| `semantic` | one time source | Selected performance's SemanticTrack; supplies duration and frame rate |
-| `space` | one time source | Authored ProgramSpace; use either `semantic` or `space` |
+| `timeline` | yes | Complete Timeline, with any prepared material and semantic anchors |
 | `appearance` | yes | SVS Film Recipe — the canvas clear color |
 
 ### film:Track
@@ -48,8 +53,8 @@ Common Track sources:
 
 | Source | Type | From |
 |---|---|---|
-| `{performance.visual}` | VisualTrack | `media-track:Track` — presentation of the semantic performance |
-| `{speech.audio}` | AudioTrack | `speech:Track` — synchronized audio |
+| `{performance.visual}` | VisualTrack | `performance:Track` — presentation of existing footage |
+| `{voice.audio}` | AudioTrack | `sound:Track` — presentation of existing audio |
 | `{captions.track}` | VisualTrack | a Caption Style-family Track — timed captions |
 | `{cards.visual}` | VisualTrack | `media-track:Track` — media overlays or B-roll |
 | `{titles.track}` | VisualTrack | `text:Track` — text overlays |
@@ -82,15 +87,14 @@ not prescribe that boundary.
 Compiles the Composition into a finished video via the HyperFrames renderer.
 
 ```svml
-<render:Video id="final" composition={main.composition} semantic={speech.semantic}/>
+<render:Video id="final" composition={main.composition} timeline={speech.timeline}/>
 ```
 
 | Attribute | Required | Description |
 |---|---|---|
 | `id` | yes | Unique identifier |
 | `composition` | yes | Composition from `film:Film` |
-| `semantic` | one time source | The composition's selected SemanticTrack |
-| `space` | one time source | The composition's authored ProgramSpace; use either `semantic` or `space` |
+| `timeline` | yes | Complete Timeline, with any prepared material and semantic anchors |
 
 The renderer:
 
@@ -111,13 +115,14 @@ their presentation. A chat animation or diagram can instead direct its own readi
 the film clock and use it in the scene, Film and Render:
 
 ```svml
-<import as="time" from="@qflow/program-space@1"/>
-<time:Space id="animation" frame-rate="30" duration="8s"/>
+<import as="time" from="@qflow/timeline-author@1"/>
+<time:Clock id="animation-clock" frame-rate="30"/>
+<time:Timeline id="animation" clock={animation-clock} end="8s"/>
 <!-- scene.track is produced by a component using this same clock. -->
-<film:Film id="main" canvas={canvas} space={animation} appearance={recipes.film.main}>
+<film:Film id="main" canvas={canvas} timeline={animation.timeline} appearance={recipes.film.main}>
   <film:Track source={scene.track}/>
 </film:Film>
-<render:Video id="final" composition={main.composition} space={animation}/>
+<render:Video id="final" composition={main.composition} timeline={animation.timeline}/>
 ```
 
 The scene's events can use authored seconds or frames. In a spoken composition, the same behavior
@@ -141,12 +146,13 @@ illustration. The complete runnable project is `examples/podcast/`; the commands
   <import as="gpt" from="@qflow/gpt-image@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
-  <import as="speech" from="@qflow/speech-track@1"/>
+  <import as="time" from="@qflow/timeline-author@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
   <import as="caption" from="@qflow/caption@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
   <import as="fonts" from="@qflow/fonts-open@1"/>
   <import as="media-track" from="@qflow/media-track@1"/>
+  <import as="performance" from="@qflow/performance@1"/>
   <import as="text" from="@qflow/typography-track@1"/>
   <import as="space" from="@qflow/spatial@1"/>
   <import as="program" from="@qflow/program-space@1"/>
@@ -196,39 +202,46 @@ illustration. The complete runnable project is `examples/podcast/`; the commands
     video="primary-moving" audio="none" span-authority="video" clock={clock}/>
   <whisperx:SemanticTake id="opening-semantic" narrative={story}
     segment={story.segment.opening} media={take-media.media} language="en"/>
-  <speech:Track id="speech">
-    <speech:Take source={opening-semantic.take}/>
-  </speech:Track>
-<media-track:Track id="performance" semantic={speech.semantic} canvas={vertical}>
-  <media-track:Performance during="program" frame={speech-frame}
-    appearance={recipes.media.performance}/>
-</media-track:Track>
+  <time:Timeline id="speech" clock={clock}>
+    <time:Take source={opening-semantic.take}/>
+  </time:Timeline>
+<performance:Style id="performance-style" frame={speech-frame} appearance={recipes.media.performance}/>
+  <performance:Track id="performance" timeline={speech.timeline} canvas={vertical}>
+    <performance:Use style={performance-style} during="program"/>
+  </performance:Track>
 
   <!-- 4. Tracks: captions, Media, text -->
   <fonts:Stack id="caption-font" family="inter" weight="700" style="normal"/>
   <fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
   <caption-fine:Style id="base-caption" recipe={recipes.caption.base} font={caption-font}/>
-  <caption:Program id="caption-program" document={story.caption} narrative={story}
-    default={base-caption}/>
-  <caption-fine:Track id="captions" document={story.caption}
-    semantic={speech.semantic} program={caption-program}/>
 
-  <media-track:Track id="cards" semantic={speech.semantic} canvas={vertical}>
+  <caption-fine:Track id="captions" document={story.caption}
+    timeline={speech.timeline}>
+    <caption-fine:Use style={base-caption}/>
+  </caption-fine:Track>
+
+  <media-track:Track id="cards" timeline={speech.timeline} canvas={vertical}>
     <media-track:Item media={motion-media.media} during={story.selection.demo}
       frame={card-frame} appearance={recipes.media.card} motion={recipes.motion.card}/>
   </media-track:Track>
   <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
-  <text:Track id="titles" semantic={speech.semantic}>
+  <text:Track id="titles" timeline={speech.timeline}>
     <text:Area id="meaning" placement={title-frame} style={title-style} during="program">
       MEANING
     </text:Area>
   </text:Track>
 
   <!-- 5. Film: compose all tracks -->
-  <film:Film id="main" canvas={vertical} semantic={speech.semantic}
+  <import as="sound" from="@qflow/sound@1"/>
+<sound:Style id="voice-style"/>
+<sound:Track id="voice" timeline={speech.timeline}>
+  <sound:Use style={voice-style}/>
+</sound:Track>
+
+<film:Film id="main" canvas={vertical} timeline={speech.timeline}
     appearance={recipes.film.vertical}>
     <film:Track source={performance.visual}/>
-    <film:Track source={speech.audio}/>
+    <film:Track source={voice.audio}/>
     <film:Track source={cards.visual}/>
     <film:Track source={captions.track}/>
     <film:Track source={titles.track}/>
@@ -236,7 +249,7 @@ illustration. The complete runnable project is `examples/podcast/`; the commands
 
   <!-- 6. Render: compile to MP4 -->
   <render:Video id="final" composition={main.composition}
-    semantic={speech.semantic}/>
+    timeline={speech.timeline}/>
 </svml>
 ```
 

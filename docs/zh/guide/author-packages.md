@@ -22,7 +22,7 @@ npm run build
 
 公开另一个视频作者真正会改的决定：内容、素材、位置、外观和有意义的事件。转场可以接收一个 Moment，决定何时改变布局；接收一个 Selection，决定整个场景何时存在。纯动画则可以接收作者指定的事件时间。将这些输入投影到选定时钟，再按得到的调度绘制场景。
 
-呈现已有说话表演时，消费它的 SemanticTrack，让画面采样与口播使用相同的 Take 和素材位置。其他视频输入以归一化媒体进入时间线。[响应式讲解场景](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/responsive-explainer) 展示持续播放的视频如何在 HTML 场景里从全屏移到侧边竖屏。[聊天示例](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/chat-scene) 展示同一个事件接口如何接受作者时间或 Script Moment。
+呈现已有说话表演时，消费它的 Timeline，让画面采样与口播使用相同的 Take 和素材位置。其他视频输入以归一化媒体进入时间线。[响应式讲解场景](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/responsive-explainer) 展示持续播放的视频如何在 HTML 场景里从全屏移到侧边竖屏。[聊天示例](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/chat-scene) 展示同一个事件接口如何接受作者时间或 Script Moment。
 
 Style 一类 Surface 在裸作者 id 下公开其值，例如 `style={board-style}`；独立输出可以使用 `.visual`、`.audio`、`.track` 等有意义的后缀。在组件自己的 vocabulary 和 README 中说明名称与可用值。
 

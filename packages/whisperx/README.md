@@ -33,7 +33,7 @@ so this branch requests no evidence audio and no WhisperX capability:
   segment={story.segment.pause} media={pause-media.media}/>
 ```
 
-There is no whole-program WhisperX pass. Speech Track only receives already-semantic Takes and later
+There is no whole-program WhisperX pass. Timeline assembly only receives already-semantic Takes and later
 translates their local frames when assembling the final ProgramSpace and complete semantic map.
 
 `@qflow/provider-qflowhub` is the default concrete adapter; it uploads the canonical evidence audio

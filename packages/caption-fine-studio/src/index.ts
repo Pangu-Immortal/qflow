@@ -1,5 +1,7 @@
+import { temporalTypes } from "@qflow/temporal";
+import type { CaptionProgram, TimedCaptionProjection } from "@qflow/caption";
 import { openFontStudioFields } from "@qflow/fonts-open/studio";
-import { captionFineMarkupSurfaces, captionFineModuleRef } from "@qflow/caption-fine";
+import { fineCaptionEditableDefaults, captionFineMarkupSurfaces, captionFineModuleRef } from "@qflow/caption-fine";
 import type { FineCaptionSchedule } from "@qflow/caption-fine";
 import { compositionTypes } from "@qflow/composition";
 import { narrativeTypes } from "@qflow/narrative";
@@ -10,11 +12,11 @@ import type {
   StudioEntityDraft,
   StudioInspectorFieldDeclaration,
 } from "@qflow/studio-adapter";
-import { requiredReferencedValue, requiredSurfaceValue, textLayer } from "@qflow/studio-adapter";
+import { authoredChildFor, temporalLineageFor, temporalSemanticSource, requiredReferencedValue, requiredSurfaceValue } from "@qflow/studio-adapter";
 
 const styleSurface = captionFineMarkupSurfaces.find((surface) => surface.name === "style");
 
-const fontInspector = openFontStudioFields("program");
+const fontInspector = openFontStudioFields("style");
 
 const recipeVocabulary = styleSurface?.vocabulary.attributes
   .find((attribute) => attribute.name === "recipe")?.recipe ?? [];
@@ -95,7 +97,7 @@ export const captionFineInspectorFields: readonly StudioInspectorFieldDeclaratio
   if (placement === undefined) throw new Error(`Caption Studio has no explicit Inspector declaration for ${property.name}.`);
   const options = valuesFor(property);
   return {
-    binding: `program.${property.name}`,
+    binding: `style.${property.name}`,
     label: title(property.name),
     ...placement,
     summary: property.summary,
@@ -118,39 +120,40 @@ function cueText(document: CaptionDocument | undefined, unitIds: readonly string
     .trim();
 }
 
-function projectCaption(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+export function projectCaptionContents(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+  const content = requiredSurfaceValue(context, "content") as TimedCaptionProjection;
   const schedule = requiredSurfaceValue(context, "schedule") as FineCaptionSchedule;
   const document = requiredReferencedValue(context, "document", narrativeTypes.captionDocument) as CaptionDocument;
-  if (document.id !== schedule.documentId) throw new Error("Caption Studio Schedule belongs to another CaptionDocument.");
-  const rendered = new Map(context.generic().flatMap((entity) =>
-    entity.presentId === undefined ? [] : [[entity.presentId, entity] as const]));
-  return schedule.cues.map((cue): StudioEntityDraft => {
-    const base = rendered.get(cue.id);
-    const label = cueText(document, cue.units.map((unit) => unit.unitId));
-    const authoredId = context.placement?.id ?? cue.id;
+  if (document.id !== content.documentId) throw new Error("Caption content belongs to another CaptionDocument.");
+  return content.cues.map((cue, index): StudioEntityDraft => ({
+    id: `${context.track.outputRef}:cue:${cue.id}`, authoredId: cue.id,
+    display: { title: `#${index + 1}`, layers: [{ kind: "text", role: "content", text: cueText(document, cue.units.map(unit => unit.unitId)) }] },
+    startFrame: cue.startFrame, endFrameExclusive: cue.endFrameExclusive, stackOrder: 0,
+    renderIds: schedule.cues.filter(item => item.cueId === cue.id).map(item => item.id),
+    presentation: { entity: "caption-cue", chrome: "standard" },
+    inspector: [{ id: "range", label: "Range", domain: "when", section: { id: "cue", label: "Cue" }, value: `${cue.startFrame}–${cue.endFrameExclusive}`, unit: "f" }],
+  }));
+}
+
+export function projectCaption(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+  const program = requiredSurfaceValue(context, "program") as CaptionProgram;
+  const uses: StudioEntityDraft[] = program.uses.map((use, index) => {
+    const authoredId = use.window.subjectId;
+    const child = authoredChildFor(context, authoredId, [temporalTypes.windowSpec]);
+    if (child === undefined) throw new Error(`Caption Use ${authoredId} has no author provenance.`);
+    const temporal = temporalLineageFor(context, authoredId, "window");
+    const semantic = temporalSemanticSource(temporal);
     return {
-      ...(base ?? {
-        id: `${context.track.outputRef}:entity:${cue.id}`,
-        authoredId: cue.id,
-        display: { title: "Caption", layers: [] },
-        startFrame: cue.visibleStartFrame,
-        endFrameExclusive: cue.visibleEndFrameExclusive,
-        stackOrder: 0,
-        presentId: cue.id,
-        renderIds: [cue.id],
-      }),
-      authoredId,
-      ...(context.placement === undefined ? {} : { elementRange: context.placement.range }),
-      display: {
-        title: "Caption",
-        layers: label.length === 0 ? [] : [textLayer(label)],
-      },
-      startFrame: cue.visibleStartFrame,
-      endFrameExclusive: cue.visibleEndFrameExclusive,
-      presentation: { entity: "caption-cue", chrome: "standard" },
-      parameterReferences: { program: cue.styleId },
+      id: `${context.track.outputRef}:use:${authoredId}`, authoredId,
+      display: { title: use.styleId, layers: [] },
+      ...use.window.span, stackOrder: index, elementRange: child.range,
+      ...(temporal === undefined ? {} : { temporal }),
+      ...(semantic === undefined ? {} : { markerId: semantic.id }),
+      presentation: { entity: "caption-use", chrome: "standard" }, band: "uses",
+      inspector: [{ id: "range", label: "Range", domain: "when", section: { id: "placement", label: "Placement" }, value: `${use.window.span.startFrame}–${use.window.span.endFrameExclusive}`, unit: "f" }],
     };
   });
+  return [...projectCaptionContents(context), ...uses];
 }
 
 export const captionFineStudioTrackCompanions: readonly StudioTrackCompanion[] = [
@@ -158,15 +161,24 @@ export const captionFineStudioTrackCompanions: readonly StudioTrackCompanion[] =
     id: "track", role: "track",
     output: { type: compositionTypes.visualTrack, surface: "track", modules: [captionFineModuleRef] },
     family: "caption", tone: "magenta", icon: "captions",
-    bindings: [
-      {
-        name: "program",
-        referenced: [fontInspector.binding],
-        recipe: { through: ["recipe"], bindings: recipeVocabulary.map(({ name }) => ({ name })) },
-      },
-    ],
-    inspector: [...fontInspector.fields, ...captionFineInspectorFields],
-    requiredValues: ["schedule"], project: projectCaption,
-    lane: { heightPx: 48 },
+    lane: { heightPx: 36 },
+    bands: [{
+      id: "uses", placement: "after", heightPx: 15, display: "label",
+      bindings: [{ name: "style", companion: true }],
+      inspector: [{ binding: "style", label: "Style", domain: "how", section: { id: "style", label: "Style" }, control: "text" }],
+    }],
+    requiredValues: ["content", "schedule", "program"], project: projectCaption,
+
   },
 ];
+
+export const captionFineStudioParameterCompanions: readonly import("@qflow/studio-adapter").StudioParameterCompanion[] = [{
+  id: "style", match: { module: captionFineModuleRef, surface: "style" },
+  bindings: [fontInspector.binding, { name: "recipe", recipe: { bindings: recipeVocabulary.map(({ name }) => ({ name,
+    ...(Object.hasOwn(fineCaptionEditableDefaults, name) ? { fallback: fineCaptionEditableDefaults[name as keyof typeof fineCaptionEditableDefaults] } : {}),
+  })) } }],
+  inspector: [
+    ...fontInspector.fields.map(field => ({ ...field, binding: field.binding.replace(/^style\./u, "") })),
+    ...captionFineInspectorFields.map(field => ({ ...field, binding: field.binding.replace(/^style\./u, "recipe.") })),
+  ],
+}];

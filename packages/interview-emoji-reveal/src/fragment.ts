@@ -1,4 +1,5 @@
-import { programSpaceTypes } from "@qflow/program-space";
+import { timelineTypes } from "@qflow/timeline";
+
 import { compositionTypes } from "@qflow/composition";
 import { artifactTypes } from "@qflow/artifact";
 import { sealGraphFragment } from "@qflow/elaborator";
@@ -29,23 +30,23 @@ export function createEmojiRevealFragment(items: readonly EmojiRevealFragmentIte
       : emojiRevealProducers.appendItem, inputs: {
       set: operation(current), spec: input(item.specName), icon: input(item.iconName),
       ...(item.activationName === undefined ? {} : {
-        space: input("space"), activation: input(item.activationName),
+        timeline: input("timeline"), activation: input(item.activationName),
       }),
     }, result: { kind: "output", name: "set" } });
     current = id;
   });
   operations.push(
     { id: "emoji:program", producer: emojiRevealProducers.finalize, inputs: {
-      header: input("header"), space: input("space"), outer: input("outer"), style: input("style"),
+      header: input("header"), timeline: input("timeline"), outer: input("outer"), style: input("style"),
       placeholder: input("placeholder"), set: operation(current),
     }, result: { kind: "output", name: "program" } },
     { id: "emoji:track", producer: emojiRevealProducers.render, inputs: {
-      canvas: input("canvas"), space: input("space"), program: operation("emoji:program"),
+      canvas: input("canvas"), timeline: input("timeline"), program: operation("emoji:program"),
     }, result: { kind: "output", name: "track" } },
   );
   return sealGraphFragment({
     inputs: [
-      { name: "header", type: emojiRevealTypes.header }, { name: "space", type: programSpaceTypes.programSpace },
+      { name: "header", type: emojiRevealTypes.header }, { name: "timeline", type: timelineTypes.track },
       { name: "canvas", type: spatialTypes.canvas }, { name: "outer", type: temporalTypes.window }, { name: "style", type: emojiRevealTypes.style },
       { name: "placeholder", type: artifactTypes.blob },
       ...items.flatMap((item) => [

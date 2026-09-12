@@ -1,7 +1,7 @@
+import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage } from "@qflow/component-kit";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef, StoredValue } from "@qflow/protocol";
-import type { ProgramSpace } from "@qflow/program-space";
 import type { CanvasSpace } from "@qflow/spatial";
 import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
@@ -23,7 +23,7 @@ export const emojiRevealComponent = {
   producers: [
     { producer: emojiRevealProducers.createSet, handler: () => ({ outputs: { set: output(createEmojiRevealSet()) }, needs: {} }) },
     { producer: emojiRevealProducers.appendItem, handler: ({ inputs }) => ({ outputs: { set: output(appendEmojiRevealItem(
-      inline<EmojiRevealSet>(inputs.set?.value, "EmojiRevealSet"), inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+      inline<EmojiRevealSet>(inputs.set?.value, "EmojiRevealSet"), inline<Timeline>(inputs.timeline?.value, "Timeline"),
       inline<EmojiRevealItemSpec>(inputs.spec?.value, "EmojiRevealItemSpec"), blob(inputs.icon?.value, "Emoji Reveal icon"),
       inline<TemporalInstant>(inputs.activation?.value, "TemporalInstant"),
     )) }, needs: {} }) },
@@ -32,12 +32,12 @@ export const emojiRevealComponent = {
       inline<EmojiRevealItemSpec>(inputs.spec?.value, "EmojiRevealItemSpec"), blob(inputs.icon?.value, "Emoji Reveal icon"),
     )) }, needs: {} }) },
     { producer: emojiRevealProducers.finalize, handler: ({ inputs }) => ({ outputs: { program: output(finalizeEmojiReveal(
-      inline<EmojiRevealHeader>(inputs.header?.value, "EmojiRevealHeader"), inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+      inline<EmojiRevealHeader>(inputs.header?.value, "EmojiRevealHeader"), inline<Timeline>(inputs.timeline?.value, "Timeline"),
       inline<TemporalWindow>(inputs.outer?.value, "TemporalWindow"), inline<EmojiRevealStyle>(inputs.style?.value, "EmojiRevealStyle"),
       blob(inputs.placeholder?.value, "Emoji Reveal placeholder"), inline<EmojiRevealSet>(inputs.set?.value, "EmojiRevealSet"),
     )) }, needs: {} }) },
     { producer: emojiRevealProducers.render, handler: ({ inputs }) => ({ outputs: { track: output(renderEmojiReveal(
-      inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"), inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+      inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"), inline<Timeline>(inputs.timeline?.value, "Timeline"),
       inline<EmojiRevealProgram>(inputs.program?.value, "EmojiRevealProgram"),
     )) }, needs: {} }) },
   ],

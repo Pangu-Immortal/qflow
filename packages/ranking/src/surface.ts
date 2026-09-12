@@ -1,4 +1,4 @@
-import { createTemporalSpace, resolveTemporalContext } from "@qflow/temporal-markup";
+import { resolveTemporalContext } from "@qflow/temporal-markup";
 import {
   assertEmptyElement as empty,
   assertAttributes as allowed,
@@ -199,7 +199,7 @@ const variantDefinition = {
 
 function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
   return ({ element, resolveReference }) => {
-    const common = ["id", "semantic", "space", "frame", "during", "terminal", "style", "appear-sound", "move-sound"];
+    const common = ["id", "timeline", "frame", "during", "terminal", "style", "appear-sound", "move-sound"];
     const attributes = variant === "column" || variant === "tier-board"
       ? [...common.filter((name) => name !== "terminal"), "canvas"]
       : common;
@@ -207,31 +207,30 @@ function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
     const id = text(element, "id");
     const selected = variantDefinition[variant];
     const context = resolveTemporalContext({ element, resolveReference });
-    const time = createTemporalSpace({ id, element, ...context });
     const canvas = variant === "column" || variant === "tier-board"
       ? reference(element.attributes.canvas, `${element.name}.canvas`, spatialTypes.canvas, resolveReference)
       : undefined;
     const frame = reference(element.attributes.frame, `${element.name}.frame`, spatialTypes.frame, resolveReference);
-    const outerTemporal = createTemporalWindowProjection({ id: `${id}.outer`, subjectId: id, element, ...context, space: time.space, resolveReference });
+    const outerTemporal = createTemporalWindowProjection({ id: `${id}.outer`, subjectId: id, element, ...context, resolveReference });
     const terminalTemporal = variant === "top-three"
       ? createTemporalInstantProjection({
-          id: `${id}.terminal`, subjectId: id, element, ...context, space: time.space, resolveReference,
+          id: `${id}.terminal`, subjectId: id, element, ...context, resolveReference,
           semanticAttribute: "terminal", projectedAttribute: false,
         })
       : undefined;
     const styleRaw = element.attributes.style;
     const style = reference(styleRaw, `${element.name}.style`, selected.style, resolveReference);
     const records: SurfaceRecordDraft[] = [...outerTemporal.records, ...(terminalTemporal?.records ?? [])];
-    const temporalComponents: SurfaceComponentDraft[] = [...time.components, ...outerTemporal.components, ...(terminalTemporal?.components ?? [])];
-    const temporalFragments = [...time.fragments, ...outerTemporal.fragments, ...(terminalTemporal?.fragments ?? [])];
+    const temporalComponents: SurfaceComponentDraft[] = [...outerTemporal.components, ...(terminalTemporal?.components ?? [])];
+    const temporalFragments = [...outerTemporal.fragments, ...(terminalTemporal?.fragments ?? [])];
     const headerId = `${id}.header`;
     records.push({
       id: headerId, type: rankingTypes.header,
       value: { kind: "inline", value: sealRankingHeader({ id, variant }) as unknown as CanonicalValue },
       range: element.range,
     });
-    const inputs: Record<string, typeof time.space.ref> = {
-      header: { kind: "record", id: headerId }, space: time.space.ref, frame: frame.ref,
+    const inputs: Record<string, typeof context.timeline.ref> = {
+      header: { kind: "record", id: headerId }, timeline: context.timeline.ref, frame: frame.ref,
       outer: outerTemporal.ref, style: style.ref,
       ...(canvas === undefined ? {} : { canvas: canvas.ref }),
       ...(terminalTemporal === undefined ? {} : { terminal: terminalTemporal.ref }),
@@ -260,8 +259,8 @@ function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
       const contentName = authored.content === undefined ? undefined : `item-${suffix}-content`;
       if (authored.content !== undefined) inputs[contentName!] = authored.content.ref;
       const itemTemporal = !authored.timed ? undefined : variant === "top-three"
-        ? createTemporalInstantProjection({ id: `${id}.item.${suffix}`, subjectId: spec.id, element: child, ...context, space: time.space, resolveReference })
-        : createTemporalWindowProjection({ id: `${id}.item.${suffix}`, subjectId: spec.id, element: child, ...context, space: time.space, resolveReference });
+        ? createTemporalInstantProjection({ id: `${id}.item.${suffix}`, subjectId: spec.id, element: child, ...context, resolveReference })
+        : createTemporalWindowProjection({ id: `${id}.item.${suffix}`, subjectId: spec.id, element: child, ...context, resolveReference });
       if (itemTemporal !== undefined) {
         records.push(...itemTemporal.records);
         temporalComponents.push(...itemTemporal.components);
@@ -307,12 +306,12 @@ function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
         id, fragment: fragment.id, inputs,
         outputs: {
           schedule: `${id}.schedule`, program: `${id}.program`, visual: `${id}.visual`,
-          ...(sound.appearName === undefined && sound.moveName === undefined ? {} : { audio: `${id}.audio` }),
+          ...(sound.appearName === undefined && sound.moveName === undefined ? {} : { events: `${id}.events`, audio: `${id}.audio` }),
         },
         range: element.range,
       }],
       fragments: [...temporalFragments, fragment],
-      exports: [`${id}.schedule`, `${id}.program`, `${id}.visual`, ...(sound.appearName === undefined && sound.moveName === undefined ? [] : [`${id}.audio`])],
+      exports: [`${id}.schedule`, `${id}.program`, `${id}.visual`, ...(sound.appearName === undefined && sound.moveName === undefined ? [] : [`${id}.events`, `${id}.audio`])],
     };
   };
 }

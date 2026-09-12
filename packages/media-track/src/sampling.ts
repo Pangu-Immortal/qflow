@@ -1,10 +1,10 @@
+import type { Timeline } from "@qflow/timeline";
 import type {
   VisualSamplingRational,
   VisualSamplingSegment,
   VisualTimedSampling,
 } from "@qflow/composition";
 import { assertProgramSpaceIdentity } from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
 
 import type { MediaVisualOccupancy, MediaVisualTrim } from "./types.js";
 
@@ -58,21 +58,21 @@ function assertOccupancy(value: MediaVisualOccupancy): void {
  * frame. This avoids a second, renderer-specific frame quantizer.
  */
 export function resolveVisualSampling(input: {
-  readonly space: ProgramSpace;
+  readonly timeline: Timeline;
   readonly sourceFrameRate: { readonly numerator: number; readonly denominator: number };
   readonly sourceFrameCount: number;
   readonly targetFrameCount: number;
   readonly trim?: MediaVisualTrim;
   readonly occupancy: MediaVisualOccupancy;
 }): VisualTimedSampling {
-  assertProgramSpaceIdentity(input.space);
+  assertProgramSpaceIdentity(input.timeline);
   assert(Number.isSafeInteger(input.sourceFrameCount) && input.sourceFrameCount > 0,
     "Timed visual source frame count is invalid.");
   assert(Number.isSafeInteger(input.targetFrameCount) && input.targetFrameCount > 0,
     "Timed visual target frame count is invalid.");
-  assert(input.sourceFrameRate.numerator === input.space.frameRate.numerator
-    && input.sourceFrameRate.denominator === input.space.frameRate.denominator,
-  "Timed visual source must be normalized to ProgramSpace frame rate before Media authoring.");
+  assert(input.sourceFrameRate.numerator === input.timeline.frameRate.numerator
+    && input.sourceFrameRate.denominator === input.timeline.frameRate.denominator,
+  "Timed visual source must be normalized to Timeline frame rate before Media authoring.");
   assertOccupancy(input.occupancy);
   const trim = input.trim ?? { startFrame: 0, endFrameExclusive: input.sourceFrameCount };
   assert(Number.isSafeInteger(trim.startFrame) && Number.isSafeInteger(trim.endFrameExclusive)

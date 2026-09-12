@@ -19,9 +19,15 @@ Composition。然后渲染器将该 Composition 编译为 MP4 视频。
 
 ```svml
 <space:Canvas id="vertical" width="1080" height="1920"/>
-<film:Film id="main" canvas={vertical} semantic={speech.semantic} appearance={recipes.film.vertical}>
+<import as="sound" from="@qflow/sound@1"/>
+<sound:Style id="voice-style"/>
+<sound:Track id="voice" timeline={speech.timeline}>
+  <sound:Use style={voice-style}/>
+</sound:Track>
+
+<film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
   <film:Track source={performance.visual}/>
-  <film:Track source={speech.audio}/>
+  <film:Track source={voice.audio}/>
   <film:Track source={captions.track}/>
   <film:Track source={product-broll.visual}/>
   <film:Track source={titles.track}/>
@@ -32,8 +38,7 @@ Composition。然后渲染器将该 Composition 编译为 MP4 视频。
 |---|---|---|
 | `id` | 是 | 唯一标识符 |
 | `canvas` | 是 | 与 Track 布局共享的显式 CanvasSpace |
-| `semantic` | 二选一 | 选定表演的 SemanticTrack，提供时长与帧率 |
-| `space` | 二选一 | 作者声明的 ProgramSpace；与 `semantic` 选择其一 |
+| `timeline` | 是 | 完整时间轴及其中的素材放置和语义锚点 |
 | `appearance` | 是 | SVS Film Recipe——画布清除颜色 |
 
 ### film:Track
@@ -48,8 +53,8 @@ Composition。然后渲染器将该 Composition 编译为 MP4 视频。
 
 | 来源 | 类型 | 来自 |
 |---|---|---|
-| `{performance.visual}` | VisualTrack | `media-track:Track`——语义表演的画面呈现 |
-| `{speech.audio}` | AudioTrack | `speech:Track`——同步音频 |
+| `{performance.visual}` | VisualTrack | `performance:Track`——已有表演的画面呈现 |
+| `{voice.audio}` | AudioTrack | `sound:Track`——已有声音的呈现 |
 | `{captions.track}` | VisualTrack | Caption 样式族 Track——定时字幕 |
 | `{cards.visual}` | VisualTrack | `media-track:Track`——Media 叠加层或 B-roll |
 | `{titles.track}` | VisualTrack | `text:Track`——文字叠加层 |
@@ -80,15 +85,14 @@ Film 收集对等的 Track。每个 Track 可以包含多个独立定时、独�
 通过 HyperFrames 渲染器将 Composition 编译为最终视频。
 
 ```svml
-<render:Video id="final" composition={main.composition} semantic={speech.semantic}/>
+<render:Video id="final" composition={main.composition} timeline={speech.timeline}/>
 ```
 
 | 属性 | 必填 | 说明 |
 |---|---|---|
 | `id` | 是 | 唯一标识符 |
 | `composition` | 是 | 来自 `film:Film` 的 Composition |
-| `semantic` | 二选一 | Composition 选定的 SemanticTrack |
-| `space` | 二选一 | Composition 使用的 ProgramSpace；与 `semantic` 选择其一 |
+| `timeline` | 是 | 完整时间轴及其中的素材放置和语义锚点 |
 
 渲染器：
 
@@ -107,13 +111,14 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
 也可以自行安排阅读节奏：声明影片时钟，让场景组件、Film 和 Render 使用它。
 
 ```svml
-<import as="time" from="@qflow/program-space@1"/>
-<time:Space id="animation" frame-rate="30" duration="8s"/>
+<import as="time" from="@qflow/timeline-author@1"/>
+<time:Clock id="animation-clock" frame-rate="30"/>
+<time:Timeline id="animation" clock={animation-clock} end="8s"/>
 <!-- scene.track 由使用同一时钟的组件产生。 -->
-<film:Film id="main" canvas={canvas} space={animation} appearance={recipes.film.main}>
+<film:Film id="main" canvas={canvas} timeline={animation.timeline} appearance={recipes.film.main}>
   <film:Track source={scene.track}/>
 </film:Film>
-<render:Video id="final" composition={main.composition} space={animation}/>
+<render:Video id="final" composition={main.composition} timeline={animation.timeline}/>
 ```
 
 场景事件可以采用作者指定的秒数或帧数。在口播编排中，同一种表现也可以跟随投影后的 Script
@@ -135,12 +140,13 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
   <import as="gpt" from="@qflow/gpt-image@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
-  <import as="speech" from="@qflow/speech-track@1"/>
+  <import as="time" from="@qflow/timeline-author@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
   <import as="caption" from="@qflow/caption@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
   <import as="fonts" from="@qflow/fonts-open@1"/>
   <import as="media-track" from="@qflow/media-track@1"/>
+  <import as="performance" from="@qflow/performance@1"/>
   <import as="text" from="@qflow/typography-track@1"/>
   <import as="space" from="@qflow/spatial@1"/>
   <import as="program" from="@qflow/program-space@1"/>
@@ -190,39 +196,46 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
     video="primary-moving" audio="none" span-authority="video" clock={clock}/>
   <whisperx:SemanticTake id="opening-semantic" narrative={story}
     segment={story.segment.opening} media={take-media.media} language="en"/>
-  <speech:Track id="speech">
-    <speech:Take source={opening-semantic.take}/>
-  </speech:Track>
-<media-track:Track id="performance" semantic={speech.semantic} canvas={vertical}>
-  <media-track:Performance during="program" frame={speech-frame}
-    appearance={recipes.media.performance}/>
-</media-track:Track>
+  <time:Timeline id="speech" clock={clock}>
+    <time:Take source={opening-semantic.take}/>
+  </time:Timeline>
+<performance:Style id="performance-style" frame={speech-frame} appearance={recipes.media.performance}/>
+  <performance:Track id="performance" timeline={speech.timeline} canvas={vertical}>
+    <performance:Use style={performance-style} during="program"/>
+  </performance:Track>
 
   <!-- 4. Tracks: captions, Media, text -->
   <fonts:Stack id="caption-font" family="inter" weight="700" style="normal"/>
   <fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
   <caption-fine:Style id="base-caption" recipe={recipes.caption.base} font={caption-font}/>
-  <caption:Program id="caption-program" document={story.caption} narrative={story}
-    default={base-caption}/>
-  <caption-fine:Track id="captions" document={story.caption}
-    semantic={speech.semantic} program={caption-program}/>
 
-  <media-track:Track id="cards" semantic={speech.semantic} canvas={vertical}>
+  <caption-fine:Track id="captions" document={story.caption}
+    timeline={speech.timeline}>
+    <caption-fine:Use style={base-caption}/>
+  </caption-fine:Track>
+
+  <media-track:Track id="cards" timeline={speech.timeline} canvas={vertical}>
     <media-track:Item media={motion-media.media} during={story.selection.demo}
       frame={card-frame} appearance={recipes.media.card} motion={recipes.motion.card}/>
   </media-track:Track>
   <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
-  <text:Track id="titles" semantic={speech.semantic}>
+  <text:Track id="titles" timeline={speech.timeline}>
     <text:Area id="meaning" placement={title-frame} style={title-style} during="program">
       MEANING
     </text:Area>
   </text:Track>
 
   <!-- 5. Film: compose all tracks -->
-  <film:Film id="main" canvas={vertical} semantic={speech.semantic}
+  <import as="sound" from="@qflow/sound@1"/>
+<sound:Style id="voice-style"/>
+<sound:Track id="voice" timeline={speech.timeline}>
+  <sound:Use style={voice-style}/>
+</sound:Track>
+
+<film:Film id="main" canvas={vertical} timeline={speech.timeline}
     appearance={recipes.film.vertical}>
     <film:Track source={performance.visual}/>
-    <film:Track source={speech.audio}/>
+    <film:Track source={voice.audio}/>
     <film:Track source={cards.visual}/>
     <film:Track source={captions.track}/>
     <film:Track source={titles.track}/>
@@ -230,7 +243,7 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
 
   <!-- 6. Render: compile to MP4 -->
   <render:Video id="final" composition={main.composition}
-    semantic={speech.semantic}/>
+    timeline={speech.timeline}/>
 </svml>
 ```
 

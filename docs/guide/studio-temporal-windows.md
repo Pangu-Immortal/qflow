@@ -11,16 +11,16 @@ author choice (Selection / Segment / Moment / program time)
   -> domain consumption (Program / Schedule / Track)
 ```
 
-Script's semantic ruler contains `2M + 2N + 2` ordered points: Token and Segment boundaries plus
+Script's semantic ruler contains `2M + 2N + 2` author points: Token and Segment boundaries plus
 distinct Program start/end anchors. Program anchors resolve at frame `0` and `frameCount` in the
-SemanticTrack; they are author points and therefore never have to be forged inside a SemanticTake.
+Timeline; they are author points and therefore never have to be forged inside a SemanticTake.
+Their Script order need not match physical time when Takes overlap or are reordered.
 This does not make `during="program"` writable: that projection remains structurally fixed.
 
 `@qflow/temporal-markup` owns the SVML author forms and lowers them before a domain component runs.
 The compiler only composes records, components and fragments; it does not recognize `during`, `at`
-or any time grammar. A declared `ProgramSpace` supplies authored animation time; for a performance,
-the graph projects it through the public Semantic Track producer,
-so domain components consume only ProgramSpace and projected time values and remain independent from
+or any time grammar. One Timeline supplies the complete range and any placed semantic evidence.
+Domain components receive that same Timeline and projected time values, remaining independent from
 both semantic lookup and Studio.
 
 ## Runtime values
@@ -32,7 +32,7 @@ The identity chain is author-visible rather than synthesized by Studio:
 
 - `<script id="story">` becomes `Narrative.id = story`; every Selection, Moment, Segment excerpt
   and CaptionDocument from that Script carries `narrativeId = story`;
-- the selected Semantic Track id, or the declared Space id, becomes `ProgramSpace.id`; every terminal Track carries that exact
+- the selected Timeline id becomes `ProgramSpace.id`; every terminal Track carries that exact
   `programSpaceId`;
 - every projected Instant carries the space identity; semantic sources also carry the Narrative
   identity. Each includes the consumer's public domain identity (normally its SVML `id`) as `subjectId`.
@@ -87,7 +87,7 @@ the same public Instant/Window protocol and carrying its executed lineage to its
 Film and Script interpretation also remain outside Studio core. `film-studio` declares which Film
 reference supplies the time axis and which child references are terminal Tracks; `script-studio` owns
 Script source observation and marker relocation. Studio selects the Script source map whose
-`narrativeId` exactly matches the active SemanticTrack and delegates the edit back to that companion.
+`narrativeId` exactly matches the active Timeline and delegates the edit back to that companion.
 An authored Space supplies the physical timeline without a Script lane.
 
 The binding name is not used as a global address. Markup retains the exact author element and input

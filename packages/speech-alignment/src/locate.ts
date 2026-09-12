@@ -456,7 +456,7 @@ export function locateAlignedSegmentTiming(
   const tokensById = new Map(timedTokens.map((token) => [token.tokenId, token]));
   const segmentsById = new Map(timedSegments.map((segment) => [segment.segmentId, segment]));
   const anchors: LocalSemanticTimePoint[] = narrative.semanticIndex.anchors.flatMap((anchor): LocalSemanticTimePoint[] => {
-    // Program boundaries belong to the assembled SemanticTrack, never to one Segment-local Take.
+    // Program boundaries belong to the assembled Timeline, never to one Segment-local Take.
     if (anchor.kind === "program-start" || anchor.kind === "program-end") return [];
     if (anchor.kind === "segment-start" || anchor.kind === "segment-end") {
       const segment = segmentsById.get(anchor.segmentId)!;

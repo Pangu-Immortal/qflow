@@ -11,8 +11,10 @@ project Companions. [Builds and Results](builds.md) explains retrieval and expli
 Compose MG, Caption, B-roll, Typography and Effects around the directed material and existing Outputs.
 Watch their actual arrangement in Studio or a rendered Result: is the comparison clear, is the
 Caption readable, does the B-roll cover the intended explanation, and do entries and exits land on
-the right words or actions? Adjust the layout, timing or component behavior that will make the
-passage work better. Judge a local change in the surrounding composition.
+the right words or actions? Does a persistent object retain its identity and state through the
+handoff, and does moving a video viewport keep its intended playback? Adjust the layout, timing or
+component behavior that will make the passage work better. Judge a local change in the surrounding
+composition.
 
 Work from the authored Script and the production's existing semantic timing when locating a word,
 reveal or handoff. Those relationships identify the passages whose composition needs attention;

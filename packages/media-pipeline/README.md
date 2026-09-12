@@ -37,7 +37,7 @@ This package is the shared execution vocabulary. Speech authoring makes the boun
 alignment produce one `SemanticTake`. Media Track consumes that prepared value; it never owns an
 implicit visual-only normalization policy.
 
-The frame clock is a separate program fact and can be shared by every Normalize and Speech Track:
+The frame clock is a separate program fact and can be shared by every Normalize and Timeline assembly:
 
 ```svml
 <program:Clock id="clock" frame-rate="30"/>
@@ -111,3 +111,7 @@ resampling, mixing, encoding or muxing is never a Producer shortcut: it is an ex
 Need. The plan fixes exact 48 kHz sample boundaries, gain/fade/playback parameters and the absence
 of hidden normalization/limiting. The local FFmpeg and AWS Lambda Providers consume the same shared
 execution body and return the same public contracts.
+
+AudioProgramPlan preserves AudioClip `gainEnvelope` and `audibility` on the full program sample
+clock. The [Composition definition](../composition/README.md#audio-presentation-on-the-program-clock)
+owns their semantics; the plan does not reinterpret source choice or presentation precedence.

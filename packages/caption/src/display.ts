@@ -1,3 +1,4 @@
+import { narrativeSelectionTokenRange } from "@qflow/narrative";
 import type { CaptionDocument, Narrative, NarrativeSelection } from "@qflow/narrative";
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -38,30 +39,14 @@ export type CaptionUnitSubset = {
   readonly unitIds: readonly string[];
 };
 
-function tokenBoundary(narrative: Narrative, anchorId: string, owner: string): number {
-  const anchor = narrative.semanticIndex.anchors.find((candidate) => candidate.id === anchorId);
-  if (anchor === undefined) throw new Error(`${owner} names unknown semantic anchor ${anchorId}`);
-  if (anchor.kind === "program-start") return 0;
-  if (anchor.kind === "program-end") return narrative.tokens.length;
-  const segment = narrative.segments.find((candidate) => candidate.id === anchor.segmentId);
-  if (segment === undefined) throw new Error(`${owner} names an anchor outside its Segment`);
-  if (anchor.kind === "segment-start") return segment.tokenStart;
-  if (anchor.kind === "segment-end") return segment.tokenEndExclusive;
-  const tokenIndex = narrative.tokens.findIndex((token) => token.id === anchor.tokenId);
-  if (tokenIndex < 0) throw new Error(`${owner} names an anchor without a Narrative token`);
-  return anchor.kind === "token-start" ? tokenIndex : tokenIndex + 1;
-}
-
 /** Project a semantic Selection to complete authored N:M Caption units. */
 export function captionUnitsForSelection(
-  document: CaptionDocument,
   narrative: Narrative,
   selection: NarrativeSelection,
 ): CaptionUnitSubset {
+  const document = narrative.caption;
   assertCaptionDocument(document);
-  const start = tokenBoundary(narrative, selection.startAnchorId, `Selection ${selection.id}`);
-  const end = tokenBoundary(narrative, selection.endAnchorId, `Selection ${selection.id}`);
-  assert(end >= start, `Selection ${selection.id} is backwards`);
+  const { tokenStart: start, tokenEndExclusive: end } = narrativeSelectionTokenRange(narrative, selection);
   const tokenPositions = new Map(narrative.tokens.map((token, index) => [token.id, index]));
   const unitIds: string[] = [];
   for (const unit of document.units) {

@@ -106,13 +106,14 @@ already available:
 ```svml
 <space:AnchoredFrame id="presenter-frame" within={canvas}
   x="94%" y="94%" width="320px" height="320px" anchor="bottom-right"/>
-<speech:Track id="speech">
-  <speech:Take source={opening.take}/>
-</speech:Track>
-<media:Track id="presenter" semantic={speech.semantic} canvas={canvas}>
-  <media:Performance during="program" frame={presenter-frame}
-    appearance={look.presenter}/>
-</media:Track>
+<time:Clock id="clock" frame-rate="30"/>
+<time:Timeline id="speech" clock={clock}>
+  <time:Take source={opening.take}/>
+</time:Timeline>
+<performance:Style id="presenter-style" frame={presenter-frame} appearance={look.presenter}/>
+  <performance:Track id="presenter" timeline={speech.timeline} canvas={canvas}>
+    <performance:Use style={presenter-style} during="program"/>
+  </performance:Track>
 ```
 
 ```svs
@@ -154,19 +155,19 @@ for a moving crop or a slow push-in while a card's outline stays still:
 ```
 
 This excerpt belongs inside Media Track, with prepared media, a Selection, Frame and Recipe already
-available. Sampling fields apply to a direct-source Item or Member, a sampled Layer, or a Performance.
+available. Sampling fields apply to a direct-source Item or Member, or a sampled Layer.
 `x` and `y` are pixel offsets, `rotate` is in
 degrees, and `at` follows the source unit's active span from `start` to `end`, with percentages for
 intermediate keys. Sampling acts after the static fit; its movement can expose space inside the
 Frame. Choose the crop and motion together for the intended coverage.
 
-A Performance uses the Track's prepared semantic material, with Sampling and whole-frame motion
-running across its full display Window, including Take boundaries. A scene that coordinates a moving
-performance viewport with surrounding graphics can own that motion in its
-[component program](component-visuals.md#compose-video-and-graphics-in-one-browser-program), while
-retaining the prepared video's source positions.
+[Performance](performance.md) applies fixed or custom Styles to existing Timeline footage. A moving
+Style retains the original Use Window across partial coverage and Take boundaries. A scene that
+coordinates the viewport with surrounding graphics can own the shared motion in its
+[component program](component-visuals.md#compose-video-and-graphics-in-one-browser-program), retaining
+source playback positions.
 
-[Tracks](tracks.md) explains the Media/Speech inputs and timing roles. Read their installed
+[Tracks](tracks.md) explains the Media and Performance inputs and timing roles. Read their installed
 vocabulary for the complete appearance and motion fields.
 
 ## Carry measured regions through the same geometry

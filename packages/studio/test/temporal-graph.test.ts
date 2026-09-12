@@ -17,7 +17,7 @@ const step = (id: string, owner: string, name: string, inputs: ProducerStep["inp
 
 test("Studio reads Instant lineage and author authority from executed graph edges", () => {
   const program = [
-    record("semantic", "@qflow/semantic-track", "SemanticTrack", { id: "speech" }),
+    record("semantic", "@qflow/timeline", "Timeline", { id: "speech" }),
     record("moment", "@qflow/narrative", "NarrativeMoment", { id: "cue", anchorId: "cue-anchor" }),
     record("point-spec", "@qflow/temporal", "TemporalInstantSpec", {
       id: "deck.card", subjectId: "card", projection: { ref: "moment.cue" }, authority: { kind: "semantic", boundary: "cue" },

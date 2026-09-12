@@ -1,8 +1,8 @@
+import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage } from "@qflow/component-kit";
 import type { SynchronizedMedia } from "@qflow/media";
 import { canonicalize } from "@qflow/protocol";
 import type { StoredValue } from "@qflow/protocol";
-import type { ProgramSpace } from "@qflow/program-space";
 
 import { audioTrackProducers, audioTrackTypes } from "./manifest.js";
 import { appendProjectedAudioItem, assertAudioTrackProgram, createAudioTrackSet, finalizeAudioTrack, renderAudioTrack } from "./program.js";
@@ -15,14 +15,14 @@ function inline<T>(value: StoredValue | undefined, label: string): T {
 }
 const output = (value: unknown) => ({ kind: "inline" as const, value: canonicalize(value) });
 
-const base = (inputs: [AudioTrackSet, AudioTrackHeader, ProgramSpace, SynchronizedMedia, AudioClipSpec, TemporalWindow]) => output(appendProjectedAudioItem(...inputs));
+const base = (inputs: [AudioTrackSet, AudioTrackHeader, Timeline, SynchronizedMedia, AudioClipSpec, TemporalWindow]) => output(appendProjectedAudioItem(...inputs));
 
 export const audioTrackComponent = {
   producers: [
     { producer: audioTrackProducers.createSet, handler: () => ({ outputs: { set: output(createAudioTrackSet()) }, needs: {} }) },
     { producer: audioTrackProducers.appendItem, handler: ({ inputs }) => ({ outputs: { set: base([
       inline<AudioTrackSet>(inputs.set?.value, "AudioTrackSet"), inline<AudioTrackHeader>(inputs.header?.value, "AudioTrackHeader"),
-      inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"), inline<SynchronizedMedia>(inputs.media?.value, "SynchronizedMedia"),
+      inline<Timeline>(inputs.timeline?.value, "Timeline"), inline<SynchronizedMedia>(inputs.media?.value, "SynchronizedMedia"),
       inline<AudioClipSpec>(inputs.spec?.value, "AudioClipSpec"),
       inline<TemporalWindow>(inputs.window?.value, "TemporalWindow"),
     ]) }, needs: {} }) },
@@ -30,7 +30,7 @@ export const audioTrackComponent = {
       inline<AudioTrackSet>(inputs.set?.value, "AudioTrackSet"), inline<AudioTrackHeader>(inputs.header?.value, "AudioTrackHeader"),
     )) }, needs: {} }) },
     { producer: audioTrackProducers.render, handler: ({ inputs }) => ({ outputs: { track: output(renderAudioTrack(
-      inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"), inline<AudioTrackProgram>(inputs.program?.value, "AudioTrackProgram"),
+      inline<Timeline>(inputs.timeline?.value, "Timeline"), inline<AudioTrackProgram>(inputs.program?.value, "AudioTrackProgram"),
     )) }, needs: {} }) },
   ],
   validators: [{

@@ -30,27 +30,58 @@ When setup, generation or rendering takes time, explain what is running or what 
 work. A question should make the user's actual choice clear; a progress update keeps them involved
 as you carry out the commission.
 
-Most work Qflow is asked to clone is creator-led, phone-captured short-form UGC: spoken expression is
-carried by one or more A-roll performances while B-roll, Caption and MG reshape what the viewer sees.
-A-roll is defined by the performance establishing semantic time, regardless of its picture size,
-placement or stack order.
-Use this as a practical prior when evidence is incomplete, not as a definition of valid work. When the
-reference or Brief establishes independently narrated, speechless, animated or another kind of work,
-direct that form on its own terms.
+## Give the work useful structure
 
-For creator-led social video, favor compelling casting, a distinctive, appealing voice, and a
-performance with a clear attitude toward the subject and listener. Outgoing or restrained, let that
-relationship shape the voice, expression and timing, with a few decisive details. Give humor,
-contrast or surprise an expression the audience can experience in the piece itself, and carry that
-intention into the material requests.
+Understand the piece as objects and relationships changing over time: what persists, what changes,
+what draws attention, and what each change accomplishes. Express the relationships that should
+survive a new product, wording or performance. Give those behaviors useful names and inputs; the
+components can complete their local layout and motion. Qflow supplies shared authoring and execution
+interfaces for both existing and project-defined components.
 
-Prefer to author the video's meaning in Script and let the accepted performance give it time.
+The work has one Timeline and a canvas. Placed Takes add semantic anchors where they belong;
+components give the picture useful structure. Time can contain speech, gaps, overlaps or wholly
+authored animation. Space can contain independent contributions or a coordinated scene with its own
+internal tree. [System relationships](references/production/system.md) explains this adaptive
+organization and connects it to materials and execution.
+
+Choose component boundaries through shared behavior. An ordinary media presentation can use Media;
+a playing video and a diagram exchanging space can share a scene that owns their layout and motion.
+Independent Caption or overlays can remain peers. Use an existing component when its behavior fits;
+create a project component when a new relationship deserves its own expression. A one-off scene is
+normal production work. [Component design](references/production/component-design.md) helps turn the
+visual idea into useful parts and author controls.
+
+For spoken work, prefer to author meaning in Script and let the accepted performance give it time.
 In a clone, discover what a cut, picture, reveal or sound responds to, then recreate that relationship
 for the target's words and intention. Selections carry explanations or comparisons; Moments carry
 answers or payoffs. This is Qflow's strong production prior: a new wording or delivery moves the
 presentation with its meaning. Preserve what each event responds to. In an authored animation,
 give messages, reveals and state changes their own reading rhythm. Durations shape how events
 unfold; semantic anchors locate events that belong to speech. A piece can use both relationships.
+
+A-roll is the performance supplying a spoken passage and its local timing. Its sound and semantic role can
+continue while its picture fills the frame, moves into an inset, or gives way to a demonstration.
+Choose what leads the picture from the current idea. Spatial grouping and timing are independent
+choices, so a whole scene can respond to a Moment and separate components can share that Moment.
+
+## Direct the material
+
+Material direction carries practical knowledge of how generation models respond to prompts and
+references. Use that experience to turn the creative answer into effective requests. Composition
+uses your understanding of the work to organize the resulting material into meaningful behavior.
+
+Keep the whole creative intention in view, then give each part the direction it can realize.
+Translate planned composition into the generated material's appearance, framing and performance;
+give later graphics their content, placement and events through components. High-level style and
+attitude remain useful when they describe what that material should look, sound or perform like.
+[Direction and its inputs](references/production/system.md#give-each-part-the-direction-it-can-realize)
+explains this division.
+
+For creator-led social video, favor compelling casting, a distinctive, appealing voice, and a
+performance with a clear attitude toward the subject and listener. Outgoing or restrained, let that
+relationship shape the voice, expression and timing, with a few decisive details. Give humor,
+contrast or surprise an expression the audience can experience in the piece itself, and translate
+the chosen idea into sensory and performable direction.
 
 Before writing or adapting an image prompt, read
 [Image direction](references/playbooks/craft/image-direction.md) and apply it to the intended picture,
@@ -86,7 +117,7 @@ path and reconsider it when actual progress changes its usefulness. Reference in
 component work can progress alongside
 the environment and generation work they do not depend on.
 
-## Understand and direct
+## Understand and adapt
 
 Understand the whole reference and the designed behavior that makes it work. Follow its argument or
 story from opening to close: what should the viewer feel, learn or decide, and how does the piece
@@ -125,16 +156,8 @@ lets B-roll cover the explanation it supports. The composition is ready when its
 carry the Treatment clearly and compellingly. Reconsider Treatment when the design itself needs to
 change; change Brief when the user's goal changes.
 
-Give useful relationships clear names and leave their expression to the component. Choose component
-boundaries through shared behavior. Reuse Media for ordinary presentation; let a
-video viewport and graphics share one component when they move or arrange together. Reuse Fine
-Caption for flowing speech text, or author a Caption family for a new relationship among words and
-graphics, carrying the same Script wording and semantic timing. Independent contributions can
-remain peers. [Component design](references/production/component-design.md)
-explains how semantic events make these compositions reusable.
-
-Create project components as normal production work. Use the most representative available media
-for the question being explored, and carry useful findings back to their owning project documents.
+Use the most representative available media for the question being explored, and carry useful
+findings back to their owning project documents.
 Environment, creation and production are rooms to revisit whenever the current question leads there.
 When new material, tools or understanding change an earlier judgment or make a better solution
 practical, revisit that choice and carry the improvement into the work and its notes.
@@ -186,7 +209,8 @@ practical, revisit that choice and carry the improvement into the work and its n
 
 | When the question is about | Read |
 | --- | --- |
-| how Source, media, Tracks, execution and Results connect | `references/production/system.md` |
+| how to express a work through materials, components and authored relationships, and how execution realizes it | `references/production/system.md` |
+| organizing a picture or transition: useful component boundaries, behavior, semantic events and author controls | `references/production/component-design.md` |
 | locating an existing `qflow` installation, or installing or updating the executable after Skill setup | `references/environment/distribution.md` |
 | what this machine can do, credentials, Model/Provider/Endpoint choices or shared capacity | `references/environment/profile.md` |
 | a new model, another service or Key for an existing model, or a project Model/Provider extension | `references/environment/model-and-provider.md` |
@@ -202,10 +226,11 @@ practical, revisit that choice and carry the improvement into the work and its n
 | deciding who is A-roll, recurring voice identity, covered performance or independent narration | `references/playbooks/craft/voice-and-performance.md` |
 | designing B-roll coverage, montage, short display windows or editorial handoffs | `references/playbooks/craft/b-roll.md` |
 | grouping Chinese, English or mixed-script Caption, reading rhythm, styling or placement | `references/playbooks/craft/captions.md` |
-| applying Caption Styles by speaker or passage, overriding a treatment, or hiding selected captions | `references/production/caption-program.md` |
+| applying Caption Styles by speaker or passage, overriding a treatment, or hiding selected captions | `references/production/caption-presentation.md` |
 | designing MG, a board, cards, graphic state, hierarchy, palette or reveals | `references/playbooks/craft/graphic-compositions.md` |
 | deciding which generated images or videos should depend on which references | `references/playbooks/craft/generated-dependencies.md` |
 | directing music, sound effects, ambience, gain, ducking or the completed mix | `references/playbooks/craft/sound-mix.md` |
+| presenting existing Timeline sound, local gain, silence, fades or explicit source blending | `references/production/sound.md` |
 | writing Sources, Recipes, and Runs, reusing produced work, adding a component | `references/production/authoring.md` |
 | imports, output references, literal values or Recipe rules | `references/production/source-syntax.md` |
 | choosing an existing Prompt Kit, assembling its wording or authoring a new one | `references/production/prompt-kits.md` |
@@ -219,8 +244,9 @@ practical, revisit that choice and carry the improvement into the work and its n
 | choosing or finding fonts, using local font files, multilingual text, Emoji or Typography | `references/production/fonts-and-text.md` |
 | which installed Surface to use, or whether to write a project component | `references/production/vocabulary.md` |
 | sharing a component, Prompt Kit, Model, or Provider across projects | `references/production/component-sharing.md` |
-| the A-roll semantic timeline and composing Media, Audio, Caption, Text, MG and Effect Tracks | `references/production/tracks.md` |
-| designing a good component: its visual idea, semantic behavior, useful controls and fit in the work | `references/production/component-design.md` |
+| placing Takes, gaps, overlap, complete duration or a pure MG work on one Timeline | `references/production/timeline.md` |
+| composing Performance, Media, Audio, Caption, Text, MG and Effect Tracks | `references/production/tracks.md` |
+| presenting existing Timeline footage with broad or local Uses, a moving viewport or a custom Performance Style | `references/production/performance.md` |
 | writing a project Track with new layout, semantic events or persistent state | `references/production/track-authoring.md` |
 | drawing a component's elements, animation, resources or prepared surfaces | `references/production/component-visuals.md` |
 | writing a Caption family with new word relationships, scheduling or layout | `references/production/caption-authoring.md` |

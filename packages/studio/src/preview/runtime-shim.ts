@@ -1,3 +1,5 @@
+import { audioEnvelopeGainAt } from "@qflow/composition";
+
 /**
  * Studio's frame driver for a compiled HyperFrames document.
  *
@@ -48,6 +50,7 @@ function shim(): string {
       rate: parseFloat(element.getAttribute('data-playback-rate') || '1') || 1
     });
   }
+  var audioContext;
   var programmeAudio = [];
   for (var element of document.querySelectorAll('.qflow-studio-audio')) {
     programmeAudio.push({
@@ -59,8 +62,49 @@ function shim(): string {
       loop: element.getAttribute('data-loop') === 'true',
       phase: parseFloat(element.getAttribute('data-phase') || '0') || 0,
       rate: parseFloat(element.getAttribute('data-playback-rate') || '1') || 1,
-      gain: parseFloat(element.getAttribute('data-gain') || '1') || 1
+      gain: Number(element.getAttribute('data-gain') ?? '1'),
+      presentation: JSON.parse(decodeURIComponent(element.getAttribute('data-presentation') || '%7B%7D'))
     });
+  }
+
+  function scheduleEnvelope(param, points, sample, now) {
+    param.cancelScheduledValues(now);
+    param.setValueAtTime(audioEnvelopeGainAt(points, sample), now);
+    for (var point of points || []) {
+      if (point.sample > sample) param.linearRampToValueAtTime(point.gain, now + (point.sample - sample) / 48000);
+    }
+  }
+
+  // Each factor has its own GainNode so intersecting ramps multiply exactly.
+  // These are the same absolute-sample envelopes consumed by the render mixer.
+  function placeAudioGain(record, seconds) {
+    if (!record.nodes) {
+      var source = audioContext.createMediaElementSource(record.element);
+      record.nodes = Array.from({ length: 5 }, function () { return audioContext.createGain(); });
+      var previous = source;
+      for (var node of record.nodes) { previous.connect(node); previous = node; }
+      previous.connect(audioContext.destination);
+      record.element.volume = 1;
+    }
+    var sample = seconds * 48000;
+    var now = audioContext.currentTime;
+    var p = record.presentation;
+    var start = record.start * 48000, end = (record.start + record.duration) * 48000;
+    record.nodes[0].gain.setValueAtTime(record.gain, now);
+    scheduleEnvelope(record.nodes[1].gain, p.gainEnvelope, sample, now);
+    scheduleEnvelope(record.nodes[2].gain, p.fadeInSamples > 0
+      ? [{ sample: start, gain: 0 }, { sample: start + p.fadeInSamples, gain: 1 }] : undefined, sample, now);
+    scheduleEnvelope(record.nodes[3].gain, p.fadeOutSamples > 0
+      ? [{ sample: end - p.fadeOutSamples, gain: 1 }, { sample: end, gain: 0 }] : undefined, sample, now);
+    var gate = record.nodes[4].gain;
+    gate.cancelScheduledValues(now);
+    gate.setValueAtTime(p.audibility === undefined || p.audibility.some(function (span) {
+      return sample >= span.startSample && sample < span.endSampleExclusive;
+    }) ? 1 : 0, now);
+    for (var span of p.audibility || []) {
+      if (span.startSample > sample) gate.setValueAtTime(1, now + (span.startSample - sample) / 48000);
+      if (span.endSampleExclusive > sample) gate.setValueAtTime(0, now + (span.endSampleExclusive - sample) / 48000);
+    }
   }
 
   function seekDecoded(element, target) {
@@ -148,7 +192,7 @@ function shim(): string {
       } else {
         if (Math.abs(element.currentTime - target) > 0.08) element.currentTime = target;
         element.playbackRate = record.rate;
-        element.volume = Math.max(0, Math.min(1, record.gain));
+        placeAudioGain(record, currentSeconds + frameSeconds / 2);
         if (element.paused) {
           var started = element.play();
           if (started) started.catch(function () {});
@@ -169,6 +213,8 @@ function shim(): string {
   };
   window.__qflowPlayFrame = function (frame) {
     playing = true;
+    if (programmeAudio.length && !audioContext) audioContext = new AudioContext();
+    if (audioContext && audioContext.state === 'suspended') audioContext.resume();
     return apply(frame / fps, false);
   };
   window.__qflowFrameReady = apply(0, true);
@@ -178,7 +224,7 @@ function shim(): string {
 }
 
 export function injectRuntimeShim(html: string, audio = ""): string {
-  const script = audio + shim();
+  const script = audio + shim().replace("(function () {", `(function () {\n${audioEnvelopeGainAt.toString()}`);
   const at = html.lastIndexOf("</body>");
   return at < 0 ? html + script : html.slice(0, at) + script + html.slice(at);
 }

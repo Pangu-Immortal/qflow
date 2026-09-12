@@ -38,7 +38,7 @@ seconds or frames can express the reading rhythm. A duration such as `12f` can d
 of a transition in either case.
 
 Media presentation, spatial layout and time each have their own inputs. A normalized clip supplies
-sampleable media; a SemanticTrack can supply the prepared performance and its source positions.
+sampleable media; a Timeline can supply the prepared performance and its source positions.
 A Frame can locate the scene, while its internal HTML/CSS or element tree coordinates videos,
 text, masks and graphics. Group content that shares behavior. Independent contributions can stay
 as peer Tracks with their own paint order.

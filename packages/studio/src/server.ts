@@ -15,7 +15,7 @@ import type { ServedFile } from "./compile.js";
 import type { StudioDomain } from "./domain.js";
 import type { StudioCompanionRegistry } from "./studio-registry.js";
 import { loadStudioRun } from "./run.js";
-import { parameterAuthorValue, parameterOption, serializeParameterValue, validateParameterValue } from "./parameter-values.js";
+import { parameterAuthorValue, parameterOption, serializeParameterValue, serializeAttributeGroup, validateParameterValue } from "./parameter-values.js";
 import { readStudioSession } from "./session.js";
 import type { Range, StudioFailure, StudioLibraryRequest, StudioLibraryView, StudioMutation, StudioSnapshot } from "./shared.js";
 import { createStudioStoryboard } from "./storyboard.js";
@@ -402,7 +402,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
     if (mutation.type === "timeline.adjust") return timelinePatches(mutation);
     const clip = currentClip(mutation.entityId);
     const parameter = clip.inspector.find((candidate) => candidate.id === mutation.parameterId);
-    if (parameter === undefined) {
+    if (parameter?.edit === undefined) {
       throw new Error(`Entity ${mutation.entityId} has no writable parameter ${mutation.parameterId}.`);
     }
     const authorValue = parameterAuthorValue(parameter, mutation.value);
@@ -420,10 +420,14 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       throw new Error(`${parameter.label} does not accept ${mutation.value}.`);
     }
     if (parameter.control === "color") validateParameterValue(authorValue, { kind: "string", format: "color" }, parameter.label);
-    const encoded = serializeParameterValue(authorValue, parameter.language);
-    const replacement = `${parameter.source.prefix ?? ""}${encoded}${parameter.source.suffix ?? ""}`;
-    return replacement === parameter.source.preimage ? [] : [{
-      ...parameter.source,
+    if (parameter.edit.attributes) {
+      const replacement = serializeAttributeGroup(parameter, authorValue);
+      return replacement === parameter.edit.source.preimage ? [] : [{ ...parameter.edit.source, replacement }];
+    }
+    const encoded = serializeParameterValue(authorValue, parameter.edit.language);
+    const replacement = `${parameter.edit.source.prefix ?? ""}${encoded}${parameter.edit.source.suffix ?? ""}`;
+    return replacement === parameter.edit.source.preimage ? [] : [{
+      ...parameter.edit.source,
       replacement,
     }];
   };

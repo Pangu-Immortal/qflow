@@ -1,6 +1,6 @@
+import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
 import type { SynchronizedMedia } from "@qflow/media";
-import type { ProgramSpace } from "@qflow/program-space";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef, StoredValue } from "@qflow/protocol";
 import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
@@ -96,7 +96,7 @@ export const rankingComponent = {
       producer: rankingProducers.schedule,
       handler: ({ inputs }) => ({ outputs: { schedule: output(buildTriggeredRankingSchedule({
         header: inline(inputs.header?.value, "RankingHeader"), items: inline(inputs.items?.value, "RankingItemSpecSet"),
-        space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
         outer: inline<TemporalWindow>(inputs.outer?.value, "TemporalWindow"),
         candidates: inline(inputs.candidates?.value, "TriggeredRankingCandidateSet"),
         terminal: inline<TemporalInstant>(inputs.terminal?.value, "TemporalInstant"),
@@ -119,7 +119,7 @@ export const rankingComponent = {
       handler: ({ inputs }) => ({ outputs: { schedule: output(buildTierBoardSchedule({
         header: inline<RankingHeader>(inputs.header?.value, "RankingHeader"),
         items: inline<RankingItemSpecSet>(inputs.items?.value, "RankingItemSpecSet"),
-        space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
         outer: inline<TemporalWindow>(inputs.outer?.value, "TemporalWindow"),
         windows: inline<TierBoardWindowSet>(inputs.windows?.value, "TierBoardWindowSet"),
       })) }, needs: {} }),
@@ -141,7 +141,7 @@ export const rankingComponent = {
       handler: ({ inputs }) => ({ outputs: { schedule: output(buildColumnSchedule({
         header: inline<RankingHeader>(inputs.header?.value, "RankingHeader"),
         items: inline<RankingItemSpecSet>(inputs.items?.value, "RankingItemSpecSet"),
-        space: inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
         outer: inline<TemporalWindow>(inputs.outer?.value, "TemporalWindow"),
         windows: inline<ColumnWindowSet>(inputs.windows?.value, "ColumnWindowSet"),
       })) }, needs: {} }),
@@ -239,7 +239,7 @@ export const rankingComponent = {
     {
       producer: rankingProducers.renderAudio,
       handler: ({ inputs }) => ({ outputs: { track: output(renderRankingAudio(
-        inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        inline<Timeline>(inputs.timeline?.value, "Timeline"),
         inline<RankingSoundEventPlan>(inputs.events?.value, "RankingSoundEventPlan"),
         inline<RankingSoundStyle>(inputs.style?.value, "RankingSoundStyle"),
         inline<RankingSoundSet>(inputs.sounds?.value, "RankingSoundSet"),
@@ -252,7 +252,7 @@ export const rankingComponent = {
     ] as const).map(([producer, render, label]) => ({
       producer,
       handler: ({ inputs }: ProducerHandlerContext) => ({ outputs: { track: output(render(
-        inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"), inline(inputs.program?.value, label) as never,
+        inline<Timeline>(inputs.timeline?.value, "Timeline"), inline(inputs.program?.value, label) as never,
       )) }, needs: {} }),
     })),
   ],

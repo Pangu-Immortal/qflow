@@ -1,6 +1,6 @@
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
 import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
-import { semanticTrackDependency, semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineDependency, timelineTypes } from "@qflow/timeline";
 import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
 
 const string = { kind: "string", minLength: 1 } as const;
@@ -65,7 +65,7 @@ export const temporalManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: temporalModuleRef.name,
   version: temporalModuleRef.version,
-  dependencies: [narrativeDependency, programSpaceDependency, semanticTrackDependency],
+  dependencies: [narrativeDependency, programSpaceDependency, timelineDependency],
   types: [
     { name: temporalTypes.instantSpec.name },
     { name: temporalTypes.instant.name },
@@ -75,16 +75,16 @@ export const temporalManifest: ModuleManifest = {
   capabilities: [],
   producers: [
     { name: temporalProducers.projectProgramInstant.name,
-      inputs: [{ name: "space", type: programSpaceTypes.programSpace }, { name: "spec", type: temporalTypes.instantSpec }],
+      inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "spec", type: temporalTypes.instantSpec }],
       outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
     { name: temporalProducers.projectSelectionInstant.name,
-      inputs: [{ name: "semantic", type: semanticTrackTypes.track }, { name: "selection", type: narrativeTypes.selection }, { name: "spec", type: temporalTypes.instantSpec }],
+      inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "selection", type: narrativeTypes.selection }, { name: "spec", type: temporalTypes.instantSpec }],
       outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
     { name: temporalProducers.projectSegmentInstant.name,
-      inputs: [{ name: "semantic", type: semanticTrackTypes.track }, { name: "segment", type: narrativeTypes.excerpt }, { name: "spec", type: temporalTypes.instantSpec }],
+      inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "segment", type: narrativeTypes.excerpt }, { name: "spec", type: temporalTypes.instantSpec }],
       outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
     { name: temporalProducers.projectMomentInstant.name,
-      inputs: [{ name: "semantic", type: semanticTrackTypes.track }, { name: "moment", type: narrativeTypes.moment }, { name: "spec", type: temporalTypes.instantSpec }],
+      inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "moment", type: narrativeTypes.moment }, { name: "spec", type: temporalTypes.instantSpec }],
       outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
     { name: temporalProducers.composeWindow.name,
       inputs: [{ name: "spec", type: temporalTypes.windowSpec }, { name: "start", type: temporalTypes.instant }, { name: "end", type: temporalTypes.instant }],
@@ -108,3 +108,5 @@ export const temporalWindowSchema: ValueSchema = object({
   end: { schema: temporalInstantSchema },
   span: { schema: frameSpanSchema },
 });
+
+export { durationInFrames } from "./rational.js";

@@ -1,3 +1,4 @@
+import type { Timeline } from "@qflow/timeline";
 import {
   assertAudioTrackIdentity,
   assertVisualTrackIdentity,
@@ -14,12 +15,7 @@ import type {
   VisualTrack,
 } from "@qflow/composition";
 import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/media";
-import {
-  assertProgramSpaceIdentity,
-  programFrameSampleBoundary,
-  programSpaceSampleFrames,
-} from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
+import { assertProgramSpaceIdentity, programFrameSampleBoundary, programSpaceSampleFrames } from "@qflow/program-space";
 
 import {
   assertColumnProgram,
@@ -253,14 +249,14 @@ function tierItemAnimation(
   })));
 }
 
-function sealTrack(space: ProgramSpace, id: string, presents: readonly VisualPresent[]): VisualTrack {
-  const value = sealVisualTrack({ programSpaceId: space.id, visualIr: "qflow.visual-ir@1", id, presents });
-  assertVisualTrackIdentity(value, space);
+function sealTrack(timeline: Timeline, id: string, presents: readonly VisualPresent[]): VisualTrack {
+  const value = sealVisualTrack({ programSpaceId: timeline.id, visualIr: "qflow.visual-ir@1", id, presents });
+  assertVisualTrackIdentity(value, timeline);
   return value;
 }
 
-export function renderTierBoard(space: ProgramSpace, program: TierBoardProgram): VisualTrack {
-  assertProgramSpaceIdentity(space);
+export function renderTierBoard(timeline: Timeline, program: TierBoardProgram): VisualTrack {
+  assertProgramSpaceIdentity(timeline);
   assertTierBoardProgram(program);
   const { canvas, frame, style, schedule } = program;
   const geometry = tierBoardGeometry(frame.widthPx, frame.heightPx, style);
@@ -370,7 +366,7 @@ export function renderTierBoard(space: ProgramSpace, program: TierBoardProgram):
       elements: itemElements(),
     }));
   }
-  return sealTrack(space, program.id, presents);
+  return sealTrack(timeline, program.id, presents);
 }
 
 function rowY(frameY: number, frameHeight: number, padding: number, count: number, index: number, height: number, gap: number): number {
@@ -463,8 +459,8 @@ function columnRevealAnimation(input: {
   ]);
 }
 
-export function renderColumn(space: ProgramSpace, program: ColumnProgram): VisualTrack {
-  assertProgramSpaceIdentity(space);
+export function renderColumn(timeline: Timeline, program: ColumnProgram): VisualTrack {
+  assertProgramSpaceIdentity(timeline);
   assertColumnProgram(program);
   const { canvas, frame, style, schedule } = program;
   const presents: VisualPresent[] = [];
@@ -562,7 +558,7 @@ export function renderColumn(space: ProgramSpace, program: ColumnProgram): Visua
       tieBreak: `${program.id}:item:${String(item.rank).padStart(4, "0")}:${item.id}:settled`, elements: itemElements(),
     }));
   }
-  return sealTrack(space, program.id, presents);
+  return sealTrack(timeline, program.id, presents);
 }
 
 function topSlotX(program: TopThreeProgram, index: number): number {
@@ -580,8 +576,8 @@ function activeAccentAnimation(duration: number, activeFrames: number): VisualAn
   ]);
 }
 
-export function renderTopThree(space: ProgramSpace, program: TopThreeProgram): VisualTrack {
-  assertProgramSpaceIdentity(space);
+export function renderTopThree(timeline: Timeline, program: TopThreeProgram): VisualTrack {
+  assertProgramSpaceIdentity(timeline);
   assertTopThreeProgram(program);
   const { frame, style, schedule } = program;
   const boardElements: VisualElement[] = [absoluteBox({
@@ -652,33 +648,33 @@ export function renderTopThree(space: ProgramSpace, program: TopThreeProgram): V
       tieBreak: `${program.id}:item:${String(index).padStart(4, "0")}:${item.id}:settled`, elements: itemElements(false),
     }));
   }
-  return sealTrack(space, program.id, presents);
+  return sealTrack(timeline, program.id, presents);
 }
 
 export function renderRankingAudio(
-  space: ProgramSpace,
+  timeline: Timeline,
   plan: RankingSoundEventPlan,
   style: RankingSoundStyle,
   sounds: RankingSoundSet,
 ): AudioTrack {
-  assertProgramSpaceIdentity(space);
+  assertProgramSpaceIdentity(timeline);
   assertRankingSoundEventPlan(plan);
   assertRankingSoundStyle(style);
   assert(sounds.appear !== undefined || sounds.move !== undefined, "Ranking audio requires at least one authored sound.");
   if (sounds.appear !== undefined) verifySynchronizedMedia(sounds.appear);
   if (sounds.move !== undefined) verifySynchronizedMedia(sounds.move);
-  const totalSamples = programSpaceSampleFrames(space, 48_000);
-  const fadeSamples = programFrameSampleBoundary(space, style.fadeFrames, 48_000);
+  const totalSamples = programSpaceSampleFrames(timeline, 48_000);
+  const fadeSamples = programFrameSampleBoundary(timeline, style.fadeFrames, 48_000);
   const clips: AudioClip[] = [];
   for (const event of plan.events) {
     const media = sounds[event.kind];
     if (media === undefined) continue;
     const audio = media.audio;
     assert(audio !== undefined, `Ranking ${event.kind} sound has no normalized audio.`);
-    const startSample = programFrameSampleBoundary(space, event.frame, 48_000);
+    const startSample = programFrameSampleBoundary(timeline, event.frame, 48_000);
     const sourceSampleFrames = synchronizedMediaSampleFrames(media);
     const length = Math.min(sourceSampleFrames, totalSamples - startSample);
-    assert(length > 0, `Ranking sound ${event.id} starts after ProgramSpace.`);
+    assert(length > 0, `Ranking sound ${event.id} starts after Timeline.`);
     assert(fadeSamples <= length, `Ranking sound ${event.id} fade exceeds its audible interval.`);
     clips.push({
       id: event.id,
@@ -694,7 +690,7 @@ export function renderRankingAudio(
     if (sounds[kind] !== undefined) assert(clips.some((clip) => clip.id.endsWith(`:${kind}`)),
       `Ranking ${kind} sound has no matching visual event.`);
   }
-  const track = sealAudioTrack({ programSpaceId: space.id, id: `${plan.id}.audio`, clips });
-  assertAudioTrackIdentity(track, space);
+  const track = sealAudioTrack({ programSpaceId: timeline.id, id: `${plan.id}.audio`, clips });
+  assertAudioTrackIdentity(track, timeline);
   return track;
 }

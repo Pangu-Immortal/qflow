@@ -136,7 +136,8 @@ referenced in place; its documentary role does not require a duplicate.
 - `TIMELINE.md` connects what happens when with what it does for the viewer. Preserve the content,
   placement, entry, changes, persistence and exit of the reference's visual systems, their word or
   action relationships, source times and useful evidence paths. Concurrent picture, speech, Caption,
-  Typography, MG, Effect and Audio behavior belong to the same connected account.
+  Typography, MG, Effect and Audio behavior belong to the same connected account. These are reference
+  timeline notes; the target's actual placements belong to the `time:Timeline` declaration in Source.
 - `transcript.json` is word-level speech evidence. It is evidence, not the director's interpretation.
 - `evidence/` contains only media worth reopening, with ordinary human-readable names.
 - `BRIEF.md` preserves the user's goal, facts, constraints, requested changes and

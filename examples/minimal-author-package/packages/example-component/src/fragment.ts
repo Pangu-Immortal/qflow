@@ -1,8 +1,7 @@
 import { compositionTypes } from "@qflow/qflow/composition";
 import { artifactTypes } from "@qflow/qflow/artifact";
 import { sealGraphFragment } from "@qflow/qflow/author-kit";
-import { semanticTrackProducers, semanticTrackTypes } from "@qflow/qflow/semantic-track";
-import { programSpaceTypes } from "@qflow/qflow/program-space";
+import { timelineTypes } from "@qflow/qflow/timeline";
 import { exampleProducers } from "./manifest.js";
 import { exampleTypes } from "./manifest.js";
 
@@ -10,12 +9,11 @@ const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
 
 export function createExampleFragment(producer: typeof exampleProducers[keyof typeof exampleProducers], id: string, media = false) {
-  const inputs = [{ name: "semantic", type: semanticTrackTypes.track }, ...(media ? [{ name: "media", type: artifactTypes.blob }] : [])];
-  const renderInputs = { space: operation("space"), ...(media ? { media: input("media") } : {}) };
+  const inputs = [{ name: "timeline", type: timelineTypes.track }, ...(media ? [{ name: "media", type: artifactTypes.blob }] : [])];
+  const renderInputs = { timeline: input("timeline"), ...(media ? { media: input("media") } : {}) };
   return sealGraphFragment({
     inputs,
     operations: [
-      { id: "space", producer: semanticTrackProducers.projectProgramSpace, inputs: { track: input("semantic") }, result: { kind: "output", name: "space" } },
       { id, producer, inputs: renderInputs, result: { kind: "output", name: "track" } },
     ],
     exports: [{ name: "track", type: compositionTypes.visualTrack, root: operation(id) }],

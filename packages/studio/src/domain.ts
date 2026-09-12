@@ -33,7 +33,7 @@ export type StudioDomain = {
 
 /**
  * Assemble Studio from the same recursive package selection as the official CLI.
- * The application owns this video-domain view; packages never register Studio metadata.
+ * The application assembles the video-domain view; selected packages contribute Studio Companions through host facets.
  */
 export async function loadStudioDomain(input: {
   readonly run: string;

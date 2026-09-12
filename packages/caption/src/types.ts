@@ -2,50 +2,24 @@ import type { CanonicalValue } from "@qflow/protocol";
 
 export type CaptionStyleIntent = {
   readonly id: string;
+  /** null selects no rendering; later Uses can select a visible Style again. */
   readonly rendering: {
     readonly family: string;
     readonly parameters: CanonicalValue;
-  };
+  } | null;
 };
 
-export type CaptionStyleApplication = {
-  readonly id: string;
-  readonly unitIds: readonly string[];
-  readonly style: CaptionStyleIntent;
-};
-
-export type CaptionWordStyleApplication = {
-  readonly id: string;
-  readonly attribute: string;
-  readonly wordIds: readonly string[];
-  readonly style: CaptionStyleIntent;
-};
-
-export type CaptionMuteApplication = {
-  readonly id: string;
-  readonly unitIds: readonly string[];
-};
-
-export type CaptionProgramRun = {
-  readonly id: string;
+/** Ordered, resolved Uses owned by a Caption Track, not a separate author element. */
+export type CaptionUse = {
+  readonly window: import("@qflow/temporal").TemporalWindow;
   readonly styleId: string;
-  readonly unitIds: readonly string[];
+  readonly role?: string;
 };
-
-export type CaptionProgramWordRun = {
-  readonly id: string;
-  readonly styleId: string;
-  readonly wordIds: readonly string[];
-};
-
 export type CaptionProgram = {
   readonly id: string;
   readonly documentId: string;
   readonly styles: readonly CaptionStyleIntent[];
-  readonly runs: readonly CaptionProgramRun[];
-  /** Optional local word styles resolved from Script-native word attributes. */
-  readonly wordRuns: readonly CaptionProgramWordRun[];
-  readonly mutedUnitIds: readonly string[];
+  readonly uses: readonly CaptionUse[];
 };
 
 export type TimedCaptionUnit = {
@@ -56,14 +30,13 @@ export type TimedCaptionUnit = {
 
 export type TimedCaptionCue = {
   readonly id: string;
-  readonly styleId: string;
   readonly startFrame: number;
   readonly endFrameExclusive: number;
   readonly units: readonly TimedCaptionUnit[];
 };
 
 export type TimedCaptionProjection = {
-  /** Semantic ProgramSpace from which every unit frame was measured. */
+  /** Semantic Timeline from which every unit frame was measured. */
   readonly spaceId: string;
   readonly narrativeId: string;
   readonly documentId: string;

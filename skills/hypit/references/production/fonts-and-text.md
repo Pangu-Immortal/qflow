@@ -87,7 +87,7 @@ wanted.
 Typography is useful for titles, labels, verdicts and copy that follows its own display rhythm.
 Script Caption remains appropriate when the displayed wording follows the performance.
 
-The following excerpt assumes the named Fonts, layout Frames, SemanticTrack and Recipes exist:
+The following excerpt assumes the named Fonts, layout Frames, Timeline and Recipes exist:
 
 ```svml
 <import as="copy" from="@qflow/text@1"/>
@@ -97,7 +97,7 @@ The following excerpt assumes the named Fonts, layout Frames, SemanticTrack and 
   <typo:Fill color="#F1E7D8"/>
 </typo:Style>
 <copy:Value id="headline">A useful idea, clearly shown.</copy:Value>
-<typo:Track id="titles" semantic={speech.semantic}>
+<typo:Track id="titles" timeline={speech.timeline}>
   <typo:Area id="opening-title" content={headline} placement={title-frame}
     style={headline-style} during={story.selection.proof}/>
 </typo:Track>

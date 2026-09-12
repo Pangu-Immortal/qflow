@@ -1,13 +1,9 @@
+import type { Timeline } from "@qflow/timeline";
 import { assertAudioTrackIdentity, sealAudioTrack } from "@qflow/composition";
 import type { AudioClip, AudioTrack } from "@qflow/composition";
 import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/media";
 import type { SynchronizedMedia } from "@qflow/media";
-import {
-  assertProgramSpaceIdentity,
-  programFrameSampleBoundary,
-  programSpaceSampleFrames,
-} from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
+import { assertProgramSpaceIdentity, programFrameSampleBoundary, programSpaceSampleFrames } from "@qflow/program-space";
 import { canonicalize, isResourceId } from "@qflow/protocol";
 import { assertTemporalWindowFor, temporalDurationInSamples } from "@qflow/temporal";
 import type { ProjectedWindow, TemporalDuration } from "@qflow/temporal";
@@ -94,23 +90,23 @@ function sourceFacts(media: SynchronizedMedia): AudioItemProgram["source"] {
 function realizedItems(
   set: AudioTrackSet,
   header: AudioTrackHeader,
-  space: ProgramSpace,
+  timeline: Timeline,
   media: SynchronizedMedia,
   spec: AudioClipSpec,
   window: ProjectedWindow,
 ): AudioTrackSet {
   assertAudioTrackSet(set);
   assertAudioTrackHeader(header);
-  assertProgramSpaceIdentity(space);
+  assertProgramSpaceIdentity(timeline);
   assertAudioClipSpec(spec);
-  assertTemporalWindowFor(window, { subjectId: spec.id, space });
+  assertTemporalWindowFor(window, { subjectId: spec.id, space: timeline });
   const source = sourceFacts(media);
-  const trimStart = spec.trim.start === undefined ? 0 : temporalDurationInSamples(spec.trim.start, space);
-  const trimEnd = spec.trim.end === undefined ? source.sampleFrames : temporalDurationInSamples(spec.trim.end, space);
+  const trimStart = spec.trim.start === undefined ? 0 : temporalDurationInSamples(spec.trim.start, timeline);
+  const trimEnd = spec.trim.end === undefined ? source.sampleFrames : temporalDurationInSamples(spec.trim.end, timeline);
   assert(trimStart >= 0 && trimStart < source.sampleFrames, `Audio Clip ${spec.id} trim start is outside its source.`);
   assert(trimEnd > trimStart && trimEnd <= source.sampleFrames, `Audio Clip ${spec.id} trim end is outside its source.`);
-  const fadeInSamples = temporalDurationInSamples(spec.mix.fadeIn, space);
-  const fadeOutSamples = temporalDurationInSamples(spec.mix.fadeOut, space);
+  const fadeInSamples = temporalDurationInSamples(spec.mix.fadeIn, timeline);
+  const fadeOutSamples = temporalDurationInSamples(spec.mix.fadeOut, timeline);
   const addition = {
     id: window.id,
     subjectId: spec.id,
@@ -129,12 +125,12 @@ function realizedItems(
 export function appendProjectedAudioItem(
   set: AudioTrackSet,
   header: AudioTrackHeader,
-  space: ProgramSpace,
+  timeline: Timeline,
   media: SynchronizedMedia,
   spec: AudioClipSpec,
   window: ProjectedWindow,
 ): AudioTrackSet {
-  return realizedItems(set, header, space, media, spec, window);
+  return realizedItems(set, header, timeline, media, spec, window);
 }
 
 function normalizeProgram(value: AudioTrackProgram): AudioTrackProgram {
@@ -183,9 +179,9 @@ export function assertAudioTrackProgram(value: AudioTrackProgram): void {
   }
 }
 
-function terminalClip(item: AudioItemProgram, space: ProgramSpace): AudioClip {
-  const windowStart = programFrameSampleBoundary(space, item.window.startFrame, 48_000);
-  const windowEnd = programFrameSampleBoundary(space, item.window.endFrameExclusive, 48_000);
+function terminalClip(item: AudioItemProgram, timeline: Timeline): AudioClip {
+  const windowStart = programFrameSampleBoundary(timeline, item.window.startFrame, 48_000);
+  const windowEnd = programFrameSampleBoundary(timeline, item.window.endFrameExclusive, 48_000);
   const windowLength = windowEnd - windowStart;
   const effectiveLength = item.trim.endSampleExclusive - item.trim.startSample;
   let targetStart = windowStart;
@@ -237,18 +233,18 @@ function terminalClip(item: AudioItemProgram, space: ProgramSpace): AudioClip {
   };
 }
 
-export function renderAudioTrack(space: ProgramSpace, program: AudioTrackProgram): AudioTrack {
-  assertProgramSpaceIdentity(space);
+export function renderAudioTrack(timeline: Timeline, program: AudioTrackProgram): AudioTrack {
+  assertProgramSpaceIdentity(timeline);
   assertAudioTrackProgram(program);
-  const totalSamples = programSpaceSampleFrames(space, 48_000);
+  const totalSamples = programSpaceSampleFrames(timeline, 48_000);
   const track = sealAudioTrack({
-    programSpaceId: space.id,
+    programSpaceId: timeline.id,
     id: program.id,
-    clips: program.items.map((item) => terminalClip(item, space)),
+    clips: program.items.map((item) => terminalClip(item, timeline)),
   });
   for (const clip of track.clips) {
-    assert(clip.target.endSampleExclusive <= totalSamples, `Audio Clip ${clip.id} is outside ProgramSpace.`);
+    assert(clip.target.endSampleExclusive <= totalSamples, `Audio Clip ${clip.id} is outside Timeline.`);
   }
-  assertAudioTrackIdentity(track, space);
+  assertAudioTrackIdentity(track, timeline);
   return track;
 }

@@ -11,15 +11,15 @@ description: 作者选择如何成为 Instant 或 Window，并准确回到真正
   -> 消费层（Programme / Schedule / Track）
 ```
 
-Script 的语义标尺包含严格有序的 `2M + 2N + 2` 个点：Token 与 Segment 的首尾，再加彼此
-独立的 Program start/end。Program 锚点由 SemanticTrack 在 `0` 和 `frameCount` 解析，不需要
-伪造进某个 SemanticTake。它们是 Selection/Moment 可选择的作者语义点；这不会让
+Script 的语义标尺包含 `2M + 2N + 2` 个点：Token 与 Segment 的首尾，再加彼此
+独立的 Program start/end。Program 锚点由 Timeline 在 `0` 和 `frameCount` 解析，不需要
+伪造进某个 SemanticTake。Take 交叠或重排时，Script 顺序不一定等于实际时间顺序。它们是 Selection/Moment 可选择的作者语义点；这不会让
 `during="program"` 变成可写，后者依然是结构固定的投影。
 
 `@qflow/temporal-markup` 统一拥有 SVML 时间语法，并在领域组件运行前把它降低成普通的投影
 组件和运行图边。编译器只会组合 Record、Component 和 Fragment，不认识 `during`、`at`，
-各 Track 也不再各写一套找帧算法。纯动画可直接声明 `ProgramSpace`；表演时间则通过
-Semantic Track 的公共 producer 显式投影。领域组件只消费 ProgramSpace 与时间投影结果，
+各 Track 也不再各写一套找帧算法。同一个 Timeline 提供全篇范围和其中已有的语义证据，
+领域组件接收同一个 Timeline 与时间投影结果，
 与选择层和 Studio 都解耦。
 
 ## 运行时对象
@@ -34,7 +34,7 @@ Semantic Track 的公共 producer 显式投影。领域组件只消费 ProgramSp
 
 - `<script id="story">` 产生 `Narrative.id = story`，它派生出的 Selection、Moment、Segment
   excerpt 与 CaptionDocument 全部携带 `narrativeId = story`；
-- 被 Film 选择的 Semantic Track 或直接声明的 Space 的 `id` 就是 `ProgramSpace.id`，所有终端 Track 都携带同一个
+- 被 Film 选择的 Timeline 的 `id` 就是 `ProgramSpace.id`，所有终端 Track 都携带同一个
   `programSpaceId`；
 - 每个 Instant 保留 Space 身份，来自语义的来源额外保留 Narrative 身份；消费者的公开领域
   身份（通常就是 SVML `id`）作为 `subjectId`。
@@ -85,7 +85,7 @@ Companion 仍负责实体外观和 Inspector 展示，但不再声明通用时�
 Instant/Window，并由 Companion 把真实执行谱系连到实体，就自动获得同一套时间行为。
 
 消费端也不是只读取 `frame`：每个官方组件在接收 Instant/Window 时核对 `subjectId`、
-`ProgramSpace.id`。Script 与 SemanticTrack 的对应关系在语义投影时核对。Space 是运行图上的显式输入边；不通过全局状态、
+`ProgramSpace.id`。Script 与 Timeline 的对应关系在语义投影时核对。Timeline 是运行图上的显式输入边；不通过全局状态、
 当前 Film 或 renderer 上下文补猜。
 
 字幕 Cue 保持独立：`CaptionDocument -> TimedCaptionProjection -> FineCaptionSchedule` 直接从
@@ -95,7 +95,7 @@ Semantic token evidence 得到只读 Cue 时间，不伪装成可拖动的 Tempo
 
 Film 与 Script 的解释也不留在 Studio 核心：`film-studio` 声明 Film 的时间来源和终端 Track
 引用规则；`script-studio` 拥有 Script Source map 与 marker 移动。Studio 只选择
-`narrativeId` 与当前 SemanticTrack 一致的 Script，再把语义修改委托回该 Companion。
+`narrativeId` 与当前 Timeline 一致的 Script，再把语义修改委托回该 Companion。
 直接声明的 Space 提供物理时间线，不需要 Script 轨道。`at="2s"` 表示作者编排的事件时刻，
 可以单独用于 Instant，也可以与 `for` 配合形成 Window；其时间修改回写 SVML。
 

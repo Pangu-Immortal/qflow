@@ -69,7 +69,7 @@ the relationship, not a required montage duration or a fixed amount of extra roo
 A montage can stay up after its subject finishes speaking. A partner can start responding while the
 last lifestyle picture is still visible, with their camera returning later. This incoming voice
 before its picture forms a J-cut relationship and gives the montage room.
-The B-roll does not need to contain that speech: the speaking Track's audio already continues beneath.
+The B-roll does not need to contain that speech: the Sound output included in Film continues beneath.
 
 Choose the endpoint by the thought, reaction and visual reading time. Extending coverage across a
 Role turn is legal; a Selection can also cross a Segment boundary. Avoid cutting the final scene
@@ -114,6 +114,8 @@ Keep the decisive action visible and let small changes finish; camera movement a
 serve that sensation. Synchronized generated sound, recorded sound or separately authored sound can
 each be appropriate. [Sound and mix](sound-mix.md) covers their relationship.
 
-When a work is genuinely speech-free, its visual, musical and action relationships still need
-authored semantic boundaries. [Media preparation](../../production/media.md#empty-segments-use-their-media-boundaries)
-owns how actual media supplies them.
+For speech-free work, author timing from the visual, musical and action relationships. Independent
+Media Items can occupy chosen Windows. A named wordless Segment is useful when a real media passage
+should supply reusable start/end anchors; [media preparation](../../production/media.md#empty-segments-use-their-media-boundaries)
+explains that option. [Timeline](../../production/timeline.md) also supports graphics-only intervals
+and complete animation without media-backed Segments.

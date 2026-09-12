@@ -1,5 +1,5 @@
 import { narrativeTypes } from "@qflow/narrative";
-import { semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineTypes } from "@qflow/timeline";
 import { sealGraphFragment } from "@qflow/elaborator";
 
 import { captionProducers, captionTypes } from "./manifest.js";
@@ -10,17 +10,13 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 export const captionTimingFragment = sealGraphFragment({
   inputs: [
     { name: "document", type: narrativeTypes.captionDocument },
-    { name: "semantic", type: semanticTrackTypes.track },
-    { name: "program", type: captionTypes.program },
+    { name: "timeline", type: timelineTypes.track },
   ],
   operations: [{
     id: "temporalize-caption-document",
     producer: captionProducers.temporalizeDocument,
-    inputs: { document: input("document"), semantic: input("semantic"), program: input("program") },
+    inputs: { document: input("document"), timeline: input("timeline") },
     result: { kind: "output", name: "caption" },
   }],
   exports: [{ name: "caption", type: captionTypes.timedProjection, root: operation("temporalize-caption-document") }],
 });
-
-/** Kept as the fragment's public name for callers that only know the old export. */
-export const plannedCaptionTimingFragment = captionTimingFragment;

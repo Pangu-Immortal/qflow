@@ -80,14 +80,22 @@ owns how the premise becomes a viewer experience; action directs the person's pa
 
 The prompt describes what this generation should make visible over time. Give a performer physical
 relationships with the camera, people, props and parts of the setting that actually exist in the
-generated scene. A Caption, icon, product card or other MG composed later can influence framing, but
-it is not an object for the performer to touch, watch or reveal inside the generated video.
+generated scene. Translate a later graphic's framing needs into the camera view, gaze or gesture
+the video should perform. Give the later Caption, icon or product card its own content and events
+through composition. A prop or display intended to exist within the generated scene can be described
+as that actual object and connected through the relevant references.
 
 Capable video models can turn figurative wording into literal objects, events or transformations. Use
 concrete visible language for intended gaze, gesture, movement, camera behavior and cuts when a
 metaphor would introduce the wrong scene content. Social attitude and aesthetic shorthand remain
 useful when they direct performance; an imagined object or event belongs in the prompt when it should
 truly appear in the generated world.
+
+Give the performer an attitude they can express, such as questioning a claim with skeptical interest.
+The broader purpose of persuading an audience belongs in Treatment; translate it into this person's
+delivery and interaction. Decide whether a described action really happens or whether a gesture is
+intended, then state that choice. [Direction and its inputs](../../production/system.md#give-each-part-the-direction-it-can-realize)
+connects those performance choices to the whole composition.
 
 Natural emphatic gestures are usually more reliable than asking fingers to display an exact number.
 Let speech, Caption or MG convey the quantity while pointing and hand actions serve the performance.

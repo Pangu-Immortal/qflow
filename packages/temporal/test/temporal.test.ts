@@ -1,11 +1,11 @@
-import { projectSemanticProgramSpace } from "@qflow/semantic-track";
+import { projectTimelineSpace } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import { programFrameSampleBoundary, programSpaceSampleFrames } from "@qflow/program-space";
 import type { ProgramSpace } from "@qflow/program-space";
-import { semanticTrackFixture } from "../../../test/semantic-track-fixture.js";
+import { timelineFixture } from "../../../test/timeline-fixture.js";
 
 import {
   assertWindowRelation,
@@ -26,7 +26,7 @@ const space: ProgramSpace = {
   frameRate: { numerator: 30, denominator: 1 },
 };
 
-const semantic = semanticTrackFixture(space, { narrativeId: "test-narrative",
+const semantic = timelineFixture(space, { narrativeId: "test-narrative",
   segments: [
     { id: "opening", frameCount: 60 },
     { id: "answer", frameCount: 60 },
@@ -53,36 +53,36 @@ const seconds = (numerator: number, denominator = 1) => ({ unit: "seconds" as co
 const fixed = { kind: "fixed" as const };
 type Projection = import("../src/index.js").TemporalInstantExpression;
 const projectProgramInstantFixture = (input: { itemId: string; semantic: typeof semantic; projection: Projection }) =>
-  projectProgramInstant({ ...input, space: projectSemanticProgramSpace(input.semantic), subjectId: input.itemId, authority: fixed });
+  projectProgramInstant({ ...input, timeline: input.semantic, subjectId: input.itemId, authority: fixed });
 const projectMomentInstantFixture = (input: { itemId: string; semantic: typeof semantic; moment: NarrativeMomentRef; projection: Projection }) =>
-  projectMomentInstant({ ...input, subjectId: input.itemId, authority: fixed });
+  projectMomentInstant({ ...input, timeline: input.semantic, subjectId: input.itemId, authority: fixed });
 const projectSelectionInstantFixture = (input: { itemId: string; semantic: typeof semantic; selection: NarrativeSelectionRef; projection: Projection }) =>
-  projectSelectionInstant({ ...input, subjectId: input.itemId, authority: fixed });
+  projectSelectionInstant({ ...input, timeline: input.semantic, subjectId: input.itemId, authority: fixed });
 const projectSelectionWindow = (input: {
   itemId: string; semantic: typeof semantic; selection: NarrativeSelectionRef;
   projection: { start: Projection; end: Projection };
 }) => composeTemporalWindow({ id: input.itemId, subjectId: input.itemId },
-  projectSelectionInstant({ itemId: `${input.itemId}.start`, subjectId: input.itemId, semantic: input.semantic, selection: input.selection, projection: input.projection.start, authority: fixed }),
+  projectSelectionInstant({ itemId: `${input.itemId}.start`, subjectId: input.itemId, timeline: input.semantic, selection: input.selection, projection: input.projection.start, authority: fixed }),
   input.projection.end.ref.startsWith("program.") || input.projection.end.ref === "absolute"
-    ? projectProgramInstant({ itemId: `${input.itemId}.end`, subjectId: input.itemId, space: projectSemanticProgramSpace(input.semantic), projection: input.projection.end, authority: fixed })
-    : projectSelectionInstant({ itemId: `${input.itemId}.end`, subjectId: input.itemId, semantic: input.semantic, selection: input.selection, projection: input.projection.end, authority: fixed }));
+    ? projectProgramInstant({ itemId: `${input.itemId}.end`, subjectId: input.itemId, timeline: input.semantic, projection: input.projection.end, authority: fixed })
+    : projectSelectionInstant({ itemId: `${input.itemId}.end`, subjectId: input.itemId, timeline: input.semantic, selection: input.selection, projection: input.projection.end, authority: fixed }));
 const projectMomentWindow = (input: {
   itemId: string; semantic: typeof semantic; moment: NarrativeMomentRef;
   projection: { start: Projection; end: Projection };
 }) => composeTemporalWindow({ id: input.itemId, subjectId: input.itemId },
-  projectMomentInstant({ itemId: `${input.itemId}.start`, subjectId: input.itemId, semantic: input.semantic, moment: input.moment, projection: input.projection.start, authority: fixed }),
-  projectMomentInstant({ itemId: `${input.itemId}.end`, subjectId: input.itemId, semantic: input.semantic, moment: input.moment, projection: input.projection.end, authority: fixed }));
+  projectMomentInstant({ itemId: `${input.itemId}.start`, subjectId: input.itemId, timeline: input.semantic, moment: input.moment, projection: input.projection.start, authority: fixed }),
+  projectMomentInstant({ itemId: `${input.itemId}.end`, subjectId: input.itemId, timeline: input.semantic, moment: input.moment, projection: input.projection.end, authority: fixed }));
 const projectSegmentWindow = (input: {
   itemId: string; semantic: typeof semantic; segment: import("@qflow/narrative").NarrativeExcerpt;
   projection: { start: Projection; end: Projection };
 }) => composeTemporalWindow({ id: input.itemId, subjectId: input.itemId },
-  projectSegmentInstant({ itemId: `${input.itemId}.start`, subjectId: input.itemId, semantic: input.semantic, segment: input.segment, projection: input.projection.start, authority: fixed }),
-  projectSegmentInstant({ itemId: `${input.itemId}.end`, subjectId: input.itemId, semantic: input.semantic, segment: input.segment, projection: input.projection.end, authority: fixed }));
+  projectSegmentInstant({ itemId: `${input.itemId}.start`, subjectId: input.itemId, timeline: input.semantic, segment: input.segment, projection: input.projection.start, authority: fixed }),
+  projectSegmentInstant({ itemId: `${input.itemId}.end`, subjectId: input.itemId, timeline: input.semantic, segment: input.segment, projection: input.projection.end, authority: fixed }));
 const projectProgramWindow = (input: {
   itemId: string; semantic: typeof semantic; projection: { start: Projection; end: Projection };
 }) => composeTemporalWindow({ id: input.itemId, subjectId: input.itemId },
-  projectProgramInstant({ itemId: `${input.itemId}.start`, subjectId: input.itemId, space: projectSemanticProgramSpace(input.semantic), projection: input.projection.start, authority: fixed }),
-  projectProgramInstant({ itemId: `${input.itemId}.end`, subjectId: input.itemId, space: projectSemanticProgramSpace(input.semantic), projection: input.projection.end, authority: fixed }));
+  projectProgramInstant({ itemId: `${input.itemId}.start`, subjectId: input.itemId, timeline: input.semantic, projection: input.projection.start, authority: fixed }),
+  projectProgramInstant({ itemId: `${input.itemId}.end`, subjectId: input.itemId, timeline: input.semantic, projection: input.projection.end, authority: fixed }));
 
 test("one Selection projects exact local points and stable source identity", () => {
   const result = projectSelectionWindow({
@@ -130,7 +130,7 @@ test("points preserve source identity and admit both ProgramSpace boundaries", (
   }).frame, 0);
 });
 
-test("Script Program Anchors resolve through the SemanticTrack without entering a SemanticTake", () => {
+test("Script Program Anchors resolve through the Timeline without entering a SemanticTake", () => {
   assert.deepEqual(locateSelection(semantic, selection("whole", "program:start", "program:end")), {
     id: "whole", start: { frame: 0 }, end: { frame: 300 },
   });
@@ -197,7 +197,7 @@ test("program and absolute projections use exact rational frame-rate arithmetic"
   };
   const result = projectProgramWindow({
     itemId: "absolute",
-    semantic: semanticTrackFixture(ntsc),
+    semantic: timelineFixture(ntsc),
     projection: {
       start: { ref: "absolute", at: { unit: "milliseconds", value: 500 } },
       end: { ref: "absolute", at: seconds(1) },
@@ -207,7 +207,7 @@ test("program and absolute projections use exact rational frame-rate arithmetic"
 });
 
 test("an authored clock needs no narrative and combines absolute time with frame offsets", () => {
-  const point = (itemId: string, projection: Projection) => projectProgramInstant({ itemId, subjectId: "bubble", space, projection, authority: fixed });
+  const point = (itemId: string, projection: Projection) => projectProgramInstant({ itemId, subjectId: "bubble", timeline: { ...space, items: [] }, projection, authority: fixed });
   const start = point("start", { ref: "absolute", at: seconds(5, 2) });
   const end = point("end", { ref: "absolute", at: seconds(5, 2), offset: frames(8) });
   assert.deepEqual(composeTemporalWindow({ id: "bubble", subjectId: "bubble" }, start, end).span,
@@ -220,7 +220,7 @@ test("shared physical time preserves semantic ownership and rejects another film
     itemId: "reveal", semantic, moment: moment("answer", "b"), projection: { ref: "moment.cue" },
   });
   const end = projectProgramInstant({
-    itemId: "end", subjectId: "reveal", space,
+    itemId: "end", subjectId: "reveal", timeline: { ...space, items: [] },
     projection: { ref: "absolute", at: seconds(3) }, authority: fixed,
   });
   const window = composeTemporalWindow({ id: "reveal", subjectId: "reveal" }, cue, end);

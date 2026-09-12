@@ -111,7 +111,7 @@ served by a supporting QflowHub Endpoint:
 ```
 
 Normalize `cutout.video` to prepare it for the timeline. If it establishes the spoken program,
-align that prepared media to its Script Segment and assemble it through Speech Track. Present the
+align that prepared media to its Script Segment and assemble it through Timeline assembly. Present the
 picture with Media Track or a project scene, at the chosen location and paint order. As B-roll,
 the normalized cutout can enter Media Track directly. Matting changes the picture's background;
 the composition determines its role.

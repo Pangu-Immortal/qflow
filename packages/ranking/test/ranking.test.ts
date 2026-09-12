@@ -1,8 +1,9 @@
+import { sealTimeline } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { videoContractManifests } from "../../../test/support/video-domain.js";
 import { fixtureResource } from "../../../test/fixture-resource.js";
-import { semanticTrackFixture } from "../../../test/semantic-track-fixture.js";
+import { timelineFixture } from "../../../test/timeline-fixture.js";
 import { projectMomentInstantFixture, projectSegmentWindow, projectSelectionWindow } from "../../../test/temporal-fixture.js";
 
 import { createResolvedClosure } from "@qflow/core";
@@ -78,7 +79,7 @@ import type {
   TopThreeItemSpec,
 } from "@qflow/ranking";
 import { narrativeTypes } from "@qflow/narrative";
-import { semanticTrackTypes } from "@qflow/semantic-track";
+import { timelineTypes } from "@qflow/timeline";
 import { spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import { sealText, textManifest, textTypes } from "@qflow/text";
@@ -91,7 +92,7 @@ import type {
   MarkupAttributeValue,
 } from "@qflow/markup";
 
-const space = sealProgramSpace({ id: "test-space", durationSec: 8,
+const space = sealTimeline({ items: [], id: "test-space", durationSec: 8,
   frameRate: { numerator: 30, denominator: 1 },
 });
 const canvas = sealCanvasSpace({
@@ -104,7 +105,7 @@ const frame = sealSpatialFrame({
 const tierFrame = sealSpatialFrame({
   xPx: 40, yPx: 360, widthPx: 720, heightPx: 280,
 });
-const semanticTrack = semanticTrackFixture(space, {
+const timeline = timelineFixture(space, {
   segments: [
     { id: "opening", frameCount: 10 },
     { id: "ranking", frameCount: 220 },
@@ -172,18 +173,18 @@ function schedule(
 ): TriggeredRankingSchedule {
   let candidates = createTriggeredRankingCandidateSet();
   for (const [index, value] of values.entries()) {
-    candidates = appendTriggeredRankingCandidate(candidates, value, semanticTrack, {
+    candidates = appendTriggeredRankingCandidate(candidates, value, timeline, {
       narrativeId: "script",
       id: `${value.id}-moment`,
       anchorId: anchors[index]!,
     });
   }
-  return buildRankingSchedule({ header: headerValue, items: specs(headerValue, values), semantic: semanticTrack, outer, candidates, terminal });
+  return buildRankingSchedule({ header: headerValue, items: specs(headerValue, values), semantic: timeline, outer, candidates, terminal });
 }
 
 function appendTriggeredRankingCandidate(
   set: ReturnType<typeof createTriggeredRankingCandidateSet>, spec: RankingItemSpec,
-  semantic: typeof semanticTrack, moment: NarrativeMomentRef,
+  semantic: typeof timeline, moment: NarrativeMomentRef,
 ) {
   return appendProjectedTriggeredRankingCandidate(set, spec, projectMomentInstantFixture({
     itemId: spec.id, semantic, moment,
@@ -194,7 +195,7 @@ function appendTriggeredRankingCandidate(
 function buildRankingSchedule(input: {
   readonly header: RankingHeader;
   readonly items: RankingItemSpecSet;
-  readonly semantic: typeof semanticTrack;
+  readonly semantic: typeof timeline;
   readonly outer: NarrativeSelectionRef;
   readonly candidates: TriggeredRankingCandidateSet;
   readonly terminal: NarrativeMomentRef;
@@ -202,7 +203,7 @@ function buildRankingSchedule(input: {
   return buildTriggeredRankingSchedule({
     header: input.header,
     items: input.items,
-    space,
+    timeline: space,
     outer: projectSelectionWindow({
       itemId: input.outer.id, subjectId: input.header.id, semantic: input.semantic, selection: input.outer,
       projection: { start: { ref: "selection.start" }, end: { ref: "selection.end" } },
@@ -217,7 +218,7 @@ function buildRankingSchedule(input: {
 
 function appendProjectedColumnWindow(
   set: ReturnType<typeof createColumnWindowSet>, spec: ColumnItemSpec,
-  semantic: typeof semanticTrack, selection: NarrativeSelectionRef,
+  semantic: typeof timeline, selection: NarrativeSelectionRef,
 ) {
   return appendColumnWindow(set, spec, projectSelectionWindow({
     itemId: spec.id, semantic, selection,
@@ -227,7 +228,7 @@ function appendProjectedColumnWindow(
 
 function appendProjectedTierWindow(
   set: ReturnType<typeof createTierBoardWindowSet>, spec: TierBoardItemSpec,
-  semantic: typeof semanticTrack, selectionValue: NarrativeSelectionRef,
+  semantic: typeof timeline, selectionValue: NarrativeSelectionRef,
 ) {
   return appendTierBoardWindow(set, spec, projectSelectionWindow({
     itemId: spec.id, semantic, selection: selectionValue,
@@ -235,7 +236,7 @@ function appendProjectedTierWindow(
   }));
 }
 
-function projectColumnSegmentOuterWindow(semantic: typeof semanticTrack, segment: NarrativeExcerpt, subjectId: string): TemporalWindow {
+function projectColumnSegmentOuterWindow(semantic: typeof timeline, segment: NarrativeExcerpt, subjectId: string): TemporalWindow {
   return projectSegmentWindow({
     itemId: `${segment.id}:outer`, subjectId, semantic, segment,
     projection: { start: { ref: "segment.start" }, end: { ref: "segment.end" } },
@@ -256,16 +257,16 @@ function columnSchedule(
   owner: RankingHeader,
   values: readonly ColumnItemSpec[],
   windows: Readonly<Record<string, NarrativeSelectionRef>>,
-  outerWindow = projectColumnSegmentOuterWindow(semanticTrack, rankingSegment, owner.id),
+  outerWindow = projectColumnSegmentOuterWindow(timeline, rankingSegment, owner.id),
 ): ColumnSchedule {
   let set = createColumnWindowSet();
   for (const value of values) {
     if (value.preset) continue;
     const timing = windows[value.id];
     if (timing === undefined) throw new Error(`Missing test Selection for ${value.id}.`);
-    set = appendProjectedColumnWindow(set, value, semanticTrack, timing);
+    set = appendProjectedColumnWindow(set, value, timeline, timing);
   }
-  return buildColumnSchedule({ header: owner, items: specs(owner, values), space, outer: outerWindow, windows: set });
+  return buildColumnSchedule({ header: owner, items: specs(owner, values), timeline: space, outer: outerWindow, windows: set });
 }
 
 function tierSchedule(
@@ -273,7 +274,7 @@ function tierSchedule(
   values: readonly TierBoardItemSpec[],
   windows: Readonly<Record<string, NarrativeSelectionRef>>,
   outerWindow = projectSelectionWindow({
-    itemId: outer.id, subjectId: owner.id, semantic: semanticTrack, selection: outer,
+    itemId: outer.id, subjectId: owner.id, semantic: timeline, selection: outer,
     projection: { start: { ref: "selection.start" }, end: { ref: "selection.end" } },
   }),
 ): TierBoardSchedule {
@@ -282,9 +283,9 @@ function tierSchedule(
     if (value.preset) continue;
     const timing = windows[value.id];
     if (timing === undefined) throw new Error(`Missing test Selection for ${value.id}.`);
-    set = appendProjectedTierWindow(set, value, semanticTrack, timing);
+    set = appendProjectedTierWindow(set, value, timeline, timing);
   }
-  return buildTierBoardSchedule({ header: owner, items: specs(owner, values), space, outer: outerWindow, windows: set });
+  return buildTierBoardSchedule({ header: owner, items: specs(owner, values), timeline: space, outer: outerWindow, windows: set });
 }
 
 test("RankingSchedule derives chronological Item order from item-owned Moments and preserves a settled suffix", () => {
@@ -302,9 +303,9 @@ test("RankingSchedule requires one item-owned Moment per Item and distinct chron
   const owner = header("top-three");
   const values = [topSpec("a"), topSpec("b")];
   let missing = createTriggeredRankingCandidateSet();
-  missing = appendTriggeredRankingCandidate(missing, values[0]!, semanticTrack, { narrativeId: "script", id: "a-at", anchorId: "one" });
+  missing = appendTriggeredRankingCandidate(missing, values[0]!, timeline, { narrativeId: "script", id: "a-at", anchorId: "one" });
   assert.throws(() => buildRankingSchedule({
-    header: owner, items: specs(owner, values), semantic: semanticTrack, outer, candidates: missing, terminal,
+    header: owner, items: specs(owner, values), semantic: timeline, outer, candidates: missing, terminal,
   }), /item-owned Moments differ/u);
   assert.throws(() => schedule(owner, values, ["one", "one"]), /strictly increasing/u);
 });
@@ -402,7 +403,7 @@ test("Column consumes explicit disjoint reveal windows without changing them", (
   set = appendColumnItem(set, semantic[1]!, image("preset"));
   set = appendColumnItem(set, semantic[2]!);
   set = appendColumnItem(set, semantic[3]!, image("overlap"));
-  const outerWindow = projectColumnSegmentOuterWindow(semanticTrack, rankingSegment, owner.id);
+  const outerWindow = projectColumnSegmentOuterWindow(timeline, rankingSegment, owner.id);
   assert.deepEqual(outerWindow.span, { startFrame: 10, endFrameExclusive: 230 });
   const value = columnSchedule(owner, semantic, {
     "late-rank-one": late,
@@ -436,10 +437,10 @@ test("Column rejects overlapping or out-of-bounds reveal windows", () => {
   assert.throws(() => columnSchedule(owner, values, { one: early, two: overlapping }),
     /windows one and two overlap/u);
 
-  const outerWindow = projectColumnSegmentOuterWindow(semanticTrack, rankingSegment, owner.id);
+  const outerWindow = projectColumnSegmentOuterWindow(timeline, rankingSegment, owner.id);
   let windows = createColumnWindowSet();
   const projected = projectSelectionWindow({
-    itemId: "one", semantic: semanticTrack, selection: early,
+    itemId: "one", semantic: timeline, selection: early,
     projection: { start: { ref: "selection.start" }, end: { ref: "selection.end" } },
   });
   windows = appendColumnWindow(windows, values[0]!, {
@@ -448,7 +449,7 @@ test("Column rejects overlapping or out-of-bounds reveal windows", () => {
     span: { startFrame: outerWindow.span.startFrame - 1, endFrameExclusive: projected.span.endFrameExclusive },
   });
   assert.throws(() => buildColumnSchedule({
-    header: owner, items: specs(owner, [values[0]!]), space, outer: outerWindow, windows,
+    header: owner, items: specs(owner, [values[0]!]), timeline: space, outer: outerWindow, windows,
   }), /one window is outside/u);
 });
 
@@ -525,7 +526,7 @@ test("all three author Surfaces preserve explicit semantic, spatial, font, image
     record: { value: { kind: "inline", value } } as never,
   });
   const references = new Map<string, SurfaceResolvedReference>([
-    ["semantic", plain("semantic", semanticTrackTypes.track)],
+    ["semantic", plain("semantic", timelineTypes.track)],
     ["canvas", plain("canvas", spatialTypes.canvas)],
     ["frame", plain("frame", spatialTypes.frame)],
     ["outer", plain("outer", narrativeTypes.selection)],
@@ -563,11 +564,11 @@ test("all three author Surfaces preserve explicit semantic, spatial, font, image
   }
   const cases = [
     [decodeTierBoardSurface, node("ranking:TierBoard", {
-      id: "tier", semantic: ref("semantic"), canvas: ref("canvas"), frame: ref("frame"), during: "program",
+      id: "tier", timeline: ref("semantic"), canvas: ref("canvas"), frame: ref("frame"), during: "program",
       style: ref("tier-style"),
     }, [node("ranking:TierItem", { id: "tier-one", tier: "s", entry: "drop", icon: ref("icon-1"), during: ref("ranking-segment") })])],
     [decodeColumnSurface, node("ranking:Column", {
-      id: "column", semantic: ref("semantic"), canvas: ref("canvas"), frame: ref("frame"), during: ref("ranking-segment"),
+      id: "column", timeline: ref("semantic"), canvas: ref("canvas"), frame: ref("frame"), during: ref("ranking-segment"),
       style: ref("column-style"),
       "appear-sound": ref("appear"), "move-sound": ref("move"),
     }, [
@@ -575,7 +576,7 @@ test("all three author Surfaces preserve explicit semantic, spatial, font, image
       node("ranking:ColumnItem", { id: "column-two", rank: "5", preset: "true", label: "Two", icon: ref("icon-2") }),
     ])],
     [decodeTopThreeSurface, node("ranking:TopThree", {
-      id: "top", semantic: ref("semantic"), frame: ref("frame"), during: ref("outer"),
+      id: "top", timeline: ref("semantic"), frame: ref("frame"), during: ref("outer"),
       terminal: ref("terminal"), style: ref("top-style"),
     }, [node("ranking:TopThreeItem", { label: "First", at: ref("moment-one") }), node("ranking:TopThreeItem", { label: "Second", icon: ref("icon-1"), at: ref("moment-two") })])],
   ] as const;
@@ -625,7 +626,8 @@ test("all three author Surfaces preserve explicit semantic, spatial, font, image
   const audio = columnFragment.exports.find((output) => output.name === "audio");
   assert.ok(columnFragment.operations.some((operation) => operation.producer.name === rankingProducers.materializeTextItem.name));
   assert(audio !== undefined);
-  assert.deepEqual(Object.keys(column.components.find((component) => component.outputs.visual !== undefined)!.outputs).sort(), ["audio", "program", "schedule", "visual"]);
+  assert.ok(columnFragment.exports.some((output) => output.name === "events" && output.type.name === rankingTypes.soundEvents.name));
+  assert.deepEqual(Object.keys(column.components.find((component) => component.outputs.visual !== undefined)!.outputs).sort(), ["audio", "events", "program", "schedule", "visual"]);
 });
 
 test("Ranking Surfaces declare their sealed Records and icon Producers consume Blob values", async () => {
@@ -656,14 +658,14 @@ test("Ranking author Surfaces fail closed on impossible image and sound combinat
   const ref = (path: string): MarkupAttributeValue => ({ kind: "reference", path });
   const plain = (path: string, type: SurfaceResolvedReference["type"]): SurfaceResolvedReference => ({ path, ref: { kind: "record", id: path }, type });
   const references = new Map<string, SurfaceResolvedReference>([
-    ["semantic", plain("semantic", semanticTrackTypes.track)],
+    ["semantic", plain("semantic", timelineTypes.track)],
     ["canvas", plain("canvas", spatialTypes.canvas)],
     ["frame", plain("frame", spatialTypes.frame)], ["outer", plain("outer", narrativeTypes.selection)],
     ["icon", plain("icon", mediaTypes.blobArtifact)],
     ["style", plain("style", rankingTypes.tierStyle)], ["style.sound", plain("style.sound", rankingTypes.soundStyle)],
     ["move", plain("move", mediaTypes.synchronized)],
   ]);
-  const common = { id: "bad", semantic: ref("semantic"), canvas: ref("canvas"), frame: ref("frame"), during: ref("outer"), style: ref("style") };
+  const common = { id: "bad", timeline: ref("semantic"), canvas: ref("canvas"), frame: ref("frame"), during: ref("outer"), style: ref("style") };
   const context = (element: StructuredElement) => ({
     sourceName: "ranking.svml", element, resolveReference: (path: string) => references.get(path),
     resolveAsset: async () => { throw new Error("no asset resolution expected"); },

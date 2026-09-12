@@ -21,18 +21,21 @@ export type StudioIcon =
 /** Studio-owned visual palette. Domain families never become CSS selectors. */
 export type StudioTimelineTone =
   | "blue"
+  | "blue-muted"
   | "green"
+  | "green-muted"
   | "teal"
   | "violet"
   | "magenta"
+  | "magenta-muted"
   | "orange"
   | "orange-muted"
   | "neutral";
 
 export type StudioTimelinePresentation = {
   readonly entity: string;
-  /** Studio-owned shell. It never decides whether title, time or body exists. */
-  readonly chrome: "standard" | "group" | "point";
+  /** Studio-owned shell. Compact presents the primary label in one line, with time in details. */
+  readonly chrome: "standard" | "group" | "point" | "compact";
 };
 
 export type StudioTemporalSource = {
@@ -140,6 +143,12 @@ export type StudioNumberPresentation = {
   readonly step?: number;
 };
 
+/** Attribute ranges are relative to the owning element's source preimage. */
+export type StudioAttributeGroupEdit = {
+  readonly insertionOffset: number;
+  readonly ranges: Readonly<Record<string, Range | null>>;
+};
+
 /** A real author endpoint. Its existence never implies Inspector visibility. */
 export type StudioSourceBinding = {
   readonly id: string;
@@ -162,10 +171,11 @@ export type StudioSourceBinding = {
     readonly prefix?: string;
     readonly suffix?: string;
   };
+  readonly attributes?: StudioAttributeGroupEdit;
   readonly disabledReason?: string;
 };
 
-export type StudioInspectorDomain = "where" | "how" | "when";
+export type StudioInspectorDomain = "where" | "when" | "how";
 
 export type StudioInspectorPageDeclaration = {
   readonly id: string;
@@ -177,7 +187,7 @@ export type StudioInspectorSectionDeclaration = {
   readonly label: string;
 };
 
-/** One visible, writable field selected from a Companion's source bindings. */
+/** One visible field selected from a Companion's source bindings. */
 export type StudioInspectorFieldDeclaration = {
   readonly binding: string;
   readonly label: string;
@@ -196,14 +206,25 @@ export type StudioInspectorFieldDeclaration = {
   readonly swatches?: readonly string[];
 };
 
-/** Resolved Inspector DTO. Studio renders it and executes its exact source write. */
-export type StudioInspectorField = Omit<StudioInspectorFieldDeclaration, "control"> & {
+/** A selected entity's package-owned fact, with no author write endpoint. */
+export type StudioInspectorValue = Pick<StudioInspectorFieldDeclaration,
+  "label" | "domain" | "page" | "section" | "summary" | "unit"> & {
+  readonly id: string;
+  readonly value: CanonicalValue;
+};
+
+/** Display and edit authority are independent of the Where / When / How grouping. */
+export type StudioInspectorField = Omit<StudioInspectorFieldDeclaration, "binding" | "control"> & {
+  readonly binding?: string;
   readonly id: string;
   readonly control: StudioParameterControl;
   readonly value: CanonicalValue;
   readonly schema?: ValueSchema;
-  readonly language: StudioParameterLanguage;
-  readonly source: StudioSourceBinding["source"];
+  readonly edit?: {
+    readonly language: StudioParameterLanguage;
+    readonly source: StudioSourceBinding["source"];
+    readonly attributes?: StudioAttributeGroupEdit;
+  };
 };
 
 /** Companion-owned source allowlist. It contains no editor presentation. */
@@ -211,6 +232,12 @@ export type StudioSourceBindingDeclaration = {
   readonly name: string;
   readonly writable?: boolean;
   readonly schema?: ValueSchema;
+  /** Typed value used when this editable attribute is omitted. */
+  readonly fallback?: CanonicalValue | ((authored: Readonly<Record<string, CanonicalValue>>) => CanonicalValue | undefined);
+  /** Compose the referenced object's package-owned parameter Companion. */
+  readonly companion?: boolean;
+  /** Edit these scalar attributes together as one schema-described record. */
+  readonly attributes?: readonly string[];
   /** Optional declaration for the authored element named by a reference. */
   readonly referenced?: readonly StudioSourceBindingDeclaration[];
   /**
@@ -234,7 +261,7 @@ export type StudioRecipeBindingDeclaration = {
   /** Domain-owned public Recipe value structure, never editor presentation. */
   readonly schema?: ValueSchema;
   /** Typed public fallback; Studio writes the property only after the author changes it. */
-  readonly fallback?: CanonicalValue;
+  readonly fallback?: CanonicalValue | ((authored: Readonly<Record<string, CanonicalValue>>) => CanonicalValue | undefined);
 };
 
 export type StudioTimelineGesture =
@@ -323,7 +350,7 @@ export type StudioDisplayLayer =
     };
 
 export type StudioEntityDisplay = {
-  /** First row. Studio always places computed time immediately after it. */
+  /** Primary label: a header in standard chrome, the complete single-line content in compact chrome. */
   readonly title: string;
   /** Ordered back-to-front body layers. */
   readonly layers: readonly StudioDisplayLayer[];
@@ -486,7 +513,7 @@ export type StudioResolvedTrack = {
 };
 
 export type StudioViewRole =
-  | "semantic-track"
+  | "timeline"
   | "supporting-value"
   | "track";
 
@@ -514,10 +541,16 @@ export type StudioEntityDraft = {
   readonly renderIds?: readonly string[];
   /** Resolved author references that differ per derived entity, such as one Cue's actual Style. */
   readonly parameterReferences?: Readonly<Record<string, string>>;
+  /** Disjoint displayed intervals belonging to one selectable author entity. */
+  readonly selectionGroup?: string;
+  /** Deliberately selected facts, presented beside bound Inspector fields. */
+  readonly inspector?: readonly StudioInspectorValue[];
   readonly presentation?: StudioTimelinePresentation;
   readonly temporal?: StudioTemporalLineage;
-  /** Studio-local lane partition; omitted means the root lane. */
+  /** Independent child Track partition; omitted means this Track. */
   readonly lane?: string;
+  /** Internal band of this Track; mutually exclusive with lane. */
+  readonly band?: string;
 };
 
 export type StudioTrackCompanionContext = {
@@ -550,6 +583,8 @@ export type StudioTrackCompanion = {
   /** Opts root timeline entities into the component's package-owned Surface preview. */
   readonly poster?: { readonly source: "surface-preview" };
   readonly attachments?: readonly StudioLaneAttachment[];
+  /** Internal bands share this Track’s label and contain independently timed entities. */
+  readonly bands?: readonly StudioTrackBand[];
   /** Same-Surface output values required to project this Track for Studio. */
   readonly requiredValues?: readonly string[];
   readonly lane?: StudioLaneDescription;
@@ -560,11 +595,20 @@ export type StudioTrackCompanion = {
   readonly project?: (context: StudioTrackCompanionContext) => readonly StudioEntityDraft[];
 };
 
+/** Parameters owned by an authored object, independently of its consumers. */
+export type StudioParameterCompanion = {
+  readonly id: string;
+  readonly match: { readonly module: ModuleRef; readonly surface: string };
+  readonly bindings: readonly StudioSourceBindingDeclaration[];
+  readonly inspector: readonly StudioInspectorFieldDeclaration[];
+};
+
 export type StudioCompanionContribution = {
   readonly format: "qflow.studio-companions@1";
   readonly tracks: readonly StudioTrackCompanion[];
   readonly films?: readonly StudioFilmCompanion[];
   readonly scripts?: readonly StudioScriptCompanion[];
+  readonly parameters?: readonly StudioParameterCompanion[];
 };
 
 /** Declarative Film boundary. Studio follows only the references named here. */
@@ -605,6 +649,13 @@ export type StudioScriptAdjustment =
   | { readonly kind: "selection"; readonly id: string; readonly startAnchorId: string; readonly endAnchorId: string }
   | { readonly kind: "moment"; readonly id: string; readonly anchorId: string };
 
+export type StudioScriptProjection = Pick<StudioSemanticTimeline, "anchors" | "segments" | "tokens" | "selections" | "moments">;
+export type StudioScriptProjectionInput = {
+  readonly source: StudioScriptSourceMap;
+  readonly values: readonly StudioObservedValue[];
+  readonly anchors: ReadonlyMap<string, number>;
+};
+
 /** Script grammar companion. It owns source observation and semantic inverse edits. */
 export type StudioScriptCompanion = {
   readonly id: string;
@@ -619,6 +670,7 @@ export type StudioScriptCompanion = {
     readonly nextOffset?: number;
     readonly attributes: Readonly<Record<string, unknown>>;
   }) => Omit<StudioScriptSourceMap, "companion"> | undefined;
+  readonly project?: (input: StudioScriptProjectionInput) => StudioScriptProjection;
   readonly adjust: (input: {
     readonly sourceName: string;
     readonly source: string;
@@ -642,6 +694,7 @@ export function createStudioCompanionHostFacet(input: {
   readonly tracks?: readonly StudioTrackCompanion[];
   readonly films?: readonly StudioFilmCompanion[];
   readonly scripts?: readonly StudioScriptCompanion[];
+  readonly parameters?: readonly StudioParameterCompanion[];
 }): StudioCompanionHostFacet {
   return {
     abi: studioCompanionHostAbi,
@@ -650,6 +703,7 @@ export function createStudioCompanionHostFacet(input: {
       tracks: input.tracks ?? [],
       ...(input.films === undefined ? {} : { films: input.films }),
       ...(input.scripts === undefined ? {} : { scripts: input.scripts }),
+      ...(input.parameters === undefined ? {} : { parameters: input.parameters }),
     },
   };
 }
@@ -658,6 +712,7 @@ export type StudioPackageContribution = {
   readonly tracks: readonly StudioTrackCompanion[];
   readonly films: readonly StudioFilmCompanion[];
   readonly scripts: readonly StudioScriptCompanion[];
+  readonly parameters: readonly StudioParameterCompanion[];
 };
 
 function qualify(owner: string, local: string, subject: string): string {
@@ -675,6 +730,7 @@ export function studioContributionFromPackage(
   const tracks: StudioTrackCompanion[] = [];
   const films: StudioFilmCompanion[] = [];
   const scripts: StudioScriptCompanion[] = [];
+  const parameters: StudioParameterCompanion[] = [];
   for (const facet of facets) {
     if (facet.abi !== studioCompanionHostAbi) continue;
     const contribution = facet.implementation as Partial<StudioCompanionContribution>;
@@ -689,12 +745,15 @@ export function studioContributionFromPackage(
       ...film,
       id: qualify(owner, film.id, "Studio Film companion"),
     })));
+    parameters.push(...(contribution.parameters ?? []).map((parameter) => ({
+      ...parameter, id: qualify(owner, parameter.id, "Studio Parameter companion"),
+    })));
     scripts.push(...(contribution.scripts ?? []).map((script) => ({
       ...script,
       id: qualify(owner, script.id, "Studio Script companion"),
     })));
   }
-  return { tracks, films, scripts };
+  return { tracks, films, scripts, parameters };
 }
 
 /**
@@ -707,6 +766,18 @@ export function studioTrackCompanionsFromPackage(
 ): readonly StudioTrackCompanion[] {
   return studioContributionFromPackage(owner, facets).tracks;
 }
+
+/** A contiguous internal strip, not a child Track. Declaration order is visual order. */
+export type StudioTrackBand = {
+  readonly id: string;
+  readonly placement: "before" | "after";
+  readonly heightPx: number;
+  /** Label bands use the whole strip for each entity's title; content bands retain its chrome. */
+  readonly display: "label" | "content";
+  readonly tone?: StudioTimelineTone;
+  readonly bindings?: readonly StudioSourceBindingDeclaration[];
+  readonly inspector?: readonly StudioInspectorFieldDeclaration[];
+};
 
 export type StudioLaneAttachment = {
   readonly id: string;
@@ -834,6 +905,22 @@ export function temporalSemanticSource(lineage: StudioTemporalLineage | undefine
     && candidate.narrativeId === first.narrativeId)
     ? first
     : undefined;
+}
+
+/** A package chooses which source references can name an otherwise unnamed Item. */
+export function authoredItemTitle(
+  context: StudioTrackCompanionContext,
+  authoredId: string,
+  sourceTypes: readonly TypeRef[],
+  sourceAttributes: readonly string[],
+): string {
+  const child = authoredChildFor(context, authoredId, sourceTypes);
+  if (child?.attributes.id) return child.attributes.id;
+  for (const attribute of sourceAttributes) {
+    const reference = child?.referenceAttributes[attribute];
+    if (reference) return reference;
+  }
+  return authoredId;
 }
 
 export function childEntities(

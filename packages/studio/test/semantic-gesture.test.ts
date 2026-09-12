@@ -81,7 +81,7 @@ test("clock expressions retain units until edited and edited values reproject to
   for (const frameRate of [{ numerator: 30, denominator: 1 }, { numerator: 60, denominator: 1 }, { numerator: 30000, denominator: 1001 }]) {
     const space = { id: "clock", durationSec: 300 * frameRate.denominator / frameRate.numerator, frameRate };
     const locate = (value: string) => projectProgramInstant({
-      itemId: "point", subjectId: "point", space,
+      itemId: "point", subjectId: "point", timeline: { ...space, items: [] },
       projection: parseTemporalInstant(value, "point"), authority: { kind: "parameter", binding: "instant", relation: "direct" },
     }).frame;
     assert.equal(locate("2s"), Math.round(2 * frameRate.numerator / frameRate.denominator));

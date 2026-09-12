@@ -6,7 +6,7 @@
   <import from="@qflow/script@1"/>
   <import as="media" from="@qflow/media@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
-  <import as="speech" from="@qflow/speech-track@1"/>
+  <import as="time" from="@qflow/timeline-author@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
   <import as="media-track" from="@qflow/media-track@1"/>
   <import as="space" from="@qflow/spatial@1"/>
@@ -32,16 +32,16 @@
     video="primary-moving" audio="none" span-authority="video"/>
   <whisperx:SemanticTake id="showcase-time" narrative={story}
     segment={story.segment.empty} media={duration-media.media}/>
-  <speech:Track id="speech"><speech:Take source={showcase-time.take}/></speech:Track>
+  <time:Timeline id="speech" clock={clock}><time:Take source={showcase-time.take}/></time:Timeline>
 
-  <media-track:Track id="showcase" semantic={speech.semantic} canvas={vertical}>
+  <media-track:Track id="showcase" timeline={speech.timeline} canvas={vertical}>
     <media-track:Item id="rounded-card" image={picture-a} extent={picture-size} during="program"
       frame={card-a} appearance={recipes.media.card} motion={recipes.motion.card}/>
     <media-track:Item id="flush-card" image={picture-b} extent={picture-size} during="program"
       frame={card-b} appearance={recipes.media.wide} motion={recipes.motion.card}/>
   </media-track:Track>
-  <film:Film id="main" canvas={vertical} semantic={speech.semantic} appearance={recipes.film.vertical}>
+  <film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
     <film:Track source={showcase.visual}/>
   </film:Film>
-  <render:Video id="final" composition={main.composition} semantic={speech.semantic}/>
+  <render:Video id="final" composition={main.composition} timeline={speech.timeline}/>
 </svml>

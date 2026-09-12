@@ -1,0 +1,71 @@
+import { sealAudioTrack } from "@qflow/composition";
+import type { AudioTrack } from "@qflow/composition";
+import { synchronizedMediaSampleFrames } from "@qflow/media";
+import {
+  programFrameSampleBoundary,
+  sealProgramSpace,
+} from "@qflow/program-space";
+import type { ProgramSpace } from "@qflow/program-space";
+
+import { assertTimelineIdentity, timelineFrameCount, timelineSpans } from "./identity.js";
+import type { Timeline } from "./types.js";
+
+/** Prepared material in an authored program interval, with its original source position retained. */
+export function projectTimelineMedia(track: Timeline, window = {
+  startFrame: 0, endFrameExclusive: timelineFrameCount(track),
+}) {
+  assertTimelineIdentity(track);
+  if (!Number.isSafeInteger(window.startFrame) || !Number.isSafeInteger(window.endFrameExclusive)
+    || window.startFrame < 0 || window.endFrameExclusive <= window.startFrame
+    || window.endFrameExclusive > timelineFrameCount(track)) throw new Error("Semantic media window is outside the performance.");
+  return timelineSpans(track).flatMap(({ item, startFrame, endFrameExclusive }) => {
+    const start = Math.max(window.startFrame, startFrame);
+    const end = Math.min(window.endFrameExclusive, endFrameExclusive);
+    return end <= start ? [] : [{
+      segmentId: item.take.segment.segmentId,
+      media: item.take.media,
+      span: { startFrame: start, endFrameExclusive: end },
+      source: { startFrame: start - startFrame, endFrameExclusive: end - startFrame },
+    }];
+  });
+}
+
+export function projectTimelineSpace(track: Timeline): ProgramSpace {
+  assertTimelineIdentity(track);
+  const frameRate = track.frameRate;
+  return sealProgramSpace({
+    id: track.id,
+    durationSec: track.durationSec,
+    frameRate,
+  });
+}
+
+export function projectTimelineAudio(track: Timeline): AudioTrack {
+  const space = projectTimelineSpace(track);
+  const clips = timelineSpans(track).flatMap(({ item, startFrame, endFrameExclusive }) => {
+    const audio = item.take.media.audio;
+    if (audio === undefined) return [];
+    const sourceSampleFrames = synchronizedMediaSampleFrames(item.take.media);
+    const targetStartSample = programFrameSampleBoundary(space, startFrame, 48_000);
+    const targetEndSampleExclusive = programFrameSampleBoundary(space, endFrameExclusive, 48_000);
+    return [{
+      id: item.take.segment.segmentId,
+      subjectId: item.take.segment.segmentId,
+      artifact: audio.artifact,
+      target: { startSample: targetStartSample, endSampleExclusive: targetEndSampleExclusive },
+      source: {
+        sampleFrames: sourceSampleFrames,
+        startSample: 0,
+        endSampleExclusive: sourceSampleFrames,
+        loop: false,
+        phaseSample: 0,
+      },
+      playbackRate: 1,
+      pitch: "preserve" as const,
+      gain: 1,
+      fadeInSamples: 0,
+      fadeOutSamples: 0,
+    }];
+  });
+  return sealAudioTrack({ programSpaceId: space.id, id: `${track.id}:audio`, clips });
+}

@@ -26,7 +26,7 @@ that Run. To keep generated material while editing, select completed Outputs wit
 | `--port <number>` | Request a browser-server port; the default is `5179`. |
 
 The selected target must lead to one Film and its time source. A spoken performance supplies a
-SemanticTrack; an animation can supply an authored ProgramSpace. Both support visual components and
+Timeline; an animation can supply an authored ProgramSpace. Both support visual components and
 property editing. The material needed to display the composition must already be available through
 the Run. Studio can perform media preparation supported by the selected Runtime; submit generation
 and encoded renders through `qflow build`.

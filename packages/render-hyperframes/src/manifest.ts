@@ -2,7 +2,7 @@ import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { artifactDependency, artifactTypes } from "@qflow/artifact";
 import { mediaDependency, mediaTypes } from "@qflow/media";
 import { compositionDependency, compositionTypes } from "@qflow/composition";
-import { semanticTrackDependency } from "@qflow/semantic-track";
+import { timelineDependency } from "@qflow/timeline";
 import {
   hyperframesManifest,
   hyperframesModuleRef,
@@ -48,9 +48,9 @@ export const renderHyperframesMarkupSurfaces = [{
         { name: "video", type: artifactTypes.blob,
           summary: "The final muxed video Artifact, addressed as `<id>.video`." },
       ],
-      example: '<render:Video id="final" composition={main.composition} semantic={speech.semantic}/>',
+      example: '<render:Video id="final" composition={main.composition} timeline={speech.timeline}/>',
       notes: [
-        "Supply id, composition and one time source: semantic or space. Write both frame bounds to select a range. The element is empty.",
+        "Supply id, composition and timeline. Write both frame bounds to select a range. The element is empty.",
         "The visual render, the audio render and the mux are three separate Needs, each realized by a Provider this package does not choose.",
         "The published Artifact carries no duration or lineage metadata, so a consumer that needs stream facts requests explicit media inspection.",
       ],
@@ -66,7 +66,7 @@ export const renderHyperframesManifest: ModuleManifest = {
     artifactDependency,
     mediaDependency,
     compositionDependency,
-    semanticTrackDependency,
+    timelineDependency,
     { module: hyperframesModuleRef },
     { module: mediaPipelineModuleRef },
   ],

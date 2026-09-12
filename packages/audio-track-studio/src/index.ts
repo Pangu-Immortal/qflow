@@ -1,8 +1,8 @@
-import { audioTrackModuleRef, audioTrackTypes } from "@qflow/audio-track";
+import { audioItemDefaults, audioTrackModuleRef, audioTrackTypes } from "@qflow/audio-track";
 import type { AudioTrackProgram } from "@qflow/audio-track";
 import { compositionTypes } from "@qflow/composition";
 import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft } from "@qflow/studio-adapter";
-import { artifactPreview, childEntities, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalSemanticSource } from "@qflow/studio-adapter";
+import { artifactPreview, authoredItemTitle, childEntities, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalSemanticSource } from "@qflow/studio-adapter";
 
 function projectAudio(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
   const program = requiredSurfaceValue(context, "program") as AudioTrackProgram;
@@ -21,7 +21,10 @@ function projectAudio(context: StudioTrackCompanionContext): readonly StudioEnti
     const semanticSource = temporalSemanticSource(temporal);
     return {
       ...entity,
-      display: { ...entity.display, layers: [previewLayer(item.preview, "waveform")] },
+      display: {
+        title: authoredItemTitle(context, entity.authoredId, item.sourceTypes, ["source"]),
+        layers: [previewLayer(item.preview, "waveform")],
+      },
       ...(semanticSource?.id === undefined
         ? {}
         : { markerId: semanticSource.id }),
@@ -39,30 +42,38 @@ export const audioTrackStudioTrackCompanions: readonly StudioTrackCompanion[] = 
       { name: "source" },
       { name: "trim-start", writable: true },
       { name: "trim-end", writable: true },
-      { name: "playback", writable: true },
-      { name: "min-rate", writable: true },
-      { name: "max-rate", writable: true },
-      { name: "gain", writable: true },
-      { name: "fade-in", writable: true },
-      { name: "fade-out", writable: true },
+      { name: "playback-settings", writable: true,
+        attributes: ["playback", "min-rate", "max-rate"],
+        fallback: { playback: audioItemDefaults.playback },
+        schema: { kind: "oneOf", variants: ["once", "once-start", "once-end", "loop", "loop-start", "loop-end", "stretch"].map(mode => ({
+          kind: "object", fields: {
+            playback: { schema: { kind: "literal", value: mode } },
+            ...(mode === "stretch" ? {
+              "min-rate": { schema: { kind: "number", minimum: 0, maximum: 100 } },
+              "max-rate": { schema: { kind: "number", minimum: 0, maximum: 100 } },
+            } : {}),
+          },
+        })) },
+      },
+      { name: "gain", writable: true, fallback: audioItemDefaults.gain },
+      { name: "fade-in", writable: true, fallback: audioItemDefaults["fade-in"] },
+      { name: "fade-out", writable: true, fallback: audioItemDefaults["fade-out"] },
     ],
     inspector: [
       {
-        binding: "playback", label: "Playback", domain: "when",
+        binding: "playback-settings", label: "Playback", domain: "when",
         page: { id: "playback", label: "Playback" }, section: { id: "playback", label: "Playback" },
-        control: "select", options: ["once", "once-start", "once-end", "loop", "loop-start", "loop-end", "stretch"],
+        control: "record",
+        summary: "Rates are multipliers (1 = original speed). Stretch requires both rate bounds.",
       },
       ...(["trim-start", "trim-end"] as const).map((binding) => ({
         binding, label: binding === "trim-start" ? "Trim Start" : "Trim End", domain: "when" as const,
         page: { id: "playback", label: "Playback" }, section: { id: "trim", label: "Trim" }, control: "number" as const,
         number: { suffixes: ["ms", "s", "f"], minimum: 0 },
       })),
-      ...(["min-rate", "max-rate", "gain"] as const).map((binding) => ({
-        binding, label: binding === "min-rate" ? "Minimum Rate" : binding === "max-rate" ? "Maximum Rate" : "Gain",
-        domain: "how" as const, page: { id: "mix", label: "Mix" }, section: { id: "mix", label: "Mix" },
-        control: "number" as const,
-        unit: "%", number: { scale: 100, minimum: 0, step: 1 },
-      })),
+      { binding: "gain", label: "Gain", domain: "how",
+        page: { id: "mix", label: "Mix" }, section: { id: "mix", label: "Mix" },
+        control: "number", unit: "%", number: { scale: 100, minimum: 0, maximum: 6400, step: 1 } },
       ...(["fade-in", "fade-out"] as const).map((binding) => ({
         binding, label: binding === "fade-in" ? "Fade In" : "Fade Out", domain: "when" as const,
         page: { id: "fade", label: "Fade" }, section: { id: "fade", label: "Fade" }, control: "number" as const,

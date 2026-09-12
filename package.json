@@ -58,9 +58,9 @@
       "types": "./dist/public/runtime-kit.d.ts",
       "import": "./packages/runtime-kit/src/index.ts"
     },
-    "./semantic-track": {
-      "types": "./dist/public/semantic-track.d.ts",
-      "import": "./packages/semantic-track/src/index.ts"
+    "./timeline": {
+      "types": "./dist/public/timeline.d.ts",
+      "import": "./packages/timeline/src/index.ts"
     },
     "./spatial": {
       "types": "./dist/public/spatial.d.ts",
@@ -97,6 +97,14 @@
     "./hyperframes": {
       "types": "./dist/public/hyperframes.d.ts",
       "import": "./packages/hyperframes/src/index.ts"
+    },
+    "./performance": {
+      "types": "./dist/public/performance.d.ts",
+      "import": "./packages/performance/src/index.ts"
+    },
+    "./sound": {
+      "types": "./dist/public/sound.d.ts",
+      "import": "./packages/sound/src/index.ts"
     }
   },
   "bin": {
@@ -169,12 +177,12 @@
     "node": ">=22.12.0"
   },
   "devDependencies": {
-    "@qflow/browser-capture": "workspace:*",
     "@qflow/artifact": "workspace:*",
     "@qflow/audio-track": "workspace:*",
     "@qflow/audio-track-studio": "workspace:*",
     "@qflow/author-kit": "workspace:*",
     "@qflow/background-removal": "workspace:*",
+    "@qflow/browser-capture": "workspace:*",
     "@qflow/build-result": "workspace:*",
     "@qflow/build-result-fs": "workspace:*",
     "@qflow/build-result-kit": "workspace:*",
@@ -209,6 +217,9 @@
     "@qflow/minimax-h3": "workspace:*",
     "@qflow/nano-banana": "workspace:*",
     "@qflow/narrative": "workspace:*",
+    "@qflow/performance": "workspace:*",
+    "@qflow/performance-studio": "workspace:*",
+    "@qflow/sound-studio": "workspace:*",
     "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/provider-hyperframes-aws-lambda": "workspace:*",
@@ -236,19 +247,19 @@
     "@qflow/seedance": "workspace:*",
     "@qflow/seedance-kits": "workspace:*",
     "@qflow/seedream": "workspace:*",
-    "@qflow/semantic-track": "workspace:*",
+    "@qflow/sound": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/speech-alignment": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",
-    "@qflow/speech-track": "workspace:*",
-    "@qflow/speech-track-studio": "workspace:*",
     "@qflow/store-sqlite": "workspace:*",
     "@qflow/studio-adapter": "workspace:*",
     "@qflow/svs": "workspace:*",
     "@qflow/temporal": "workspace:*",
     "@qflow/temporal-markup": "workspace:*",
     "@qflow/text": "workspace:*",
+    "@qflow/timeline": "workspace:*",
+    "@qflow/timeline-author": "workspace:*",
     "@qflow/typography-track": "workspace:*",
     "@qflow/typography-track-studio": "workspace:*",
     "@qflow/visual-ir": "workspace:*",

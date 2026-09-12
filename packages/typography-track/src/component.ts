@@ -1,5 +1,5 @@
+import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage } from "@qflow/component-kit";
-import type { ProgramSpace } from "@qflow/program-space";
 import type { CompositableSurfaceRef } from "@qflow/media";
 import type { SpatialFrame, SpatialPath, SpatialPoint } from "@qflow/spatial";
 import type { StoredValue } from "@qflow/protocol";
@@ -58,7 +58,7 @@ export const typographyTrackComponent = {
       handler: ({ inputs }) => ({ outputs: { set: output(appendProjectedTextItem(
         inline<TypographyTrackSet>(inputs.set?.value, "TypographyTrackSet"),
         inline<TypographyTrackHeader>(inputs.header?.value, "TypographyTrackHeader"),
-        inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        inline<Timeline>(inputs.timeline?.value, "Timeline"),
         inline<TextPlacement>(inputs.placement?.value, "TextPlacement"),
         inline<TextItemSpec>(inputs.spec?.value, "TextItemSpec"),
         inline<TextStyle>(inputs.style?.value, "TextStyle"),
@@ -76,14 +76,14 @@ export const typographyTrackComponent = {
     {
       producer: typographyTrackProducers.render,
       handler: ({ inputs }) => ({ outputs: { track: output(renderTypographyTrack(
-        inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        inline<Timeline>(inputs.timeline?.value, "Timeline"),
         inline<TypographyTrackProgram>(inputs.program?.value, "TypographyTrackProgram"),
       )) }, needs: {} }),
     },
     {
       producer: typographyTrackProducers.renderMask,
       handler: ({ inputs }) => ({ outputs: { track: output(renderTextMaskTrack(
-        inline<ProgramSpace>(inputs.space?.value, "ProgramSpace"),
+        inline<Timeline>(inputs.timeline?.value, "Timeline"),
         inline<TypographyTrackProgram>(inputs.program?.value, "TypographyTrackProgram"),
         inline<CompositableSurfaceRef>(inputs.material?.value, "CompositableSurfaceRef"),
         inline<TextMaskSpec>(inputs.spec?.value, "TextMaskSpec"),

@@ -11,7 +11,7 @@ visible lifetime. For a reveal card, those decisions become a box and text, a de
 an entrance animation and the interval for which the answer remains visible.
 
 A component can first compute a domain program, such as a list of answers and their reveal times.
-Its drawing Producer receives that program, ProgramSpace, Frames, Style and explicit assets, then
+Its drawing Producer receives that program, Timeline, Frames, Style and explicit assets, then
 returns a VisualTrack. A simple component can produce the Track directly when no separate program
 would help its behavior or editing.
 
@@ -19,7 +19,7 @@ The public representation has these parts:
 
 | Part | What it means |
 | --- | --- |
-| Track | Named picture contribution belonging to one ProgramSpace |
+| Track | Named picture contribution belonging to one Timeline |
 | Present | An independently timed and stacked appearance |
 | `span` | Program frames from `startFrame` through the frame before `endFrameExclusive` |
 | `stacking` | Absolute paint order among Presents; higher order appears above lower order |
@@ -109,11 +109,11 @@ video sampling and font handling while participating in the program's HTML layou
 used by the program belong in its `artifacts` list; `hyperframesResourceUri` supplies their resource
 URLs. The rendering environment materializes those references.
 
-For a semantic performance, `projectSemanticMedia(semantic, window.span)` from
-`@qflow/qflow/semantic-track` returns each intersecting Take's prepared media, program span and source
+For a semantic performance, `projectTimelineMedia(semantic, window.span)` from
+`@qflow/qflow/timeline` returns each intersecting Take's prepared media, program span and source
 span. Subtract the outer Window's start to obtain Present-local video sampling intervals. Preserve
 the returned source offset: moving or reframing a video changes its presentation while playback
-continues from the same place. Original sound can remain `speech.audio` in Film.
+continues from the same place. A separate Sound presentation can continue the existing audio in Film.
 
 A reusable scene might expose `during={story.selection.explanation}` for its lifetime and
 `reveal={story.moment.demonstrate}` for its layout change. The Surface projects these independently;

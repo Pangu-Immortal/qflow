@@ -1,5 +1,6 @@
-import { createTemporalSpace, resolveTemporalContext } from "@qflow/temporal-markup";
-import { programSpaceTypes } from "@qflow/program-space";
+import { timelineTypes } from "@qflow/timeline";
+import { resolveTemporalContext } from "@qflow/temporal-markup";
+
 import { compositionTypes } from "@qflow/composition";
 import type {
   VisualColorPaint,
@@ -649,7 +650,7 @@ function createTrackFragment(id: string, items: readonly FragmentItem[]): GraphF
     }
     const append = `text:set:append:${String(index + 1).padStart(4, "0")}`;
     const common = {
-      set: operation(current), header: input("header"), space: input("space"), placement: operation(bind),
+      set: operation(current), header: input("header"), timeline: input("timeline"), placement: operation(bind),
       spec: item.contentName === undefined ? input(item.specName) : operation(materialized),
       style: input(item.styleName), motion: input(item.motionName), window: input(item.windowName),
     };
@@ -658,10 +659,10 @@ function createTrackFragment(id: string, items: readonly FragmentItem[]): GraphF
   }
   operations.push(
     { id: "text:finalize", producer: typographyTrackProducers.finalize, inputs: { header: input("header"), set: operation(current) }, result: { kind: "output", name: "program" } },
-    { id: "text:render", producer: typographyTrackProducers.render, inputs: { space: input("space"), program: operation("text:finalize") }, result: { kind: "output", name: "track" } },
+    { id: "text:render", producer: typographyTrackProducers.render, inputs: { timeline: input("timeline"), program: operation("text:finalize") }, result: { kind: "output", name: "track" } },
   );
   const inputEntries = [
-    { name: "space", type: programSpaceTypes.programSpace },
+    { name: "timeline", type: timelineTypes.track },
     { name: "header", type: typographyTrackTypes.header },
     ...items.flatMap((item) => [
       { name: item.geometryName, type: item.placementKind === "point" ? spatialTypes.point : item.placementKind === "area" ? spatialTypes.frame : spatialTypes.path },
@@ -688,10 +689,9 @@ function createTrackFragment(id: string, items: readonly FragmentItem[]): GraphF
 }
 
 export const decodeTypographyTrackSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  allowed(element, ["id", "semantic", "space"], ["id"]);
+  allowed(element, ["id", "timeline"], ["id"]);
   const id = text(element, "id");
   const context = resolveTemporalContext({ element, resolveReference });
-  const time = createTemporalSpace({ id: id, element, ...context });
   const headerId = `${id}.__header`;
   const records: SurfaceRecordDraft[] = [{
     id: headerId, type: typographyTrackTypes.header,
@@ -699,8 +699,8 @@ export const decodeTypographyTrackSurface: StructuredSurfaceHandler = ({ element
   }];
   const defaultMotionId = `${id}.__still-motion`;
   records.push({ id: defaultMotionId, type: typographyTrackTypes.motion, value: { kind: "inline", value: stillTextMotion(defaultMotionId) }, range: element.range });
-  const temporalComponents: SurfaceComponentDraft[] = [...time.components];
-  const temporalFragments: ReturnType<typeof createTemporalWindowProjection>["fragments"][number][] = [...time.fragments];
+  const temporalComponents: SurfaceComponentDraft[] = [];
+  const temporalFragments: ReturnType<typeof createTemporalWindowProjection>["fragments"][number][] = [];
   const items: Array<FragmentItem & {
     readonly geometry: SurfaceResolvedReference;
     readonly style: SurfaceResolvedReference;
@@ -731,7 +731,7 @@ export const decodeTypographyTrackSurface: StructuredSurfaceHandler = ({ element
       "id", "content", "placement", "style", "motion", ...temporalWindowAttributeNames,
     ], ["id", "placement", "style"]);
     const itemId = text(child, "id");
-    const temporal = createTemporalWindowProjection({ id: itemId, element: child, ...context, space: time.space, resolveReference });
+    const temporal = createTemporalWindowProjection({ id: itemId, element: child, ...context, resolveReference });
     records.push(...temporal.records); temporalComponents.push(...temporal.components); temporalFragments.push(...temporal.fragments);
     const placementKind = form.toLowerCase() as "point" | "area" | "path";
     const geometry = reference(child.attributes.placement, `${child.name}.placement`, placementKind === "point" ? spatialTypes.point : placementKind === "area" ? spatialTypes.frame : spatialTypes.path, resolveReference);
@@ -777,7 +777,7 @@ export const decodeTypographyTrackSurface: StructuredSurfaceHandler = ({ element
     components: [...temporalComponents, {
       id, fragment: fragment.id,
       inputs: {
-        space: time.space.ref, header: { kind: "record", id: headerId },
+        timeline: context.timeline.ref, header: { kind: "record", id: headerId },
         ...Object.fromEntries(items.flatMap((item) => [
           [item.geometryName, item.geometry.ref], [item.specName, { kind: "record" as const, id: item.specId }],
           [item.windowName, item.window],
@@ -794,7 +794,7 @@ export const decodeTypographyTrackSurface: StructuredSurfaceHandler = ({ element
 
 function createMaskFragment(id: string): GraphFragment {
   const inputs = [
-    { name: "space", type: programSpaceTypes.programSpace },
+    { name: "timeline", type: timelineTypes.track },
     { name: "program", type: typographyTrackTypes.program },
     { name: "material", type: mediaTypes.compositableSurface },
     { name: "spec", type: typographyTrackTypes.maskSpec },
@@ -804,7 +804,7 @@ function createMaskFragment(id: string): GraphFragment {
     operations: [
       {
         id: "text-mask:render", producer: typographyTrackProducers.renderMask,
-        inputs: { space: input("space"), program: input("program"), material: input("material"), spec: input("spec") },
+        inputs: { timeline: input("timeline"), program: input("program"), material: input("material"), spec: input("spec") },
         result: { kind: "output", name: "track" },
       },
     ],
@@ -815,11 +815,10 @@ function createMaskFragment(id: string): GraphFragment {
 }
 
 export const decodeTypographyMaskSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  allowed(element, ["id", "semantic", "space", "text", "material", "mode", "fit"], ["id", "text", "material"]);
+  allowed(element, ["id", "timeline", "text", "material", "mode", "fit"], ["id", "text", "material"]);
   empty(element);
   const id = text(element, "id");
   const context = resolveTemporalContext({ element, resolveReference });
-  const time = createTemporalSpace({ id: id, element, ...context });
   const program = reference(element.attributes.text, `${element.name}.text`, typographyTrackTypes.program, resolveReference);
   const material = reference(element.attributes.material, `${element.name}.material`, mediaTypes.compositableSurface, resolveReference);
   const specId = `${id}.__spec`;
@@ -831,12 +830,12 @@ export const decodeTypographyMaskSurface: StructuredSurfaceHandler = ({ element,
   const fragment = createMaskFragment(id);
   return {
     records: [{ id: specId, type: typographyTrackTypes.maskSpec, value: { kind: "inline", value: spec }, range: element.range }],
-    components: [...time.components, {
+    components: [{
       id, fragment: fragment.id,
-      inputs: { space: time.space.ref, program: program.ref, material: material.ref, spec: { kind: "record", id: specId } },
+      inputs: { timeline: context.timeline.ref, program: program.ref, material: material.ref, spec: { kind: "record", id: specId } },
       outputs: { track: `${id}.track` }, range: element.range,
     }],
-    fragments: [...time.fragments, fragment],
+    fragments: [fragment],
     exports: [`${id}.track`],
   };
 };

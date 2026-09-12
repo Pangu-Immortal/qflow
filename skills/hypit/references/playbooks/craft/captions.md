@@ -30,7 +30,7 @@ energy inform that judgment rather than prescribing a fixed Cue length or one ca
 ## Caption families, Styles and parameters
 
 Script publishes one `CaptionDocument`: ordered display words, complete Alignment Units, speaking
-Roles, word attributes and authored Cue handoffs. Caption joins it to the real SemanticTrack. That
+Roles, word attributes and authored Cue handoffs. Caption joins it to the real Timeline. That
 common typed relationship is what makes the result Caption; an official renderer is not the
 definition. A project package can provide another Caption family while keeping the same Script words
 and measured speech evidence.
@@ -49,14 +49,14 @@ project `.svs`; a set that has earned reuse across works can become an ordinary 
 under its owner's scope. Such a collection preserves the family, Recipe and intended use together
 rather than turning isolated parameter values into universal defaults.
 
-Caption Program chooses where those Styles apply: a default, a speaking Role, a semantic passage or
-a local emphasis. [Caption styling and coverage](../../production/caption-program.md) explains
-overrides, Segment-wide selections, word attributes and hiding selected captions with Mute.
+Caption Track Uses choose when those Styles apply, optionally filtered by speaker. Cue content
+stays complete when presentation changes midway through a phrase. [Caption styling and coverage](../../production/caption-presentation.md) explains
+overrides, Segment-wide selections, word attributes and hiding selected captions with a Hidden Style.
 
 ## Keep wording and timing in their owners
 
 Script owns display words, speaking Roles, Dual Text units, attributes and `||` Cue Breaks. Its
-CaptionDocument contains no seconds or frames. Caption joins that truth to the actual SemanticTrack;
+CaptionDocument contains no seconds or frames. Caption joins that truth to the actual Timeline;
 a visual family then presents the timed units. Reuse those units rather than retyping spoken words
 into independent Typography merely because it can draw the desired shape.
 
@@ -72,12 +72,12 @@ explicit Style Recipes. Role overrides can distinguish podcast hosts; a tracked 
 moving placement point without changing the verbal pipeline.
 
 ```svml
-<caption:Program id="caption-program" document={story.caption} narrative={story}
-  default={primary-caption}>
-  <caption:Use role="GUEST" style={guest-caption}/>
-</caption:Program>
+
 <caption-fine:Track id="captions" document={story.caption}
-  semantic={speech.semantic} program={caption-program}/>
+  timeline={speech.timeline}>
+    <caption-fine:Use style={primary-caption}/>
+    <caption-fine:Use role="GUEST" style={guest-caption}/>
+  </caption-fine:Track>
 ```
 
 This excerpt assumes the imported Surfaces, fonts and Styles already declared in the Source.

@@ -78,7 +78,7 @@ evidence, and the feeling of the shot rather than from a fixed layout recipe.
 | Full-frame | A `9:16` character-and-scene image and reference-generated performance are the common fit for vertical creator footage. Frame the face, body and real setting for the later composite. |
 | Upper or lower split | A square camera image and performance often cover a `9:8` half of a vertical Canvas cleanly, with a small top/bottom crop. A close, intimate phone view may instead be a vertically generated performance whose other half is covered. |
 | Foreground cutout | A vertical performance often preserves a natural amount of the speaking body. Remove its background, normalize the alpha-bearing result, and use that same prepared performance as the SemanticTake. |
-| Circular picture-in-picture | A square source with the face near its own center is a useful starting point. Present the semantic performance through Media Performance with a square Frame and rounded clip whose radius is half the side. |
+| Circular picture-in-picture | A square source with the face near its own center is a useful starting point. Present the semantic performance through Performance with a square Frame and rounded clip whose radius is half the side. |
 | Audio-only A-roll | The performance contributes semantic time and sound but no picture. Another Track fills the Segment with the intended demonstration, POV, B-roll, Typography or MG. |
 
 For a non-overlapping upper/lower split, equal stacking order can express two peer regions; the
@@ -118,7 +118,7 @@ chroma-backed camera image
        → moving-video matting
        → alpha-preserving normalization
        → SemanticTake
-       → Speech Track cutout presentation
+       → Timeline placement → Performance or project-scene presentation
 ```
 
 The chroma backdrop establishes subject separation rather than the final story setting. The final
@@ -128,11 +128,11 @@ identity, framing and useful performance state; the matting section below owns t
 
 ## Inset, cutout and flattened composite are distinct choices
 
-A speaking rectangular inset, circular inset or normalized cutout can be presented directly by
-Speech Track. A circular inset is a geometric crop: use a square Frame and a rounded clip whose
+A speaking rectangular inset, circular inset or normalized cutout can be presented by
+Performance or a project scene. A circular inset is a geometric crop: use a square Frame and a rounded clip whose
 radius is half that square's side. The camera background remains inside the circle. A cutout instead
-follows the person's silhouette and needs suitable transparency in the source. Speech Track presents
-the Take while it carries the Segment's speaking performance. Media Track can use the same prepared
+follows the person's silhouette and needs suitable transparency in the source. Timeline assembly retains
+the Take's positions; its visual component presents the prepared picture. Media Track can use the same prepared
 media when the work intentionally gives it an independent Window, playback, trim or visual role.
 
 A speaking person in either presentation remains A-roll when their performance carries the main
@@ -164,8 +164,8 @@ require another kind of Take or Track. Choose which role the cutout serves in th
 
 | Role | Consume the prepared output |
 | --- | --- |
-| A speaking performance establishing semantic time | `cutout-media.media` → SemanticTake → Speech Track; show its prepared picture through Media or a project component and include `speech.audio` when wanted. |
-| A visual overlay on an existing semantic timeline | `cutout-media.media` → a Media Item's `media` input; select its Window and include the Track's visual output in Film. |
+| A speaking performance with local semantic timing | `cutout-media.media` → SemanticTake → Timeline assembly; show its placed picture through Performance or a project component and present its placed audio through Sound. |
+| An independent visual overlay | `cutout-media.media` → a Media Item's `media` input; select its Window on the Timeline and include the Track's visual output in Film. |
 
 When the intended artifact is a fixed flattened arrangement of still images, use
 [Image Compose](../../production/image-operations.md#flatten-a-fixed-still-image-arrangement).

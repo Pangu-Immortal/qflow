@@ -30,20 +30,20 @@ formats. The service's flat-background MP4 option is a different output treatmen
 This excerpt assumes the performance and Script exist. Normalize keeps the transparent picture
 and prepares the selected embedded audio on the program clock. WhisperX and semantic alignment
 associate that prepared performance with the Script. Use `opening-semantic.take` in
-[Speech Track](../speech-track/README.md); its screen position and stack order are independent
+[Timeline assembly](../timeline-author/README.md); its screen position and stack order are independent
 of its role as A-roll.
 
 For B-roll, normalize `cutout.video` with `audio="none"` when its sound is unwanted, then use
 `cutout-media.media` in [Media Track](../media-track/README.md). No SemanticTake is needed for
 that overlay. Existing transparency can enter Normalize directly.
 
-For example, this alternative uses the existing program's SemanticTrack and an authored Selection:
+For example, this alternative uses the existing program's Timeline and an authored Selection:
 
 ```svml
 <import as="media-track" from="@qflow/media-track@1"/>
 <pipeline:Normalize id="overlay-media" source={cutout.video} clock={clock}
   video="primary-moving" audio="none" span-authority="video"/>
-<media-track:Track id="overlay" semantic={speech.semantic} canvas={canvas}>
+<media-track:Track id="overlay" timeline={speech.timeline} canvas={canvas}>
   <media-track:Item media={overlay-media.media} during={story.selection.example}
     frame={overlay-frame} appearance={look.media.overlay}/>
 </media-track:Track>

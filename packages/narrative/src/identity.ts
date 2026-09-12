@@ -25,6 +25,17 @@ export function assertNarrativeIdentity(value: Narrative): void {
   if (value.segments.length === 0) throw new Error("Narrative must contain at least one Segment.");
   const segmentIds = unique(value.segments.map((item) => item.id), "Narrative Segment id");
   const tokenIds = unique(value.tokens.map((item) => item.id), "Narrative Token id");
+  assertCaptionDocumentIdentity(value.caption);
+  if (value.caption.narrativeId !== value.id) throw new Error("Narrative CaptionDocument belongs to another Narrative.");
+  const turns = new Map(value.turns.map((turn) => [turn.id, turn]));
+  const tokens = new Map(value.tokens.map((token) => [token.id, token]));
+  for (const unit of value.caption.units) {
+    const turn = turns.get(unit.turnId);
+    if (turn === undefined || turn.segmentId !== unit.segmentId || turn.role !== unit.role
+      || unit.sourceTokenIds.some((id) => tokens.get(id)?.segmentId !== unit.segmentId)) {
+      throw new Error(`Caption unit ${unit.id} disagrees with its authored speech.`);
+    }
+  }
   unique(value.turns.map((item) => item.id), "Narrative Turn id");
   unique(value.selections.map((item) => item.id), "Narrative Selection id");
   unique(value.moments.map((item) => item.id), "Narrative Moment id");

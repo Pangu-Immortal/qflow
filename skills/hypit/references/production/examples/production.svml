@@ -1,12 +1,14 @@
 <?svml using="@qflow/markup@1"?>
 <svml>
   <import as="media-track" from="@qflow/media-track@1"/>
+  <import as="sound" from="@qflow/sound@1"/>
+  <import as="performance" from="@qflow/performance@1"/>
   <import from="@qflow/script@1"/>
   <import as="text" from="@qflow/text@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
-  <import as="speech" from="@qflow/speech-track@1"/>
+  <import as="time" from="@qflow/timeline-author@1"/>
   <import as="space" from="@qflow/spatial@1"/>
   <import as="program" from="@qflow/program-space@1"/>
   <import as="fonts" from="@qflow/fonts-open@1"/>
@@ -35,28 +37,33 @@
     video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:SemanticTake id="opening-semantic" narrative={story}
     segment={story.segment.opening} media={performance-media.media} language="en"/>
-  <speech:Track id="speech">
-    <speech:Take source={opening-semantic.take}/>
-  </speech:Track>
-  <media-track:Track id="speech-picture" semantic={speech.semantic} canvas={canvas}>
-    <media-track:Performance during="program" frame={full}
-      appearance={look.media.performance}/>
-  </media-track:Track>
+  <time:Timeline id="speech" clock={clock}>
+    <time:Take source={opening-semantic.take}/>
+  </time:Timeline>
+
+  <sound:Style id="speech-sound-style"/>
+  <sound:Track id="speech-sound" timeline={speech.timeline}>
+    <sound:Use style={speech-sound-style}/>
+  </sound:Track>
+  <performance:Style id="speech-picture-style" frame={full} appearance={look.media.performance}/>
+  <performance:Track id="speech-picture" timeline={speech.timeline} canvas={canvas}>
+    <performance:Use style={speech-picture-style} during="program"/>
+  </performance:Track>
 
   <fonts:Stack id="title-font" family="inter" weight="700" style="normal" emoji="color"/>
   <typo:Style id="title-style" recipe={look.text.title} font={title-font}>
     <typo:Fill color="#F1E7D8"/>
   </typo:Style>
-  <typo:Track id="titles" semantic={speech.semantic}>
+  <typo:Track id="titles" timeline={speech.timeline}>
     <typo:Area id="proof-label" placement={title-frame} style={title-style}
       during={story.selection.proof}>The useful part</typo:Area>
   </typo:Track>
-  <film:Film id="main" canvas={canvas} semantic={speech.semantic} appearance={look.film.main}>
+  <film:Film id="main" canvas={canvas} timeline={speech.timeline} appearance={look.film.main}>
     <film:Track source={speech-picture.visual}/>
-    <film:Track source={speech.audio}/>
+    <film:Track source={speech-sound.audio}/>
     <film:Track source={titles.track}/>
   </film:Film>
-  <render:Video id="final" composition={main.composition} semantic={speech.semantic}/>
-  <render:Video id="detail" composition={main.composition} semantic={speech.semantic}
+  <render:Video id="final" composition={main.composition} timeline={speech.timeline}/>
+  <render:Video id="detail" composition={main.composition} timeline={speech.timeline}
     start-frame="30" end-frame-exclusive="90"/>
 </svml>

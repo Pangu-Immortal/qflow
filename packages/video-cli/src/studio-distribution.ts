@@ -11,9 +11,10 @@ export const videoStudioCompanionPackages = [
   "@qflow/deck-track-studio",
   "@qflow/film-studio",
   "@qflow/media-track-studio",
+  "@qflow/performance-studio",
   "@qflow/ranking-studio",
   "@qflow/screen-overlay-studio",
   "@qflow/script-studio",
-  "@qflow/speech-track-studio",
+  "@qflow/sound-studio",
   "@qflow/typography-track-studio",
 ] as const;

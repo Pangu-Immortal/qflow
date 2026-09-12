@@ -1,3 +1,4 @@
+import type { Timeline } from "@qflow/timeline";
 import type {
   VisualAnimation,
   VisualEasing,
@@ -5,7 +6,6 @@ import type {
   VisualStyleDeclaration,
 } from "@qflow/composition";
 import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
 import { canonicalize } from "@qflow/protocol";
 import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
 import type { CanvasSpace } from "@qflow/spatial";
@@ -109,12 +109,12 @@ function appendMediaSequenceMemberAtFrame(
 
 export function appendMediaSequenceMember(
   set: MediaSequenceMemberSet,
-  space: ProgramSpace,
+  timeline: Timeline,
   layers: MediaLayerSet,
   spec: MediaSequenceMemberSpec,
   activation: TemporalInstant,
 ): MediaSequenceMemberSet {
-  assertTemporalInstantFor(activation, { subjectId: spec.id, space });
+  assertTemporalInstantFor(activation, { subjectId: spec.id, space: timeline });
   return appendMediaSequenceMemberAtFrame(set, layers, spec, activation.frame);
 }
 
@@ -180,7 +180,7 @@ function resolvedHandoff(
 
 export function resolveMediaSequence(
   header: MediaTrackHeader,
-  space: ProgramSpace,
+  timeline: Timeline,
   canvas: CanvasSpace,
   memberSet: MediaSequenceMemberSet,
   frame: MediaSequenceProgram["frame"],
@@ -188,7 +188,7 @@ export function resolveMediaSequence(
   sounds: MediaSoundSet,
   terminalFrame: number,
 ): MediaSequenceProgram {
-  assertProgramSpaceIdentity(space);
+  assertProgramSpaceIdentity(timeline);
   assertCanvasSpace(canvas);
   assertMediaSequenceMemberSet(memberSet);
   assertMediaSequenceSpec(spec);
@@ -205,7 +205,7 @@ export function resolveMediaSequence(
     terminalFrame,
     triggers: memberSet.members.map((member) => ({ id: member.id, frame: member.activationFrame })),
   });
-  assert(terminalFrame <= programSpaceFrameCount(space), `Media Sequence ${spec.id} exits ProgramSpace.`);
+  assert(terminalFrame <= programSpaceFrameCount(timeline), `Media Sequence ${spec.id} exits Timeline.`);
   const handoffs = spec.handoffs.map((handoff, index) => {
     const from = memberSet.members[index]!;
     const to = memberSet.members[index + 1]!;
@@ -360,7 +360,7 @@ export function sequenceMemberHandoffAnimation(
 
 export function lowerMediaSequencePresents(
   sequence: MediaSequenceProgram,
-  space: ProgramSpace,
+  timeline: Timeline,
 ): readonly VisualPresent[] {
   return sequence.members.map((member, index) => {
     const incoming = sequence.handoffs[index - 1];
@@ -389,7 +389,7 @@ export function lowerMediaSequencePresents(
       subjectId: sequence.id,
       span: { ...item.span },
       stacking: { ...item.stacking },
-      elements: lowerMediaItemElements(item, space, {
+      elements: lowerMediaItemElements(item, timeline, {
         includeHandoffWrapper: true,
         ...(handoffAnimation === undefined ? {} : { handoffAnimation }),
         lifecycleAnimationOverride: lifecycleAnimationWindow(

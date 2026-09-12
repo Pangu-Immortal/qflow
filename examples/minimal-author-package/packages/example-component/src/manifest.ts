@@ -1,8 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { compositionTypes } from "@qflow/qflow/composition";
 import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/author-kit";
-import { programSpaceTypes } from "@qflow/qflow/program-space";
-import { semanticTrackTypes } from "@qflow/qflow/semantic-track";
+import { timelineTypes } from "@qflow/qflow/timeline";
 import { temporalTypes } from "@qflow/qflow/temporal";
 import { mediaTypes } from "@qflow/qflow/media";
 import { svsRecipeType } from "@qflow/qflow/svs";
@@ -35,8 +34,7 @@ export const exampleManifest: ModuleManifest = {
     { module: artifactTypes.blob.module },
     { module: compositionTypes.visualTrack.module },
     { module: mediaTypes.fontStack.module },
-    { module: programSpaceTypes.programSpace.module },
-    { module: semanticTrackTypes.track.module },
+    { module: timelineTypes.track.module },
     { module: svsRecipeType.module },
     { module: temporalTypes.window.module },
   ],
@@ -46,7 +44,7 @@ export const exampleManifest: ModuleManifest = {
     name: producer.name,
     inputs: producer === exampleProducers.appendItems
       ? [{ name: "previous", type: exampleTypes.itemSet }, { name: "item", type: exampleTypes.itemSet }]
-      : [{ name: "space", type: programSpaceTypes.programSpace }, ...(producer === exampleProducers.renderMedia ? [{ name: "media", type: artifactTypes.blob }] : [])],
+      : [{ name: "timeline", type: timelineTypes.track }, ...(producer === exampleProducers.renderMedia ? [{ name: "media", type: artifactTypes.blob }] : [])],
     outputs: producer === exampleProducers.appendItems
       ? [{ name: "set", type: exampleTypes.itemSet }]
       : [{ name: "track", type: compositionTypes.visualTrack }],
@@ -56,11 +54,11 @@ export const exampleManifest: ModuleManifest = {
 
 const vocabulary = (summary: string, example: string) => ({
   summary,
-  appearance: "A deterministic, self-contained example surface rendered on the supplied ProgramSpace.",
+  appearance: "A deterministic, self-contained example surface rendered on the supplied Timeline.",
   preview: previewImage("Box.png"),
   attributes: [
     { name: "id", kind: "identifier" as const, required: true, summary: "Names this instance." },
-    { name: "semantic", kind: "reference" as const, required: true, accepts: [semanticTrackTypes.track], summary: "Selects the semantic timing track." },
+    { name: "timeline", kind: "reference" as const, required: true, accepts: [timelineTypes.track], summary: "Selects the complete Timeline." },
   ],
   ports: [{ name: "track", type: compositionTypes.visualTrack, summary: "The terminal VisualTrack." }],
   example,
@@ -68,9 +66,9 @@ const vocabulary = (summary: string, example: string) => ({
 });
 
 export const exampleMarkupSurfaces = [
-  { name: "box", tag: "Box", mode: "structured", outputs: [exampleTypes.box, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A framed box surface.", "<example:Box id=\"box\" semantic={speech.semantic}/>") , preview: previewImage("Box.png") } },
-  { name: "text", tag: "Text", mode: "structured", outputs: [exampleTypes.text, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A text-bearing surface.", "<example:Text id=\"title\" semantic={speech.semantic}>Hello</example:Text>"), preview: previewImage("Box.png") } },
-  { name: "media-slot", tag: "MediaSlot", mode: "structured", outputs: [exampleTypes.mediaSlot, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A media slot whose content is a graph input.", "<example:MediaSlot id=\"shot\" semantic={speech.semantic} media={shot-media}/>") , attributes: [...vocabulary("", "").attributes, { name: "media", kind: "reference" as const, required: false, accepts: [artifactTypes.blob], summary: "Optional image or video Blob Artifact." }], preview: previewImage("Box.png") } },
+  { name: "box", tag: "Box", mode: "structured", outputs: [exampleTypes.box, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A framed box surface.", "<example:Box id=\"box\" timeline={speech.timeline}/>") , preview: previewImage("Box.png") } },
+  { name: "text", tag: "Text", mode: "structured", outputs: [exampleTypes.text, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A text-bearing surface.", "<example:Text id=\"title\" timeline={speech.timeline}>Hello</example:Text>"), preview: previewImage("Box.png") } },
+  { name: "media-slot", tag: "MediaSlot", mode: "structured", outputs: [exampleTypes.mediaSlot, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A media slot whose content is a graph input.", "<example:MediaSlot id=\"shot\" timeline={speech.timeline} media={shot-media}/>") , attributes: [...vocabulary("", "").attributes, { name: "media", kind: "reference" as const, required: false, accepts: [artifactTypes.blob], summary: "Optional image or video Blob Artifact." }], preview: previewImage("Box.png") } },
   { name: "style", tag: "Style", mode: "structured", outputs: [exampleTypes.style], vocabulary: {
     summary: "Decodes one SVS Recipe and exact FontStackRef into a Style value.",
     attributes: [

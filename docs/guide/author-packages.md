@@ -35,7 +35,7 @@ appearance and meaningful events. A transition can accept a Moment for when the 
 a Selection for how long the scene appears. A pure animation can accept authored event times instead.
 Project those inputs onto the chosen clock, then use the resulting schedule to draw the scene.
 
-For an existing spoken performance, consume its SemanticTrack so picture sampling follows the same
+For an existing spoken performance, consume its Timeline so picture sampling follows the same
 takes and source positions as the speech. Other video inputs enter the timeline as normalized media.
 The [responsive explainer example](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/responsive-explainer)
 shows a continuously playing video moving from full screen to a side portrait inside an HTML scene.

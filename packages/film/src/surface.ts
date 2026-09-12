@@ -1,4 +1,4 @@
-import { createTemporalSpace, resolveTemporalContext } from "@qflow/temporal-markup";
+import { resolveTemporalContext } from "@qflow/temporal-markup";
 import { spatialTypes } from "@qflow/spatial";
 import { compositionTypes } from "@qflow/composition";
 import type { AudioTrack, Track, VisualTrack } from "@qflow/composition";
@@ -93,13 +93,13 @@ function trackKind(reference: SurfaceResolvedReference): "visual" | "audio" {
 }
 
 export const decodeFilmSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  exactAttributes(element, ["id", "canvas", element.attributes.space === undefined ? "semantic" : "space", "appearance"]);
+  exactAttributes(element, ["id", "canvas", "timeline", "appearance"]);
   const id = stringAttribute(element, "id");
   const canvas = requiredReference(element, "canvas", resolveReference);
   if (!sameType(canvas.type, spatialTypes.canvas)) {
     throw new Error(`${element.name}.canvas must reference CanvasSpace`);
   }
-  const time = createTemporalSpace({ id, element, ...resolveTemporalContext({ element, resolveReference }) });
+  const context = resolveTemporalContext({ element, resolveReference });
   const appearanceReference = requiredReference(element, "appearance", resolveReference);
   const appearance = filmAppearanceFromRecipe(
     recipe(appearanceReference, `${element.name}.appearance`).properties,
@@ -129,18 +129,18 @@ export const decodeFilmSurface: StructuredSurfaceHandler = ({ element, resolveRe
       value: { kind: "inline", value: program },
       range: element.range,
     }],
-    components: [...time.components, {
+    components: [{
       id,
       fragment: fragment.id,
       inputs: {
         program: { kind: "record", id: programId },
         canvas: canvas.ref,
-        space: time.space.ref,
+        timeline: context.timeline.ref,
         ...Object.fromEntries(tracks.map((track) => [track.name, track.source.ref])),
       },
       outputs: { composition: `${id}.composition` },
       range: element.range,
     }],
-    fragments: [...time.fragments, fragment],
+    fragments: [fragment],
   };
 };

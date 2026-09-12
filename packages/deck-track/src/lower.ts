@@ -1,3 +1,4 @@
+import type { Timeline } from "@qflow/timeline";
 import {
   assertVisualTrackIdentity,
   sealVisualTrack,
@@ -20,7 +21,6 @@ import type {
   MediaSampleLayerProgram,
   MediaVisualTrim,
 } from "@qflow/media-track";
-import type { ProgramSpace } from "@qflow/program-space";
 import { assertCanvasSpace } from "@qflow/spatial";
 import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
 
@@ -170,17 +170,17 @@ function samplingFor(input: {
   readonly relation: number;
   readonly stageStart: number;
   readonly stageDuration: number;
-  readonly space: ProgramSpace;
+  readonly timeline: Timeline;
 }): VisualTimedSampling | undefined {
   const timing = sourceTiming(input.layer);
   if (timing === undefined) return undefined;
-  assert(timing.frameRate.numerator === input.space.frameRate.numerator
-    && timing.frameRate.denominator === input.space.frameRate.denominator,
-  `DepthStack Card ${input.card.id} timed material must be normalized to ProgramSpace.`);
+  assert(timing.frameRate.numerator === input.timeline.frameRate.numerator
+    && timing.frameRate.denominator === input.timeline.frameRate.denominator,
+  `DepthStack Card ${input.card.id} timed material must be normalized to Timeline.`);
   const trim = trimFor(input.layer, timing.frameCount);
   if (input.relation === 0) {
     return resolveVisualSampling({
-      space: input.space,
+      timeline: input.timeline,
       sourceFrameRate: timing.frameRate,
       sourceFrameCount: timing.frameCount,
       targetFrameCount: input.stageDuration,
@@ -282,10 +282,10 @@ function labelElement(card: DepthStackCard, parent: string, order: number): Visu
 
 export function renderDepthStack(
   canvas: CanvasSpace,
-  space: ProgramSpace,
+  timeline: Timeline,
   program: DepthStackProgram,
 ): VisualTrack {
-  assertDepthStackProgramIdentity(program, space);
+  assertDepthStackProgramIdentity(program, timeline);
   assertCanvasSpace(canvas);
   const presents: VisualTrack["presents"][number][] = [];
   for (let stageIndex = 0; stageIndex < program.cards.length; stageIndex += 1) {
@@ -322,7 +322,7 @@ export function renderDepthStack(
       const samplingAnimationOverrides: Record<string, VisualAnimation | null> = {};
       for (const layer of card.material.layers) {
         if (layer.kind !== "sample") continue;
-        const sampling = samplingFor({ program, card, layer, relation, stageStart, stageDuration, space });
+        const sampling = samplingFor({ program, card, layer, relation, stageStart, stageDuration, timeline });
         if (sampling !== undefined) samplingOverrides[layer.id] = sampling;
         if (relation !== 0 && layer.samplingMotion !== undefined) samplingAnimationOverrides[layer.id] = null;
       }
@@ -337,7 +337,7 @@ export function renderDepthStack(
         stacking: { order: 0, tieBreak: card.id },
         sounds: [],
       };
-      const material = [...lowerMediaItemElements(mediaItem, space, {
+      const material = [...lowerMediaItemElements(mediaItem, timeline, {
         placementParent: group.poseParent,
         lifecycleAnimationOverride: null,
         samplingOverrides,
@@ -360,11 +360,11 @@ export function renderDepthStack(
     }
   }
   const track = sealVisualTrack({
-    programSpaceId: space.id,
+    programSpaceId: timeline.id,
     visualIr: "qflow.visual-ir@1",
     id: program.id,
     presents,
   });
-  assertVisualTrackIdentity(track, space);
+  assertVisualTrackIdentity(track, timeline);
   return track;
 }

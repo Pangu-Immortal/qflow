@@ -1,5 +1,5 @@
 import { sealVisualTrack } from "@qflow/qflow/composition";
-import type { ProgramSpace } from "@qflow/qflow/program-space";
+import type { Timeline } from "@qflow/qflow/timeline";
 import { canonicalize } from "@qflow/qflow/author-kit";
 import type { BlobRef, ComponentPackage, ProducerHandler, TypedRecord } from "@qflow/qflow/author-kit";
 import { VISUAL_IR_V1 } from "@qflow/qflow/visual-ir";
@@ -13,10 +13,10 @@ const output = (value: unknown) => ({ kind: "inline" as const, value: canonicali
 function blob(record: TypedRecord | undefined): BlobRef | undefined {
   return record?.value.kind === "blob" ? record.value : undefined;
 }
-function render(kind: string, space: ProgramSpace, media?: BlobRef) {
-  const frames = Math.max(1, Math.round(space.durationSec * space.frameRate.numerator / space.frameRate.denominator));
+function render(kind: string, timeline: Timeline, media?: BlobRef) {
+  const frames = Math.max(1, Math.round(timeline.durationSec * timeline.frameRate.numerator / timeline.frameRate.denominator));
   return sealVisualTrack({
-    programSpaceId: space.id,
+    programSpaceId: timeline.id,
     visualIr: VISUAL_IR_V1,
     id: `example-${kind}`,
     presents: [{ id: `present-${kind}`, span: { startFrame: 0, endFrameExclusive: frames }, stacking: { order: 0, tieBreak: kind }, elements: [{
@@ -26,7 +26,7 @@ function render(kind: string, space: ProgramSpace, media?: BlobRef) {
     ] }],
   });
 }
-const producer = (kind: string): { readonly handler: ProducerHandler } => ({ handler: ({ inputs }) => ({ outputs: { track: output(render(kind, inline<ProgramSpace>(inputs.space), blob(inputs.media))) }, needs: {} }) });
+const producer = (kind: string): { readonly handler: ProducerHandler } => ({ handler: ({ inputs }) => ({ outputs: { track: output(render(kind, inline<Timeline>(inputs.timeline), blob(inputs.media))) }, needs: {} }) });
 const appendItems: { readonly handler: ProducerHandler } = { handler: ({ inputs }) => ({ outputs: { set: output({ items: [inline<{ items: readonly unknown[] }>(inputs.previous).items, inline<{ items: readonly unknown[] }>(inputs.item).items].flat() }) }, needs: {} }) };
 
 export const exampleComponent = {

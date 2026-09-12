@@ -6,10 +6,10 @@ For a source video at a link, read [video download](video-downloads.md).
 For acquiring website screenshots, page recordings or local HTML graphics, read
 [browser capture](browser-capture.md).
 
-Media carries the visible performance and sound. Preparing it for a video answers two further
-questions: how it occupies the program's time, and which Script passage it realizes. Normalization
-establishes the frame clock and selected picture/audio streams. A SemanticTake adds the association
-with Script and the locations of its words and boundaries.
+Media carries picture and sound. Normalization establishes its frame clock, local duration and
+selected picture/audio streams. A SemanticTake adds the association with a Script passage and the
+local locations of its words and boundaries. [Timeline assembly](timeline.md) then determines where
+the prepared Take belongs in the complete work.
 
 ## Files and generated Outputs
 
@@ -81,21 +81,22 @@ For an already declared Script and prepared spoken performance:
 WhisperX supplies timed speech evidence; alignment locates the authored Script in that evidence.
 Script remains the wording authority, and this step establishes where its words occur in the
 performance. The result `opening-semantic.take` contains the same media and that Segment's local
-timing. Speech Track assembles Takes in their intended order and translates their local positions
-into program time.
+timing. [Timeline assembly](timeline.md) places Takes sequentially or at authored starts and
+translates their local positions into Program time.
 Use the performed language supported by the selected package and Endpoint.
 
 Audio-only A-roll follows the same path with audio-only media. Voice Clone produces the Segment's
 performed audio from its Script and the person's Voice Reference. Normalize that output with
 `video="none"`, `audio="default"` and `span-authority="audio"`, then align it to the same Segment.
-The resulting SemanticTake publishes semantic time and sound through Speech Track without inventing
+The resulting SemanticTake publishes semantic time and sound through Timeline assembly without inventing
 a visual performance; the work's Media, Typography or MG Tracks supply the picture.
 
 ## Empty Segments use their media boundaries
 
 An ordinary Script Segment such as `<empty></empty>` can carry a passage without words. Its prepared
 media gives it a duration, so the resulting SemanticTake has the Segment's start/end Anchors and no
-timed Tokens. It enters the same Speech Track assembly as a spoken Take.
+timed Tokens. It enters the same Timeline assembly as a spoken Take. An interval with no performance
+material can instead be left open by Timeline placement or extent, with graphics authored there directly.
 
 The semantic Surface maps an empty Segment directly to its prepared media domain:
 
@@ -106,7 +107,7 @@ The semantic Surface maps an empty Segment directly to its prepared media domain
 
 This performs boundary materialization without a transcription request because the Segment has no
 Tokens. Action, music or visual rhythm can determine the media duration. The ordinary SemanticTake
-enters Speech Track alongside spoken Takes.
+enters Timeline assembly alongside spoken Takes.
 
 ## Give a still a duration when that is its role
 

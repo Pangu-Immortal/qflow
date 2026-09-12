@@ -1,4 +1,4 @@
-import { createTemporalSpace, resolveTemporalContext } from "@qflow/temporal-markup";
+import { resolveTemporalContext } from "@qflow/temporal-markup";
 import { artifactTypes } from "@qflow/artifact";
 import { mediaTypes } from "@qflow/media";
 import type { FontStackRef } from "@qflow/media";
@@ -181,28 +181,27 @@ export const decodeDepthStackLabelSurface: StructuredSurfaceHandler = ({ element
 };
 
 export const decodeDepthStackSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  allowed(element, ["id", "semantic", "space", "canvas", "frame", "appearance", "until", "until-boundary"]);
+  allowed(element, ["id", "timeline", "canvas", "frame", "appearance", "until", "until-boundary"]);
   const id = text(element, "id");
   const context = resolveTemporalContext({ element, resolveReference });
-  const time = createTemporalSpace({ id: id, element, ...context });
   const canvas = reference(element.attributes.canvas, `${element.name}.canvas`, spatialTypes.canvas, resolveReference);
   const frame = reference(element.attributes.frame, `${element.name}.frame`, spatialTypes.frame, resolveReference);
   const appearance = recipe(element.attributes.appearance, `${element.name}.appearance`, resolveReference);
   const terminal = createTemporalInstantProjection({
-    id: `${id}.terminal`, subjectId: id, element, ...context, space: time.space, resolveReference,
+    id: `${id}.terminal`, subjectId: id, element, ...context, resolveReference,
     semanticAttribute: "until", boundaryAttribute: "until-boundary", boundaryFallback: "end", projectedAttribute: false,
   });
   const records: SurfaceRecordDraft[] = [...terminal.records];
-  const temporalComponents: SurfaceComponentDraft[] = [...time.components, ...terminal.components];
-  const temporalFragments = [...time.fragments, ...terminal.fragments];
+  const temporalComponents: SurfaceComponentDraft[] = [...terminal.components];
+  const temporalFragments = [...terminal.fragments];
   const headerId = `${id}.header`;
   const specId = `${id}.spec`;
   records.push(
     { id: headerId, type: depthStackTypes.header, value: { kind: "inline", value: sealDepthStackHeader({ id }) }, range: element.range },
     { id: specId, type: depthStackTypes.spec, value: { kind: "inline", value: decodeDepthStackSpec(appearance) }, range: element.range },
   );
-  const inputs: Record<string, typeof time.space.ref> = {
-    canvas: canvas.ref, frame: frame.ref, header: { kind: "record", id: headerId }, space: time.space.ref,
+  const inputs: Record<string, typeof context.timeline.ref> = {
+    canvas: canvas.ref, frame: frame.ref, header: { kind: "record", id: headerId }, timeline: context.timeline.ref,
     spec: { kind: "record", id: specId }, terminal: terminal.ref,
   };
   const cards: DepthStackFragmentCard[] = [];
@@ -225,7 +224,7 @@ export const decodeDepthStackSurface: StructuredSurfaceHandler = ({ element, res
       : reference(child.attributes.extent, `${child.name}.extent`, spatialTypes.extent, resolveReference);
     if (sourceKind === "still" && extent === undefined) throw new Error(`${child.name}.extent is required for a still image.`);
     if (sourceKind !== "still" && extent !== undefined) throw new Error(`${child.name}.extent belongs only to a still image.`);
-    const activation = createTemporalInstantProjection({ id: `${id}.${cardId}`, subjectId: cardId, element: child, ...context, space: time.space, resolveReference });
+    const activation = createTemporalInstantProjection({ id: `${id}.${cardId}`, subjectId: cardId, element: child, ...context, resolveReference });
     records.push(...activation.records); temporalComponents.push(...activation.components); temporalFragments.push(...activation.fragments);
     const cardAppearance = child.attributes.appearance === undefined
       ? appearance : recipe(child.attributes.appearance, `${child.name}.appearance`, resolveReference);
@@ -249,7 +248,7 @@ export const decodeDepthStackSurface: StructuredSurfaceHandler = ({ element, res
     inputs[sampleSpecName] = { kind: "record", id: sampleId };
     inputs[cardSpecName] = { kind: "record", id: cardSpecId };
     inputs[activationName] = activation.ref;
-    let labelRef: typeof time.space.ref;
+    let labelRef: typeof context.timeline.ref;
     if (child.attributes.label === undefined) {
       const labelId = `${id}.card.${suffix}.label-none`;
       records.push({ id: labelId, type: depthStackTypes.cardLabel, value: { kind: "inline", value: noDepthStackCardLabel() }, range: child.range });

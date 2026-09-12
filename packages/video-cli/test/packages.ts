@@ -18,10 +18,10 @@ import runMarkup from "../../run-markup/src/activation.js";
 import script from "../../script/src/activation.js";
 import seedance from "../../seedance/src/activation.js";
 import speechAlignment from "../../speech-alignment/src/activation.js";
-import speechTrack from "../../speech-track/src/activation.js";
+import timelineAuthor from "../../timeline-author/src/activation.js";
 import speech from "../../speech/src/activation.js";
 import speechEvidence from "../../speech-evidence/src/activation.js";
-import semanticTrack from "../../semantic-track/src/activation.js";
+import timeline from "../../timeline/src/activation.js";
 import spatial from "../../spatial/src/activation.js";
 import temporal from "../../temporal/src/activation.js";
 import visualIr from "../../visual-ir/src/activation.js";
@@ -43,7 +43,7 @@ export const videoTestPackages = [
   bind("@qflow/program-space", programSpace),
   bind("@qflow/speech", speech),
   bind("@qflow/speech-evidence", speechEvidence),
-  bind("@qflow/semantic-track", semanticTrack),
+  bind("@qflow/timeline", timeline),
   bind("@qflow/visual-ir", visualIr),
   bind("@qflow/composition", composition),
   bind("@qflow/svs", svs),
@@ -56,7 +56,7 @@ export const videoTestPackages = [
   bind("@qflow/caption", caption),
   bind("@qflow/caption-fine", captionFine),
   bind("@qflow/speech-alignment", speechAlignment),
-  bind("@qflow/speech-track", speechTrack),
+  bind("@qflow/timeline-author", timelineAuthor),
   bind("@qflow/whisperx", whisperX),
   bind("@qflow/spatial", spatial),
   bind("@qflow/temporal", temporal),

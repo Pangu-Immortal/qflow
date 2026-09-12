@@ -1,64 +1,55 @@
 import type { CaptionDocument } from "@qflow/narrative";
-import { projectSemanticProgramSpace, tokenFrameSpan } from "@qflow/semantic-track";
-import type { SemanticTrack } from "@qflow/semantic-track";
+import { projectTimelineSpace, tokenFrameSpan } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 
 import { CaptionTimingError } from "./error.js";
 import { assertCaptionDocument } from "./display.js";
-import { assertCaptionProgramForDocument } from "./style.js";
-import type { CaptionProgram, TimedCaptionProjection, TimedCaptionCue, TimedCaptionUnit } from "./types.js";
+import type { TimedCaptionProjection, TimedCaptionCue, TimedCaptionUnit } from "./types.js";
 
 export function temporalizeCaptionDocument(
   document: CaptionDocument,
-  semantic: SemanticTrack,
-  program: CaptionProgram,
+  semantic: Timeline,
 ): TimedCaptionProjection {
   assertCaptionDocument(document);
-  assertCaptionProgramForDocument(program, document);
-  const space = projectSemanticProgramSpace(semantic);
-  if (document.narrativeId !== semantic.narrativeId) {
-    throw new CaptionTimingError("CAPTION_NARRATIVE", "CaptionDocument and SemanticTrack belong to different Narratives.");
+  const space = projectTimelineSpace(semantic);
+  if (semantic.narrativeId !== undefined && document.narrativeId !== semantic.narrativeId) {
+    throw new CaptionTimingError("CAPTION_NARRATIVE", "CaptionDocument and Timeline belong to different Narratives.");
   }
-  const styleByUnit = new Map(program.runs.flatMap((run) => run.unitIds.map((unitId) => [unitId, run.styleId] as const)));
-  const muted = new Set(program.mutedUnitIds);
   const breaks = new Set(document.cueBreaks.map((cueBreak) => cueBreak.afterUnitId));
-  const timed: Array<{ unit: CaptionDocument["units"][number]; styleId: string; timing: TimedCaptionUnit }> = [];
+  const timed: Array<{ unit: CaptionDocument["units"][number]; timing: TimedCaptionUnit }> = [];
   for (const unit of document.units) {
-    if (muted.has(unit.id)) continue;
-    const styleId = styleByUnit.get(unit.id);
-    if (styleId === undefined) throw new CaptionTimingError("CAPTION_UNIT", `Caption unit ${unit.id} has no Style.`);
     const window = tokenFrameSpan(semantic, unit.sourceTokenIds);
-    if (window === undefined) throw new CaptionTimingError("CAPTION_SPEECH_COVERAGE", `Caption unit ${unit.id} is absent from the SemanticTrack.`);
+    if (window === undefined) continue;
     if (window.endFrameExclusive < window.startFrame) {
       throw new CaptionTimingError("CAPTION_SPEECH_ORDER", `Caption unit ${unit.id} references speech Tokens in reverse order.`);
     }
     const startFrame = window.startFrame;
     const endFrameExclusive = Math.max(startFrame + 1, window.endFrameExclusive);
-    timed.push({ unit, styleId, timing: { unitId: unit.id, startFrame, endFrameExclusive } });
+    timed.push({ unit, timing: { unitId: unit.id, startFrame, endFrameExclusive } });
   }
   const cues: TimedCaptionCue[] = [];
-  let current: { styleId: string; units: TimedCaptionUnit[]; segmentId: string; turnId: string } | undefined;
+  let current: { units: TimedCaptionUnit[]; segmentId: string; turnId: string } | undefined;
   const flush = (): void => {
     if (current === undefined || current.units.length === 0) return;
     cues.push({
-      id: `${program.id}:cue:${cues.length + 1}`,
-      styleId: current.styleId,
+      id: `${document.id}:cue:${cues.length + 1}`,
       startFrame: current.units[0]!.startFrame,
       endFrameExclusive: current.units.at(-1)!.endFrameExclusive,
       units: current.units,
     });
     current = undefined;
   };
+  const documentOrder = new Map(document.units.map((unit, index) => [unit.id, index]));
   for (const [index, entry] of timed.entries()) {
     const previousDocumentUnit = index === 0 ? undefined : timed[index - 1]!.unit;
     const mustBreak = current !== undefined && (
-      current.styleId !== entry.styleId
-      || current.segmentId !== entry.unit.segmentId
+      current.segmentId !== entry.unit.segmentId
       || current.turnId !== entry.unit.turnId
-      || (previousDocumentUnit !== undefined && breaks.has(previousDocumentUnit.id))
+      || (previousDocumentUnit !== undefined && (breaks.has(previousDocumentUnit.id)
+        || documentOrder.get(entry.unit.id)! !== documentOrder.get(previousDocumentUnit.id)! + 1))
     );
     if (mustBreak) flush();
     if (current === undefined) current = {
-      styleId: entry.styleId,
       units: [],
       segmentId: entry.unit.segmentId,
       turnId: entry.unit.turnId,
@@ -68,34 +59,8 @@ export function temporalizeCaptionDocument(
   flush();
   const result: TimedCaptionProjection = {
     spaceId: space.id,
-    narrativeId: semantic.narrativeId,
+    narrativeId: document.narrativeId,
     documentId: document.id,
-    cues,
-  };
-  assertTimedCaptionProjection(result);
-  return result;
-}
-
-export function applyCaptionMute(
-  projection: TimedCaptionProjection,
-  program: CaptionProgram,
-  document: CaptionDocument,
-): TimedCaptionProjection {
-  assertCaptionDocument(document);
-  assertCaptionProgramForDocument(program, document);
-  if (projection.documentId !== document.id || projection.narrativeId !== document.narrativeId) {
-    throw new Error("Caption Mute received another CaptionDocument or Narrative");
-  }
-  const muted = new Set(program.mutedUnitIds);
-  const cues = projection.cues.flatMap((cue) => {
-    const units = cue.units.filter((unit) => !muted.has(unit.unitId));
-    if (units.length === 0) return [];
-    return [{ ...cue, units, startFrame: units[0]!.startFrame, endFrameExclusive: units.at(-1)!.endFrameExclusive }];
-  });
-  const result = {
-    spaceId: projection.spaceId,
-    narrativeId: projection.narrativeId,
-    documentId: projection.documentId,
     cues,
   };
   assertTimedCaptionProjection(result);
@@ -109,7 +74,7 @@ export function assertTimedCaptionProjection(projection: TimedCaptionProjection)
   const cueIds = new Set<string>();
   const unitIds = new Set<string>();
   for (const cue of projection.cues) {
-    if (cue.id.length === 0 || cueIds.has(cue.id) || cue.styleId.length === 0 || cue.units.length === 0
+    if (cue.id.length === 0 || cueIds.has(cue.id) || cue.units.length === 0
       || !Number.isSafeInteger(cue.startFrame) || !Number.isSafeInteger(cue.endFrameExclusive)
       || cue.startFrame < 0 || cue.endFrameExclusive <= cue.startFrame) throw new Error("TimedCaptionProjection contains an invalid Cue");
     cueIds.add(cue.id);
