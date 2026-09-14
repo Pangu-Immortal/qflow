@@ -1,3 +1,4 @@
+import { t, userText, uiAttribute, uiText, uiAttr } from "./i18n.js";
 import type { Range, StudioSnapshot, StudioSourceView } from "../shared.js";
 import { icon, setIcon } from "./icons.js";
 import { intentTones } from "./markers.js";
@@ -77,10 +78,10 @@ export function createCodePane(): CodePane {
     <strong class="code-location" data-path></strong>
     <div class="code-actions">
       <span class="code-save-state" data-save-state></span>
-      <button type="button" class="icon-button code-wrap" data-wrap aria-label="Wrap lines" aria-pressed="false" title="Wrap lines">
+      <button type="button" class="icon-button code-wrap" data-wrap ${uiAttribute("aria-label", "source.wrap-lines")} aria-pressed="false" ${uiAttribute("title", "source.wrap-lines")}>
         ${icon("wrap")}
       </button>
-      <button type="button" class="icon-button code-mode" data-mode aria-label="Edit source" title="Edit source">
+      <button type="button" class="icon-button code-mode" data-mode ${uiAttribute("aria-label", "source.edit-source")} ${uiAttribute("title", "source.edit-source")}>
         <span data-mode-icon>${icon("edit")}</span>
       </button>
     </div>`;
@@ -88,7 +89,7 @@ export function createCodePane(): CodePane {
   element.className = "code";
   element.innerHTML = `
     <div class="code-scroll"><svg class="range-canvas" aria-hidden="true"></svg></div>
-    <textarea class="code-editor" data-editor spellcheck="false" aria-label="SVML source"></textarea>`;
+    <textarea class="code-editor" data-editor spellcheck="false" ${uiAttribute("aria-label", "source.svml-source")}></textarea>`;
   const path = toolbar.querySelector<HTMLElement>("[data-path]")!;
   const scroll = element.querySelector<HTMLElement>(".code-scroll")!;
   const canvas = element.querySelector<SVGSVGElement>(".range-canvas")!;
@@ -116,8 +117,8 @@ export function createCodePane(): CodePane {
     wrapped = value;
     element.classList.toggle("is-wrapped", wrapped);
     wrap.setAttribute("aria-pressed", String(wrapped));
-    wrap.setAttribute("aria-label", wrapped ? "Keep lines unwrapped" : "Wrap lines");
-    wrap.title = wrapped ? "Keep lines unwrapped" : "Wrap lines";
+    uiAttr(wrap, "aria-label", wrapped ? "source.keep-lines-unwrapped" : "source.wrap-lines");
+    uiAttr(wrap, "title", wrapped ? "source.keep-lines-unwrapped" : "source.wrap-lines");
     window.requestAnimationFrame(draw);
   };
 
@@ -125,8 +126,8 @@ export function createCodePane(): CodePane {
     editing = value;
     element.classList.toggle("is-editing", editing);
     setIcon(modeIcon, editing ? "eye" : "edit");
-    mode.setAttribute("aria-label", editing ? "Read source" : "Edit source");
-    mode.title = editing ? "Read source" : "Edit source";
+    uiAttr(mode, "aria-label", editing ? "source.read-source" : "source.edit-source");
+    uiAttr(mode, "title", editing ? "source.read-source" : "source.edit-source");
     if (editing) {
       editor.value = sourceText;
       editingRevision = snapshotRevision;
@@ -143,7 +144,7 @@ export function createCodePane(): CodePane {
     saveInFlight = true;
     let accepted = false;
     let acceptedRevision = savingRevision;
-    saveState.textContent = "Saving";
+    uiText(saveState, "common.saving");
     saveState.className = "code-save-state saving";
     try {
       const response = await fetch("/__studio/source", {
@@ -153,7 +154,7 @@ export function createCodePane(): CodePane {
       });
       if (!response.ok) {
         const reason = await response.text();
-        throw new Error(reason || `Save failed (${response.status})`);
+        throw new Error(reason || t("source.save-failed-status", { status: response.status }));
       }
       const result = await response.json() as { readonly revision?: unknown };
       if (typeof result.revision === "number") acceptedRevision = result.revision;
@@ -163,15 +164,15 @@ export function createCodePane(): CodePane {
         sourceText = savingText;
         dirty = false;
       }
-      saveState.textContent = "Saved";
+      uiText(saveState, "common.saved");
       saveState.className = "code-save-state saved";
       window.setTimeout(() => {
-        if (!dirty) saveState.textContent = "";
+        if (!dirty) userText(saveState, "");
       }, 1200);
     } catch (error) {
-      saveState.textContent = error instanceof Error && error.message.includes("changed")
-        ? "Changed outside Studio"
-        : "Save failed";
+      uiText(saveState, error instanceof Error && error.message.includes("changed")
+        ? "source.changed-outside-studio"
+        : "common.save-failed");
       saveState.className = "code-save-state error";
     } finally {
       saveInFlight = false;
@@ -189,7 +190,7 @@ export function createCodePane(): CodePane {
   wrap.addEventListener("click", () => setWrapped(!wrapped));
   editor.addEventListener("input", () => {
     dirty = true;
-    saveState.textContent = "Unsaved";
+    uiText(saveState, "source.unsaved");
     saveState.className = "code-save-state dirty";
     if (saveTimer !== undefined) window.clearTimeout(saveTimer);
     saveTimer = window.setTimeout(() => void save(), 480);
@@ -308,7 +309,7 @@ export function createCodePane(): CodePane {
           imports: [],
         };
       if (activeSource !== undefined && activeSource.path !== sourceFile.path && dirty) {
-        saveState.textContent = "Saving before switch";
+        uiText(saveState, "source.saving-before-switch");
         saveState.className = "code-save-state saving";
         void save();
         return false;

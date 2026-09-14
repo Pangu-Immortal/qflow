@@ -10,6 +10,14 @@ Open a Run in the browser to inspect its composition, Sources and Results.
 
   qflow studio --run <build.svrun> [--runtime <qflow.runtime.json>]
     [--port <number>] [--workspace <directory>] [--package-root <directory>]
+    [--locale-pack <./language.json | installed-package/language.json>]...
+
+  qflow studio --check-locale <./language.json | installed-package/language.json>
+    [--package-root <directory>]
+
+Language packs are explicit JSON data. Relative files use the current directory;
+package exports resolve from --package-root (the project by default).
+--check-locale lists missing translations and unknown IDs without opening a Run.
 
 Relative command-line paths start at the current directory; --workspace selects
 the project, without rebasing those paths. Otherwise the nearest package.json
@@ -24,9 +32,9 @@ function invalidArguments(message: string): never {
   throw new Error(`${message}. See qflow studio --help.`);
 }
 
-function argumentsByName(argv: readonly string[]): ReadonlyMap<string, string> {
-  const accepted = new Set(["run", "runtime", "port", "workspace", "package-root"]);
-  const result = new Map<string, string>();
+function argumentsByName(argv: readonly string[]): ReadonlyMap<string, readonly string[]> {
+  const accepted = new Set(["run", "runtime", "port", "workspace", "package-root", "locale-pack", "check-locale"]);
+  const result = new Map<string, string[]>();
   for (let index = 0; index < argv.length; index += 2) {
     const flag = argv[index];
     const value = argv[index + 1];
@@ -35,7 +43,7 @@ function argumentsByName(argv: readonly string[]): ReadonlyMap<string, string> {
     }
     const name = flag.slice(2);
     if (!accepted.has(name)) invalidArguments(`Unknown option --${name}`);
-    result.set(name, value);
+    result.set(name, [...result.get(name) ?? [], value]);
   }
   return result;
 }
@@ -47,22 +55,12 @@ export async function runStudio(argv: readonly string[], io: Pick<CliIo, "write"
   }
   const values = argumentsByName(argv[0] === "--" ? argv.slice(1) : argv);
   const invokedFrom = process.env.INIT_CWD ?? process.cwd();
-  const runArgument = values.get("run");
-  if (runArgument === undefined || runArgument.trim().length === 0) invalidArguments("Missing --run");
-  const { createServer } = await import("vite");
+  const runArgument = values.get("run")?.at(-1);
+
   const { findRuntimeProfile, resolveProjectRoot } = await import("@qflow/project-context-node");
-  const { resolveDistributionPackageImport } = await import("@qflow/package-loader-node");
-  const { videoCliDistribution, videoStudioCompanionPackages } = await import("@qflow/video-cli");
-  const { openStudioBuildLibrary } = await import("./src/build-library.js");
-  const { loadStudioCompanionRegistry } = await import("./src/companion-assembly.js");
-  const { loadStudioDomain } = await import("./src/domain.js");
-  const { loadStudioRun } = await import("./src/run.js");
-  const { studioPlugin } = await import("./src/server.js");
-  const { studioFeedbackPlugin } = await import("./src/feedback-server.js");
-  const { inspectStudioRun } = await import("./src/studio-preflight.js");
-  const runPath = resolve(invokedFrom, runArgument);
-  const packageRootArgument = values.get("package-root");
-  const workspaceArgument = values.get("workspace");
+
+  const packageRootArgument = values.get("package-root")?.at(-1);
+  const workspaceArgument = values.get("workspace")?.at(-1);
   const requestedWorkspaceRoot = workspaceArgument === undefined
     ? undefined
     : resolve(invokedFrom, workspaceArgument);
@@ -73,7 +71,26 @@ export async function runStudio(argv: readonly string[], io: Pick<CliIo, "write"
   const packageRoot = packageRootArgument === undefined
     ? workspaceRoot
     : resolve(invokedFrom, packageRootArgument);
-  const runtimeArgument = values.get("runtime");
+  const { describeLanguagePack, loadLanguagePack, studioLanguages, studioLocalizationPlugin } = await import("./src/localization-node.js");
+  const checkLocale = values.get("check-locale")?.at(-1);
+  if (checkLocale !== undefined) {
+    io.write(describeLanguagePack(await loadLanguagePack(checkLocale, invokedFrom, packageRoot)) + "\n");
+    return;
+  }
+  if (runArgument === undefined || runArgument.trim().length === 0) invalidArguments("Missing --run");
+  const runPath = resolve(invokedFrom, runArgument);
+  const { createServer } = await import("vite");
+  const { resolveDistributionPackageImport } = await import("@qflow/package-loader-node");
+  const { videoCliDistribution, videoStudioCompanionPackages } = await import("@qflow/video-cli");
+  const { openStudioBuildLibrary } = await import("./src/build-library.js");
+  const { loadStudioCompanionRegistry } = await import("./src/companion-assembly.js");
+  const { loadStudioDomain } = await import("./src/domain.js");
+  const { loadStudioRun } = await import("./src/run.js");
+  const { studioPlugin } = await import("./src/server.js");
+  const { studioFeedbackPlugin } = await import("./src/feedback-server.js");
+  const { inspectStudioRun } = await import("./src/studio-preflight.js");
+  const languages = await studioLanguages(values.get("locale-pack") ?? [], invokedFrom, packageRoot);
+  const runtimeArgument = values.get("runtime")?.at(-1);
   const selectedRuntime = runtimeArgument === undefined
     ? await findRuntimeProfile(workspaceRoot)
     : undefined;
@@ -89,7 +106,7 @@ export async function runStudio(argv: readonly string[], io: Pick<CliIo, "write"
     ...(packageRoot === workspaceRoot ? [] : [`  Package root       ${packageRoot}`]),
     "",
   ].join("\n"));
-  const port = Number(values.get("port") ?? "5179");
+  const port = Number(values.get("port")?.at(-1) ?? "5179");
   if (!Number.isSafeInteger(port) || port <= 0) invalidArguments("--port must be a positive integer");
 
   const distributionPackageRoot = videoCliDistribution.packageRoot ?? resolve(here, "../..");
@@ -137,7 +154,7 @@ export async function runStudio(argv: readonly string[], io: Pick<CliIo, "write"
       // available for Source and material previews.
       fs: { allow: [workspaceRoot, packageRoot, distributionPackageRoot, here] },
     },
-    plugins: [distributionImports, studioFeedbackPlugin(workspaceRoot, runPath), studioPlugin({
+    plugins: [distributionImports, studioLocalizationPlugin(languages), studioFeedbackPlugin(workspaceRoot, runPath), studioPlugin({
       source,
       runPath,
       workspaceRoot,

@@ -1,3 +1,4 @@
+import { uiAttr, uiText, userText } from "./i18n.js";
 import type { StudioArtifactView } from "../shared.js";
 import { audioPreview } from "./material-preview.js";
 
@@ -35,7 +36,7 @@ export function createArtifactPreview(changed: () => void) {
     error.setAttribute("role", "status");
     const failed = () => {
       if (generation !== current) return;
-      error.textContent = "This media could not be opened in the browser.";
+      uiText(error, "player.media-failed");
       error.hidden = false;
       changed();
     };
@@ -61,14 +62,14 @@ export function createArtifactPreview(changed: () => void) {
       if (audio) {
         const wave = document.createElement("div");
         wave.className = "stage-audio-wave";
-        wave.textContent = "Audio";
+        uiText(wave, "library.audio");
         element.append(wave);
         void audioPreview(url).then((waveform) => {
           if (generation !== current || waveform === undefined) return;
           const image = document.createElement("img");
           image.src = waveform;
-          image.alt = "Audio waveform";
-          wave.replaceChildren(image);
+          uiAttr(image, "alt", "player.audio-waveform");
+          userText(wave, ""); wave.replaceChildren(image);
         });
       }
     }

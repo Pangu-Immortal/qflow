@@ -1,3 +1,4 @@
+import { uiLabel, uiAttribute, uiText, uiAttr, userText } from "./i18n.js";
 import { createArtifactPreview } from "./artifact-preview.js";
 import type { StudioArtifactView, StudioSnapshot } from "../shared.js";
 import { createOverlay } from "./overlay.js";
@@ -31,31 +32,31 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
   element.className = "stage";
   element.innerHTML = `
     <div class="stage-heading">
-      <div class="stage-title">${icon("preview")}<strong>Preview</strong></div>
-      <button type="button" class="stage-return" hidden>Back to composition</button>
+      <div class="stage-title">${icon("preview")}<strong>${uiLabel("player.preview")}</strong></div>
+      <button type="button" class="stage-return" hidden>${uiLabel("player.back-to-composition")}</button>
     </div>
     <div class="stage-viewport">
       <div class="stage-scaler">
-        <iframe title="Preview" sandbox="allow-scripts allow-same-origin" allow="autoplay"></iframe>
+        <iframe ${uiAttribute("title", "player.preview")} sandbox="allow-scripts allow-same-origin" allow="autoplay"></iframe>
       </div>
     </div>
     <div class="stage-progress" hidden>
-      <input class="stage-scrubber" type="range" min="0" max="0" value="0" step="0.01" aria-label="Media time" hidden>
+      <input class="stage-scrubber" type="range" min="0" max="0" value="0" step="0.01" ${uiAttribute("aria-label", "player.media-time")} hidden>
     </div>
     <div class="stage-bar">
       <span class="stage-time" hidden></span>
       <div class="stage-transport">
-      <button type="button" data-previous aria-label="Previous frame" title="Previous frame">
+      <button type="button" data-previous ${uiAttribute("aria-label", "player.previous-frame")} ${uiAttribute("title", "player.previous-frame")}>
         ${icon("previous")}
       </button>
-      <button type="button" data-play aria-label="Play">
+      <button type="button" data-play ${uiAttribute("aria-label", "player.play")}>
         <span data-icon>${icon("play")}</span>
       </button>
-      <button type="button" data-next aria-label="Next frame" title="Next frame">
+      <button type="button" data-next ${uiAttribute("aria-label", "player.next-frame")} ${uiAttribute("title", "player.next-frame")}>
         ${icon("next")}
       </button>
       </div>
-      <button type="button" data-mute aria-label="Mute" class="stage-mute">
+      <button type="button" data-mute ${uiAttribute("aria-label", "player.mute")} class="stage-mute">
         <span data-mute-icon>${icon("volume")}</span>
       </button>
     </div>`;
@@ -124,7 +125,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     event.preventDefault(); stop(); closeSelectionMenu();
     const menu = document.createElement("div");
     menu.className = "selection-menu";
-    menu.setAttribute("role", "menu"); menu.setAttribute("aria-label", "Elements at this point");
+    menu.setAttribute("role", "menu"); uiAttr(menu, "aria-label", "player.elements-at-this-point");
     for (const hit of hits) {
       const option = document.createElement("button"); option.type = "button";
       option.setAttribute("role", "menuitem"); option.textContent = hit.display.title;
@@ -204,7 +205,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     const wasPlaying = playing;
     playing = false;
     setIcon(playIcon, "play");
-    play.setAttribute("aria-label", "Play");
+    uiAttr(play, "aria-label", "player.play");
     if (raf !== 0) cancelAnimationFrame(raf);
     raf = 0;
     // Settle the picture on the frame the transport stopped at.
@@ -219,7 +220,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     if (playing) { stop(); return; }
     playing = true;
     setIcon(playIcon, "pause");
-    play.setAttribute("aria-label", "Pause");
+    uiAttr(play, "aria-label", "player.pause");
     const total = state.snapshot.space.frameCount;
     const rate = fps(state.snapshot);
     fromFrame = state.playhead.frame >= total - 1 ? 0 : state.playhead.frame;
@@ -245,7 +246,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
 
   const applyMuted = (): void => {
     setIcon(muteIcon, muted ? "muted" : "volume");
-    mute.setAttribute("aria-label", muted ? "Unmute" : "Mute");
+    uiAttr(mute, "aria-label", muted ? "player.unmute" : "player.mute");
     if (artifactPreview.media !== undefined) artifactPreview.media.muted = muted;
     (iframe.contentWindow as SeekWindow | null)?.__qflowSetMuted?.(muted);
   };
@@ -286,12 +287,12 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     previous.disabled = next.disabled = play.disabled;
     scrubber.disabled = duration <= 0;
     scrubber.step = "0.01";
-    scrubber.setAttribute("aria-label", "Media time");
+    uiAttr(scrubber, "aria-label", "player.media-time");
     scrubber.max = String(duration);
     scrubber.value = String(media?.currentTime ?? 0);
     time.textContent = `${clock(media?.currentTime ?? 0)} / ${clock(duration)}`;
     setIcon(playIcon, media !== undefined && !media.paused ? "pause" : "play");
-    play.setAttribute("aria-label", media !== undefined && !media.paused ? "Pause" : "Play");
+    uiAttr(play, "aria-label", media !== undefined && !media.paused ? "player.pause" : "player.play");
   });
   viewport.append(artifactPreview.element);
   const compositionTime = (): void => {
@@ -302,7 +303,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     scrubber.step = String(1 / rate);
     scrubber.max = String(Math.max(0, state.snapshot.space.frameCount - 1) / rate);
     scrubber.value = String(state.playhead.frame / rate);
-    scrubber.setAttribute("aria-label", "Composition time");
+    uiAttr(scrubber, "aria-label", "player.composition-time");
     time.textContent = `${clock(state.playhead.frame / rate)} / ${clock(state.snapshot.space.frameCount / rate)}`;
   };
   scrubber.addEventListener("input", () => {
@@ -318,14 +319,14 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     compositionTime();
     transport.hidden = mute.hidden = false;
     play.disabled = previous.disabled = next.disabled = false;
-    previous.title = "Previous frame";
-    previous.setAttribute("aria-label", previous.title);
-    next.title = "Next frame";
-    next.setAttribute("aria-label", next.title);
-    title.textContent = "Preview";
+    uiAttr(previous, "title", "player.previous-frame");
+    uiAttr(previous, "aria-label", "player.previous-frame");
+    uiAttr(next, "title", "player.next-frame");
+    uiAttr(next, "aria-label", "player.next-frame");
+    uiText(title, "player.preview");
     title.removeAttribute("title");
     setIcon(playIcon, "play");
-    play.setAttribute("aria-label", "Play");
+    uiAttr(play, "aria-label", "player.play");
     fit();
     if (state !== undefined && ready) seekPicture(state.playhead.frame);
   };
@@ -335,12 +336,12 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     stop();
     scaler.hidden = true;
     back.hidden = false;
-    title.textContent = artifact.displayName ?? artifact.output;
+    userText(title, artifact.displayName ?? artifact.output);
     title.title = artifact.output;
-    previous.title = "Back 5 seconds";
-    next.title = "Forward 5 seconds";
-    previous.setAttribute("aria-label", previous.title);
-    next.setAttribute("aria-label", next.title);
+    uiAttr(previous, "title", "player.back-5-seconds");
+    uiAttr(next, "title", "player.forward-5-seconds");
+    uiAttr(previous, "aria-label", "player.back-5-seconds");
+    uiAttr(next, "aria-label", "player.forward-5-seconds");
     artifactPreview.open(artifact, muted);
     selectedArtifact(artifact.id);
   };
@@ -404,7 +405,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     showComposition() { if (artifactPreview.selected !== undefined) returnToComposition(); },
     renameArtifact(artifact) {
       const selected = artifactPreview.selected;
-      if (selected?.build === artifact.build && selected.output === artifact.output) title.textContent = artifact.displayName ?? artifact.output;
+      if (selected?.build === artifact.build && selected.output === artifact.output) userText(title, artifact.displayName ?? artifact.output);
     },
   };
 }

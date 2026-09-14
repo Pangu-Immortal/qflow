@@ -11,6 +11,7 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
     "declaration": true,
     "sourceMap": true,
     "rootDir": ".",

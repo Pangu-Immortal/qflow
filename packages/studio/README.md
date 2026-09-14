@@ -258,3 +258,16 @@ audibility regions and target-relative fades. Web Audio gain nodes schedule the 
 on the same clock, including silence and amplification above unity. Visual video elements stay muted;
 the Film's selected AudioTracks own composition sound. Seeking is silent. This path is independent of
 which component emitted a clip.
+
+### Interface language
+
+The globe menu to the left of **Studio / Comments** selects a language. English
+and Simplified Chinese are included; additional JSON language packs can be loaded
+with `--locale-pack`, from local files or installed package exports. The first
+visit follows browser preferences, and later visits remember the user's choice.
+Switching preserves the playhead, selection and comment draft.
+
+[Localizing Studio](LOCALIZATION.md) explains the message catalog, plural forms,
+translation checks and language-pack distribution. Only Studio-owned interface
+text is translated; Companion labels, project content and raw diagnostics retain
+their original text. The Companion ABI is unchanged.

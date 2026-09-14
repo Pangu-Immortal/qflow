@@ -34,6 +34,7 @@ Live Builds additionally need Python 3.10–3.13, uv, ffmpeg and Chromium. The
 | A new Author Package | [Adding an Author Package](https://qflow.ai/guide/author-packages/) |
 | A new Provider | [Adding a Provider](https://qflow.ai/guide/providers/) |
 | Component internals | [Component Anatomy](https://qflow.ai/guide/component-anatomy/) |
+| Studio interface translations | [Localizing Studio](packages/studio/LOCALIZATION.md) |
 | Compilation, Runs and Builds | [Runtime](https://qflow.ai/guide/runtime/) |
 | Naming, module boundaries, wire data | [Conventions](https://qflow.ai/guide/conventions/) |
 | Tests and environment-gated suites | [Testing](https://qflow.ai/guide/testing/) |

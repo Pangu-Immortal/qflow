@@ -1,3 +1,4 @@
+import { t, uiDate, uiLabel, uiAttribute, uiText, uiAttr, type Message } from "./i18n.js";
 import type {
   StudioArtifactView,
   StudioLibraryView,
@@ -38,19 +39,19 @@ function formatBytes(value: number): string {
   return `${(value / 1_000_000_000).toFixed(1)} GB`;
 }
 
-const date = new Intl.DateTimeFormat(undefined, {
-  month: "short",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+function localizedSidebarItem(input: { label: Message; icon: string; selected: boolean; select(): void }): HTMLButtonElement {
+  const button = sidebarItem(input);
+  uiAttr(button, "title", input.label);
+  uiAttr(button, "aria-label", input.label);
+  return button;
+}
 
-function emptyState(iconName: string, title: string, detail: string): HTMLElement {
+function emptyState(iconName: string, title: Message, detail: Message): HTMLElement {
   const node = document.createElement("div");
   node.className = "library-empty";
   node.innerHTML = `<span class="library-empty-icon">${icon(iconName)}</span><strong></strong><p></p>`;
-  node.querySelector("strong")!.textContent = title;
-  node.querySelector("p")!.textContent = detail;
+  uiText(node.querySelector("strong")!, title);
+  uiText(node.querySelector("p")!, detail);
   return node;
 }
 
@@ -77,9 +78,9 @@ function taskCard(task: StudioTaskView, selected: boolean, select: () => void, s
   node.dataset.taskId = task.id;
   const source = task.run ?? task.source;
   const title = task.title ?? stem(source);
-  const statuses: Record<StudioTaskView["status"], string> = {
-    queued: "Queued", running: "Running", waiting: "Waiting", complete: "Completed",
-    failed: "Failed", cancelled: "Cancelled", "saving-result": "Saving", attention: "Needs attention",
+  const statuses: Record<StudioTaskView["status"], Message> = {
+    queued: "common.queued", running: "common.running", waiting: "common.waiting", complete: "common.completed",
+    failed: "common.failed", cancelled: "common.cancelled", "saving-result": "common.saving", attention: "common.needs-attention",
   };
   node.innerHTML = `
     <div class="task-state" aria-hidden="true">${icon(task.ongoing ? "when" : task.status === "complete" ? "check" : task.status === "failed" ? "alert" : "tasks")}</div>
@@ -89,18 +90,24 @@ function taskCard(task: StudioTaskView, selected: boolean, select: () => void, s
       <div class="task-progress" data-progress></div>
       <div class="task-detail" data-detail></div>
     </div>
-    <button type="button" class="task-open" aria-label="View task media" title="View media">${icon("arrowRight")}</button>`;
+    <button type="button" class="task-open" ${uiAttribute("aria-label", "library.view-task-media")} ${uiAttribute("title", "library.view-media")}>${icon("arrowRight")}</button>`;
   const name = node.querySelector<HTMLButtonElement>(".task-name")!;
   name.textContent = title;
   name.addEventListener("click", (event) => { event.stopPropagation(); select(); });
-  node.querySelector<HTMLElement>(".task-status")!.textContent = statuses[task.status];
+  uiText(node.querySelector<HTMLElement>(".task-status")!, statuses[task.status]);
   const time = node.querySelector("time")!;
   time.dateTime = new Date(task.createdAt).toISOString();
-  time.textContent = date.format(task.createdAt);
+  uiDate(time, task.createdAt);
   const progress = task.ongoing ? taskProgress(task) : undefined;
   const progressNode = node.querySelector<HTMLElement>("[data-progress]")!;
   if (progress === undefined) progressNode.remove();
-  else { progressNode.textContent = progress; progressNode.title = progress; }
+  else {
+    progressNode.textContent = progress; progressNode.title = progress;
+    if (!task.operations.some(operation => operation.status === "pending" && operation.phase !== undefined) && task.requests !== undefined) {
+      uiText(progressNode, "tasks.progress", task.requests);
+      uiAttr(progressNode, "title", "tasks.progress", task.requests);
+    }
+  }
   const detailNode = node.querySelector<HTMLElement>("[data-detail]")!;
   if (task.detail === undefined) detailNode.remove();
   else {
@@ -109,10 +116,10 @@ function taskCard(task: StudioTaskView, selected: boolean, select: () => void, s
     message.textContent = task.detail;
     detailNode.append(message);
     const copy = document.createElement("button");
-    copy.type = "button"; copy.className = "task-copy-error"; copy.textContent = "Copy error";
+    copy.type = "button"; copy.className = "task-copy-error"; uiText(copy, "tasks.copy-error");
     copy.addEventListener("click", (event) => {
       event.stopPropagation();
-      void navigator.clipboard.writeText(task.detail!).then(() => { copy.textContent = "Copied"; }, () => { copy.textContent = "Select the text to copy"; });
+      void navigator.clipboard.writeText(task.detail!).then(() => { uiText(copy, "common.copied"); }, () => { uiText(copy, "tasks.copy-manually"); });
     });
     detailNode.append(copy);
     detailNode.addEventListener("click", (event) => { event.stopPropagation(); if (!node.classList.contains("selected")) select(); });
@@ -122,11 +129,11 @@ function taskCard(task: StudioTaskView, selected: boolean, select: () => void, s
   return node;
 }
 
-function artifactKind(mediaType: string): { readonly label: string; readonly icon: string } {
-  if (mediaType.startsWith("video/")) return { label: "Video", icon: "video" };
-  if (mediaType.startsWith("image/")) return { label: "Image", icon: "image" };
-  if (mediaType.startsWith("audio/")) return { label: "Audio", icon: "waveform" };
-  return { label: "Data", icon: "code" };
+function artifactKind(mediaType: string): { readonly label: Message; readonly icon: string } {
+  if (mediaType.startsWith("video/")) return { label: "library.video", icon: "video" };
+  if (mediaType.startsWith("image/")) return { label: "library.image", icon: "image" };
+  if (mediaType.startsWith("audio/")) return { label: "library.audio", icon: "waveform" };
+  return { label: "library.data", icon: "code" };
 }
 
 function sizeThumbnail(media: HTMLElement, width: number, height: number): void {
@@ -140,7 +147,7 @@ function artifactCard(artifact: StudioArtifactView, open: (artifact: StudioArtif
   const kind = artifactKind(artifact.mediaType);
   const link = document.createElement("div");
   link.tabIndex = 0;
-  link.className = `artifact-card artifact-${kind.label.toLowerCase()}${artifact.highlighted ? " artifact-highlighted" : ""}`;
+  link.className = `artifact-card artifact-${artifact.mediaType.split("/")[0]}${artifact.highlighted ? " artifact-highlighted" : ""}`;
   const query = new URLSearchParams({
     build: artifact.build,
     output: artifact.output,
@@ -158,10 +165,10 @@ function artifactCard(artifact: StudioArtifactView, open: (artifact: StudioArtif
       <span class="artifact-glyph">${icon(kind.icon)}</span>
       <span class="artifact-type"></span>
     </div>`;
-  link.querySelector<HTMLElement>(".artifact-type")!.textContent = kind.label;
+  uiText(link.querySelector<HTMLElement>(".artifact-type")!, kind.label);
   const preview = link.querySelector<HTMLElement>(".artifact-preview")!;
   preview.setAttribute("role", "button");
-  preview.setAttribute("aria-label", `Preview ${title}`);
+  uiAttr(preview, "aria-label", "library.preview-name", { name: title });
   preview.addEventListener("click", () => open(artifact));
   const name = createArtifactName({
     name: title,
@@ -173,11 +180,11 @@ function artifactCard(artifact: StudioArtifactView, open: (artifact: StudioArtif
         body: JSON.stringify({ build: artifact.build, output: artifact.output, displayName }),
       });
       const result = await response.json() as { displayName?: string; error?: string };
-      if (!response.ok || typeof result.displayName !== "string") throw new Error(result.error ?? "Could not save the name");
+      if (!response.ok || typeof result.displayName !== "string") throw new Error(result.error ?? t("library.name-failed"));
       artifact = { ...artifact, displayName: result.displayName };
       link.dataset.displayName = result.displayName;
       renamed(artifact);
-      preview.setAttribute("aria-label", `Preview ${result.displayName}`);
+      uiAttr(preview, "aria-label", "library.preview-name", { name: result.displayName });
       preview.title = [result.displayName, ...preview.title.split("\n").slice(1)].join("\n");
       return result.displayName;
     },
@@ -191,7 +198,7 @@ function artifactCard(artifact: StudioArtifactView, open: (artifact: StudioArtif
   if (artifact.mediaType.startsWith("image/")) {
     const image = document.createElement("img");
     image.addEventListener("load", () => sizeThumbnail(image, image.naturalWidth, image.naturalHeight));
-    image.addEventListener("error", () => { link.classList.add("preview-unavailable"); link.querySelector<HTMLElement>(".artifact-type")!.textContent = "Preview unavailable"; });
+    image.addEventListener("error", () => { link.classList.add("preview-unavailable"); uiText(link.querySelector<HTMLElement>(".artifact-type")!, "library.preview-unavailable"); });
     image.src = href;
     image.alt = "";
     image.loading = "lazy";
@@ -204,11 +211,11 @@ function artifactCard(artifact: StudioArtifactView, open: (artifact: StudioArtif
     video.dataset.previewSource = href;
     video.setAttribute("aria-hidden", "true");
     const label = link.querySelector<HTMLElement>(".artifact-type")!;
-    label.textContent = "Video · Loading preview";
+    uiText(label, "library.video-loading-preview");
     const ready = () => {
       if (video.readyState < 2 || video.seeking) return;
       video.classList.add("is-ready");
-      label.textContent = "Video";
+      uiText(label, "library.video");
     };
     video.addEventListener("loadedmetadata", () => {
       sizeThumbnail(video, video.videoWidth, video.videoHeight);
@@ -216,7 +223,7 @@ function artifactCard(artifact: StudioArtifactView, open: (artifact: StudioArtif
     }, { once: true });
     video.addEventListener("loadeddata", ready);
     video.addEventListener("seeked", ready);
-    video.addEventListener("error", () => { label.textContent = "Preview unavailable"; link.classList.add("preview-unavailable"); });
+    video.addEventListener("error", () => { uiText(label, "library.preview-unavailable"); link.classList.add("preview-unavailable"); });
     link.querySelector<HTMLElement>(".artifact-preview")!.prepend(video);
   } else if (artifact.mediaType.startsWith("audio/")) {
     const waveform = document.createElement("img");
@@ -229,7 +236,7 @@ function artifactCard(artifact: StudioArtifactView, open: (artifact: StudioArtif
     title,
     artifact.mediaType,
     formatBytes(artifact.size),
-    date.format(artifact.createdAt),
+    new Date(artifact.createdAt).toLocaleString(),
     artifact.ownerBuild === undefined ? artifact.filePath : `${artifact.ownerBuild}/${artifact.filePath}`,
     ...artifact.origins.map((origin) => `${origin.run ?? origin.source} · ${origin.build} · ${origin.output}`),
     artifact.buildNote,
@@ -241,15 +248,15 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
   const element = document.createElement("section");
   element.className = "library";
   element.innerHTML = `
-    <div class="library-tabs" role="tablist" aria-label="Studio library">
+    <div class="library-tabs" role="tablist" ${uiAttribute("aria-label", "library.studio-library")}>
       <button type="button" class="library-tab active" data-library-tab="source" role="tab" aria-selected="true">
-        <span>${icon("code")}</span><strong>Source</strong>
+        <span>${icon("code")}</span><strong>${uiLabel("library.source")}</strong>
       </button>
       <button type="button" class="library-tab" data-library-tab="tasks" role="tab" aria-selected="false">
-        <span>${icon("tasks")}</span><strong>Tasks</strong>
+        <span>${icon("tasks")}</span><strong>${uiLabel("library.tasks")}</strong>
       </button>
       <button type="button" class="library-tab" data-library-tab="artifacts" role="tab" aria-selected="false">
-        <span>${icon("results")}</span><strong>Artifacts</strong>
+        <span>${icon("results")}</span><strong>${uiLabel("library.artifacts")}</strong>
       </button>
     </div>
     <section class="library-view active" data-library-view="source">
@@ -258,19 +265,22 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
     <section class="library-view" data-library-view="artifacts">
     </section>`;
 
-  const sourcePanel = createSidebarPanel("panel", "Referenced source files");
+  const sourcePanel = createSidebarPanel("panel", "library.referenced-source-files");
+  uiAttr(sourcePanel.navigation, "aria-label", "library.referenced-source-files");
   sourcePanel.toolbar.append(code.toolbar);
   sourcePanel.content.classList.add("source-code");
   sourcePanel.content.append(code.element);
   element.querySelector('[data-library-view="source"]')!.append(sourcePanel.element);
-  const taskPanel = createSidebarPanel("panel", "Task categories");
-  taskPanel.toolbar.innerHTML = `<span class="code-location" data-task-heading>All tasks</span><div class="task-context" data-task-context hidden></div>
-    <button type="button" class="library-refresh" data-library-refresh aria-label="Refresh tasks" title="Refresh">${icon("refresh")}</button>`;
+  const taskPanel = createSidebarPanel("panel", "library.task-categories");
+  uiAttr(taskPanel.navigation, "aria-label", "library.task-categories");
+  taskPanel.toolbar.innerHTML = `<span class="code-location" data-task-heading>${uiLabel("library.all-tasks")}</span><div class="task-context" data-task-context hidden></div>
+    <button type="button" class="library-refresh" data-library-refresh ${uiAttribute("aria-label", "library.refresh-tasks")} ${uiAttribute("title", "common.refresh")}>${icon("refresh")}</button>`;
   taskPanel.content.innerHTML = `<div class="media-status" data-library-status="tasks" role="status" hidden></div><div class="task-list" data-task-list></div>`;
   element.querySelector('[data-library-view="tasks"]')!.append(taskPanel.element);
-  const mediaPanel = createSidebarPanel("panel", "Media categories");
-  mediaPanel.toolbar.innerHTML = `<span class="code-location" data-media-heading>All media</span><div class="task-context" data-task-context hidden></div>
-    <button type="button" class="library-refresh" data-library-refresh aria-label="Refresh media" title="Refresh">${icon("refresh")}</button>`;
+  const mediaPanel = createSidebarPanel("panel", "library.media-categories");
+  uiAttr(mediaPanel.navigation, "aria-label", "library.media-categories");
+  mediaPanel.toolbar.innerHTML = `<span class="code-location" data-media-heading>${uiLabel("library.all-media")}</span><div class="task-context" data-task-context hidden></div>
+    <button type="button" class="library-refresh" data-library-refresh ${uiAttribute("aria-label", "library.refresh-media")} ${uiAttribute("title", "common.refresh")}>${icon("refresh")}</button>`;
   mediaPanel.content.innerHTML = `<div class="media-status" data-library-status="artifacts" role="status" hidden></div><div class="artifact-grid" data-artifact-grid></div>`;
   element.querySelector('[data-library-view="artifacts"]')!.append(mediaPanel.element);
   const sourceList = sourcePanel.navigation;
@@ -300,7 +310,7 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
     node.className = "library-continuation";
     node.dataset.moreSection = section;
     node.dataset.before = cursor;
-    node.textContent = "Loading more…";
+    uiText(node, "library.loading-more");
     return node;
   };
   const selectArtifact = (id: string | undefined): void => {
@@ -367,7 +377,7 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
       back.type = "button"; back.className = "task-context-name";
       back.innerHTML = "<span></span>";
       back.querySelector("span")!.textContent = task.title ?? stem(task.run ?? task.source);
-      back.title = `${task.title ?? stem(task.run ?? task.source)} · Return to task`;
+      uiAttr(back, "title", "library.task-return", { name: task.title ?? stem(task.run ?? task.source) });
       back.addEventListener("click", () => {
         taskFilter = "all";
         switchTo("tasks", false);
@@ -376,7 +386,7 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
       });
       const clear = document.createElement("button");
       clear.type = "button"; clear.className = "task-context-clear";
-      clear.innerHTML = icon("close"); clear.title = "Clear task filter"; clear.setAttribute("aria-label", clear.title);
+      clear.innerHTML = icon("close"); uiAttr(clear, "title", "library.clear-task-filter"); uiAttr(clear, "aria-label", "library.clear-task-filter");
       clear.addEventListener("click", () => {
         selectedTask = undefined; delete libraries.artifacts; renderTaskContext(); renderTasks();
         if (active === "artifacts") { renderArtifacts(); void refresh("artifacts"); }
@@ -389,11 +399,12 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
     for (const node of Array.from(taskList.querySelectorAll("[data-more-section]"))) morePages.unobserve(node);
     const library = libraries.tasks;
     const tasks = library?.tasks ?? [];
-    const filters = [["all", "All tasks", "component"], ["ongoing", "In progress", "when"], ["finished", "Finished", "check"]] as const;
+    const filters = [["all", "library.all-tasks", "component"], ["ongoing", "library.in-progress", "when"], ["finished", "library.finished", "check"]] as const;
     const heading = taskPanel.toolbar.querySelector<HTMLElement>("[data-task-heading]")!;
-    heading.textContent = filters.find(([id]) => id === taskFilter)![1];
-    heading.title = library?.runtime === undefined ? "Saved project Results · no Runtime selected" : library.runtime;
-    taskPanel.navigation.replaceChildren(...filters.map(([id, label, mark]) => sidebarItem({
+    uiText(heading, filters.find(([id]) => id === taskFilter)![1]);
+    if (library?.runtime === undefined) uiAttr(heading, "title", "tasks.saved-only");
+    else { heading.removeAttribute("data-ui-title"); heading.title = library.runtime; }
+    taskPanel.navigation.replaceChildren(...filters.map(([id, label, mark]) => localizedSidebarItem({
       label, icon: mark, selected: id === taskFilter,
       select: () => { taskFilter = id; taskList.scrollTop = 0; renderTasks(); },
     })));
@@ -413,10 +424,10 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
       () => selectTask(task), () => { selectTask(task); switchTo("artifacts"); }));
     renderTaskContext();
     if (tasksToShow.length === 0) entries.push(emptyState("tasks",
-      library === undefined && request !== undefined ? "Loading tasks…" : taskFilter === "ongoing" ? "No tasks in progress" : "No tasks here",
+      library === undefined && request !== undefined ? "library.loading-tasks" : taskFilter === "ongoing" ? "library.no-tasks-in-progress" : "library.no-tasks-here",
       taskFilter === "ongoing" && library?.runtime === undefined
-        ? "No Runtime is selected. Saved tasks are available under Finished."
-        : "Refresh to read the latest task status."));
+        ? "tasks.no-runtime"
+        : "tasks.refresh-hint"));
     // Runtime activity is returned in full on the first page. Older pages contain Results only.
     if (taskFilter !== "ongoing" && library?.next !== undefined) entries.push(continuation("tasks", library.next));
     taskList.replaceChildren(...entries);
@@ -429,12 +440,12 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
     const cards = new Map(Array.from(artifactGrid.querySelectorAll<HTMLElement>("[data-artifact-id]"), (card) => [card.dataset.artifactId!, card]));
     const library = libraries.artifacts;
     const artifacts = library?.artifacts ?? [];
-    const filters = [["all", "All media", "component"], ["video", "Videos", "video"], ["image", "Images", "image"], ["audio", "Audio", "waveform"]] as const;
+    const filters = [["all", "library.all-media", "component"], ["video", "library.videos", "video"], ["image", "library.images", "image"], ["audio", "library.audio", "waveform"]] as const;
     const heading = mediaPanel.toolbar.querySelector<HTMLElement>("[data-media-heading]")!;
-    heading.textContent = filters.find(([id]) => id === artifactFilter)?.[1] ?? "All media";
-    heading.title = "Media category";
+    uiText(heading, filters.find(([id]) => id === artifactFilter)?.[1] ?? "library.all-media");
+    uiAttr(heading, "title", "library.media-category");
     renderTaskContext();
-    artifactFilters.replaceChildren(...filters.map(([id, label, mark]) => sidebarItem({
+    artifactFilters.replaceChildren(...filters.map(([id, label, mark]) => localizedSidebarItem({
       label, icon: mark, selected: id === artifactFilter,
       select: () => {
         artifactFilter = id;
@@ -466,8 +477,8 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
       if (video !== null) { video.removeAttribute("src"); video.load(); }
     }
     if (shown.length === 0) entries.push(emptyState("results",
-      library === undefined && request !== undefined ? "Loading media…" : artifactFilter === "all" ? "No media" : `No ${artifactFilter} files`,
-      "Images, videos and audio published as file Outputs appear here, including those from ongoing Builds."));
+      library === undefined && request !== undefined ? "library.loading-media" : artifactFilter === "all" ? "library.no-media" : "library.no-files-in-this-category",
+      "library.media-hint"));
     if (library?.next !== undefined) entries.push(continuation("artifacts", library.next));
     artifactGrid.replaceChildren(...entries);
     selectArtifact(selectedArtifact);
@@ -497,7 +508,7 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
     const controller = new AbortController();
     request = controller;
     const status = element.querySelector<HTMLElement>(`[data-library-status="${section}"]`)!;
-    status.textContent = "Refreshing…";
+    uiText(status, "library.refreshing");
     status.hidden = true;
     element.classList.add("is-refreshing");
     try {
@@ -507,7 +518,7 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
       if (section === "artifacts" && selectedTask !== undefined) query.set("build", selectedTask.id);
       const response = await fetch(`/__studio/library?${query.toString()}`, { signal: controller.signal });
       const value = await response.json() as StudioLibraryView | { readonly error: string };
-      if (!response.ok || "error" in value) throw new Error("error" in value ? value.error : "Library unavailable");
+      if (!response.ok || "error" in value) throw new Error("error" in value ? value.error : t("library.unavailable"));
       if (controller.signal.aborted) return;
       const previous = libraries[section];
       if (before === undefined || previous === undefined) libraries[section] = value;
@@ -522,18 +533,18 @@ export function createLibraryPane(code: CodePane, openArtifact: (artifact: Studi
       }
       if (section === "tasks") renderTasks();
       else renderArtifacts();
-      status.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+      uiText(status, "library.updated", { time: new Date().toLocaleTimeString() });
     } catch (error) {
       if (!controller.signal.aborted) {
         const detail = error instanceof Error ? error.message : String(error);
         status.hidden = false;
-        status.textContent = `Refresh failed: ${detail}${libraries[section] === undefined ? "" : " · Previous view retained"}`;
+        uiText(status, libraries[section] === undefined ? "library.refresh-failed" : "library.refresh-failed-retained", { detail });
       }
     } finally {
       if (request === controller) {
         request = undefined;
         element.classList.remove("is-refreshing");
-        if (controller.signal.aborted) status.textContent = "Refresh interrupted";
+        if (controller.signal.aborted) uiText(status, "library.refresh-interrupted");
       }
     }
   };

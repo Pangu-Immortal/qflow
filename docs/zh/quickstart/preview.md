@@ -3,7 +3,7 @@ title: Qflow Studio
 description: 浏览编排、Source 和 Result，编辑作品的时机与外观。
 ---
 
-Studio 在浏览器中打开可编辑的视频项目。你可以播放编排、逐帧查看，在时间线上选择词语或图形，并修改组件公开的属性。交付成片时，也可以一起打开 Studio，展示作品的可编辑结构。
+Studio 在浏览器中打开可编辑的视频项目。你可以播放编排、逐帧查看，在时间线上选择词语或图形，并修改组件公开的属性。切换到 **Comments** 可以用更大的画面查看作品、按时间留下反馈。两个视图都可以在导出之前使用。
 
 ## 打开要编辑的作品
 
@@ -14,6 +14,8 @@ qflow studio --run build.svrun
 
 打开命令打印的网址。Studio 使用这份 Run 选择的 Author Source 和素材。编辑时要保留已生成素材，可以通过 [`build-record` 与 `satisfy`](./run.md) 选择已完成的 Output。
 
+**Studio / Comments 左侧的地球菜单**可以切换界面语言，内置英文和简体中文。首次访问跟随浏览器语言，之后记住你的选择。切换时保留播放位置、选中状态和评论草稿；稿子、视频字幕和评论内容保持原样。
+
 | 参数 | 用途 |
 | --- | --- |
 | `--run <file.svrun>` | 选择要打开的 Run。 |
@@ -21,7 +23,13 @@ qflow studio --run build.svrun
 | `--workspace <directory>` | 设置 Source 访问与修改的项目边界。 |
 | `--port <number>` | 指定浏览器服务端口，默认请求 `5179`。 |
 
-所选目标需要指向一个 Film 及其时间来源。说话表演可以提供 Timeline，动画可以使用作者声明的 ProgramSpace，两者都支持视觉组件与属性编辑。显示编排所需的素材应已通过 Run 提供。Studio 可以完成所选 Runtime 支持的媒体准备；生成和编码渲染通过 `qflow build` 提交。
+所选目标需要指向一个 Film 及其 Timeline。放入的 Take 带来对应的语义锚点；纯动画也使用 Timeline，声明结束时间、不放入 Take 即可。两者都支持视觉组件与属性编辑。显示编排所需的素材应已通过 Run 提供。Studio 可以完成所选 Runtime 支持的媒体准备；生成和编码渲染通过 `qflow build` 提交。
+
+## 在 Comments 一起看作品
+
+打开命令打印的、以 `#comments` 结尾的网址，可以在画面旁看到评论区。点击画面播放或暂停，在选定时间留下意见；点击已保存的评论即可回到对应帧。评论按时间排列，编号按留言顺序显示。
+
+评论保存在项目的 `FEEDBACK.json` 中，你和 Agent 都可以读取、修改、标记完成。发送评论会保存意见；写好后告诉 Agent 开始处理即可。切换到 **Studio** 则可以查看时间线、Source、Result，以及组件公开的控件。打开两个视图都不会编码视频，也不会提交导出 Build。
 
 ## 浏览项目
 
@@ -45,10 +53,12 @@ Inspector 显示所选实体的属性。可编辑字段与时间线手柄由组�
 
 Source 编辑修改所选 `.svml`、`.svs` 或 `.svrun` 文件。支持的 Inspector 修改和时间线手势会写回对应作者值，然后用同一份 Run 重新编译。移动共享的 Selection 或 Moment，会改变它在 Script 中的位置，使用它的组件随之更新；修改共享 Frame 或 Recipe，也可能影响多个画面元素。
 
-编辑后查看保存状态。重新编译失败时，Studio 显示错误并恢复之前的文件。结构化 Inspector 草稿使用 Apply 或 Reset。Run 和已加载 Source 文件会被监听；更换安装包、组件代码或 Runtime 选择后，需要重启 Studio 来加载这些变化。
+编辑后查看保存状态。重新编译失败时，Studio 显示错误并恢复之前的文件。列表与记录控件在结束编辑时保存完整、有效的值；未填写完整时会显示提示。Run 和已加载 Source 文件会被监听；更换安装包、组件代码或 Runtime 选择后，需要重启 Studio 来加载这些变化。
 
 ## 声音与交付
 
-预览播放包含 Film 选中的 AudioTrack，例如口播、音乐与音效。导出视频的音频由渲染的媒体管线装配。交付编码后的成片，同时可以用 Studio 浏览其可编辑编排。
+预览播放包含 Film 选中的 AudioTrack，例如口播、音乐与音效。导出视频的音频由渲染的媒体管线装配。作品准备好交付后，运行导出 Build 得到编码后的成片；Studio 与 Comments 仍可用于查看可编辑作品、沟通后续修改。
 
 组件作者可以阅读 [Studio 时间谱系](../guide/studio-temporal-windows.md) 了解语义编辑，以及 [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-adapter/README.md) 了解如何公开组件实体和控件。
+
+需要其他界面语言时，可以通过 `--locale-pack ./language.json` 加载本地 JSON 译文。[本地化指南](https://github.com/qflow-ai/qflow/blob/main/packages/studio/LOCALIZATION.md) 介绍译文格式、缺项检查和语言包分享方法。

@@ -1,6 +1,6 @@
 # Work in Studio
 
-Read this when opening a Run, using its timeline and Inspector, or giving a project component a
+Read this when opening a Run, choosing its interface language, using its timeline and Inspector, or giving a project component a
 useful Studio presentation. For component implementation, read [Companion authoring](studio-companions.md).
 [Review](review.md) owns the judgment made from the visible work;
 [Track authoring](track-authoring.md) owns the component's production behavior.
@@ -35,6 +35,32 @@ Changing package code, adding a package import, changing Companion activation, o
 Runtime or Result repository requires restarting that Studio session: those implementations and
 selections are loaded at startup. A browser refresh alone does not reload the server-side modules.
 Stop only the relevant Studio process; stopping Studio does not cancel a submitted Build.
+
+## Choose the interface language
+
+The globe menu to the left of **Studio / Comments** changes the interface language. English and
+Simplified Chinese are included. The first visit follows browser language preferences; later visits
+remember the user's choice. Switching preserves the playhead, selection and comment draft. When
+introducing the review, point out this menu if it helps the user work in their preferred language.
+This choice affects Studio's interface, not the video's Script, captions or user comments;
+component-owned names and Companion labels retain their authored text.
+
+Additional languages are ordinary JSON data, loaded explicitly when opening Studio:
+
+```bash
+qflow studio --check-locale ./studio-ja.json
+qflow studio --run build.svrun --locale-pack ./studio-ja.json
+```
+
+For a new translation, copy `packages/studio/locales/en.json` from the installed Distribution.
+Set `locale`, the native language `name`, and `direction` (`ltr` or `rtl`); translate `messages`
+while keeping their IDs and named variables such as `{count}`. Missing entries use English.
+The check command reports missing entries, unknown IDs and invalid variables without opening a Run.
+Relative file paths start at the command's working directory. Repeat `--locale-pack` for several
+languages, or pass an installed package's JSON export instead, such as
+`--locale-pack @your-scope/studio-ja/locale.json`. A local file is enough; sharing it as a package
+is optional. Restart Studio to load changed language files. The installed
+`packages/studio/LOCALIZATION.md` covers plural forms and JSON package exports.
 
 ## Discuss the work while composing
 

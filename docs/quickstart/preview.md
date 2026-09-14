@@ -5,7 +5,7 @@ description: Explore a composition, its Sources and Results, and edit its timing
 
 Studio opens an editable video project in the browser. Play the composition, move through its
 frames, select words or graphics on the timeline, and change the properties a component exposes.
-It is also a useful way to hand over a finished project alongside the exported video.
+Switch to **Comments** for a larger picture and timestamped feedback. Both views work before export.
 
 ## Open the work you want to edit
 
@@ -18,6 +18,11 @@ Open the address printed by the command. Studio uses the Author Source and mater
 that Run. To keep generated material while editing, select completed Outputs with
 [`build-record` and `satisfy`](./run.md#reusing-results).
 
+The **globe menu**, to the left of **Studio / Comments**, selects the interface language.
+English and Simplified Chinese are included. The first visit follows your browser language;
+later visits remember your choice. Switching preserves the playhead, selection and comment draft.
+It changes the interface, while your Script, video captions and comments keep their own content.
+
 | Argument | Use |
 | --- | --- |
 | `--run <file.svrun>` | Select the Run to open. |
@@ -25,11 +30,22 @@ that Run. To keep generated material while editing, select completed Outputs wit
 | `--workspace <directory>` | Set the project boundary for Source access and edits. |
 | `--port <number>` | Request a browser-server port; the default is `5179`. |
 
-The selected target must lead to one Film and its time source. A spoken performance supplies a
-Timeline; an animation can supply an authored ProgramSpace. Both support visual components and
+The selected target must lead to one Film and its Timeline. Placed Takes add their semantic anchors;
+an animation can use a Timeline with an explicit end and no Takes. Both support visual components and
 property editing. The material needed to display the composition must already be available through
 the Run. Studio can perform media preparation supported by the selected Runtime; submit generation
 and encoded renders through `qflow build`.
+
+## Review together in Comments
+
+Open the printed URL ending in `#comments` to watch the current composition with a notes column.
+Click the picture to play or pause, then leave a comment at the selected time. Clicking a saved note
+returns to that frame. Notes appear in time order; their numbers follow submission order.
+
+Comments are saved in the project's `FEEDBACK.json`. You and your Agent can read, edit and mark them
+complete. Sending a note saves it; tell your Agent when the feedback is ready to work through.
+Switch to **Studio** to explore the timeline, Sources, Results and the controls components expose.
+Opening either view does not encode a video or submit an export Build.
 
 ## Explore the project
 
@@ -65,16 +81,22 @@ Moving a shared Selection or Moment changes its position in the Script, so all c
 that change. Editing a shared Frame or Recipe can likewise affect several appearances.
 
 Check the save status after an edit. If recompilation fails, Studio reports the error and restores
-the previous files. Use Apply or Reset for a structured Inspector draft. The Run and loaded Source
+the previous files. List and record controls save complete, valid values when editing ends and show
+a completion hint for incomplete values. The Run and loaded Source
 files are watched; restart Studio after changing installed packages, component code or Runtime
 selection so those changes are loaded too.
 
 ## Sound and delivery
 
 Preview playback includes the AudioTracks selected in Film, such as speech, music and effects.
-The exported video's audio is assembled by the render's media pipeline. Deliver the encoded video;
-Studio lets the recipient explore the editable composition as well.
+The exported video's audio is assembled by the render's media pipeline. When the composition is
+ready for delivery, run its export Build to create the encoded video. Studio and Comments remain
+available to explore the editable work and discuss further changes.
 
 For component authors, [Studio Temporal Lineage](../guide/studio-temporal-windows.md) explains semantic
 editing, and the [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-adapter/README.md)
 explains how to expose component entities and controls.
+
+To add another interface language, load a local JSON translation with `--locale-pack ./language.json`.
+The [localization guide](https://github.com/qflow-ai/qflow/blob/main/packages/studio/LOCALIZATION.md)
+explains translation files, checking missing entries and sharing a language pack.

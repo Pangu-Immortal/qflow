@@ -1,3 +1,4 @@
+import { uiAttr, uiText, t } from "./i18n.js";
 import type { StudioSnapshot } from "../shared.js";
 import { feedbackClock } from "../feedback.js";
 
@@ -11,10 +12,11 @@ export function createScrubPreview(container: HTMLElement) {
   const element = document.createElement("div");
   element.className = "scrub-preview";
   element.hidden = true;
-  element.innerHTML = '<div class="scrub-preview-picture"><span>Loading frame…</span></div><div class="scrub-preview-time"></div>';
+  element.innerHTML = '<div class="scrub-preview-picture"><span></span></div><div class="scrub-preview-time"></div>';
   element.setAttribute("aria-hidden", "true");
   const picture = element.querySelector<HTMLElement>(".scrub-preview-picture")!;
   const status = picture.querySelector<HTMLElement>("span")!;
+  uiText(status, "player.frame-loading");
   const time = element.querySelector<HTMLElement>(".scrub-preview-time")!;
   container.append(element);
   let iframe: HTMLIFrameElement | undefined;
@@ -34,7 +36,7 @@ export function createScrubPreview(container: HTMLElement) {
         const target = current.contentWindow as PreviewWindow | null;
         const placed = await target?.__qflowSeekFrame?.(frame);
         if (iframe !== current) return;
-        if (!placed) throw new Error("Frame unavailable");
+        if (!placed) throw new Error(t("player.frame-unavailable"));
         displayed = frame;
         if (requested === frame) {
           current.style.visibility = "visible";
@@ -43,7 +45,7 @@ export function createScrubPreview(container: HTMLElement) {
         }
       }
     } catch {
-      if (iframe === current) status.textContent = "Frame unavailable";
+      if (iframe === current) uiText(status, "player.frame-unavailable");
     } finally {
       if (iframe === current) seeking = false;
     }
@@ -65,7 +67,7 @@ export function createScrubPreview(container: HTMLElement) {
         picture.style.width = `${canvasWidth * scale}px`;
         picture.style.height = `${canvasHeight * scale}px`;
         const created = document.createElement("iframe");
-        created.title = "Hovered frame";
+        uiAttr(created, "title", "player.hovered-frame");
         created.tabIndex = -1;
         created.setAttribute("sandbox", "allow-scripts allow-same-origin");
         created.setAttribute("allow", "autoplay 'none'");
@@ -80,7 +82,7 @@ export function createScrubPreview(container: HTMLElement) {
             if (iframe !== created) return;
             ready = true;
             await seek();
-          })().catch(() => { if (iframe === created) status.textContent = "Frame unavailable"; });
+          })().catch(() => { if (iframe === created) uiText(status, "player.frame-unavailable"); });
         });
         created.srcdoc = snapshot.preview.srcdoc;
         iframe = created;
@@ -94,7 +96,7 @@ export function createScrubPreview(container: HTMLElement) {
       time.textContent = feedbackClock(frame * snapshot.space.frameRate.denominator / snapshot.space.frameRate.numerator);
       if (frame !== displayed) {
         iframe.style.visibility = "hidden";
-        status.textContent = "Loading frame…";
+        uiText(status, "player.frame-loading");
         status.hidden = false;
         delete element.dataset.frame;
       } else {

@@ -1,3 +1,4 @@
+import { t, uiLabel, uiAttribute, uiText, uiAttr, type Message } from "./i18n.js";
 import { feedbackClock } from "../feedback.js";
 import type { FeedbackComment, FeedbackMutation, FeedbackView } from "../feedback.js";
 import { icon } from "./icons.js";
@@ -11,28 +12,28 @@ export function createComments(store: Store, stage: Stage) {
   element.className = "comments-panel";
   element.innerHTML = `
     <div class="pane-heading comments-heading">
-      <div class="pane-title">${icon("comments")}<h2>Comments</h2><span data-count></span></div>
-      <button type="button" class="comments-icon" data-refresh aria-label="Refresh comments" title="Refresh comments">${icon("refresh")}</button>
+      <div class="pane-title">${icon("comments")}<h2>${uiLabel("app.comments")}</h2><span data-count></span></div>
+      <button type="button" class="comments-icon" data-refresh ${uiAttribute("aria-label", "comments.refresh-comments")} ${uiAttribute("title", "comments.refresh-comments")}>${icon("refresh")}</button>
     </div>
-    <div class="comments-filters" role="group" aria-label="Filter comments">
-      <button type="button" data-filter="all" aria-pressed="true">All</button>
-      <button type="button" data-filter="open" aria-pressed="false">Open</button>
-      <button type="button" data-filter="done" aria-pressed="false">Done</button>
+    <div class="comments-filters" role="group" ${uiAttribute("aria-label", "comments.filter-comments")}>
+      <button type="button" data-filter="all" aria-pressed="true">${uiLabel("comments.all")}</button>
+      <button type="button" data-filter="open" aria-pressed="false">${uiLabel("comments.open")}</button>
+      <button type="button" data-filter="done" aria-pressed="false">${uiLabel("comments.done")}</button>
     </div>
     <div class="comments-error" role="status" aria-live="polite" hidden></div>
-    <div class="comments-list" aria-label="Comments"></div>
+    <div class="comments-list" ${uiAttribute("aria-label", "app.comments")}></div>
     <form class="comment-composer">
       <div class="comment-anchor">
-        <button type="button" class="comment-time" data-current-time title="Use current frame" aria-label="Use current frame">${icon("when")}<span>00:00.00</span></button>
+        <button type="button" class="comment-time" data-current-time ${uiAttribute("title", "comments.use-current-frame")} ${uiAttribute("aria-label", "comments.use-current-frame")}>${icon("when")}<span>00:00.00</span></button>
       </div>
       <div class="comment-input">
-        <textarea rows="3" aria-label="Write a comment" placeholder="What would you like to change?" spellcheck="true" enterkeyhint="send"></textarea>
+        <textarea rows="3" ${uiAttribute("aria-label", "comments.write-a-comment")} ${uiAttribute("placeholder", "comments.placeholder")} spellcheck="true" enterkeyhint="send"></textarea>
         <div class="comment-input-actions">
           <div class="comment-tools">
-            <button type="button" class="comments-icon" aria-label="Emoji — coming later" title="Emoji — coming later" disabled>${icon("smile")}</button>
-            <button type="button" class="comments-icon" aria-label="Draw — coming later" title="Draw — coming later" disabled>${icon("edit")}</button>
+            <button type="button" class="comments-icon" ${uiAttribute("aria-label", "comments.emoji-soon")} ${uiAttribute("title", "comments.emoji-soon")} disabled>${icon("smile")}</button>
+            <button type="button" class="comments-icon" ${uiAttribute("aria-label", "comments.draw-soon")} ${uiAttribute("title", "comments.draw-soon")} disabled>${icon("edit")}</button>
           </div>
-          <button class="comment-submit" type="submit" aria-label="Send comment" title="Send comment (Enter)" disabled>${icon("send")}</button>
+          <button class="comment-submit" type="submit" ${uiAttribute("aria-label", "comments.send-comment")} ${uiAttribute("title", "comments.send-shortcut")} disabled>${icon("send")}</button>
         </div>
       </div>
     </form>`;
@@ -68,10 +69,10 @@ export function createComments(store: Store, stage: Stage) {
     submit.disabled = busy || view === undefined || anchor === undefined || input.value.trim().length === 0;
   };
   const capture = (): void => { stage.pause(); anchor = currentAnchor(); renderAnchor(); };
-  const button = (name: string, label: string, action: () => void): HTMLButtonElement => {
+  const button = (name: string, label: Message, action: () => void): HTMLButtonElement => {
     const node = document.createElement("button");
     node.type = "button"; node.className = "comments-icon";
-    node.innerHTML = icon(name); node.title = label; node.setAttribute("aria-label", label);
+    node.innerHTML = icon(name); uiAttr(node, "title", label); uiAttr(node, "aria-label", label);
     node.disabled = busy;
     node.addEventListener("click", (event) => { event.stopPropagation(); action(); });
     return node;
@@ -101,8 +102,8 @@ export function createComments(store: Store, stage: Stage) {
       const empty = document.createElement("div");
       empty.className = "comments-empty";
       empty.innerHTML = `${icon(filter === "done" ? "check" : "comments")}<strong></strong><p></p>`;
-      empty.querySelector("strong")!.textContent = view === undefined ? "Loading comments…" : filter === "done" ? "No completed comments" : filter === "open" ? "All caught up" : "A note starts here";
-      empty.querySelector("p")!.textContent = filter === "all" ? "Pause on a frame and describe what you would like to change." : "Switch filters to see the other comments.";
+      uiText(empty.querySelector("strong")!, view === undefined ? "comments.loading-comments" : filter === "done" ? "comments.no-completed-comments" : filter === "open" ? "comments.caught-up" : "comments.empty");
+      uiText(empty.querySelector("p")!, filter === "all" ? "comments.empty-hint" : "comments.filter-hint");
       list.append(empty);
     }
     for (const { comment, number } of comments) {
@@ -114,31 +115,31 @@ export function createComments(store: Store, stage: Stage) {
       const label = document.createElement("span"); label.className = "comment-number"; label.textContent = `#${number}`;
       const time = document.createElement("span"); time.className = "comment-time"; time.textContent = feedbackClock(comment.at);
       location.append(time);
-      location.title = "Go to this frame"; location.addEventListener("click", () => locate(comment));
+      uiAttr(location, "title", "comments.go-to-this-frame"); location.addEventListener("click", () => locate(comment));
       row.addEventListener("click", (event) => {
         if ((event.target as Element).closest("button, form") !== null || window.getSelection()?.isCollapsed === false) return;
         locate(comment);
       });
       const actions = document.createElement("div"); actions.className = "comment-actions";
-      const resolve = button("check", comment.resolved ? "Reopen comment" : "Mark complete", () => {
+      const resolve = button("check", comment.resolved ? "comments.reopen-comment" : "comments.mark-complete", () => {
         void mutate({ type: "replace", before: comment, comment: { ...comment, resolved: !comment.resolved } });
       });
       resolve.classList.toggle("is-done", comment.resolved === true);
       resolve.setAttribute("aria-pressed", String(comment.resolved === true));
-      actions.append(label, resolve, button("edit", "Edit comment", () => {
+      actions.append(label, resolve, button("edit", "comments.edit-comment", () => {
         editing = { id: comment.id, before: comment, text: comment.text }; selected = comment.id; render();
         list.querySelector<HTMLTextAreaElement>(".comment-edit textarea")?.focus();
-      }), button("trash", "Delete comment", () => { void mutate({ type: "delete", before: comment }); }));
+      }), button("trash", "comments.delete-comment", () => { void mutate({ type: "delete", before: comment }); }));
       head.append(location, actions); row.append(head);
       if (editing?.id === comment.id) {
         const edit = document.createElement("form"); edit.className = "comment-edit";
         const text = document.createElement("textarea"); text.rows = 3; text.value = editing.text;
-        text.setAttribute("aria-label", "Edit comment text");
+        uiAttr(text, "aria-label", "comments.edit-comment-text");
         text.addEventListener("input", () => { if (editing !== undefined) editing.text = text.value; });
         const controls = document.createElement("div"); controls.className = "comment-edit-actions";
-        const cancel = document.createElement("button"); cancel.type = "button"; cancel.textContent = "Cancel";
+        const cancel = document.createElement("button"); cancel.type = "button"; uiText(cancel, "common.cancel");
         cancel.addEventListener("click", () => { editing = undefined; render(); });
-        const save = document.createElement("button"); save.type = "submit"; save.textContent = "Save"; save.disabled = busy;
+        const save = document.createElement("button"); save.type = "submit"; uiText(save, "common.save"); save.disabled = busy;
         controls.append(cancel, save); edit.append(text, controls);
         edit.addEventListener("submit", (event) => {
           event.preventDefault();
@@ -161,7 +162,7 @@ export function createComments(store: Store, stage: Stage) {
     try {
       const response = await fetch("/__studio/feedback");
       const data = await response.json() as FeedbackView & { error?: string };
-      if (!response.ok) throw new Error(data.error ?? "Could not read comments.");
+      if (!response.ok) throw new Error(data.error ?? t("comments.read-failed"));
       if (request !== fetchId) return;
       if (JSON.stringify(view) !== JSON.stringify(data)) { view = data; render(); }
       showError(); renderAnchor();
@@ -173,7 +174,7 @@ export function createComments(store: Store, stage: Stage) {
     try {
       const response = await fetch("/__studio/feedback", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(mutation) });
       const data = await response.json() as FeedbackView & { error?: string };
-      if (!response.ok) throw new Error(data.error ?? "Could not save comment.");
+      if (!response.ok) throw new Error(data.error ?? t("comments.save-failed"));
       ++fetchId; view = data; busy = false; saved?.();
       if (mutation.type === "delete" && selected === mutation.before.id) selected = undefined;
       if (mutation.type === "delete" && editing?.id === mutation.before.id) editing = undefined;

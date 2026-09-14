@@ -1,3 +1,5 @@
+import { bindDropdown } from "./dropdown.js";
+import { uiLabel, uiAttribute, uiText, uiAttr, userText, languageMenu, initializeI18n, type Message } from "./i18n.js";
 import type { Clip, StudioFailure, StudioInspectorDomain, StudioSnapshot } from "../shared.js";
 import type { CanonicalValue, ValueSchema } from "@qflow/protocol";
 import { parameterAuthorValue, parameterControlForSchema, parameterNumber, parameterOption, parameterRecordSchema, parameterRecordVariants, validateParameterValue } from "../parameter-values.js";
@@ -15,6 +17,8 @@ import { applyStudioMutation } from "./writeback.js";
 import { createTimeline } from "./timeline.js";
 import { createComments } from "./comments.js";
 import "../style.css";
+
+await initializeI18n();
 
 const app = document.querySelector<HTMLElement>("#app")!;
 app.innerHTML = `
@@ -40,9 +44,10 @@ app.innerHTML = `
     <div class="topbar-right">
       <div class="meta" data-meta></div>
       <div class="status" data-status></div>
-      <div class="view-tabs" role="tablist" aria-label="Studio view">
-        <button type="button" role="tab" data-view="studio" aria-selected="true">${icon("studio")}Studio</button>
-        <button type="button" role="tab" data-view="comments" aria-selected="false">${icon("comments")}Comments</button>
+      <div data-language-menu></div>
+      <div class="view-tabs" role="tablist" ${uiAttribute("aria-label", "app.studio-view")}>
+        <button type="button" role="tab" data-view="studio" aria-selected="true">${icon("studio")}${uiLabel("app.studio")}</button>
+        <button type="button" role="tab" data-view="comments" aria-selected="false">${icon("comments")}${uiLabel("app.comments")}</button>
       </div>
     </div>
   </header>
@@ -52,7 +57,7 @@ app.innerHTML = `
       <div class="preview-panel" data-stage></div>
       <aside class="workspace-panel">
         <div class="pane-heading workspace-heading" data-workspace-heading>
-          <div class="pane-title">${icon("tune")}<h2>Properties</h2></div>
+          <div class="pane-title">${icon("tune")}<h2>${uiLabel("inspector.properties")}</h2></div>
         </div>
         <div class="workspace-scroll">
           <section class="workspace-section">
@@ -64,6 +69,8 @@ app.innerHTML = `
     <div class="timeline-panel" data-timeline></div>
   </main>
   <pre class="failure" data-failure></pre>`;
+
+app.querySelector("[data-language-menu]")!.replaceWith(languageMenu());
 
 const store = createStore();
 const code = createCodePane();
@@ -144,7 +151,7 @@ changeView();
 timeline.element.addEventListener("studio:write", (event) => {
   const state = (event as CustomEvent<{ readonly state?: string }>).detail.state;
   status.className = state === "error" ? "status error" : state === "saved" ? "status saved" : "status saving";
-  status.textContent = state === "error" ? "Save failed" : state === "saved" ? "Saved" : "Saving";
+  uiText(status, state === "error" ? "common.save-failed" : state === "saved" ? "common.saved" : "common.saving");
 });
 
 // Program-level facts never change while a Source is being read, so they live in
@@ -154,14 +161,14 @@ function renderMeta(snapshot: StudioSnapshot): void {
   project.title = snapshot.source.path;
   // Sequence facts belong to the project/inspector, not the application chrome.
   // The timeline transport is the single persistent time readout.
-  meta.textContent = "";
+  userText(meta, "");
 }
 
-function property(label: string, value: string, tone?: string): HTMLElement {
+function property(label: Message, value: string, tone?: string): HTMLElement {
   const node = document.createElement("div");
   node.className = `property${tone === undefined ? "" : ` ${tone}`}`;
   node.innerHTML = "<span></span><strong></strong>";
-  node.querySelector("span")!.textContent = label;
+  uiText(node.querySelector("span")!, label);
   node.querySelector("strong")!.textContent = value;
   node.querySelector("strong")!.title = value;
   return node;
@@ -179,6 +186,12 @@ function group(label: string, items: readonly HTMLElement[], className = ""): HT
   return node;
 }
 
+function uiGroup(label: Message, items: readonly HTMLElement[]): HTMLElement {
+  const node = group(label, items);
+  uiText(node.querySelector("h3")!, label);
+  return node;
+}
+
 function aspectRatio(width: number, height: number): string {
   let a = width;
   let b = height;
@@ -186,10 +199,10 @@ function aspectRatio(width: number, height: number): string {
   return `${width / a}:${height / a}`;
 }
 
-const domainPresentation: Readonly<Record<StudioInspectorDomain, { readonly label: string; readonly icon: string }>> = {
-  where: { label: "Where", icon: "where" },
-  how: { label: "How", icon: "how" },
-  when: { label: "When", icon: "when" },
+const domainPresentation: Readonly<Record<StudioInspectorDomain, { readonly label: Message; readonly icon: string }>> = {
+  where: { label: "inspector.where", icon: "where" },
+  how: { label: "inspector.how", icon: "how" },
+  when: { label: "inspector.when", icon: "when" },
 };
 const domainOrder: readonly StudioInspectorDomain[] = ["where", "when", "how"];
 const inspectorDomainByEntity = new Map<string, StudioInspectorDomain>();
@@ -197,7 +210,7 @@ const inspectorPageByEntity = new Map<string, string>();
 
 function defaultWorkspaceHeading(): void {
   workspaceHeading.className = "pane-heading workspace-heading";
-  workspaceHeading.innerHTML = `<div class="pane-title">${icon("tune")}<h2>Properties</h2></div>`;
+  workspaceHeading.innerHTML = `<div class="pane-title">${icon("tune")}<h2>${uiLabel("inspector.properties")}</h2></div>`;
 }
 
 function inspectorHeading(
@@ -213,7 +226,7 @@ function inspectorHeading(
     button.type = "button";
     button.className = `inspector-domain-tab${domain === active ? " active" : ""}`;
     button.dataset.domain = domain;
-    button.innerHTML = `${icon(presentation.icon)}<strong>${presentation.label}</strong>`;
+    button.innerHTML = `${icon(presentation.icon)}<strong>${uiLabel(presentation.label)}</strong>`;
     button.setAttribute("aria-pressed", String(domain === active));
     button.addEventListener("click", () => {
       inspectorDomainByEntity.set(entityId, domain);
@@ -244,7 +257,7 @@ function commitControl(entityId: string, parameter: Clip["inspector"][number], r
     void writeParameter(entityId, parameter, replacement);
   } catch (error) {
     restoreParameterControls(entityId);
-    status.textContent = "Invalid value"; status.className = "status error";
+    uiText(status, "common.invalid-value"); status.className = "status error";
     status.title = error instanceof Error ? error.message : String(error);
   }
 }
@@ -329,70 +342,7 @@ function selectControl(
   });
   menu.append(...options);
 
-  const close = (restoreFocus: boolean): void => {
-    control.classList.remove("open", "open-up");
-    trigger.setAttribute("aria-expanded", "false");
-    menu.hidden = true;
-    if (restoreFocus) trigger.focus();
-  };
-  const open = (focus: "selected" | "first" | "last" = "selected"): void => {
-    control.classList.add("open");
-    trigger.setAttribute("aria-expanded", "true");
-    menu.hidden = false;
-    control.classList.remove("open-up");
-    const scroll = control.closest<HTMLElement>(".workspace-scroll");
-    if (scroll !== null) {
-      const menuBox = menu.getBoundingClientRect();
-      const scrollBox = scroll.getBoundingClientRect();
-      if (menuBox.bottom > scrollBox.bottom && trigger.getBoundingClientRect().top - menuBox.height >= scrollBox.top) {
-        control.classList.add("open-up");
-      }
-    }
-    const target = focus === "first" ? options[0]
-      : focus === "last" ? options.at(-1)
-      : options.find((option) => option.classList.contains("active")) ?? options[0];
-    target?.focus();
-  };
-  const moveOptionFocus = (offset: number): void => {
-    const current = options.indexOf(document.activeElement as HTMLButtonElement);
-    const next = current < 0 ? 0 : (current + offset + options.length) % options.length;
-    options[next]?.focus();
-  };
-
-  trigger.addEventListener("click", () => {
-    if (control.classList.contains("open")) close(false);
-    else open();
-  });
-  trigger.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      event.stopPropagation();
-      open(event.key === "ArrowDown" ? "first" : "last");
-    } else if (event.key === "Escape" && control.classList.contains("open")) {
-      event.preventDefault();
-      event.stopPropagation();
-      close(false);
-    }
-  });
-  menu.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      event.stopPropagation();
-      moveOptionFocus(event.key === "ArrowDown" ? 1 : -1);
-    } else if (event.key === "Home" || event.key === "End") {
-      event.preventDefault();
-      event.stopPropagation();
-      options[event.key === "Home" ? 0 : options.length - 1]?.focus();
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      close(true);
-    }
-  });
-  control.addEventListener("focusout", (event) => {
-    if (event.relatedTarget instanceof Node && control.contains(event.relatedTarget)) return;
-    close(false);
-  });
+  const { close } = bindDropdown(control, trigger, menu, options);
   control.append(trigger, menu);
   return control;
 }
@@ -413,7 +363,7 @@ function colorValueControl(
   const picker = document.createElement("input");
   picker.type = "color";
   picker.className = "parameter-color-native";
-  picker.setAttribute("aria-label", `${label} picker`);
+  uiAttr(picker, "aria-label", "inspector.color-picker", { label });
   picker.title = label;
   const exact = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/iu.test(initial);
   picker.value = exact ? initial.slice(0, 7) : "#000000";
@@ -530,7 +480,7 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
   const save = (): void => {
     const changed = !sameValue(draft, parameter.value);
     notice.hidden = !changed || valid();
-    notice.textContent = "Complete the required fields with valid values to save.";
+    uiText(notice, "inspector.invalid-fields");
     if (changed && valid()) change(draft);
   };
 
@@ -563,9 +513,8 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
     const summary = document.createElement("div");
     summary.className = "parameter-structured-summary";
     const count = document.createElement("span");
-    count.textContent = schema.kind === "array" && Array.isArray(draft)
-      ? `${draft.length} ${draft.length === 1 ? "item" : "items"}`
-      : "Structured value";
+    if (schema.kind === "array" && Array.isArray(draft)) uiText(count, "inspector.item-count", { count: draft.length });
+    else uiText(count, "inspector.structured-value");
     summary.append(count);
     if (schema.kind === "array") shell.append(summary);
 
@@ -600,19 +549,19 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
         const up = document.createElement("button");
         up.type = "button";
         up.textContent = "↑";
-        up.title = "Move up";
+        uiAttr(up, "title", "inspector.move-up");
         up.disabled = index === 0;
         up.addEventListener("click", () => move(-1));
         const down = document.createElement("button");
         down.type = "button";
         down.textContent = "↓";
-        down.title = "Move down";
+        uiAttr(down, "title", "inspector.move-down");
         down.disabled = index === list.length - 1;
         down.addEventListener("click", () => move(1));
         const remove = document.createElement("button");
         remove.type = "button";
         remove.innerHTML = icon("minus");
-        remove.title = "Remove item";
+        uiAttr(remove, "title", "inspector.remove-item");
         remove.disabled = schema.minItems !== undefined && list.length <= schema.minItems;
         remove.addEventListener("click", () => {
           const current = Array.isArray(draft) ? draft : [];
@@ -639,7 +588,7 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
       const add = document.createElement("button");
       add.type = "button";
       add.className = "parameter-structured-add";
-      add.innerHTML = `${icon("plus")}<span>Add ${schema.items.kind === "string" && schema.items.format === "color" ? "color" : "item"}</span>`;
+      add.innerHTML = `${icon("plus")}${uiLabel(schema.items.kind === "string" && schema.items.format === "color" ? "inspector.add-color" : "inspector.add-item")}`;
       add.disabled = schema.maxItems !== undefined && list.length >= schema.maxItems;
       add.addEventListener("click", () => {
         const current = Array.isArray(draft) ? draft : [];
@@ -708,7 +657,7 @@ function parameterControl(
       const palette = document.createElement("span"); palette.className = "parameter-swatches";
       for (const color of parameter.swatches) {
         const swatch = document.createElement("button"); swatch.type = "button";
-        swatch.style.backgroundColor = color; swatch.title = color; swatch.setAttribute("aria-label", `Use ${color}`);
+        swatch.style.backgroundColor = color; swatch.title = color; uiAttr(swatch, "aria-label", "inspector.use-color", { color });
         swatch.addEventListener("click", () => commit(color)); palette.append(swatch);
       }
       right.append(palette);
@@ -784,13 +733,13 @@ function parameterGroups(entityId: string, fields: readonly Clip["inspector"][nu
   });
 }
 
-let parameterWriteState: "" | "Saving" | "Saved" | "Failed" = "";
+let parameterWriteState: "" | "common.saving" | "common.saved" | "common.failed" = "";
 async function writeParameter(entityId: string, parameter: Clip["inspector"][number], replacement: CanonicalValue): Promise<void> {
   const state = store.current();
   if (state === undefined) return;
-  parameterWriteState = "Saving";
+  parameterWriteState = "common.saving";
   status.title = "";
-  status.textContent = parameterWriteState;
+  uiText(status, parameterWriteState);
   status.className = "status saving";
   try {
     await applyStudioMutation({
@@ -800,15 +749,15 @@ async function writeParameter(entityId: string, parameter: Clip["inspector"][num
       parameterId: parameter.id,
       value: replacement,
     });
-    parameterWriteState = "Saved";
-    status.textContent = parameterWriteState;
+    parameterWriteState = "common.saved";
+    uiText(status, parameterWriteState);
     status.className = "status saved";
   } catch (error) {
     // Validation and stale-revision rejections do not publish a new snapshot.
     // Restore the accepted value just as a rejected compilation does.
     restoreParameterControls(entityId);
-    parameterWriteState = "Failed";
-    status.textContent = error instanceof Error ? "Save failed" : parameterWriteState;
+    parameterWriteState = "common.failed";
+    uiText(status, error instanceof Error ? "common.save-failed" : parameterWriteState);
     status.className = "status error";
     status.title = error instanceof Error ? error.message : String(error);
   }
@@ -826,26 +775,26 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
     defaultWorkspaceHeading();
     const fps = snapshot.space.frameRate.numerator / snapshot.space.frameRate.denominator;
     inspector.replaceChildren(
-      group("Project", [
-        property("Author", snapshot.source.path, "property-code"),
-        property("Run", snapshot.run.path, "property-code"),
-        property("Sources", `${snapshot.source.files.length} referenced files`),
-        property("Tracks", String(snapshot.tracks.length), "property-number"),
+      uiGroup("inspector.project", [
+        property("inspector.author", snapshot.source.path, "property-code"),
+        property("inspector.run", snapshot.run.path, "property-code"),
+        property("inspector.sources", String(snapshot.source.files.length)),
+        property("inspector.tracks", String(snapshot.tracks.length), "property-number"),
       ]),
-      group("Canvas", [
-        property("Resolution", `${snapshot.space.canvasWidth} × ${snapshot.space.canvasHeight}`, "property-number"),
-        property("Aspect ratio", aspectRatio(snapshot.space.canvasWidth, snapshot.space.canvasHeight), "property-number"),
+      uiGroup("inspector.canvas", [
+        property("inspector.resolution", `${snapshot.space.canvasWidth} × ${snapshot.space.canvasHeight}`, "property-number"),
+        property("inspector.aspect-ratio", aspectRatio(snapshot.space.canvasWidth, snapshot.space.canvasHeight), "property-number"),
       ]),
-      group("Timeline", [
-        property("Duration", `${snapshot.space.durationSec.toFixed(2)} s`, "property-number"),
-        property("Frame rate", `${fps.toFixed(Number.isInteger(fps) ? 0 : 2)} fps`, "property-number"),
-        property("Frames", String(snapshot.space.frameCount), "property-number"),
+      uiGroup("inspector.timeline", [
+        property("inspector.duration", `${snapshot.space.durationSec.toFixed(2)} s`, "property-number"),
+        property("inspector.frame-rate", `${fps.toFixed(Number.isInteger(fps) ? 0 : 2)} fps`, "property-number"),
+        property("inspector.frames", String(snapshot.space.frameCount), "property-number"),
       ]),
-      group("Build", [
-        property("Targets", snapshot.run.targets
+      uiGroup("inspector.build", [
+        property("inspector.targets", snapshot.run.targets
           .map((target) => target.split("::output::").at(-1) ?? target)
           .join(", ") || "—", "property-code"),
-        property("Candidates", String(snapshot.run.satisfactions.length), "property-number"),
+        property("inspector.candidates", String(snapshot.run.satisfactions.length), "property-number"),
       ]),
     );
     return;
@@ -855,7 +804,7 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
     defaultWorkspaceHeading();
     const empty = document.createElement("div");
     empty.className = "inspector-empty";
-    empty.textContent = "No details for this selection";
+    uiText(empty, "inspector.empty");
     inspector.replaceChildren(empty);
     return;
   }
@@ -908,7 +857,7 @@ function renderSemanticInspector(snapshot: StudioSnapshot, segmentId: string): v
   defaultWorkspaceHeading();
   const empty = document.createElement("div");
   empty.className = "inspector-empty";
-  empty.textContent = "No details for this selection";
+  uiText(empty, "inspector.empty");
   inspector.replaceChildren(empty);
 }
 
@@ -920,32 +869,36 @@ function semanticAnchorInspector(snapshot: StudioSnapshot, kind: "selection" | "
     .map((handle) => ({ clip, handle })));
   const current = kind === "selection" ? semantic?.selections.find((item) => item.id === id)
     : semantic?.moments.find((item) => item.id === id);
-  if (!semantic || !current) return group("Timing", []);
-  const endpoints = "anchorId" in current ? [["Moment", current.anchorId]]
-    : [["Start", current.startAnchorId], ["End", current.endAnchorId]];
-  return group("Semantic anchors", endpoints.map(([label, anchorId]) => {
+  if (!semantic || !current) return uiGroup("inspector.timing", []);
+  const endpoints: readonly (readonly [Message, string])[] = "anchorId" in current ? [["inspector.moment", current.anchorId]]
+    : [["inspector.start", current.startAnchorId], ["inspector.end", current.endAnchorId]];
+  return uiGroup("inspector.semantic-anchors", endpoints.map(([label, anchorId]) => {
     const anchor = semantic.anchors.find((item) => item.id === anchorId)!;
-    const describe = (item: typeof anchor) => {
+    const describe = (node: Element, item: typeof anchor) => {
       const word = semantic.tokens.find((token) => token.id === item.tokenId)?.text;
-      return `${item.kind.replaceAll("-", " ")}${word ? ` · ${word}` : ""}${item.segmentId ? ` · ${item.segmentId}` : ""}`;
+      uiText(node, `inspector.anchor.${item.kind}`, { detail: `${word ? ` · ${word}` : ""}${item.segmentId ? ` · ${item.segmentId}` : ""}` });
     };
     const candidates = semantic.anchors.filter((item) => item.frame === anchor.frame).flatMap((item) => {
       const target: SemanticTarget = "anchorId" in current ? { kind: "moment", anchorId: item.id }
-        : { kind: "selection", startAnchorId: label === "Start" ? item.id : current.startAnchorId,
-            endAnchorId: label === "End" ? item.id : current.endAnchorId };
+        : { kind: "selection", startAnchorId: label === "inspector.start" ? item.id : current.startAnchorId,
+            endAnchorId: label === "inspector.end" ? item.id : current.endAnchorId };
       const owner = consumers.find(({ handle }) => semanticGestureSpan(semantic.anchors, handle, target) !== undefined);
       return owner ? [{ item, target, ...owner }] : [];
     });
-    if (candidates.length < 2) return property(label!, describe(anchor));
+    if (candidates.length < 2) {
+      const row = property(label!, "");
+      describe(row.querySelector("strong")!, anchor);
+      return row;
+    }
     const row = document.createElement("label");
     row.className = "property";
     const name = document.createElement("span");
-    name.textContent = label!;
+    uiText(name, label!);
     const control = document.createElement("select");
     control.className = "parameter-value";
-    control.setAttribute("aria-label", `${label} semantic anchor`);
+    uiAttr(control, "aria-label", label === "inspector.start" ? "inspector.start-anchor" : label === "inspector.end" ? "inspector.end-anchor" : "inspector.moment-anchor");
     for (const { item } of candidates) {
-      const option = document.createElement("option"); option.value = item.id; option.textContent = describe(item);
+      const option = document.createElement("option"); option.value = item.id; describe(option, item);
       control.append(option);
     }
     control.value = anchorId!;
@@ -954,14 +907,14 @@ function semanticAnchorInspector(snapshot: StudioSnapshot, kind: "selection" | "
       const span = semanticGestureSpan(semantic.anchors, choice.handle, choice.target)!;
       const temporal = choice.handle.temporal!;
       control.disabled = true;
-      status.textContent = "Saving"; status.className = "status saving";
+      uiText(status, "common.saving"); status.className = "status saving";
       void applyStudioMutation({ type: "timeline.adjust", revision: snapshot.revision,
         entityId: choice.clip.id, gesture: choice.handle.gesture,
         target: temporal.kind === "instant" ? { kind: "instant", frame: span.startFrame, semantic: choice.target }
           : { kind: "window", ...span, semantic: choice.target },
-      }).then(() => { status.textContent = "Saved"; status.className = "status saved"; })
+      }).then(() => { uiText(status, "common.saved"); status.className = "status saved"; })
         .catch((error: unknown) => {
-          control.value = anchorId!; status.textContent = "Save failed"; status.className = "status error";
+          control.value = anchorId!; uiText(status, "common.save-failed"); status.className = "status error";
           status.title = error instanceof Error ? error.message : String(error);
         }).finally(() => { control.disabled = false; });
     });
@@ -1145,10 +1098,10 @@ window.addEventListener("keydown", (event) => {
 });
 
 function applySnapshot(snapshot: StudioSnapshot): void {
-  failureView.textContent = "";
+  userText(failureView, "");
   status.className = "status";
   status.title = "";
-  status.textContent = "";
+  userText(status, "");
   renderMeta(snapshot);
   library.show(snapshot);
   store.load(snapshot);
@@ -1156,7 +1109,7 @@ function applySnapshot(snapshot: StudioSnapshot): void {
 
 function applyFailure(failure: StudioFailure): void {
   status.className = "status error";
-  status.textContent = "Compile failed";
+  uiText(status, "common.compile-failed");
   failureView.textContent = failure.error;
   if (failure.range !== undefined) code.highlight([{ range: failure.range, tone: "element" }], true);
   // A parameter control changes immediately in the browser, but the source

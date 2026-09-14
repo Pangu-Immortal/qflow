@@ -142,7 +142,7 @@ button:focus-visible, textarea:focus-visible {
   white-space: nowrap;
 }
 .topbar-right { justify-self: end; display: flex; align-items: center; min-width: 0; }
-.view-tabs { display: flex; align-items: center; gap: 2px; margin-left: 16px; padding: 2px; border-radius: 5px; background: var(--subtab-surface); }
+.view-tabs { display: flex; flex: 0 0 auto; white-space: nowrap; align-items: center; gap: 2px; margin-left: 16px; padding: 2px; border-radius: 5px; background: var(--subtab-surface); }
 .view-tabs button {
   display: flex; align-items: center; gap: 7px; height: 24px; padding: 0 10px;
   border: 0; border-radius: 4px; color: var(--text-3); background: transparent;
@@ -150,6 +150,18 @@ button:focus-visible, textarea:focus-visible {
 .view-tabs button[aria-selected="true"] { color: var(--subtab-active-text); background: var(--subtab-active-surface); }
 .view-tabs button:focus-visible { outline: 1px solid #8a8f99; outline-offset: -1px; }
 .view-tabs .icon { width: 14px; height: 14px; }
+.parameter-select.language-select { width: auto; flex: 0 0 auto; margin-left: 10px; }
+.language-select .language-toggle {
+  display: grid; place-items: center; grid-template-columns: 1fr;
+  width: 28px; height: 28px; padding: 0;
+  color: var(--subtab-active-text); background: var(--subtab-surface);
+  border-color: var(--line);
+}
+.language-toggle .icon { width: 16px; height: 16px; }
+.language-select .parameter-select-menu { width: max-content; min-width: 150px; max-width: 240px; }
+.language-select .parameter-select-option { font-family: var(--font-ui); text-align: start; }
+.topbar { position: relative; z-index: 40; }
+
 .meta {
   color: var(--text-3);
   font: 500 11px/1 var(--font-ui);
@@ -1560,8 +1572,8 @@ button:focus-visible, textarea:focus-visible {
 .failure:empty { display: none; }
 
 @media (max-width: 920px) {
-  .meta, .topbar-right { display: none; }
-  .topbar { grid-template-columns: 1fr minmax(120px, 1fr); }
+  .meta, .topbar-right .status { display: none; }
+  .topbar { grid-template-columns: auto minmax(0, 1fr) auto; }
   .upper-shell { grid-template-columns: minmax(320px, var(--source-width)) 8px minmax(300px, 1fr); }
   .workspace-handle, .workspace-panel { display: none; }
 }

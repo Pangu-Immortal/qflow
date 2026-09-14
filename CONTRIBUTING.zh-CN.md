@@ -27,6 +27,7 @@ pnpm install --frozen-lockfile
 | --- | --- |
 | 新增 Author 包 | [添加 Author 包](https://qflow.ai/zh/guide/author-packages/) |
 | 新增 Provider | [添加 Provider](https://qflow.ai/zh/guide/providers/) |
+| Studio 界面翻译 | [Studio 本地化](packages/studio/LOCALIZATION.md) |
 | 编译、Run 与 Build | [Runtime](https://qflow.ai/zh/guide/runtime/) |
 | 命名、模块边界、wire 数据 | [代码规范](https://qflow.ai/zh/guide/conventions/) |
 | 测试与依赖环境的测试套件 | [测试](https://qflow.ai/zh/guide/testing/) |

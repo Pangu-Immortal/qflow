@@ -1,3 +1,5 @@
+import { uiAttr, uiText, userText } from "./i18n.js";
+
 /** Two-line label with an expanding editor; the caller owns persistence. */
 export function createArtifactName(options: {
   readonly name: string;
@@ -15,7 +17,7 @@ export function createArtifactName(options: {
   text.className = "artifact-name-text";
   text.textContent = name;
   label.append(text);
-  label.title = options.editable ? `${name}\nDouble-click or press F2 to rename` : `${name}\nNaming is available when this Build finishes`;
+  uiAttr(label, "title", options.editable ? "library.rename-hint" : "library.name-pending", { name });
   element.append(label);
   label.addEventListener("click", (event) => { event.stopPropagation(); options.select(); });
   let editing = false;
@@ -30,7 +32,7 @@ export function createArtifactName(options: {
     field.className = "artifact-name-editor";
     field.value = name;
     field.rows = 1;
-    field.setAttribute("aria-label", "Display name");
+    uiAttr(field, "aria-label", "library.display-name");
     const error = document.createElement("span");
     error.className = "artifact-name-error";
     error.setAttribute("role", "status");
@@ -53,17 +55,17 @@ export function createArtifactName(options: {
       if (!editing || saving) return;
       const value = field.value.trim();
       if (value === name) { close(); return; }
-      if (value.length === 0) { error.textContent = "Enter a name."; return; }
+      if (value.length === 0) { uiText(error, "library.enter-name"); return; }
       saving = true;
       field.readOnly = true;
-      error.textContent = "Saving…";
+      uiText(error, "common.saving");
       try {
         name = await options.save(value);
         text.textContent = name;
-        label.title = `${name}\nDouble-click or press F2 to rename`;
+        uiAttr(label, "title", "library.rename-hint", { name });
         close();
       } catch (cause) {
-        error.textContent = cause instanceof Error ? cause.message : String(cause);
+        userText(error, cause instanceof Error ? cause.message : String(cause));
       } finally {
         saving = false;
         field.readOnly = false;

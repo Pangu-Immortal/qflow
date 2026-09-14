@@ -1,3 +1,4 @@
+import { userText, uiAttribute, uiText, uiAttr } from "./i18n.js";
 import type {
   SemanticToken,
   StudioSnapshot,
@@ -89,13 +90,13 @@ export function createTimeline(store: Store): Timeline {
   element.innerHTML = `
     <div class="timeline-toolbar">
       <div class="timeline-tools">
-        <button type="button" class="tool-button active" aria-label="Select" title="Select">${icon("select")}</button>
+        <button type="button" class="tool-button active" ${uiAttribute("aria-label", "timeline.select")} ${uiAttribute("title", "timeline.select")}>${icon("select")}</button>
       </div>
       <div class="timeline-time" data-timeline-time>00:00:00</div>
       <div class="timeline-view-actions">
-        <button type="button" class="icon-button" data-zoom-out aria-label="Zoom out" title="Zoom out">${icon("minus")}</button>
-        <button type="button" class="icon-button" data-zoom-fit aria-label="Fit timeline" title="Fit timeline">${icon("fit")}</button>
-        <button type="button" class="icon-button" data-zoom-in aria-label="Zoom in" title="Zoom in">${icon("plus")}</button>
+        <button type="button" class="icon-button" data-zoom-out ${uiAttribute("aria-label", "timeline.zoom-out")} ${uiAttribute("title", "timeline.zoom-out")}>${icon("minus")}</button>
+        <button type="button" class="icon-button" data-zoom-fit ${uiAttribute("aria-label", "timeline.fit-timeline")} ${uiAttribute("title", "timeline.fit-timeline")}>${icon("fit")}</button>
+        <button type="button" class="icon-button" data-zoom-in ${uiAttribute("aria-label", "timeline.zoom-in")} ${uiAttribute("title", "timeline.zoom-in")}>${icon("plus")}</button>
       </div>
     </div>
     <div class="timeline-body" data-timeline-body>
@@ -138,8 +139,8 @@ export function createTimeline(store: Store): Timeline {
     remember: "qflow-studio.v4.timeline-label-width",
   });
   labelHandle.classList.add("timeline-label-handle");
-  labelHandle.setAttribute("aria-label", "Resize timeline track labels");
-  labelHandle.title = "Resize track labels";
+  uiAttr(labelHandle, "aria-label", "timeline.resize-timeline-track-labels");
+  uiAttr(labelHandle, "title", "timeline.resize-track-labels");
   body.insertBefore(labelHandle, lanes);
 
   let state: State | undefined;
@@ -501,12 +502,14 @@ export function createTimeline(store: Store): Timeline {
     ];
     const laneHeight = bands.reduce((height, band) => height + band.height, itemMetrics.insetYPx * 2);
     const label = createTrackLabel(
-      presentation.label ?? "Timeline",
+      presentation.label ?? "",
       presentation.tone,
       presentation.icon,
-      `${snapshot.semantic.segments.length} segment${snapshot.semantic.segments.length === 1 ? "" : "s"}`,
+      "",
       laneHeight,
     );
+    if (presentation.label === undefined) uiText(label.querySelector("strong")!, "inspector.timeline");
+    uiAttr(label, "title", "timeline.segment-count", { count: snapshot.semantic.segments.length });
     label.classList.add("track-label-semantic");
     label.style.height = `calc(var(--timeline-ruler-height) + ${laneHeight}px)`;
     labels.append(label);
@@ -529,7 +532,7 @@ export function createTimeline(store: Store): Timeline {
       band.className = `semantic-band semantic-band-${kind}`;
       band.style.top = `${bandTop}px`;
       band.style.setProperty("--semantic-band-height", `${height}px`);
-      band.setAttribute("aria-label", kind === "intent" ? "Selections and Moments" : kind === "word" ? "Words" : "Segments");
+      uiAttr(band, "aria-label", kind === "intent" ? "timeline.selections-and-moments" : kind === "word" ? "timeline.words" : "timeline.segments");
       lane.append(band);
       bandTop += height;
     }
@@ -546,7 +549,7 @@ export function createTimeline(store: Store): Timeline {
       node.className = "semantic-cell semantic-segment";
       node.tabIndex = 0;
       node.setAttribute("role", "button");
-      node.setAttribute("aria-label", `Segment ${segment.id}`);
+      uiAttr(node, "aria-label", "timeline.segment-name", { name: segment.id });
       node.dataset.semanticSegment = segment.id;
       node.style.left = `${from * 100}%`;
       const segmentWidth = Math.max(0, to - from) * 100;
@@ -626,7 +629,7 @@ export function createTimeline(store: Store): Timeline {
       node.type = "button";
       node.className = "semantic-cell semantic-selection";
       node.tabIndex = 0;
-      node.setAttribute("aria-label", `Selection ${selection.id}`);
+      uiAttr(node, "aria-label", "timeline.selection-name", { name: selection.id });
       node.style.left = `${from * 100}%`;
       node.style.width = `max(2px, ${Math.max(0, to - from) * 100}%)`;
       node.title = selection.id;
@@ -652,7 +655,7 @@ export function createTimeline(store: Store): Timeline {
       node.type = "button";
       node.className = "semantic-moment";
       node.tabIndex = 0;
-      node.setAttribute("aria-label", `Moment ${moment.id}`);
+      uiAttr(node, "aria-label", "timeline.moment-name", { name: moment.id });
       node.style.left = `${at * 100}%`;
       node.title = moment.id;
       node.addEventListener("click", (event) => {
@@ -674,7 +677,7 @@ export function createTimeline(store: Store): Timeline {
       const menu = document.createElement("div");
       menu.className = "timeline-overlap-menu";
       menu.setAttribute("role", "menu");
-      menu.setAttribute("aria-label", "Overlapping timeline objects");
+      uiAttr(menu, "aria-label", "timeline.overlapping-timeline-objects");
       for (const hit of [...hits].reverse()) {
         const option = document.createElement("button");
         option.type = "button";
@@ -835,7 +838,7 @@ export function createTimeline(store: Store): Timeline {
     semanticNodes = [];
     const corner = document.createElement("div");
     corner.className = "label-corner";
-    corner.textContent = "";
+    userText(corner, "");
     if (snapshot.semantic === undefined || snapshot.semantic.segments.length === 0) labels.append(corner);
     buildSemanticLane(snapshot);
     const nextClipNodes: { node: HTMLElement; start: number; end: number; id: string; selectionGroup?: string }[] = [];
