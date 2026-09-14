@@ -376,7 +376,9 @@ test("up stops waiting when a started program exits", async () => {
     assert.match(result.programs[0]!.detail ?? "", /process exited; see/u);
     await assert.rejects(async () => await readFile(join(root, "programs", "example", "process.pid"), "utf8"));
   } finally {
-    await rm(root, { recursive: true, force: true });
+    // Readiness observes process exit, not the release of Windows redirected-log handles.
+    // Only temporary test cleanup waits for filesystem release; the assertions above stay immediate.
+    await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 });
 
