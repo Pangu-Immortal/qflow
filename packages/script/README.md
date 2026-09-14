@@ -64,7 +64,7 @@ CaptionDocument contracts.
 - **Role Cue**: a speaker turn, written as a bare tag such as `<ALICE>` inside a Segment. The next
   Role Cue or the Segment close ends that turn.
 - **Dual Text**: one authored speech span with separate display and spoken projections, written
-  `<display text | spoken text>`.
+  `<display text | spoken text>`. In `<display text|>`, omitted speech inherits the displayed prose.
 - **Selection marker**: a named semantic range, written `@name ... @/name`.
 - **Moment marker**: a named semantic point, written `@name!`.
 - **CaptionDocument**: the Script-owned caption truth; it contains **Display Words**,
@@ -73,10 +73,22 @@ CaptionDocument contracts.
   `really{emphasis,importance=2,tone=warm}`. Values may be strings, finite numbers or booleans. It
   becomes `CaptionDisplayWord.attributes`; it is not a Selection and does not carry timing.
 
-Within Dual Text, an unescaped `@` is legal only on the spoken side. The display side is literal; write
-`\@` if an at-sign must be shown. An empty display side, such as `< | spoken words>`, keeps the speech
+Within Dual Text, an unescaped `@` belongs to the source of spoken text: the right side when supplied,
+or the shared left side in `<display text|>`. Write `\@` if an at-sign must be shown. An empty display side, such as `< | spoken words>`, keeps the speech
 tokens and omits them from Caption. `||` is an authored Caption Cue Break and must occur between
 complete Alignment Units.
+
+`<组件化|>` is shorthand for `<组件化|组件化>`, using the same exported Caption Alignment Unit.
+It groups the displayed expression without merging its individual speech Tokens or time anchors.
+For example, `把<动效|><组件化|>。|| 之后<直接复用|>。` authors groups inside two Cues.
+Use groups where the expression should be treated together; ordinary prose needs no extra markup.
+Caption Styles choose whether to highlight, reveal or keep the text steady.
+
+In a shared side, markers and display attributes do not enter either text projection. Its speech
+Tokens retain offsets into the actually written left-hand text, so Studio can move an anchor inside
+`<组@beat!件化|>` without expanding the shorthand. Attributes still annotate the preceding display
+word, not the whole group. Whitespace-only speech is omitted; a group with no spoken text on either
+side is invalid. This adds no new public value type or protocol version.
 
 ## Segments, turns and Cues are different boundaries
 

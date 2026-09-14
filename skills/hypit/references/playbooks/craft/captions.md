@@ -137,6 +137,13 @@ Choose `trail` instead of `current` when the already spoken characters should st
 sweeps inside its glyphs. Both follow each unit's own speech time, including uneven delivery and
 pauses. Making a Cue longer changes its reading group, not its character timing.
 
+When a compound, name or short phrase should respond together, author it as `<组件化|>` in Script.
+The omitted spoken side inherits the same words. Fine's existing whole-unit `step` highlighting,
+underline and active box then follow that group's first-to-last speech interval, while each spoken
+character keeps its own Timeline anchors. A Cue can mix these groups with ordinary characters.
+Use this for deliberate whole-expression treatment, not as a requirement to annotate every Chinese
+word. `||` remains the reading handoff; group markup does not create another Cue.
+
 Text appearing and text changing color are separate choices. `atom-reveal: all` keeps the complete
 Cue available to read while Karaoke supplies emphasis; `on-start` reveals whole spoken units, and
 `typewriter` reveals whole graphemes within them. A pronunciation span such as `<API|A P I>`

@@ -104,10 +104,26 @@ An empty left side is legal:
 ```
 
 This means "um" is spoken but never displayed as a caption. The two sides can have different word
-counts — this is an N:M Alignment Unit, not a 1:1 substitution. A Selection cannot split that unit.
+counts — this is an N:M Alignment Unit, not a 1:1 substitution. Its displayed unit stays complete
+even when a semantic marker locates a word within the spoken side.
 
-Markers belong to the spoken side of Dual Text. The display side is literal; an unescaped `@` there
-is rejected. Escape it as `\@` when the at-sign should be shown.
+When both sides are written, markers belong to the spoken side of Dual Text. The display side is
+literal; an unescaped `@` there is rejected. Escape it as `\@` when the at-sign should be shown.
+
+When both wordings are identical, omit the speech after the pipe:
+
+```svml
+<explanation><HOST>把<动效|><组件化|>。|| 以后就能<直接复用|>。</explanation>
+```
+
+`<组件化|>` means `<组件化|组件化>`: one complete Caption unit, with the same three individually
+timed spoken characters. Caption Styles can highlight the group together. Ordinary text remains
+valid without grouping, and `||` still chooses the Cue handoff. This works for phrases and names
+in other languages too, such as `<Git Hub|>`.
+
+Here the left side also supplies speech, so markers can be written and moved there:
+`<组@beat!件化|>`. Markers and display attributes never become spoken text. An explicit spoken side
+still owns its own markers. Both sides empty is invalid.
 
 `||` is the **Caption Cue Break** syntax. It records a boundary between complete Alignment Units;
 it cannot appear inside Dual Text or split an N:M unit. Cue timing is still obtained later by

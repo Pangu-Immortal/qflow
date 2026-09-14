@@ -61,6 +61,7 @@ The author-facing forms are:
 | `<pause/>` | A self-closing Segment with identity and boundaries but no words. |
 | `<HOST>` | A Role Cue inside the current Segment; it applies until another Role Cue or the Segment end. |
 | `<display text \| spoken text>` | One Dual Text unit with separate visible and pronounced wording. |
+| `<display text\|>` | One complete display/speech unit using the same wording for both; individual spoken word times remain available. |
 | `< \| spoken text>` | Spoken words that keep semantic timing while contributing no visible Caption words. |
 | `||` | A Caption Cue handoff between complete Alignment Units. |
 | `word{emphasis,keyword}` | Boolean attributes on one complete display word for a Caption family to interpret. |
@@ -81,6 +82,17 @@ placed on the spoken side because that side owns the speech anchors. Place Cue B
 complete Dual Text unit, not inside it. Attributes for a displayed Dual Text word belong on the
 display side before the pipe. Inside that display side, use `\@` when the visible text itself needs an
 at-sign.
+
+When the wording is identical, `<组件化|>` is shorthand for `<组件化|组件化>`. It can group a name,
+compound or phrase for Caption presentation while leaving its spoken Tokens and timing intact:
+`把<动效|><组件化|>。|| 以后就能<直接复用|>。` Choose groups for the intended expression; ordinary
+Chinese prose does not require word-by-word markup. The group's Style determines its visual response;
+`||` still controls which reading phrases appear as separate Cues.
+
+With speech omitted, the left side supplies both projections, so semantic markers can be placed
+there and Studio writes back there: `<组@beat!件化|>`. Display attributes and markers are metadata,
+not spoken words. Attributes still apply to the preceding display word rather than the whole group.
+With an explicit spoken side, markers continue to belong on that right-hand side.
 
 Script comments use ordinary Markup comments outside the prose:
 

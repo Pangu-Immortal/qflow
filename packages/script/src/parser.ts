@@ -499,16 +499,22 @@ export function parseScript(
   const consumeSpeechSide = (
     raw: string,
     absoluteStart: number,
-    caption: string,
+    caption: string | undefined,
     marks: ParsedCaptionRegion["marks"] = [],
   ): void => {
     const startToken = tokens.length;
+    // An omitted speech side shares the written display source. Keep its original offsets:
+    // marker edits target these words, not a synthetic copy beyond the pipe.
+    const shared = caption === undefined;
+    const spokenParts: string[] = [];
+    const sharedMarks: Array<ParsedCaptionRegion["marks"][number]> = [];
     let partStart = 0;
     let index = 0;
     let emittedCaption = false;
     const addLiteral = (part: string, start: number): void => {
       for (const piece of literalPieces(part, start, true)) {
-        addText(piece.value, emittedCaption ? "" : caption, piece.start, piece.end, false, piece.positions);
+        spokenParts.push(piece.value);
+        addText(piece.value, shared ? piece.value : emittedCaption ? "" : caption!, piece.start, piece.end, false, piece.positions);
         emittedCaption = true;
       }
     };
@@ -519,6 +525,29 @@ export function parseScript(
       }
       if (raw.startsWith("||", index)) {
         fail("SCRIPT_CAPTION_BREAK_DUAL", "Caption Cue break cannot occur inside Dual Text; split the Dual Text into separate units.", absoluteStart + index);
+      }
+      if (shared && raw[index] === "{") {
+        const before = raw.slice(partStart, index);
+        if (!before || /\s$/u.test(before)) {
+          fail("SCRIPT_ATTRIBUTE_TARGET", "A token attribute must immediately follow a display token.", absoluteStart + index);
+        }
+        addLiteral(before, absoluteStart + partStart);
+        const block = parseAttributeBlock(raw.slice(index), absoluteStart + index);
+        const displayIndex = displayWordSurfaces(spokenParts.join("")).length - 1;
+        if (displayIndex < 0 || tokens.length === startToken) {
+          fail("SCRIPT_ATTRIBUTE_TARGET", "A token attribute must follow a visible display token.", absoluteStart + index);
+        }
+        if (sharedMarks.some(mark => mark.displayIndex === displayIndex)) {
+          fail("SCRIPT_ATTRIBUTE_OVERLAP", "A display token cannot receive two separate attribute blocks.", absoluteStart + index);
+        }
+        sharedMarks.push({ displayIndex, attributes: block.attributes });
+        const token = tokens.at(-1)!;
+        tokens[tokens.length - 1] = { ...token, editRange: {
+          start: token.editRange.start, end: sourceOffset + absoluteStart + index + block.length,
+        } };
+        index += block.length;
+        partStart = index;
+        continue;
       }
       const marker = parseMarker(raw, index);
       if (!marker) {
@@ -532,15 +561,19 @@ export function parseScript(
       partStart = index;
     }
     addLiteral(raw.slice(partStart), absoluteStart + partStart);
+    const display = caption ?? spokenParts.join("");
+    if (shared && tokens.length === startToken) {
+      fail("SCRIPT_DUAL_EMPTY", "Dual Text with omitted speech must contain spoken text on its display side.", absoluteStart);
+    }
     if (tokens.length > startToken) {
       addCaptionRegion(
-        caption,
+        display,
         current!.id,
         startToken,
         tokens.length,
-        cleanProjection(caption) ? "alias" : "hidden",
+        cleanProjection(display) ? "alias" : "hidden",
         { start: sourceOffset + absoluteStart, end: sourceOffset + absoluteStart + raw.length },
-        marks,
+        shared ? sharedMarks : marks,
       );
     }
   };
@@ -636,10 +669,16 @@ export function parseScript(
       const pipe = findUnescaped(inside, "|");
       if (pipe >= 0) {
         finishLexicalRun();
+        const speech = inside.slice(pipe + 1);
+        if (!speech.trim()) {
+          consumeSpeechSide(inside.slice(0, pipe), offset + 1, undefined);
+          finishLexicalRun();
+          offset = end + 1;
+          continue;
+        }
         assertDualDisplayLiteral(inside.slice(0, pipe), offset + 1);
         const markedDisplay = parseMarkedDisplay(inside.slice(0, pipe), offset + 1);
         const display = markedDisplay.display;
-        const speech = inside.slice(pipe + 1);
         if (!speech.replace(/~?@\/?[A-Za-z_][A-Za-z0-9_.-]*!?~?/gu, "").trim()) {
           fail("SCRIPT_DUAL_EMPTY", "Dual Text speech side must not be empty.", offset);
         }

@@ -9,8 +9,8 @@ import { selectionFrameSpan } from "@qflow/timeline";
 import { temporalizeCaptionDocument } from "../src/index.js";
 import { fixtureResource } from "../../../test/fixture-resource.js";
 
-test("Chinese Script, WhisperX response, semantic assembly and captions preserve words, cue breaks and timing", () => {
-  const parsed = parseScript("mixed-zh.svml", `<opening><HOST>用@brand ElevenLabs @/brand做视频，|| 真方便。</opening>
+for (const grouped of [false, true]) test(`Chinese Script through WhisperX and Timeline preserves caption timing (shared groups: ${grouped})`, () => {
+  const parsed = parseScript("mixed-zh.svml", `<opening><HOST>用@brand ElevenLabs @/brand做${grouped ? '<视频|>' : '视频'}，|| 真方便。</opening>
 <answer><GUEST>今年<2026|二零二六>年，這個很好。</answer>`);
   const narrative = narrativeValue(parsed, "story") as unknown as Narrative;
   const document = captionDocument(parsed, "story.caption", "story");
@@ -54,6 +54,9 @@ test("Chinese Script, WhisperX response, semantic assembly and captions preserve
   assert.deepEqual(windowsFor("用"), [first[0]]);
   assert.deepEqual(windowsFor("ElevenLabs"), [[first[1]![0], first[10]![1]]]);
   assert.deepEqual(windowsFor("做"), [first[11]]);
+  if (grouped) assert.deepEqual(windowsFor("视频，"), [[first[12]![0], first[13]![1]]]);
+  assert.deepEqual(semantic.items[0]!.take.tokens.filter(token => ["做", "视", "频"].includes(token.text))
+    .map(token => [token.startFrame, token.endFrameExclusive]), first.slice(11, 14));
   const span = selectionFrameSpan(semantic, { ...narrative.selections[0]!, narrativeId: narrative.id });
   assert.deepEqual(span, { startFrame: first[1]![0], endFrameExclusive: first[10]![1] });
   const second = evidenceWindows[1]!;

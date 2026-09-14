@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { decodeScriptSurface, narrativeValue, parseScript } from "@qflow/script";
+import { captionDocument, decodeScriptSurface, formatScript, narrativeDialogueTextValue,
+  narrativeSpeechTextValue, narrativeValue, parseScript } from "@qflow/script";
 import { assertNarrativeIdentity, narrativeAnchorTokenBoundary, narrativeSelectionTokenRange,
   narrativeTokensForSelection, narrativeTypes } from "@qflow/narrative";
 import type { Narrative, NarrativeSelectionRef } from "@qflow/narrative";
@@ -8,6 +9,8 @@ import { captionUnitsForSelection, captionTypes, decodeHiddenCaptionStyleSurface
 import type { CaptionProgram } from "@qflow/caption";
 import { parseStructuredElement } from "@qflow/markup";
 import type { SurfaceResolvedReference } from "@qflow/markup";
+import { countSpeechEstimateUnits } from "@qflow/estimate";
+import type { Text } from "@qflow/text";
 
 const body = `<intro><HOST>Try @brand <qflow|Hai-Pit> @/brand today. ||</intro>
 <gap/>
@@ -16,6 +19,42 @@ const body = `<intro><HOST>Try @brand <qflow|Hai-Pit> @/brand today. ||</intro>
 function authored() {
   return narrativeValue(parseScript("views.svml", body), "story") as unknown as Narrative;
 }
+
+test("omitted speech shares display prose while retaining ordinary Narrative and caption exports", () => {
+  for (const [short, expanded] of [
+    ['把<动效|><组件化|>。|| <直接复用|>。', '把<动效|动效><组件化|组件化>。|| <直接复用|直接复用>。'],
+    ['<Git Hub|> 和 <API|A P I>。<|只说不显示>', '<Git Hub|Git Hub> 和 <API|A P I>。<|只说不显示>'],
+    ['<图{emphasis}像|> 与 <\\@Qflow|>。', '<图{emphasis}像|图像> 与 <\\@Qflow|\\@Qflow>。'],
+  ]) {
+    const body = `<intro><HOST>${short}</intro>`;
+    const parsed = parseScript("short.svml", body);
+    const full = parseScript("full.svml", `<intro><HOST>${expanded}</intro>`);
+    assert.deepEqual(narrativeValue(parsed, "story"), narrativeValue(full, "story"));
+    assert.deepEqual(narrativeSpeechTextValue(parsed.segments[0]!), narrativeSpeechTextValue(full.segments[0]!));
+    assert.deepEqual(narrativeDialogueTextValue(parsed.segments[0]!), narrativeDialogueTextValue(full.segments[0]!));
+    const speech = narrativeSpeechTextValue(parsed.segments[0]!) as unknown as Text;
+    assert.equal(countSpeechEstimateUnits(speech.value, "zh"), countSpeechEstimateUnits(full.serializations.speech, "zh"));
+    assert.deepEqual(narrativeValue(parseScript("formatted", formatScript("short", body)), "story"), narrativeValue(parsed, "story"));
+    const source = `<script id="story">${body}</script>`;
+    const decoded = decodeScriptSurface({ sourceName: "short.svml", source, tag: "script",
+      attributes: { id: "story" }, openingStart: 0, contentStart: source.indexOf(">") + 1 });
+    assert.deepEqual(decoded.records.find(record => record.id === "story")?.value,
+      { kind: "inline", value: narrativeValue(parsed, "story") });
+  }
+});
+
+test("shared text permits semantic markers without changing display; empty groups still fail", () => {
+  const parsed = parseScript("shared", '<intro><HOST><组@part 件@/part化|></intro>');
+  assert.equal(parsed.serializations.speech, "组件化");
+  assert.equal(parsed.captionProjection.text, "组件化");
+  assert.equal(parsed.selections[0]!.startAnchorId, parsed.tokens[1]!.startAnchorId);
+  assert.equal(captionDocument(parsed, "caption", "story").units[0]!.sourceTokenIds.length, 3);
+  for (const body of ['<|>', '< | >', '<@beat!|>', '<...|>']) {
+    assert.throws(() => parseScript("empty", `<intro>${body}</intro>`), /omitted speech must contain spoken text/u);
+  }
+  assert.throws(() => parseScript("cue", '<intro><动效|动||效></intro>'), /Cue break cannot occur inside/u);
+  assert.throws(() => parseScript("explicit", '<intro><@bad 字|word></intro>'), /spoken text, not the Dual display side/u);
+});
 
 test("Script exports complete author content and a caption view from that same value", () => {
   const source = `<script id="story">${body}</script>`;

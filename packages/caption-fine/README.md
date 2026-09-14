@@ -87,6 +87,13 @@ individual Han characters as Display Words; punctuation stays with its display w
 those units for timing and active Paint, while authored Cues remain complete reading phrases.
 Dual Text retains its complete alignment unit even when it displays or speaks several words.
 
+`<组件化|>` authors the same unit as `<组件化|组件化>` without repeating the speech. Fine's `step`
+karaoke, active underline and active box treat that unit together using its first-to-last speech
+interval. Ordinary Chinese characters around it retain their own activation times. This is an
+explicit authored group, not a renderer-selected segmentation, and does not introduce a new Cue.
+The underlying character anchors remain available to other Timeline consumers. `wipe` and
+`typewriter` still animate inside the complete unit over its interval when deliberately selected.
+
 `word-gap` applies between Latin words and at Chinese/Latin boundaries. Adjacent Han characters and
 full-width punctuation carry no extra word gap. `letter-spacing` controls glyph tracking. Exact
 font fallbacks supply the required glyphs; the layout does not select a font by language.

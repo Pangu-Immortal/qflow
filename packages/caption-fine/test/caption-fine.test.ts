@@ -328,6 +328,31 @@ function numericStyleAt(element: import("@qflow/composition").VisualElement, fra
     : value(left) + (value(right) - value(left)) * (frame - left.atFrame) / (right.atFrame - left.atFrame);
 }
 
+for (const mode of ["current", "trail"] as const) test(`shared-text groups use existing ${mode} whole-unit caption effects`, () => {
+  const make = (script: string) => {
+    const { document, program, projection } = fixture(script);
+    const style = fineCaptionStyle("plain", { ...recipe, properties: { ...recipe.properties,
+      karaoke: mode, "karaoke-transition": "step", "active-box": mode, "active-underline": mode,
+    } }, [font]);
+    const styled = { ...program, styles: [style] };
+    return renderFineCaption(scheduleFineCaption(projection, styled, document), styled, document,
+      sealTimeline({ items: [], id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } }));
+  };
+  const track = make('<line><动效|><组件化|> || <直接|><复用|></line>');
+  assert.deepEqual(track, make('<line><动效|动效><组件化|组件化> || <直接|直接><复用|复用></line>'));
+  const present = track.presents[0]!;
+  for (const [index, [start, end]] of [[10, 20], [20, 30]].entries()) {
+    for (const suffix of ["active", "underline", "box"]) {
+      const element = present.elements.find(item => item.id === `atom-${index + 1}-${suffix}`)!;
+      assert.ok(element);
+      for (let frame = present.span.startFrame; frame < present.span.endFrameExclusive; frame++) {
+        assert.equal(numericStyleAt(element, frame - present.span.startFrame, "opacity"),
+          Number(frame >= start! && (mode === "trail" || frame < end!)));
+      }
+    }
+  }
+});
+
 for (const mode of ["current", "trail"] as const) {
   test(`Chinese ${mode} karaoke, underline and boxes follow unequal character times and pauses`, () => {
     const { track, windows } = unevenChineseCaption({

@@ -64,7 +64,8 @@ export const scriptMarkupSurfaces = [
         "A Script requires at least one Segment, and natural-language text is refused outside a Segment.",
         "A Segment is opened by its own lower-case name and closed by that exact name, or written self-closing as `<pause/>`; the name is the Segment id, must be unique within the Script, and `script` is reserved. Segments do not nest.",
         "A Role Cue such as `<HOST>` is a bare tag inside a Segment with no close; its turn runs until the next Cue or the end of the Segment, and a Cue may not follow unowned speech in the same Segment. Role state resets when the Segment closes.",
-        "Dual Text is written `<display | speech>`: the left side reaches the caption projection and the right side reaches dialogue and speech. The spoken side must not be empty; the displayed side may be, which speaks a word that is never displayed.",
+        "Dual Text is written `<display | speech>`: the left side reaches Caption and the right side reaches dialogue and speech. `<display|>` inherits speech from the displayed prose and forms the same complete alignment unit; its word times remain individual. `<|speech>` speaks without displaying. Both sides empty is invalid.",
+        "Inside Dual Text, semantic markers belong to the source of spoken text: the explicit right side, or the shared left side when speech is omitted. Display attributes remain visual metadata and never enter spoken text.",
         "A flat token attribute follows a complete display token as `{name}` or `{name=value}`; multiple attributes use one comma-separated block. Attributes do not nest, do not carry timing, and never split a Dual Alignment Unit.",
         "Selection and Moment markers are zero-width, share one name namespace, and may not split a speech token:",
         [

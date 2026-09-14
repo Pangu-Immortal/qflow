@@ -16,6 +16,8 @@ const fixtures = [
   '<one>Find \\@qflow now. @beat!</one>',
   '<one>Use \\{braces\\} here. @beat!</one>',
   '<one><Qflow|Hai \\@ Pit> works. @beat!</one>',
+  '<one><HOST>把<动效|><组件化|>。@beat!</one>',
+  '<one><HOST><Git Hub|> <图{emphasis}像|> <\\@Qflow|>。@beat!</one>',
 ];
 
 test("horizontal formatting preserves lexical distinctions and line breaks", () => {
@@ -88,6 +90,7 @@ for (const source of [
   '<one>A   ~@s B  . @/s</one>',
   '<one>@s A   @/s B  .</one>',
   '<one>@s A   @/s~ B  .</one>',
+  '<one><HOST>@s <动效|><组件化|> @/s</one>',
 ]) test(`Selection affinity survives every structural round trip: ${source}`, () => {
   const original = parseScript("edit", source);
   const selection = original.selections[0]!;
