@@ -7,6 +7,8 @@ import { defineEndpointPackage } from "@qflow/endpoint-kit";
 import type { AsyncEndpoint } from "@qflow/endpoint-kit";
 import type { CanonicalValue, Need } from "@qflow/protocol";
 import { mimoSpeechEndpoints, sealMimoSpeechRequest } from "@qflow/mimo-speech";
+import { fishAudioSpeechEndpoints, sealFishAudioSpeechRequest } from "@qflow/fishaudio-speech";
+import { elevenLabsSpeechEndpoints, sealElevenLabsSpeechRequest } from "@qflow/elevenlabs-speech";
 import { generationTypes } from "@qflow/generation";
 import { sealSeedanceRequest, seedanceEndpoints } from "@qflow/seedance";
 import { sealSpeechEvidenceAudio } from "@qflow/speech";
@@ -312,8 +314,11 @@ test("QflowHub stores both preview JSON and ordinary speech JSON as audio Resour
       const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
       submitted.push(body);
       const data = Buffer.from([9, 8, 7, submitted.length]).toString("base64");
-      return submitted.length === 1
-        ? Response.json({ object: "audio.voice_previews", previews: [{ b64_json: data, mime_type: "audio/wav" }] })
+      return cases[submitted.length - 1]!.previews
+        ? Response.json({ object: "audio.voice_previews", previews: [
+          { b64_json: data, mime_type: "audio/wav" },
+          { b64_json: Buffer.from([6, 5, 4]).toString("base64"), mime_type: "audio/wav" },
+        ] })
         : Response.json({ object: "audio.speech", b64_json: data, mime_type: "audio/wav" });
     },
   });
@@ -325,6 +330,8 @@ test("QflowHub stores both preview JSON and ordinary speech JSON as audio Resour
       constraints: sealMimoSpeechRequest("mimo-v2.5-tts-voicedesign", {
         text: ["A short voice sample."], voiceDescription: ["Warm and confident."],
       }),
+      previews: true,
+      wire: { model: "mimo-v2.5-tts-voicedesign", input: "A short voice sample.", voice_description: "Warm and confident." },
     },
     {
       endpoint: mimoSpeechEndpoints.voiceClone,
@@ -332,6 +339,37 @@ test("QflowHub stores both preview JSON and ordinary speech JSON as audio Resour
         text: ["Independent narration."], instruction: ["Quietly direct."],
         voiceReference: [{ role: "audio", artifact: voiceReference }],
       }),
+      previews: false,
+      wire: { model: "mimo-v2.5-tts-voiceclone", input: "Independent narration.", prompt: "Quietly direct.",
+        reference_audio: ["https://qflow.ai/assets/voice.wav"] },
+    },
+    {
+      endpoint: fishAudioSpeechEndpoints.voiceDesign,
+      constraints: sealFishAudioSpeechRequest("voice-design-1", {
+        text: ["A Fish Audio voice sample."], voiceDescription: ["A bright, playful young woman."],
+      }),
+      previews: true,
+      wire: { model: "fishaudio/voice-design-1", input: "A Fish Audio voice sample.", voice_description: "A bright, playful young woman." },
+    },
+    {
+      endpoint: fishAudioSpeechEndpoints.voiceClone,
+      constraints: sealFishAudioSpeechRequest("voice-clone", {
+        text: ["Fish Audio narration."], voiceReference: [{ role: "audio", artifact: voiceReference }],
+      }),
+      previews: false,
+      wire: { model: "fishaudio/voice-clone", input: "Fish Audio narration.", voice_description: "reference",
+        reference_audio: ["https://qflow.ai/assets/voice.wav"] },
+    },
+    {
+      endpoint: elevenLabsSpeechEndpoints.voiceDesign,
+      constraints: sealElevenLabsSpeechRequest("eleven_ttv_v3", {
+        text: ["This is a clear conversational voice sample, with enough room to hear the speaker's warmth, energy and natural rhythm."],
+        voiceDescription: ["A warm young woman with bright conversational delivery."],
+      }),
+      previews: true,
+      wire: { model: "eleven_ttv_v3",
+        input: "This is a clear conversational voice sample, with enough room to hear the speaker's warmth, energy and natural rhythm.",
+        voice_description: "A warm young woman with bright conversational delivery." },
     },
   ];
   for (const [index, item] of cases.entries()) {
@@ -354,11 +392,10 @@ test("QflowHub stores both preview JSON and ordinary speech JSON as audio Resour
     assert.equal(result.value.kind, "inline");
     const set = result.value.kind === "inline" ? result.value.value as Record<string, unknown> : {};
     const audios = set.audios as Array<{ resource: `res_${string}` }>;
-    assert.equal(await resources.has(audios[0]!.resource), true);
+    assert.equal(audios.length, item.previews ? 2 : 1);
+    for (const audio of audios) assert.equal(await resources.has(audio.resource), true);
+    assert.deepEqual(submitted[index], { ...item.wire, output: "b64_json" });
   }
-  assert.equal(submitted[0]!.output, "b64_json");
-  assert.deepEqual(submitted[1]!.reference_audio, ["https://qflow.ai/assets/voice.wav"]);
-  assert.equal(submitted[1]!.prompt, "Quietly direct.");
 });
 
 test("QflowHub uploads one referenced Resource once and submits its HTTPS URL", async () => {

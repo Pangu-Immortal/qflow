@@ -45,6 +45,10 @@ test("ElevenLabs Speech declares the exact voice design request shape", () => {
   assert.throws(() => sealElevenLabsSpeechRequest("eleven_ttv_v3", {
     text: ["Do not rewrite me."],
   }), /voiceDescription is required/u);
+  assert.throws(() => sealElevenLabsSpeechRequest("eleven_ttv_v3", {
+    text: ["A voice sample with enough detail to make the test intent clear."],
+    voiceDescription: ["a".repeat(1001)],
+  }), /voiceDescription.+1000/u);
   assert.equal(elevenLabsNodePackage.format, "qflow.node-package@1");
   assert.deepEqual(elevenLabsSpeechMarkupSurfaces.map((surface) => surface.name), ["voiceDesign"]);
 });

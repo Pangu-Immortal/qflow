@@ -1,6 +1,6 @@
 import { artifactTypes } from "@qflow/artifact";
 import { generationPort, sealGenerationMediaBinding } from "@qflow/generation";
-import type { GenerationMediaPort, GenerationPortValue } from "@qflow/generation";
+import type { GenerationMediaPort } from "@qflow/generation";
 import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/model-kit";
 import type { ExactModelEndpoint, ExactModelMediaInput, ExactModelTextInput } from "@qflow/model-kit";
 import type { CanonicalValue } from "@qflow/protocol";
@@ -73,7 +73,7 @@ function voiceReference(reference: SurfaceResolvedReference, subject: string): S
   return reference;
 }
 
-function body(element: StructuredElement, required: boolean): string | undefined {
+function body(element: StructuredElement): string {
   if (element.children.some((child) => child.kind === "element")) {
     throw new Error(`${element.name} accepts instruction text only`);
   }
@@ -85,8 +85,7 @@ function body(element: StructuredElement, required: boolean): string | undefined
   const indent = indents.length === 0 ? 0 : Math.min(...indents);
   const value = lines.map((line) => line.slice(indent).trimEnd()).join("\n").trim();
   if (value.length === 0) {
-    if (required) throw new Error(`${element.name} requires a voice description in its body`);
-    return undefined;
+    throw new Error(`${element.name} requires a voice description in its body`);
   }
   return value;
 }
@@ -168,7 +167,7 @@ export const decodeFishAudioVoiceDesignSurface: StructuredSurfaceHandler = ({ el
   return output(
     element,
     fishAudioSpeechEndpoints.voiceDesign,
-    sealFishAudioSpeechRequestDraft("voice-design-1", { voiceDescription: [body(element, true)!] }),
+    sealFishAudioSpeechRequestDraft("voice-design-1", { voiceDescription: [body(element)] }),
     "reference",
     [speechInput(element, resolveReference)],
   );
@@ -176,13 +175,13 @@ export const decodeFishAudioVoiceDesignSurface: StructuredSurfaceHandler = ({ el
 
 export const decodeFishAudioVoiceCloneSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
   attributes(element, ["id", "speech", "voice"]);
-  const instruction = body(element, false);
-  const ports: Record<string, readonly GenerationPortValue[]> = {};
-  if (instruction !== undefined) ports.instruction = [instruction];
+  if (element.children.some((child) => child.kind === "element" || child.value.trim().length > 0)) {
+    throw new Error(`${element.name} accepts speech and voice references, with no body input`);
+  }
   return output(
     element,
     fishAudioSpeechEndpoints.voiceClone,
-    sealFishAudioSpeechRequestDraft("voice-clone", ports),
+    sealFishAudioSpeechRequestDraft("voice-clone", {}),
     "audio",
     [speechInput(element, resolveReference)],
     [{

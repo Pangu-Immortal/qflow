@@ -146,7 +146,6 @@ export const hypiHubMappings: readonly GenerationWireMapping[] = [
     constants: { voice_description: "reference" },
     fields: {
       text: { as: "value", field: "input" },
-      instruction: { as: "value", field: "prompt" },
       voiceReference: { as: "urlArray", field: "reference_audio" },
     },
   },

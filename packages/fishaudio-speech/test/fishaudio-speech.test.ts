@@ -87,12 +87,17 @@ test("VoiceDesign publishes one reusable voice reference", async () => {
 });
 
 test("VoiceClone binds an accepted audio Resource and publishes independent speech", async () => {
-  const result = await decodeFishAudioVoiceCloneSurface(context(`<fish:VoiceClone id="narration" speech={story.segment.opening.speech} voice={host.reference}>
-    Calm and restrained.
-  </fish:VoiceClone>`));
+  const result = await decodeFishAudioVoiceCloneSurface(context(
+    `<fish:VoiceClone id="narration" speech={story.segment.opening.speech} voice={host.reference}/>`));
   assert.deepEqual(result.components[0]!.outputs, { audio: "narration.audio" });
   assert.deepEqual(result.components[0]!.inputs["voice:artifact"], { kind: "record", id: "host.reference" });
   assert.ok(result.components[0]!.inputs["voice:binding"] !== undefined);
+});
+
+test("VoiceClone rejects a delivery body rather than silently losing it during synthesis", () => {
+  assert.throws(() => decodeFishAudioVoiceCloneSurface(context(
+    `<fish:VoiceClone id="narration" speech={story.segment.opening.speech} voice={host.reference}>Calm and restrained.</fish:VoiceClone>`,
+  )), /no body input/u);
 });
 
 test("VoiceClone refuses a known non-audio Resource", () => {

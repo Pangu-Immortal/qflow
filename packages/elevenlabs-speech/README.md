@@ -2,9 +2,10 @@
 
 Exact model contract and author Surface for ElevenLabs Voice Design.
 
-`eleven_ttv_v3` creates an ordinary audio voice reference from a natural-language description and an
-authored speech sample of 100 to 1000 characters. The service returns several candidate previews;
-the Surface exposes the primary member of the shared `GeneratedAudioSet` as `<id>.reference`.
+`eleven_ttv_v3` creates an ordinary audio voice reference from a natural-language description of
+20 to 1000 characters and an authored speech sample of 100 to 1000 characters. The service returns
+several candidate previews; the Surface exposes the primary member of the shared `GeneratedAudioSet`
+as `<id>.reference`.
 
 It contains no API URL, credential, retry, queue or ElevenLabs wire encoding. Those belong to a
 Runtime Endpoint such as `@qflow/provider-qflowhub`.

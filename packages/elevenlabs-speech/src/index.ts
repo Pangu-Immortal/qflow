@@ -12,7 +12,8 @@ export type ElevenLabsSpeechModel = typeof elevenLabsSpeechModels[number];
 // ElevenLabs documents a 100 to 1000 character preview text. The port vocabulary
 // carries the ceiling; the floor is stated to authors and enforced by the service.
 const spokenText = { kind: "text", maxChars: 1000 } as const;
-const instruction = { kind: "text" } as const;
+// Voice descriptions have their own documented 20 to 1000 character bounds.
+const instruction = { kind: "text", maxChars: 1000 } as const;
 
 function table(model: ElevenLabsSpeechModel): GenerationPortTable {
   return sealGenerationPortTable({
@@ -95,6 +96,7 @@ export const elevenLabsSpeechMarkupSurfaces = [
       notes: [
         "The element accepts no child elements; only its text is read.",
         "The spoken sample must be between 100 and 1000 characters.",
+        "The voice description must be between 20 and 1000 characters.",
         "The result is an ordinary audio Resource that can be supplied anywhere an audio reference is accepted.",
       ],
     },

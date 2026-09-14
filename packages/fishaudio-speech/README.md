@@ -19,13 +19,13 @@ Runtime Endpoint such as `@qflow/provider-qflowhub`. Both models return the shar
   A clear young woman with a grounded, confident conversational delivery.
 </fish:VoiceDesign>
 
-<fish:VoiceClone id="narration" speech={story.segment.reveal.speech} voice={host.reference}>
-  Quietly confident, with a short pause before the final word.
-</fish:VoiceClone>
+<fish:VoiceClone id="narration" speech={story.segment.reveal.speech} voice={host.reference}/>
 ```
 
 `host.reference` is not a special identity record. It is a normal audio Resource, so the same
 accepted reference can also feed an A-roll video model that accepts reference audio.
+`VoiceClone` takes spoken text and a voice reference. It has no separate natural-language delivery
+instruction input; the description in `VoiceDesign` establishes the reference voice.
 
 Official API reference: <https://docs.fish.audio/>
 

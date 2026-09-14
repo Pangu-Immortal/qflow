@@ -120,7 +120,7 @@ reference to produce independent speech. All of them use `POST /v1/audio/speech`
 | `@qflow/mimo-speech` | `mimo-v2.5-tts-voicedesign` | `mimo-v2.5-tts-voicedesign` | `input`, `voice_description` |
 | `@qflow/mimo-speech` | `mimo-v2.5-tts-voiceclone` | `mimo-v2.5-tts-voiceclone` | `input`, `reference_audio`, optional `prompt` |
 | `@qflow/fishaudio-speech` | `voice-design-1` | `fishaudio/voice-design-1` | `input`, `voice_description` |
-| `@qflow/fishaudio-speech` | `voice-clone` | `fishaudio/voice-clone` | `input`, `reference_audio`, optional `prompt`, constant `voice_description` title |
+| `@qflow/fishaudio-speech` | `voice-clone` | `fishaudio/voice-clone` | `input`, `reference_audio`, constant `voice_description` title |
 | `@qflow/elevenlabs-speech` | `eleven_ttv_v3` | `eleven_ttv_v3` | `input`, `voice_description` |
 
 Each returned preview becomes one member of the audio set. These Model packages do not expose preset
