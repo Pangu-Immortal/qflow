@@ -71,6 +71,10 @@ these details.
 
 ## Plan the selected Run
 
+`qflow plan` inspects an authored Run's execution demands. The creative direction shared with the
+user develops earlier from their request and reference evidence; it does not require a Run, a fully
+prepared environment or this command. Use the command when there is concrete execution to inspect.
+
 Plan the actual Run after its reuse choices and requested changes are expressed:
 
 ```bash

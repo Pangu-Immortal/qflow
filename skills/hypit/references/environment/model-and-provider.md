@@ -43,6 +43,14 @@ are maintained on the [service-partner page](https://github.com/qflow-ai/qflow/b
 A partner is an independent service with its own
 account, pricing and API, and uses the same project-extension path as any other external service.
 
+Service choice and authentication method are different questions: QflowHub itself accepts OAuth or
+an API key. In a BYOK request, establish which service the user's key belongs to and what it supports.
+Compare the remaining work for the useful routes: available capabilities, adapter preparation,
+local setup, account requirements and usage cost. A ready suitable connection can carry the work
+forward. A new project Provider makes another service possible, but its API mapping and validation
+take real work; QflowHub's bundled integration can avoid that work. Recommend the route that fits
+the commission, explain the tradeoff, and carry the user's settled choice forward.
+
 [Environment selection](profile.md#choose-the-practical-capability-path-with-the-user) owns readiness,
 local preparation and account choices. Connect the capability needed next. For a spoken reference,
 that may be WhisperX while the generation plan is still developing. Once the intended material is

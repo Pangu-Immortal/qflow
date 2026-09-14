@@ -20,7 +20,9 @@ these changes against the words, pauses or actions they serve. Explain what the 
 viewer: establishes a person, contrasts two claims, accumulates proof, amplifies a reaction, makes
 a process legible, or hands attention to the next idea. Meaning directs the close look; the close
 look supplies the detail needed to recreate the expression. Close reading also reveals purposes and
-connections that the first whole-piece impression missed.
+connections that the first whole-piece impression missed. An interpretation earns its usefulness
+by explaining the concrete choices; close observation becomes creative understanding when those
+choices connect to the piece's intention. Keep both growing together throughout the reading.
 
 When a choice is puzzling, widen the view: relate it to the surrounding words, nearby events, earlier
 appearances and later consequences. Consider what those connections could explain, then examine the
@@ -40,12 +42,13 @@ replace an item, add to a collection, or temporarily cover it. Document the syst
 its changes in time. Camera boundaries help navigation; meaning and continuity determine which
 things belong together.
 
-Speak aloud as the understanding develops: share a specific finding, its significance for this work
-and the next question being examined, while continuing the investigation. Once the direction is supported, present a
-short account of the reference's structure with representative frames or a word-labeled grid:
-what persists, what changes on which idea, and which relationships suit the user's adaptation.
-Analysis and Timeline retain the detailed evidence; the visible account helps the user assess your
-reading and contribute their taste. Routine progress does not require another approval.
+Speak aloud as the understanding develops. During a close look, explain what the discovered timing,
+placement or motion does for the viewer and how it informs the adaptation. Share representative
+frames or a word-labeled grid when they make that relationship tangible. Carry a provisional reading
+into the conversation, then explain how new evidence deepens or changes it. Articulating the
+connection also helps you notice where your explanation is still incomplete. Analysis and Timeline
+retain the detailed evidence; the conversation lets the user follow the developing interpretation
+and contribute their taste. Routine progress does not require another approval.
 
 Build an account of behavior that can become an editable production. A fixed screen image may be
 the evidence the passage needs; a changing comparison also needs its arrivals, states and handoffs.
@@ -56,6 +59,11 @@ The useful result is an explanatory model for this commission: which relationshi
 when its person, product or wording changes, and which choices should be redesigned. Record the
 observed behavior before choosing how the target will implement it. A picture, text and motion that
 work together may become one component; repeated appearances may be states of that same object.
+
+Follow the whole reference and account concretely for each distinct system and its changes.
+Repeated behavior can share an explanation, with its variations and handoffs located in time.
+Carry established understanding into direction and composition while pursuing the questions still
+open. Preserve those questions at their source times so the next view can sharpen the account.
 
 ## Make time visible
 

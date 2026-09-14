@@ -159,7 +159,9 @@ stage and can disappear when there is nothing useful to hand over.
 
 Use these files as the working memory across conversations. Write discoveries and decisions into
 their owning documents as the work develops, preserving both the explanation and its concrete
-details. Resume by reading the current project files and relevant Skill pages; use Progress to find
+details. Let provisional accounts grow with the understanding, keeping detailed evidence once and
+linking to its owner. Share the meaning of discoveries in conversation while the files retain the
+full account. Resume by reading the current project files and relevant Skill pages; use Progress to find
 the next question and the saved evidence, Sources, Runs or Results to continue it. A new discovery
 updates the account it changes so the next session inherits the improved understanding.
 
