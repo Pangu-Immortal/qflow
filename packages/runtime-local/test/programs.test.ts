@@ -117,6 +117,26 @@ function fileBackedProgram(marker: string): ManagedProgram {
   };
 }
 
+test("Provider-owned preparation reconciles a cold installation and leaves a ready Program alone", async () => {
+  const configured = await project((root) => ({
+    id: "reconciled",
+    probe: async () => {
+      try { await readFile(join(root, "prepared")); return { state: "ready" }; }
+      catch { return { state: "down", detail: "not prepared" }; }
+    },
+    installation: {
+      prepareBeforeStart: true,
+      probe: async () => ({ state: "ready" }),
+      commands: [nodeProgram("require('node:fs').appendFileSync(process.argv[1], 'prepared\\n')", join(root, "prepared"))],
+    },
+  }));
+  try {
+    assert.equal((await bringManagedProgramsUp(configured.path, configured.options)).programs[0]?.action, "installed");
+    assert.equal((await bringManagedProgramsUp(configured.path, configured.options)).programs[0]?.action, "already-running");
+    assert.equal(await readFile(join(configured.root, "prepared"), "utf8"), "prepared\n");
+  } finally { await rm(configured.root, { recursive: true, force: true }); }
+});
+
 test("up preserves installation logs through service startup and down stops it", async () => {
   const marker = join(await mkdtemp(join(tmpdir(), "qflow-marker-")), "ready");
   const installed = `${marker}.installed`;

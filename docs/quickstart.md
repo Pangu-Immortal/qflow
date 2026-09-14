@@ -46,11 +46,14 @@ project and explains the direction as the work develops.
 
 The Agent checks the relevant tools and services already available. For a spoken reference, WhisperX
 provides the words and their timing so the Agent can relate the picture to what is being said.
-If it is missing, the Agent can help prepare it locally or explain the hosted option.
+If it needs preparation, the Agent explains the local effort and hosted option before you choose.
+Cached weights can reduce setup time; they do not choose a service for you.
 
 [QflowHub](https://qflow.ai) offers hosted WhisperX and image, video and voice models through one
-account. You can also use your own keys with supported Providers, and combine local and hosted
-capabilities. The Agent explains what is needed and helps connect the services you choose.
+account. You can also use your own keys through existing or project-written Providers, and combine
+local and hosted capabilities. The Agent connects what the next part of the work needs, explains
+progress and shows its reference understanding before developing the material plan. Generation
+accounts can be chosen when that plan establishes the models you need.
 
 ## 4. Agree on the cost and let production run
 

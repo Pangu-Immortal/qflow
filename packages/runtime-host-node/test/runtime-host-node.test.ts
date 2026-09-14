@@ -31,12 +31,13 @@ test("configured executable paths are rooted at the Runtime Profile project", as
   }
 });
 
-test("machine packages are exact npm packages reused from one Host root", async () => {
+test("machine packages reuse exact releases without overwriting another version", async () => {
   const root = await mkdtemp(join(tmpdir(), "qflow-machine-packages-"));
   try {
     const packageRoot = qflowHostPackageRoot(root);
-    await mkdir(join(packageRoot, "node_modules", "hyperframes"), { recursive: true });
-    await writeFile(join(packageRoot, "node_modules", "hyperframes", "package.json"), JSON.stringify({
+    const installation = join(packageRoot, "hyperframes", "0.7.101");
+    await mkdir(join(installation, "node_modules", "hyperframes"), { recursive: true });
+    await writeFile(join(installation, "node_modules", "hyperframes", "package.json"), JSON.stringify({
       name: "hyperframes",
       version: "0.7.101",
     }));
@@ -48,6 +49,13 @@ test("machine packages are exact npm packages reused from one Host root", async 
     assert.throws(() => parseRegistryPackageSpec("@qflow/seedance@1.0.0"), /external npm registry package/u);
     const reports = await prepareHostPackages(["hyperframes@0.7.101"], { root: packageRoot });
     assert.equal(reports[0]?.action, "already-installed");
+    assert.equal(reports[0]?.root, installation);
+    const other = join(packageRoot, "hyperframes", "0.7.102");
+    await mkdir(join(other, "node_modules", "hyperframes"), { recursive: true });
+    await writeFile(join(other, "node_modules", "hyperframes", "package.json"), JSON.stringify({ name: "hyperframes", version: "0.7.102" }));
+    assert.equal((await prepareHostPackages(["hyperframes@0.7.102"], { root: packageRoot }))[0]?.root, other);
+    assert.equal((await prepareHostPackages(["hyperframes@0.7.101"], { root: packageRoot }))[0]?.action, "already-installed");
+    assert.equal((await prepareHostPackages(["hyperframes@0.7.101", "hyperframes@0.7.102"], { root: packageRoot })).length, 2);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

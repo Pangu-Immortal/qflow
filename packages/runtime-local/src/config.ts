@@ -1,3 +1,4 @@
+import { fileExecutionLogs } from "./log.js";
 import { readFile, rm, stat } from "node:fs/promises";
 import { dirname, relative, resolve, sep } from "node:path";
 
@@ -56,6 +57,7 @@ import type {
   RuntimeHostCapabilityProvider,
   RuntimeHostProviderQuery,
   RuntimeHostTransientExecution,
+  RuntimeInvocationObservation,
 } from "@qflow/runtime-host-node";
 import { SqliteRuntimeState } from "@qflow/store-sqlite";
 
@@ -82,6 +84,8 @@ export type LocalRuntimeAdapterSelection = {
 export type LocalRuntimeProfile = {
   readonly format: "qflow.runtime-local@1";
   readonly dataRoot: string;
+  /** Coordinator policy, independent of any Build's selected Endpoints. */
+  readonly worker?: { readonly executionMemoryMb: number };
   readonly credentials: readonly LocalRuntimeAdapterSelection[];
   readonly endpoints: readonly LocalRuntimeAdapterSelection[];
   /**
@@ -106,6 +110,9 @@ export type ProjectBuildResultDoctorResult = {
 export type LoadRuntimeConfigOptions = {
   readonly registry?: RuntimeAdapterRegistry;
   readonly resultRegistry?: BuildResultRepositoryRegistry;
+  /** Execution-owned module bindings; omitted for ordinary short-lived CLI calls. */
+  readonly importModule?: (url: string) => Promise<unknown>;
+  readonly endpoints?: readonly string[];
   readonly packageRoot?: string;
   readonly distributionPackageRoot?: string;
   /** Persistent machine/user state. Defaults to the platform Qflow state root. */
@@ -119,8 +126,34 @@ export type RuntimeConfigDoctorResult = {
 
 type RuntimeInspectionOptions = LoadRuntimeConfigOptions & {
   readonly capabilities?: readonly CapabilityRef[];
+  readonly endpoints?: readonly string[];
   readonly active: boolean;
 };
+
+/** Explicit deployment scope. Bindings narrow discovery before unused packages are loaded. */
+function scopedProfile(document: LocalRuntimeProfile, scope: {
+  readonly endpoints?: readonly string[];
+  readonly capabilities?: readonly CapabilityRef[];
+}): LocalRuntimeProfile {
+  const bound = scope.capabilities?.map((capability) => document.bindings[capabilityKey(capability)]);
+  const names = scope.endpoints ?? (bound?.every((name) => name !== undefined) ? bound as string[] : undefined);
+  if (names === undefined) return document;
+  for (const name of names) {
+    if (!document.endpoints.some((item) => item.instance === name)) throw new Error(`Runtime Profile has no Endpoint ${name}`);
+  }
+  const selected = new Set(names);
+  return { ...document,
+    endpoints: document.endpoints.filter((item) => selected.has(item.instance)),
+    bindings: Object.fromEntries(Object.entries(document.bindings).filter(([, name]) => selected.has(name))),
+  };
+}
+
+function requestsCapability(document: LocalRuntimeProfile, instance: string, capability: CapabilityRef,
+  requested: ReadonlySet<string> | undefined): boolean {
+  const key = capabilityKey(capability);
+  return requested === undefined || requested.has(key)
+    && (document.bindings[key] === undefined || document.bindings[key] === instance);
+}
 
 export type ResolvedRuntimeConfigPaths = {
   readonly packageRoot: string;
@@ -194,7 +227,7 @@ function bindings(value: unknown, endpoints: readonly LocalRuntimeAdapterSelecti
 
 export function parseLocalRuntimeProfile(value: unknown): LocalRuntimeProfile {
   const item = object(value, "$runtime");
-  exactKeys(item, ["format", "dataRoot", "credentials", "endpoints", "bindings"], "$runtime");
+  exactKeys(item, ["format", "dataRoot", "worker", "credentials", "endpoints", "bindings"], "$runtime");
   if (item.format !== "qflow.runtime-local@1") {
     throw new Error("$runtime.format must be qflow.runtime-local@1");
   }
@@ -202,13 +235,29 @@ export function parseLocalRuntimeProfile(value: unknown): LocalRuntimeProfile {
   const endpoints = entries(item.endpoints, "$runtime.endpoints", true);
   const ids = [...credentials, ...endpoints].map((value) => value.instance);
   if (new Set(ids).size !== ids.length) throw new Error("$runtime repeats a Runtime instance id");
+  let worker: LocalRuntimeProfile["worker"];
+  if (item.worker !== undefined) {
+    const settings = object(item.worker, "$runtime.worker");
+    exactKeys(settings, ["executionMemoryMb"], "$runtime.worker");
+    const budget = settings.executionMemoryMb;
+    if (typeof budget !== "number" || !Number.isSafeInteger(budget) || budget <= 0) {
+      throw new Error("$runtime.worker.executionMemoryMb must be a positive integer in MiB");
+    }
+    worker = { executionMemoryMb: budget };
+  }
   return {
     format: "qflow.runtime-local@1",
     dataRoot: requiredString(item.dataRoot, "$runtime.dataRoot"),
+    ...(worker === undefined ? {} : { worker }),
     credentials,
     endpoints,
     bindings: bindings(item.bindings, endpoints),
   };
+}
+
+/** Read only process policy; starting a coordinator does not load selected project packages. */
+export async function readRuntimeWorkerOptions(path: string): Promise<{ readonly executionMemoryMb: number }> {
+  return (await openRuntimeConfig(path)).document.worker ?? { executionMemoryMb: 1024 };
 }
 
 async function openRuntimeConfig(path: string, packageRootHint?: string): Promise<OpenedRuntimeConfig> {
@@ -253,6 +302,7 @@ async function installRuntimeAdapters(
   packageRoot: string,
   selection: NodePackageSelectionRequest,
   distributionPackageRoot?: string,
+  importModule?: (url: string) => Promise<unknown>,
 ): Promise<void> {
   const logical = selection.logical?.filter((address) => {
     if (address.abi === runtimeEndpointAdapterHostAbi) return !registry.has(address.name, "endpoint");
@@ -261,6 +311,8 @@ async function installRuntimeAdapters(
   }) ?? [];
   if (selection.selected.length === 0 && logical.length === 0) return;
   const loaded = await loadNodePackageSelection({ selected: selection.selected, logical }, packageRoot, {
+    deferExternalDependencies: true,
+    ...(importModule === undefined ? {} : { importModule }),
     ...(distributionPackageRoot === undefined ? {} : { fallbackRoots: [distributionPackageRoot] }),
   });
   for (const item of loaded) {
@@ -275,9 +327,11 @@ async function installBuildResultAdapter(
   packageRoot: string,
   use: string,
   distributionPackageRoot?: string,
+  importModule?: (url: string) => Promise<unknown>,
 ): Promise<void> {
   if (registry.has(use)) return;
   const loaded = await loadNodePackageSelection(resultPackageSelection(use), packageRoot, {
+    ...(importModule === undefined ? {} : { importModule }),
     ...(distributionPackageRoot === undefined ? {} : { fallbackRoots: [distributionPackageRoot] }),
   });
   for (const item of loaded) {
@@ -294,7 +348,7 @@ async function openBuildResultLocation(
   packageRoot: string,
   registry: BuildResultRepositoryRegistry,
 ): Promise<BuildResultRepositoryOpened> {
-  await installBuildResultAdapter(registry, packageRoot, location.selection.use, options.distributionPackageRoot);
+  await installBuildResultAdapter(registry, packageRoot, location.selection.use, options.distributionPackageRoot, options.importModule);
   return await registry.open(location.selection, location.root);
 }
 
@@ -394,13 +448,19 @@ export async function prepareRuntimeConfigPackages(
   path: string,
   options: LoadRuntimeConfigOptions & {
     readonly onProgress?: (event: HostPackageProgress) => void;
+    readonly endpoints?: readonly string[];
   } = {},
 ): Promise<readonly HostPackageReport[]> {
   if (options.distributionPackageRoot === undefined) return [];
-  const { document } = await openRuntimeConfig(path, options.packageRoot);
+  const opened = await openRuntimeConfig(path, options.packageRoot);
+  const document = scopedProfile(opened.document, options);
+  const registry = options.registry ?? new RuntimeAdapterRegistry();
+  await installRuntimeAdapters(registry, opened.packageRoot, endpointPackageSelection(document), options.distributionPackageRoot);
+  const activations = await activatedEndpoints(document, opened.root, resolve(options.hostStateRoot ?? qflowHostStateRoot()), registry);
+  const credentials = credentialProfile(document, activations.map(({ activation }) => activation.endpoint));
   const requirements = await distributionExternalPackageRequirements([
-    ...document.credentials.map((item) => item.use),
     ...document.endpoints.map((item) => item.use),
+    ...credentials.credentials.map((item) => item.use),
   ], options.distributionPackageRoot);
   return await prepareHostPackages(requirements.map((item) => item.specifier), {
     root: qflowHostPackageRoot(options.hostStateRoot),
@@ -450,11 +510,18 @@ async function activatedEndpoints(
   })));
 }
 
+function credentialProfile(document: LocalRuntimeProfile, endpoints: readonly EndpointPackage[]): LocalRuntimeProfile {
+  const used = new Set(endpoints.flatMap((endpoint) => endpoint.credentials.map((slot) => slot.ref.store)));
+  return { ...document, credentials: document.credentials.filter((item) => used.has(item.instance)) };
+}
+
 export async function declaredManagedPrograms(
   path: string,
-  options: LoadRuntimeConfigOptions & { readonly capabilities?: readonly CapabilityRef[] } = {},
+  options: LoadRuntimeConfigOptions & { readonly capabilities?: readonly CapabilityRef[]; readonly endpoints?: readonly string[] } = {},
 ): Promise<{ readonly dataRoot: string; readonly programs: readonly DeclaredManagedProgram[] }> {
-  const { document, root, packageRoot } = await openRuntimeConfig(path, options.packageRoot);
+  const opened = await openRuntimeConfig(path, options.packageRoot);
+  const { root, packageRoot } = opened;
+  const document = scopedProfile(opened.document, options);
   if (options.capabilities?.length === 0) return { dataRoot: root, programs: [] };
   const hostStateRoot = resolve(options.hostStateRoot ?? qflowHostStateRoot());
   const registry = options.registry ?? new RuntimeAdapterRegistry();
@@ -464,7 +531,7 @@ export async function declaredManagedPrograms(
     : new Set(options.capabilities.map(capabilityKey));
   const programs: DeclaredManagedProgram[] = [];
   for (const { entry, activation } of await activatedEndpoints(document, root, hostStateRoot, registry)) {
-    if (requested !== undefined && !activation.endpoint.offers.some((offer) => requested.has(capabilityKey(offer.capability)))) continue;
+    if (requested !== undefined && !activation.endpoint.offers.some((offer) => requestsCapability(document, entry.instance, offer.capability, requested))) continue;
     if (activation.program !== undefined) programs.push({ instance: entry.instance, program: activation.program });
   }
   return { dataRoot: root, programs };
@@ -627,7 +694,9 @@ export async function describeRuntimeConfigProviders(
   options: LoadRuntimeConfigOptions = {},
 ): Promise<readonly RuntimeHostCapabilityProvider[]> {
   if (requests.length === 0) return [];
-  const { document, root, packageRoot } = await openRuntimeConfig(path, options.packageRoot);
+  const opened = await openRuntimeConfig(path, options.packageRoot);
+  const { root, packageRoot } = opened;
+  const document = scopedProfile(opened.document, { capabilities: requests.map((request) => request.capability) });
   const hostStateRoot = resolve(options.hostStateRoot ?? qflowHostStateRoot());
   const registry = options.registry ?? new RuntimeAdapterRegistry();
   await installRuntimeAdapters(registry, packageRoot, endpointPackageSelection(document), options.distributionPackageRoot);
@@ -708,14 +777,25 @@ export async function readRuntimeConfigPricing(
   options: LoadRuntimeConfigOptions = {},
 ): Promise<readonly RuntimeHostCapabilityPricing[]> {
   if (requests.length === 0) return [];
-  const { absolute, document, root, packageRoot } = await openRuntimeConfig(path, options.packageRoot);
+  const opened = await openRuntimeConfig(path, options.packageRoot);
+  const { absolute, root, packageRoot } = opened;
+  const document = scopedProfile(opened.document, { capabilities: requests.map((request) => request.capability) });
   const hostStateRoot = resolve(options.hostStateRoot ?? qflowHostStateRoot());
   const registry = options.registry ?? new RuntimeAdapterRegistry();
-  await installRuntimeAdapters(registry, packageRoot, runtimePackageSelection(document), options.distributionPackageRoot);
+  await installRuntimeAdapters(registry, packageRoot, endpointPackageSelection(document), options.distributionPackageRoot);
   const activations = await activatedEndpoints(document, root, hostStateRoot, registry);
   const endpoints = await installedEndpointRegistry(document, activations);
-  let stores: Awaited<ReturnType<typeof openCredentialStores>> | undefined;
-  const openedStores = async () => stores ??= await openCredentialStores(document, root, hostStateRoot, registry);
+  const stores = new Map<string, Awaited<ReturnType<typeof openCredentialStores>>>();
+  const openedStores = async (endpoint: EndpointPackage) => {
+    let opened = stores.get(endpoint.instance.id);
+    if (opened === undefined) {
+      const selected = credentialProfile(document, [endpoint]);
+      await installRuntimeAdapters(registry, packageRoot, runtimePackageSelection({ ...selected, endpoints: [] }), options.distributionPackageRoot);
+      opened = await openCredentialStores(selected, root, hostStateRoot, registry);
+      stores.set(endpoint.instance.id, opened);
+    }
+    return opened;
+  };
   const result: RuntimeHostCapabilityPricing[] = [];
   try {
     for (const request of requests) {
@@ -784,7 +864,7 @@ export async function readRuntimeConfigPricing(
         const pricingDocuments = await match.activation.endpoint.readPricing({
           request: endpointRequest,
           credentials: async () => {
-            const opened = await openedStores();
+            const opened = await openedStores(match.activation.endpoint);
             return await resolveEndpointCredentials(match.activation.endpoint, opened.store, absolute);
           },
         });
@@ -804,7 +884,7 @@ export async function readRuntimeConfigPricing(
     }
     return result;
   } finally {
-    await stores?.close();
+    await Promise.all([...stores.values()].map((opened) => opened.close()));
   }
 }
 
@@ -820,12 +900,14 @@ export async function invokeRuntimeConfigNeed(
   path: string,
   need: Need,
   resources: ResourceStore,
-  options: LoadRuntimeConfigOptions = {},
+  options: LoadRuntimeConfigOptions & RuntimeInvocationObservation = {},
 ): Promise<EndpointFulfillment> {
-  const { absolute, document, root, packageRoot } = await openRuntimeConfig(path, options.packageRoot);
+  const opened = await openRuntimeConfig(path, options.packageRoot);
+  const { absolute, root, packageRoot } = opened;
+  const document = scopedProfile(opened.document, { capabilities: [need.capability] });
   const hostStateRoot = resolve(options.hostStateRoot ?? qflowHostStateRoot());
   const registry = options.registry ?? new RuntimeAdapterRegistry();
-  await installRuntimeAdapters(registry, packageRoot, runtimePackageSelection(document), options.distributionPackageRoot);
+  await installRuntimeAdapters(registry, packageRoot, endpointPackageSelection(document), options.distributionPackageRoot);
   const activations = await activatedEndpoints(document, root, hostStateRoot, registry);
   const endpoints = await installedEndpointRegistry(document, activations);
   const subject = capabilityKey(need.capability);
@@ -850,7 +932,9 @@ export async function invokeRuntimeConfigNeed(
   }
   const activation = activations.find(({ activation: item }) => item.endpoint.instance.id === registration.id)?.activation;
   if (activation === undefined) throw new Error(`Endpoint ${registration.id} is not declared by ${absolute}`);
-  const stores = await openCredentialStores(document, root, hostStateRoot, registry);
+  const selected = credentialProfile(document, [activation.endpoint]);
+  await installRuntimeAdapters(registry, packageRoot, runtimePackageSelection({ ...selected, endpoints: [] }), options.distributionPackageRoot);
+  const stores = await openCredentialStores(selected, root, hostStateRoot, registry);
   try {
     const credentials = await resolveEndpointCredentials(activation.endpoint, stores.store, absolute);
     return await registration.handler({
@@ -858,6 +942,8 @@ export async function invokeRuntimeConfigNeed(
       need,
       resources,
       credentials,
+      ...(options.reportProgress === undefined ? {} : { reportProgress: options.reportProgress }),
+      ...(options.reportDiagnostic === undefined ? {} : { reportDiagnostic: options.reportDiagnostic }),
     });
   } finally {
     await stores.close();
@@ -896,7 +982,7 @@ async function openCredentialStores(
   }
 }
 
-function statePath(root: string): string {
+export function statePath(root: string): string {
   return resolve(root, "runtime.sqlite");
 }
 
@@ -915,7 +1001,10 @@ async function inspectRuntimeConfig(
   path: string,
   options: RuntimeInspectionOptions,
 ): Promise<RuntimeConfigDoctorResult> {
-  const { absolute, document, root, packageRoot } = await openRuntimeConfig(path, options.packageRoot);
+  const opened = await openRuntimeConfig(path, options.packageRoot);
+  const { absolute, root, packageRoot } = opened;
+  const document = scopedProfile(opened.document, options);
+  const scoped = options.endpoints !== undefined || options.capabilities !== undefined;
   const hostStateRoot = resolve(options.hostStateRoot ?? qflowHostStateRoot());
   const diagnostics: RuntimeDoctorDiagnostic[] = [];
   try {
@@ -927,23 +1016,9 @@ async function inspectRuntimeConfig(
   }
   const registry = options.registry ?? new RuntimeAdapterRegistry();
   try {
-    await installRuntimeAdapters(registry, packageRoot, runtimePackageSelection(document), options.distributionPackageRoot);
+    await installRuntimeAdapters(registry, packageRoot, endpointPackageSelection(document), options.distributionPackageRoot);
   } catch (error) {
     return { dataRoot: root, diagnostics: [diagnostic(error, "RUNTIME_PACKAGE_SELECTION_INVALID")] };
-  }
-  const storeSelections = [
-    ...document.credentials.map((item) => ({ item, kind: "credential-store" as const })),
-  ];
-  for (const selection of storeSelections) {
-    const context = adapterContext(root, hostStateRoot, selection.item);
-    try {
-      diagnostics.push(...registry.validate(selection.item.use, selection.kind, context));
-      if (options.active) {
-        diagnostics.push(...await registry.doctor(selection.item.use, selection.kind, context));
-      }
-    } catch (error) {
-      diagnostics.push(diagnostic(error, "RUNTIME_COMPONENT_CONFIG_INVALID", selection.item.instance));
-    }
   }
   const requested = options.capabilities === undefined
     ? undefined
@@ -963,7 +1038,7 @@ async function inspectRuntimeConfig(
       continue;
     }
     activated.push({ item, activation });
-    if (requested !== undefined && !activation.endpoint.offers.some((offer) => requested.has(capabilityKey(offer.capability)))) continue;
+    if (requested !== undefined && !activation.endpoint.offers.some((offer) => requestsCapability(document, item.instance, offer.capability, requested))) continue;
     for (const offer of activation.endpoint.offers) covered.add(capabilityKey(offer.capability));
     selectedEndpoints.push({ item, activation });
     const program = activation.program;
@@ -1028,10 +1103,32 @@ async function inspectRuntimeConfig(
   } catch (error) {
     diagnostics.push(diagnostic(error, "RUNTIME_ENDPOINT_INSTALL_FAILED"));
   }
+  const credentialDocument = scoped ? credentialProfile(document, selectedEndpoints.map(({ activation }) => activation.endpoint)) : document;
+  try {
+    await installRuntimeAdapters(registry, packageRoot, {
+      selected: [], logical: credentialDocument.credentials.map((item) => ({ abi: runtimeCredentialStoreAdapterHostAbi, name: item.use })),
+    }, options.distributionPackageRoot);
+  const storeSelections = [
+    ...credentialDocument.credentials.map((item) => ({ item, kind: "credential-store" as const })),
+  ];
+  for (const selection of storeSelections) {
+    const context = adapterContext(root, hostStateRoot, selection.item);
+    try {
+      diagnostics.push(...registry.validate(selection.item.use, selection.kind, context));
+      if (options.active) {
+        diagnostics.push(...await registry.doctor(selection.item.use, selection.kind, context));
+      }
+    } catch (error) {
+      diagnostics.push(diagnostic(error, "RUNTIME_COMPONENT_CONFIG_INVALID", selection.item.instance));
+    }
+  }
+  } catch (error) {
+    diagnostics.push(diagnostic(error, "RUNTIME_CREDENTIAL_CHECK_FAILED"));
+  }
   if (selectedEndpoints.length > 0) {
     let stores: Awaited<ReturnType<typeof openCredentialStores>> | undefined;
     try {
-      stores = await openCredentialStores(document, root, hostStateRoot, registry);
+      stores = await openCredentialStores(credentialDocument, root, hostStateRoot, registry);
       for (const { item, activation } of selectedEndpoints) {
         const credentials: Record<string, CredentialValue> = {};
         let missing = false;
@@ -1081,7 +1178,7 @@ async function inspectRuntimeConfig(
  */
 export async function preflightRuntimeConfig(
   path: string,
-  options: LoadRuntimeConfigOptions & { readonly capabilities?: readonly CapabilityRef[] } = {},
+  options: LoadRuntimeConfigOptions & { readonly capabilities?: readonly CapabilityRef[]; readonly endpoints?: readonly string[] } = {},
 ): Promise<RuntimeConfigDoctorResult> {
   return await inspectRuntimeConfig(path, { ...options, active: false });
 }
@@ -1089,7 +1186,7 @@ export async function preflightRuntimeConfig(
 /** Active diagnosis may ask selected credentials and Endpoints to verify their configured services. */
 export async function doctorRuntimeConfig(
   path: string,
-  options: LoadRuntimeConfigOptions & { readonly capabilities?: readonly CapabilityRef[] } = {},
+  options: LoadRuntimeConfigOptions & { readonly capabilities?: readonly CapabilityRef[]; readonly endpoints?: readonly string[] } = {},
 ): Promise<RuntimeConfigDoctorResult> {
   return await inspectRuntimeConfig(path, { ...options, active: true });
 }
@@ -1098,35 +1195,75 @@ export async function createRuntimeFromConfig(
   path: string,
   options: LoadRuntimeConfigOptions = {},
 ): Promise<LocalRuntime> {
-  const { document, root, packageRoot } = await openRuntimeConfig(path, options.packageRoot);
+  return await createRuntimeFromOpened(await openRuntimeConfig(path, options.packageRoot), options);
+}
+
+/** Execution choices are captured at submission; later Profile edits belong to later Builds. */
+export type LocalExecutionContext = {
+  readonly format: "qflow.local-execution@1";
+  readonly packageRoot: string;
+  readonly hostStateRoot: string;
+  readonly distributionPackageRoot?: string;
+  readonly profile: CanonicalValue;
+};
+
+export function localExecutionContext(value: CanonicalValue | undefined): LocalExecutionContext {
+  const record = object(value, "Build execution context");
+  if (record.format !== "qflow.local-execution@1") throw new Error("Build has no local execution context; create a new Build");
+  return {
+    format: "qflow.local-execution@1",
+    packageRoot: requiredString(record.packageRoot, "execution.packageRoot"),
+    hostStateRoot: requiredString(record.hostStateRoot, "execution.hostStateRoot"),
+    ...(record.distributionPackageRoot === undefined ? {} : { distributionPackageRoot: requiredString(record.distributionPackageRoot, "execution.distributionPackageRoot") }),
+    profile: record.profile as CanonicalValue,
+  };
+}
+
+export async function createRuntimeForBuild(dataRoot: string, build: string, execution: {
+  readonly state: SqliteRuntimeState;
+  readonly importModule: (url: string) => Promise<unknown>;
+}): Promise<LocalRuntime> {
+  const context = localExecutionContext((await execution.state.execution.read(build))?.context);
+  return await createRuntimeFromOpened({
+    absolute: dataRoot, profileRoot: dataRoot, root: dataRoot,
+    packageRoot: context.packageRoot, document: parseLocalRuntimeProfile(context.profile),
+  }, { ...context, importModule: execution.importModule }, { state: execution.state, build });
+}
+
+async function createRuntimeFromOpened(opened: OpenedRuntimeConfig, options: LoadRuntimeConfigOptions, execution?: {
+  readonly state: SqliteRuntimeState; readonly build: string;
+}): Promise<LocalRuntime> {
+  const { root, packageRoot } = opened;
+  let document = scopedProfile(opened.document, options);
   const hostStateRoot = resolve(options.hostStateRoot ?? qflowHostStateRoot());
   const registry = options.registry ?? new RuntimeAdapterRegistry();
   const resultRegistry = options.resultRegistry ?? new BuildResultRepositoryRegistry();
-  await installRuntimeAdapters(registry, packageRoot, runtimePackageSelection(document), options.distributionPackageRoot);
-  const state = new SqliteRuntimeState(statePath(root));
-  // Only selections that can change Command execution or an Operation handle are pinned until
-  // every Build using them has left active Runtime state.
-  const environmentConfig = canonicalStringify({
-    credentials: document.credentials,
-    endpoints: document.endpoints,
-    bindings: document.bindings,
-  });
+  await installRuntimeAdapters(registry, packageRoot, endpointPackageSelection(document), options.distributionPackageRoot, options.importModule);
+  const state = execution?.state ?? new SqliteRuntimeState(statePath(root));
   let credentials: Awaited<ReturnType<typeof openCredentialStores>> | undefined;
   try {
-    await state.environment.use(environmentConfig);
-    credentials = await openCredentialStores(document, root, hostStateRoot, registry);
     const endpoints = await Promise.all(document.endpoints.map(async (item) => await registry.createEndpoint(
       item.use,
       adapterContext(root, hostStateRoot, { ...item, pool: item.pool ?? item.instance }),
     )));
+    document = credentialProfile(document, endpoints);
+    await installRuntimeAdapters(registry, packageRoot, runtimePackageSelection({ ...document, endpoints: [] }), options.distributionPackageRoot, options.importModule);
+    credentials = await openCredentialStores(document, root, hostStateRoot, registry);
+    const selections = (items: readonly LocalRuntimeAdapterSelection[]) => Object.fromEntries(items.map(({ instance, ...selection }) => [instance, selection]));
+    const context = {
+      format: "qflow.local-execution@1", packageRoot, hostStateRoot,
+      ...(options.distributionPackageRoot === undefined ? {} : { distributionPackageRoot: options.distributionPackageRoot }),
+      profile: { format: document.format, dataRoot: root, credentials: selections(document.credentials),
+        endpoints: selections(document.endpoints), bindings: document.bindings },
+    } as CanonicalValue;
     return await createLocalRuntime({
+      ...(execution === undefined ? {} : { executionBuild: execution.build }),
+      executionContext: context,
       buildStore: state.builds,
       buildCatalog: state.catalog,
       operationStore: state.operations,
       commandExecutionStore: state.commandExecutions,
-      assertEnvironment: async () => {
-        await state.environment.assert(environmentConfig);
-      },
+      executionLogs: fileExecutionLogs((build) => buildWorkPath(root, build)),
       executionStore: state.execution,
       removeActiveBuild: async (build) => await state.removeActiveBuild(build),
       submissionStore: state.submissions,
@@ -1139,6 +1276,7 @@ export async function createRuntimeFromConfig(
       credentialStore: credentials.store,
       loadComponentPackages: async (specifiers) => {
         const loaded = await loadNodePackageSelection(specifiers, packageRoot, {
+          ...(options.importModule === undefined ? {} : { importModule: options.importModule }),
           ...(options.distributionPackageRoot === undefined
             ? {}
             : { fallbackRoots: [options.distributionPackageRoot] }),
@@ -1149,12 +1287,12 @@ export async function createRuntimeFromConfig(
       bindings: document.bindings,
       close: async () => {
         await credentials?.close();
-        state.close();
+        if (execution === undefined) state.close();
       },
     });
   } catch (error) {
     await credentials?.close();
-    state.close();
+    if (execution === undefined) state.close();
     throw error;
   }
 }
@@ -1167,6 +1305,8 @@ export async function createRuntimeControlFromConfig(
   const state = new SqliteRuntimeState(statePath(root), { readOnly: options.readOnly === true });
   return createLocalRuntimeControl({
     buildStore: state.builds,
+    commandExecutionStore: state.commandExecutions,
+    executionLogs: fileExecutionLogs((build) => buildWorkPath(root, build)),
     buildCatalog: state.catalog,
     operationStore: state.operations,
     executionStore: state.execution,
@@ -1180,12 +1320,18 @@ export async function createRuntimeResultControlFromConfig(
   options: LoadRuntimeConfigOptions = {},
 ): Promise<LocalResultWriter> {
   const { root, packageRoot } = await openRuntimeConfig(path, options.packageRoot);
+  return createRuntimeResultWriter(root, { ...options, packageRoot });
+}
+
+export function createRuntimeResultWriter(root: string, options: LoadRuntimeConfigOptions & { readonly packageRoot: string }): LocalResultWriter {
+  const { packageRoot } = options;
   const state = new SqliteRuntimeState(statePath(root));
   const resultRegistry = options.resultRegistry ?? new BuildResultRepositoryRegistry();
   return createLocalResultWriter({
     buildStore: state.builds,
     operationStore: state.operations,
     commandExecutionStore: state.commandExecutions,
+    executionLogs: fileExecutionLogs((build) => buildWorkPath(root, build)),
     executionStore: state.execution,
     removeActiveBuild: async (build) => await state.removeActiveBuild(build),
     submissionStore: state.submissions,

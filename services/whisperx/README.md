@@ -71,6 +71,14 @@ Configuration is deployment state:
 The Node Provider must configure the same model, device, compute, batch size, service version and
 WhisperX version. A mismatch fails before transcription results are accepted.
 
+## Package preparation
+
+Local package preparation includes `src/**/*.py` in uv's package cache inputs. Updating service code
+therefore rebuilds its small wheel instead of reusing one selected only by an unchanged
+`pyproject.toml`. This leaves dependency and speech-model caches intact. See
+[uv's local dependency caching](https://docs.astral.sh/uv/concepts/cache/#dynamic-metadata).
+This governs package installation; an already running service continues using its loaded code.
+
 ## Queue and concurrency
 
 The SVML Runtime Scheduler decides how many WhisperX Needs may enter this Provider lane. One service
@@ -80,3 +88,9 @@ second direct request receives `503 BUSY` instead of entering a hidden service q
 
 Run multiple service processes on different devices/ports only when the Runtime registers and
 locks them as distinct Provider instances.
+
+The local Provider reconciles this packaged project through `uv sync` before a cold service start.
+A passing version probe alone cannot establish that same-version checkout edits were installed;
+the declared uv source cache keys decide whether the service wheel needs rebuilding. A healthy
+running service remains untouched. To adopt edited service code, stop that selected helper when idle
+and start it again through its Profile; restarting only the Build Worker does not reinstall Python.

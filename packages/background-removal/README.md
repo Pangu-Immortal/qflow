@@ -12,13 +12,10 @@ Use it for a product, portrait or graphic that will be composited over another p
 image Output. `{cutout.image}` publishes one image BlobArtifact with transparency. Keep its actual
 dimensions when placing it in Media Track, or use Image Compose when a flattened still is wanted.
 
-The package declares the visual operation; the selected Endpoint implements it. The existing
-`@qflow/provider-kie` route uses
-[KIE Recraft Remove Background](https://docs.kie.ai/market/recraft/remove-background), sending
-`model: "recraft/remove-background"` and `input.image`. It follows the ordinary submit, poll and
-collect lifecycle and expects one image result. Another Provider can fulfill the same capability
-without changing the Source. This operation therefore needs no separate Recraft-specific author
-Model to use the existing KIE implementation.
+The package declares the visual operation; a project Provider implements the capability
+`@qflow/background-removal@1#remove-background`, accepting `{ source: BlobRef }` and returning one
+image BlobRef with transparency. The Provider owns its service's request mapping and task lifecycle.
+A service-specific author Model is unnecessary when the operation has this same meaning.
 
 For a moving portrait, [Volcengine Matting](../volcengine-matting/README.md) provides
 `<matte:Portrait source={performance.video}/>` through QflowHub. Normalize its processed video

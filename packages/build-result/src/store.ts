@@ -1,3 +1,4 @@
+import { preserveExecutionLog } from "./execution-log.js";
 import { currentFileReference, localExternalFiles } from "./file-reference.js";
 import type { ExternalFileAccess } from "./file-reference.js";
 import { randomUUID } from "node:crypto";
@@ -134,12 +135,21 @@ async function copyArtifactAtomic(
   await mkdir(dirname(destination), { recursive: true });
   const input = await source.open(artifact);
   if (input === undefined) throw new Error(`Build resource ${artifact.resource} is unavailable`);
+  await writeStreamAtomic(destination, input);
+}
+
+async function writeStreamAtomic(destination: string, input: AsyncIterable<Uint8Array>): Promise<void> {
+  await mkdir(dirname(destination), { recursive: true });
   const temporary = `${destination}.part-${randomUUID()}`;
   const output = await open(temporary, "wx");
   try {
     for await (const value of input) {
       const chunk = Uint8Array.from(value);
-      await output.write(chunk);
+      let offset = 0;
+      while (offset < chunk.byteLength) {
+        const { bytesWritten } = await output.write(chunk, offset, chunk.byteLength - offset);
+        offset += bytesWritten;
+      }
     }
     await output.close();
     await replaceFile(temporary, destination);
@@ -442,10 +452,13 @@ export class FileBuildResult {
       await rm(join(this.directory, writerStateName), { force: true });
       return manifest;
     }
+    const executionLog = await preserveExecutionLog(input.executionLog,
+      async (path, chunks) => await writeStreamAtomic(join(this.directory, path), chunks));
     const now = Date.now();
     const updated: BuildResultManifest = {
       ...manifest,
       outcome: input.outcome,
+      ...(executionLog === undefined ? {} : { executionLog }),
       ...(input.operations === undefined ? {} : { operations: input.operations }),
       finishedAt: manifest.finishedAt ?? now,
       ...(input.failure === undefined ? {} : { failure: input.failure }),

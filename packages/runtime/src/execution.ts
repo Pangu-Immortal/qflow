@@ -10,7 +10,9 @@ export type BuildOutcome = "complete" | "failed" | "cancelled";
 
 export type BuildExecutionRequest = {
   readonly build: string;
-  /** Installed component packages loaded when a Worker takes an execution turn. */
+  /** Host-owned execution choices. Opaque to the graph and Core. */
+  readonly context?: import("@qflow/protocol").CanonicalValue;
+  /** Installed component packages loaded when this execution context starts. */
   readonly componentPackages: readonly string[];
   /** Exact project Result Repository selected at submission. */
   readonly result: BuildResultRepositoryLocation;
@@ -48,6 +50,8 @@ export type BuildResultWriteLease = BuildExecutionTurn;
  */
 export type BuildExecutionSnapshot = BuildExecutionRequest & {
   readonly createdAt: number;
+  /** An execution context has been assigned; losing it ends this attempt. */
+  readonly startedAt?: number;
   /** Absent when waiting for a resource release. */
   readonly wakeAt?: number;
   /** Only these Operations can advance the Build until their next outcome. */
@@ -79,10 +83,14 @@ export type BuildExecutionStore = {
   create(request: BuildExecutionRequest, options?: { readonly now?: number }): Promise<BuildExecutionSnapshot>;
   read(build: string): Promise<BuildExecutionSnapshot | undefined>;
   list(): Promise<readonly BuildExecutionSnapshot[]>;
+  /** Lightweight scheduling views; no Definition, Profile or Operation payloads are loaded. */
+  listUnstarted(): Promise<readonly string[]>;
+  listReady(now?: number): Promise<readonly string[]>;
   /** Atomically take one ready, undecided execution turn for this Worker owner. */
-  claim(owner: string, now?: number): Promise<BuildExecutionSnapshot | undefined>;
-  /** A new owning Worker clears turns left by the previous process; no external action is repeated here. */
-  reclaimTurns(now?: number): Promise<readonly string[]>;
+  claim(owner: string, now?: number, build?: string): Promise<BuildExecutionSnapshot | undefined>;
+  start(build: string, now?: number): Promise<BuildExecutionSnapshot>;
+  /** Conclude after the owner confirms this execution context has ended. Never repeats external work. */
+  interrupt(build: string, reason: string): Promise<BuildExecutionSnapshot>;
   /** An unobserved stop wakes the next turn immediately to finish the attempt. */
   releaseTurn(build: string, owner: string, wakeAt: number | undefined, operationWait?: readonly string[]): Promise<BuildExecutionSnapshot>;
   /** Freeze the one conclusion. An execution with a decision can never be claimed again. */
@@ -106,6 +114,8 @@ export type CommandExecutionReceipt = {
   readonly command: string;
   readonly status: "started" | "completed";
   readonly event?: CommandResult;
+  /** Current Provider-reported activity; discarded when this call completes. */
+  readonly activity?: { readonly endpoint: string; readonly progress: import("./operations.js").OperationProgress };
 };
 
 export type CommandExecutionBegin = {
@@ -119,6 +129,7 @@ export type CommandExecutionBegin = {
  */
 export type CommandExecutionStore = {
   begin(build: string, command: string): Promise<CommandExecutionBegin>;
+  reportProgress(build: string, command: string, activity: NonNullable<CommandExecutionReceipt["activity"]>): Promise<void>;
   complete(build: string, command: string, event: CommandResult): Promise<CommandExecutionReceipt>;
   list(build: string): Promise<readonly CommandExecutionReceipt[]>;
   removeBuild(build: string): Promise<void>;

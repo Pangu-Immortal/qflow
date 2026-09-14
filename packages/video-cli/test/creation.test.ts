@@ -41,7 +41,9 @@ function host(seen: Need[]): CreationHost {
       use: "@qflow/provider-example",
       pricing: page,
     })),
-    invoke: async (need: Need, resources: ResourceStore) => {
+    invoke: async (need, resources, observation) => {
+      await observation?.reportProgress?.({ phase: "Aligning words" });
+      await observation?.reportProgress?.({ phase: "Aligning words" });
       seen.push(need);
       if (need.capability.name === "whisperx-alignment") {
         const request = need.constraints as unknown as WhisperXAlignmentRequest;
@@ -74,6 +76,7 @@ test("transcribe writes every word in seconds from the Profile's alignment Endpo
     await runCreationCli(["transcribe", "speech.wav", "--to", "speech.json", "--language", "en"], out.io, environment(root, seen));
     assert.match(out.text(), /paid\.default \(@qflow\/provider-example\)  ·  https:\/\/prices\.example\/models/u);
     assert.match(out.text(), /2 words in 1 passage over 2s/u);
+    assert.equal(out.text().match(/Aligning words/gu)?.length, 1);
     const file = JSON.parse(await readFile(join(root, "speech.json"), "utf8")) as {
       readonly audio_seconds: number; readonly passages: readonly { readonly words: readonly { readonly text: string; readonly start_seconds: number }[] }[];
     };

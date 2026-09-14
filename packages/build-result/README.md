@@ -56,3 +56,14 @@ It is presentation text only: Output names, forwarding and file ownership do not
 `updatePresentation` accepts `outputDisplayNames`, keyed by exact public Output name. Each
 nonempty string sets that Output’s `displayName`; null removes it. Like title and note editing,
 this applies to finished Results and preserves all values, file references and Output identifiers.
+
+## Execution evidence
+
+A finished manifest may contain `executionLog`, an ordinary Result file reference separate from
+`outputs`. `BuildResultWriter.finish({ executionLog, outcome, ... })` accepts a byte stream. Repositories
+preserve it as `execution.jsonl` before the terminal manifest is published. The filesystem and S3
+implementations use the same interface. Repeating an already completed finish does not rewrite it.
+
+This file describes how the Build ran; it is neither an authored Output nor a gallery asset. Consumers
+read it with `openFile(build, manifest.executionLog)`. Its absence means no log was recorded, including
+Results made before logging was available; readers do not reconstruct history from other projects.

@@ -1,111 +1,106 @@
 # Models, services, and Keys
 
-Read this when the user wants a new model, another service for a familiar model, or a new account.
-A Key identifies access to a service. The model describes what the work asks that service to produce.
-Look at the existing Profile and the service's actual documentation before deciding what to change.
+Read this when the user brings a Key, chooses another service, or needs a model that is not yet
+available. Connecting a service through a project package is ordinary production work, like making
+a project component. Qflow supplies the extension interfaces; the production selects implementations.
 
-## Follow one request through the possible changes
+## Know which fact is changing
 
-Suppose the Source already asks GPT Image 2 to make a 9:16, 2K picture from a portrait and a Prompt.
-The Model describes that request. The KIE Provider knows how to send it to KIE. An Endpoint such as
-`kie.personal` configures that Provider for a particular account, deployment and capacity.
+A **Model** describes what to generate: exact model identity, text and media inputs, reference roles,
+parameters and result types. It produces a Need for its versioned capability. A **Provider** fulfills
+that request through a particular API or local process. An **Endpoint** configures a Provider for an
+account or deployment. The Runtime Profile selects the Endpoint, using a binding when several
+implement the same capability.
 
-**The same service, a new Key.** If the existing account merely replaces its Key, update the value in
-its Credential Store; the Endpoint can keep the same CredentialRef. To retain a personal account and
-add a company account, create another credential entry and configured Endpoint, such as
-`kie.company`. Both use the same Provider code. The Profile chooses the intended account.
+| Situation | Work to do |
+| --- | --- |
+| Replace a Key for the same account | Update its Credential Store entry; retain the Endpoint's reference |
+| Add another account on that service | Configure another Endpoint using the same Provider |
+| Use another address with the same complete protocol | Use the Provider's supported address configuration |
+| Use the same model through a different API | Reuse an installed suitable Provider, or write a project Provider |
+| Use a model not yet described | Add its Model definition and an implementation of its capability |
 
-**The same protocol, another address.** Reuse the Provider when its documented configuration accepts
-the address and the deployment supports the full required protocol: authentication, reference upload,
-submission, polling and result transfer. A similar URL shape or model label does not establish that.
-For example, KIE's Provider exposes API and upload base URLs; the destination must actually support
-the operations that this Provider performs.
+A Key alone does not identify its service protocol. Establish the service and relevant API docs from
+the user's information, known configuration or a concise question. Similar model labels do not prove
+that uploads, input parameters, task handling or results match. For an existing exact capability,
+map the request in the Provider; keep the Model and creative prompt unchanged. Resolve a service's
+unsupported combination explicitly, such as requesting 2K where it only offers 1K.
 
-**The same model, another service.** First look for an installed Provider for that service. KIE and
-QflowHub both implement GPT Image 2, so an explicit switch between those implementations is a Profile
-choice. A new service with a different API needs a Provider mapping if none already supports it.
-That package translates the same model inputs into the service's fields, follows its tasks and stores
-the returned media. The Model and the creative Prompt can remain unchanged. If the service offers
-only a subset, such as 1K output, report the unsupported 2K request and resolve that production choice.
+## Choose a service for the work
 
-**A model Qflow does not yet describe.** Supply a Model definition for its actual text/media inputs,
-parameters and result types, together with a Provider that implements its capability. An existing
-Provider can be reused when it already supports that capability. One package may contain both Model
-and Provider facets; a Provider can serve several models, and several Providers can serve one model.
-A local deployment follows the same relationship, with a Managed Program when Qflow should prepare
-and run its helper service.
+The official Distribution supplies local Providers and QflowHub. QflowHub is the recommended integrated
+hosted route, maintained alongside Qflow's supported production capabilities, including WhisperX
+and generation. It is a useful way to start when the user wants hosted execution without connecting
+several services. Current availability, account requirements and rates still come from that service.
+Match its current catalogue to the installed Model vocabulary and Provider support for the requested
+inputs. A service can add a model before the installed Distribution describes it; that calls for a
+Model and Provider extension or a release containing them. A missing model or unsupported parameter
+is a capability question, while an expired credential is an account question.
 
-The Agent establishes which service owns the Key, which model the user wants, and whether an existing
-implementation can perform the actual request. Explain the resulting work in practical language:
-“Your service offers the model we need. I'll check how it accepts reference images and returns results,
-then connect your account to that implementation.” Use known account information and ask only for
-missing facts or a choice that affects cost, privacy, setup or capability. Credential entry follows
-`qflow auth` and the selected Store, keeping the secret out of Source and conversation.
+A user's existing service or local deployment remains a normal choice. BYOK means using that chosen
+account through a Provider; it does not require an officially bundled adapter. Partner introductions
+are maintained on the [service-partner page](https://github.com/qflow-ai/qflow/blob/main/docs/guide/service-partners.md).
+A partner is an independent service with its own
+account, pricing and API, and uses the same project-extension path as any other external service.
 
-## Keep the request and its execution separate
+[Environment selection](profile.md#choose-the-practical-capability-path-with-the-user) owns readiness,
+local preparation and account choices. Connect the capability needed next. For a spoken reference,
+that may be WhisperX while the generation plan is still developing. Once the intended material is
+clear, explain its required models and ask about an account only where that choice is unresolved.
 
-The Model owns author-visible meaning: exact model identity, text and media inputs, reference roles,
-parameter values, and result types. It lowers Source into a Need with a versioned capability, a
-concrete request, and an expected result type.
+## Implement the missing capability in the project
 
-The Provider implements that capability through its service. It owns wire fields, URLs, uploads,
-authentication, task handling, result transfer, service-specific support limits, capacity, diagnostics,
-and its price source. When useful machine-readable pricing exists, `readPricing` may use the complete
-request to retrieve relevant Provider-owned material. The returned data keeps the Provider's own shape;
-a pricing page remains the interface when that is what the service publishes. Generated media returns
-as stored Resource references of the declared type.
-The shared generated-media vocabulary carries text, media references, and image/video/audio results;
-it does not choose a vendor or model on the author's behalf.
+First inspect the selected model's vocabulary and README, then the service's actual API docs. Reuse
+an installed compatible implementation when available. Otherwise create `packages/provider-…` in
+the production, implementing the requests this work needs. The package may later be reused in other
+projects under its owner's scope. Ordinary project extensions do not require a framework release.
 
-The Runtime Profile selects a configured Provider instance, called an Endpoint. A `binding` chooses
-one when several Endpoints offer the same capability. The same Source can use another implementation
-of that capability through an explicit Profile change. Different author inputs or model behavior may
-instead require changing the Model and Source.
+Follow one concrete request through the service:
 
-A service may expose only part of a model's supported range. Its Provider checks the complete request
-through `supports` and reports unsupported combinations before submission. That service restriction
-belongs to the Provider; it does not narrow the Model vocabulary for other implementations.
+1. Name the Model's exact capability and expected result type. Identify scalar fields, text and
+   media-reference roles in its request. A genuinely new model needs a Model definition as well.
+2. Map those inputs to the API's fields and media transport. Declare `supports` for real service
+   limits, considering authored inputs that are not yet produced. Support checks and pricing
+   receive the request, not a graph to reverse-engineer.
+3. Resolve only the declared CredentialRefs. Return immediate results directly, or implement
+   `start`, `poll` and, where useful, `collect` for acknowledged remote tasks. Record the received
+   task ID promptly; let Runtime drive the lifecycle and retain it through interruptions.
+4. Admit returned media through `context.resources` and return the declared result type. Declare
+   capacity for the actual account/deployment. Supply the pricing page or `readPricing` material
+   with units and conditions, without inventing a bill for unknown future inputs.
+5. Compile and install the package, select its `use` in the Profile, and inspect `plan` and `pricing`
+   for the actual Run. An authorized real request establishes live execution; read-only checks
+   establish configuration and support without spending on a test generation.
 
-QflowHub participates in this same selection model. [Runtime Profile and capabilities](profile.md)
-owns hosted, BYOK, local, account, and fallback choices.
+The complete **project Provider example** ships in the Distribution at
+`examples/provider-package/README.md`, with compilable source, activation and Profile configuration.
+Locate it through `qflow paths`. Its unbranded example API is illustrative; use the selected service's
+actual protocol. It demonstrates reference upload, receipt, polling, collection, limits and rates
+without introducing a second scheduler. For a new Model, the Model SDK README includes the definition
+and author-package activation example.
 
-## Extend through an ordinary project package
-
-A custom Provider or Model can live in the project's `packages/` directory or arrive as an installed
-package. Source selects Model contributions; the Runtime Profile selects Provider contributions by
-`use`. The package's `qflow.activation` entry supplies the corresponding facets to those hosts.
-
-The public APIs are supplied by the executable `@qflow/qflow` Distribution:
+## Use the public SDK
 
 | Import | Responsibility |
 | --- | --- |
-| `@qflow/qflow/author-kit` | Author Module, Surface, component, and Fragment declarations |
-| `@qflow/qflow/model-kit` | Exact model requests and their Producer/Need construction |
-| `@qflow/qflow/generation` | Shared generated-media inputs, results, validation, and wire-mapping helpers |
-| `@qflow/qflow/endpoint-kit` | Capability handlers, credentials, receipts, and capacity declarations |
-| `@qflow/qflow/runtime-kit` | Profile-selected activation, configuration, diagnostics, and Managed Programs |
+| `@qflow/qflow/model-kit` | Exact model ports and Producer/Need construction |
+| `@qflow/qflow/generation` | Generated-media values, validation and optional wire-mapping helpers |
+| `@qflow/qflow/endpoint-kit` | Handlers, resource access, credentials, receipts, support and capacity |
+| `@qflow/qflow/runtime-kit` | Profile activation, configuration, diagnostics and Managed Programs |
+| `@qflow/qflow/author-kit` | Author Module, Surface and Fragment declarations for a new Model |
 
-Each API's package README owns its exact fields and examples. Locate those files in the active
-Distribution reported by `qflow paths`: `packages/model-kit/README.md`,
-`packages/generation/README.md`, `packages/endpoint-kit/README.md`, and
-`packages/runtime-kit/README.md`. They ship with the executable; a repository checkout is unnecessary.
+Each API's README in `packages/<name>/README.md` owns its exact interface and ships with the
+executable. Use the active `@qflow/qflow` release as the extension's development dependency and ship
+compiled JavaScript plus ordinary runtime dependencies. A repository checkout is unnecessary.
+The package's `qflow.activation` exposes its facets; Source selects author contributions, while
+Profile `use` selects execution contributions. Installing a package does not select its account.
+[Package sharing](../production/component-sharing.md) explains tarballs and owner-managed releases.
 
-Compile a TypeScript extension against the selected `@qflow/qflow` development dependency and ship its
-JavaScript and required assets. [Sharing a package](../production/component-sharing.md) explains direct
-tarball handoff and registry releases. Creating an implementation of an existing public extension
-point belongs in that package. Changing a shared port type, host protocol, or framework behavior is
-a framework change and should be considered at that boundary.
+Local inference follows the same model: implement the capability through the chosen local process.
+Contribute a Managed Program when Qflow should prepare and operate a persistent helper. A Provider
+owns its service mapping and diagnostics; it receives neither authority to change another account
+nor a reason to alter the shared execution system.
 
-## Establish that the connection works
-
-Install the selected package, configure the Endpoint and credential reference, and use `doctor` to
-inspect the selected deployment and its diagnostics. A Run's `plan` should identify the intended
-capability, Endpoint, and price source, and accept the actual parameters and reference types needed
-by this video. Read-only
-checks establish configuration and declared support; a real media request needs the user's spending
-authority and a result judged against the work.
-
-A remote acknowledgement belongs to that submitted task. The Provider retains its non-secret receipt
-and follows it through completion and collection. A failed attempt keeps the useful evidence and
-Outputs; subsequent work selects them in a new Run. [Builds](../production/builds.md) explains this
-execution model and its receipt handling.
+Keep secrets in the selected Credential Store, and account/scope decisions in Brief. Report what
+was connected and what remains needed in the user's language. [Builds](../production/builds.md)
+owns spending scope, durable execution and reuse of produced Outputs.

@@ -7,9 +7,9 @@ import test from "node:test";
 import type { CliDistribution } from "../src/distribution.js";
 import { parseCommand } from "../src/arguments.js";
 import { runCli } from "../src/main.js";
-import { resolveProjectRoot } from "../src/project-context.js";
+import { resolveProjectRoot } from "@qflow/project-context-node";
 import type { CliRuntimeControl } from "../src/runtime-port.js";
-import { findRuntimeProfile, selectRuntimeProfile } from "../src/runtime-selection.js";
+import { findRuntimeProfile, selectRuntimeProfile } from "@qflow/project-context-node";
 
 test("check has no Runtime context", () => {
   assert.throws(
@@ -211,4 +211,19 @@ test("runtime status without a selected Profile reports the missing context inst
     process.chdir(previous);
     await rm(root, { recursive: true, force: true });
   }
+});
+
+
+test("Runtime selection explains a directory collision without changing its contents", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-runtime-collision-"));
+  try {
+    const selection = join(root, ".qflow", "runtime");
+    await mkdir(selection, { recursive: true });
+    await writeFile(join(selection, "kept.txt"), "runtime data");
+    const profile = join(root, "qflow.runtime.json");
+    await writeFile(profile, "{}\n");
+    await assert.rejects(findRuntimeProfile(root), /Runtime selection must be a file:.*occupied by a directory/u);
+    await assert.rejects(selectRuntimeProfile(root, profile), /Runtime selection must be a file:.*occupied by a directory/u);
+    assert.equal(await readFile(join(selection, "kept.txt"), "utf8"), "runtime data");
+  } finally { await rm(root, { recursive: true, force: true }); }
 });

@@ -4,7 +4,13 @@ Read this when opening Studio, judging an encoded Result, or improving the layou
 expression of the new Film.
 
 [Studio](studio.md) explains launch, session reuse, displayed information, Source writeback and
-project Companions. [Builds and Results](builds.md) explains retrieval and explicit Output reuse.
+project Companions. [Timestamped Comments](studio.md#revise-from-timestamped-comments) connects user
+feedback to the owning production facts. [Builds and Results](builds.md) explains retrieval and explicit Output reuse.
+
+For a collaborative review, [show the editable work before export](studio.md#review-before-export)
+and introduce both views: Comments for time-located direction, Studio for the timeline and exposed
+parameters. Browser playback makes both available without first encoding a complete video. When a final file is requested,
+render and inspect that encoded deliverable as a separate step.
 
 ## Make the composition work
 

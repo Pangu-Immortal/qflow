@@ -47,6 +47,8 @@ export type NodePackageSelectionRequest = {
 };
 
 export type NodePackageLoadOptions = {
+  /** Host-owned module scope. Omitting this uses Node's ordinary process imports. */
+  readonly importModule?: (url: string) => Promise<unknown>;
   /**
    * Additional read-only Distribution roots. They are fallbacks for project-scoped packages;
    * the reserved @qflow namespace resolves only from these roots when they are present.
@@ -57,4 +59,6 @@ export type NodePackageLoadOptions = {
    * dependencies. Defaults to the roots installed by the Qflow launcher.
    */
   readonly externalRoots?: readonly string[];
+  /** Runtime declarations can be read before their optional execution tools are prepared. */
+  readonly deferExternalDependencies?: boolean;
 };

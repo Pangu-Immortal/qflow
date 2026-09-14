@@ -4,8 +4,7 @@ Exact author/compute contracts and package-owned author Surfaces for Grok Imagin
 
 It exposes the standard and 1.5-preview models as distinct Surfaces. Each request is nominally typed and
 validated before yielding an ordinary video Artifact. The package declares the model
-choice; it does not route to another model or access a Provider. `@qflow/provider-kie` is one
-optional Runtime implementation.
+choice; it does not route to another model or access a Provider. The selected Provider implements its exact capability.
 
 ```xml
 <grok:Video id="clip" prompt={prompt} duration="6" aspect-ratio="9:16" resolution="720p">

@@ -63,13 +63,22 @@ export function browserProgramScript(entries: readonly {
         const render = entry.program.setup === undefined ? () => {} :
           new Function('root', 'data', entry.program.setup)(root, entry.program.data);
         if (typeof render !== 'function') throw new Error('Browser program setup must return render(localFrame).');
-        return { ...entry, render };
+        return { ...entry, render, region: undefined };
       } catch (error) { fail(error); return { ...entry, render: () => {} }; }
     });
     const apply = time => {
       const frame = Math.round(Number(time || 0) * ${numerator} / ${denominator});
       for (const entry of renders) {
-        try { entry.render(Math.max(0, Math.min(entry.durationFrames, frame - entry.startFrame))); }
+        const local = frame - entry.startFrame;
+        const region = local < 0 ? 'before' : local >= entry.durationFrames ? 'after' : 'active';
+        // Preserve the initial/boundary pose, but stop updating an invisible
+        // program at the same clamped endpoint. Active seeks always render,
+        // including repeated frame 0 after images/fonts finish loading.
+        if (region !== 'active' && entry.region === region) continue;
+        try {
+          entry.render(Math.max(0, Math.min(entry.durationFrames, local)));
+          entry.region = region;
+        }
         catch (error) { fail(error); }
       }
     };

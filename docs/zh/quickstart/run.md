@@ -220,27 +220,15 @@ qflow auth status
 
 选择服务后，再连接其凭据：
 
-| 变量 | Provider / 用途 |
-|---|---|
-| QflowHub OAuth | QflowHub 付费生成、WhisperX 对齐；运行 `qflow auth login qflowhub.default --runtime qflow.runtime.json` 并在 https://qflow.ai 登录 |
-| `KIE_API_KEY` | 仅在显式选择 KIE Provider 时使用 |
-| `MIMO_API_KEY` | Xiaomi MiMo 音色设计或音色克隆；只有明确选择官方 Endpoint 时才需要 |
-
-只执行 Profile 中所选 Endpoint 对应的行。在 macOS/Linux Shell 中：
+已选择 QflowHub 账户时：
 
 ```bash
-read -r -s KIE_API_KEY
-export KIE_API_KEY
-read -r -s MIMO_API_KEY
-export MIMO_API_KEY
+qflow auth login qflowhub.default
 ```
 
-在 Windows PowerShell 中：
-
-```powershell
-$env:KIE_API_KEY = "your-key"
-$env:MIMO_API_KEY = "your-key"
-```
+其他所选 Endpoint 使用它声明的安全输入方式，例如 `qflow auth login images.personal`。
+Provider 说明需要哪种凭据，Profile 选择存储方式；项目 Provider 沿用同一条路径。
+如果使用环境变量存储，则按 Provider 的配置在 Worker 环境中设置。
 
 不要把凭据写进 Author Source、Run Source、Runtime Profile 源文件或提交内容。`doctor` 会验证所需凭据是否存在，但不会打印秘密值。
 
@@ -389,9 +377,9 @@ qflow status <build-id> --watch
 | `--follow` | 将 Build 进度流式输出到终端 |
 
 每次执行都会创建新的 Build id，即使 Author Source 和 Run Source 完全没变。这是非确定性生成
-所要求的边界：跨 Build 复用只能由 Run Source 里的显式 Candidate 决定。一次 Build 提交后
-处于活跃状态时具有耐久性；Worker 重启会继续它已经接受的执行事实和同一外部任务，但不会让
-另一次命令变成这个 Build。
+所要求的边界：跨 Build 复用只能由 Run Source 里的显式 Candidate 决定。关闭观察终端不会停止
+Worker；但 Build 一旦失去执行上下文，这次尝试就结束，重启 Worker 不会恢复它。已完成的
+Output 和记录下来的任务凭据会保留；后续执行通过新 Build 显式复用已有工作。
 
 ### 5. 检查并获取结果
 
@@ -431,6 +419,8 @@ qflow runtime logs
 qflow runtime down
 ```
 
-`runtime down` 只会让 Worker 停止领取新 Build，并保留外部程序；只有确实要停掉这些程序时
-才执行 `programs down`。两条命令都不会取消耐久 Build 或远程 Provider 工作。再次启动同一
-Profile 后，会从已经接受的执行事实继续推进其中的活跃 Build。
+`runtime down` 停止协调器及其执行进程，保留独立的 Managed Program。未完成的 Build 一旦
+失去执行上下文，就不会在 Worker 重启后恢复；保留其已完成 Output 和任务凭据，通过新 Build
+继续制作。已提交但从未开始的 Build 仍可开始。只有确实要停掉独立程序时才执行 `programs down`。
+要取消某个 Build 的远程工作，应在其执行上下文仍可用时调用 `qflow cancel <build-id>`；
+停止本地进程本身不会取消远程 Provider 任务。

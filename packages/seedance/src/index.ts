@@ -19,14 +19,16 @@ export type SeedanceModel = typeof seedanceModels[number];
 
 const ASPECT_RATIOS = ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9", "adaptive"] as const;
 
+const PERSON_REFERENCE_FIELDS = [{ name: "personReference", value: { kind: "boolean" }, optional: true }] as const;
+
 const SEEDANCE_25_DURATIONS = [-1, ...Array.from({ length: 27 }, (_item, index) => index + 4)] as const;
 
 /**
  * Exact Seedance model inputs. Provider wire names are deliberately absent:
- * KIE, Volcengine or another service maps these ports independently.
+ * Each service maps these ports independently.
  *
  * Seedance 2.5 is not treated as an alias for a Seedance 2 variant. Its public
- * KIE contract widens prompt/reference capacities and duration independently,
+ * request definition widens prompt/reference capacities and duration independently,
  * so it receives its own exact Capability while reusing the same three author
  * Surfaces.
  */
@@ -37,11 +39,11 @@ function seedancePortTable(model: SeedanceModel): GenerationPortTable {
     result: "video",
     ports: [
       { name: "prompt", value: { kind: "text", maxChars: is25 ? 30_000 : 20_000 }, minItems: 1, maxItems: 1 },
-      { name: "referenceImage", value: { kind: "media", accepts: ["image"] }, minItems: 0, maxItems: is25 ? 30 : 9 },
-      { name: "referenceVideo", value: { kind: "media", accepts: ["video"] }, minItems: 0, maxItems: is25 ? 10 : 3 },
+      { name: "referenceImage", value: { kind: "media", accepts: ["image"], itemFields: PERSON_REFERENCE_FIELDS }, minItems: 0, maxItems: is25 ? 30 : 9 },
+      { name: "referenceVideo", value: { kind: "media", accepts: ["video"], itemFields: PERSON_REFERENCE_FIELDS }, minItems: 0, maxItems: is25 ? 10 : 3 },
       { name: "referenceAudio", value: { kind: "media", accepts: ["audio"] }, minItems: 0, maxItems: is25 ? 10 : 3 },
-      { name: "firstFrame", value: { kind: "media", accepts: ["image"] }, minItems: 0, maxItems: 1 },
-      { name: "lastFrame", value: { kind: "media", accepts: ["image"] }, minItems: 0, maxItems: 1 },
+      { name: "firstFrame", value: { kind: "media", accepts: ["image"], itemFields: PERSON_REFERENCE_FIELDS }, minItems: 0, maxItems: 1 },
+      { name: "lastFrame", value: { kind: "media", accepts: ["image"], itemFields: PERSON_REFERENCE_FIELDS }, minItems: 0, maxItems: 1 },
       {
         name: "resolution",
         value: {
@@ -174,6 +176,11 @@ const seedanceCommonAttributes: readonly SurfaceAttributeVocabulary[] = [
   },
 ];
 
+const personReferenceAttribute = (name: string): SurfaceAttributeVocabulary => ({
+  name, kind: "literal", required: false, values: ["true", "false"],
+  summary: "Declares whether this visual input contains a person/avatar reference, including an AI-generated human likeness. Omission leaves it unclassified.",
+});
+
 const seedanceVideoPort: readonly SurfacePortVocabulary[] = [{
   name: "video",
   type: artifactTypes.blob,
@@ -229,6 +236,8 @@ export const seedanceMarkupSurfaces = [
       summary: "Generates one video with an exact Seedance model from a Text prompt and the images the video opens and closes on.",
       attributes: [
         ...seedanceCommonAttributes,
+        personReferenceAttribute("first-frame-person-reference"),
+        personReferenceAttribute("last-frame-person-reference"),
         {
           name: "first-frame",
           kind: "reference",
@@ -268,6 +277,7 @@ export const seedanceMarkupSurfaces = [
         cardinality: "many",
         summary: "Attaches one Artifact as a reference through exactly one of its `image`, `video` or `audio` references.",
         attributes: [
+          personReferenceAttribute("person-reference"),
           {
             name: "image",
             kind: "reference",
@@ -301,12 +311,13 @@ export const seedanceMarkupSurfaces = [
   aspect-ratio="9:16"
   generate-audio="true"
 >
-  <seedance:Reference image={presenter-clean}/>
+  <seedance:Reference image={presenter-clean} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>`,
       notes: [
         ...seedanceSettingNotes,
         "The element requires at least one `Reference` child, and the model's port limits cap how many of each role it accepts.",
+        "`person-reference` applies to image/video references; voice audio carries no visual classification. The Provider transports the declared fact according to its API.",
         "A `Reference` carries exactly one of `image`, `video` or `audio`, and is empty.",
       ],
     },

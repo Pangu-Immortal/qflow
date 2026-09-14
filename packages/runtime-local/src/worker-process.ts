@@ -3,7 +3,6 @@ import { randomUUID } from "node:crypto";
 import { mkdir, open, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
-import { canonicalStringify } from "@qflow/protocol";
 
 import { processAlive, stopProcessTree } from "./process-control.js";
 import { readProcessLogs } from "./process-logs.js";
@@ -17,7 +16,6 @@ export type RuntimeWorkerLaunch = {
 
 export type RuntimeProcessState = {
   readonly state: "running" | "stopped";
-  readonly configuration?: "current" | "changed";
   readonly profile: string;
   readonly pid?: number;
   readonly startedAt?: number;
@@ -26,7 +24,6 @@ export type RuntimeProcessState = {
 
 type ProcessRecord = {
   readonly profile: string;
-  readonly profileConfig: string;
   readonly owner: string;
   readonly pid: number;
   readonly startedAt: number;
@@ -68,12 +65,11 @@ async function rotateLog(path: string): Promise<void> {
   await rename(path, previous);
 }
 
-async function record(profile: string, dataRoot: string): Promise<ProcessRecord | undefined> {
+async function record(dataRoot: string): Promise<ProcessRecord | undefined> {
   const path = paths(dataRoot).pid;
   try {
     const value = JSON.parse(await readFile(path, "utf8")) as ProcessRecord;
-    if (value.profile !== resolve(profile)
-      || typeof value.profileConfig !== "string" || value.profileConfig.length === 0
+    if (typeof value.profile !== "string" || value.profile.length === 0
       || typeof value.owner !== "string" || value.owner.length === 0
       || !Number.isSafeInteger(value.pid) || value.pid < 1
       || !Number.isSafeInteger(value.startedAt) || value.startedAt < 0) {
@@ -84,10 +80,6 @@ async function record(profile: string, dataRoot: string): Promise<ProcessRecord 
     if (nodeError(error, "ENOENT")) return undefined;
     throw error;
   }
-}
-
-async function profileConfig(profile: string): Promise<string> {
-  return canonicalStringify(JSON.parse(await readFile(resolve(profile), "utf8")));
 }
 
 async function readyOwner(path: string): Promise<string | undefined> {
@@ -105,13 +97,12 @@ export async function runtimeProcessStatus(
   dataRoot: string,
 ): Promise<RuntimeProcessState> {
   const location = paths(dataRoot);
-  const current = await record(profile, dataRoot);
+  const current = await record(dataRoot);
   if (current === undefined || !processAlive(current.pid)) {
     return { state: "stopped", profile: resolve(profile), logPath: location.log };
   }
   return {
     state: "running",
-    configuration: current.profileConfig === await profileConfig(profile) ? "current" : "changed",
     profile: current.profile,
     pid: current.pid,
     startedAt: current.startedAt,
@@ -159,7 +150,7 @@ async function waitForReady(
   const location = paths(dataRoot);
   const deadline = Date.now() + timeoutMs;
   while (Date.now() <= deadline) {
-    const current = await record(profile, dataRoot);
+    const current = await record(dataRoot);
     if (current === undefined || !processAlive(current.pid)) {
       const log = await readProcessLogs(location.log, LOG_TAIL_BYTES);
       throw new Error(`Runtime Worker exited before becoming ready${log.length === 0 ? "" : `: ${log.trim().split("\n").at(-1)}`}`);
@@ -197,18 +188,14 @@ export async function ensureRuntimeProcess(
   try {
     const current = await runtimeProcessStatus(profile, dataRoot);
     if (current.state === "running") {
-      if (current.configuration === "changed") {
-        throw new Error("Runtime Profile changed while its Worker is running; stop and start the Worker to activate it");
-      }
       return current;
     }
-    const stale = await record(profile, dataRoot).catch(() => undefined);
+    const stale = await record(dataRoot).catch(() => undefined);
     if (stale !== undefined && !processAlive(stale.pid)) {
       await rm(location.pid, { force: true });
       await rm(location.ready, { force: true });
     }
     const owner = `worker_${randomUUID()}`;
-    const activeProfileConfig = await profileConfig(absolute);
     await rm(location.ready, { force: true });
     await rotateLog(location.log);
     const log = await open(location.log, "a");
@@ -252,7 +239,6 @@ export async function ensureRuntimeProcess(
       const startedAt = Date.now();
       await writeFile(location.pid, JSON.stringify({
         profile: absolute,
-        profileConfig: activeProfileConfig,
         owner,
         pid: child.pid,
         startedAt,
@@ -260,9 +246,6 @@ export async function ensureRuntimeProcess(
       child.unref?.();
       try {
         const ready = await waitForReady(absolute, dataRoot, owner, timeoutMs);
-        if (ready.configuration === "changed") {
-          throw new Error("Runtime Profile changed while its Worker was starting; start it again to activate the new Profile");
-        }
         return ready;
       } catch (error) {
         const stopped = await stopProcessTree(child.pid, true).catch(() => "denied" as const);
@@ -272,7 +255,7 @@ export async function ensureRuntimeProcess(
             { cause: error },
           );
         }
-        const saved = await record(profile, dataRoot).catch(() => undefined);
+        const saved = await record(dataRoot).catch(() => undefined);
         if (saved?.owner === owner) {
           await rm(location.pid, { force: true });
           await rm(location.ready, { force: true });
@@ -288,7 +271,7 @@ export async function ensureRuntimeProcess(
 }
 
 async function stopRuntimeProcessUnlocked(profile: string, dataRoot: string, timeoutMs: number): Promise<RuntimeProcessState> {
-  const current = await record(profile, dataRoot);
+  const current = await record(dataRoot);
   const location = paths(dataRoot);
   if (current === undefined || !processAlive(current.pid)) {
     await rm(location.pid, { force: true });

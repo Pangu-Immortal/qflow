@@ -60,7 +60,7 @@ export type AuthorCheckOutput = {
   readonly assets: number;
   readonly modules: number;
   readonly outputCount: number;
-  readonly outputs: readonly {
+  readonly outputs?: readonly {
     readonly name: string;
     readonly type: string;
   }[];
@@ -82,6 +82,7 @@ export type RunCheckOutput = {
   readonly targets: readonly string[];
   readonly candidates: number;
   readonly satisfactions: number;
+  readonly historicalOutputCount?: number;
   readonly steps?: number;
   readonly unresolvedHistoricalOutputs?: readonly {
     readonly candidate: string;
@@ -94,7 +95,7 @@ export type RunCheckOutput = {
 export type PlanPreflight = {
   readonly ok: boolean;
   readonly capabilityCount: number;
-  readonly capabilities: readonly string[];
+  readonly capabilities?: readonly string[];
   readonly omittedCapabilities?: number;
   readonly diagnosticCount: number;
   readonly diagnostics: readonly CliDiagnostic[];
@@ -119,7 +120,7 @@ export type PlanOutput = {
   readonly run: string;
   readonly targetCount: number;
   readonly targets: readonly string[];
-  readonly steps: number;
+  readonly steps?: number;
   readonly requestCount: number;
   readonly requestIssueCount: number;
   /** Present when a Runtime Profile was selected. */
@@ -128,18 +129,44 @@ export type PlanOutput = {
   readonly unresolvedRequestCount?: number;
   readonly unsupportedRequestCount?: number;
   readonly choiceCount: number;
-  readonly choices: readonly { readonly output: string; readonly candidate: string }[];
+  readonly choices?: readonly { readonly output: string; readonly candidate: string }[];
   readonly omittedChoices?: number;
   readonly unreached?: readonly { readonly output: string; readonly operation: string }[];
   readonly omittedUnreached?: number;
   /** Present only when a Runtime Profile was selected; the Endpoint and price page behind each capability. */
   readonly providers?: readonly PlanProvider[];
-  readonly omittedProviders?: number;
   /** Every external request the Build will make, in step order, with its parameters when known. */
   readonly needs?: readonly PlanNeed[];
-  readonly omittedNeeds?: number;
   readonly preflight?: PlanPreflight;
 };
+
+/** Output scope is independent of encoding. Limits apply to expanded detail, not demanded work. */
+export function createPlanOutput(plan: PlanOutput, options: { readonly verbose: boolean; readonly limit: number }): PlanOutput {
+  const { steps, choices = [], unreached = [], preflight, ...summary } = plan;
+  const limit = options.limit;
+  return {
+    ...summary,
+    ...(options.verbose ? {
+      steps,
+      choices: choices.slice(0, limit),
+      ...(choices.length <= limit ? {} : { omittedChoices: choices.length - limit }),
+      unreached: unreached.slice(0, limit),
+      ...(unreached.length <= limit ? {} : { omittedUnreached: unreached.length - limit }),
+    } : {}),
+    ...(preflight === undefined ? {} : { preflight: {
+      ok: preflight.ok,
+      capabilityCount: preflight.capabilityCount,
+      diagnosticCount: preflight.diagnosticCount,
+      diagnostics: preflight.diagnostics,
+      ...(options.verbose ? {
+        capabilities: preflight.capabilities?.slice(0, limit) ?? [],
+        ...((preflight.capabilities?.length ?? 0) <= limit ? {} : {
+          omittedCapabilities: preflight.capabilities!.length - limit,
+        }),
+      } : {}),
+    } }),
+  };
+}
 
 export type PricingEntry = PlanProvider & {
   readonly pricingDocuments?: readonly PricingDocument[];
@@ -310,7 +337,7 @@ function renderAuthorCheck(
   verbose: boolean,
 ): string {
   const lines = [heading("success", "Source is valid", io, colors), ""];
-  const readable = view.machine.outputs;
+  const readable = view.machine.outputs ?? [];
   lines.push(...facts([
     ["Source", shortPath(view.machine.source)],
     ["Outputs", String(view.machine.outputCount)],
@@ -350,8 +377,7 @@ function renderRunCheck(
   verbose: boolean,
 ): string {
   const lines = [heading("success", "Run source is valid", io, colors), ""];
-  const reuse = (view.machine.unresolvedHistoricalOutputs?.length ?? 0)
-    + (view.machine.omittedHistoricalOutputs ?? 0);
+  const reuse = view.machine.historicalOutputCount ?? 0;
   const targetSummary = view.machine.targets.length === 0
     ? String(view.machine.targetCount)
     : view.machine.targets.join(", ")
@@ -433,7 +459,7 @@ function needSummaryText(needs: readonly PlanNeed[]): string {
   const pendingCount = first.pending.length;
   if (pendingCount > 0) parts.push(`${pendingCount === 1 ? "input" : `${pendingCount} inputs`} produced during Build`);
   if (first.issue !== undefined) parts.push(`could not inspect: ${first.issue}`);
-  return parts.length === 0 ? "no parameters" : parts.join(" · ");
+  return parts.length === 0 ? "request summary unavailable" : parts.join(" · ");
 }
 
 /** One line per distinct request shape, counted; the step names when only one request has that shape. */
@@ -489,6 +515,7 @@ function renderPlan(
     ["Run", shortPath(view.machine.run)],
     ["Targets", targetSummary],
     ["Requests", String(view.machine.requestCount)],
+    ...(view.machine.choiceCount === 0 ? [] : [["Run choices", String(view.machine.choiceCount)] as const]),
     ...(view.machine.requestIssueCount === 0 ? [] : [["Request issues", String(view.machine.requestIssueCount)] as const]),
     ...((view.machine.providerRequestCount ?? 0) === 0 ? [] : [["Provider requests", String(view.machine.providerRequestCount)] as const]),
     ...((view.machine.localRequestCount ?? 0) === 0 ? [] : [["Local requests", String(view.machine.localRequestCount)] as const]),
@@ -497,7 +524,7 @@ function renderPlan(
     ...(view.machine.preflight === undefined ? [] : [[
       "Preflight", view.machine.preflight.ok ? "ready" : "needs attention",
     ] as const]),
-    ...(verbose ? [["Steps", String(view.machine.steps)] as const] : []),
+    ...(!verbose || view.machine.steps === undefined ? [] : [["Steps", String(view.machine.steps)] as const]),
   ], colors));
   if (view.machine.providers !== undefined) {
     if (view.machine.providers.length > 0) lines.push("", colors.strong("Providers and price pages"));
@@ -531,9 +558,6 @@ function renderPlan(
       const requests = new Set(group.map((provider) => provider.request));
       lines.push(...groupedNeedLines((view.machine.needs ?? []).filter((need) => requests.has(need.request)), colors, verbose));
     }
-    if ((view.machine.omittedProviders ?? 0) > 0) {
-      lines.push(`  ${colors.dim(`${view.machine.omittedProviders} more requests · use --limit <count>`)}`);
-    }
   } else if (view.machine.requestCount > 0) {
     const byCapability = new Map<string, PlanNeed[]>();
     for (const need of view.machine.needs ?? []) {
@@ -559,9 +583,9 @@ function renderPlan(
   }
   if (view.machine.preflight !== undefined
     && (view.machine.preflight.diagnostics.length > 0
-      || (verbose && view.machine.preflight.capabilities.length > 0))) {
+      || (verbose && (view.machine.preflight.capabilities?.length ?? 0) > 0))) {
     lines.push("", colors.strong("Runtime preflight"));
-    if (verbose) for (const capability of view.machine.preflight.capabilities) lines.push(`  ${colors.accent(capability)}`);
+    if (verbose) for (const capability of view.machine.preflight.capabilities ?? []) lines.push(`  ${colors.accent(capability)}`);
     if (verbose && (view.machine.preflight.omittedCapabilities ?? 0) > 0) {
       lines.push(`  ${colors.dim(`${view.machine.preflight.omittedCapabilities} more capabilities · use --limit <count>`)}`);
     }
@@ -578,9 +602,9 @@ function renderPlan(
       lines.push(`  ${colors.dim(`${capabilityCount} demanded Endpoint ${capabilityCount === 1 ? "capability" : "capabilities"} checked.`)}`);
     }
   }
-  if (view.machine.choices.length > 0) {
+  if (verbose && (view.machine.choices?.length ?? 0) > 0) {
     lines.push("", colors.strong("Run choices"));
-    for (const selection of view.machine.choices) {
+    for (const selection of view.machine.choices ?? []) {
       const status = colors.success(glyph(io, "✓", "+"));
       lines.push(`  ${status} ${colors.accent(selection.output)} ← ${selection.candidate}`);
     }
@@ -774,23 +798,27 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.dim("Validate one self-described Author Source or Run Source without executing it."),
       "",
       "  qflow check <source> [--workspace <workspace>] [--asset-root <directory>]",
+      "  --verbose lists exported names/types and historical references.",
     ],
     doctor: [
       colors.accent(colors.strong("qflow doctor")),
       colors.dim("Diagnose project Results and, when selected or supplied, one Runtime Profile."),
       "",
-      "  qflow doctor [--runtime <profile>] [--workspace <project>]",
+      "  qflow doctor [--runtime <profile>] [--workspace <project>] [--endpoint <instance>]",
       "  A positional Profile is also accepted in place of --runtime.",
+      "  Repeat --endpoint <instance> to limit the operation to chosen services; omission covers the Profile.",
       "  Without a Runtime Profile, checks only the project's selected Result Store.",
     ],
     plan: [
       colors.accent(colors.strong("qflow plan")),
-      colors.dim("Freeze the demanded subgraph and expose explicit Run choices and every external Need."),
+      colors.dim("Show targets, demanded requests and their readiness without executing them."),
       "",
       "  qflow plan <run-source> [--runtime <profile>] [--workspace <workspace>] [--asset-root <directory>]",
       "",
       "With --runtime, plan also preflights only the demanded deployment slice and names the Provider",
       "and price page behind each external request.",
+      "--verbose expands Run choices and unreached declarations. --limit bounds that detail,",
+      "while all demanded requests and diagnostics remain visible in both text and JSON.",
       "Planning never starts external work.",
     ],
     pricing: [
@@ -823,13 +851,14 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       "  qflow runtime init [<profile>] [--workspace <project>] create and select a starter Profile",
       "  qflow runtime use <profile> [--workspace <project>]  select the project Profile",
       "  qflow runtime unset [--workspace <project>]          remove only that selection",
-      "  qflow runtime up [<profile>]      prepare local packages and programs, then start the Worker",
+      "  qflow runtime up [<profile>] [--endpoint <instance>]  prepare helpers, then start the Worker",
       "  qflow runtime status [<profile>]  inspect the local Worker, active Builds and programs",
       "  qflow runtime logs [<profile>] [--lines <count>]",
       "  qflow runtime down [<profile>]    stop the Worker; external programs keep running",
       "",
       "The project is resolved first. Selection is read only from that project's .qflow/runtime.",
       "All runtime actions accept --workspace <project>; operational actions also accept --runtime <profile>.",
+      "For up, repeat --endpoint <instance> to prepare only chosen services; omission prepares the Profile.",
       "No Profile filename discovery or parent-project inheritance is performed.",
       "Remote Endpoints such as QflowHub are not started by this command; use doctor to test them.",
     ],
@@ -841,7 +870,8 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       "  qflow packages install <package@exact-version>",
       "",
       "The package is reused by every project and later session on this machine.",
-      "npm owns the ordinary package.json; Qflow creates no package lock or receipt.",
+      "Each exact version has its own installation; npm owns package.json and package-lock.json.",
+      "Preparation reports its install.log for live output and later diagnosis.",
     ],
     programs: [
       colors.accent(colors.strong("qflow programs")),
@@ -851,6 +881,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       "  qflow programs status [--runtime <profile>] [--workspace <project>]",
       "  qflow programs down [--runtime <profile>] [--workspace <project>]",
       "  A positional Profile is also accepted in place of --runtime.",
+      "  Repeat --endpoint <instance> to limit the operation to chosen services; omission covers the Profile.",
     ],
     activity: [
       colors.accent(colors.strong("qflow activity")),
@@ -874,6 +905,14 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       "",
       "  qflow builds [--workspace <project>] [--limit <count>] [--before <build-id>]",
     ],
+    logs: [
+      colors.accent(colors.strong("qflow logs")),
+      colors.dim("Read Build execution evidence; finished logs need only the project Result Repository."),
+      "",
+      "  qflow logs <build-id> [--workspace <project>] [--runtime <profile>] [--lines <count>]",
+      "  --lines <count>           show the last N records (default 50)",
+      "  runtime logs             reads the Worker process log instead",
+    ],
     status: [
       colors.accent(colors.strong("qflow status")),
       colors.dim("Show one Build now, or keep watching it without owning execution."),
@@ -887,6 +926,8 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.dim("Inspect one project-owned Build Result and its public Outputs."),
       "",
       "  qflow inspect <build-id> [--output <name>] [--limit <count>] [--workspace <project>]",
+      "  Defaults to targets and highlighted Outputs. --verbose expands other available Outputs.",
+      "  --output selects one exact name; --limit bounds expanded lists.",
     ],
     get: [
       colors.accent(colors.strong("qflow get")),
@@ -958,6 +999,7 @@ export function writeCliHelp(io: CliIo, topic?: string): void {
     colors.strong("Results"),
     row("builds", "list Results newest first"),
     row("history <output>", "find one named Output across Builds"),
+    row("logs <build-id> [--lines <count>]", "read saved Build execution phases and diagnostics"),
     row("status <build-id> [--watch]", "show current work and Result facts"),
     row("inspect <build-id>", "inspect one Result"),
     row("get <build-id> --output <name> --to <path>", "export one Build Output"),
@@ -969,7 +1011,7 @@ export function writeCliHelp(io: CliIo, topic?: string): void {
     row("runtime up|status|logs|down", "prepare and manage the local Build Runtime"),
     row("programs up|status|down", "manage declared external programs only"),
     row("packages install|status", "manage pinned upstream packages in the machine home"),
-    row("activity [--watch]", "inspect active Builds and shared capacity"),
+    row("activity [--watch]", "show active Builds and their current phases"),
     row("cancel <build-id>", "withdraw one active Build"),
     row("paths", "show physical state locations"),
     row("auth status|login|logout", "manage Endpoint credentials"),

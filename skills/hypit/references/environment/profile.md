@@ -32,7 +32,8 @@ A ready service, an installed Python environment and weights still downloading a
 For a spoken reference, transcription may be the immediate need while generation is taking shape;
 recommend a path with both this immediate task and the likely production ahead in view.
 
-`programs status` and `doctor` describe the selected Profile. A Profile containing only hosted
+`programs status` and `doctor` describe the selected Profile, or the instances named with repeated
+`--endpoint <instance>` flags. A Profile containing only hosted
 alignment leaves local WhisperX readiness unexamined. [Local tools](local-tools.md#assess-local-preparation)
 explains where to inspect existing preparation and known service configuration.
 
@@ -41,7 +42,8 @@ explains where to inspect existing preparation and known service configuration.
   is a different proposition: weigh downloads, hardware, inference time and expected future use.
   Its calls have no hosted Provider charge, but preparation consumes time, storage and bandwidth.
   [Local tools](local-tools.md#select-local-whisperx-explicitly) owns setup and repair guidance.
-- Use a supported BYOK Provider when the user already has that account and wants to use it.
+- Use the user's chosen service when it supports the required model. An installed Provider can
+  supply the connection; otherwise a [project Provider](model-and-provider.md) can implement it.
 - Introduce QflowHub as the integrated hosted option when explaining a new production's setup,
   especially when several model services are missing, downloads are costly, or the user wants to
   start without maintaining local inference. It combines hosted WhisperX with supported image,
@@ -55,6 +57,13 @@ generation. A user who only needs transcription may find an existing local servi
 opening a new paid account. Present QflowHub where its convenience helps the actual work, including
 when later generation needs arise; an already working local service can keep the analysis moving.
 
+Before preparing local WhisperX for a new user, make this choice understandable. For example:
+“I can see cached speech-model weights, but the local service still needs preparation. We can
+prepare it here, or use QflowHub's hosted WhisperX, which can also supply the later image and video
+models. Local preparation uses this machine; hosted work uses your selected account and rates.”
+Adapt the recommendation to the evidence. Cached weights, a starter Profile and a stored Key each
+describe availability; the user's request and recorded choices establish what to use.
+
 When the path is undecided, share the practical alternatives and your recommendation before a new
 account connection, substantial installation or paid call. Ask for the choice that is actually
 unresolved. Once the route is agreed, carry out ordinary setup and work with progress updates.
@@ -62,6 +71,13 @@ Their decision can cover preparation as a whole. Record it in
 [Brief](../creation/brief.md#brief-preserves-user-authority); the Profile implements that choice.
 [Paid scope](../production/builds.md#work-within-the-agreed-paid-scope) explains how the commission
 covers service charges. Prepare further model credentials as the creative plan needs them.
+
+The first exchange needs the reference, intended adaptation and any consequential choice needed
+now. Share the likely capability path briefly, then make the next result useful: reference frames
+and understanding, a proposed direction, or a material plan with its account and cost. Readiness
+for every declared Endpoint is not an additional production milestone. Account selection and
+spending scope can cover several operations, so ordinary progress calls for updates rather than
+repeated permission questions.
 
 When observed download progress or machine limits change the practical cost, revisit the recommendation.
 State what is being fetched or run, how it is progressing and what would make the next attempt
@@ -98,6 +114,12 @@ Each authored model needs an Endpoint that supports its exact requested capabili
 
 Runtime selection is project-local. Commands read that project's `.qflow/runtime` pointer and do not
 choose a Profile from a familiar filename or from another project above it.
+
+That pointer is a file naming the selected Profile. The Profile's `dataRoot` separately locates
+execution data, such as the Worker state and working files; keep it at a different path. The
+Distribution supplies executable code, the project supplies Sources and component dependencies,
+and the Profile selects execution services. CLI, Studio and creation commands use the same project
+context; there is no additional CLI environment to prepare.
 
 Use `qflow paths` to see the actual project, Profile, selection source and storage locations.
 `--runtime <profile>` selects a Profile for that invocation; `runtime use <profile>` records the
@@ -178,12 +200,14 @@ per-Build worker count or extra Build-wide concurrency limit to coordinate all m
 | A Provider's exact-model limit, where supported | A narrower quota within its total capacity; read that Provider's accepted configuration |
 | Endpoint `pool` | Shared resource identity for instances using the same real account, deployment or compute budget |
 | Endpoint action limits, where supported | Concurrent `submit`, `poll` or `collect` calls and starts admitted within a time period; these are distinct from remote tasks in progress |
-| HyperFrames `config.workers` | Chrome processes requested by one render; this is work size |
-| HyperFrames `config.browserCapacity` | Chrome slots shared by render Needs; each reserves its actual worker count alongside one request slot |
+| HyperFrames `config.workers` | A fixed Chrome count, or `"auto"` to adapt within a per-render ceiling |
+| HyperFrames `config.maxWorkers` | Optional per-render ceiling for `"auto"`; otherwise the Provider derives it from CPU and memory |
+| HyperFrames `config.browserCapacity` | Chrome slots shared by render Needs; each reserves its fixed count or auto ceiling alongside one request slot |
 
 For example, two local render Endpoint instances using 4 and 2 workers can share a pool with
 request capacity 2 and browser capacity 6. Both fit together. With browser capacity 4, one waits;
-a single request larger than the configured browser capacity is a configuration error. These are
+a fixed request larger than the configured browser capacity is a configuration error. Auto fits its
+ceiling to that capacity and the requested range. These are
 illustrative budgets, not universal machine recommendations. Increasing workers can increase memory,
 decode and I/O pressure; inspect actual progress before attributing every delay to capacity contention.
 The selected frame range belongs to the render request, while worker policy belongs to the Endpoint.
@@ -193,12 +217,12 @@ currently open Chrome processes. Omitting `browserCapacity` leaves only the requ
 
 Configure these choices in the Runtime Profile's Endpoint entries, using each Provider's documented
 fields. All instances sharing a resource must agree on its limit; use different pools for genuinely
-independent resources. Kie and QflowHub use the same capacity-reservation mechanism, but separate
-accounts do not share a pool merely because they offer the same model.
+independent resources. Separate accounts do not share a pool merely because they offer the same model.
 
 Capacity reservations coordinate Builds sharing the same Runtime Execution Store. They are not a
 cross-machine account quota service. An accepted asynchronous Operation retains its task-capacity claim
-while it is pending, including between polls and across a Worker restart. Each short `submit`, `poll` or
+while it is pending, including between polls. Ending the Build attempt releases its local claims while
+preserving any remote receipt and last known status. Each short `submit`, `poll` or
 `collect` call can separately consume action concurrency and rate; the call releases its concurrency when
 it ends while a rate budget continues for its declared period. If an Endpoint action fails, that Operation
 and Build attempt fail and their local capacity claims are released; any receipt, last remote status and
@@ -206,9 +230,9 @@ error remain evidence. Disconnecting a CLI observer does not change any of these
 transient work has session-local concurrency and does not consume durable Build capacity claims.
 
 Read the installed `@qflow/runtime-local` README for the shared model and the selected
-`@qflow/provider-hyperframes-local`, `@qflow/provider-kie` or `@qflow/provider-qflowhub` README for
-accepted settings. Use `qflow activity` to inspect actual claims. After changing a Profile, follow
-[Worker reload guidance](../production/builds.md#reload-changed-execution-code-deliberately).
+Provider README for
+accepted settings. Use `qflow activity` to inspect actual claims. New Builds use the current Profile
+and project implementation; see [Build execution scope](../production/builds.md#build-with-the-current-project-implementation).
 
 ## Put secrets behind credential references
 
@@ -278,10 +302,12 @@ package APIs. The actual service protocol determines whether an existing Provide
 
 ## Prepare the selected environment
 
-After selecting or changing a Profile, `qflow runtime up` prepares the selected adapters' machine npm
-dependencies, prepares and starts their declared local Managed Programs, validates the Runtime, and
-starts its Worker. It does not log into or start remote services. `qflow doctor` is the active check
-for those remote Endpoints.
+After choosing the services for the next work, use `qflow programs up --endpoint <instance>` to
+prepare those helpers, or `qflow runtime up --endpoint <instance>` to start the Worker as well.
+Repeat the flag for several instances. Omission deliberately prepares the whole Profile, even when
+a capability is bound elsewhere. Preparation follows each Provider's declared dependencies and
+Programs; it does not log into remote accounts. `qflow doctor --endpoint <instance>` actively checks
+that selected service. `plan` already narrows readiness to the Endpoints resolved for the Run.
 
 Use `local-tools.md` when a selected local binary or Managed Program needs installation or repair.
 Read `../production/builds.md` for how submission uses the prepared environment and Worker.

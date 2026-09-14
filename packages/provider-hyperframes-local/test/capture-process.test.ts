@@ -40,3 +40,22 @@ setInterval(() => {}, 1000);
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("renderer stdout and stderr diagnostics are drained before reporting success", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-render-diagnostics-"));
+  const messages: import("@qflow/runtime").ExecutionDiagnostic[] = [];
+  try {
+    const entry = join(root, "report.mjs");
+    await writeFile(entry, `process.once('message', () => {
+      process.stdout.write('browser ready\\n');
+      process.stderr.write('render diagnostic\\n');
+      process.send({ type: 'completed' });
+    });`);
+    await runCaptureProcess({ config: resolveExecutionOptions({}) } as CaptureInput,
+      new AbortController().signal, () => {}, pathToFileURL(entry), async (message) => {
+        await new Promise((resolve) => setTimeout(resolve, 5)); messages.push(message);
+      });
+    assert.ok(messages.some((item) => item.stream === "stdout" && item.message.includes("browser ready")));
+    assert.ok(messages.some((item) => item.stream === "stderr" && item.message.includes("render diagnostic")));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

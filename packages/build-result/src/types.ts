@@ -206,6 +206,7 @@ export type BuildResultManifest = {
   readonly failure?: string;
   readonly outputs: Readonly<Record<string, BuildResultOutput>>;
   readonly operations?: readonly BuildResultOperation[];
+  readonly executionLog?: BuildResultFileRef;
 };
 
 export type FinishedBuildResultManifest = BuildResultManifest & {
@@ -294,6 +295,8 @@ export type BuildResultSync = {
 };
 
 export type BuildResultFinish = {
+  /** Closed execution evidence; Repository stores it before publishing the terminal manifest. */
+  readonly executionLog?: AsyncIterable<Uint8Array>;
   readonly operations?: readonly BuildResultOperation[];
   readonly outcome: BuildResultOutcome;
   readonly failure?: string;

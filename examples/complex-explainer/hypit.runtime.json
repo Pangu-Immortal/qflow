@@ -1,0 +1,24 @@
+{
+  "format": "qflow.runtime-local@1",
+  "dataRoot": ".qflow/execution",
+  "endpoints": {
+    "media.local": {
+      "use": "@qflow/provider-media-local",
+      "config": {
+        "defaultConcurrency": 2
+      }
+    },
+    "hyperframes.local": {
+      "use": "@qflow/provider-hyperframes-local",
+      "config": {
+        "workers": 8,
+        "defaultConcurrency": 1
+      }
+    }
+  },
+  "bindings": {
+    "@qflow/render-hyperframes@1#render-visual": "hyperframes.local",
+    "@qflow/media-pipeline@1#render-timeline-audio": "media.local",
+    "@qflow/media-pipeline@1#mux-program-media": "media.local"
+  }
+}

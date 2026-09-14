@@ -1,0 +1,69 @@
+import { sealVisualTrack } from "@qflow/qflow/composition";
+import { browserProgram } from "@qflow/qflow/hyperframes";
+import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
+const sty = (o) => Object.entries(o).map(([name, value]) => ({ name, value }));
+const esc = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
+function seal(t, c, w, o, html, css, setup, data, children = []) {
+  assertTemporalWindowFor(w, { subjectId: o.id, space: t });
+  return sealVisualTrack({
+    id: o.id,
+    programSpaceId: t.id,
+    visualIr: "qflow.visual-ir@1",
+    presents: [
+      {
+        id: o.id,
+        span: w.span,
+        stacking: { order: o.z, tieBreak: o.id },
+        elements: [
+          {
+            id: "scene",
+            kind: "program",
+            order: 0,
+            program: browserProgram({
+              html: html + '<div class="font-resource">{{font}}</div>',
+              css:
+                ":scope{pointer-events:none}.font-resource{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}" +
+                css,
+              setup:
+                `const family=getComputedStyle(root.querySelector('.font-resource>*')).fontFamily;root.style.fontFamily=family;` +
+                setup,
+              data,
+            }),
+            style: sty({
+              position: "absolute",
+              inset: 0,
+              width: c.widthPx + "px",
+              height: c.heightPx + "px",
+            }),
+          },
+          {
+            id: "font",
+            parent: "scene",
+            kind: "text",
+            order: 1,
+            text: "Qflow 字",
+            fonts: [data.font],
+            style: sty({ "font-size": "12px" }),
+          },
+          ...children,
+        ],
+      },
+    ],
+  });
+}
+export function renderPoster(t, c, w, font, o) {
+  return seal(
+    t,
+    c,
+    w,
+    o,
+    `<div class="poster"><div class="poster-title">${esc(o.text)}</div><div class="poster-subtitle">${esc(o.subtitle)}</div></div>`,
+    `.poster{position:absolute;left:5%;top:${o.y * 100}%;width:90%;text-align:center}.poster-title{font-size:${o.size}px;line-height:1.05;color:#ff79bc;-webkit-text-stroke:5px #2b1f30;paint-order:stroke fill;text-shadow:2px 2px #2b1f30,4px 4px #2b1f30,7px 8px #2b1f30;filter:drop-shadow(0 0 1px #ffe6f2)}.poster-subtitle{display:inline-block;margin-top:${o["subtitle-gap"]}px;padding:10px 26px 13px;font-size:${o["subtitle-size"]}px;line-height:1.2;color:#2b1f30;background:#fff0f7;border:3px solid #2b1f30;border-radius:6px;box-shadow:6px 7px 0 #fa67aa}`,
+    "return frame=>{};",
+    { font },
+  );
+}

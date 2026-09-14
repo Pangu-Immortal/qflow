@@ -239,3 +239,21 @@ test("runtime media stays on graph edges until a model-owned draft is finalized"
   assert.throws(() => bindGenerationMedia(table, base, "referenceImage",
     sealGenerationMediaBinding(imagePort as never, { role: "image" }), audio), /image\//u);
 });
+
+test("media item fields can belong to URL preparation separately from the request body", async () => {
+  const { video } = await artifacts();
+  const transportMapping: GenerationWireMapping = { ...mapping, fields: { ...mapping.fields,
+    excerpt: { as: "itemObject", field: "video_list", urlKey: "url", resourceFields: ["startSec"], fieldKeys: { endSec: "ends" } },
+  } };
+  assertMappingCoversPorts(table, transportMapping);
+  assert.throws(() => assertMappingCoversPorts(table, { ...mapping, fields: { ...mapping.fields,
+    excerpt: { as: "urlArray", field: "video_list", resourceFields: ["startSec"] },
+  } }), /required item field endSec/);
+  const seen: unknown[] = [];
+  const request = sealGenerationPortRequest(table, { prompt: ["motion"], duration: [8], resolution: ["720p"],
+    excerpt: [{ role: "video", artifact: video, fields: { startSec: 0, endSec: 4 } }],
+  });
+  const result = await compileWireRequest(transportMapping, request, async (_artifact, fields) => { seen.push(fields); return "https://media.test/prepared"; });
+  assert.deepEqual(seen, [{ startSec: 0 }]);
+  assert.deepEqual((result.input as Record<string, unknown>).video_list, [{ url: "https://media.test/prepared", ends: 4 }]);
+});

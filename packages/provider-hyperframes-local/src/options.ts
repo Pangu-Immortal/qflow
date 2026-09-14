@@ -8,6 +8,8 @@ export type HyperframesExecutionOptions = {
   readonly ffmpegPath?: string;
   /** Parallel Chrome workers inside one render. This is separate from Provider request concurrency. */
   readonly workers?: HyperframesWorkers;
+  /** Upper bound for auto's browser reservation; explicit workers remain fixed. */
+  readonly maxWorkers?: number;
   readonly quality?: HyperframesQuality;
   /** Chrome's rasterizer, default hardware. Use software without a usable GPU. */
   readonly browserGpu?: HyperframesBrowserGpu;

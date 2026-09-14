@@ -70,7 +70,7 @@ quota; exact-model limits may narrow it further. Build identity is not a capacit
 no second queue.
 Claims may carry `units` (default 1): one render Need can occupy one request slot and four browser
 slots at once. The same admission rule applies to total Provider capacity, exact models, and local
-compute resources. SQLite retains the weighted reservation across Worker turns and restarts. This
+compute resources. SQLite retains the weighted reservation across execution turns; an ended attempt releases its reservations. This
 coordinates Builds sharing this Runtime's Execution Store; it does not enforce a service's quotas
 across other machines. Short-action limits are described below.
 
@@ -95,8 +95,7 @@ becomes available; known Operations are polled from their own lightweight record
 serialized, while network actions and local work remain concurrent under their declared limits.
 
 QflowHub can be the explicitly selected gateway for users without their own service keys. A bound
-Provider's authentication, quota or transport error never changes that selection. Separate Kie and
-QflowHub accounts use separate pools even when they implement the same model.
+Provider's authentication, quota or transport error never changes that selection. Separate accounts use separate pools even when they implement the same model.
 
 Without `qflow.results.json`, the official video Distribution selects the filesystem adapter at the
 project's `.qflow/results` directory, with no cloud account or service. Runtime Local opens that default
@@ -128,7 +127,9 @@ The lifecycle commands have deliberately narrow meanings:
 - `qflow runtime init` writes and selects the Distribution's starter Profile; it performs no setup or
   network access and never overwrites an existing Profile.
 - `qflow runtime up` prepares selected local dependencies, starts declared local Programs and starts
-  the Worker. `qflow runtime down` stops the Worker; `qflow programs down` stops the Programs.
+  the Worker. Repeat `--endpoint <instance>` to limit preparation to chosen services; omission covers
+  the whole Profile. `doctor` and Program operations accept the same scope. Build preflight receives
+  actual resolved Endpoint IDs and checks only their credentials and Programs. `qflow runtime down` stops the Worker; `qflow programs down` stops the Programs.
   Remote services have no lifecycle for Qflow to start or stop.
 - `qflow runtime logs` reads the Worker's output, including separately redirected standard errors
   on Windows. The files are `worker.log` and `worker.err.log` under the Runtime data directory's
@@ -136,3 +137,90 @@ The lifecycle commands have deliberately narrow meanings:
   event order. A failure before readiness also includes the recorded error in its startup message.
 - `qflow doctor` is the active, read-only check. Endpoint-owned diagnostics may authenticate and read a
   remote capability catalog; normal preflight never does.
+
+## Build execution evidence
+
+The Worker records Endpoint calls independently of CLI follow. Local calls use the execution context;
+remote Operations retain their existing receipts and contribute phase changes as they advance.
+`fileExecutionLogs` appends `qflow.execution-log@1` records to `work/<build>/execution.jsonl` under the
+Profile's `dataRoot`. Each record carries time, Command and Endpoint identity. Pure graph evaluation
+and repeated progress counters do not become log entries. The latest counters remain active Runtime
+state; Provider-authored diagnostics and phase changes are durable evidence.
+
+Result finishing streams this log through the selected Repository before publishing the terminal
+manifest or clearing the Build working directory. Complete, failed and cancelled Builds use the same
+finishing path. A failed archive leaves Result attention and preserves the working directory; finishing
+that Result performs no external execution. Log write failures also surface at the Result boundary,
+without converting a successful Provider call into another generation attempt.
+
+`qflow logs <build-id>` reads active evidence through Runtime control or finished evidence through the
+project Result Repository. `runtime logs` remains the Worker's process log. Program installation and
+service logs remain owned by their Program; they are shared service history, not copied into every Build.
+The logger does not capture the process environment, credential values, request bodies or global console.
+
+## Build-scoped execution
+
+The long-lived Worker supervises execution carriers. Each Build has its own module scope,
+component/Provider registries and selected configuration. Editing project code or Profile selections
+applies to the next Build without restarting the Worker; already loaded modules remain bound to their
+original Build. Installed Distribution modules stay process-owned. The Package Loader owns scoped
+JavaScript/TypeScript loading, including transitive ESM and CommonJS dependencies.
+
+One carrier shares a SQLite connection and event loop across active Builds. The database returns
+ready Build IDs; the dispatcher opens that Build's context once, hydrates local work in sequence, then
+lets asynchronous actions proceed concurrently. Pending remote submission does not hold a whole-Build
+admission slot. Accepted Operations retain receipts and wake times; their next poll can advance without
+materializing the whole graph. Endpoint-declared task limits, action concurrency and rates still govern
+actual work. A remote task waiting in an eight-slot pool does not block another Build's unrelated local
+step. CPU-heavy rendering belongs to its execution backend and declared resources.
+
+The active execution request owns its opaque local context: project package root, Distribution root,
+selected Endpoint configurations and bindings, and relevant Credential Store declarations. Source
+compilation and execution use the same project package root. Core does not see these choices. Different
+Profiles selecting the same Runtime data directory share its coordinator and capacity accounting; the
+coordinator's startup directory and recorded Profile path do not select later Builds' project code.
+
+`startedAt` records assignment to an execution carrier. Losing that carrier ends its assigned attempts
+and preserves completed Outputs and external receipts, without resubmitting work. Unstarted queue
+entries may still start. Result-writing failures retain the attention and `result finish` path. A live
+carrier never reclaims another carrier's turns. These are module/registry contexts in trusted code,
+not OS or security isolation: process globals, native libraries and a fatal process failure are shared.
+The carrier has one working directory and inherited environment. Package-relative file access uses
+module URLs; spawned tools receive their own explicit working directory and environment as needed.
+
+After its assigned Builds end, the carrier exits and releases Node's module cache. The coordinator and
+Managed Programs stay available. With continuous submissions, the coordinator can retire a carrier
+from accepting new Builds while its assigned work continues in place. New work uses a fresh carrier;
+all carriers share the same SQLite resource accounting. A live Build is never unloaded or moved.
+
+The coordinator reads process policy from its startup Profile:
+
+```json
+"worker": { "executionMemoryMb": 1024 }
+```
+
+The default is 1024 MiB of execution-process RSS. It is a soft retirement budget, not a memory ceiling
+or a limit on active Builds. Carriers report RSS after opening a Build context and when a Build ends.
+Once a carrier has completed work and its reported RSS reaches the budget, it stops accepting new
+Builds. Its remaining Builds finish before it exits. Live work alone does not trigger rotation, and
+a fresh carrier can accept work even when its startup footprint exceeds the budget. There is no
+forced timeout or replay. Draining carriers can still use substantial memory while long jobs run;
+this policy reclaims finished-work accumulation, not the memory required by unfinished work.
+The Profile that starts the coordinator owns this process policy until that coordinator exits.
+
+Loaded module bindings are scoped, not the filesystem. Later file reads observe ordinary files;
+a first-time dynamic import reads the implementation then available and subsequently remains cached
+in that Build's scope. No source snapshot, filesystem scan, content hash or Build recovery is involved.
+`createLocalRuntime` remains available for embeddings that explicitly supply their implementations.
+Its `workOnce` advances fresh work or work already owned by that instance; an explicit request to
+take over another context's started Build fails before any Provider call. The coordinator supplies
+the assignment when opening each production Build context. Client code calls `worker.up()` on the
+controller returned by `await host.controller()`, and calls `build(...)` on the Runtime returned by
+`await host.createRuntime()`. There is one production process-lifecycle path.
+
+Managed Programs have independent lifetimes. A healthy WhisperX service keeps its model loaded;
+`prepareBeforeStart` reconciles a cold installation through uv's source-aware synchronization.
+`runtime down` stops the coordinator and asks its executors to stop; Programs are stopped separately.
+Distribution changes and shell environment changes still concern the coordinator's bootstrap process.
+Inspect active work before restarting it. Environment-backed credentials use that inherited process
+environment; external writable Credential Stores resolve through their own implementation.

@@ -5,6 +5,8 @@ description: 选择账户、连接服务或添加模型，沿用同一套视频�
 
 **Model** 定义要生成什么：输入、支持的参数和输出类型。**Provider** 知道如何通过某个服务完成这个请求。**Endpoint** 是配置好的 Provider 实例，包含服务地址、凭据引用和容量。Runtime Profile 将所需能力绑定到 Endpoint。
 
+官方发行包含本地 Provider 和 QflowHub Provider。其他服务通过项目或作者自己的包接入；Agent 可以使用公开 SDK 编写所需接入，就像为视频创建视觉组件。[服务合作方介绍](../../guide/service-partners.md) 集中介绍独立合作服务，它们沿用同一套扩展方式。
+
 ## 根据需求选择修改位置
 
 | 你想做什么 | 修改哪里 |
@@ -38,6 +40,8 @@ import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow
 真正的失败会结束本次执行尝试。Build Result 保留已完成的 Output 与公开任务回执。后续工作通过新的 Run 与 Build，选择仍适用的已有 Output 复用。
 
 [Endpoint SDK](https://github.com/qflow-ai/qflow/blob/main/packages/endpoint-kit/README.md) 维护处理接口、activation、资源声明和价格 API。将包编译为 JavaScript，由项目包管理器安装。在 [Runtime Profile](./runtime.md) 的 `endpoints` 中配置实例，并通过 `bindings` 选择它。
+
+[完整项目 Provider 示例](https://github.com/qflow-ai/qflow/tree/main/examples/provider-package) 使用示意 API 展示参考上传、任务回执、结果收集与价格读取。示例随执行包分发，Agent 无需仓库 checkout 就能读取和改写。
 
 ## 价格与授权
 

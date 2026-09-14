@@ -127,9 +127,11 @@ wires those projections, the shared Timeline/Canvas and authored values into the
 Producers. The Producer consumes the resulting time and geometry and owns the visual/state behavior;
 Studio consumes that published meaning for presentation and editing.
 
-Keep actual text, icons, images, colors and event references in Source or Recipe. The package owns
-its reusable persistent-state behavior, motion and visual structure. A new Caption family consumes
-the common Caption document and timing.
+Wire supplied media, Script content and event references through Source. Expose other content or
+treatment in Source or Recipe where the work needs those choices. A one-off component can own fixed
+illustrative labels, dimensions and animation alongside its state and visual structure; its boundary
+does not require every detail to become a parameter. [Component design](component-design.md#separate-responsibility-parameters-and-reuse)
+explains that distinction. A new Caption family consumes the common Caption document and timing.
 
 ## Connect the implementation at its real boundaries
 

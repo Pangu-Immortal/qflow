@@ -4,22 +4,9 @@
   "credentials": {
     "os": {
       "use": "@qflow/credential-store-os"
-    },
-    "env": {
-      "use": "@qflow/credential-store-env"
     }
   },
   "endpoints": {
-    "kie.default": {
-      "use": "@qflow/provider-kie",
-      "config": {
-        "apiKey": {
-          "store": "env",
-          "key": "KIE_API_KEY"
-        },
-        "defaultConcurrency": 10
-      }
-    },
     "media.local": {
       "use": "@qflow/provider-media-local",
       "config": {
@@ -38,6 +25,15 @@
         "workers": 2,
         "quality": "standard",
         "defaultConcurrency": 1
+      }
+    },
+    "qflowhub.default": {
+      "use": "@qflow/provider-qflowhub",
+      "config": {
+        "apiKey": {
+          "store": "os",
+          "key": "qflowhub.default"
+        }
       }
     }
   }

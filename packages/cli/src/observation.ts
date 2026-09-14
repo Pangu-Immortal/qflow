@@ -5,7 +5,8 @@ import { formatOperationProgress } from "./runtime-view.js";
 
 const FIRST_HEARTBEAT_MS = 30_000;
 const LATER_HEARTBEAT_MS = 60_000;
-const MIN_PROGRESS_INTERVAL_MS = 1_000;
+// Coalesce live counters into readable terminal updates; persistence can advance more often.
+const MIN_PROGRESS_INTERVAL_MS = 5_000;
 
 export type BuildProgressView = {
   readonly build: string;
@@ -21,6 +22,10 @@ function progressPhases(view: CliBuildView): Readonly<Record<string, number>> {
   for (const operation of view.operations.filter((item) => item.status === "pending")) {
     const phase = operation.progress?.phase ?? "in progress";
     phases.set(phase, (phases.get(phase) ?? 0) + 1);
+  }
+  for (const command of view.commands ?? []) {
+    const label = formatOperationProgress(command.progress);
+    phases.set(label, (phases.get(label) ?? 0) + 1);
   }
   return Object.fromEntries([...phases].sort(([left], [right]) => left.localeCompare(right)));
 }
@@ -41,6 +46,7 @@ export function buildProgressView(view: CliBuildView, now = Date.now()): BuildPr
     phases: progressPhases(view),
     elapsedMs: Math.max(0, now - view.createdAt),
     details: [
+      ...(view.commands ?? []).map((item) => `${item.endpoint}: ${formatOperationProgress(item.progress)}`),
       ...(view.stop === undefined ? [] : [view.stop.cause === "execution-failed"
         ? `Build stopping after failure${view.stop.reason === undefined ? "" : `: ${view.stop.reason}`}`
         : `Build cancelling${view.stop.reason === undefined ? "" : `: ${view.stop.reason}`}`]),

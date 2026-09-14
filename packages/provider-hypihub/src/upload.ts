@@ -70,6 +70,7 @@ export type QflowHubUploadInput = {
   readonly mediaType: string;
   readonly filename?: string;
   readonly purpose?: string;
+  readonly isPersonReference?: boolean;
 };
 
 type PartDeclaration = {
@@ -385,6 +386,7 @@ export class QflowHubUploader {
           bytes: input.bytes.byteLength,
           mime_type: input.mediaType,
           purpose: input.purpose ?? "reference",
+          ...(input.isPersonReference === undefined ? {} : { is_person_reference: input.isPersonReference }),
           sha256: digest,
           head_base64: Buffer.from(input.bytes.subarray(0, 512)).toString("base64"),
         }),

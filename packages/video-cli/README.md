@@ -46,7 +46,10 @@ Chinese speech containing English names; the requested language selects the reco
 model, independently of the eventual caption font or script's simplified/traditional characters.
 
 `transcribe` uses the Profile's `whisperx-alignment` Endpoint (after
-extracting 16 kHz mono speech audio with ffmpeg). `measure` counts a Segment's pronunciation units at a
+extracting 16 kHz mono speech audio with ffmpeg). Direct invocation forwards the Provider's progress
+and diagnostic callbacks; the CLI reports phase changes while waiting, with JSON progress on the
+separate progress stream when supplied. Immediate invocation has no durable remote task receipt and
+does not become resumable merely because it reports progress. `measure` counts a Segment's pronunciation units at a
 delivery policy and prints estimated seconds, the resolved rate, padding and rounding. Choose the
 literal `duration` from that estimate and the intended performance. `measure` opens no Profile and
 spends nothing. It accepts `--pace slow|normal|fast` or `--rate <units/s>`; JSON includes the resolved

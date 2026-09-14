@@ -25,13 +25,6 @@ export type RuntimeRunnableCommand = {
 
 export type RuntimeResourceClaim = import("./capacity.js").CapacityResourceClaim;
 
-export type RuntimeWorkerRunOptions = {
-  readonly idlePollMs: number;
-  readonly signal?: AbortSignal;
-  /** Called after abandoned work is claimable and immediately before the claim loop starts. */
-  readonly ready?: () => void | Promise<void>;
-};
-
 export type RuntimePreparation = {
   readonly state: BuildState;
   readonly runnable: readonly RuntimeRunnableCommand[];
@@ -41,6 +34,10 @@ export type RuntimePreparation = {
 export type RuntimeExecutionContext = {
   /** Stable Run-local identity; two identical BuildRequests may still be distinct Builds. */
   readonly build: string;
+  /** Observational activity of this call; it never changes scheduling or Core facts. */
+  readonly reportProgress?: (activity: NonNullable<import("./execution.js").CommandExecutionReceipt["activity"]>) => Promise<void>;
+  /** Execution evidence; the Runtime owns persistence. Implementations keep logging failures out of Provider outcomes. */
+  readonly recordExecution?: (event: import("./log.js").ExecutionLogEvent) => Promise<void>;
   /** Release only the asynchronous Operation's occupancy after its remote end is confirmed. */
   readonly releaseOperationCapacity?: () => Promise<void>;
 };
@@ -72,7 +69,7 @@ export type RuntimeCommandExecutor = {
     state: BuildState,
     operation: OperationSnapshot,
   ): Promise<OperationSnapshot>;
-  advanceOperation?(operation: OperationSnapshot): Promise<OperationSnapshot>;
+  advanceOperation?(operation: OperationSnapshot, context?: RuntimeExecutionContext): Promise<OperationSnapshot>;
   /** Validate an already received result without invoking a Producer or contacting an Endpoint. */
   acceptOperation?(state: BuildState, operation: OperationSnapshot): Promise<CommandResult | undefined>;
 };

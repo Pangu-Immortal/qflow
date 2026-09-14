@@ -42,7 +42,9 @@ export type ManagedProgramCommand = {
 export type ManagedProgramInstallation = {
   /** Truthful inspection of the installed program; no installer-owned receipt. */
   probe(): Promise<ManagedProgramState>;
-  /** Commands run only when the installation probe is not ready. */
+  /** Reconcile an installed environment before a cold start, using its package manager's cache. */
+  readonly prepareBeforeStart?: boolean;
+  /** Commands run when installation is missing, or before a cold start when requested above. */
   readonly commands: readonly ManagedProgramCommand[];
 };
 

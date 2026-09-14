@@ -230,3 +230,16 @@ test("OAuth refresh keeps the existing upload session and retries only its rejec
   assert.equal(f.calls.filter((call) => call.endsWith("/parts")).length, 2);
   assert.equal(f.calls.filter((call) => call.startsWith("DELETE")).length, 0);
 });
+
+test("upload sessions preserve explicit person-reference flags and omission", async () => {
+  for (const flag of [true, false, undefined]) {
+    const f = fixture((url, init) => {
+      if (!url.endsWith("/files/uploads")) return;
+      const body = JSON.parse(String(init.body));
+      assert.equal(body.is_person_reference, flag);
+      assert.equal(Object.hasOwn(body, "is_person_reference"), flag !== undefined);
+      return undefined;
+    });
+    await f.uploader().upload({ ...input, ...(flag === undefined ? {} : { isPersonReference: flag }) }, "test-key");
+  }
+});

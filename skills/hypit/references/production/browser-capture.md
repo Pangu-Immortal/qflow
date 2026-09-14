@@ -70,6 +70,13 @@ to express the task. `browser` is also available for opening more pages; pass on
 argument to `screenshot` or `record` to capture it. Returning finishes open recordings and closes
 the browser. Completed captures survive a later script failure.
 
+For a scrolling demonstration, identify the container that actually scrolls; a gallery may move
+inside a fixed page. Frame the useful content at its intended viewing size and record from a useful
+start state through the action. Compare separated saved frames to confirm that the intended rows or
+states change. Crop and presentation can then be revised around this recording without repeating
+the capture. An authored diagram or simulated interaction whose motion must follow Script events
+belongs in an editable component; a recording supplies the real interface behavior being shown.
+
 For local inputs beside the script, `new URL('../assets/card.html', import.meta.url).href` locates
 the file. Relative output paths follow the directory where the command runs. `args` contains the
 arguments after `--`; use `log` for progress. `--json` reports every completed helper output with its

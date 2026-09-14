@@ -16,7 +16,6 @@ import type {
   CredentialRef,
   OperationSnapshot,
   ResourceStore,
-  RuntimeWorkerRunOptions,
 } from "@qflow/runtime";
 import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-kit";
 
@@ -63,6 +62,12 @@ export type BuildView = {
   readonly acceptedRecords: number;
   readonly outstandingCommands: number;
   readonly operations: readonly BuildOperationView[];
+  /** Activity reported by calls running in the local Worker. */
+  readonly commands?: readonly {
+    readonly id: string;
+    readonly endpoint: string;
+    readonly progress: NonNullable<OperationSnapshot["progress"]>;
+  }[];
 };
 
 export type RuntimeHostCredentialStatus = {
@@ -77,6 +82,8 @@ export type RuntimeHostCredentialStatus = {
 };
 
 export type RuntimeHostControl = {
+  /** Build evidence while active. Finished evidence is read through its Result Repository. */
+  logs?(build: string, lines: number): Promise<import("@qflow/runtime").ExecutionLogView | undefined>;
   inspect(build: string): Promise<BuildView | undefined>;
   activity(): Promise<{
     readonly builds: readonly BuildView[];
@@ -127,7 +134,6 @@ export type RuntimeHostExecution = RuntimeHostControl & RuntimeHostCredentialCon
     readonly maxWaitMs?: number;
     readonly signal?: AbortSignal;
   }): Promise<RuntimeHostBuildSubmission>;
-  work(options: RuntimeWorkerRunOptions): Promise<void>;
 };
 
 export type RuntimeHostDoctorResult = {
@@ -214,7 +220,6 @@ export type ManagedProgramReport = {
 
 export type RuntimeWorkerState = {
   readonly state: "running" | "stopped";
-  readonly configuration?: "current" | "changed";
   readonly profile: string;
   readonly pid?: number;
   readonly startedAt?: number;
@@ -235,9 +240,10 @@ export type RuntimeController = {
       readonly maxWaitMs?: number;
       readonly onProgress?: (event: ManagedProgramProgress) => void;
       readonly capabilities?: readonly CapabilityRef[];
+      readonly endpoints?: readonly string[];
     }): Promise<{ readonly dataRoot: string; readonly programs: readonly ManagedProgramReport[] }>;
-    down(): Promise<{ readonly dataRoot: string; readonly programs: readonly ManagedProgramReport[] }>;
-    report(): Promise<{ readonly dataRoot: string; readonly programs: readonly ManagedProgramReport[] }>;
+    down(options?: { readonly endpoints?: readonly string[] }): Promise<{ readonly dataRoot: string; readonly programs: readonly ManagedProgramReport[] }>;
+    report(options?: { readonly endpoints?: readonly string[] }): Promise<{ readonly dataRoot: string; readonly programs: readonly ManagedProgramReport[] }>;
   };
 };
 
@@ -255,7 +261,7 @@ export type NodeRuntimeHost = {
   controller(options?: {
     readonly packageRoot?: string;
   }): Promise<RuntimeController>;
-  createRuntime(): Promise<RuntimeHostExecution>;
+  createRuntime(options?: { readonly endpoints?: readonly string[] }): Promise<RuntimeHostExecution>;
   openControl(options?: { readonly readOnly?: boolean }): Promise<RuntimeHostControl>;
   /** Open only Result-writing dependencies; never construct execution Providers. */
   openResultControl(): Promise<RuntimeHostResultControl>;
@@ -263,6 +269,7 @@ export type NodeRuntimeHost = {
   /** Explicitly prepare upstream packages selected by this Runtime Profile. */
   prepare(options?: {
     readonly onProgress?: (event: import("./packages.js").HostPackageProgress) => void;
+    readonly endpoints?: readonly string[];
   }): Promise<readonly import("./packages.js").HostPackageReport[]>;
   /**
    * Read-only, bounded deployment validation for one demanded Build slice.
@@ -271,10 +278,12 @@ export type NodeRuntimeHost = {
    */
   preflight(options?: {
     readonly capabilities?: readonly CapabilityRef[];
+    readonly endpoints?: readonly string[];
   }): Promise<RuntimeHostDoctorResult>;
   /** Active deployment diagnosis. Unlike preflight, adapters may contact their configured services. */
   doctor(options?: {
     readonly capabilities?: readonly CapabilityRef[];
+    readonly endpoints?: readonly string[];
   }): Promise<RuntimeHostDoctorResult>;
   /**
    * Which selected Endpoint would serve each capability and where its Provider publishes prices.
@@ -288,10 +297,16 @@ export type NodeRuntimeHost = {
    * The creation-time boundary for observation, transcription and other quick capabilities; it
    * creates no Build, Result or state, and refuses asynchronous capabilities.
    */
-  invoke(need: Need, resources: ResourceStore): Promise<{ readonly value: StoredValue }>;
+  invoke(need: Need, resources: ResourceStore, observation?: RuntimeInvocationObservation): Promise<{ readonly value: StoredValue }>;
   /** Open one disposable authoring execution. It creates no Build, Result or recoverable Operation. */
   openTransientExecution(): Promise<RuntimeHostTransientExecution>;
-  runWorker(readyFile: string, owner: string): Promise<void>;
+  runWorker(readyFile: string, owner: string, execution?: { readonly dataRoot: string }): Promise<void>;
+};
+
+/** Progress stays with the selected Provider; immediate calls need no synthetic Build. */
+export type RuntimeInvocationObservation = {
+  readonly reportProgress?: (progress: import("@qflow/runtime").OperationProgress) => Promise<void>;
+  readonly reportDiagnostic?: (diagnostic: import("@qflow/runtime").ExecutionDiagnostic) => Promise<void>;
 };
 
 /**
@@ -321,7 +336,7 @@ export function qflowHostStateRoot(options: {
     : state, "qflow");
 }
 
-/** Upstream npm packages shared by every Qflow project and future session on this machine. */
+/** Home of version-isolated upstream npm installations shared across projects. */
 export function qflowHostPackageRoot(hostStateRoot = qflowHostStateRoot()): string {
   return join(resolve(hostStateRoot), "packages");
 }

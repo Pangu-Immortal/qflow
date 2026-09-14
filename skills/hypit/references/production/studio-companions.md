@@ -8,6 +8,9 @@ The Companion describes two things: **what an author can recognize and select**,
 authored fact an edit changes**. Keep the same concepts across the picture, timeline and Inspector.
 A reveal can be one entity even when its graphic moves and later remains on a board. A coordinated
 presenter-and-diagram scene can stay one entity when its layout is intended to be edited together.
+Recognition and editing are separate capabilities. A production may use Studio mainly to watch and
+show its arrangement, with a few useful adjustments. Clear labels, timing and selected read-only
+facts can fully serve a one-off scene; useful Caption controls can coexist with that fixed scene.
 
 ## Choose useful entities and lanes
 
@@ -15,6 +18,17 @@ Match the component's actual Module ABI, Surface and terminal output Type. Gener
 AudioTrack entities are enough for simple occupancy. Use `project(context)` when the author needs
 domain meaning that the terminal drawing no longer contains. A Surface preview supplies a useful
 static recognition image; live entities and editable bindings come from the Companion.
+
+Generic presentation recognizes the terminal Type, not the component's creative role. A custom
+Caption Track can therefore render correct subtitles yet appear as a generic blue visual lane with
+opaque ids when its package has no matching Companion. Inspect the selected Companion and its
+Module/Surface match before treating this as misplaced content or moving visuals between Tracks.
+The package declares its role; Studio does not infer one from a tag name or the text in a picture.
+
+When adapting an existing family, carry forward its editor meaning wherever the public content,
+schedule and author identities still agree. Reuse its Companion with the actual Module/Surface
+identity, or adapt its projection for the changed behavior. Preserve useful Cue/Use or item/event
+relationships along with rendering. A rendering wrapper alone does not activate that integration.
 
 For example, a board can expose its outer lifetime and its individual reveal events. Publish the
 deterministic schedule/program needed to describe these from the same Surface, then request its
@@ -65,14 +79,21 @@ the Companion carries their actual ids into `renderIds`. Studio uses the visible
 current frame. This preserves selection after an icon lands without duplicating animation geometry
 in the Companion. A preset with no separately exposed child remains part of the parent entity.
 
-Picture selection and timeline selection identify the same authored object. Position and size can
-then be adjusted through its declared Inspector fields.
+Picture selection and timeline selection identify the same authored object. If position and size
+are exposed choices, its declared Inspector fields can adjust them.
 
 ## Expose decisions, not implementation debris
 
 Declare `bindings` for the actual author endpoints, then choose visible `inspector` fields. A
 binding can follow a shared authored Frame or Style through `referenced`, or an SVS Recipe through
 `recipe`. Use `parameterReferences` for an entity's actual reference, when a derived entity points to a different authored object. Shared values retain their shared effect when edited.
+
+A Companion is a view of the author model, not a reason to expand it. When an Inspector adjustment
+is actually needed, bind it to a real Source input or domain event. A label inside a one-off renderer
+can remain an implementation detail until external control has a purpose. Useful child entities can
+live inside the same Track, and selection can be read-only. The
+[component boundary](component-design.md#separate-responsibility-parameters-and-reuse) determines
+what is independently organized; it does not prescribe how many controls to provide.
 
 Where describes placement and layout. When describes timing, playback and motion. How describes
 appearance, content and sound. Each Companion chooses useful pages and sections within them.

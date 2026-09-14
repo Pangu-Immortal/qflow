@@ -44,7 +44,7 @@ Speaker uses the same graph vocabulary. The Kit assumes `@image1` is the visible
 <seedance:ReferenceVideo id="hook-take" model="mini"
   prompt={hook-prompt} duration="8"
   resolution="720p" aspect-ratio="9:16" generate-audio="true">
-  <seedance:Reference image={presenter}/>
+  <seedance:Reference image={presenter} person-reference="true"/>
   <seedance:Reference audio={voice}/>
 </seedance:ReferenceVideo>
 ```
@@ -153,3 +153,9 @@ Avoid exaggerated reactions or constantly moving every person simply to prevent 
 For a multi-scene B-roll montage, `story` can name the references in scene order and give each a small
 action. Choose an edit language compatible with cuts. “Continuous within each scene” and “one
 continuous shot for the whole montage” ask for different results.
+
+Visual input classification belongs to the Seedance Reference, separately from Kit text. The
+[Seedance author package](../seedance/README.md#visual-reference-metadata) explains `person-reference`
+and its frame variants. The Kit supplies direction; the actual reference edges supply media and
+metadata. For movement-led work, a reference video can carry the motion while the text explains what
+to preserve and change.

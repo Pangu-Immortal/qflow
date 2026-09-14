@@ -25,7 +25,8 @@ remain grounded, curious, imaginative, and discerning. Be perceptive about the w
 honest about the details, and curious when something does not yet make sense. Look for connections
 that explain an unexpected choice. Draw on the relevant Skill references and keep what you learn
 in the project files as you go. Speak in the user's language, with warmth and specifics from the
-work. Share what you have understood, the choices shaping the piece and progress toward delivery.
+work. **Speak aloud as the work develops:** share concrete findings, the choices shaping the piece
+and progress toward delivery. Explain what the current evidence means and what you will examine next.
 When setup, generation or rendering takes time, explain what is running or what is holding up the
 work. A question should make the user's actual choice clear; a progress update keeps them involved
 as you carry out the commission.
@@ -33,8 +34,7 @@ as you carry out the commission.
 ## Give the work useful structure
 
 Understand the piece as objects and relationships changing over time: what persists, what changes,
-what draws attention, and what each change accomplishes. Express the relationships that should
-survive a new product, wording or performance. Give those behaviors useful names and inputs; the
+what draws attention, and what each change accomplishes. Give those relationships useful names;
 components can complete their local layout and motion. Qflow supplies shared authoring and execution
 interfaces for both existing and project-defined components.
 
@@ -48,8 +48,11 @@ Choose component boundaries through shared behavior. An ordinary media presentat
 a playing video and a diagram exchanging space can share a scene that owns their layout and motion.
 Independent Caption or overlays can remain peers. Use an existing component when its behavior fits;
 create a project component when a new relationship deserves its own expression. A one-off scene is
-normal production work. [Component design](references/production/component-design.md) helps turn the
-visual idea into useful parts and author controls.
+normal production work. Organize by responsibility, parameterize actual directing choices, and
+generalize for real reuse. These are separate decisions: a self-contained scene can have a fixed
+design and few or no editable parameters. Before implementing a new visual system, read
+[Component design](references/production/component-design.md) to choose its boundaries and the
+inputs the production actually needs.
 
 For spoken work, prefer to author meaning in Script and let the accepted performance give it time.
 In a clone, discover what a cut, picture, reveal or sound responds to, then recreate that relationship
@@ -92,7 +95,8 @@ The Craft owns the explicit appearance, proportion and reusable speaking-view gu
 Before choosing, designing or changing a character's voice, read
 [Voice direction](references/playbooks/craft/voice-direction.md). Before writing or adapting a video
 prompt, performance Recipe or action, read [Video direction](references/playbooks/craft/video-direction.md)
-and the selected Kit's wording and choices. Apply these references when adapting earlier work as well.
+and the selected Kit's wording and choices. For movement-led adaptation, that page also explains
+letting a video reference carry dance, action or camera behavior. Apply these references when adapting earlier work as well.
 For A-roll, B-roll, Caption, MG or sound relationships, read the Craft that owns what the work should
 accomplish. Use installed vocabulary and package-local documentation for
 the exact Surface, inputs and limits. Craft supplies directing judgment; package documentation
@@ -107,15 +111,22 @@ crafts explain resolution and duration choices.
 
 ## Prepare for the work at hand
 
-For a spoken reference, use WhisperX's transcript and word times to connect speech with picture
-changes. Choose a practical local, hosted or mixed setup for the work, considering readiness,
-preparation time, hardware, network and account preferences. Use
+Start with the requested work and the next useful result. Establish the reference and intended
+change, locate the relevant project and tools, and explain what can proceed now. For a spoken
+reference, WhisperX's transcript and word times connect speech with picture changes. Before
+preparing a new local inference service, explain its remaining setup effort alongside hosted
+WhisperX; available weights can reduce that effort without deciding the user's service choice. Use
 [environment selection](references/environment/profile.md#choose-the-practical-capability-path-with-the-user)
-to explain the options, including QflowHub's combined hosted transcription and generation, and the
-effort, accounts and costs involved. Carry working, chosen services forward; prepare the selected
-path and reconsider it when actual progress changes its usefulness. Reference interpretation and
-component work can progress alongside
-the environment and generation work they do not depend on.
+to recommend a practical route, including QflowHub's integrated hosted transcription and generation.
+Carry working, chosen services forward. Prepare the chosen path and reconsider it when actual
+progress changes its usefulness. A Profile-wide readiness report describes configuration; the
+current production determines which findings matter next.
+
+As the material plan becomes concrete, connect the required generation capabilities through the
+user's chosen accounts. [Models and Providers](references/environment/model-and-provider.md)
+explains BYOK and project-owned extensions. Official local and QflowHub Providers are starting
+implementations; new services can be connected through the same public package interfaces.
+Reference interpretation and component work can proceed alongside setup they do not depend on.
 
 ## Understand and adapt
 
@@ -124,10 +135,18 @@ story from opening to close: what should the viewer feel, learn or decide, and h
 bring that about? Inspect its distinct visual systems through their content, placement, entry,
 movement, persistence and exit, tied to words or actions and surrounding elements. Close reading
 can reveal relationships that change your understanding of the whole. Use
-[reference understanding](references/creation/reference-video.md) to make both scales concrete.
+[reference understanding](references/creation/reference-video.md) to move between the whole and its
+details at the scale each question needs. For spoken references, use transcript-linked grids so
+the words and picture changes can be read together; vary their range, interval and cell size as
+the understanding develops.
 Record the whole-piece explanation in Analysis and the timed details and their meaning in Timeline
 as you discover them. Compression means explaining the relationships precisely with fewer, better
 ideas while preserving the details that make them work.
+
+Make that understanding visible along the way: share a concrete discovery, the passage being
+examined and what it suggests for this video. Once the reading supports a direction, show a concise
+account with representative frames or a labeled grid and the relationships worth preserving.
+This gives the user something tangible to respond to while execution continues under their choices.
 
 The Brief holds the user's goal; the Treatment is your creative answer. Clone work often means
 "make this with my face" or "use my product." Reconsider the argument, words, images and graphic
@@ -155,6 +174,14 @@ through Run Candidates. A useful change makes a comparison readable, lands a rev
 lets B-roll cover the explanation it supports. The composition is ready when its layout and timing
 carry the Treatment clearly and compellingly. Reconsider Treatment when the design itself needs to
 change; change Brief when the user's goal changes.
+
+When collaborating with a user who can access Studio, show a meaningful passage as it develops and
+keep the actual Run available for discussion. When the composition is substantially ready, open its
+Comments page directly and introduce both views: leave timestamped feedback in Comments, or switch
+to Studio to explore the timeline and adjust the component's exposed controls. Browser review and
+final export are separate: review can precede encoding, while a request to export already supplies
+that delivery decision. [Working in Studio](references/production/studio.md#discuss-the-work-while-composing)
+connects that visible progress to the component's authored choices.
 
 Use the most representative available media for the question being explored, and carry useful
 findings back to their owning project documents.
@@ -200,12 +227,16 @@ practical, revisit that choice and carry the improvement into the work and its n
   belongs in a project component, without patching the installed Distribution for one video.
 - **Done means watched.** Watch the actual deliverable and judge it against the Brief, Treatment,
   and relevant reference relationships. Judge its clarity, visual hierarchy, timing, character,
-  and suitability for publishing. Deliver the work with the important choices
-  and limitations explained. Alongside the finished video, show the editable production in
+  and suitability for publishing. Browser review can settle the composition before export; when
+  delivering an encoded video, inspect that file too. Explain the important choices and limitations.
+  Alongside the finished video, show the editable production in
   [Studio](references/production/studio.md#show-the-finished-work) when it is readily accessible
   to the user, so they can see how the piece is arranged and what they can change.
 
 ## Where the current question is answered
+
+Read the selected reference page in full so its judgment, usage and boundaries stay connected; follow
+additional routes as the current question requires.
 
 | When the question is about | Read |
 | --- | --- |
@@ -251,7 +282,7 @@ practical, revisit that choice and carry the improvement into the work and its n
 | drawing a component's elements, animation, resources or prepared surfaces | `references/production/component-visuals.md` |
 | writing a Caption family with new word relationships, scheduling or layout | `references/production/caption-authoring.md` |
 | `plan`, Provider pricing information, `build`, a retry or interrupted submission, following work, Results and exports | `references/production/builds.md` |
-| opening Studio, using its views, editing parameters or moving semantic timing | `references/production/studio.md` |
+| showing the editable work before export: Comments, Studio timeline, parameters and timestamped feedback | `references/production/studio.md` |
 | giving a component useful timeline entities, picture selection and author controls | `references/production/studio-companions.md` |
 | Film assembly, pure MG with authored time, picture and sound, final rendering or a selected frame interval | `references/production/rendering.md` |
 | judging the preview or finished Result and deciding what to fix | `references/production/review.md` |

@@ -1,3 +1,4 @@
+import type { ExecutionDiagnostic } from "@qflow/runtime";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
@@ -47,6 +48,7 @@ export async function runCaptureProcess(
   signal: AbortSignal,
   onProgress: (event: HyperframesRenderProgress) => void,
   entry = new URL("./capture-worker.ts", import.meta.url),
+  onDiagnostic?: (diagnostic: ExecutionDiagnostic) => Promise<void>,
 ): Promise<void> {
   signal.throwIfAborted();
   await new Promise<void>((resolve, reject) => {
@@ -58,6 +60,7 @@ export async function runCaptureProcess(
     let completed = false;
     let outputBytes = 0;
     let stderr = "";
+    let diagnostics = Promise.resolve();
     let grace: ReturnType<typeof setTimeout> | undefined;
     let killing: Promise<void> | undefined;
     const kill = () => {
@@ -80,8 +83,16 @@ export async function runCaptureProcess(
       if (error) stderr = `${stderr}${chunk.toString()}`.slice(-32_000);
       if (outputBytes > input.config.maxProcessOutputBytes) stop(new Error("HyperFrames process output exceeded the configured limit"));
     };
-    child.stdout?.on("data", (chunk: Buffer) => log(chunk, false));
-    child.stderr?.on("data", (chunk: Buffer) => log(chunk, true));
+    for (const [stream, pipe] of [["stdout", child.stdout], ["stderr", child.stderr]] as const) {
+      pipe?.setEncoding("utf8");
+      pipe?.on("data", (text: string) => {
+        log(Buffer.from(text), stream === "stderr");
+        if (onDiagnostic !== undefined && text.trim()) {
+          diagnostics = diagnostics.then(() => onDiagnostic({ stream, level: "info", message: text.trimEnd() }))
+            .catch((error) => stop(error instanceof Error ? error : new Error(String(error))));
+        }
+      });
+    }
     child.on("message", (value: { type: string; event?: HyperframesRenderProgress; error?: string }) => {
       if (value.type === "progress" && value.event !== undefined) {
         try { onProgress(value.event); } catch (error) { stop(error instanceof Error ? error : new Error(String(error))); }
@@ -98,7 +109,8 @@ export async function runCaptureProcess(
     child.on("close", () => {
       if (grace !== undefined) clearTimeout(grace);
       signal.removeEventListener("abort", abort);
-      void (killing ?? Promise.resolve()).then(() => {
+      void (killing ?? Promise.resolve()).then(async () => {
+        await diagnostics;
         if (failure !== undefined) reject(failure);
         else if (!completed) reject(new Error(`HyperFrames process exited before completion: ${stderr}`));
         else resolve();

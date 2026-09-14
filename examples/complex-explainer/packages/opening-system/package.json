@@ -1,0 +1,19 @@
+{
+  "name": "@explainer/opening-system",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "qflow": {
+    "activation": "./src/activation.js"
+  },
+  "exports": {
+    ".": "./src/render.js"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "@explainer/visual-language": "file:../visual-language"
+  }
+}

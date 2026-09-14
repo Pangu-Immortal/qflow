@@ -20,6 +20,7 @@ function buildView(input: {
   readonly submission?: PendingBuildSubmission;
   readonly execution?: BuildExecutionSnapshot;
   readonly operations: readonly OperationSnapshot[];
+  readonly commands: readonly import("@qflow/runtime").CommandExecutionReceipt[];
 }): BuildView | undefined {
   if (input.submission === undefined && input.execution === undefined) return undefined;
   const createdAt = buildIdCreatedAt(input.build);
@@ -57,6 +58,8 @@ function buildView(input: {
     ...(requests === undefined ? {} : { requests }),
     acceptedRecords: input.snapshot?.state.records.length ?? 0,
     outstandingCommands: input.snapshot?.state.outstanding.length ?? 0,
+    commands: input.commands.flatMap((command) => command.status === "started" && command.activity !== undefined
+      ? [{ id: command.command, ...command.activity }] : []),
     operations: input.operations.map((operation) => ({
       id: operation.id,
       endpoint: operation.endpoint,
@@ -75,12 +78,13 @@ export function createLocalRuntimeControl(
 ): LocalRuntimeControl {
   const buildCatalog = options.buildCatalog;
   const inspect = async (build: string): Promise<BuildView | undefined> => {
-    const [snapshot, catalog, operations, submission, execution] = await Promise.all([
+    const [snapshot, catalog, operations, submission, execution, commands] = await Promise.all([
       options.buildStore.read(build),
       buildCatalog?.read(build),
       options.operationStore.list({ build }),
       options.submissionStore.read(build),
       options.executionStore.read(build),
+      options.commandExecutionStore.list(build),
     ]);
     return buildView({
       build,
@@ -89,10 +93,14 @@ export function createLocalRuntimeControl(
       ...(submission === undefined ? {} : { submission }),
       ...(execution === undefined ? {} : { execution }),
       operations,
+      commands,
     });
   };
   return {
     inspect,
+    async logs(build, lines) {
+      return await options.executionLogs?.read(build, lines);
+    },
     async activity() {
       const [submissions, executions, capacity] = await Promise.all([
         options.submissionStore.list(),

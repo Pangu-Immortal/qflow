@@ -421,9 +421,10 @@ export function assertPlannedRequests(
   }
 }
 
-export async function preflightPlan(host: NodeRuntimeHost, state: BuildState) {
+export async function preflightPlan(host: NodeRuntimeHost, state: BuildState, providers: readonly PlanProviderView[]) {
   const capabilities = demandedCapabilities(state);
-  const result = await host.preflight({ capabilities });
+  const endpoints = [...new Set(providers.flatMap((item) => item.status === "resolved" && item.endpoint !== undefined ? [item.endpoint] : []))];
+  const result = await host.preflight({ endpoints });
   return {
     ok: !result.diagnostics.some((item) => item.severity === "error"),
     capabilities: capabilities.map(capabilityName),

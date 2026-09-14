@@ -109,6 +109,13 @@ test("Local Runtime Profile names credentials and Endpoints, not project result 
   assert.deepEqual(parsed.endpoints, [{ use: "example.provider", instance: "generation", pool: "shared" }]);
 });
 
+test("execution memory policy belongs to the local Worker, with an explicit MiB budget", () => {
+  assert.deepEqual(parseLocalRuntimeProfile({ ...profile(), worker: { executionMemoryMb: 768 } }).worker,
+    { executionMemoryMb: 768 });
+  assert.throws(() => parseLocalRuntimeProfile({ ...profile(), worker: { executionMemoryMb: 0 } }), /positive integer/u);
+  assert.throws(() => parseLocalRuntimeProfile({ ...profile(), worker: { executionMemoryMb: 768, maxBuilds: 8 } }), /maxBuilds/u);
+});
+
 test("Build Result repositories default to the project path and can be selected explicitly", async () => {
   const root = await mkdtemp(join(tmpdir(), "qflow-runtime-results-"));
   const defaultProject = join(root, "default-project");
@@ -685,9 +692,11 @@ test("Runtime invoke executes one immediate Need through the selected Endpoint a
           capability: observe,
           returns,
           lifecycle: "immediate",
-          handler: ({ need, credentials }) => ({
-            value: { kind: "inline", value: { seen: need.constraints, key: credentials.apiKey?.secret ?? null } },
-          }),
+          handler: async ({ need, credentials, reportProgress, reportDiagnostic }) => {
+            await reportProgress?.({ phase: "Aligning words" });
+            await reportDiagnostic?.({ level: "info", message: "Timing ready" });
+            return { value: { kind: "inline", value: { seen: need.constraints, key: credentials.apiKey?.secret ?? null } } };
+          },
         }],
       }),
     }),
@@ -717,9 +726,15 @@ test("Runtime invoke executes one immediate Need through the selected Endpoint a
     id: "need:creation-time", capability, returns, constraints: { question: "what happens?" }, result: "record:creation-time",
   });
   try {
-    assert.deepEqual(await invokeRuntimeConfigNeed(path, need(observe), resources, { registry }), {
+    const messages: string[] = [];
+    assert.deepEqual(await invokeRuntimeConfigNeed(path, need(observe), resources, {
+      registry,
+      reportProgress: async (event) => { messages.push(event.phase); },
+      reportDiagnostic: async (event) => { messages.push(event.message); },
+    }), {
       value: { kind: "inline", value: { seen: { question: "what happens?" }, key: "configured" } },
     });
+    assert.deepEqual(messages, ["Aligning words", "Timing ready"]);
     await assert.rejects(invokeRuntimeConfigNeed(path, need(missing), resources, { registry }), /No Endpoint in .* serves example\.model@1#transcribe/u);
     await assert.rejects(invokeRuntimeConfigNeed(path, need(generate), resources, { registry }), /asynchronous capability/u);
     configured = false;
@@ -862,4 +877,45 @@ test("doctor reports inconsistent limits for shared pools and capacity resources
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("demanded readiness and Programs follow the chosen Endpoint, including before package loading", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-chosen-readiness-"));
+  const path = join(root, "runtime.json");
+  const capability = { module: { name: "example.speech", version: "1" }, name: "transcribe" } as const;
+  const returns = { module: { name: "example.value", version: "1" }, name: "Text" } as const;
+  let chosen = "local";
+  const registry = new RuntimeAdapterRegistry();
+  registry.registerFacet(createRuntimeCredentialStoreAdapterFacet({
+    use: "example.keys", validate() {},
+    open: () => ({ value: { resolve: async () => chosen === "hosted" ? { secret: "fixture" } : undefined } }),
+  }));
+  for (const name of ["local", "hosted"]) registry.registerFacet(createRuntimeEndpointAdapterFacet({
+    use: `example.${name}`,
+    activate: (context) => ({
+      endpoint: defineEndpointPackage({
+        module: { name: `example.${name}`, version: "1" }, facet: name,
+        instance: context.instance, pool: context.instance, pricing: { kind: "local" },
+        ...(name === "hosted" ? { credentials: { key: credentialRef("keys", "account") } } : {}),
+        capabilities: [{ capability, returns, lifecycle: "immediate", handler: () => ({ value: { kind: "inline", value: "ok" } }) }],
+      }),
+      ...(name === "local" ? { program: { id: "local-service", probe: async () => chosen === "local"
+        ? { state: "ready" as const } : { state: "down" as const, detail: "not selected" } } } : {}),
+    }),
+  }));
+  try {
+    const { declaredManagedPrograms } = await import("../src/config.js");
+    for (chosen of ["local", "hosted"]) {
+      await writeFile(path, JSON.stringify(profile({ dataRoot: ".", credentials: { keys: { use: "example.keys" } },
+        endpoints: { local: { use: "example.local" }, hosted: { use: "example.hosted" }, later: { use: "uninstalled.future.provider" } },
+        bindings: { "example.speech@1#transcribe": chosen },
+      })));
+      assert.deepEqual((await preflightRuntimeConfig(path, { registry, capabilities: [capability] })).diagnostics, []);
+      assert.deepEqual((await preflightRuntimeConfig(path, { registry, endpoints: [chosen] })).diagnostics, []);
+      const programs = await declaredManagedPrograms(path, { registry, capabilities: [capability] });
+      assert.deepEqual(programs.programs.map((item) => item.instance), chosen === "local" ? ["local"] : []);
+    }
+    assert.deepEqual((await preflightRuntimeConfig(path, { endpoints: [] })).diagnostics, []);
+    await assert.rejects(preflightRuntimeConfig(path, { registry, endpoints: ["typo"] }), /no Endpoint typo/);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });

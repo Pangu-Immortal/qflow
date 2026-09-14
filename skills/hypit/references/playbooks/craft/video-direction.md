@@ -19,14 +19,19 @@ together. Their value is the performable relationship they contain.
 
 As with [Image direction](image-direction.md#compress-the-idea-into-decisive-anchors), high-level
 language should carry sensory direction. The model can realize "admiring but incredulous" across a
-whole passage. A pointed emphasis or a revealing gesture can then settle its most consequential
-expression. The prompt names the attitude; the performance makes the audience experience it.
+whole passage. Words such as "lively" or "expressive" set an energy level; the speaker's particular
+response to the meaning gives that energy direction. Locate the consequential thought in the Script
+and make its expression concrete: what earns an accent, changes the face, or moves the body?
+Voice, expression and gesture can reinforce one response, with whichever channels make it legible.
+A single revealing reaction can carry the thought; specifying all channels at every phrase adds no
+inherent value.
 
 For example, alongside a Script that questions a price and ends with an ironic compliment:
 
 ```text
-She is venting to a friend with affectionate exasperation at how overpriced this is. Give the
-price an incredulous emphasis; let the final compliment land with a teasing smile in her voice.
+She is venting to a friend with affectionate exasperation at how overpriced this is. At the price,
+her eyebrows rise and her open palm turns upward with an incredulous vocal accent. Let the final
+compliment land with a teasing smile in her voice.
 ```
 
 The first sentence directs the entire encounter. The details make the price and the ironic turn
@@ -37,12 +42,16 @@ strengthening the expression.
 
 Let the thought determine whether the attitude develops or holds: an example may win a skeptical
 speaker over, while a firm argument may sustain the same conviction throughout. When adapting a
-reference, recover that relationship before selecting movements or vocal details for the new work.
+reference, recover what prompts the reaction and how it lands, then find the corresponding thought
+in the new Script. This preserves the expressive relationship while letting the new words call for
+their own movements and phrasing. Phrase-level emphasis should fit the performed language's tones
+and cadence; a source-language stress pattern is not a universal performance instruction.
 
 Carry the character, voice and useful physical relationships across Takes while directing the
 attitude each passage calls for. The same speaker can invite, question, tease and persuade as the
 argument develops. Shared direction can preserve their manner; the passage supplies the particular
-response. Stable framing leaves room for changes in face, voice and posture.
+response. Carry forward production continuity, and reconsider the expressive intention whenever the
+thought changes. Stable framing leaves room for changes in face, voice and posture.
 
 ## Give restraint an expressive purpose
 
@@ -85,6 +94,19 @@ the video should perform. Give the later Caption, icon or product card its own c
 through composition. A prop or display intended to exist within the generated scene can be described
 as that actual object and connected through the relevant references.
 
+The spoken subject and the visible action have separate responsibilities. A speaker can discuss
+objects, quantities, transformations or an imaginary demonstration while the camera records only
+their performance in the referenced setting. Preserve the words in Dialogue; use action to describe
+the person's response to those words. A quoted phrase can locate a vocal accent or a hand beat
+without asking for its meaning to appear as an object, written label or event in the shot.
+
+Make the performer the subject of the direction. "She gives the promise a satisfied accent and a
+small nod" identifies what the camera and microphone should capture. "Make the idea tangible" or
+"show that it works" leaves the means of demonstration open. Complete that translation into the
+intended voice, expression or physical interaction before writing the request. Read the assembled
+prompt as one account of the generated scene; a general no-text instruction does not resolve an
+ambiguous invitation to demonstrate the spoken content visually.
+
 Capable video models can turn figurative wording into literal objects, events or transformations. Use
 concrete visible language for intended gaze, gesture, movement, camera behavior and cuts when a
 metaphor would introduce the wrong scene content. Social attitude and aesthetic shorthand remain
@@ -109,6 +131,7 @@ encoder.
 | --- | --- |
 | Character-and-scene references | appearance, setting, framing and the physical state to preserve |
 | Product, interface or other factual references | the visible facts that need continuity or exactness |
+| Motion or camera video references | temporal behavior whose phrasing, coordination or path should guide the new shot |
 | Recurring voice references | a speaker's intended voice identity when the model accepts them |
 | Script dialogue | the exact words, intended pronunciation and speaking turns for a visible performance |
 | Prompt Kit or Recipe | a reusable prompt relationship that fits this kind of work |
@@ -159,6 +182,28 @@ without making it a model wrapper.
 Read the selected template's wording when choosing its Recipe. Composition, camera, edit rhythm,
 performance and gesture choices shape different aspects of the footage. Choose them to support the
 intended delivery, and use action Text for the passage's particular meaning and reactions.
+
+## Let footage carry motion that matters
+
+When the defining value of a reference is its movement, let a video reference carry that evidence to
+an appropriate video model. Dance phrasing, coordinated body action and a distinctive camera move
+can be easier to preserve through footage than through a long verbal reconstruction. Understand what
+makes the movement work, then state which motion to follow and which person, setting or appearance
+to change. The reference supplies temporal behavior; the prompt and other references direct the new
+visible result.
+
+Choose a useful excerpt around the complete action and its preparation or settling. Size it using
+the source passage, the target's intended duration and the selected model's actual reference-duration,
+count and size limits. A long reference can yield several purposeful excerpts. Preserve continuous
+action where it matters, and use natural editorial boundaries where separate requests make sense.
+Connect the actual video as a reference input; an excerpt mentioned only in prose is not an input.
+
+The same [reference relationships](generated-dependencies.md) apply: each image, video or audio carries
+specific facts, and the nearest useful references guide the next request. Image references can supply
+the target identity or world while video supplies movement. The selected model and Provider determine
+which combination is supported. Read their installed vocabulary and exact media requirements,
+including any declared person-reference metadata, before submitting. Motion reference is another
+way to direct capable generation, alongside text, camera images and voice references.
 
 ## Direct camera and cuts as part of the passage
 

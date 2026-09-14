@@ -97,6 +97,18 @@ owns the local structure; CSS supplies layout, stacking, masks, filters and blen
 `setup(root, data)` code returns `render(localFrame)`. This function sets the complete state at that
 frame. A range render may start in the middle, so compute state from the frame and authored inputs.
 
+Prepare stable structure in `setup`: locate elements, construct geometry and retain reusable drawing
+objects there. Paint static procedural textures once their resources are ready.
+Let `render(localFrame)` update the state that changes with time. This supports both
+fast repeated capture and direct seeking. A program is sampled within its Present's lifetime;
+outside it, the renderer may retain the boundary pose. Re-entry and repeated active seeks must
+produce the complete requested state, including when an image became ready since the last call.
+
+For a depth or material effect, choose the representation that carries its visible behavior:
+CSS can tilt a panel, while a deforming textured surface may warrant mesh geometry and Canvas or
+WebGL drawing. Keep that implementation inside the project component; give Source the useful
+material, amplitude or timing choices rather than the renderer's internal construction.
+
 For shared opacity or a filter, put the affected content under the element that owns the treatment.
 A translucent panel can use backdrop filtering; its painted position and browser compositing scope
 determine which background it affects. A transition can own both participating pictures and their

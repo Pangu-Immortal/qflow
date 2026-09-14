@@ -73,8 +73,8 @@ export async function runEnvironmentCommand(input: {
     };
   const reportPackageProgress = args.presentation.json
     ? undefined
-    : (event: { readonly specifier: string; readonly phase: "checking" | "installing" | "ready" }): void => {
-      if (event.phase === "installing") io.write(`  · Installing ${event.specifier}\n`);
+    : (event: { readonly specifier: string; readonly phase: "checking" | "installing" | "ready"; readonly logPath?: string }): void => {
+      if (event.phase === "installing") io.write(`  · Installing ${event.specifier}${event.logPath === undefined ? "" : ` · log ${event.logPath}`}\n`);
     };
   const reportCredentialProgress = args.presentation.json
     ? io.writeProgress
@@ -126,10 +126,13 @@ export async function runEnvironmentCommand(input: {
       action: args.action,
       package: args.package,
       ready,
+      ...(reports[0] === undefined ? {} : { installation: reports[0].root }),
+      ...(reports[0]?.logPath === undefined ? {} : { logPath: reports[0].logPath }),
     }, args.action === "install" ? "Machine package is ready" : "Machine package status",
     ready ? "success" : "warning", [
       ["Package", args.package],
       ["Ready", String(ready)],
+      ...(args.presentation.verbose && reports[0] !== undefined ? [["Installation", reports[0].root] as const] : []),
     ]);
     if (!ready) io.setExitCode?.(1);
     return;
@@ -138,7 +141,7 @@ export async function runEnvironmentCommand(input: {
   if (args.command === "doctor") {
     const profile = runtimeProfile === undefined ? undefined : resolve(runtimeProfile);
     const [runtimeResult, projectResult] = await Promise.all([
-      profile === undefined ? undefined : (await runtimeHost(profile)).doctor(),
+      profile === undefined ? undefined : (await runtimeHost(profile)).doctor(args.endpoints === undefined ? {} : { endpoints: args.endpoints }),
       distribution.diagnoseProjectResults(projectRoot, {
         packageRoot: await packageRootForProject(),
         ...(distribution.packageRoot === undefined
@@ -155,8 +158,7 @@ export async function runEnvironmentCommand(input: {
       ...(runtimeSelectionFile === undefined ? {} : { selectionFile: runtimeSelectionFile }),
       ...(profile === undefined ? {} : { profile }),
       diagnosticCount: diagnostics.length,
-      diagnostics: diagnostics.slice(0, args.limit),
-      ...(diagnostics.length <= args.limit ? {} : { omittedDiagnostics: diagnostics.length - args.limit }),
+      diagnostics,
     };
     writeCliOutput(io, args.presentation, { kind: "doctor", machine });
     if (!machine.ok) io.setExitCode?.(1);
@@ -168,21 +170,27 @@ export async function runEnvironmentCommand(input: {
     const profile = resolve(runtimeProfile);
     const host = await runtimeHost(profile);
     if (args.action === "up") {
-      await host.prepare(reportPackageProgress === undefined ? {} : { onProgress: reportPackageProgress });
+      await host.prepare({ ...(args.endpoints === undefined ? {} : { endpoints: args.endpoints }), ...(reportPackageProgress === undefined ? {} : { onProgress: reportPackageProgress }) });
     }
     const controller = await runtimeController(profile);
     const result = args.action === "up"
       ? await controller.programs.up({
+        ...(args.endpoints === undefined ? {} : { endpoints: args.endpoints }),
         ...(args.maxWaitMs === undefined ? {} : { maxWaitMs: args.maxWaitMs }),
         ...(reportProgramProgress === undefined ? {} : { onProgress: reportProgramProgress }),
       })
       : args.action === "down"
-        ? await controller.programs.down()
-        : await controller.programs.report();
+        ? await controller.programs.down(args.endpoints === undefined ? {} : { endpoints: args.endpoints })
+        : await controller.programs.report(args.endpoints === undefined ? {} : { endpoints: args.endpoints });
     const ready = result.programs.every((item) => item.state.state === "ready");
     const desiredState = args.action === "down" ? !result.programs.some((item) => item.state.state === "ready") : ready;
     const lifecycleOk = args.action === "status" || desiredState;
-    const shownPrograms = result.programs.filter((item) => args.presentation.verbose || item.state.state !== "ready").slice(0, args.limit);
+    const needsAttention = (item: typeof result.programs[number]) => args.action === "down"
+      ? item.state.state === "ready" : item.state.state !== "ready";
+    const relevant = result.programs.filter((item) => args.presentation.verbose || args.action === "status" || needsAttention(item));
+    const urgent = relevant.filter(needsAttention);
+    const shownPrograms = [...urgent, ...relevant.filter((item) => !needsAttention(item)).slice(0, Math.max(0, args.limit - urgent.length))];
+    const omittedPrograms = relevant.length - shownPrograms.length;
     const title = args.action === "up"
       ? desiredState ? "External programs ready" : "External programs need attention"
       : args.action === "down"
@@ -192,15 +200,17 @@ export async function runEnvironmentCommand(input: {
       format: "qflow.cli-programs@1",
       action: args.action,
       ready,
-      programs: result.programs.slice(0, args.limit).map(programRecord),
-      ...(result.programs.length <= args.limit ? {} : { omittedPrograms: result.programs.length - args.limit }),
+      programCount: result.programs.length,
+      readyCount: result.programs.filter((item) => item.state.state === "ready").length,
+      programs: shownPrograms.map(programRecord),
+      ...(omittedPrograms === 0 ? {} : { omittedPrograms }),
     }, title,
     args.action === "status" ? ready ? "success" : "info" : lifecycleOk ? "success" : "warning", [
       ...(!args.presentation.verbose && lifecycleOk && args.action !== "status" ? [] : [
         ["Programs", String(result.programs.length)] as const,
         ["Ready", String(result.programs.filter((item) => item.state.state === "ready").length)] as const,
       ]),
-    ], shownPrograms.map(programDescription));
+    ], shownPrograms.map(programDescription).concat(omittedPrograms === 0 ? [] : [`${omittedPrograms} more programs · use --limit <count>`]));
     if (!lifecycleOk) io.setExitCode?.(1);
     return;
   }
@@ -213,11 +223,12 @@ export async function runEnvironmentCommand(input: {
       const packageRoot = await packageRootForProject();
       const host = await runtimeHost(profile, packageRoot);
       const prepared = await host.prepare(
-        reportPackageProgress === undefined ? {} : { onProgress: reportPackageProgress },
+        { ...(args.endpoints === undefined ? {} : { endpoints: args.endpoints }), ...(reportPackageProgress === undefined ? {} : { onProgress: reportPackageProgress }) },
       );
-      const validated = await host.createRuntime();
+      const validated = await host.createRuntime(args.endpoints === undefined ? {} : { endpoints: args.endpoints });
       await validated.close();
       const external = await controller.programs.up({
+        ...(args.endpoints === undefined ? {} : { endpoints: args.endpoints }),
         ...(args.maxWaitMs === undefined ? {} : { maxWaitMs: args.maxWaitMs }),
         ...(reportProgramProgress === undefined ? {} : { onProgress: reportProgramProgress }),
       });
@@ -234,7 +245,7 @@ export async function runEnvironmentCommand(input: {
         programs: {
           total: external.programs.length,
           ready: external.programs.filter((item) => item.state.state === "ready").length,
-          items: external.programs.map(programRecord),
+          items: external.programs.filter((item) => args.presentation.verbose || item.state.state !== "ready").map(programRecord),
         },
       }, ok ? "Local Runtime ready" : "Local Runtime needs attention", ok ? "success" : "warning", [
         ...(!args.presentation.verbose && ok ? [] : [
@@ -300,13 +311,12 @@ export async function runEnvironmentCommand(input: {
         attention,
         worker: {
           state: worker.state,
-          ...(worker.configuration === undefined ? {} : { configuration: worker.configuration }),
         },
         builds: counts,
         programs: {
           total: external.programs.length,
           ready: external.programs.length - unavailable.length,
-          unavailable: unavailable.slice(0, args.limit).map((item) => ({ id: item.id, state: item.state.state })),
+          unavailable: unavailable.map(programRecord),
         },
         capacity: {
           active: activity.capacity.length,
@@ -326,7 +336,7 @@ export async function runEnvironmentCommand(input: {
           ["Capacity in use", String(activity.capacity.length)] as const,
         ] : []),
       ], [
-        ...unavailable.slice(0, args.limit).map((item) => `${item.id}: ${item.state.state}`),
+        ...unavailable.map(programDescription),
       ]);
     } finally {
       if (runtime !== undefined) await runtime.close();

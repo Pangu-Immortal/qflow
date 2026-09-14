@@ -114,7 +114,7 @@ test("real selected renders sample video correctly across loop, hold and stretch
     const full = await render("full", undefined, 1);
     events.length = 0;
     const selected = await render("selected", { startFrame: 3, endFrameExclusive: 11 }, 3);
-    const starts = events.filter((e): e is Extract<HyperframesRenderProgress, { worker: number }> => e.phase === "worker-start");
+    const starts = events.filter((e): e is Extract<HyperframesRenderProgress, { browserPid: number | undefined }> => e.phase === "worker-start");
     assert.equal(starts.length, 3);
     assert.equal(new Set(starts.map((e) => e.browserPid)).size, 3);
     const one = await render("one", { startFrame: 7, endFrameExclusive: 8 }, 4);

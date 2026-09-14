@@ -104,7 +104,7 @@ model-selected duration or an integer from 4 through 30 seconds:
 ```svml
 <seedance:ReferenceVideo id="long-take" model="2.5"
   prompt={long-direction} duration="30" resolution="720p">
-  <seedance:Reference image={presenter-reference}/>
+  <seedance:Reference image={presenter-reference} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>
 ```
@@ -143,10 +143,20 @@ video and audio references within the model's declared limits.
   prompt={alice-direction}
   duration="5"
   generate-audio="true">
-  <seedance:Reference image={alice-reference}/>
+  <seedance:Reference image={alice-reference} person-reference="true"/>
   <seedance:Reference audio={alice-voice}/>
 </seedance:ReferenceVideo>
 ```
+
+On an image or video reference, `person-reference="true"` declares a person/avatar in the supplied
+material, including a generated human likeness. Use false for a reference without that content;
+omission leaves the classification unspecified. Audio references do not use this visual flag.
+Frame mode provides `first-frame-person-reference` and `last-frame-person-reference`. The selected
+Provider carries this fact through the service's media preparation.
+
+A video reference can guide dance, physical action or camera movement while images guide the new
+appearance. Choose an excerpt that carries the intended motion within the selected model and
+service's input-duration limits; the requested output duration is a separate choice.
 
 The component does not know that this is a talking head. That meaning lives in the supplied Text.
 
@@ -163,14 +173,14 @@ edge. Extraction does not turn it into speech evidence or attach speaker meaning
 
 <seedance:ReferenceVideo id="follow-up" model="mini"
   prompt={follow-up-direction} duration="5" generate-audio="true">
-  <seedance:Reference image={presenter-reference}/>
+  <seedance:Reference image={presenter-reference} person-reference="true"/>
   <seedance:Reference audio={voice-from-opening.audio}/>
 </seedance:ReferenceVideo>
 ```
 
 The same media-operation package exposes `Transform` for ordered trim/retime and `ExtractFrame` for
-first, last, indexed or timestamped still extraction. Local FFmpeg and AWS Lambda are interchangeable
-Runtime Endpoints for these exact Needs; neither changes the author graph.
+first, last, indexed or timestamped still extraction. Local FFmpeg implements these exact Needs. Another compatible Runtime Endpoint can be selected
+without changing the author graph.
 
 ## Seedance semantic Kits
 
@@ -260,9 +270,9 @@ camera changes and performance in its authored action, in the exact order they s
 <seedance:ReferenceVideo id="interview-take" model="mini"
   prompt={interview-prompt} duration="8"
   resolution="720p" aspect-ratio="9:16" generate-audio="true">
-  <seedance:Reference image={interviewer-view}/>
-  <seedance:Reference image={guest-view}/>
-  <seedance:Reference image={shared-view}/>
+  <seedance:Reference image={interviewer-view} person-reference="true"/>
+  <seedance:Reference image={guest-view} person-reference="true"/>
+  <seedance:Reference image={shared-view} person-reference="true"/>
   <seedance:Reference audio={interviewer-voice}/>
   <seedance:Reference audio={guest-voice}/>
 </seedance:ReferenceVideo>
@@ -298,7 +308,7 @@ module. The result enters Seedance through the same explicit `prompt` edge as an
   prompt={hook-prompt}
   duration="8"
   resolution="720p" aspect-ratio="9:16" generate-audio="true">
-  <seedance:Reference image={presenter-clean}/>
+  <seedance:Reference image={presenter-clean} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>
 ```
@@ -337,12 +347,12 @@ generation:
 
 <seedance:ReferenceVideo id="hook-take" model="mini" prompt={hook-prompt}
   duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
-  <seedance:Reference image={presenter-clean}/>
+  <seedance:Reference image={presenter-clean} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>
 <seedance:ReferenceVideo id="meeting-take" model="mini" prompt={meeting-prompt}
   duration="6" resolution="720p" aspect-ratio="9:16" generate-audio="true">
-  <seedance:Reference image={presenter-alt}/>
+  <seedance:Reference image={presenter-alt} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>
 ```

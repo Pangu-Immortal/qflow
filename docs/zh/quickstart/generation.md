@@ -93,7 +93,7 @@ Seedance 2.5 复用同样的 Surface，而不是由 Runtime 把别的模型偷�
 ```svml
 <seedance:ReferenceVideo id="long-take" model="2.5"
   prompt={long-direction} duration="30" resolution="720p">
-  <seedance:Reference image={presenter-reference}/>
+  <seedance:Reference image={presenter-reference} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>
 ```
@@ -128,10 +128,18 @@ Seedance 2.5 复用同样的 Surface，而不是由 Runtime 把别的模型偷�
   prompt={alice-direction}
   duration="5"
   generate-audio="true">
-  <seedance:Reference image={alice-reference}/>
+  <seedance:Reference image={alice-reference} person-reference="true"/>
   <seedance:Reference audio={alice-voice}/>
 </seedance:ReferenceVideo>
 ```
+
+图片或视频参考上的 `person-reference="true"` 声明素材中含有人物／数字人形象，AI 生成的人像也适用。
+没有这类内容时可写 false；省略表示没有提供分类。音频参考不使用这个视觉标记。
+首尾帧模式提供 `first-frame-person-reference` 和 `last-frame-person-reference`。
+选定的 Provider 负责把这项事实交给服务的素材准备流程。
+
+舞蹈、身体动作或运镜可以由参考视频提供运动依据，再用参考图指定新的形象与场景。
+围绕需要保留的动作选取片段，并核对模型与服务的参考视频时长上限；它和要生成的视频时长是两回事。
 
 这个低层组件并不知道它被用来做口播；用途只存在于传入的 Text 中。公共属性包括
 `id`、`model`、`prompt`、`duration`、`resolution`、
@@ -145,13 +153,12 @@ Seedance 2.5 复用同样的 Surface，而不是由 Runtime 把别的模型偷�
 
 <seedance:ReferenceVideo id="follow-up" model="mini"
   prompt={follow-up-direction} duration="5" generate-audio="true">
-  <seedance:Reference image={presenter-reference}/>
+  <seedance:Reference image={presenter-reference} person-reference="true"/>
   <seedance:Reference audio={voice-from-opening.audio}/>
 </seedance:ReferenceVideo>
 ```
 
-同一个媒体操作包还提供 `Transform`（按顺序截取、变速）和 `ExtractFrame`（首帧、尾帧、指定帧或指定时间取图）。本地 FFmpeg 与 AWS Lambda 只是这些精确 Need 的可互换 Runtime
-Endpoint，不会改变作者图。
+同一个媒体操作包还提供 `Transform`（按顺序截取、变速）和 `ExtractFrame`（首帧、尾帧、指定帧或指定时间取图）。本地 FFmpeg 实现这些精确 Need；也可以选择其他兼容的 Runtime Endpoint，作者图保持不变。
 
 ## Seedance 语义 Kit
 
@@ -225,9 +232,9 @@ Source Closure 沿着这个显式包导入读取内容。如果共享措辞不�
 <seedance:ReferenceVideo id="interview-take" model="mini"
   prompt={interview-prompt} duration="8"
   resolution="720p" aspect-ratio="9:16" generate-audio="true">
-  <seedance:Reference image={interviewer-view}/>
-  <seedance:Reference image={guest-view}/>
-  <seedance:Reference image={shared-view}/>
+  <seedance:Reference image={interviewer-view} person-reference="true"/>
+  <seedance:Reference image={guest-view} person-reference="true"/>
+  <seedance:Reference image={shared-view} person-reference="true"/>
   <seedance:Reference audio={interviewer-voice}/>
   <seedance:Reference audio={guest-voice}/>
 </seedance:ReferenceVideo>
@@ -259,7 +266,7 @@ dialogue/action 由普通 Text 模块组装，结果再像其他生成任务一�
 <seedance:ReferenceVideo id="hook-take" model="mini"
   prompt={hook-prompt} duration="8"
   resolution="720p" aspect-ratio="9:16" generate-audio="true">
-  <seedance:Reference image={presenter-clean}/>
+  <seedance:Reference image={presenter-clean} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>
 ```
@@ -296,12 +303,12 @@ dialogue/action 由普通 Text 模块组装，结果再像其他生成任务一�
 
 <seedance:ReferenceVideo id="hook-take" model="mini" prompt={hook-prompt}
   duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
-  <seedance:Reference image={presenter-clean}/>
+  <seedance:Reference image={presenter-clean} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>
 <seedance:ReferenceVideo id="meeting-take" model="mini" prompt={meeting-prompt}
   duration="6" resolution="720p" aspect-ratio="9:16" generate-audio="true">
-  <seedance:Reference image={presenter-alt}/>
+  <seedance:Reference image={presenter-alt} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>
 ```

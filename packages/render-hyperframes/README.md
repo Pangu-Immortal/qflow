@@ -29,7 +29,7 @@ Core therefore sees three real byte-operation Needs, not one opaque mega-render.
 contiguous or interleaved chunks, retries and image-sequence assembly remain inside the selected
 visual Endpoint; clip decoding/mixing remains inside the audio Endpoint; container encoding remains
 inside the mux Endpoint. A single Provider package may implement all three locally, or a Runtime may
-bind them to separate Lambda-backed Endpoints. The author still sees one `<render:Video>` result.
+bind them to separate compatible Endpoints. The author still sees one `<render:Video>` result.
 
 Film is not a dependency of this author meaning. Any package that produces the common Composition
 contract can feed the render Surface. Conversely, targeting Composition never demands this package;
@@ -54,5 +54,5 @@ Provider's Runtime configuration.
 
 In TypeScript, `hyperframesVisualRequest(document, { range })` constructs the visual request;
 `createRenderHyperframesFragment(true)` accepts a `MediaFrameRange` input and connects it to visual
-and audio requests. The AWS Lambda Provider currently declines range requests. Selection limits
+and audio requests. Provider support checks establish range support for other deployments. Selection limits
 final rendering work; it does not prune upstream generation dependencies.

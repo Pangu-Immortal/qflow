@@ -3,7 +3,7 @@
 Read-only `CredentialStore` backed by explicitly named environment variables.
 
 ```ts
-credentialRef("env", "KIE_API_KEY")
+credentialRef("env", "IMAGE_API_KEY")
 ```
 
 It resolves only the requested key when an Endpoint needs it. It never enumerates or serializes the

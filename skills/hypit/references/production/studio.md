@@ -19,7 +19,9 @@ composition and time. The Timeline supplies the clock and any placed Script anch
 lanes, including a pure animation with no Takes. An image-generation-only Run is not a Film view; several distinct
 Films need separate Runs or sessions.
 
-Open the URL actually printed by the process and retain it with the Run it serves. The default
+Open the URL actually printed by the process and retain it with the Run it serves. For review, open
+that URL with `#comments` appended, such as `http://localhost:5179/#comments`; this selects the
+Comments view directly. The printed port is authoritative. The default
 requested port is 5179; `--port` selects another, and an occupied port can cause Vite to choose a
 different one. Reuse an existing session when it serves the intended project and Run.
 
@@ -33,6 +35,80 @@ Changing package code, adding a package import, changing Companion activation, o
 Runtime or Result repository requires restarting that Studio session: those implementations and
 selections are loaded at startup. A browser refresh alone does not reload the server-side modules.
 Stop only the relevant Studio process; stopping Studio does not cancel a submitted Build.
+
+## Discuss the work while composing
+
+When the user is collaborating locally, open the actual composition once a meaningful passage is
+available and keep its Studio URL connected to the current Run. Point to the passage, object or
+transition being discussed so the user can give concrete direction. Continue through settled choices;
+showing progress need not become an approval stop. Use the prepared production media and explain
+which passages are already composed. A rendered frame or clip remains useful when it answers the
+current question more directly.
+
+Check that the objects being discussed are recognizable and that their useful author choices are
+available. A successful preview establishes that the picture renders; the component's Companion
+establishes what the user can select and revise. [Companion authoring](studio-companions.md) explains
+this view of the same Source, including generic fallback and project-defined families.
+
+## Revise from timestamped Comments
+
+Open Comments directly when the user wants to point at a moment and describe a change.
+It gives the same composition a larger player and a comment column. A change of visual style,
+choreography or graphic structure often needs authored code or direction, while a position or color
+may fit an Inspector field. Both are ordinary collaboration: Comments carries the desired result,
+and the Agent chooses the owning Source, Recipe, component or material decision to change.
+
+Comments live in `FEEDBACK.json` at the project workspace root. Read the entries for the reviewed Run
+and the open notes before revising. Each entry has a stable `id`, workspace-relative `run`, `at` in
+seconds, `text`, and optional `resolved` (false when omitted). For example:
+
+```json
+{"comments":[{"id":"opening-title","run":"runs/render.svrun","at":1.5,
+"text":"Give the title a softer pink and a stronger offset shadow.","resolved":false}]}
+```
+
+The UI displays notes in time order; its `#` labels follow submission order within that Run. Identify
+file edits by `id` and preserve the array order and unrelated entries. Clicking a note seeks to its
+saved time. Interpret that time with its words and the reviewed composition: changing Script or Take
+placement can move the intended event. Comments retain the reviewed seconds rather than silently
+following new semantic timing.
+
+Explain the changes you will make, apply them to their owning facts, and inspect the affected passage
+and handoffs. Mark the addressed notes `resolved: true`; a note can be reopened with false. Both the
+user and Agent can edit this file, and Studio observes saved changes. Read the current file before
+writing so newly added comments survive. Retain useful directing decisions in Treatment or Progress;
+comments remain the concrete review conversation.
+
+Send saves a comment. Agent notification is not connected yet; when the user asks for another review
+pass, read the latest file. [Composition review](review.md) explains the judgment, and
+[project files](../creation/project-files.md) owns the production's durable memory.
+
+## Review before export
+
+When the composition is substantially ready and the user can access it, open the current Run at
+`#comments` for discussion and introduce Comments and Studio together. Comments lets the user
+pause and leave direction at a time; Studio shows the timeline, component relationships and exposed
+parameters they can adjust. Both views stay with the same work and playhead. Browser playback does not render an MP4,
+create an export Build or save frame sequences. It can therefore show real material and animation
+while avoiding a full encode for changes the user is still choosing. Use Studio's other view for
+Inspector or timeline edits, and an encoded frame or clip when that evidence is needed.
+
+Introduce the review in the user's language: explain what is ready, invite timestamped comments,
+and say whether export is waiting for their review or already covered by their request. For example:
+“I've opened the editable video. You can pause and leave timestamped notes in Comments, or switch
+to Studio to explore the timeline and adjust available parameters. When you're happy with it,
+I can export the video.” This is a collaboration choice, not a mandatory
+approval stage. A user who has asked for final export has already chosen that step.
+
+A first-time reviewer may benefit from one short welcome note at the relevant time, saved with
+`resolved: true`. Write it explicitly as the Agent's invitation, such as “You can pause here and
+leave a note about anything you'd like changed.” It demonstrates the file workflow without adding
+an unfinished production task or pretending that the user requested a change. Keep this optional
+and specific to the collaboration; existing comments need no repeated welcome.
+
+Once export is wanted, reuse the accepted material in a Build, retrieve its completed video and
+check that encoded deliverable. [Rendering](rendering.md) and [Builds](builds.md) own that execution.
+Comments is a review view of the editable work; the exported file is the deliverable.
 
 ## Show the finished work
 

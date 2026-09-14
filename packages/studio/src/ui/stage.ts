@@ -2,12 +2,18 @@ import { createArtifactPreview } from "./artifact-preview.js";
 import type { StudioArtifactView, StudioSnapshot } from "../shared.js";
 import { createOverlay } from "./overlay.js";
 import { icon, setIcon } from "./icons.js";
+import { createScrubPreview } from "./scrub-preview.js";
 import type { State, Store } from "./selection.js";
 
 export type Stage = {
   readonly element: HTMLElement;
   /** Start or stop playback, however the request arrived. */
   toggle(): void;
+  pause(): void;
+  /** Change picture interaction while preserving Studio's selection. */
+  setReviewMode(enabled: boolean): void;
+  /** Return from a Result artifact to the composition player. */
+  showComposition(): void;
   openArtifact(artifact: StudioArtifactView): void;
   renameArtifact(artifact: StudioArtifactView): void;
 };
@@ -33,7 +39,9 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
         <iframe title="Preview" sandbox="allow-scripts allow-same-origin" allow="autoplay"></iframe>
       </div>
     </div>
-    <input class="stage-scrubber" type="range" min="0" max="0" value="0" step="0.01" aria-label="Media time" hidden>
+    <div class="stage-progress" hidden>
+      <input class="stage-scrubber" type="range" min="0" max="0" value="0" step="0.01" aria-label="Media time" hidden>
+    </div>
     <div class="stage-bar">
       <span class="stage-time" hidden></span>
       <div class="stage-transport">
@@ -55,6 +63,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
   const viewport = element.querySelector<HTMLElement>(".stage-viewport")!;
   const scaler = element.querySelector<HTMLElement>(".stage-scaler")!;
   const iframe = element.querySelector<HTMLIFrameElement>("iframe")!;
+  let reviewMode = false;
   /**
    * Measure a clip in the rendered picture.
    *
@@ -99,13 +108,45 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
   // Clicking the picture selects whatever is drawn under the pointer, which is
   // the third way into the same selection.
   scaler.addEventListener("click", (event) => {
+    if (reviewMode) { toggle(); return; }
     const clip = overlay.hitTest(event.clientX, event.clientY);
     if (clip !== undefined) store.select(clip.id, "video");
     else store.clearSelection();
   });
+  // A broad component frame can cover smaller elements. Offer all actual
+  // Companion hits without special knowledge of captions or any other family.
+  let selectionMenu: HTMLElement | undefined;
+  const closeSelectionMenu = (): void => { selectionMenu?.remove(); selectionMenu = undefined; };
+  scaler.addEventListener("contextmenu", (event) => {
+    if (reviewMode) { event.preventDefault(); return; }
+    const hits = overlay.hitsAt(event.clientX, event.clientY);
+    if (hits.length === 0) return;
+    event.preventDefault(); stop(); closeSelectionMenu();
+    const menu = document.createElement("div");
+    menu.className = "selection-menu";
+    menu.setAttribute("role", "menu"); menu.setAttribute("aria-label", "Elements at this point");
+    for (const hit of hits) {
+      const option = document.createElement("button"); option.type = "button";
+      option.setAttribute("role", "menuitem"); option.textContent = hit.display.title;
+      option.title = hit.id;
+      option.addEventListener("click", () => { store.select(hit.id, "video"); closeSelectionMenu(); });
+      menu.append(option);
+    }
+    element.append(menu);
+    menu.style.left = `${Math.max(0, Math.min(event.clientX, window.innerWidth - menu.offsetWidth - 8))}px`;
+    menu.style.top = `${Math.max(0, Math.min(event.clientY, window.innerHeight - menu.offsetHeight - 8))}px`;
+    selectionMenu = menu; menu.querySelector("button")?.focus();
+  });
+  document.addEventListener("pointerdown", (event) => {
+    if (event.target instanceof Node && !selectionMenu?.contains(event.target)) closeSelectionMenu();
+  });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeSelectionMenu(); });
   // The room around the picture is empty in the plainest sense.
   viewport.addEventListener("click", (event) => {
-    if (event.target === viewport) store.clearSelection();
+    if (event.target === viewport) {
+      if (reviewMode) toggle();
+      else store.clearSelection();
+    }
   });
   const play = element.querySelector<HTMLButtonElement>("[data-play]")!;
   const previous = element.querySelector<HTMLButtonElement>("[data-previous]")!;
@@ -213,6 +254,18 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
   const title = element.querySelector<HTMLElement>(".stage-title strong")!;
   const back = element.querySelector<HTMLButtonElement>(".stage-return")!;
   const scrubber = element.querySelector<HTMLInputElement>(".stage-scrubber")!;
+  const progress = element.querySelector<HTMLElement>(".stage-progress")!;
+  const scrubPreview = createScrubPreview(progress);
+  scrubber.addEventListener("pointermove", (event) => {
+    if (!reviewMode || state === undefined || scrubber.disabled || artifactPreview.selected !== undefined) return;
+    const box = scrubber.getBoundingClientRect();
+    // Native range thumbs travel between their centers, not the input edges.
+    const fraction = Math.max(0, Math.min(1, (event.clientX - box.left - 6) / Math.max(1, box.width - 12)));
+    const frame = Math.round(fraction * Math.max(0, state.snapshot.space.frameCount - 1));
+    scrubPreview.show(state.snapshot, frame, event.clientX);
+  });
+  scrubber.addEventListener("pointerleave", scrubPreview.hide);
+  scrubber.addEventListener("blur", scrubPreview.hide);
   const time = element.querySelector<HTMLElement>(".stage-time")!;
   const transport = element.querySelector<HTMLElement>(".stage-transport")!;
   const clock = (seconds: number): string => {
@@ -227,7 +280,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     const duration = media !== undefined && Number.isFinite(media.duration) ? media.duration : 0;
     transport.hidden = !timed;
     mute.hidden = !timed;
-    scrubber.hidden = !timed;
+    progress.hidden = scrubber.hidden = !timed;
     time.hidden = !timed;
     play.disabled = duration <= 0 || media?.error != null;
     previous.disabled = next.disabled = play.disabled;
@@ -244,7 +297,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
   const compositionTime = (): void => {
     if (state === undefined || artifactPreview.selected !== undefined) return;
     const rate = fps(state.snapshot);
-    scrubber.hidden = time.hidden = false;
+    progress.hidden = scrubber.hidden = time.hidden = false;
     scrubber.disabled = !ready;
     scrubber.step = String(1 / rate);
     scrubber.max = String(Math.max(0, state.snapshot.space.frameCount - 1) / rate);
@@ -309,6 +362,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     state = value;
     if (moved && value.playhead.origin !== "play" && artifactPreview.selected !== undefined) returnToComposition();
     if (value.snapshot.revision !== mounted) {
+      scrubPreview.clear();
       mounted = value.snapshot.revision;
       if (artifactPreview.selected === undefined) stop();
       ready = false;
@@ -339,6 +393,15 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
   });
 
   return { element, toggle, openArtifact,
+    setReviewMode(enabled) {
+      reviewMode = enabled;
+      element.classList.toggle("stage-review", enabled);
+      overlay.element.style.display = enabled ? "none" : "";
+      closeSelectionMenu();
+      if (!enabled) scrubPreview.clear();
+    },
+    pause() { stop(); artifactPreview.media?.pause(); },
+    showComposition() { if (artifactPreview.selected !== undefined) returnToComposition(); },
     renameArtifact(artifact) {
       const selected = artifactPreview.selected;
       if (selected?.build === artifact.build && selected.output === artifact.output) title.textContent = artifact.displayName ?? artifact.output;

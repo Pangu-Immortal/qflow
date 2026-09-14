@@ -202,6 +202,7 @@ export function decodeBuildResultManifest(
     throw new Error(`${subject} must be either unfinished or have both outcome and finishedAt`);
   }
   const failure = optionalString(item.failure, `${subject}.failure`);
+  if (item.executionLog !== undefined) assertBuildResultFileRef(item.executionLog, `${subject}.executionLog`);
   return {
     format: "qflow.build-result@1",
     id,
@@ -215,6 +216,7 @@ export function decodeBuildResultManifest(
     ...(outcome === undefined ? {} : { outcome }),
     ...(failure === undefined ? {} : { failure }),
     outputs: outputs(item.outputs, `${subject}.outputs`),
+    ...(item.executionLog === undefined ? {} : { executionLog: item.executionLog }),
     ...(item.operations === undefined ? {} : { operations: operationReceipts(item.operations, `${subject}.operations`) }),
   };
 }

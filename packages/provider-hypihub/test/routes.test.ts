@@ -153,7 +153,7 @@ test("QflowHub MiniMax reference mode preserves the public image array", async (
   });
 });
 
-test("QflowHub uses ref_video_url for one video and the public array for multiple videos", async () => {
+test("QflowHub preserves reference-video roles for one or several videos", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "minimax-h3");
   assert.ok(route);
   const video = { ...image, mediaType: "video/mp4" };
@@ -165,7 +165,7 @@ test("QflowHub uses ref_video_url for one video and the public array for multipl
   } }, resolveVideo);
   assert.deepEqual(single.input, {
     prompt: "animate", seconds: 6, resolution: "2k",
-    ref_video_url: "https://qflow.ai/files/1.mp4",
+    reference_videos: ["https://qflow.ai/files/1.mp4"],
   });
 
   const multiple = await route.compile({ ports: {
@@ -205,4 +205,33 @@ test("QflowHub MiMo Speech mappings use the public audio speech fields", async (
     prompt: "quiet and direct",
     reference_audio: ["data:audio/wav;base64,AQID"],
   });
+});
+
+test("Seedance person metadata reaches resource transport without changing video request fields", async () => {
+  for (const port of ["referenceImage", "referenceVideo", "firstFrame", "lastFrame"] as const) {
+    const route = hypiHubRoutes.find((item) => item.capability.name === "seedance-2-mini")!;
+    for (const flag of [true, false, undefined]) {
+      const fields = flag === undefined ? {} : { personReference: flag };
+      const seen: unknown[] = [];
+      const result = await route.compile({ ports: {
+        prompt: ["animate"], duration: [5],
+        [port]: [{ role: port === "referenceVideo" ? "video" : "image", artifact: image, fields }],
+      } }, async (_artifact, metadata) => { seen.push(metadata); return "https://media.test/ref"; });
+      assert.deepEqual(seen, [fields]);
+      const wireField = { referenceImage: "reference_image_urls", referenceVideo: "reference_videos", firstFrame: "first_frame", lastFrame: "last_frame" }[port];
+      assert.deepEqual((result.input as Record<string, unknown>)[wireField], port.startsWith("reference") ? ["https://media.test/ref"] : "https://media.test/ref");
+      assert.equal(JSON.stringify(result.input).includes("person"), false);
+    }
+  }
+});
+
+test("exact model identity survives reference mode and preview selection", async () => {
+  const lite = hypiHubRoutes.find((item) => item.capability.name === "seedream-5-lite")!;
+  const preview = hypiHubRoutes.find((item) => item.capability.name === "grok-imagine-video-1.5-preview")!;
+  for (const images of [[], [{ role: "image", artifact: image }]]) {
+    const request = { ports: { prompt: ["A scene"], ...(images.length ? { images } : {}) } };
+    assert.equal((await lite.compile(request, resolve)).model,
+      images.length ? "seedream/5-lite-image-to-image" : "seedream/5-lite-text-to-image");
+    assert.equal((await preview.compile(request, resolve)).model, "grok-imagine-video-1.5-preview");
+  }
 });

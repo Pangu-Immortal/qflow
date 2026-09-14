@@ -245,6 +245,6 @@ test("plan preserves the selected work summary but exits non-zero when cheap pre
   };
   assert.equal(value.ok, false);
   assert.equal(value.preflight.ok, false);
-  assert.equal(typeof value.steps, "number");
+  assert.equal("steps" in value, false);
   assert.equal(exitCode, 1);
 });

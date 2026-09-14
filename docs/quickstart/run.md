@@ -257,27 +257,16 @@ is a configuration starting point, not evidence that an account was chosen.
 
 After choosing a service, connect its credential:
 
-| Variable | Provider/use |
-|---|---|
-| QflowHub OAuth | QflowHub paid generation, WhisperX alignment; run `qflow auth login qflowhub.default --runtime qflow.runtime.json` |
-| `KIE_API_KEY` | Explicit KIE Provider only |
-| `MIMO_API_KEY` | Xiaomi MiMo Voice Design or Voice Clone, only when the official Endpoint is explicitly selected |
-
-Run only the lines for the Endpoints in your Profile. In macOS/Linux shells:
+For a chosen QflowHub account:
 
 ```bash
-read -r -s KIE_API_KEY
-export KIE_API_KEY
-read -r -s MIMO_API_KEY
-export MIMO_API_KEY
+qflow auth login qflowhub.default
 ```
 
-In Windows PowerShell:
-
-```powershell
-$env:KIE_API_KEY = "your-key"
-$env:MIMO_API_KEY = "your-key"
-```
+For another selected Endpoint, use its declared secure input, such as
+`qflow auth login images.personal`. Its Provider describes the required credential and its Profile
+selects the Store. A project Provider follows the same path. Environment-backed credentials are
+set in the Worker environment according to that Provider's configuration.
 
 Keep credentials out of Author Source, Run Source, Runtime Profile source, and committed files.
 `doctor` validates required credential presence without printing secret values.
@@ -414,8 +403,9 @@ A plain `status <build-id>` prints one snapshot. `status --watch` exits when the
 
 Each invocation creates a fresh Build id, even when the Author and Run Sources are unchanged. That
 is necessary for non-deterministic generation: cross-Build reuse belongs only to explicit Candidates
-in a Run Source. While a Build is active, a Worker restart continues its accepted execution facts
-and the same external task checkpoints; it never turns another invocation into that Build.
+in a Run Source. Closing an observer leaves the Worker running. Losing a Build's execution context
+ends that attempt; restarting the Worker does not resume it. Completed Outputs and recorded task
+receipts remain available, and further execution uses a new Build with explicit reuse.
 
 ### 5. Inspect and retrieve results
 
@@ -461,7 +451,9 @@ qflow runtime logs
 qflow runtime down
 ```
 
-`runtime down` stops the Worker from advancing Builds but leaves external programs running.
-Use `programs down` only when those programs should also stop. Neither command cancels durable
-Builds or remote Provider work. Starting the same Profile again continues its active Builds from
-their already accepted execution facts.
+`runtime down` stops the coordinator and its execution processes, leaving Managed Programs running.
+Unfinished Builds whose execution contexts end cannot resume when the Worker starts again. Preserve
+their completed Outputs and recorded receipts, then use a new Build for further work. Work that was
+submitted but never started can still start. Use `programs down` when the separate Programs should
+also stop. To cancel a selected Build's remote work, use `qflow cancel <build-id>` while its execution
+context is available; stopping local processes does not itself cancel remote Provider tasks.

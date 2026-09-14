@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { setImmediate } from "node:timers/promises";
 import type { BuildState } from "@qflow/protocol";
 import type {
   ResourceStore,
@@ -10,12 +9,13 @@ import type {
   RuntimePreparation,
   RuntimeRunnableCommand,
   ScheduledBuildResult,
-  RuntimeWorkerRunOptions,
 } from "@qflow/runtime";
 import { LocalBuildScheduler } from "@qflow/runtime";
 import { BuildMachine } from "@qflow/core";
 
 type LocalWorkerOptions = {
+  readonly executionBuild?: string;
+  readonly executionLogs?: import("./log.js").LocalExecutionLogs;
   readonly stores: {
     readonly builds: import("@qflow/runtime").BuildStore;
     readonly operations: import("@qflow/runtime").OperationStore;
@@ -25,7 +25,6 @@ type LocalWorkerOptions = {
   readonly resourceStore: ResourceStore;
   readonly resourceStoreForBuild?: (build: string) => ResourceStore;
   readonly openBuildResultRepository: NonNullable<import("./types.js").CreateLocalRuntimeOptions["openBuildResultRepository"]>;
-  readonly assertEnvironment?: () => Promise<void> | void;
   readonly installComponentPackages: (specifiers: readonly string[]) => Promise<void>;
   readonly resultWriter: import("./types.js").LocalResultWriter;
 };
@@ -34,28 +33,6 @@ type WorkerTurnResult = BuildExecutionSnapshot | BuildCompletion;
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
-}
-
-function positive(value: number, subject: string): number {
-  assert(Number.isSafeInteger(value) && value > 0, `${subject} must be a positive safe integer`);
-  return value;
-}
-
-async function pause(ms: number, signal?: AbortSignal): Promise<void> {
-  if (signal?.aborted === true) throw signal.reason ?? new Error("Worker stopped");
-  await new Promise<void>((resolve, reject) => {
-    const done = (): void => {
-      signal?.removeEventListener("abort", abort);
-      resolve();
-    };
-    const timer = setTimeout(done, ms);
-    const abort = (): void => {
-      clearTimeout(timer);
-      signal?.removeEventListener("abort", abort);
-      reject(signal?.reason ?? new Error("Worker stopped"));
-    };
-    signal?.addEventListener("abort", abort, { once: true });
-  });
 }
 
 /** Shares declared capacity across independently advancing Builds. */
@@ -87,9 +64,13 @@ class CapacityExecutor implements RuntimeCommandExecutor {
     context: { readonly build: string },
   ): Promise<RuntimeExecutionResult> {
     const store = this.#options.stores.executions;
+    const recordExecution = this.#options.executionLogs === undefined ? {} : {
+      recordExecution: (event: import("@qflow/runtime").ExecutionLogEvent) =>
+        this.#options.executionLogs!.record(context.build, descriptor.command.id, event),
+    };
     if (descriptor.capacityMode === "asynchronous") {
       return await this.#delegate.executeCommand(state, descriptor, {
-        ...context, releaseOperationCapacity: () => this.#options.stores.execution.releaseCapacity(context.build, descriptor.command.id),
+        ...context, ...recordExecution, releaseOperationCapacity: () => this.#options.stores.execution.releaseCapacity(context.build, descriptor.command.id),
       });
     }
     const begun = await store.begin(context.build, descriptor.command.id);
@@ -107,7 +88,10 @@ class CapacityExecutor implements RuntimeCommandExecutor {
       return { status: "completed", event };
     }
     try {
-      const result = await this.#delegate.executeCommand(state, descriptor, context);
+      const result = await this.#delegate.executeCommand(state, descriptor, {
+        ...context, ...recordExecution,
+        reportProgress: (activity) => store.reportProgress(context.build, descriptor.command.id, activity),
+      });
       assert(result.status === "completed",
         `Immediate Command ${descriptor.command.id} returned ${result.status}`);
       await store.complete(context.build, descriptor.command.id, result.event);
@@ -190,11 +174,13 @@ class DurableLocalWorker {
   readonly #options: LocalWorkerOptions;
   readonly #executorWithCapacity: CapacityExecutor;
   readonly #owner = randomUUID();
+  readonly #ownedBuilds = new Set<string>();
   #buildRead = Promise.resolve();
 
   constructor(executor: RuntimeCommandExecutor, options: LocalWorkerOptions) {
     this.#executor = executor;
     this.#options = options;
+    if (options.executionBuild !== undefined) this.#ownedBuilds.add(options.executionBuild);
     this.#executorWithCapacity = new CapacityExecutor(executor, options, this.#owner);
   }
 
@@ -247,7 +233,14 @@ class DurableLocalWorker {
       }
       if (execution.stop.cause === "user-cancelled") {
         for (const operation of await this.#options.stores.operations.list({ build: execution.build })) {
-          if (operation.status === "pending") await this.#executor.cancelOperation?.(machine.view(), operation);
+          if (operation.status === "pending") {
+            const cancelled = await this.#executor.cancelOperation?.(machine.view(), operation);
+            if (cancelled !== undefined) await this.#options.executionLogs?.record(operation.build, operation.command, {
+              endpoint: operation.endpoint, kind: "diagnostic", level: "info",
+              message: `Cancellation: ${cancelled.cancellation?.outcome ?? "unsupported"}${
+                cancelled.cancellation?.message === undefined ? "" : `; ${cancelled.cancellation.message}`}`,
+            });
+          }
         }
       }
     }
@@ -322,7 +315,13 @@ class DurableLocalWorker {
           hydrated?.();
           const actions = await Promise.allSettled(pending.map(async (operation) => {
             if (operation === undefined) throw new Error(`Build ${execution.build} lost a waiting Operation`);
-            const result = await this.#executor.advanceOperation!(operation);
+            const result = await this.#executor.advanceOperation!(operation, {
+              build: operation.build,
+              ...(this.#options.executionLogs === undefined ? {} : {
+                recordExecution: (event: import("@qflow/runtime").ExecutionLogEvent) =>
+                  this.#options.executionLogs!.record(operation.build, operation.command, event),
+              }),
+            });
             if (result.remoteEnded || result.status !== "pending") {
               await this.#options.stores.execution.releaseCapacity(execution.build, result.command);
             }
@@ -380,65 +379,38 @@ class DurableLocalWorker {
     return finished;
   }
 
-  async runOnce(): Promise<WorkerTurnResult | undefined> {
-    await this.#options.assertEnvironment?.();
-    const execution = await this.#options.stores.execution.claim(this.#owner, Date.now());
-    if (execution === undefined) return undefined;
-    const [result] = await this.#runClaimed([execution]);
-    return result;
-  }
-
-  async run(options: RuntimeWorkerRunOptions): Promise<void> {
-    positive(options.idlePollMs, "Worker idlePollMs");
-    const active = new Set<Promise<void>>();
-    // The Runtime Host admits one Worker process. Any stored turn owner therefore belongs to the
-    // previous process; clearing it changes no external fact and performs no Result action.
-    await this.#options.assertEnvironment?.();
-    await this.#options.stores.execution.reclaimActionCapacity();
-    await this.#options.stores.execution.reclaimTurns(Date.now());
-    await this.#options.stores.execution.reclaimResultWrites();
-    for (const execution of await this.#options.stores.execution.list()) {
-      if (execution.decision !== undefined && execution.attention === undefined) {
-        await this.#options.stores.execution.setAttention(execution.build, {
-          step: "result",
-          error: "Result writing was interrupted; run `qflow result finish <build-id>`",
-        });
-      }
+  async runOnce(options: { readonly build?: string; readonly hydrated?: () => void } = {}): Promise<WorkerTurnResult | undefined> {
+    const store = this.#options.stores.execution;
+    const assigned = this.#options.executionBuild;
+    if (assigned !== undefined && options.build !== undefined && options.build !== assigned) {
+      throw new Error(`This execution context belongs to Build ${assigned}, not ${options.build}`);
     }
-    await options.ready?.();
-    try {
-      while (options.signal?.aborted !== true) {
-        await this.#options.assertEnvironment?.();
-        while (!Boolean(options.signal?.aborted)) {
-          const execution = await this.#options.stores.execution.claim(this.#owner, Date.now());
-          if (execution === undefined) break;
-          let markHydrated!: () => void;
-          const hydration = new Promise<void>((resolve) => { markHydrated = resolve; });
-          let task: Promise<void>;
-          task = this.#runClaimed([execution], markHydrated)
-            .then(() => undefined)
-            .finally(() => active.delete(task));
-          active.add(task);
-          // The next Build may execute concurrently, but its persisted snapshot is
-          // not hydrated until this one has left the single-threaded JSON boundary.
-          await Promise.race([hydration, task]);
-          // Awaiting synchronous stores only drains microtasks. Let sockets, timers and
-          // stop signals run before claiming another piece of ready work.
-          await setImmediate();
+    const selected = options.build ?? assigned;
+    for (const build of selected === undefined ? await store.listReady() : [selected]) {
+      const current = await store.read(build);
+      if (current === undefined || current.decision !== undefined) continue;
+      if (current.startedAt !== undefined && !this.#ownedBuilds.has(build)) {
+        if (selected === undefined) continue;
+        throw new Error(`Build ${build} already belongs to another execution context; create a new Build to continue`);
+      }
+      const execution = await store.claim(this.#owner, Date.now(), build);
+      if (execution === undefined) continue;
+      if (!this.#ownedBuilds.has(build)) {
+        if (execution.startedAt !== undefined) {
+          await store.releaseTurn(build, this.#owner, execution.wakeAt, execution.operationWait);
+          throw new Error(`Build ${build} was assigned to another execution context`);
         }
-        const idle = new AbortController();
-        const signal = options.signal === undefined ? idle.signal : AbortSignal.any([idle.signal, options.signal]);
-        try {
-          await Promise.race([...active, pause(options.idlePollMs, signal)]);
-        } catch (error) {
-          if (!Boolean(options.signal?.aborted)) throw error;
-        } finally { idle.abort(); }
-
+        await store.start(build);
+        this.#ownedBuilds.add(build);
       }
-    } finally {
-      await Promise.allSettled(active);
+      const [result] = await this.#runClaimed([execution], options.hydrated);
+      if (result !== undefined && ("outcome" in result || result.decision !== undefined)) this.#ownedBuilds.delete(build);
+      return result;
     }
+    return undefined;
   }
+
+
 }
 
 export function createDurableLocalWorker(

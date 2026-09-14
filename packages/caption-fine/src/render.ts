@@ -788,8 +788,8 @@ function cueElements(
       const next = atoms[prefixIndex + 1];
       const nextStart = next === undefined ? durationFrames : atomFrames.get(next.id)?.start;
       if (nextStart === undefined) throw new Error("Fine Caption is missing timing for the next Atom");
-      // A no-break timeline inside an atom keeps its words on one row; the boundaries between atoms
-      // take an ordinary timeline. Both are spaced only where the surfaces meeting there call for one.
+      // A no-break space inside an atom keeps its words on one row; the boundaries between atoms
+      // take an ordinary space. Both are spaced only where the surfaces meeting there call for one.
       const prefixText = joinSurfaces(
         atoms.slice(0, prefixIndex + 1).map((prefixAtom, index) => {
           for (const wordId of prefixAtom.wordIds) {
@@ -1078,7 +1078,7 @@ export function renderFineCaption(
 
   assertProgramSpaceIdentity(timeline);
   if (schedule.spaceId !== timeline.id || schedule.narrativeId !== document.narrativeId) {
-    throw new Error("Fine Caption inputs belong to different ProgramSpaces or Narratives");
+    throw new Error("Fine Caption inputs belong to different Timelines or Narratives");
   }
   const styles = new Map(program.styles.map((style) => [style.id, style]));
   const wordText = new Map(document.words.map((word) => [word.id, word.text]));

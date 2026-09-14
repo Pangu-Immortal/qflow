@@ -13,7 +13,7 @@ import type {
   CliRuntime,
   CliRuntimeController,
 } from "./runtime-port.js";
-import { createPricingOutput, writeCliHelp, writeCliOutput } from "./output.js";
+import { createPlanOutput, createPricingOutput, writeCliHelp, writeCliOutput } from "./output.js";
 import type { CliIo, CliMachineView } from "./output.js";
 import { parseCommand } from "./arguments.js";
 import type { CliCommand, RuntimeOption } from "./command.js";
@@ -23,13 +23,13 @@ import { isProjectResultCommand, runProjectResultCommand } from "./commands/resu
 import { isEnvironmentCommand, runEnvironmentCommand } from "./commands/environment.js";
 import { isExecutionCommand, runExecutionCommand } from "./commands/execution.js";
 import { inlineValuePreview } from "./runtime-view.js";
-import { resolvePackageRoot, resolveProjectRoot } from "./project-context.js";
+import { resolvePackageRoot, resolveProjectRoot } from "@qflow/project-context-node";
 import { loadDiscoveredSourcePackages } from "./source-packages.js";
 import {
   clearRuntimeProfile,
   findRuntimeProfile,
   selectRuntimeProfile,
-} from "./runtime-selection.js";
+} from "@qflow/project-context-node";
 import {
   buildStatusView,
   cliTypeName,
@@ -40,8 +40,8 @@ function createPublicBuildId(now = Date.now()): string {
   return orderedBuildId(now, randomBytes(5).toString("hex").toUpperCase());
 }
 
-async function loadRuntime(host: NodeRuntimeHost): Promise<CliRuntime> {
-  return await host.createRuntime();
+async function loadRuntime(host: NodeRuntimeHost, endpoints: readonly string[]): Promise<CliRuntime> {
+  return await host.createRuntime({ endpoints });
 }
 
 function commandWorkspaceRoot(command: CliCommand): string | undefined {
@@ -116,7 +116,8 @@ export async function runCli(
     await (await runtimeHost(
       args.profile,
       args.packageRoot ?? await packageRootForProject(),
-    )).runWorker(args.readyFile, args.workerOwner);
+    )).runWorker(args.readyFile, args.workerOwner,
+      args.executionRoot === undefined ? undefined : { dataRoot: args.executionRoot });
     return;
   }
   if (args.command === "runtime" && args.action === "init") {
@@ -180,7 +181,7 @@ export async function runCli(
   let runtimeSelectionFile: string | undefined;
   const runtimeWasExplicit = runtimeProfile !== undefined;
   let runtimeNeedsHint = runtimeWasExplicit;
-  if (acceptsRuntimeContext(args) && runtimeProfile === undefined) {
+  if (acceptsRuntimeContext(args) && runtimeProfile === undefined && args.command !== "logs") {
     const selected = await findRuntimeProfile(await commandProjectRoot());
     if (selected !== undefined) {
       runtimeProfile = selected.profile;
@@ -231,6 +232,7 @@ export async function runCli(
       runtimeHost,
       runtimeController,
       openProjectResults: projectResults,
+      resolveProjectRuntime: async () => (await findRuntimeProfile(await commandProjectRoot()))?.profile,
       write: writeOperational,
     });
     return;
@@ -289,17 +291,18 @@ export async function runCli(
           author: projectPath(loaded.authorSource, effectiveWorkspaceRoot),
           frontend: sourceHeader.using,
           targetCount: loaded.document.targets.length,
-          targets: loaded.document.targets.slice(0, args.limit).map((item) => item.output),
+          targets: loaded.document.targets.map((item) => item.output),
           candidates: loaded.document.candidates.length,
           satisfactions: loaded.document.satisfactions.length,
-          unresolvedHistoricalOutputs: loaded.unresolvedHistoricalOutputs.slice(0, args.limit).map((item) => ({
+          historicalOutputCount: loaded.unresolvedHistoricalOutputs.length,
+          ...(args.presentation.verbose ? { unresolvedHistoricalOutputs: loaded.unresolvedHistoricalOutputs.slice(0, args.limit).map((item) => ({
             candidate: item.id,
             build: item.build,
             output: item.output,
           })),
           ...(loaded.unresolvedHistoricalOutputs.length <= args.limit ? {} : {
             omittedHistoricalOutputs: loaded.unresolvedHistoricalOutputs.length - args.limit,
-          }),
+          }) } : {}),
         } as const;
         writeCliOutput(io, args.presentation, {
           kind: "check-run",
@@ -324,9 +327,10 @@ export async function runCli(
         assets: result.attachments.length,
         modules: modules.length,
         outputCount: outputs.length,
-        outputs: outputs.slice(0, args.limit).map((item) => ({ name: item.name, type: cliTypeName(item.type) })),
-        ...(outputs.length <= args.limit ? {} : { omittedOutputs: outputs.length - args.limit }),
-        ...(args.presentation.verbose ? { details: {
+        ...(args.presentation.verbose ? {
+          outputs: outputs.slice(0, args.limit).map((item) => ({ name: item.name, type: cliTypeName(item.type) })),
+          ...(outputs.length <= args.limit ? {} : { omittedOutputs: outputs.length - args.limit }),
+          details: {
           modules: modules.slice(0, args.limit),
           values: values.slice(0, args.limit).map((item) => ({ name: item.name, type: cliTypeName(item.type) })),
         } } : {}),
@@ -402,7 +406,7 @@ export async function runCli(
       const evaluated = await evaluatePlanNeeds(result.definition, packageContributions);
       const providers = await describePlanProviders(host, evaluated.state, evaluated);
       assertPlannedRequests(evaluated.state, evaluated, providers);
-      const preflight = await preflightPlan(host, evaluated.state);
+      const preflight = await preflightPlan(host, evaluated.state, providers);
       // Build is an execution boundary, not a provisioning command. The cheap
       // preflight must already be clean; `runtime up` is the explicit place for
       // installing or starting declared programs.
@@ -415,7 +419,8 @@ export async function runCli(
         const detail = error instanceof Error ? error.message : String(error);
         throw new Error(`Runtime Worker could not start; no Build was queued: ${detail}`);
       }
-      runtime = await loadRuntime(await runtimeHost(runtimeProfile));
+      runtime = await loadRuntime(await runtimeHost(runtimeProfile, sourcePackageRoot),
+        [...new Set(providers.flatMap((item) => item.status === "resolved" && item.endpoint !== undefined ? [item.endpoint] : []))]);
       let built = await runtime.build(request);
       const requestCount = result.definition.plan.steps.reduce(
         (total, step) => total + Object.keys(step.needs).length,
@@ -488,7 +493,6 @@ export async function runCli(
         ...(activeView === undefined ? {} : { runtime: activeView }),
         ...(finishedResult === undefined ? {} : { result: finishedResult }),
         verbose: args.presentation.verbose,
-        operationLimit: args.limit,
       });
       const machine = {
         format: "qflow.cli-build@1" as const,
@@ -590,8 +594,8 @@ export async function runCli(
       });
       return;
     }
-    const preflight = planHost === undefined ? undefined : await preflightPlan(planHost, evaluated.state);
     const providers = planHost === undefined ? undefined : await describePlanProviders(planHost, evaluated.state, evaluated);
+    const preflight = planHost === undefined ? undefined : await preflightPlan(planHost, evaluated.state, providers ?? []);
     const needs = describePlanNeeds(evaluated.state, evaluated, providers ?? []);
     const outputNames = Object.fromEntries(result.compilation.author.exports.flatMap((item) =>
       item.ref.kind === "logical-output" ? [[item.ref.id, item.name]] : []));
@@ -600,8 +604,10 @@ export async function runCli(
       const candidate = loaded.run.satisfactionNames[selection.output];
       return output === undefined || candidate === undefined ? [] : [{ output, candidate }];
     });
-    const allUnreached = unreachedGenerations(result.compilation.author.graph, result.state, outputNames)
-      .map((item) => ({ output: item.name, operation: item.producer }));
+    const allUnreached = args.presentation.verbose
+      ? unreachedGenerations(result.compilation.author.graph, result.state, outputNames)
+        .map((item) => ({ output: item.name, operation: item.producer }))
+      : [];
     const targets = loaded.run.document.targets.map((item) => item.output);
     const unsupportedRequestCount = providers?.filter((item) => item.status === "unsupported").length ?? 0;
     const unresolvedRequestCount = providers?.filter((item) => item.status === "unresolved" || item.status === "ambiguous").length ?? 0;
@@ -610,45 +616,31 @@ export async function runCli(
     const requestIssueCount = needs.filter((item) => item.issue !== undefined).length;
     writeCliOutput(io, args.presentation, {
       kind: "plan",
-      machine: {
+      machine: createPlanOutput({
         format: "qflow.cli-plan@1",
         ok: (preflight?.ok ?? true) && unresolvedRequestCount === 0
           && unsupportedRequestCount === 0 && requestIssueCount === 0,
         run: projectPath(loaded.path, effectiveWorkspaceRoot),
         targetCount: targets.length,
-        targets: targets.slice(0, args.limit),
+        targets,
         steps: result.definition.plan.steps.length,
         requestCount: needs.length,
         requestIssueCount,
         ...(providerRequestCount === undefined ? {} : { providerRequestCount }),
         ...(providers === undefined ? {} : { localRequestCount, unresolvedRequestCount, unsupportedRequestCount }),
         choiceCount: allChoices.length,
-        choices: allChoices.slice(0, args.limit),
-        ...(allChoices.length <= args.limit ? {} : { omittedChoices: allChoices.length - args.limit }),
-        ...(allUnreached.length === 0 ? {} : { unreached: allUnreached.slice(0, args.limit) }),
-        ...(allUnreached.length <= args.limit ? {} : { omittedUnreached: allUnreached.length - args.limit }),
-        ...(providers === undefined ? {} : {
-          providers: providers.slice(0, Math.max(args.limit, 50)),
-          ...(providers.length <= Math.max(args.limit, 50)
-            ? {}
-            : { omittedProviders: providers.length - Math.max(args.limit, 50) }),
-        }),
-        needs: needs.slice(0, Math.max(args.limit, 50)),
-        ...(needs.length <= Math.max(args.limit, 50) ? {} : { omittedNeeds: needs.length - Math.max(args.limit, 50) }),
+        choices: allChoices,
+        unreached: allUnreached,
+        ...(providers === undefined ? {} : { providers }),
+        needs,
         ...(preflight === undefined ? {} : { preflight: {
           ok: preflight.ok,
           capabilityCount: preflight.capabilities.length,
-          capabilities: preflight.capabilities.slice(0, args.limit),
-          ...(preflight.capabilities.length <= args.limit
-            ? {}
-            : { omittedCapabilities: preflight.capabilities.length - args.limit }),
+          capabilities: preflight.capabilities,
           diagnosticCount: preflight.diagnostics.length,
-          diagnostics: preflight.diagnostics.slice(0, args.limit),
-          ...(preflight.diagnostics.length <= args.limit
-            ? {}
-            : { omittedDiagnostics: preflight.diagnostics.length - args.limit }),
+          diagnostics: preflight.diagnostics,
         } }),
-      },
+      }, { verbose: args.presentation.verbose, limit: args.limit }),
     });
     if ((preflight !== undefined && !preflight.ok) || unresolvedRequestCount > 0
       || unsupportedRequestCount > 0 || requestIssueCount > 0) io.setExitCode?.(1);

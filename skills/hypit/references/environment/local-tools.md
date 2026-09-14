@@ -16,6 +16,9 @@ findings in [environment selection](profile.md#choose-the-practical-capability-p
 then prepare the chosen setup using its Provider instructions and the evidence from its logs.
 Consider hardware and actual network reachability alongside installed files. A cached environment
 can still need speech-model weights or a language's alignment model before its first useful request.
+Existing weights can make local preparation attractive; report that fact while offering the local
+and hosted choice. Starting a newly configured large-model service is preparation even when all
+weights are cached. A previously chosen, working service can be carried forward directly.
 
 ## Diagnose the selected local capability
 
@@ -72,24 +75,28 @@ needed by local HyperFrames. Its Provider owns the prepare command, start comman
 identity, and configuration. The Runtime operates those declarations:
 
 ```bash
-qflow runtime up
-qflow programs status
+qflow programs up --endpoint whisperx.local
+qflow programs status --endpoint whisperx.local
 ```
 
-`runtime up` prepares selected adapter dependencies, brings declared Programs to their expected local
-state, and starts the Worker. It prepares all Endpoints declared in that Profile, including a local
-Endpoint whose capability is currently bound to a hosted one. Keep the active Profile representative
-of the chosen setup; bindings select request execution, not which declared Programs are prepared.
+Name the chosen Profile instance with `--endpoint`; repeat it for several services. This scopes
+package preparation and Program operations together. `runtime up --endpoint <instance>` also starts
+the Worker. Omitting the flag deliberately covers the whole Profile. A binding selects which Endpoint
+fulfills a request; `plan` checks the Endpoints resolved for its actual requests, so an unused local
+service or hosted credential does not become a prerequisite for that Build.
 Program commands leave the Worker lifecycle alone:
 
 | Intention | Command |
 | --- | --- |
-| Prepare and start the selected helpers | `qflow programs up` |
-| Inspect their current state | `qflow programs status` |
-| Stop helpers managed by Qflow | `qflow programs down` |
+| Prepare and start the selected helpers | `qflow programs up --endpoint <instance>` |
+| Inspect their current state | `qflow programs status --endpoint <instance>` |
+| Stop helpers managed by Qflow | `qflow programs down --endpoint <instance>` |
 
-`runtime down` stops the Worker while leaving separately managed Programs available. This lets a later
-Build reuse an already warm local model. Use `programs down` when those helpers themselves should stop.
+`runtime down` stops the Worker and its execution processes while leaving separately managed Programs available. This lets a later
+Build reuse an already warm local model. Use scoped `programs down` when a helper itself should stop.
+A healthy service stays warm across repeated `up` calls. Local WhisperX reconciles its packaged Python
+environment before a cold start; uv reuses cached dependencies and weights. This is separate from
+loading project component code for a new Build.
 
 Ordinary projects use these declarations instead of running a service's internal `uv sync` or Python
 entry point by hand. Contributor/operator commands in a service README are for diagnosing that
@@ -126,10 +133,10 @@ download. Weigh accuracy needs against setup and inference time, including the h
 The Provider README owns exact settings, compute choices and the distinction between transcription
 and language-specific alignment. Configure the chosen model before preparing it.
 
-With the Endpoint and model selected, run `qflow runtime up`. The first preparation may install Python
+With the Endpoint and model selected, run `qflow runtime up --endpoint whisperx.local`. The first preparation may install Python
 and download model weights, while later projects reuse the machine Program. Success means the configured
-service identity answers its health probe; `qflow doctor` then checks the selected Endpoint as part of
-the full Profile.
+service identity answers its health probe; `qflow doctor --endpoint whisperx.local` then checks that
+selected service.
 
 ## Make network preparation practical
 
@@ -185,5 +192,7 @@ metadata successfully may still redirect large files to another host; diagnose t
 - A remote authentication, account, quota, or model-catalogue error belongs to the remote Endpoint and
   `profile.md`, even when the Worker happens to run locally.
 
-After changing the Distribution or an already loaded project package, read `../production/builds.md`
-before restarting the Worker so active work is preserved.
+Project component and Profile edits apply to the next Build through its fresh execution context.
+For a Distribution or inherited shell-environment change, read
+[Build execution](../production/builds.md#build-with-the-current-project-implementation) before
+restarting the coordinator so active work is preserved.

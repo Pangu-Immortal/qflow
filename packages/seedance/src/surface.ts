@@ -28,6 +28,7 @@ type MediaInput = {
   readonly port: "referenceImage" | "referenceVideo" | "referenceAudio" | "firstFrame" | "lastFrame";
   readonly role: GenerationMediaRole;
   readonly source: SurfaceResolvedReference;
+  readonly fields?: { readonly personReference: boolean };
 };
 
 function localName(value: string): string {
@@ -142,6 +143,11 @@ function booleanAttribute(element: StructuredElement, name: string, fallback: bo
   throw new Error(`${element.name}.${name} must be true or false`);
 }
 
+function personReferenceFields(element: StructuredElement, name: string) {
+  return element.attributes[name] === undefined ? undefined
+    : { personReference: booleanAttribute(element, name, false) };
+}
+
 function enumeratedPort(table: GenerationPortTable, name: string): readonly (string | number)[] {
   const port = generationPort(table, name);
   if (port.value.kind !== "enum") throw new Error(`${table.model} port ${name} is not enumerated`);
@@ -204,12 +210,15 @@ function referenceInputs(
       continue;
     }
     if (localName(child.name) !== "Reference") throw new Error(`${element.name} accepts only Reference children`);
-    attributes(child, [], accepted);
+    attributes(child, [], [...accepted, "person-reference"]);
     empty(child);
     const kinds = accepted.filter((kind) => child.attributes[kind] !== undefined);
     if (kinds.length !== 1) throw new Error(`${child.name} requires exactly one of ${accepted.join(", ")}`);
     const role = kinds[0]!;
+    const fields = personReferenceFields(child, "person-reference");
+    if (role === "audio" && fields !== undefined) throw new Error(`${child.name}.person-reference applies to image or video, not audio`);
     result.push({
+      ...(fields === undefined ? {} : { fields }),
       role,
       port: REFERENCE_PORTS[role],
       source: mediaReference(resolved(child, role, resolveReference), role, `${child.name}.${role}`),
@@ -230,10 +239,14 @@ function frameInputs(
   resolveReference: (path: string) => SurfaceResolvedReference | undefined,
 ): MediaInput[] {
   const first = mediaReference(resolved(element, "first-frame", resolveReference), "image", `${element.name}.first-frame`);
-  const result: MediaInput[] = [{ port: "firstFrame", role: "image", source: first }];
+  const firstFields = personReferenceFields(element, "first-frame-person-reference");
+  const result: MediaInput[] = [{ port: "firstFrame", role: "image", source: first, ...(firstFields === undefined ? {} : { fields: firstFields }) }];
+  const lastFields = personReferenceFields(element, "last-frame-person-reference");
+  if (lastFields !== undefined && element.attributes["last-frame"] === undefined) throw new Error(`${element.name}.last-frame-person-reference requires last-frame`);
   if (element.attributes["last-frame"] !== undefined) {
     result.push({
       port: "lastFrame",
+      ...(lastFields === undefined ? {} : { fields: lastFields }),
       role: "image",
       source: mediaReference(resolved(element, "last-frame", resolveReference), "image", `${element.name}.last-frame`),
     });
@@ -266,7 +279,7 @@ function assembleMedia(
       type: binding.type,
       value: {
         kind: "inline",
-        value: sealGenerationMediaBinding(port as GenerationMediaPort, { role: value.role }) as unknown as CanonicalValue,
+        value: sealGenerationMediaBinding(port as GenerationMediaPort, { role: value.role, ...(value.fields === undefined ? {} : { fields: value.fields }) }) as unknown as CanonicalValue,
       },
       range,
     });
@@ -330,7 +343,7 @@ export const decodeSeedanceTextVideoSurface: StructuredSurfaceHandler = ({ eleme
 };
 
 export const decodeSeedanceFrameVideoSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  attributes(element, ["id", "model", "prompt", "duration", "first-frame"], [...COMMON_OPTIONAL, "last-frame"]);
+  attributes(element, ["id", "model", "prompt", "duration", "first-frame"], [...COMMON_OPTIONAL, "last-frame", "first-frame-person-reference", "last-frame-person-reference"]);
   empty(element);
   const selected = modelSelection(element);
   const promptSource = resolved(element, "prompt", resolveReference);

@@ -13,6 +13,12 @@ import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow
 import { generationTypes, compileWireRequest, sealGeneratedImageSet } from "@qflow/qflow/generation";
 ```
 
+The shipped [project Provider example](../../examples/provider-package/README.md) follows an image
+request through configuration, support, upload, submission, receipt, polling, collection and pricing.
+It uses an explicitly illustrative service protocol and imports only public SDK subpaths.
+This SDK also exports `canonicalize`, `BlobRef`, `ResourceId`, `credentialRef` and
+`isStreamingResourceStore` for Providers that construct stored results or use streaming resource IO.
+
 For an existing model, name its exact versioned Capability and expected result Type. Map its request
 ports into the service's wire format; the Provider need not import the model's implementation.
 `@qflow/qflow/generation` supplies the common generated-media values and optional wire-mapping helpers.
@@ -28,6 +34,13 @@ optional best effort `cancel`. Provider-total and exact-capability resource limi
 without changing Core demand. Each resource declares a `limit` and optional `units` (default 1).
 A capability may add `resources` and a pure `unitsForRequest(request)` resolver for quantities of
 already declared resources. Runtime admits all claims atomically for one `fulfill-need` Command.
+
+A long immediate call can report its current activity with
+`await context.reportProgress?.({ phase: "processing", completed: 12, total: 40, unit: "items" })`.
+The Provider chooses meaningful phases and quantities and reports non-secret, human-readable facts.
+The Runtime attaches them to the currently executing Command; they do not change its outcome,
+scheduling or Core facts. Completion clears the live activity. Direct callers may omit the callback.
+For asynchronous work, return `progress` in the existing pending outcome instead.
 
 Asynchronous execution moves forward through `start`, `poll`, and optional `collect`. `start` returns
 a task handle; `pending` means an acknowledged task is still running. `ready` records remote completion
@@ -109,3 +122,14 @@ represented by a semantic `pendingInputs` slot instead. A Provider may use the s
 media role to enforce support limits, but it never receives graph traversal rules or future bytes.
 It returns either `supported`, or `unsupported` with the Provider's reason. Selection infrastructure
 preserves that reason without interpreting request fields or maintaining a central limitation table.
+
+An Endpoint can additionally emit explicit, non-secret diagnostics:
+
+```ts
+await context.reportDiagnostic?.({ level: "info", message: "Encoder initialized" });
+```
+
+The Runtime binds each message to this call's Build, Command and Endpoint and owns persistence.
+The Provider does not select a log path or Result repository. Messages describe operational evidence;
+credentials, request bodies and opaque vendor payloads remain private. `reportProgress` continues to
+report current activity; repeated counters are not an append-only log. Phase names belong to the Provider.

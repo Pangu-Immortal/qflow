@@ -5,8 +5,7 @@ Exact model/compute contracts for GPT Image 2 requests.
 One closed Port Table accepts the supported scalar settings and optional reference images. Runtime-
 produced references remain explicit Blob edges: the model-owned Draft is bound one edge at a time,
 then finalized into the only `GenerationRequest` a Provider can receive. The package owns model
-semantics but no API key, Provider selection, queue or network code. `@qflow/provider-kie` is
-one optional Runtime implementation.
+semantics but no API key, Provider selection, queue or network code. The selected Provider implements its exact capability.
 
 Provider-specific combination limits are checked by that Provider before any paid operation. They
 do not narrow this model-owned vocabulary or leak into author source.

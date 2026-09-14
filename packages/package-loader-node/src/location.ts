@@ -66,6 +66,31 @@ function packageName(value: string): string {
   return value;
 }
 
+/** One ordinary npm installation per exact upstream release; no shared mutable node_modules. */
+export function externalPackageInstallRoot(root: string, name: string, version: string): string {
+  packageName(name);
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u.test(version)) {
+    throw new Error(`${name}@${version} must select an exact upstream version`);
+  }
+  return join(resolve(root), ...name.split("/"), version);
+}
+
+/** The importing package's own manifest owns its upstream version selection. */
+export function declaredExternalPackageRoot(root: string, from: string | URL, name: string): string | undefined {
+  let cursor = dirname(fromPath(from));
+  while (true) {
+    const manifest = join(cursor, "package.json");
+    if (existsSync(manifest)) {
+      const value = JSON.parse(readFileSync(manifest, "utf8")) as { dependencies?: Record<string, string> };
+      const version = value.dependencies?.[name];
+      return version === undefined ? undefined : externalPackageInstallRoot(root, name, version);
+    }
+    const parent = dirname(cursor);
+    if (parent === cursor) return undefined;
+    cursor = parent;
+  }
+}
+
 function packageSourceAddress(value: string): { readonly name: string; readonly subpath: string } {
   if (value.startsWith(".") || value.startsWith("/") || value.startsWith("#") || value.includes(":")) {
     throw new Error(`${value} must be one npm package Source export`);
@@ -187,7 +212,8 @@ export function locateNodePackage(nameValue: string, options: LocateNodePackageO
     ?? distributionRoots.some((root) => within(root, dirname(from)));
   if (allowExternal) {
     for (const root of externalRoots) {
-      const found = nodeModulesPackage(root, name);
+      const installation = declaredExternalPackageRoot(root, from, name);
+      const found = installation === undefined ? undefined : nodeModulesPackage(installation, name);
       if (found !== undefined) return found;
     }
   }

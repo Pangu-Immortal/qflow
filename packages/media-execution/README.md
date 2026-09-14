@@ -20,9 +20,8 @@ owns the byte-level implementations of the eight current operations:
 - render an exact sample-domain audio program;
 - mux rendered visual and audio products.
 
-Local and AWS Lambda Providers call these same functions with different Artifact I/O and FFmpeg
-launch environments. They therefore share stream selection, timing, codec and validation behavior
-instead of reimplementing media semantics per deployment.
+The local Provider calls these functions with its Artifact I/O and FFmpeg launch environment. Other
+deployments can reuse the same functions to preserve stream selection, timing, codec and validation behavior.
 
 This is not an author package, Provider, queue or Core extension. It performs no endpoint selection,
 credential lookup or SVML parsing.

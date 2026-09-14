@@ -124,6 +124,7 @@ export function localWhisperXProgram(options: LocalWhisperXProgramOptions): Mana
       stateRoot,
       installation: {
         probe: installationProbe,
+        prepareBeforeStart: true,
         commands: [{
           command: "uv",
           args: ["sync", "--project", localWhisperXManagedProject, "--frozen", "--no-editable"],

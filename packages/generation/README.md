@@ -15,5 +15,15 @@ schemas, validators and graph facets. Generated sets are atomic Products: a Prov
 returned bytes in an ResourceStore and returns typed Blob references rather than transient URLs.
 
 This package does not choose a model, Provider, credential, queue or retry policy. Model packages
-declare exact request Capabilities; Endpoint packages such as `@qflow/provider-kie` implement those
+declare exact request Capabilities; selected Endpoint packages implement those
 Capabilities in a selected Runtime Profile.
+
+## Reference fields in resource transport
+
+A service may consume per-media metadata while preparing a URL rather than in its generation JSON.
+Media wire mappings (`url`, `urlArray`, `itemObject`) may declare `resourceFields: ["fieldName"]`.
+`compileWireRequest` supplies those present item fields as the second argument to its URL resolver;
+`itemObject.fieldKeys` separately maps fields into the generation body. Port coverage checks both
+paths against the declared media fields. False, zero and empty strings remain values; omitted fields
+remain absent. The resolver implements the service protocol; this package knows no particular
+service or classification. Providers using custom transports carry those fields through that boundary.

@@ -153,6 +153,7 @@ export async function createLocalRuntime(
     validators,
   });
   const resultWriter = createLocalResultWriter({
+    ...(options.executionLogs === undefined ? {} : { executionLogs: options.executionLogs }),
     buildStore: options.buildStore,
     operationStore: options.operationStore,
     commandExecutionStore: options.commandExecutionStore,
@@ -165,6 +166,8 @@ export async function createLocalRuntime(
     openBuildResultRepository,
   });
   const worker = createDurableLocalWorker(driver, {
+    ...(options.executionBuild === undefined ? {} : { executionBuild: options.executionBuild }),
+    ...(options.executionLogs === undefined ? {} : { executionLogs: options.executionLogs }),
     stores: {
       builds: options.buildStore,
       operations: options.operationStore,
@@ -174,7 +177,6 @@ export async function createLocalRuntime(
     resourceStore: options.resourceStore,
     ...(options.resourceStoreForBuild === undefined ? {} : { resourceStoreForBuild: options.resourceStoreForBuild }),
     openBuildResultRepository,
-    ...(options.assertEnvironment === undefined ? {} : { assertEnvironment: options.assertEnvironment }),
     installComponentPackages,
     resultWriter,
   });
@@ -183,7 +185,9 @@ export async function createLocalRuntime(
     endpoints: options.endpoints ?? [],
   });
   const control = createLocalRuntimeControl({
+    ...(options.executionLogs === undefined ? {} : { executionLogs: options.executionLogs }),
     buildStore: options.buildStore,
+    commandExecutionStore: options.commandExecutionStore,
     buildCatalog,
     operationStore: options.operationStore,
     executionStore: options.executionStore,
@@ -256,6 +260,7 @@ export async function createLocalRuntime(
     const resultRequest = request.result;
     const executionRequest = {
       build: request.id,
+      ...(options.executionContext === undefined ? {} : { context: options.executionContext }),
       componentPackages: [...new Set(request.componentPackages ?? [])].sort(),
       result: resultRequest.repository,
     } as const;
@@ -331,11 +336,8 @@ export async function createLocalRuntime(
     ...credentialControl,
     ...resultWriter,
     build: runBuild,
-    async workOnce() {
-      return await worker.runOnce();
-    },
-    async work(workOptions) {
-      await worker.run(workOptions);
+    async workOnce(workOptions) {
+      return await worker.runOnce(workOptions);
     },
     close() {
       return options.close?.();

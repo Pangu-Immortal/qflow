@@ -560,3 +560,26 @@ test("browser program state follows direct seeks and reports authored evaluation
   seek({ detail: { time: 3 } });
   assert.match(window.__qflowBrowserProgramError!, /bad pose/);
 });
+
+test("inactive programs settle once, while re-entry and repeated active seeks still redraw ready assets", async () => {
+  const { runInNewContext } = await import("node:vm");
+  const { browserProgramScript } = await import("../src/browser-program.js");
+  const root = { frames: [] as number[], ready: false, painted: false };
+  let seek: (event: { detail: { time: number } }) => void = () => {};
+  runInNewContext(browserProgramScript([{ id: "scene", startFrame: 30, durationFrames: 30,
+    program: { html: "", setup: 'return frame => { root.frames.push(frame); root.painted=root.ready; };' },
+  }], 30, 1), { window: { addEventListener: (_: string, callback: typeof seek) => { seek = callback; } },
+    document: { getElementById: () => root } });
+  seek({ detail: { time: 0.5 } });
+  assert.deepEqual(root.frames, [0]);
+  seek({ detail: { time: 1 } });
+  root.ready = true;
+  seek({ detail: { time: 1 } });
+  assert.equal(root.painted, true);
+  seek({ detail: { time: 2 } });
+  seek({ detail: { time: 3 } });
+  assert.deepEqual(root.frames, [0, 0, 0, 30]);
+  seek({ detail: { time: 1.5 } });
+  seek({ detail: { time: 0.5 } });
+  assert.deepEqual(root.frames, [0, 0, 0, 30, 15, 0]);
+});

@@ -112,9 +112,9 @@ A component gives an authored relationship its behavior. A ranking board can con
 Selection to animate an entry; a reveal, flash and sound can share one Moment. Each interprets the
 event according to its role. The board may keep the revealed answer visible after the entrance ends.
 
-Placement and appearance have their own inputs: a Frame says where the board belongs, a Style says
-how it looks, and supplied text or images say what it contains. This lets one behavior serve several
-productions while each production chooses its content and art direction.
+Where placement, appearance or content need external direction, a component can accept a Frame,
+Style, text or images for those choices. This lets one behavior serve different uses. A one-off scene
+can instead keep its specific design local while receiving the media and semantic events it needs.
 
 Visual and audio components publish Tracks. A visual Track groups named appearances; each appearance
 owns its lifetime, paint order and internal element tree. A moving video and its diagram can form

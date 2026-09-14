@@ -52,6 +52,36 @@ test("activity opens Runtime control without constructing execution Providers", 
   assert.deepEqual(result.builds, []);
 });
 
+test("doctor retains later errors even with a small display limit", async () => {
+  const diagnostics = Array.from({ length: 25 }, (_, index) => ({
+    severity: "warning" as const, code: `NOTICE_${index}`, message: "setup note",
+  }));
+  const selected = { diagnoseProjectResults: async () => ({ diagnostics: [
+    ...diagnostics, { severity: "error", code: "BROKEN_RESULT", message: "selected repository unavailable" },
+  ] }) } as unknown as CliDistribution;
+  let output = "";
+  let exitCode = 0;
+  await runCli(["doctor", "--workspace", "/tmp", "--limit", "1", "--json"], {
+    write(text) { output += text; }, setExitCode(code) { exitCode = code; },
+  }, selected);
+  assert.equal(exitCode, 1);
+  assert.equal(JSON.parse(output).diagnostics.at(-1).code, "BROKEN_RESULT");
+});
+
+test("finished status reports failure details and a nonzero exit without a Runtime", async () => {
+  const selected = { openProjectResults: async () => ({
+    repository: { read: async () => ({ id: "failed", outcome: "failed", targets: [], outputs: {}, failure: "renderer exited", operations: [] }) },
+    close() {},
+  }) } as unknown as CliDistribution;
+  let output = "";
+  let exitCode = 0;
+  await runCli(["status", "failed", "--workspace", "/tmp"], {
+    write(text) { output += text; }, setExitCode(code) { exitCode = code; },
+  }, selected);
+  assert.equal(exitCode, 1);
+  assert.match(output, /renderer exited/u);
+});
+
 test("status --watch follows active execution, then reads its finished Result", async () => {
   const calls: string[] = [];
   const resultLocation = {
@@ -239,7 +269,7 @@ test("status preserves Runtime decision and attention when its Result Store is u
     targets: [],
     acceptedRecords: 0,
     outstandingCommands: 0,
-    operations: [{ endpoint: "kie.internal", status: "failed" as const,
+    operations: [{ endpoint: "images.internal", status: "failed" as const,
       failure: { code: "REMOTE", message: "provider detail" } }],
   };
   const control = {
@@ -270,7 +300,9 @@ test("status preserves Runtime decision and attention when its Result Store is u
   assert.equal(result.build.work.outcome, "failed");
   assert.equal(result.build.result.state, "unavailable");
   assert.equal(result.build.attention.message, "S3 unavailable");
-  assert.equal("operations" in result.build, false);
+  assert.deepEqual((result.build as { operations?: unknown }).operations, [{
+    endpoint: "images.internal", state: "failed", failure: { code: "REMOTE", message: "provider detail" },
+  }]);
   assert.equal(exitCode, 1);
 });
 
@@ -423,11 +455,11 @@ test("auth opens only one Endpoint credential control, never the execution Runti
     async credentials(endpoint?: string) {
       calls.push(`credentials.status:${endpoint}`);
       return [{
-        endpoint: "kie.project",
+        endpoint: "images.project",
         slot: "apiKey",
-        label: "KIE API key",
+        label: "Image service API key",
         kind: "secret",
-        ref: { store: "env", key: "KIE_API_KEY" },
+        ref: { store: "env", key: "IMAGE_API_KEY" },
         configured: false,
         writable: false,
       }];
@@ -450,15 +482,15 @@ test("auth opens only one Endpoint credential control, never the execution Runti
   let output = "";
 
   await runCli([
-    "auth", "status", "kie.project", "--runtime", "/tmp/runtime.json", "--json",
+    "auth", "status", "images.project", "--runtime", "/tmp/runtime.json", "--json",
   ], { write: (text) => { output += text; } }, distribution);
 
   assert.deepEqual(calls, [
-    "credentials.create:kie.project",
-    "credentials.status:kie.project",
+    "credentials.create:images.project",
+    "credentials.status:images.project",
     "credentials.close",
   ]);
-  assert.equal((JSON.parse(output) as { readonly endpoint?: string }).endpoint, "kie.project");
+  assert.equal((JSON.parse(output) as { readonly endpoint?: string }).endpoint, "images.project");
   const machine = JSON.parse(output) as { readonly credentials: readonly Record<string, unknown>[] };
   assert.equal("ref" in machine.credentials[0]!, false);
   assert.equal("key" in machine.credentials[0]!, false);
@@ -494,11 +526,11 @@ test("auth login explains an environment-owned credential before asking for a se
   const credentials = {
     async credentials() {
       return [{
-        endpoint: "kie.project",
+        endpoint: "images.project",
         slot: "apiKey",
-        label: "KIE API key",
+        label: "Image service API key",
         kind: "secret",
-        ref: { store: "env", key: "KIE_API_KEY" },
+        ref: { store: "env", key: "IMAGE_API_KEY" },
         configured: false,
         writable: false,
       }];
@@ -514,7 +546,7 @@ test("auth login explains an environment-owned credential before asking for a se
 
   await assert.rejects(
     async () => await runCli([
-      "auth", "login", "kie.project", "--runtime", "/tmp/runtime.json",
+      "auth", "login", "images.project", "--runtime", "/tmp/runtime.json",
     ], {
       write() {},
       readSecret: async () => {
@@ -522,7 +554,7 @@ test("auth login explains an environment-owned credential before asking for a se
         return "must-not-be-read";
       },
     }, distribution),
-    /cannot be written.*set KIE_API_KEY/u,
+    /cannot be written.*set IMAGE_API_KEY/u,
   );
   assert.equal(prompted, false);
   assert.equal(closed, true);
@@ -566,6 +598,7 @@ test("cancelling a completed Build reports that no cancellation was requested", 
     requested: false,
     build: {
       id: "build-complete",
+      targets: [],
       work: { state: "done", outcome: "complete" },
       result: { state: "complete", outputCount: 0 },
     },

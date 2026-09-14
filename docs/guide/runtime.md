@@ -224,7 +224,12 @@ therefore select separately, even when their Profiles declare equivalent externa
 `runtime up` asks npm to prepare the selected adapters' exact upstream packages in the shared
 machine home, prepares declared **local** Managed Programs, then starts the local Worker. It does not
 start, restart, log into or probe remote Endpoints such as QflowHub. `runtime down` stops only the
-local Worker; separately managed local Programs remain available until `programs down`.
+local Worker and its execution processes; separately managed local Programs remain available until `programs down`.
+
+Use `--endpoint <instance>` on `runtime up`, `programs up|status|down`, or `doctor` to operate on a
+chosen service; repeat it for several services. Omitting it covers the whole Profile. Build planning
+checks the Endpoints actually selected for that work. Optional upstream package versions have separate
+installations, so preparing one version does not replace another; npm retains its shared download cache.
 
 `doctor` is the active read-only environment check. It resolves declared credentials and lets each
 selected Endpoint verify its real environment; a remote Provider may therefore contact its bounded
@@ -244,21 +249,25 @@ the exact `result` or `cleanup` step. After fixing the external problem, an oper
 Operation values, working bytes and the exact Result Repository; it never loads or invokes a Producer
 or Endpoint. It idempotently writes the Result, removes the working directory, then atomically removes
 the active SQLite aggregate. Only one Result writer may own that work at a time; this mutual-
-exclusion lease is not a phase and never changes the decision. A Worker restarted after a hard interruption
-clears the abandoned lease and records attention, but performs no storage action automatically. Missing bytes
-fail explicitly instead of being regenerated.
+exclusion lease is not a phase and never changes the decision. After a hard interruption, the coordinator
+clears abandoned Result-writer leases. An already decided Build whose Result writing was interrupted retains attention
+for `result finish`; a Build that lost its executor is concluded and its available facts are written to
+Result. Missing bytes fail explicitly instead of being regenerated.
 Reusing an earlier Result is an explicit Candidate in a new `.svrun`, not hidden Runtime behavior.
 
-A running Worker loads installed Component packages as Builds first require them. A later Build may
-name a new Component package without restarting the Worker; the Worker loads only packages it has
-not already seen from that package's complete dependency closure. Loaded package code is not hot
-reloaded, so editing a package or updating the Distribution still requires stopping an idle Worker
-before the next Build.
+Each Build uses its own loaded project implementation and selected Provider configuration. Editing project components or changing Profile selections therefore applies to the next
+Build while already started work keeps its loaded implementation. Managed Programs keep their own
+lifetime, so a warm model remains available across Builds. Concurrent Builds share execution
+infrastructure. Remote waiting does not reserve a whole-Build slot; declared resource limits apply
+to the work using those resources.
+The local Runtime can rotate execution processes as completed-work memory accumulates: existing Builds
+finish in their current process while new Builds use another. Warm services stay available.
 
-The Worker records the normalized literal Runtime Profile, not a hash. A changed Profile is not
-silently applied to a live Worker. SQLite separately pins credential and Endpoint selection while any
-pending or active Build remains, so a restarted Worker cannot poll an old Operation handle through new
-Endpoint config.
+If an executor is lost, its affected attempts end with completed Outputs and available remote receipts;
+it is not restarted with newly edited code. Continue through a new Build and explicit reuse. Files
+read later by a component retain ordinary filesystem semantics. Distribution updates and changes to
+the coordinator's inherited shell environment still require restarting that bootstrap process after
+preserving active work.
 
 Runtime packages are trusted local deployment code. npm or pnpm owns their installed versions;
 Qflow only selects exact requirements and invokes npm at the explicit `runtime up`/`packages install`

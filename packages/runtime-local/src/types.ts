@@ -21,13 +21,16 @@ import type {
 } from "@qflow/runtime-host-node";
 
 export type CreateLocalRuntimeOptions = {
+  /** Already assigned by the local coordinator. Embeddings omit this and start fresh work. */
+  readonly executionBuild?: string;
+  readonly executionContext?: import("@qflow/protocol").CanonicalValue;
+  readonly executionLogs?: import("./log.js").LocalExecutionLogs;
   readonly buildStore: BuildStore;
   /** Host presentation metadata only; never part of Core state. */
   readonly buildCatalog: BuildCatalog;
   readonly operationStore: OperationStore;
   /** Durable receipt boundary: one immediate Command is never invoked twice for one Build. */
   readonly commandExecutionStore: import("@qflow/runtime").CommandExecutionStore;
-  readonly assertEnvironment?: () => Awaitable<void>;
   readonly executionStore: import("@qflow/runtime").BuildExecutionStore;
   readonly removeActiveBuild: (build: string) => Awaitable<BuildCompletion>;
   /** Atomic submission boundary: external preparation is never a claimable partial Build. */
@@ -49,7 +52,9 @@ export type CreateLocalRuntimeOptions = {
 };
 
 export type CreateLocalRuntimeControlOptions = {
+  readonly executionLogs?: import("./log.js").LocalExecutionLogs;
   readonly buildStore: BuildStore;
+  readonly commandExecutionStore: import("@qflow/runtime").CommandExecutionStore;
   readonly buildCatalog?: BuildCatalog;
   readonly operationStore: OperationStore;
   readonly executionStore: BuildExecutionStore;
@@ -59,6 +64,7 @@ export type CreateLocalRuntimeControlOptions = {
 };
 
 export type CreateLocalResultWriterOptions = {
+  readonly executionLogs?: import("./log.js").LocalExecutionLogs;
   readonly buildStore: BuildStore;
   readonly operationStore: OperationStore;
   readonly commandExecutionStore: import("@qflow/runtime").CommandExecutionStore;
@@ -83,7 +89,8 @@ export type LocalBuildOptions = Parameters<RuntimeHostExecution["build"]>[1];
 export type LocalBuildSubmission = RuntimeHostBuildSubmission;
 
 export type LocalRuntime = RuntimeHostExecution & {
-  workOnce(): Promise<BuildExecutionSnapshot | BuildCompletion | undefined>;
+  /** Advance owned or unstarted work only. Process lifecycle belongs to the Runtime Host. */
+  workOnce(options?: { readonly build?: string; readonly hydrated?: () => void }): Promise<BuildExecutionSnapshot | BuildCompletion | undefined>;
 };
 
 /** Active execution control that never opens the selected ResourceStore. */

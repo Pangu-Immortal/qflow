@@ -5,7 +5,7 @@ Exact author/compute contracts and package-owned author Surfaces for MiniMax H3 
 Text, frame-guided and subject-reference modes are separate Surfaces rather than one dynamic
 port mode. Each produces an ordinary video Artifact. This package owns request semantics
 and validation only; Provider calls, credentials, retries and queueing belong to a Runtime Endpoint
-such as `@qflow/provider-kie`.
+selected in the Runtime Profile.
 
 ```xml
 <h3:TextVideo id="idea" prompt={prompt} duration="6" resolution="768P" aspect-ratio="9:16"/>

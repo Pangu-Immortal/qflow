@@ -79,3 +79,15 @@ version, compile and pack its code and assets with `npm pack`, or publish under 
 in npm or a private registry. For registry publication, remove `private: true` and supply the normal
 package metadata. Consumers install the selected version and commit their package-manager lockfile.
 A Qflow repository checkout or upstream pull request is not needed to use the component.
+
+## See a complete production
+
+The [complex spoken explainer](https://github.com/qflow-ai/qflow/tree/main/examples/complex-explainer)
+combines presenter framing, independent captions, website demonstrations and coordinated animated
+scenes in one finished work. Its project guide follows each decision to the Source, Recipe or package
+that owns it. The example distinguishes a useful component boundary from the separate choices to
+expose parameters or design for reuse. Accepted material is supplied separately, so its default Run
+can open and render the composition without another generation request.
+
+[Watch the finished film](https://storage.googleapis.com/qflow-public-assets/assets/examples/complex-explainer/v1/20260914/final.mp4)
+or follow the example's download instructions to open its accepted material in Studio.

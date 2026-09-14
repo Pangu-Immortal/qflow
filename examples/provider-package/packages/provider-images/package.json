@@ -1,0 +1,11 @@
+{
+  "name": "@example/provider-images",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "qflow": { "activation": "./dist/activation.js" },
+  "exports": { ".": "./dist/provider.js" },
+  "files": ["dist"],
+  "scripts": { "build": "tsc -p tsconfig.json" },
+  "devDependencies": { "@qflow/qflow": "workspace:*", "typescript": "5.9.3", "@qflow/driver-node": "workspace:*", "@qflow/gpt-image": "workspace:*" }
+}

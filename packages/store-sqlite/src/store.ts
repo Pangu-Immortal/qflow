@@ -35,7 +35,6 @@ import type {
   OperationSnapshot,
   OperationStore,
   OperationUpdate,
-  RuntimeEnvironmentStore,
 } from "@qflow/runtime";
 
 export type SqliteRuntimeStateOptions = {
@@ -224,6 +223,7 @@ function parseExecutionRequest(row: Row, subject: string): BuildExecutionRequest
     `SQLite ${subject} Result location is invalid`);
   return {
     build: row.build_id,
+    ...(typeof row.context_json === "string" ? { context: JSON.parse(row.context_json) as NonNullable<BuildExecutionRequest["context"]> } : {}),
     componentPackages,
     result: result as BuildExecutionRequest["result"],
   };
@@ -263,12 +263,13 @@ class SqlitePendingBuildStore implements PendingBuildStore {
       assert(occupied === undefined, `Build ${request.build} already has Runtime state`);
       this.#database.prepare(`
         INSERT INTO qflow_submissions (
-          build_id, component_packages_json, result_location_json, created_at
-        ) VALUES (?, ?, ?, ?)
+          build_id, component_packages_json, result_location_json, context_json, created_at
+        ) VALUES (?, ?, ?, ?, ?)
       `).run(
         request.build,
         JSON.stringify(request.componentPackages),
         JSON.stringify(request.result),
+        request.context === undefined ? null : JSON.stringify(request.context),
         now,
       );
       return parsePendingBuildSubmission(
@@ -295,7 +296,8 @@ class SqlitePendingBuildStore implements PendingBuildStore {
       if (row === undefined) throw new Error(`Build submission ${request.build} was not prepared`);
       const submission = parsePendingBuildSubmission(row);
       assert(JSON.stringify(submission.componentPackages) === JSON.stringify(request.componentPackages)
-        && JSON.stringify(submission.result) === JSON.stringify(request.result),
+        && JSON.stringify(submission.result) === JSON.stringify(request.result)
+        && JSON.stringify(submission.context) === JSON.stringify(request.context),
       `Build submission ${request.build} does not match its prepared state`);
       this.#database.prepare(`
         INSERT INTO qflow_builds (build_id, definition_json) VALUES (?, ?)
@@ -305,15 +307,16 @@ class SqlitePendingBuildStore implements PendingBuildStore {
       `).run(request.build, Date.now(), JSON.stringify(request.catalog));
       this.#database.prepare(`
         INSERT INTO qflow_executions (
-          build_id, component_packages_json, result_location_json, created_at, wake_at,
+          build_id, component_packages_json, result_location_json, context_json, created_at, wake_at,
           turn_owner, turn_acquired_at, result_writer_owner, result_writer_acquired_at,
           stop_cause, stop_reason,
           decision_outcome, decision_reason, attention_step, attention_error
-        ) VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
+        ) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
       `).run(
         request.build,
         JSON.stringify(request.componentPackages),
         JSON.stringify(request.result),
+        request.context === undefined ? null : JSON.stringify(request.context),
         submission.createdAt,
         Date.now(),
       );
@@ -424,6 +427,9 @@ function parseCommandExecution(row: Row): CommandExecutionReceipt {
     command: row.command_id,
     status: row.status,
     ...(event === undefined ? {} : { event }),
+    ...(row.status !== "started" || typeof row.activity_json !== "string" ? {} : {
+      activity: JSON.parse(row.activity_json) as NonNullable<CommandExecutionReceipt["activity"]>,
+    }),
   };
 }
 
@@ -456,7 +462,7 @@ class SqliteCommandExecutionStore implements CommandExecutionStore {
       const current = parseCommandExecution(row);
       if (current.status === "completed") return current;
       this.#database.prepare(`
-        UPDATE qflow_command_executions SET status = 'completed', event_json = ?
+        UPDATE qflow_command_executions SET status = 'completed', event_json = ?, activity_json = NULL
         WHERE build_id = ? AND command_id = ? AND status = 'started'
       `).run(JSON.stringify(event), build, command);
       return parseCommandExecution(this.#database.prepare(`
@@ -471,53 +477,17 @@ class SqliteCommandExecutionStore implements CommandExecutionStore {
     `).all(build) as Row[]).map(parseCommandExecution);
   }
 
+  async reportProgress(build: string, command: string, activity: NonNullable<CommandExecutionReceipt["activity"]>): Promise<void> {
+    this.#database.prepare(`
+      UPDATE qflow_command_executions SET activity_json = ?
+      WHERE build_id = ? AND command_id = ? AND status = 'started'
+    `).run(JSON.stringify(activity), build, command);
+  }
+
   async removeBuild(build: string): Promise<void> {
     this.#database.prepare("DELETE FROM qflow_command_executions WHERE build_id = ?").run(build);
   }
 }
-
-class SqliteRuntimeEnvironmentStore implements RuntimeEnvironmentStore {
-  readonly #database: DatabaseSync;
-
-  constructor(database: DatabaseSync) {
-    this.#database = database;
-  }
-
-  async use(config: string): Promise<void> {
-    assert(config.length > 0, "Runtime environment configuration is empty");
-    transaction(this.#database, () => {
-      const active = this.#database.prepare(
-        `SELECT
-          (SELECT COUNT(*) FROM qflow_submissions)
-          + (SELECT COUNT(*) FROM qflow_executions) AS count`,
-      ).get() as Row;
-      assert(typeof active.count === "number", "SQLite active Runtime work count is invalid");
-      const row = this.#database.prepare(
-        "SELECT config_json FROM qflow_runtime_environment WHERE singleton = 1",
-      ).get() as Row | undefined;
-      if (active.count > 0) {
-        assert(typeof row?.config_json === "string",
-          "Active Runtime work has no recorded environment; use its original Profile or resolve it explicitly");
-        assert(row.config_json === config,
-          "Runtime Profile differs from the environment pinned by active Builds");
-        return;
-      }
-      this.#database.prepare(`
-        INSERT INTO qflow_runtime_environment (singleton, config_json) VALUES (1, ?)
-        ON CONFLICT(singleton) DO UPDATE SET config_json = excluded.config_json
-      `).run(config);
-    });
-  }
-
-  async assert(config: string): Promise<void> {
-    const row = this.#database.prepare(
-      "SELECT config_json FROM qflow_runtime_environment WHERE singleton = 1",
-    ).get() as Row | undefined;
-    assert(typeof row?.config_json === "string" && row.config_json === config,
-      "Runtime Profile no longer matches this Worker's active environment");
-  }
-}
-
 
 function parseExecutionSnapshot(row: Row): BuildExecutionSnapshot {
   assert(typeof row.created_at === "number", "SQLite Execution creation time is invalid");
@@ -538,6 +508,7 @@ function parseExecutionSnapshot(row: Row): BuildExecutionSnapshot {
   return {
     ...parseExecutionRequest(row, "Execution"),
     createdAt: row.created_at,
+    ...(typeof row.started_at === "number" ? { startedAt: row.started_at } : {}),
     ...(typeof row.wake_at === "number" ? { wakeAt: row.wake_at } : {}),
     ...(typeof row.operation_wait_json === "string" ? { operationWait: JSON.parse(row.operation_wait_json) as string[] } : {}),
     ...(typeof row.turn_owner === "string" ? {
@@ -582,12 +553,12 @@ class SqliteBuildExecutionStore implements BuildExecutionStore {
     nonNegativeInteger(now, "Execution creation time");
     this.#database.prepare(`
       INSERT INTO qflow_executions (
-        build_id, component_packages_json, result_location_json, created_at, wake_at,
+        build_id, component_packages_json, result_location_json, context_json, created_at, wake_at,
         turn_owner, turn_acquired_at, result_writer_owner, result_writer_acquired_at,
         stop_cause, stop_reason,
         decision_outcome, decision_reason, attention_step, attention_error
-      ) VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-    `).run(request.build, JSON.stringify(request.componentPackages), JSON.stringify(request.result), now, now);
+      ) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
+    `).run(request.build, JSON.stringify(request.componentPackages), JSON.stringify(request.result), request.context === undefined ? null : JSON.stringify(request.context), now, now);
     return {
       ...copy(request),
       createdAt: now,
@@ -608,19 +579,20 @@ class SqliteBuildExecutionStore implements BuildExecutionStore {
     return rows.map(parseExecutionSnapshot);
   }
 
-  async claim(owner: string, now = Date.now()): Promise<BuildExecutionSnapshot | undefined> {
+  async claim(owner: string, now = Date.now(), build?: string): Promise<BuildExecutionSnapshot | undefined> {
     assert(owner.trim().length > 0, "Execution turn owner is empty");
     nonNegativeInteger(now, "Execution claim time");
     return transaction(this.#database, () => {
       const row = this.#database.prepare(`
         SELECT execution.build_id FROM qflow_executions AS execution
         WHERE decision_outcome IS NULL AND turn_owner IS NULL AND wake_at <= ?
+          AND (? IS NULL OR execution.build_id = ?)
         ORDER BY EXISTS (
           SELECT 1 FROM qflow_capacity AS capacity
           WHERE capacity.build_id = execution.build_id
         ) DESC, wake_at ASC, created_at ASC, execution.build_id ASC
         LIMIT 1
-      `).get(now) as Row | undefined;
+      `).get(now, build ?? null, build ?? null) as Row | undefined;
       if (row === undefined) return undefined;
       assert(typeof row.build_id === "string", "SQLite ready Execution has no Build id");
       const updated = this.#database.prepare(`
@@ -632,6 +604,45 @@ class SqliteBuildExecutionStore implements BuildExecutionStore {
       return parseExecutionSnapshot(
         this.#database.prepare("SELECT * FROM qflow_executions WHERE build_id = ?").get(row.build_id) as Row,
       );
+    });
+  }
+
+  async listUnstarted(): Promise<readonly string[]> {
+    return (this.#database.prepare(`SELECT build_id FROM qflow_executions
+      WHERE decision_outcome IS NULL AND started_at IS NULL ORDER BY created_at, build_id`).all() as Row[])
+      .map((row) => row.build_id as string);
+  }
+
+  async listReady(now = Date.now()): Promise<readonly string[]> {
+    return (this.#database.prepare(`SELECT build_id FROM qflow_executions
+      WHERE decision_outcome IS NULL AND turn_owner IS NULL AND wake_at <= ?
+      ORDER BY wake_at, created_at, build_id`).all(now) as Row[]).map((row) => row.build_id as string);
+  }
+
+  async start(build: string, now = Date.now()): Promise<BuildExecutionSnapshot> {
+    nonNegativeInteger(now, "Execution start time");
+    const updated = this.#database.prepare(`
+      UPDATE qflow_executions SET started_at = ?
+      WHERE build_id = ? AND started_at IS NULL AND decision_outcome IS NULL
+    `).run(now, build);
+    assert(updated.changes === 1, `Execution ${build} has already started or ended`);
+    return (await this.read(build))!;
+  }
+
+  async interrupt(build: string, reason: string): Promise<BuildExecutionSnapshot> {
+    return transaction(this.#database, () => {
+      const row = this.#database.prepare("SELECT * FROM qflow_executions WHERE build_id = ?").get(build) as Row | undefined;
+      assert(row !== undefined, `Execution ${build} does not exist`);
+      const current = parseExecutionSnapshot(row);
+      if (current.decision !== undefined) return current;
+      this.#release(build);
+      this.#database.prepare(`
+        UPDATE qflow_executions SET decision_outcome = ?, decision_reason = ?,
+          turn_owner = NULL, turn_acquired_at = NULL,
+          result_writer_owner = NULL, result_writer_acquired_at = NULL
+        WHERE build_id = ?
+      `).run(current.stop?.cause === "user-cancelled" ? "cancelled" : "failed", current.stop?.reason ?? reason, build);
+      return parseExecutionSnapshot(this.#database.prepare("SELECT * FROM qflow_executions WHERE build_id = ?").get(build) as Row);
     });
   }
 
@@ -902,28 +913,6 @@ class SqliteBuildExecutionStore implements BuildExecutionStore {
     transaction(this.#database, () => this.#release(build));
   }
 
-  async reclaimTurns(now = Date.now()): Promise<readonly string[]> {
-    nonNegativeInteger(now, "Execution turn reclaim time");
-    return transaction(this.#database, () => {
-      const rows = this.#database.prepare(
-        "SELECT build_id FROM qflow_executions WHERE turn_owner IS NOT NULL AND decision_outcome IS NULL",
-      ).all() as Row[];
-      const builds = rows.map((row) => {
-        assert(typeof row.build_id === "string", "SQLite owned Execution has no Build id");
-        return row.build_id;
-      });
-      for (const row of rows) {
-        assert(typeof row.build_id === "string", "SQLite active Execution is invalid");
-        this.#database.prepare(`
-          UPDATE qflow_executions
-          SET turn_owner = NULL, turn_acquired_at = NULL, wake_at = ?
-          WHERE build_id = ? AND decision_outcome IS NULL
-        `).run(now, row.build_id);
-      }
-      return builds;
-    });
-  }
-
   async listCapacity(): Promise<readonly CapacityReservation[]> {
     return (this.#database.prepare(
       "SELECT * FROM qflow_capacity ORDER BY created_at ASC, build_id ASC, command_id ASC",
@@ -961,7 +950,6 @@ export class SqliteRuntimeState {
   readonly commandExecutions: CommandExecutionStore;
   readonly execution: BuildExecutionStore;
   readonly catalog: BuildCatalog;
-  readonly environment: RuntimeEnvironmentStore;
   readonly submissions: PendingBuildStore;
   readonly #database: DatabaseSync;
 
@@ -1007,6 +995,7 @@ export class SqliteRuntimeState {
         command_id TEXT NOT NULL,
         status TEXT NOT NULL CHECK (status IN ('started', 'completed')),
         event_json TEXT,
+        activity_json TEXT,
         PRIMARY KEY (build_id, command_id)
       ) STRICT;
       CREATE TABLE IF NOT EXISTS qflow_build_catalog (
@@ -1018,13 +1007,16 @@ export class SqliteRuntimeState {
         build_id TEXT PRIMARY KEY,
         component_packages_json TEXT NOT NULL,
         result_location_json TEXT NOT NULL,
+        context_json TEXT,
         created_at INTEGER NOT NULL
       ) STRICT;
       CREATE TABLE IF NOT EXISTS qflow_executions (
         build_id TEXT PRIMARY KEY,
         component_packages_json TEXT NOT NULL,
         result_location_json TEXT NOT NULL,
+        context_json TEXT,
         created_at INTEGER NOT NULL,
+        started_at INTEGER,
         wake_at INTEGER,
         operation_wait_json TEXT,
         turn_owner TEXT,
@@ -1062,17 +1054,26 @@ export class SqliteRuntimeState {
         resource_id TEXT PRIMARY KEY, limit_units INTEGER NOT NULL, period_ms INTEGER NOT NULL,
         tokens REAL NOT NULL, updated_at INTEGER NOT NULL
       ) STRICT;
-      CREATE TABLE IF NOT EXISTS qflow_runtime_environment (
-        singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
-        config_json TEXT NOT NULL
-      ) STRICT;
     `);
+    if (!options.readOnly) transaction(database, () => {
+      for (const table of ["qflow_submissions", "qflow_executions"]) {
+        const columns = database.prepare(`PRAGMA table_info(${table})`).all() as Row[];
+        if (!columns.some((column) => column.name === "context_json")) database.exec(`ALTER TABLE ${table} ADD COLUMN context_json TEXT`);
+        if (table === "qflow_executions" && !columns.some((column) => column.name === "started_at")) database.exec("ALTER TABLE qflow_executions ADD COLUMN started_at INTEGER");
+      }
+    });
+    // Add the nullable live-activity column without touching any accepted facts or Results.
+    if (!options.readOnly) transaction(database, () => {
+      if (!(database.prepare("PRAGMA table_info(qflow_command_executions)").all() as Row[])
+        .some((column) => column.name === "activity_json")) {
+        database.exec("ALTER TABLE qflow_command_executions ADD COLUMN activity_json TEXT");
+      }
+    });
     this.builds = new SqliteBuildStore(database);
     this.operations = new SqliteOperationStore(database);
     this.commandExecutions = new SqliteCommandExecutionStore(database);
     this.execution = new SqliteBuildExecutionStore(database);
     this.catalog = new SqliteBuildCatalog(database);
-    this.environment = new SqliteRuntimeEnvironmentStore(database);
     this.submissions = new SqlitePendingBuildStore(database);
   }
 

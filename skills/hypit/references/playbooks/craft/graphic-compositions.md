@@ -21,6 +21,21 @@ Motion should make a change legible: arrival, replacement, accumulation, compari
 completion. Entry is not the whole design. Decide what remains after it, how later elements join,
 and how the system leaves the frame. A settled board may carry more meaning than its animation.
 
+Make the visual direction concrete before extending it across scenes. Translate a reference's vibe
+into a few shared choices: palette, type, edges, depth and motion character. A small representative
+passage can show those choices together with the actual footage. Carry the accepted direction into
+shared Recipes or project styling so a later change reaches the related components consistently.
+
+Let action demonstrate the claim. A rejected placement can show the object follow an attempted
+drag and visibly return. Keep a developing
+demonstration active while the speech explains it, with acceleration, contact and settling that
+make the relationship perceptible. Preserve continuing objects across phases when the argument
+continues through them.
+
+Give graphic text its own job: identify, compare or emphasize what the picture needs beyond Caption.
+When removing a redundant heading or label, recompose the remaining content and its spacing. The
+former text slot need not remain an unexplained hole; the demonstration should still feel complete.
+
 ## Put the right facts in editable structure
 
 Use authored text, exact fonts, geometry and state when wording, alignment, timing, data or repeated

@@ -35,6 +35,17 @@ reuse completed Outputs. A closed terminal or interrupted
 observation is distinct from a failed Provider request inside the Build. Finishing an incomplete
 Result is covered below and does not require regenerating media.
 
+For a slow or failed stage, read its retained execution evidence:
+
+```bash
+qflow logs <build-id> --lines 80
+```
+
+This reads Provider diagnostics and execution phases from active work or the finished Result.
+Completed Build logs remain accessible through the Result repository without the original Runtime.
+Use `qflow runtime logs` for Worker startup or process failures. Start with the relevant tail and
+expand it when the cause needs earlier context; a closed terminal does not erase the Build's log.
+
 ## Continue after a failed attempt
 
 A failed Build leaves the work and evidence produced by that attempt. Prepare a new Run that selects
@@ -68,6 +79,11 @@ qflow plan path/to/build.svrun
 `check` validates the self-described Sources and graph without executing them. `plan` freezes the
 demanded subgraph after applying the Run's Candidate selections and lists every external Need that
 would be sent. Planning starts no external work.
+
+Use the default reports to follow the remaining work. `--json` changes the encoding; `--verbose`
+expands the scope. A Run's Candidate count is not its count of new requests or generated assets:
+Candidates may supply existing values or select another Producer. Read demanded Needs to decide
+what will execute, and `pricing` to identify the subset that may incur a Provider charge.
 
 With a selected Runtime Profile, the plan also names the Endpoint behind each request, applies that
 Endpoint's request-support rules, checks cheap readiness for the demanded capabilities, and shows the
@@ -172,8 +188,8 @@ model limits declared by those Endpoints. Builds share only those actual resourc
 can advance together.
 
 Immediate work releases its capacity when it returns. An asynchronous Provider operation keeps its
-claim while that same accepted operation is being polled to completion. A Worker restart continues
-stored Provider operations rather than submitting their paid request again.
+claim while that same accepted operation is being polled to completion. Losing the execution process
+ends the attempt and preserves available remote receipts; it does not resubmit the paid request.
 When an action fails, the attempt ends and local reservations are released. Any last-observed remote
 status remains evidence, rather than a condition the old Build must resolve before the next attempt.
 
@@ -215,8 +231,11 @@ Check the reported state afterward. Detaching the observer does not send this ca
 cancellation request cannot undo already completed Provider work. Preserve completed usable Outputs
 and leave unrelated Builds alone.
 
-Stopping a Worker is different from cancellation. `runtime down` pauses advancement of all active
-Builds in that project Runtime; their durable facts remain available for the next Worker.
+`runtime down` stops the coordinator and its execution processes for that Runtime. An unfinished
+Build that loses its execution context ends that attempt; starting the Worker again does not resume
+it. Completed Outputs and recorded receipts remain available for explicit reuse in a new Build.
+Stopping the Worker does not itself cancel remote Provider work; use `cancel` for a selected Build
+while its execution context is available.
 
 ## Browse and export project Results
 
@@ -227,9 +246,12 @@ qflow history <public-output-name>
 qflow get <build-id> --output <public-output-name> --to <destination>
 ```
 
-`builds` lists finished project Results newest first. `inspect` shows one Result and its exact public
-Output names. `history` finds one named Output across Results; it does not select one for the current
-Run. `get` exports one named Output to one explicit destination:
+`builds` lists finished project Results newest first. `inspect` shows one Result's Targets,
+highlighted Outputs and outcome. Use `inspect <build-id> --output <public-output-name>` for a known
+Output, or `--verbose` to browse all available names and receipts. A Result can expose many forwarded
+Outputs from earlier work; this inventory does not mean those files were generated or copied again.
+`history` finds one named Output across Results, including reuse; it does not select one for the
+current Run. `get` exports one named Output to one explicit destination:
 
 - a Scalar becomes a JSON file;
 - a Resource becomes one streamed file;
@@ -273,14 +295,20 @@ reference Resources in the original Result.
 [Project handoff](../creation/project-files.md#hand-over-an-editable-production) explains carrying
 those Results and the authored work to another machine or collaborator.
 
-## Reload changed execution code deliberately
+## Build with the current project implementation
 
-A running Worker keeps the Runtime Profile, inherited environment, Distribution code, and package
-implementations it has already loaded. Before restarting it for a changed Profile, environment-backed
-credential, Distribution, or loaded project package, inspect `qflow activity` and preserve active
-work. Stop an idle Worker with `qflow runtime down`; the next prepared Build can start a fresh one.
+Each normal local Build receives its own loaded project implementation and selected Provider
+configuration. Edit project components or the Profile, then create a new Build;
+previously started work keeps its loaded implementation. Reuse completed material through the Run
+when changing composition. Warm services such as WhisperX remain available across Builds.
 
-Credentials resolved from a writable external store may be visible without a process restart, while
-environment variables are inherited when the Worker process starts. Let the Credential Store and
-current Provider error determine which case applies instead of treating every authentication failure
-as a restart problem.
+Concurrent Builds share execution infrastructure; remote waiting does not reserve a whole-Build slot.
+A lost executor ends its affected attempts; completed Outputs and available remote receipts are
+retained. Continue with a new Build and explicit reuse. This execution boundary does not freeze files
+that a component chooses to read later.
+
+Changing the installed Distribution or the coordinator's inherited shell environment is a separate
+bootstrap change. Inspect `qflow activity` before restarting that Worker. External writable credential
+stores may expose updated values directly; environment-backed credentials use the environment in
+which the coordinator was started. `qflow runtime down` stops the Worker and its active executors;
+Managed Programs have their own lifetime.

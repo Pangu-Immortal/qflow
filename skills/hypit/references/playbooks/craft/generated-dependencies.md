@@ -55,6 +55,10 @@ In ordinary UGC, podcast and interview production, stable reference views suppor
 generated Takes that meet at editorial cuts. Those cuts can remove dead pauses, change the object of
 attention and make the performance feel like edited social video.
 
+When the movement itself is the reference, connect a useful video excerpt alongside the target
+identity or world inputs. [Motion references](video-direction.md#let-footage-carry-motion-that-matters)
+explains choosing excerpts and assigning those inputs distinct responsibilities.
+
 A truly continuous action is a different creative requirement. Direct that intended shot through
 the chosen model's suitable mode; repeated references alone do not guarantee identical poses across
 generated seams.

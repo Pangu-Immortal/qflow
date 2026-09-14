@@ -20,7 +20,9 @@ import type {
 } from "@qflow/runtime";
 import { capacityUnits, verifyCredentialRef } from "@qflow/runtime";
 
-export type { CanonicalValue, CapabilityRef, ModuleRef, StoredValue, TypeRef } from "@qflow/protocol";
+export { canonicalize } from "@qflow/protocol";
+export type { BlobRef, CanonicalValue, CapabilityRef, ModuleRef, ResourceId, StoredValue, TypeRef } from "@qflow/protocol";
+export { credentialRef, isStreamingResourceStore } from "@qflow/runtime";
 export type {
   CapacityResourceClaim,
   CredentialAcquisition,
@@ -97,6 +99,10 @@ export type EndpointInvocationContext = {
   readonly resources: ResourceStore;
   /** Only slots explicitly declared by this configured Endpoint instance are present. */
   readonly credentials: Readonly<Record<string, EndpointCredential>>;
+  /** Explicit non-secret diagnostic output. The Provider owns its content, never its storage. */
+  readonly reportDiagnostic?: (diagnostic: import("@qflow/runtime").ExecutionDiagnostic) => Promise<void>;
+  /** Report non-secret activity of a long local call without creating a remote Operation. */
+  readonly reportProgress?: (progress: OperationProgress) => Promise<void>;
 };
 
 export type ImmediateEndpointHandler = (

@@ -97,10 +97,12 @@ function activationPath(item: ResolvedPackage): string {
   return target;
 }
 
-async function importContribution(item: ResolvedPackage): Promise<NodePackageContribution> {
+async function importContribution(item: ResolvedPackage, options: NodePackageLoadOptions): Promise<NodePackageContribution> {
   const target = activationPath(item);
   assert((await stat(target)).isFile(), `${item.json.name} activation is not a file`);
-  const imported = await import(pathToFileURL(target).href) as { readonly default?: unknown };
+  const url = pathToFileURL(target).href;
+  const imported = await (options.importModule !== undefined && !item.json.name.startsWith("@qflow/")
+    ? options.importModule(url) : import(url)) as { readonly default?: unknown };
   assert(imported.default !== null && typeof imported.default === "object", `${item.json.name} activation has no default package export`);
   const contribution = imported.default as Partial<NodePackageContribution>;
   assert(contribution.format === "qflow.node-package@1", `${item.json.name} activation has an unsupported package format`);
@@ -185,7 +187,7 @@ export async function distributionExternalPackageRequirements(
   const root = resolve(distributionRoot);
   const queue = [...new Set(specifiers.filter((name) => name.startsWith("@qflow/")))].sort();
   const visited = new Set<string>();
-  const external = new Map<string, string>();
+  const external = new Map<string, { readonly name: string; readonly version: string; readonly specifier: string }>();
   while (queue.length > 0) {
     const name = queue.shift()!;
     if (visited.has(name)) continue;
@@ -196,16 +198,11 @@ export async function distributionExternalPackageRequirements(
         queue.push(dependency);
         continue;
       }
-      const previous = external.get(dependency);
-      if (previous !== undefined && previous !== version) {
-        throw new Error(`${dependency} is required at both ${previous} and ${version} by the selected Distribution packages`);
-      }
-      external.set(dependency, version);
+      const specifier = `${dependency}@${version}`;
+      external.set(specifier, { name: dependency, version, specifier });
     }
   }
-  return [...external.entries()]
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([name, version]) => ({ name, version, specifier: `${name}@${version}` }));
+  return [...external.values()].sort((left, right) => left.specifier.localeCompare(right.specifier));
 }
 
 /**
@@ -256,8 +253,8 @@ export async function loadNodePackageSelection(
   for (const item of await Promise.all(roots.map(async (physical) => ({
     physical,
     contribution: await (async () => {
-      await assertExternalDependencies(physical, distributionRoots, externalRoots);
-      return await importContribution(physical);
+      if (!options.deferExternalDependencies) await assertExternalDependencies(physical, distributionRoots, externalRoots);
+      return await importContribution(physical, options);
     })(),
   })))) add(item);
 
@@ -270,8 +267,8 @@ export async function loadNodePackageSelection(
       providerPackage,
       resolutionRoots(providerPackage, [requirement.from, root], distributionRoots),
     );
-    await assertExternalDependencies(physical, distributionRoots, externalRoots);
-    const provider = { physical, contribution: await importContribution(physical) };
+    if (!options.deferExternalDependencies) await assertExternalDependencies(physical, distributionRoots, externalRoots);
+    const provider = { physical, contribution: await importContribution(physical, options) };
     add(provider);
     assert(providedModules.has(requirement.key), `${providerPackage} does not provide the required ${requirement.key}`);
   }

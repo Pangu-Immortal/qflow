@@ -338,6 +338,22 @@ export class NodeDriver {
     registration: EndpointRegistration,
     runtimeContext: RuntimeExecutionContext,
   ): Promise<OperationSnapshot> {
+    const result = await this.#advanceOperationStep(operation, registration, runtimeContext);
+    if (result.status === "failed" && operation.status !== "failed") {
+      await runtimeContext.recordExecution?.({ endpoint: operation.endpoint, kind: "failed", message: result.failure!.message });
+    } else if (result.completion !== undefined && operation.completion === undefined) {
+      await runtimeContext.recordExecution?.({ endpoint: operation.endpoint, kind: "completed" });
+    } else if (result.progress?.phase !== undefined && result.progress.phase !== operation.progress?.phase) {
+      await runtimeContext.recordExecution?.({ endpoint: operation.endpoint, kind: "phase", phase: result.progress.phase });
+    }
+    return result;
+  }
+
+  async #advanceOperationStep(
+    operation: OperationSnapshot,
+    registration: EndpointRegistration,
+    runtimeContext: RuntimeExecutionContext,
+  ): Promise<OperationSnapshot> {
     const operations = this.operations!;
     if (registration.kind !== "asynchronous") throw new Error("Operation Endpoint is not asynchronous");
     if (operation.status !== "pending" || operation.completion !== undefined) return operation;
@@ -358,6 +374,10 @@ export class NodeDriver {
         command: structuredClone(command), need: structuredClone(command.need),
         resources: this.#resourceStore(operation.build), operation: operation.id,
         credentials: await this.#endpointCredentials({ ...registration, credentials: operation.credentials ?? registration.credentials ?? {} }),
+        ...(runtimeContext.recordExecution === undefined ? {} : {
+          reportDiagnostic: (diagnostic: import("@qflow/runtime").ExecutionDiagnostic) =>
+            runtimeContext.recordExecution!({ endpoint: operation.endpoint, kind: "diagnostic", ...diagnostic }),
+        }),
         checkpoint: async (checkpoint: import("@qflow/endpoint-kit").EndpointCheckpoint) => {
           await operations.update(operation.id, { status: "pending", ...checkpoint,
             submission: "accepted", acknowledgedAt: operation.acknowledgedAt ?? Date.now(), wakeAt: Date.now(), progress: { phase: checkpoint.remoteEnded ? "collecting" : "submitted" } });
@@ -366,10 +386,12 @@ export class NodeDriver {
       };
       if (action === "submit") {
         await operations.update(operation.id, { status: "pending", submission: "started", progress: { phase: "submitting" } });
+        await runtimeContext.recordExecution?.({ endpoint: operation.endpoint, kind: "started" });
         return await endpoint.start(context);
       }
       const pollContext = { ...context, handle: structuredClone(operation.handle!) };
       if (action === "collect") {
+        await runtimeContext.recordExecution?.({ endpoint: operation.endpoint, kind: "phase", phase: "collecting" });
         if (endpoint.collect === undefined) throw new Error(`Endpoint ${registration.id} declared artifacts ready but has no collect action`);
         return await endpoint.collect(pollContext);
       }
@@ -418,13 +440,13 @@ export class NodeDriver {
     });
   }
 
-  async advanceOperation(operation: OperationSnapshot): Promise<OperationSnapshot> {
+  async advanceOperation(operation: OperationSnapshot, context?: RuntimeExecutionContext): Promise<OperationSnapshot> {
     if (operation.request === undefined) throw new Error(`Operation ${operation.id} has no stored request`);
     const selected = this.endpoints.resolve(operation.request.need);
     if (selected.status !== "resolved" || selected.registration.id !== operation.endpoint) {
       throw new Error(`Operation ${operation.id} cannot change its selected Endpoint ${operation.endpoint}`);
     }
-    return await this.#advanceOperation(operation, selected.registration, { build: operation.build });
+    return await this.#advanceOperation(operation, selected.registration, context ?? { build: operation.build });
   }
 
   async #execute(
@@ -464,21 +486,37 @@ export class NodeDriver {
       try {
         return await this.#executeEndpoint(state, executable, context);
       } catch (error) {
+        await context.recordExecution?.({ endpoint: executable.endpointId, kind: "failed", message: failureMessage(error) });
         throw new Error(
           `Endpoint ${executable.endpointId} failed ${executable.command.need.capability.name}: ${failureMessage(error)}`,
           { cause: error },
         );
       }
     }
+    let phase: string | undefined;
+    await context?.recordExecution?.({ endpoint: executable.endpointId, kind: "started" });
     try {
       const result = await executable.registration.handler({
         command: structuredClone(executable.command),
         need: structuredClone(executable.command.need),
         resources: this.#resourceStore(context?.build),
         credentials: await this.#endpointCredentials(executable.registration),
+        reportProgress: async (progress) => {
+          await context?.reportProgress?.({ endpoint: executable.endpointId, progress });
+          if (progress.phase !== phase) {
+            phase = progress.phase;
+            await context?.recordExecution?.({ endpoint: executable.endpointId, kind: "phase", phase });
+          }
+        },
+        ...(context?.recordExecution === undefined ? {} : {
+          reportDiagnostic: (diagnostic) => context.recordExecution!({ endpoint: executable.endpointId, kind: "diagnostic", ...diagnostic }),
+        }),
       });
-      return { status: "completed", event: await this.#endpointEvent(state, executable, result) };
+      const event = await this.#endpointEvent(state, executable, result);
+      await context?.recordExecution?.({ endpoint: executable.endpointId, kind: "completed" });
+      return { status: "completed", event };
     } catch (error) {
+      await context?.recordExecution?.({ endpoint: executable.endpointId, kind: "failed", message: failureMessage(error) });
       throw new Error(
         `Endpoint ${executable.endpointId} failed ${executable.command.need.capability.name}: ${failureMessage(error)}`,
         { cause: error },

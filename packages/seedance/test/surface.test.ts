@@ -119,3 +119,26 @@ test("the three Surfaces make incompatible invocation shapes unrepresentable", a
     /requires/u,
   );
 });
+
+test("visual reference classification survives authoring as per-input metadata", async () => {
+  const result = await decode(`<seedance:ReferenceVideo id="motion" model="mini" prompt={direction} duration="6">
+    <seedance:Reference image={generated.image} person-reference="true"/>
+    <seedance:Reference video={first.image} person-reference="false"/>
+    <seedance:Reference image={last.image}/>
+  </seedance:ReferenceVideo>`, decodeSeedanceReferenceVideoSurface);
+  const bindings = result.records.filter((record) => record.id.endsWith(".binding"));
+  assert.deepEqual(bindings.map((record) => record.value.kind === "inline" ? record.value.value : null), [
+    { role: "image", fields: { personReference: true } },
+    { role: "video", fields: { personReference: false } },
+    { role: "image" },
+  ]);
+  const frames = await decode('<seedance:FrameVideo id="frames" model="fast" prompt={direction} duration="5" first-frame={first.image} first-frame-person-reference="true" last-frame={last.image} last-frame-person-reference="false"/>', decodeSeedanceFrameVideoSurface);
+  const frameBindings = frames.records.filter((record) => record.id.endsWith(".binding"));
+  assert.deepEqual(frameBindings.map((record) => record.value.kind === "inline" ? record.value.value : null), [
+    { role: "image", fields: { personReference: true } },
+    { role: "image", fields: { personReference: false } },
+  ]);
+  await assert.rejects(decode('<seedance:ReferenceVideo id="bad" model="mini" prompt={direction} duration="6"><seedance:Reference audio={voice.audio} person-reference="true"/></seedance:ReferenceVideo>', decodeSeedanceReferenceVideoSurface), /applies to image or video/);
+  await assert.rejects(decode('<seedance:ReferenceVideo id="bad" model="mini" prompt={direction} duration="6"><seedance:Reference image={generated.image} person-reference="maybe"/></seedance:ReferenceVideo>', decodeSeedanceReferenceVideoSurface), /must be true or false/);
+  await assert.rejects(decode('<seedance:FrameVideo id="bad" model="mini" prompt={direction} duration="6" first-frame={first.image} last-frame-person-reference="true"/>', decodeSeedanceFrameVideoSurface), /requires last-frame/);
+});

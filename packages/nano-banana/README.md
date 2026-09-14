@@ -4,7 +4,7 @@ Exact author/compute contracts and package-owned author Surfaces for Nano Banana
 
 The model variants are separate endpoints with exact request validation. Their Surfaces project the
 primary result to an ordinary image Artifact. The package contains no Provider selection, API key or
-network execution; `@qflow/provider-kie` is one optional Runtime implementation.
+network execution. The selected Provider implements its exact capability.
 
 Import the model variant you mean and connect prompt and references as ordinary graph edges:
 

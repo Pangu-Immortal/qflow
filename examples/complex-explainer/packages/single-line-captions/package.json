@@ -1,0 +1,9 @@
+{
+  "name": "@explainer/single-line-captions",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "qflow": {
+    "activation": "./src/activation.js"
+  }
+}

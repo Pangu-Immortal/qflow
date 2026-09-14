@@ -6,6 +6,9 @@ import type { HyperframesRenderProgress, resolveExecutionOptions } from "./rende
 import { assert, runProcess } from "./process.js";
 import { verifyOutput } from "./output.js";
 import { distributeFrameRange, sourceFrameAt, sourceWindows, videoSlots } from "./sampling.js";
+import { renderWorkerLimit } from "./render.js";
+import { CaptureConcurrency } from "./concurrency.js";
+import { createOpaqueFrameCapture } from "./opaque-capture.js";
 
 export type CaptureInput = {
   readonly document: HyperframesDocument;
@@ -22,8 +25,14 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
   const { document, range, config, directory: work } = input;
   const signal = controller.signal;
   const frameCount = range.endFrameExclusive - range.startFrame;
-  const tasks = distributeFrameRange(range, config.workers);
   const fps = { num: document.frameRate.numerator, den: document.frameRate.denominator };
+  const limit = renderWorkerLimit(config, frameCount, fps.num / fps.den);
+  const concurrency = new CaptureConcurrency(limit, config.workers === "auto");
+  // Short contiguous batches retain sequential capture while allowing free browsers
+  // to help with expensive passages. This queue exists only inside this render.
+  const batchCount = Math.max(limit, Math.ceil(frameCount / Math.max(1, Math.round(fps.num / fps.den))));
+  const batches = distributeFrameRange(range, batchCount);
+  let nextBatch = 0;
   const started = performance.now();
   const elapsedMs = () => Math.round(performance.now() - started);
   const engine = await import(input.engineModule) as typeof import("@hyperframes/engine");
@@ -65,7 +74,11 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
     const sources = new Map<string, { frames: Map<number, string>; width: number; height: number }>();
     let sourceFrames = 0;
     // One source at a time bounds decoder pressure independently of browser concurrency.
-    for (const source of sourceWindows(slots, range)) {
+    const windows = sourceWindows(slots, range);
+    const sourceTotal = windows.reduce((sum, source) => sum + source.windows.reduce((count, window) =>
+      count + window.endFrameExclusive - window.startFrame, 0), 0);
+    if (sourceTotal > 0) onProgress({ phase: "decoding", completed: 0, total: sourceTotal, elapsedMs: elapsedMs() });
+    for (const source of windows) {
       const path = resolve(work, source.src);
       assert(path.startsWith(`${work}${sep}`), "HyperFrames source is outside the staged project");
       const frames = new Map<number, string>();
@@ -86,6 +99,7 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
         width = extracted.metadata.width;
         height = extracted.metadata.height;
         sourceFrames += count;
+        onProgress({ phase: "decoding", completed: sourceFrames, total: sourceTotal, elapsedMs: elapsedMs() });
       }
       sources.set(source.src, { frames, width, height });
     }
@@ -109,9 +123,24 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
     const serverUrl = server.url;
     const outputFrames = join(work, "frames");
     await mkdir(outputFrames);
-    onProgress?.({ phase: "prepared", workers: tasks.length, sourceFrames, elapsedMs: elapsedMs() });
-    const results = await Promise.allSettled(tasks.map(async (task, worker) => {
+    onProgress?.({ phase: "prepared", workers: concurrency.target, sourceFrames, elapsedMs: elapsedMs() });
+    const jobs: Promise<void>[] = [];
+    let active = 0, open = 0, initializing = 0, capturedFrames = 0;
+    let startupMs = 0;
+    const launch = (): void => {
+      const worker = jobs.length;
+      jobs.push(runWorker(worker));
+      // Failure stops all jobs promptly; all jobs are still awaited below.
+      void jobs[worker]!.catch(() => {});
+    };
+    const runWorker = async (worker: number): Promise<void> => {
       let session: Session | undefined;
+      let ready = false;
+      active++;
+      open++;
+      initializing++;
+      const launched = performance.now();
+      let setupMs = 0;
       try {
         signal.throwIfAborted();
         const directory = join(work, `worker-${worker}`);
@@ -120,7 +149,9 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
           frameSrcResolver: (path) => new URL(relative(work, path).split(sep).map(encodeURIComponent).join("/"), `${serverUrl}/`).href,
         });
         session = await engine.createCaptureSession(serverUrl, directory, {
-          ...document.canvas, fps, format: "png",
+          // Engine initialization couples PNG to transparent-export mode. Use
+          // its opaque session setup; our capture adapter writes lossless PNG.
+          ...document.canvas, fps, format: "jpeg",
           compositionDurationSeconds: document.frameCount * fps.den / fps.num,
           skipReadinessVideoIds: slots.map((slot) => slot.id),
           videoMetadataHints: slots.flatMap((slot) => {
@@ -132,38 +163,77 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
         signal.throwIfAborted();
         const activeSession = session;
         const browserPid = session.browser.process()?.pid;
-        onProgress?.({ phase: "worker-initializing", worker, range: task, browserPid, elapsedMs: elapsedMs() });
+        onProgress?.({ phase: "worker-initializing", worker, range, browserPid, elapsedMs: elapsedMs() });
         await stage(`worker ${worker} initialization`, config.initializationTimeoutMs, () => engine.initializeSession(activeSession));
-        // HyperFrames' PNG capture clears the page/composition backgrounds for
-        // standalone transparent exports. Here PNGs are intermediate frames of
-        // a Film, whose authored Canvas background still belongs in the image.
-        await activeSession.page.evaluate(() => {
-          globalThis.document.getElementById("__hf_transparent_bg__")?.remove();
-        });
-        onProgress?.({ phase: "worker-start", worker, range: task, browserPid, elapsedMs: elapsedMs() });
-        for (let frame = task.startFrame; frame < task.endFrameExclusive; frame++) {
-          signal.throwIfAborted();
-          const captured = await stage(`worker ${worker} frame ${frame}`, config.frameTimeoutMs, async () => {
-            const capture = await engine.captureFrameToBuffer(activeSession, frame, frame * fps.den / fps.num);
-            const programError = await activeSession.page.evaluate(() =>
-              (window as unknown as { __qflowBrowserProgramError?: string }).__qflowBrowserProgramError);
-            if (programError !== undefined) throw new Error(`Browser program failed at frame ${frame}: ${programError}`);
-            return capture;
-          });
-          await writeFile(join(outputFrames, `${String(frame - range.startFrame).padStart(9, "0")}.png`), captured.buffer);
+        const captureFrame = await createOpaqueFrameCapture(activeSession);
+        setupMs = performance.now() - launched;
+        startupMs = Math.max(startupMs, setupMs);
+        ready = true;
+        initializing--;
+        if (initializing === 0) concurrency.settled(performance.now());
+        onProgress?.({ phase: "worker-start", worker, range, browserPid, elapsedMs: elapsedMs() });
+        let completed = 0;
+        let lastProgressAt = performance.now();
+        const timing = { seekMs: 0, prepareMs: 0, screenshotMs: 0 };
+        while (true) {
+          // Retire only between complete batches, before claiming more work.
+          if (active > concurrency.target) break;
+          const batch = batches[nextBatch++];
+          if (batch === undefined) break;
+          for (let frame = batch.startFrame; frame < batch.endFrameExclusive; frame++) {
+            signal.throwIfAborted();
+            const captured = await stage(`worker ${worker} frame ${frame}`, config.frameTimeoutMs, () => captureFrame(frame));
+            timing.seekMs += captured.seekMs;
+            timing.prepareMs += captured.prepareMs;
+            timing.screenshotMs += captured.screenshotMs;
+            await writeFile(join(outputFrames, `${String(frame - range.startFrame).padStart(9, "0")}.png`), captured.buffer);
+            completed++;
+            capturedFrames++;
+            if (performance.now() - lastProgressAt >= 1_000) {
+              onProgress({ phase: "worker-progress", worker, completed, elapsedMs: elapsedMs() });
+              lastProgressAt = performance.now();
+            }
+          }
+          const decision = concurrency.complete({ now: performance.now(), frames: batch.endFrameExclusive - batch.startFrame,
+            remainingFrames: frameCount - capturedFrames, startupMs, active: initializing === 0 ? active : 0 });
+          if (decision !== undefined) {
+            console.log(`Capture auto: ${active} -> ${decision.workers} browsers; ${decision.fps.toFixed(1)} frames/s; ${decision.reason}`);
+            while (active < decision.workers && open < limit && nextBatch < batches.length) launch();
+          }
         }
-        onProgress?.({ phase: "worker-complete", worker, range: task, browserPid, elapsedMs: elapsedMs() });
+        console.log(`Capture worker ${worker}: ${completed} frames; startup ${Math.round(setupMs)} ms; `
+          + `seek ${Math.round(timing.seekMs)} ms; prepare ${Math.round(timing.prepareMs)} ms; PNG ${Math.round(timing.screenshotMs)} ms`);
+        onProgress({ phase: "worker-complete", worker, completed, browserPid, elapsedMs: elapsedMs() });
       } catch (error) {
         controller.abort(error);
         throw error;
       } finally {
+        active--;
+        if (!ready) initializing--;
         if (session !== undefined) await close(session);
+        open--;
+        // A restoring decision can wait for a retiring Chrome to release its
+        // slot. Closing processes still count against the reserved ceiling.
+        if (!signal.aborted && active < concurrency.target && open < limit && nextBatch < batches.length) launch();
       }
-    }));
+    };
+    const initialWorkers = concurrency.target;
+    console.log(`Capture: opaque fast PNG; ${config.workers === "auto" ? "auto" : "fixed"} workers ${initialWorkers}, limit ${limit}`);
+    for (let i = 0; i < initialWorkers; i++) launch();
+    // New workers can join while earlier jobs run; collect every launched job.
+    let awaited = 0;
+    let failure: unknown;
+    while (awaited < jobs.length) {
+      const pending = jobs.slice(awaited);
+      awaited = jobs.length;
+      const results = await Promise.allSettled(pending);
+      for (const result of results) if (result.status === "rejected") failure ??= result.reason;
+    }
+    if (failure !== undefined) throw failure;
     signal.throwIfAborted();
-    for (const result of results) if (result.status === "rejected") throw result.reason;
     await Promise.all(closing.values());
     const output = join(work, "visual.mp4");
+    onProgress({ phase: "encoding", elapsedMs: elapsedMs() });
     const crf = { draft: 28, standard: 23, high: 18 }[config.quality];
     await runProcess({ executable: config.ffmpegPath,
       argv: ["-v", "error", "-y", "-framerate", `${fps.num}/${fps.den}`, "-i", join(outputFrames, "%09d.png"),

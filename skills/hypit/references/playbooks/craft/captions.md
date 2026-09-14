@@ -139,7 +139,7 @@ pauses. Making a Cue longer changes its reading group, not its character timing.
 
 Text appearing and text changing color are separate choices. `atom-reveal: all` keeps the complete
 Cue available to read while Karaoke supplies emphasis; `on-start` reveals whole spoken units, and
-`typewriter` reveals whole graphemes within them. A pronunciation span such as `<Qflow|Hai-Pit>`
+`typewriter` reveals whole graphemes within them. A pronunciation span such as `<API|A P I>`
 remains one shared timing unit. Scope it to the expression needing a pronunciation hint so the
 surrounding Chinese characters retain their own timing.
 

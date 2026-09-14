@@ -46,15 +46,27 @@ export type CliBuildResultView = {
   readonly targets: readonly string[];
   readonly omittedTargets?: number;
   readonly outputs: readonly CliOutputView[];
+  readonly outputCount: number;
+  /** Available Outputs outside the selected inspection scope. */
+  readonly otherOutputCount?: number;
   readonly omittedOutputs?: number;
   readonly failure?: string;
-  readonly operations?: BuildResultManifest["operations"];
+  readonly operations?: readonly Pick<NonNullable<BuildResultManifest["operations"]>[number],
+    "endpoint" | "status" | "receipt" | "failure">[];
+  readonly executionLog?: BuildResultManifest["executionLog"];
   readonly omittedOperations?: number;
 };
 
 export type CliBuildStatusView = {
   readonly id: string;
   readonly title?: string;
+  readonly targets?: readonly string[];
+  readonly failure?: string;
+  readonly commands?: readonly {
+    readonly id?: string;
+    readonly endpoint: string;
+    readonly progress: NonNullable<BuildView["commands"]>[number]["progress"];
+  }[];
   readonly work: {
     readonly state: "unknown" | "submitting" | "working" | "done";
     readonly outcome?: "complete" | "failed" | "cancelled";
@@ -68,6 +80,7 @@ export type CliBuildStatusView = {
   };
   readonly attention?: { readonly message: string; readonly action?: string };
   readonly operations?: readonly {
+    readonly count?: number;
     readonly id?: string;
     readonly receipt?: { readonly id: string; readonly url?: string };
     readonly endpoint: string;
@@ -127,8 +140,8 @@ function orderedOutputNames(manifest: BuildResultManifest): readonly string[] {
   const highlighted = new Set(manifest.highlightedOutputs ?? []);
   const targets = new Set(manifest.targets);
   return names.sort((left, right) => {
-    const leftRank = highlighted.has(left) ? 0 : targets.has(left) ? 1 : 2;
-    const rightRank = highlighted.has(right) ? 0 : targets.has(right) ? 1 : 2;
+    const leftRank = targets.has(left) ? 0 : highlighted.has(left) ? 1 : 2;
+    const rightRank = targets.has(right) ? 0 : highlighted.has(right) ? 1 : 2;
     return leftRank - rightRank || left.localeCompare(right);
   });
 }
@@ -146,7 +159,6 @@ export function buildStatusView(options: {
   readonly result?: BuildResultManifest;
   readonly resultReadError?: string;
   readonly verbose?: boolean;
-  readonly operationLimit?: number;
 }): CliBuildStatusView {
   const resultState = options.resultReadError !== undefined
     ? "unavailable" as const
@@ -154,6 +166,15 @@ export function buildStatusView(options: {
   const issue = options.runtime?.issue;
   return {
     id: options.id,
+    ...((options.runtime?.targets ?? options.result?.targets) === undefined ? {} : {
+      targets: options.runtime?.targets ?? options.result!.targets,
+    }),
+    ...((options.result?.failure ?? options.runtime?.stop?.reason) === undefined ? {} : {
+      failure: options.result?.failure ?? options.runtime!.stop!.reason,
+    }),
+    ...(options.runtime?.commands?.length ? { commands: options.runtime.commands.map((command) => ({
+      ...(options.verbose ? { id: command.id } : {}), endpoint: command.endpoint, progress: command.progress,
+    })) } : {}),
     ...(options.result?.title === undefined ? {} : { title: options.result.title }),
     work: {
       state: workState(options.runtime, options.result),
@@ -176,13 +197,12 @@ export function buildStatusView(options: {
           }
         : { message: options.resultReadError! },
     }),
-    ...(!options.verbose ? {} : {
-      operations: (options.runtime?.operations ?? options.result?.operations ?? [])
+    ...((options.runtime?.operations ?? options.result?.operations ?? []).some((item) => item.status !== "completed") ? {
+      operations: groupOperationViews((options.runtime?.operations ?? options.result?.operations ?? [])
         .filter((item) => item.status !== "completed")
-        .slice(0, options.operationLimit ?? 20)
         .map((item) => ({
-          ...("operation" in item ? { id: item.operation } : item.id === undefined ? {} : { id: item.id }),
-          ...(item.receipt === undefined ? {} : { receipt: item.receipt }),
+          ...(!options.verbose ? {} : "operation" in item ? { id: item.operation } : item.id === undefined ? {} : { id: item.id }),
+          ...(item.receipt === undefined || (!options.verbose && item.failure === undefined) ? {} : { receipt: item.receipt }),
           endpoint: item.endpoint,
           state: item.status,
           ...(item.progress === undefined ? {} : { progress: item.progress }),
@@ -190,23 +210,43 @@ export function buildStatusView(options: {
             code: item.failure.code,
             message: item.failure.message,
           } }),
-        })),
-    }),
+        })), options.verbose === true),
+    } : {}),
   };
+}
+
+function groupOperationViews(
+  operations: NonNullable<CliBuildStatusView["operations"]>,
+  verbose: boolean,
+): NonNullable<CliBuildStatusView["operations"]> {
+  if (verbose) return operations;
+  const groups = new Map<string, { view: typeof operations[number]; count: number }>();
+  for (const operation of operations) {
+    const key = JSON.stringify(operation);
+    const existing = groups.get(key);
+    if (existing !== undefined) existing.count += 1;
+    else groups.set(key, { view: operation, count: 1 });
+  }
+  return [...groups.values()].map(({ view, count }) => count === 1 ? view : { ...view, count });
 }
 
 export async function buildResultView(
   repository: BuildResultRepository,
   manifest: BuildResultManifest,
-  options: { readonly projectRoot: string; readonly output?: string; readonly limit: number },
+  options: { readonly projectRoot: string; readonly output?: string; readonly limit: number; readonly verbose?: boolean },
 ): Promise<CliBuildResultView> {
   if (options.output !== undefined && manifest.outputs[options.output] === undefined) {
     throw new Error(`Build Result ${manifest.id} has no public Output ${options.output}`);
   }
-  const allNames = options.output === undefined ? orderedOutputNames(manifest) : [options.output];
-  const selected = allNames.slice(0, options.limit);
+  const available = orderedOutputNames(manifest);
+  const allNames = options.output !== undefined ? [options.output] : options.verbose ? available
+    : available.filter((name) => manifest.targets.includes(name) || manifest.highlightedOutputs?.includes(name));
+  const selected = options.verbose ? allNames.slice(0, options.limit) : allNames;
   const outputs = await Promise.all(selected.map(async (name) =>
     await outputView(repository, manifest, name)));
+  const operations = options.verbose ? manifest.operations ?? []
+    : (manifest.operations ?? []).filter((item) => item.failure !== undefined);
+  const selectedOperations = options.verbose ? operations.slice(0, options.limit) : operations;
   return {
     id: manifest.id,
     ...(manifest.title === undefined ? {} : { title: manifest.title }),
@@ -217,12 +257,18 @@ export async function buildResultView(
     source: projectPath(manifest.source.path, options.projectRoot),
     ...(manifest.run === undefined ? {} : { run: projectPath(manifest.run.path, options.projectRoot) }),
     targetCount: manifest.targets.length,
-    targets: manifest.targets.slice(0, options.limit),
-    ...(manifest.targets.length <= options.limit ? {} : { omittedTargets: manifest.targets.length - options.limit }),
+    targets: manifest.targets,
+    outputCount: available.length,
     outputs,
+    ...(available.length === allNames.length ? {} : { otherOutputCount: available.length - allNames.length }),
     ...(selected.length === allNames.length ? {} : { omittedOutputs: allNames.length - selected.length }),
     ...(manifest.failure === undefined ? {} : { failure: manifest.failure }),
-    ...(manifest.operations === undefined ? {} : { operations: manifest.operations.slice(0, options.limit) }),
-    ...((manifest.operations?.length ?? 0) <= options.limit ? {} : { omittedOperations: manifest.operations!.length - options.limit }),
+    ...(manifest.executionLog === undefined ? {} : { executionLog: manifest.executionLog }),
+    ...(selectedOperations.length === 0 ? {} : { operations: selectedOperations.map((item) => options.verbose ? item : ({
+      endpoint: item.endpoint, status: item.status,
+      ...(item.receipt === undefined ? {} : { receipt: item.receipt }),
+      ...(item.failure === undefined ? {} : { failure: item.failure }),
+    })) }),
+    ...(selectedOperations.length === operations.length ? {} : { omittedOperations: operations.length - selectedOperations.length }),
   };
 }

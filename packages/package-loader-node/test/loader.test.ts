@@ -93,7 +93,7 @@ test("a Distribution package accepts an exact CLI-only dependency from the machi
       format: "qflow.node-package@1",
       hostFacets: [{ abi: "example.provider@1", offers: ["example"] }]
     }`, { "cli-only": "1.2.3" });
-    const cli = join(machine, "node_modules", "cli-only");
+    const cli = join(machine, "cli-only", "1.2.3", "node_modules", "cli-only");
     await mkdir(join(cli, "bin"), { recursive: true });
     await writeFile(join(cli, "package.json"), JSON.stringify({
       name: "cli-only",

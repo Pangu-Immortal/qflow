@@ -100,13 +100,8 @@ export async function runProjectResultCommand(input: {
       projectRoot,
       ...(args.outputName === undefined ? {} : { output: args.outputName }),
       limit: args.limit,
+      verbose: args.presentation.verbose,
     });
-    const focusedOutputs = args.outputName === undefined
-      ? build.outputs.filter((item) => item.target || item.highlighted)
-      : build.outputs;
-    const visibleOutputs = args.presentation.verbose ? build.outputs : focusedOutputs;
-    const outputCount = build.outputs.length + (build.omittedOutputs ?? 0);
-    const hiddenOutputCount = args.outputName === undefined ? outputCount - focusedOutputs.length : 0;
     write({ format: "qflow.cli-inspect@1", build }, "Build Result",
       manifest.outcome === "failed" ? "error"
         : manifest.outcome === "cancelled" ? "warning"
@@ -117,23 +112,24 @@ export async function runProjectResultCommand(input: {
         ["Outcome", build.outcome],
         ...(args.outputName === undefined ? [
           ["Targets", String(build.targetCount)] as const,
-          ["Outputs", String(outputCount)] as const,
+          ["Available Outputs", String(build.outputCount)] as const,
         ] : []),
       ], [
         ...(build.failure === undefined ? [] : [`Reason    ${build.failure}`]),
+        ...(build.executionLog === undefined ? [] : [`Execution log    qflow logs ${build.id}`]),
         ...(build.operations ?? []).map((operation) =>
           `${operation.endpoint}: ${operation.status}${operation.receipt === undefined ? "" : ` · task ${operation.receipt.id}`}`
           + (operation.failure === undefined ? "" : ` · ${operation.failure.code}: ${operation.failure.message}`)),
         ...(build.omittedOperations === undefined ? [] : [`${build.omittedOperations} more execution receipts · use --limit <count>`]),
         ...(build.note === undefined ? [] : [`Note      ${build.note}`]),
-        ...visibleOutputs.map((item) => `${item.highlighted ? "★" : item.target ? "Target" : "Output"}    ${item.name}`
+        ...build.outputs.map((item) => `${item.highlighted ? "★" : item.target ? "Target" : "Output"}    ${item.name}`
           + (!args.presentation.verbose ? "" : ` · ${item.type} · ${item.kind}`
             + `${item.mediaType === undefined ? "" : ` · ${item.mediaType}`}`
             + `${item.size === undefined ? "" : ` · ${item.size} bytes`}`)),
-        ...(!args.presentation.verbose && hiddenOutputCount > 0 ? [
-          `${hiddenOutputCount} other Output${hiddenOutputCount === 1 ? "" : "s"} · use --verbose or --output <name>`,
+        ...(args.outputName === undefined && (build.otherOutputCount ?? 0) > 0 ? [
+          `${build.otherOutputCount} other Outputs · use --verbose or --output <name>`,
         ] : []),
-        ...(args.presentation.verbose && build.omittedOutputs !== undefined ? [
+        ...(build.omittedOutputs !== undefined ? [
           `${build.omittedOutputs} more Outputs · use --limit <count> or --output <name>`,
         ] : []),
       ]);

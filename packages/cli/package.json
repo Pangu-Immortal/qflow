@@ -16,6 +16,7 @@
     "@qflow/driver-node": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
+    "@qflow/project-context-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/run": "workspace:*",
     "@qflow/runtime": "workspace:*",

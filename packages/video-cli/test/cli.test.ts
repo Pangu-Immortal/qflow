@@ -41,9 +41,8 @@ test("source package selection follows Run and Author imports", async () => {
 });
 
 test("provider-free example plans from installed Source packages", async () => {
-  // The examples directory is intentionally kept empty; use the maintained package preview
-  // fixture instead. It is a real installed Source package and exercises the same provider-free
-  // planning path (semantic track, composition and mux projections).
+  // The installed package preview exercises Timeline, composition and mux planning without
+  // requiring a generation account or an authored project copy.
   const fixture = join(process.cwd(), "packages", "media-track", "preview");
   let output = "";
   await runCli([
@@ -54,11 +53,13 @@ test("provider-free example plans from installed Source packages", async () => {
   ], { write: (text) => { output += text; } });
   const plan = JSON.parse(output) as {
     readonly format: string;
-    readonly steps: number;
+    readonly ok: boolean;
+    readonly requestCount: number;
     readonly targets: readonly string[];
   };
   assert.equal(plan.format, "qflow.cli-plan@1");
-  assert.equal(plan.steps > 0, true);
+  assert.equal(plan.ok, true);
+  assert.equal(plan.requestCount > 0, true);
   assert.equal(plan.targets.length, 1);
 });
 

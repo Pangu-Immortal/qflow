@@ -117,8 +117,7 @@ function normalizeQflowHubRequest(
       ? (item as Record<string, unknown>).url : item).filter((item): item is string => typeof item === "string" && item.length > 0);
     if (urls.length > 0) input.reference_image_urls = urls;
   }
-  if (Array.isArray(videoRefs) && videoRefs.length === 1) input.ref_video_url = videoRefs[0];
-  else if (Array.isArray(videoRefs) && videoRefs.length > 1) input.reference_videos = videoRefs;
+  if (Array.isArray(videoRefs) && videoRefs.length > 0) input.reference_videos = videoRefs;
   if (Array.isArray(audioRefs) && audioRefs.length > 0) input.reference_audios = audioRefs;
   return { model: request.model, input: canonicalize(input) };
 }

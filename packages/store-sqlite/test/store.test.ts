@@ -13,6 +13,26 @@ const resultLocation = {
   selection: { use: "@qflow/build-result-fs", config: { path: ".qflow/results" } },
 } as const;
 
+test("local command progress is visible across connections and ends with the command", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qflow-command-progress-"));
+  const path = join(directory, "runtime.sqlite");
+  const writer = new SqliteRuntimeState(path);
+  const observer = new SqliteRuntimeState(path, { readOnly: true });
+  try {
+    await writer.commandExecutions.begin("build", "draw");
+    await writer.commandExecutions.reportProgress("build", "draw", {
+      endpoint: "example.local", progress: { phase: "drawing", completed: 5, total: 10, unit: "frames" },
+    });
+    assert.equal((await observer.commandExecutions.list("build"))[0]?.activity?.progress.completed, 5);
+    await writer.commandExecutions.complete("build", "draw", { kind: "command-failed", command: "draw", code: "STOP", message: "Stopped" });
+    await writer.commandExecutions.reportProgress("build", "draw", { endpoint: "example.local", progress: { phase: "late" } });
+    assert.equal((await observer.commandExecutions.list("build"))[0]?.activity, undefined);
+    assert.deepEqual(await observer.operations.list({ build: "build" }), []);
+  } finally {
+    observer.close(); writer.close(); await rm(directory, { recursive: true, force: true });
+  }
+});
+
 function definition(state: ReturnType<typeof createGreetingBuild>) {
   const authored = new Set(state.program.records.map((record) => record.id));
   return defineBuild({
@@ -60,7 +80,7 @@ test("SQLite stores verified Build facts and Operation handles across reopen", a
       id: "operation:generation",
       build: "video",
       command: "command:generation",
-      endpoint: "kie.personal",
+      endpoint: "images.personal",
     };
     const pending = await first.operations.create({ ...operation,
       status: "pending",
@@ -202,37 +222,34 @@ test("Execution stores scheduling facts, one decision and independent operator a
   }
 });
 
-test("Submissions and Executions pin the literal Runtime environment", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "qflow-sqlite-environment-"));
+test("each execution retains its own context and can be claimed without touching its sibling", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qflow-sqlite-context-"));
   try {
     const state = new SqliteRuntimeState(join(directory, "runtime.sqlite"));
-    await state.environment.use('{"endpoints":{"kie":{"region":"us"}}}');
-    await state.submissions.prepare({ build: "active-build", componentPackages: [], result: resultLocation }, { now: 100 });
-    await assert.rejects(
-      state.environment.use('{"endpoints":{"kie":{"region":"eu"}}}'),
-      /pinned by active Builds/u,
-    );
-    await state.environment.assert('{"endpoints":{"kie":{"region":"us"}}}');
-    await assert.rejects(
-      state.environment.assert('{"endpoints":{"kie":{"region":"eu"}}}'),
-      /no longer matches/u,
-    );
+    await state.execution.create({ build: "a", componentPackages: [], result: resultLocation, context: { provider: "old" } }, { now: 100 });
+    await state.execution.create({ build: "b", componentPackages: [], result: resultLocation, context: { provider: "new" } }, { now: 100 });
+    await state.execution.start("a", 101);
+    await assert.rejects(state.execution.start("a", 102), /already started/u);
+    assert.equal((await state.execution.claim("b-owner", 102, "b"))?.build, "b");
+    assert.equal((await state.execution.read("a"))?.turn, undefined);
+    assert.deepEqual((await state.execution.read("a"))?.context, { provider: "old" });
+    const interrupted = await state.execution.interrupt("a", "executor exited");
+    assert.equal(interrupted.decision?.outcome, "failed");
+    assert.equal((await state.execution.read("b"))?.turn?.owner, "b-owner");
     state.close();
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
+  } finally { await rm(directory, { recursive: true, force: true }); }
 });
 
-test("a new Worker reclaims abandoned turns and Result-writer leases without external work", async () => {
+test("a lost executor ends its attempt while Result-writer leases can be reclaimed", async () => {
   const directory = await mkdtemp(join(tmpdir(), "qflow-sqlite-turn-reclaim-"));
   try {
     const state = new SqliteRuntimeState(join(directory, "runtime.sqlite"));
     await state.execution.create({ build: "interrupted", componentPackages: [], result: resultLocation }, { now: 100 });
     assert.equal((await state.execution.claim("old-worker", 100))?.turn?.owner, "old-worker");
-    assert.deepEqual(await state.execution.reclaimTurns(200), ["interrupted"]);
+    await state.execution.interrupt("interrupted", "executor lost");
     assert.equal((await state.execution.read("interrupted"))?.turn, undefined);
-    assert.equal((await state.execution.claim("new-worker", 200))?.turn?.owner, "new-worker");
-    await state.execution.decide("interrupted", "new-worker", "failed", "provider stopped");
+    assert.equal(await state.execution.claim("new-worker", 200), undefined);
+    assert.equal((await state.execution.read("interrupted"))?.decision?.outcome, "failed");
     assert.equal(
       (await state.execution.claimResultWrite("interrupted", "old-result-writer", 201))?.resultWrite?.owner,
       "old-result-writer",
@@ -254,9 +271,9 @@ test("shared capacity resources are acquired atomically across Builds", async ()
   const directory = await mkdtemp(join(tmpdir(), "qflow-sqlite-hierarchy-"));
   try {
     const state = new SqliteRuntimeState(join(directory, "runtime.sqlite"));
-    const pool = { id: "pool:kie.main", limit: 2 };
-    const seedance = { id: "capacity:kie.main/seedance-2-mini", limit: 1 };
-    const minimax = { id: "capacity:kie.main/minimax-h3", limit: 2 };
+    const pool = { id: "pool:images.main", limit: 2 };
+    const seedance = { id: "capacity:images.main/seedance-2-mini", limit: 1 };
+    const minimax = { id: "capacity:images.main/minimax-h3", limit: 2 };
 
     const first = await state.execution.acquireCapacity({
       build: "seedance-a",

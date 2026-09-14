@@ -5,6 +5,7 @@ import type {
 } from "@qflow/runtime-host-node";
 import { qflowHostStateRoot } from "@qflow/runtime-host-node";
 import { resolve } from "node:path";
+import { superviseBuilds } from "./supervisor.js";
 
 import {
   createRuntimeControlFromConfig,
@@ -82,8 +83,8 @@ export async function openLocalRuntimeHost(
       },
       programs: {
         up: async (programOptions) => await bringManagedProgramsUp(profile, { ...programOptions, packageRoot, ...distribution }),
-        down: async () => await takeManagedProgramsDown(profile, { packageRoot, ...distribution }),
-        report: async () => await reportManagedPrograms(profile, { packageRoot, ...distribution }),
+        down: async (scope) => await takeManagedProgramsDown(profile, { ...scope, packageRoot, ...distribution }),
+        report: async (scope) => await reportManagedPrograms(profile, { ...scope, packageRoot, ...distribution }),
       },
     };
   };
@@ -102,7 +103,7 @@ export async function openLocalRuntimeHost(
       };
     },
     controller,
-    createRuntime: async () => await createRuntimeFromConfig(profile, { packageRoot: basePackageRoot, ...distribution }),
+    createRuntime: async (scope) => await createRuntimeFromConfig(profile, { packageRoot: basePackageRoot, ...distribution, ...scope }),
     openControl: async (options) => await createRuntimeControlFromConfig(profile, {
       packageRoot: basePackageRoot,
       ...distribution,
@@ -121,16 +122,19 @@ export async function openLocalRuntimeHost(
       packageRoot: basePackageRoot,
       ...distribution,
       ...(options?.onProgress === undefined ? {} : { onProgress: options.onProgress }),
+      ...(options?.endpoints === undefined ? {} : { endpoints: options.endpoints }),
     }),
     preflight: async (options) => await preflightRuntimeConfig(profile, {
       packageRoot: basePackageRoot,
       ...distribution,
       ...(options?.capabilities === undefined ? {} : { capabilities: options.capabilities }),
+      ...(options?.endpoints === undefined ? {} : { endpoints: options.endpoints }),
     }),
     doctor: async (options) => await doctorRuntimeConfig(profile, {
       packageRoot: basePackageRoot,
       ...distribution,
       ...(options?.capabilities === undefined ? {} : { capabilities: options.capabilities }),
+      ...(options?.endpoints === undefined ? {} : { endpoints: options.endpoints }),
     }),
     providers: async (capabilities) => await describeRuntimeConfigProviders(profile, capabilities, {
       packageRoot: basePackageRoot,
@@ -140,34 +144,50 @@ export async function openLocalRuntimeHost(
       packageRoot: basePackageRoot,
       ...distribution,
     }),
-    invoke: async (need, resources) => await invokeRuntimeConfigNeed(profile, need, resources, {
+    invoke: async (need, resources, observation) => await invokeRuntimeConfigNeed(profile, need, resources, {
       packageRoot: basePackageRoot,
       ...distribution,
+      ...observation,
     }),
     openTransientExecution: async () => await openTransientRuntimeConfigExecution(profile, {
       packageRoot: basePackageRoot,
       ...distribution,
     }),
-    runWorker: async (readyFile, owner) => {
-      let runtime: Awaited<ReturnType<typeof createRuntimeFromConfig>> | undefined;
+    runWorker: async (readyFile, owner, execution) => {
       const abort = new AbortController();
-      const stop = (): void => abort.abort();
+      const stop = (): void => { abort.abort(); };
+      // A Build never survives loss of its supervisor by silently changing code owners.
+      const disconnected = (): never => process.exit(1);
+      const message = (value: unknown): void => {
+        if (typeof value === "object" && value !== null && "kind" in value && value.kind === "stop-execution") stop();
+      };
       process.once("SIGTERM", stop);
       process.once("SIGINT", stop);
+      if (execution !== undefined) {
+        process.once("disconnect", disconnected);
+        process.on("message", message);
+      }
       try {
-        runtime = await createRuntimeFromConfig(profile, {
-          packageRoot: basePackageRoot,
-          ...distribution,
-        });
-        await runtime.work({
-          idlePollMs: 250,
-          signal: abort.signal,
-          ready: async () => await markRuntimeProcessReady(readyFile, owner),
-        });
+        if (execution !== undefined) {
+          const { executeBuilds } = await import("./executor.js");
+          await executeBuilds(execution.dataRoot, abort.signal);
+        } else {
+          const paths = await resolveRuntimeConfigPaths(profile, { packageRoot: basePackageRoot, ...distribution });
+          await superviseBuilds({
+            profile, dataRoot: paths.dataRoot, readyFile, owner,
+            launch: hostOptions.workerLaunch, signal: abort.signal,
+            ready: async () => await markRuntimeProcessReady(readyFile, owner),
+          });
+        }
+      } catch (error) {
+        if (execution !== undefined && process.connected) process.send?.({ kind: "execution-error", message: error instanceof Error ? error.message : String(error) });
+        throw error;
       } finally {
         process.removeListener("SIGTERM", stop);
         process.removeListener("SIGINT", stop);
-        await runtime?.close();
+        process.removeListener("disconnect", disconnected);
+        process.removeListener("message", message);
+        if (execution !== undefined && process.connected) process.disconnect();
       }
     },
   };

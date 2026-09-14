@@ -5,6 +5,12 @@ import { requestDeadline } from "@qflow/runtime-kit";
 const OAUTH_CLIENT_ID = "hyc_d5d5e8e7131b0c877756e66c";
 const REFRESH_SKEW_MS = 60_000;
 
+/** Read-only diagnostics can identify expiry without attempting credential rotation. */
+export function hypiHubCredentialNeedsRefresh(secret: string, now = Date.now()): boolean {
+  const expiresAt = decodeOAuth2Credential(secret)?.expiresAt;
+  return expiresAt !== undefined && expiresAt <= now + REFRESH_SKEW_MS;
+}
+
 type OAuthTokenResponse = {
   readonly access_token?: unknown;
   readonly refresh_token?: unknown;

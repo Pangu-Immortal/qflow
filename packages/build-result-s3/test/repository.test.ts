@@ -491,3 +491,41 @@ test("S3 Composite values retain external and prior-Result Resource references",
   for await (const chunk of (await repository.openFile(reusedId, externalRef, { start: 1, endExclusive: 3 }))!) selected.push(chunk);
   assert.deepEqual(Buffer.concat(selected), Buffer.from([5, 6]));
 });
+
+test("S3 preserves execution evidence before terminal publication and does not repeat it on finish", async () => {
+  const client = new MemoryS3();
+  const repository = new S3BuildResultRepository({ bucket: "unused", prefix: "project", client });
+  const id = "bld_20260913T130000000Z_0000000001";
+  const writer = await repository.create({ id, source: { path: "main.svml" }, targets: [], publishedOutputs: [] });
+  const text = '{"format":"qflow.execution-log@1","message":"renderer stopped"}\n';
+  const manifest = await writer.finish({ outcome: "cancelled", executionLog: (async function* () { yield Buffer.from(text); })() });
+  assert.ok(manifest.executionLog);
+  assert.deepEqual(manifest.outputs, {});
+  assert.equal(manifest.executionLog.size, Buffer.byteLength(text));
+  assert.ok(client.writes.at(-2)?.endsWith("execution.jsonl"));
+  assert.ok(client.writes.at(-1)?.endsWith("result.json"));
+  const reopened = await repository.read(id);
+  const stream = await repository.openFile(id, reopened!.executionLog!);
+  let read = "";
+  for await (const chunk of stream!) read += Buffer.from(chunk).toString();
+  assert.equal(read, text);
+  const count = client.writes.length;
+  await writer.finish({ outcome: "cancelled" });
+  assert.equal(client.writes.length, count);
+});
+
+test("failed log archival keeps the Result open and finishing again performs only storage", async () => {
+  const client = new MemoryS3();
+  const repository = new S3BuildResultRepository({ bucket: "unused", prefix: "project", client });
+  const id = "bld_20260913T130000000Z_0000000002";
+  const writer = await repository.create({ id, source: { path: "main.svml" }, targets: [], publishedOutputs: [] });
+  await assert.rejects(writer.finish({ outcome: "failed", failure: "render stopped", executionLog: (async function* () {
+    yield Buffer.from('first record\n'); throw new Error("log read failed");
+  })() }), /log read failed/);
+  assert.equal((await repository.read(id))!.outcome, undefined);
+  const result = await writer.finish({ outcome: "failed", failure: "render stopped", executionLog: (async function* () {
+    yield Buffer.from('complete record\n');
+  })() });
+  assert.equal(result.outcome, "failed");
+  assert.ok(result.executionLog);
+});

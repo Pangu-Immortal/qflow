@@ -36,7 +36,7 @@ readme = readme
   .replaceAll("https://github.com/user-attachments/assets/cc929974-96b8-4166-b81d-008e130b0f24", `${assets}star.gif`)
   .replaceAll('href="./', `href="${github}`)
   .replaceAll("](./", `](${github}`)
-  .replace("## Install once\n", "## Install once\n\nInstall the Qflow CLI (Node.js 22.12 or newer):\n\n```bash\nnpm install -g @qflow/qflow\n```\n\nAdd the Skill to your coding agent:\n");
+  .replace("## Install once\n", "## Install once\n\nInstall the Qflow CLI (Node.js 22.15 or newer):\n\n```bash\nnpm install -g @qflow/qflow\n```\n\nAdd the Skill to your coding agent:\n");
 
 const stage = await mkdtemp(resolve(tmpdir(), "qflow-npm-"));
 try {

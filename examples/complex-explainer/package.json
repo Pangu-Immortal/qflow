@@ -1,0 +1,13 @@
+{
+  "name": "qflow-complex-explainer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@explainer/opening-system": "file:packages/opening-system",
+    "@explainer/launch-scenes": "file:packages/launch-scenes",
+    "@explainer/web-scenes": "file:packages/web-scenes",
+    "@explainer/single-line-captions": "file:packages/single-line-captions",
+    "@explainer/visual-language": "file:packages/visual-language"
+  }
+}

@@ -72,6 +72,66 @@ transient processing require the selected Runtime.
 
 ## Opening and editing a session
 
+The CLI prints the actual session URL and its direct `#comments` URL after the server chooses a port.
+Open the latter to review the current composition before export. Browser playback creates no export
+Build or encoded video; an export remains a separate Run execution when the user wants the file.
+
+The top-right **Studio / Comments** tabs change the layout around the same composition player.
+Comments gives the picture the available height with a notes column on the right. Click the picture
+to play or pause; the wider progress control seeks, with a hovered-frame preview that leaves the
+main playhead alone. The hover picture uses one lazy, muted instance of the current preview document,
+released when leaving Comments. It needs no Build or thumbnail files.
+
+Studio retains picture selection and its right-click menu for overlapping Companion entities.
+Comments uses viewing controls without selecting objects. Switching views preserves the composition
+time and Studio's selection; comments themselves only refer to a time and the user's words.
+
+### Comments are project files
+
+Studio saves comments in `<workspace>/FEEDBACK.json`, creating it on the first saved comment.
+This path is Studio's project-file convention, rooted in the resolved workspace; it is independent
+of the Runtime, Result repository and Agent implementation.
+Each comment records its reviewed Run relative to that workspace, so the file can hold notes for
+several Runs while the UI shows the current Run. Times are seconds, including fractional seconds:
+
+```json
+{
+  "comments": [
+    {
+      "id": "caption-size",
+      "run": "runs/main.svrun",
+      "at": 12.5,
+      "text": "Make this caption larger.",
+      "resolved": false
+    }
+  ]
+}
+```
+
+`id`, `run`, `at` and `text` are required. `resolved` defaults to false; setting it to true marks
+the comment complete, and false reopens it. Deleting removes the entry. Following a note seeks to
+its saved time; a changed composition can show something different at that time.
+
+Focusing the comment composer pauses the picture and captures the current frame. The time chip
+captures a new time. The draft keeps its time while the user writes. Click a saved timestamp to
+revisit it. Comments can be edited, completed, reopened and deleted from the UI or by editing the file.
+The list is ordered by timestamp. Its `#1`, `#2` labels follow submission order within the current
+Run (the file's array order) and appear beside the completion control. Changing a timestamp or
+filtering Open/Done preserves those numbers; deleting a note closes its gap in the numbering.
+The stored `id` remains the stable identity. Clicking a note's text or time seeks
+to its frame. The composer has an icon-only send control; emoji and drawing buttons are inactive placeholders.
+Clicking outside the selected note clears its highlight without discarding an edit. Enter sends a
+new note or saves an edited one; Shift+Enter or Alt+Enter inserts a line break. IME confirmation stays
+with the text input rather than submitting the comment.
+
+File changes refresh comments through filesystem events, without polling or recompiling the video.
+Studio reads the file afresh for each edit, preserves unrelated notes and project-added fields, and
+rejects an edit to a comment that has changed since it was displayed. An invalid manually edited
+file remains intact and its error is shown. Unsent text stays in the browser. Agent notification is
+a separate, planned connection; **Send comment** currently saves the note only.
+
+### Composition editing
+
 The selected targets must reach one Film and its resolved time source. Studio rejects several
 distinct Films in one view; use separate Runs/sessions for those. A Timeline supplies the
 placed material and semantic timing, including wordless Segments. The ruler always shows program

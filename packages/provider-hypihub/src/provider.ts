@@ -18,7 +18,7 @@ import type { WhisperXTranscriptResponse } from "@qflow/whisperx";
 import { hypiHubRouteForCapability, hypiHubRoutes } from "./routes.js";
 import { QflowHubUploader } from "./upload.js";
 import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-kit";
-import { createQflowHubAuth } from "./oauth.js";
+import { createQflowHubAuth, hypiHubCredentialNeedsRefresh } from "./oauth.js";
 import type { QflowHubAuth } from "./oauth.js";
 
 export const hypiHubProviderModuleRef = { name: "@qflow/provider-qflowhub", version: "1" } as const;
@@ -45,7 +45,7 @@ export type CreateQflowHubProviderOptions = {
   readonly transcriptionModel?: string;
   readonly fetch?: typeof globalThis.fetch;
   /** Overrides QflowHub's negotiated upload transport for referenced Resources. */
-  readonly publicAssetUrl?: (artifact: BlobRef, artifacts: ResourceStore) => Promise<string>;
+  readonly publicAssetUrl?: (artifact: BlobRef, artifacts: ResourceStore, fields?: Readonly<Record<string, string | number | boolean>>) => Promise<string>;
 };
 
 type Handle = { readonly contract: "qflow.qflowhub-operation@1"; readonly jobId: string; readonly route: string; readonly startedAt: number };
@@ -69,7 +69,7 @@ function credential(credentials: Readonly<Record<string, EndpointCredential>>) {
 }
 function guidedMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
-  return /API key is unavailable|QflowHub login is unavailable|HTTP (?:401|403|404)\b|not enabled for|model_not_found|no_capable_provider/iu.test(message)
+  return /API key is unavailable|QflowHub login is unavailable|HTTP 401\b/iu.test(message)
     ? `${message}. Sign in to QflowHub at https://qflow.ai with qflow auth login`
     : message;
 }
@@ -155,11 +155,14 @@ class QflowHubClient {
     }
     throw lastError instanceof Error ? lastError : new Error(String(lastError));
   }
-  async upload(artifact: BlobRef, resources: ResourceStore, auth: QflowHubAuth): Promise<string> {
+  async upload(artifact: BlobRef, resources: ResourceStore, auth: QflowHubAuth, fields?: Readonly<Record<string, string | number | boolean>>): Promise<string> {
     const bytes = await resources.get(artifact.resource);
     assert(bytes !== undefined, `QflowHub reference artifact ${artifact.resource} is unavailable`);
     assert(bytes.byteLength === artifact.size, `QflowHub reference artifact ${artifact.resource} size differs`);
-    return await this.uploader.upload({ bytes, mediaType: artifact.mediaType }, auth);
+    const personReference = fields?.personReference;
+    assert(personReference === undefined || typeof personReference === "boolean", "QflowHub personReference must be a boolean");
+    return await this.uploader.upload({ bytes, mediaType: artifact.mediaType,
+      ...(personReference === undefined ? {} : { isPersonReference: personReference }) }, auth);
   }
 
   async transcribe(body: Record<string, unknown>, auth: QflowHubAuth): Promise<Record<string, unknown>> {
@@ -300,6 +303,11 @@ export async function diagnoseQflowHubProvider(
 ): Promise<readonly RuntimeDoctorDiagnostic[]> {
   const apiKey = context.credentials.apiKey?.secret;
   assert(typeof apiKey === "string" && apiKey.length > 0, "QflowHub login is unavailable");
+  if (hypiHubCredentialNeedsRefresh(apiKey)) return [{
+    severity: "warning",
+    code: "QFLOWHUB_OAUTH_REFRESH_UNCHECKED",
+    message: "The stored QflowHub access token needs refresh. Read-only doctor has not checked account access or refresh validity. Authorized execution can refresh through a writable Credential Store; reconnect if that refresh is rejected.",
+  }];
   const client = new QflowHubClient({
     baseUrl: apiBaseUrl(options.baseUrl ?? "https://qflow.ai/v1"),
     timeout: options.requestTimeoutMs ?? 30_000,
@@ -373,9 +381,9 @@ async function synthesizeAudio(client: QflowHubClient, context: EndpointInvocati
   const route = hypiHubRouteForCapability(context.need.capability);
   assert(route !== undefined && route.media === "audio", "QflowHub does not implement this exact capability");
   const auth = authFor(context, client);
-  const compiled = await route.compile(context.need.constraints, async (artifact) => publicAssetUrl === undefined
-    ? await client.upload(artifact, context.resources, auth)
-    : await publicAssetUrl(artifact, context.resources));
+  const compiled = await route.compile(context.need.constraints, async (artifact, fields) => publicAssetUrl === undefined
+    ? await client.upload(artifact, context.resources, auth, fields)
+    : await publicAssetUrl(artifact, context.resources, fields));
   await verifyModelRoute(client, auth, compiled.model, "audio_speech");
   const audio = await client.speech(auth, { model: compiled.model, ...(compiled.input as Record<string, unknown>) });
   const artifacts = await Promise.all(audio.map(async (item) => await context.resources.put(item.bytes, item.mediaType)));
@@ -390,13 +398,14 @@ function endpoint(client: QflowHubClient, pollIntervalMs: number, maxOperationMs
         assert(route !== undefined, "QflowHub does not implement this exact capability");
         const auth = authFor(context, client);
         const uploaded = new Map<string, Promise<string>>();
-        const resolve = (artifact: BlobRef): Promise<string> => {
-          const existing = uploaded.get(artifact.resource);
+        const resolve = (artifact: BlobRef, fields?: Readonly<Record<string, string | number | boolean>>): Promise<string> => {
+          const key = JSON.stringify([artifact.resource, canonicalize(fields ?? {})]);
+          const existing = uploaded.get(key);
           if (existing !== undefined) return existing;
           const promise = publicAssetUrl === undefined
-            ? client.upload(artifact, context.resources, auth)
-            : publicAssetUrl(artifact, context.resources);
-          uploaded.set(artifact.resource, promise);
+            ? client.upload(artifact, context.resources, auth, fields)
+            : publicAssetUrl(artifact, context.resources, fields);
+          uploaded.set(key, promise);
           return promise;
         };
         const compiled = await route.compile(context.need.constraints, resolve);
@@ -511,9 +520,11 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
       assertWhisperXEvidenceWav(bytes, request.sampleFrames);
       const auth = authFor(context, client);
       await verifyModelRoute(client, auth, transcriptionModel, "transcriptions");
+      await context.reportProgress?.({ phase: "Preparing audio for hosted transcription" });
       const url = options.publicAssetUrl === undefined
         ? await client.upload(request.audio, context.resources, auth)
         : await options.publicAssetUrl(request.audio, context.resources);
+      await context.reportProgress?.({ phase: "Transcribing and aligning words" });
       const response = await client.transcribe({
         model: transcriptionModel,
         url,
@@ -524,6 +535,7 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
       const evidence = sealAlignedTranscriptEvidence({
         passages: interpretWhisperXTranscript(response as WhisperXTranscriptResponse, request.sampleFrames),
       });
+      await context.reportProgress?.({ phase: "Word timing ready" });
       return { value: { kind: "inline", value: canonicalize(evidence) } };
     } catch (error) {
       throw new Error(guidedMessage(error), { cause: error });

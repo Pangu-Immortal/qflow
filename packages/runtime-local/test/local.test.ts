@@ -1,3 +1,5 @@
+import { fileExecutionLogs } from "../src/log.js";
+import { readExecutionLog } from "@qflow/runtime";
 import assert from "node:assert/strict";
 import {
   mkdir,
@@ -55,6 +57,7 @@ function projectRuntimeFixture(directory: string) {
   const state = new SqliteRuntimeState(join(directory, ".qflow", "runtime.sqlite"));
   const work = join(directory, ".qflow", "work");
   return {
+    executionLogs: fileExecutionLogs((build) => join(work, build)),
     buildStore: state.builds,
     buildCatalog: state.catalog,
     operationStore: state.operations,
@@ -105,28 +108,6 @@ function durableBuildRequest(
   } as const;
 }
 
-test("a Worker does not claim a Build when the pinned Runtime environment differs", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "qflow-local-worker-owner-"));
-  const initial = createGreetingBuild();
-  try {
-    const runtime = await createLocalRuntime({
-      ...projectRuntimeFixture(directory),
-      assertEnvironment: () => {
-        throw new Error("Runtime Profile no longer matches this Worker's active environment");
-      },
-    });
-    await runtime.build(durableBuildRequest(directory, "bld_20260902T120000000Z_0000000001", initial));
-
-    await assert.rejects(runtime.workOnce(), /no longer matches this Worker's active environment/u);
-    const status = await runtime.inspect("bld_20260902T120000000Z_0000000001");
-    assert.equal(status?.activity, "ready");
-    assert.deepEqual(status?.requests, { total: 1, completed: 0 });
-    await runtime.close();
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
-});
-
 async function finishClaimedBuild(
   runtime: Awaited<ReturnType<typeof createLocalRuntime>>,
 ): Promise<BuildCompletion> {
@@ -137,6 +118,27 @@ async function finishClaimedBuild(
   }
   throw new Error(`Build did not finish; last activity was ${snapshot === undefined
     ? "none" : "wakeAt" in snapshot ? buildExecutionActivity(snapshot) : "removed"}`);
+}
+
+// An embedding test supplies implementations explicitly and advances their owned turns.
+// Production process lifecycle is exercised through superviseBuilds in the process tests.
+async function runFixture(runtime: Awaited<ReturnType<typeof createLocalRuntime>>,
+  store: import("@qflow/runtime").BuildExecutionStore,
+  options: {idlePollMs:number,signal:AbortSignal}): Promise<void> {
+  const active = new Map<string,Promise<void>>();
+  let failure: unknown;
+  try {
+    while (!options.signal.aborted && failure === undefined) {
+      for (const build of await store.listReady()) {
+        if (active.has(build)) continue;
+        const task = runtime.workOnce({build}).then(() => undefined)
+          .catch((error: unknown) => { failure = error; }).finally(() => active.delete(build));
+        active.set(build,task);
+      }
+      await new Promise((resolve) => setTimeout(resolve,options.idlePollMs));
+    }
+  } finally { await Promise.all(active.values()); }
+  if (failure !== undefined) throw failure;
 }
 
 test("Endpoint-declared credentials use the selected writable Store without a Provider switch", async () => {
@@ -301,6 +303,13 @@ test("project local Runtime advances, polls and cancels work with replaceable pa
     assert.equal(buildExecutionActivity(firstTurn), "ready");
     assert.equal(starts, 1);
     assert.equal(polls, 0);
+    assert.equal("work" in firstRuntime, false, "execution lifecycle belongs to the Runtime Host");
+    const otherRuntime = await createLocalRuntime({ ...projectRuntimeFixture(directory), components:[components], endpoints:[endpointPackage] });
+    try {
+      assert.equal(await otherRuntime.workOnce(), undefined);
+      await assert.rejects(otherRuntime.workOnce({build:"bld_20260902T120000001Z_0000000001"}), /another execution context/u);
+      assert.equal(starts,1); assert.equal(polls,0);
+    } finally { await otherRuntime.close(); }
     const second = await firstRuntime.inspect("bld_20260902T120000001Z_0000000001");
     assert.equal(second?.activity, "ready");
     assert.equal((await finishClaimedBuild(firstRuntime)).outcome, "complete");
@@ -773,7 +782,7 @@ test("a selected file is staged once and remains referenced in the produced Comp
       kind: "external-file", uri: pathToFileURL(inputPath).href, size: bytes.length, mediaType: historical.mediaType,
     }]);
     const resultDirectory = join(directory, "results", "2026-09-02", "bld_20260902T120000009Z_0000000001");
-    assert.deepEqual((await readdir(resultDirectory)).sort(), ["result.json", "values"]);
+    assert.deepEqual((await readdir(resultDirectory)).sort(), ["execution.jsonl", "result.json", "values"]);
     assert.deepEqual(await readFile(inputPath), Buffer.from(bytes));
     await runtime.close();
   } finally {
@@ -892,7 +901,7 @@ test("one local Worker admits later Builds while preserving shared Endpoint capa
     });
     await runtime.build(durableBuildRequest(directory, "bld_20260902T120000010Z_0000000001", createGreetingBuild()));
     controller = new AbortController();
-    work = runtime.work({ idlePollMs: 5, signal: controller.signal });
+    work = runFixture(runtime, fixture.executionStore, { idlePollMs: 5, signal: controller.signal });
     await firstStarted;
     await runtime.build(durableBuildRequest(directory, "bld_20260902T120000011Z_0000000001", createGreetingBuild()));
     const results = new FileBuildResultRepository(join(directory, "results"));
@@ -1215,7 +1224,7 @@ test("concurrent durable Builds preserve action capacity and outcomes across fai
     }
     const deadline = setTimeout(() => controller.abort(), 20_000);
     try {
-      work = runtime.work({ idlePollMs: 2, signal: controller.signal });
+      work = runFixture(runtime, fixture.executionStore, { idlePollMs: 2, signal: controller.signal });
       while ((await fixture.executionStore.list()).length > 0 && !controller.signal.aborted) {
         await new Promise((resolve) => setTimeout(resolve, 10));
       }
@@ -1239,4 +1248,58 @@ test("concurrent durable Builds preserve action capacity and outcomes across fai
     await runtime.close();
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("local call logs survive cleanup and remain attributed across concurrent successful and failed Builds", { timeout: 15_000 }, async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qflow-execution-logs-"));
+  let calls = 0;
+  const fixture = projectRuntimeFixture(directory);
+  const runtime = await createLocalRuntime({
+    ...fixture,
+    endpoints: [defineEndpointPackage({ module: providerModule, facet: "generation", instance: "local-logs", pool: "local-logs", defaultConcurrency: 2,
+      capabilities: [{ capability: capabilities.generation, returns: types.generated, lifecycle: "immediate", async handler(context) {
+        const call = ++calls;
+        for (let completed = 0; completed < 4; completed++) await context.reportProgress?.({ phase: "rendering", completed, total: 4 });
+        await context.reportDiagnostic?.({ level: "info", message: `call ${call}` });
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        if (call === 2) throw new Error("render rejected");
+        await context.reportProgress?.({ phase: "storing" });
+        return { value: { kind: "inline", value: `call ${call}` } };
+      } }] })],
+    components: [{ producers: [
+      { producer: producers.makePrompt, handler: () => ({ outputs: { prompt: { kind: "inline", value: "hello" } }, needs: {} }) },
+      { producer: producers.requestText, handler: () => ({ outputs: {}, needs: { generation: { prompt: "hello" } } }) },
+    ] }],
+  });
+  const ids = ["bld_20260913T120000000Z_0000000001", "bld_20260913T120000000Z_0000000002"];
+  const controller = new AbortController();
+  let work: Promise<void> | undefined;
+  try {
+    for (const id of ids) await runtime.build(durableBuildRequest(directory, id, createGreetingBuild({ targetOutputs: ["generated"] })));
+    // The Worker records evidence with no CLI follower attached.
+    work = runFixture(runtime, fixture.executionStore, { signal: controller.signal, idlePollMs: 2 });
+    while (calls < 2) await new Promise((resolve) => setTimeout(resolve, 1));
+    assert.ok((await runtime.logs!(ids[0]!, 30))!.records.length > 0);
+    while ((await runtime.activity()).builds.length) await new Promise((resolve) => setTimeout(resolve, 2));
+    const repository = new FileBuildResultRepository(join(directory, "results"));
+    const seen = new Set<string>();
+    for (const id of ids) {
+      assert.equal(await runtime.inspect(id), undefined);
+      assert.equal(await stat(join(directory, ".qflow/work", id)).then(() => true, () => false), false);
+      const manifest = (await repository.read(id))!;
+      assert.ok(manifest.executionLog);
+      const log = await readExecutionLog((await repository.openFile(id, manifest.executionLog))!, 50);
+      assert.equal(log.records.filter((record) => record.kind === "started").length, 1);
+      assert.equal(log.records.filter((record) => record.kind === "phase" && record.phase === "rendering").length, 1);
+      assert.ok(log.records.every((record) => record.endpoint === "local-logs"));
+      const diagnostic = log.records.find((record) => record.kind === "diagnostic")!;
+      assert.equal(diagnostic.kind, "diagnostic");
+      if (diagnostic.kind !== "diagnostic") throw new Error("missing diagnostic");
+      seen.add(diagnostic.message);
+      assert.equal(manifest.outcome, diagnostic.message === "call 1" ? "complete" : "failed");
+      assert.equal(log.records.at(-1)?.kind, manifest.outcome === "complete" ? "completed" : "failed");
+      assert.equal(Object.keys(manifest.outputs).some((key) => key.includes("execution")), false);
+    }
+    assert.deepEqual([...seen].sort(), ["call 1", "call 2"]);
+  } finally { controller.abort(); await work; await runtime.close(); await rm(directory, { recursive: true, force: true }); }
 });

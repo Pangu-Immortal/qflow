@@ -1,15 +1,21 @@
 # Video examples
 
-Each of the three formats has one complete generation entry, `reference.svml`, with an adjacent
-`reference.svrun`. These Sources generate their main images, recurring voice references and video
-Takes, then normalize media, align the Script and compose the finished video. They need no earlier
-Build Result or manually supplied presenter, host or scene image.
+These projects demonstrate different directing and composition decisions. Read the one closest to
+the question, then trace its intent, component boundaries, semantic events and rendered behavior.
+Adapt those relationships to a new work; its scene list and styling are choices for that production.
 
-| Example | What its reference entry demonstrates |
-| --- | --- |
-| [Football ranking](ranking-football/README.md) | One generated goth host, eight generated comic B-roll images, real player icons, independent speaking Takes and a persistent tier board |
-| [Podcast](podcast/README.md) | Related host views, a generated creatine product, holding views, a split opening and a three-scene lifestyle montage |
-| [Street interview](interview/README.md) | A shared encounter and two derived close views, motivated cuts, coordinated Moment reveals, and a fresh-footage Caption tracking extension |
+| Example | What to learn | Starting material |
+| --- | --- | --- |
+| [Football ranking](ranking-football/README.md) | Independent speaking Takes, a persistent tier board and timed reveals | Generate from `reference.svrun` |
+| [Podcast](podcast/README.md) | Related host views, product references, motivated cuts and a lifestyle montage | Generate from `reference.svrun` |
+| [Street interview](interview/README.md) | A shared encounter, derived close views, coordinated Moments and Caption tracking | Generate from `reference.svrun` |
+| [Complex spoken explainer](complex-explainer/README.md) | Coordinated project scenes, moving presenter framing, independent Caption, semantic graphic events and Take-free intervals | Download its accepted media/Result bundle; render locally |
+
+The three generation entries use `reference.svml` and an adjacent `reference.svrun`. They generate
+their main images, recurring voice references and video Takes, then normalize media, align the Script
+and compose the video. They need no earlier Build Result or manually supplied presenter, host or scene
+image. The explainer instead opens a complete 137-second production with 17 accepted Takes, recorded
+demonstrations, pixel graphics and sound; its default Run reuses the supplied material.
 
 Self-contained here means a project directory: SVML, its imported SVS/Kits and the selected local
 assets. The installed Qflow Distribution supplies the imported packages. A Runtime Profile and
@@ -21,4 +27,6 @@ The other `swap-*` and nested projects preserve separate variations and reuse st
 all been rebuilt to the same generation standard as these three reference entries. A linked showcase
 video demonstrates the original production; a fresh generation is a new result and will differ.
 
-`minimal-author-package/` demonstrates independent component packaging.
+For focused package work, `minimal-author-package/` demonstrates independent component packaging;
+[provider-package](provider-package/README.md) demonstrates connecting a chosen service through a
+project Provider. Each package's public inputs and behavior belong with its implementation.

@@ -20,6 +20,7 @@ export type Overlay = {
   readonly element: SVGSVGElement;
   /** The topmost clip drawn at a point, in client coordinates. */
   hitTest(clientX: number, clientY: number): Clip | undefined;
+  hitsAt(clientX: number, clientY: number): readonly Clip[];
   /** Redraw against the picture, once it has mounted or moved. */
   refresh(): void;
 };
@@ -127,19 +128,22 @@ export function createOverlay(store: Store, measure: Measure): Overlay {
     draw();
   });
 
-  return {
-    element,
-    refresh: draw,
-    hitTest(clientX, clientY) {
+  const hitsAt = (clientX: number, clientY: number): readonly Clip[] => {
       const box = element.getBoundingClientRect();
-      if (box.width === 0 || box.height === 0) return undefined;
+      if (box.width === 0 || box.height === 0) return [];
       const x = (clientX - box.left) / box.width * canvas.width;
       const y = (clientY - box.top) / box.height * canvas.height;
       // Hit individual parts, not the empty space inside a group's union box.
-      return entities.flatMap((clip) => drawnParts(clip)
+      const hits = entities.flatMap((clip) => drawnParts(clip)
         .filter((part) => inside(part, x, y))
         .map((part) => ({ clip, order: part.stackOrder })))
-        .sort((left, right) => right.order - left.order)[0]?.clip;
-    },
+        .sort((left, right) => right.order - left.order);
+      return [...new Map(hits.map(({ clip }) => [clip.id, clip])).values()];
+  };
+  return {
+    element,
+    refresh: draw,
+    hitsAt,
+    hitTest: (x, y) => hitsAt(x, y)[0],
   };
 }

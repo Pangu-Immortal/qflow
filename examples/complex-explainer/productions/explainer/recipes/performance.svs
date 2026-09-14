@@ -1,0 +1,10 @@
+<?svml using="@qflow/svs@1"?>
+<sheet version="1">
+  speaker.host {
+    composition-stability: soft-locked;
+    camera-motion: none;
+    edit-rhythm: pause-trim-jump-cuts;
+    performance: high-energy-ugc;
+    gesture: expressive;
+  }
+</sheet>

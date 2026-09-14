@@ -2,7 +2,8 @@
 
 Read this when deciding how to organize a picture, a transition or a recurring visual system.
 Design it with the taste of a director and the care of someone who will use it in a real composition.
-A useful component makes a particular idea legible and gives its author clear ways to direct it.
+A useful component makes a particular idea legible and keeps its behavior understandable within the
+production. Its author interface can be as small as the work requires.
 
 [Graphic composition](../playbooks/craft/graphic-compositions.md) owns visual hierarchy and motion;
 [Track authoring](track-authoring.md) owns the implementation. A new Caption family also draws on
@@ -35,10 +36,50 @@ coordinated geometry, state and transitions together where that makes their beha
 functions and subcomponents can organize this code without each becoming another Track or package.
 The useful division preserves the relationship through change; more layers alone do not improve it.
 
-Consider the change the user actually wants. If the product changes, the comparison's content may
-change while its explanatory behavior remains. If delivery changes, its spoken reveal should move
-with the relevant Moment. If a presenter and a diagram exchange space, their shared layout should
-remain coordinated. These relationships suggest the inputs and boundaries worth authoring.
+## Separate responsibility, parameters and reuse
+
+Adaptive composition introduces structure where it makes the work easier to understand and direct.
+A boundary gives a responsibility an owner; a parameter expresses a choice supplied from outside
+that owner; reuse preserves a relationship across uses. These decisions serve different needs.
+
+| Decision | What justifies it |
+| --- | --- |
+| Independent organization | A distinct visual responsibility, lifetime or behavior benefits from its own owner. Parts sharing geometry, state or motion can stay together. |
+| Parameterization | The production needs an external choice: an asset, a spoken trigger, a placement or a setting the author will actually adjust. |
+| Reusable design | Actual uses share a relationship or treatment. Share that behavior and generalize only the variation those uses need. |
+
+One-off effects can be independently organized with fixed designs. A future edit may appropriately
+change their implementation. Consider likely revisions to reveal tangled responsibilities or useful
+inputs, rather than treating every possible edit as a parameter to implement in advance. Even repeated
+use can share the same fixed treatment. Interface breadth and reuse count do not measure component quality.
+
+For example, a backdrop and an editor demonstration have different jobs and can be organized
+separately. The editor can keep its button sizes, panel spacing, illustrative labels and pointer paths
+inside its implementation. Its pointer, dragged image and target slot share geometry and belong
+together. Supply the actual assets and speech-linked events through author inputs; expose Caption
+placement or color when those are useful adjustments. This gives the piece clear structure without
+turning the illustrated editor into configurable editing software.
+
+Choose peer Tracks for independently composed contributions, internal parts for a coordinated scene,
+and ordinary modules for code organization. These boundaries need not coincide with parameter or
+package boundaries. Splitting files helps maintenance; a named Track around a whole passage gives
+it occupancy. Judge both by whether they clarify the actual responsibilities. The spoken outline
+supplies timing context: several passages may develop one object, and one passage may contain
+several independent objects. Sharing a Moment does not by itself require a shared Track.
+
+## Keep implementation changes local
+
+Keep revisions local as the scene grows. Separate independently edited scene bodies, styling and
+frame evaluation into ordinary source modules while sharing their actual mechanics. A palette,
+typing function or media-sampling helper can be an ordinary project dependency; it needs no Surface
+or Track of its own. A shared package becomes useful when several components really use it.
+Source connects selected assets, semantic events and the component's external choices; these modules
+own their realization, including any fixed design specific to this piece.
+
+Derive related geometry from one layout. A pointer's destination should come from the target it
+clicks; an attached badge should follow its pointer; two presentations of one playing source should
+share their sampling. Then revising a layout changes its dependent motion with it. Repeatedly fixing
+the same choice in several places is evidence that its ownership needs consolidating.
 
 Choose visual grouping and timing independently. A combined scene can respond to spoken Moments;
 separate Tracks can share an authored event. What belongs together on the canvas does not decide
@@ -54,10 +95,12 @@ layout through the Timeline and shared temporal projections. Replacing a product
 Script then changes content and semantic anchors while preserving the behavior. The final frame
 positions come from the placed Takes.
 
-Sketch its intended Source use with this video's actual content. The tag and its children should
-read like a concise account of the visual idea: which subjects are compared, which answer is already
-known, and which statement reveals the next one. This makes the important choices visible early and
-helps reveal a missing relationship before it becomes rendering code.
+The repository's [video examples](https://github.com/qflow-ai/qflow/tree/main/examples) show different
+applications: a persistent ranking board, related podcast views, a shared interview encounter and
+coordinated explainer scenes. Trace why a behavior has its owner, what drives its time, and which
+inputs a changed brief would replace. Their notes explain those choices; the scene lists are each
+production's design. In the explainer, scenes retain fixed internal details while Script events,
+Caption and presenter framing remain independently authored.
 
 ## Let meaning drive the behavior
 
@@ -87,22 +130,24 @@ Moment. A shared event is enough when each contribution already has a useful ind
 [Track authoring](track-authoring.md#keep-selection-projection-and-consumption-distinct) explains the
 projection and consumption boundary in detail.
 
-## Expose the choices that preserve the idea
+## Expose the choices the work needs
 
-Separate the work's content from the behavior that presents it. Words, images, identities and event
-references belong in Source. Related visual choices can form a Recipe. The component supplies a
-coherent default treatment and the reusable layout, state and motion that make its role recognizable.
+A good parameter earns its place by enabling a useful directing choice or connecting a real dependency.
+Keep Script wording and semantic anchors connected to their existing owners, and supplied media
+explicitly wired. Illustrative text, decorative geometry and purpose-built animation may remain local
+to a one-off scene. A fixed design is complete when it serves the piece; adding controls is a separate
+decision. If a label later needs repeated variation, promote that choice to an input then.
 
-A good parameter earns its place by enabling a useful directing choice. A comparison may need labels,
-images, emphasis, a Frame and a reveal relationship. Its internal coordinates can follow those choices.
-Keep independently useful decisions independent, while letting one meaningful control coordinate details
-that belong together. Palette, spacing and motion defaults should already form a designed whole.
+For the inputs that matter, sketch their Source use before implementing them. Related authored visual
+choices can form a Style or Recipe. A comparison may need labels, images and a reveal relationship;
+its internal layout can derive from those few inputs. One meaningful control can coordinate many
+details while preserving a designed whole. Semantic triggers remain valuable even for a scene used
+once: they connect its behavior to the actual performance without exposing every animation detail.
 
-Support the variation the work actually needs. Longer names, another product, a different number of
-rows or a changed performance may be ordinary inputs; a new visual relationship may deserve another
-component. Reuse becomes valuable when the next author can change the content while retaining the
-idea. [Caption craft](../playbooks/craft/captions.md#caption-families-styles-and-parameters) gives
-a concrete example of this distinction through family, Recipe/Style and parameters.
+When reuse is needed, support the actual variation: longer names, another product or a different
+number of rows. A new visual relationship may deserve another component.
+[Caption craft](../playbooks/craft/captions.md#caption-families-styles-and-parameters) illustrates
+family, Style and parameter choices for a commonly reused role.
 
 ## Design the component in its frame
 
@@ -110,10 +155,11 @@ Judge it beside the presenter, coverage, Caption and other graphics it will shar
 Give the eye a clear entry point, useful grouping and a settled state that remains readable. The
 component's local palette, density and motion should support the whole composition's hierarchy.
 
-Use the supplied Frame to express placement and derive the internal layout from it. Decide how real
+Use the chosen Frame to express placement and derive the internal layout from it. Decide how real
 text and media occupy that space: what wraps, what crops, what scales, and what stays aligned. A useful
-default can suit the present work while leaving size, position and assets authored. Let a genuinely
-unsupported configuration produce an actionable explanation of the content or space that needs changing.
+fixed layout can suit the present work; expose placement or size when the composition needs to direct
+them externally. Let a genuinely unsupported configuration produce an actionable explanation of the
+content or space that needs changing.
 [Spatial layout](spatial.md) owns fitting and coordinate relationships; [Fonts and text](fonts-and-text.md)
 owns text resources and placement.
 
@@ -129,9 +175,12 @@ Give the component vocabulary and an example that show its purpose, required inp
 and the meaning of its timing. For persistent state, explain what remains after activation. A preview
 should reveal the behavior that makes someone choose this component, with useful default content.
 
-When a Studio Companion helps, expose the same meaningful entities and choices: a board's lifetime,
-a row's reveal, a Caption Cue's actual Style. Editing the displayed entity should change the owning
-Source fact. [Companion authoring](studio-companions.md) owns those bindings.
+For a production the user will explore in Studio, make its useful objects recognizable: a board's
+lifetime, a row's reveal, a Caption Cue's actual Style. Watching and understanding the work are useful
+on their own; a read-only scene with a clear identity can be complete. Expose controls for the real
+adjustments the user needs, such as Caption position and color, through the existing author inputs.
+An empty parameter panel alone is no reason to widen the component interface.
+[Companion authoring](studio-companions.md) owns those bindings.
 
 For an existing example, read the installed `@qflow/ranking` README and the part of its implementation
 that answers the current question. It connects semantic reveals, settled state, layout and editor

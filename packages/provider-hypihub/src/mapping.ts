@@ -14,11 +14,11 @@ const seedance = (name: string, model: string): GenerationWireMapping => ({
   capability: { module: SEEDANCE, name }, result: "video", routes: [{ model }],
   fields: {
     prompt: { as: "value", field: "prompt" },
-    referenceImage: { as: "urlArray", field: "reference_image_urls" },
-    referenceVideo: { as: "urlArray", field: "reference_videos" },
+    referenceImage: { as: "urlArray", field: "reference_image_urls", resourceFields: ["personReference"] },
+    referenceVideo: { as: "urlArray", field: "reference_videos", resourceFields: ["personReference"] },
     referenceAudio: { as: "urlArray", field: "reference_audios" },
-    firstFrame: { as: "url", field: "first_frame" },
-    lastFrame: { as: "url", field: "last_frame" },
+    firstFrame: { as: "url", field: "first_frame", resourceFields: ["personReference"] },
+    lastFrame: { as: "url", field: "last_frame", resourceFields: ["personReference"] },
     resolution: { as: "value", field: "resolution" },
     aspectRatio: { as: "value", field: "aspect_ratio" },
     duration: { as: "value", field: "seconds" },
@@ -65,7 +65,7 @@ export const hypiHubMappings: readonly GenerationWireMapping[] = [
   })),
   {
     capability: { module: SEEDREAM, name: "seedream-5-lite" }, result: "image", routes: [
-      { model: "seedream/5-pro-image-to-image", whenPresent: ["images"] },
+      { model: "seedream/5-lite-image-to-image", whenPresent: ["images"] },
       { model: "seedream/5-lite-text-to-image" },
     ],
     fields: {
@@ -108,8 +108,7 @@ export const hypiHubMappings: readonly GenerationWireMapping[] = [
   },
   {
     capability: { module: GROK, name: "grok-imagine-video-1.5-preview" }, result: "video", routes: [
-      { model: "grok-imagine/image-to-video", whenPresent: ["images"] },
-      { model: "grok-imagine/text-to-video" },
+      { model: "grok-imagine-video-1.5-preview" },
     ],
     fields: {
       prompt: { as: "value", field: "prompt" }, duration: { as: "value", field: "seconds" },

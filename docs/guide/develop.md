@@ -7,7 +7,7 @@ description: Getting started with Qflow development.
 
 | Tool | Version | Required for |
 |---|---|---|
-| Node.js | 22.12+ | everything |
+| Node.js | 22.15+ | everything |
 | pnpm | 10.33.x | workspace management; selected by the root `packageManager` field |
 | Python | 3.10–3.13 | local WhisperX and OpenCV Managed Programs |
 | uv | latest | Python environment management |

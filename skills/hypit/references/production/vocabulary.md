@@ -12,7 +12,7 @@ Name what the element must do in the work before choosing its implementation. Us
 - What does it consume and publish?
 - Does it follow a Script Selection, a Moment, an explicit time span, or another component state?
 - What changes over time, and what stays visually persistent?
-- Which content belongs to this production, and which behavior should be reusable?
+- Which choices need author inputs, and which design can stay specific to this piece?
 
 Query the likely package owners:
 
@@ -40,6 +40,16 @@ Run Fragment libraries have a separate interface. A package can provide
 Candidates while declaring no Markup Surfaces. Read [Runs](runs.md) and the library's
 package-local Fragment documentation for those inputs and exports.
 
+## Connect model references as typed inputs
+
+Read the model Surface's reference roles and per-input metadata as well as its prompt parameters.
+The prompt gives direction; the actual edges supply media and the declared facts needed to use it.
+For example, Seedance's `person-reference="true"` identifies a supplied image/video containing a
+person or generated human likeness; false describes a reference without it, and audio has no such
+visual field. Its installed README owns the exact Reference and frame-mode forms. The
+[Provider](../environment/model-and-provider.md) translates these facts into the selected service's
+media preparation without adding service instructions to the creative prompt.
+
 ## Choose a component for its behavior
 
 An installed Surface fits when its semantic role, inputs and outputs, temporal behavior, composition
@@ -62,9 +72,10 @@ component. Author the behavior in the video's project package and select it thro
 
 Keep the boundary useful:
 
-- the package owns reusable mechanics, rendering behavior, input shapes, defaults and the vocabulary
-  that explains them;
-- Source and Recipe own this video's words, people, assets, timing, and chosen configuration;
+- the package owns rendering behavior, fixed design, input shapes, defaults and the vocabulary that
+  explains them, whether used once or reused;
+- Source and Recipe connect supplied content, assets and semantic timing, and own the choices exposed
+  by the component;
 - Runtime Profiles own external execution and credentials;
 - Provider packages implement media tools and external services.
 

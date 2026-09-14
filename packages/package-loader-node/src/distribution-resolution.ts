@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 
 import {
   distributionPackageDirectory,
+  declaredExternalPackageRoot,
   setActiveDistributionPackageRoots,
   setActiveExternalPackageRoots,
 } from "./location.js";
@@ -100,7 +101,7 @@ export function installDistributionPackageResolution(roots: readonly string[]): 
         }
         for (const root of installed) {
           const entry = resolveDistributionPackageImport(root, specifier);
-          if (entry !== undefined) return { url: pathToFileURL(entry).href, shortCircuit: true };
+          if (entry !== undefined) return nextResolve(pathToFileURL(entry).href, context);
         }
         throw new Error(`Active Qflow Distribution does not provide ${specifier}`);
       }
@@ -123,7 +124,6 @@ export function installExternalPackageResolution(roots: readonly string[]): void
   }
   externalInstalled = next;
   setActiveExternalPackageRoots(externalInstalled);
-  const parentUrls = externalInstalled.map((root) => pathToFileURL(join(root, "__qflow_external__.mjs")).href);
   registerHooks({
     resolve(specifier, context, nextResolve) {
       if (specifier.startsWith("@qflow/") || !barePackageSpecifier(specifier)) {
@@ -132,8 +132,15 @@ export function installExternalPackageResolution(roots: readonly string[]): void
       try {
         return nextResolve(specifier, context);
       } catch (original) {
-        for (const parentURL of parentUrls) {
+        if (context.parentURL === undefined || !context.parentURL.startsWith("file:")) throw original;
+        if (installed.length > 0 && !installed.some((root) =>
+          context.parentURL!.startsWith(pathToFileURL(`${root}/`).href))) throw original;
+        for (const root of externalInstalled) {
           try {
+            const name = packageAddress(specifier)?.name;
+            const selected = name === undefined ? undefined : declaredExternalPackageRoot(root, context.parentURL, name);
+            if (selected === undefined) continue;
+            const parentURL = pathToFileURL(join(selected, "__qflow_external__.mjs")).href;
             return nextResolve(specifier, { ...context, parentURL });
           } catch {
             // Try the next machine package root before preserving Node's error.

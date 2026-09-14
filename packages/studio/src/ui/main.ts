@@ -13,6 +13,7 @@ import { semanticGestureSpan } from "../temporal-edit.js";
 import type { SemanticTarget } from "../temporal-edit.js";
 import { applyStudioMutation } from "./writeback.js";
 import { createTimeline } from "./timeline.js";
+import { createComments } from "./comments.js";
 import "../style.css";
 
 const app = document.querySelector<HTMLElement>("#app")!;
@@ -39,6 +40,10 @@ app.innerHTML = `
     <div class="topbar-right">
       <div class="meta" data-meta></div>
       <div class="status" data-status></div>
+      <div class="view-tabs" role="tablist" aria-label="Studio view">
+        <button type="button" role="tab" data-view="studio" aria-selected="true">${icon("studio")}Studio</button>
+        <button type="button" role="tab" data-view="comments" aria-selected="false">${icon("comments")}Comments</button>
+      </div>
     </div>
   </header>
   <main class="studio-shell">
@@ -65,6 +70,7 @@ const code = createCodePane();
 const stage = createStage(store, (id) => library.selectArtifact(id));
 const library = createLibraryPane(code, (artifact) => stage.openArtifact(artifact), (artifact) => stage.renameArtifact(artifact));
 const timeline = createTimeline(store);
+const comments = createComments(store, stage);
 app.querySelector<HTMLElement>("[data-library]")!.append(library.element);
 app.querySelector<HTMLElement>("[data-timeline]")!.append(timeline.element);
 app.querySelector<HTMLElement>("[data-stage]")!.append(stage.element);
@@ -91,6 +97,14 @@ const workspaceHandle = createHandle({
 });
 workspaceHandle.classList.add("workspace-handle");
 upperShell.insertBefore(workspaceHandle, workspacePanel);
+const commentsHandle = createHandle({
+  axis: "column", initial: 360, minimum: 280, invert: true,
+  maximum: () => Math.max(280, upperShell.clientWidth - 360),
+  apply: (size) => { upperShell.style.setProperty("--comments-width", `${size}px`); },
+  remember: "qflow-studio.comments-width",
+});
+commentsHandle.classList.add("comments-handle");
+upperShell.append(commentsHandle, comments.element);
 shell.insertBefore(createHandle({
   axis: "row", initial: Math.round(window.innerHeight * 0.45), minimum: 220, invert: true,
   maximum: () => Math.max(260, shell.clientHeight - 260),
@@ -103,6 +117,29 @@ const meta = app.querySelector<HTMLElement>("[data-meta]")!;
 const project = app.querySelector<HTMLElement>("[data-project]")!;
 const status = app.querySelector<HTMLElement>("[data-status]")!;
 const failureView = app.querySelector<HTMLElement>("[data-failure]")!;
+
+const changeView = (): void => {
+  const current = window.location.hash === "#comments" ? "comments" : "studio";
+  shell.dataset.view = current;
+  app.querySelectorAll<HTMLButtonElement>(".view-tabs [data-view]").forEach((button) => {
+    const selected = button.dataset.view === current;
+    button.setAttribute("aria-selected", String(selected)); button.tabIndex = selected ? 0 : -1;
+  });
+  comments.activate(current === "comments");
+};
+app.querySelectorAll<HTMLButtonElement>(".view-tabs [data-view]").forEach((button) => {
+  button.addEventListener("click", () => { window.location.hash = button.dataset.view!; });
+  button.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    event.stopPropagation();
+    const next = button.dataset.view === "studio" ? "comments" : "studio";
+    window.location.hash = next;
+    app.querySelector<HTMLButtonElement>(`.view-tabs [data-view="${next}"]`)!.focus();
+  });
+});
+window.addEventListener("hashchange", changeView);
+changeView();
 
 timeline.element.addEventListener("studio:write", (event) => {
   const state = (event as CustomEvent<{ readonly state?: string }>).detail.state;
@@ -1081,6 +1118,7 @@ window.addEventListener("keydown", (event) => {
     event.preventDefault();
     return;
   }
+  if (shell.dataset.view === "comments" && ["-", "_", "=", "+", "\\", "f", "F"].includes(event.key)) return;
   if (event.key === "-" || event.key === "_") {
     timeline.zoomOut();
     event.preventDefault();

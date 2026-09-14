@@ -221,3 +221,10 @@ A command interruption or missing reply can leave the Worker running. [Builds](.
 explains how to identify active work and continue through a new Run after a failed attempt.
 Completed Outputs remain in Results without being exported as files. Keep or add their Run Candidates
 when revising downstream work; neither the notes nor an unchanged output name selects them automatically.
+
+## Keep review notes with the work
+
+Studio's `FEEDBACK.json` belongs to the workspace and records timestamped comments for its Runs.
+[Working from Comments](../production/studio.md#revise-from-timestamped-comments) explains reading,
+resolving and preserving these shared notes. Carry settled creative choices into Treatment and
+execution progress into Progress; retain comments as the review conversation.

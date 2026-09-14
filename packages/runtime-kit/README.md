@@ -40,3 +40,8 @@ WhisperX process. Credential adapters validate configuration before opening a st
 storage belongs to the Runtime implementation, while project Build Result repositories use the
 separate `@qflow/build-result-kit` boundary. Runtime Kit knows no Provider, filesystem, database or
 video package by name.
+
+`ManagedProgram.installation.prepareBeforeStart` lets a Provider reconcile its installed environment
+before a cold start, even when the installation probe already passes. The declared commands use the
+Provider's ordinary package manager. A healthy running Program is reused before this preparation is
+considered; Runtime does not inspect source files or infer implementation versions.

@@ -8,6 +8,11 @@ A **Provider** knows how to fulfill that request through a particular service. A
 configured instance of that Provider, with its service address, credential reference and capacity.
 The Runtime Profile binds the requested capability to an Endpoint.
 
+Qflow's official Distribution includes local Providers and the QflowHub Provider. Other services
+connect through packages owned by the production or their authors. The Agent can implement a new
+service through the public SDK, just as it can create a visual component for a video.
+[Service partners](./service-partners.md) introduces independent partners through that same path.
+
 ## Choose the change that matches the need
 
 | You want to… | Change |
@@ -57,6 +62,10 @@ The [Endpoint SDK](https://github.com/qflow-ai/qflow/blob/main/packages/endpoint
 owns the handler interfaces, activation, resource declarations and pricing API. Compile the package
 to JavaScript and install it in the project through its package manager. Configure its Endpoint
 under `endpoints` and select it in `bindings` in the [Runtime Profile](./runtime.md).
+
+The [complete project Provider example](https://github.com/qflow-ai/qflow/tree/main/examples/provider-package)
+demonstrates reference uploads, task receipts, collection and pricing using an illustrative API.
+It also ships with the executable, so the Agent can adapt it without a repository checkout.
 
 ## Prices and permission
 

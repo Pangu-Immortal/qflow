@@ -46,6 +46,7 @@ export type ManagedProgramOptions = LoadRuntimeConfigOptions & {
   readonly onProgress?: (event: ManagedProgramProgress) => void;
   /** When present, operate only programs backing at least one demanded capability. */
   readonly capabilities?: readonly CapabilityRef[];
+  readonly endpoints?: readonly string[];
 };
 
 function independentPrograms(programs: readonly { instance: string; program: ManagedProgram }[]) {
@@ -266,7 +267,7 @@ async function bringUp(
   const installLogPath = join(directory(root, program), "install.log");
   if (program.installation !== undefined) {
     const installation = await program.installation.probe();
-    if (installation.state !== "ready") {
+    if (installation.state !== "ready" || program.installation.prepareBeforeStart === true) {
       await mkdir(directory(root, program), { recursive: true });
       await rotateLog(installLogPath);
       onProgress?.({ id: program.id, phase: "installing", logPath: installLogPath });

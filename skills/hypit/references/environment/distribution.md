@@ -64,6 +64,12 @@ source and choose a reachable route. Keep the requested version when changing re
 
 ## Let the installation channel own updates
 
+The Distribution supplies local execution and QflowHub Providers, plus public SDKs and examples for
+project extensions. A service the user brings can use an installed or project-authored Provider;
+its absence from the official bundle is an extension question. Follow
+[Models and Providers](model-and-provider.md) for that connection. Installing the executable does
+not choose a service account or prepare every model that a production might eventually use.
+
 Install, update, and remove the Distribution through the same package or release channel. Updating
 it does not update an installed Skill or edit a video project. Updating the Skill does not replace the
 executable Distribution. After installation or an update, use the selected launcher for `--version`,
@@ -77,3 +83,11 @@ Explain whether the work needs an available package, a supported alternative or 
 A contributor checkout can execute its own Distribution after its documented workspace setup, but it
 is a development arrangement, not an assumed location for ordinary production. Use one only when the
 user explicitly supplied or selected that checkout.
+
+Optional upstream npm tools live under the Host package home reported by `paths`, with one installation
+per exact package version. Separate Distribution requirements can coexist there, while npm still shares
+its download cache. `qflow packages install <package@version>` reports `install.log`; inspect that file
+when a download appears stalled or fails. Installing an upstream tool does not start a service or
+restart an existing service. Project component edits are loaded by the next Build. See
+[Build execution](../production/builds.md#build-with-the-current-project-implementation) for Distribution
+bootstrap changes and service lifetimes.

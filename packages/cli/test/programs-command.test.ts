@@ -68,6 +68,47 @@ test("programs accepts only up, down and status", async () => {
   );
 });
 
+test("scoped preparation and startup receive the same explicit Endpoint set", async () => {
+  const calls: string[] = [];
+  let prepared: unknown;
+  const selected = distribution(calls);
+  const base = selected.openRuntimeHost!;
+  await runCli(["programs", "up", "/p/qflow.runtime.json", "--endpoint", "chosen", "--endpoint", "media"], io, {
+    ...selected,
+    openRuntimeHost: async (...args) => {
+      const host = await base(...args);
+      return { ...host, prepare: async (scope) => { prepared = scope?.endpoints; return []; } };
+    },
+  });
+  assert.deepEqual(prepared, ["chosen", "media"]);
+  assert.match(calls[0]!, /"endpoints":\["chosen","media"\]/u);
+});
+
+test("program discovery preserves readiness and failed shutdown names the service still running", async () => {
+  const reports: CliManagedProgramReport[] = [
+    ...Array.from({ length: 25 }, (_, index) => ({ id: `ready-${index}`, endpoint: "chosen", state: { state: "ready" as const } })),
+    { id: "needs-help", endpoint: "other", state: { state: "down", detail: "cannot connect" } },
+  ];
+  let output = "";
+  await runCli(["programs", "status", "/tmp/profile.json", "--json", "--limit", "2"], {
+    write(text) { output += text; },
+  }, distribution([], reports));
+  const parsed = JSON.parse(output);
+  assert.equal(parsed.programCount, 26);
+  assert.equal(parsed.readyCount, 25);
+  assert.deepEqual(parsed.programs.map((item: { id: string }) => item.id), ["needs-help", "ready-0"]);
+  assert.equal(parsed.omittedPrograms, 24);
+
+  let failure = "";
+  let exitCode = 0;
+  await runCli(["programs", "down", "/tmp/profile.json", "--limit", "1"], {
+    write(text) { failure += text; }, setExitCode(code) { exitCode = code; },
+  }, distribution([], reports));
+  assert.equal(exitCode, 1);
+  assert.match(failure, /ready-24: ready/u);
+  assert.doesNotMatch(failure, /needs-help/u);
+});
+
 test("waiting belongs only to programs up", async () => {
   await assert.rejects(
     runCli(["programs", "status", "/p/qflow.runtime.json", "--max-wait-ms", "1000"], io, distribution([])),

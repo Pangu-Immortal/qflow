@@ -50,7 +50,7 @@ export async function runStudio(argv: readonly string[], io: Pick<CliIo, "write"
   const runArgument = values.get("run");
   if (runArgument === undefined || runArgument.trim().length === 0) invalidArguments("Missing --run");
   const { createServer } = await import("vite");
-  const { findRuntimeProfile, resolveProjectRoot } = await import("@qflow/cli");
+  const { findRuntimeProfile, resolveProjectRoot } = await import("@qflow/project-context-node");
   const { resolveDistributionPackageImport } = await import("@qflow/package-loader-node");
   const { videoCliDistribution, videoStudioCompanionPackages } = await import("@qflow/video-cli");
   const { openStudioBuildLibrary } = await import("./src/build-library.js");
@@ -58,6 +58,7 @@ export async function runStudio(argv: readonly string[], io: Pick<CliIo, "write"
   const { loadStudioDomain } = await import("./src/domain.js");
   const { loadStudioRun } = await import("./src/run.js");
   const { studioPlugin } = await import("./src/server.js");
+  const { studioFeedbackPlugin } = await import("./src/feedback-server.js");
   const { inspectStudioRun } = await import("./src/studio-preflight.js");
   const runPath = resolve(invokedFrom, runArgument);
   const packageRootArgument = values.get("package-root");
@@ -136,7 +137,7 @@ export async function runStudio(argv: readonly string[], io: Pick<CliIo, "write"
       // available for Source and material previews.
       fs: { allow: [workspaceRoot, packageRoot, distributionPackageRoot, here] },
     },
-    plugins: [distributionImports, studioPlugin({
+    plugins: [distributionImports, studioFeedbackPlugin(workspaceRoot, runPath), studioPlugin({
       source,
       runPath,
       workspaceRoot,
@@ -152,4 +153,5 @@ export async function runStudio(argv: readonly string[], io: Pick<CliIo, "write"
   });
   await server.listen();
   server.printUrls();
+  for (const url of server.resolvedUrls?.local ?? []) io.write(`  Comments           ${url}#comments\n`);
 }

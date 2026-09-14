@@ -157,7 +157,12 @@
     "examples/semantic-composition/*.svml",
     "examples/semantic-composition/*.svrun",
     "examples/semantic-composition/*.svs",
-    "examples/semantic-composition/qflow.runtime.json"
+    "examples/semantic-composition/qflow.runtime.json",
+    "examples/provider-package/README.md",
+    "examples/provider-package/packages/*/package.json",
+    "examples/provider-package/packages/*/tsconfig.json",
+    "examples/provider-package/packages/*/src/**/*",
+    "examples/provider-package/qflow.runtime.json"
   ],
   "scripts": {
     "pack:distribution": "node scripts/pack-distribution.mjs",
@@ -174,7 +179,7 @@
     "prepack": "npm run build:public-types"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.15.0"
   },
   "devDependencies": {
     "@qflow/artifact": "workspace:*",
@@ -219,17 +224,14 @@
     "@qflow/narrative": "workspace:*",
     "@qflow/performance": "workspace:*",
     "@qflow/performance-studio": "workspace:*",
-    "@qflow/sound-studio": "workspace:*",
     "@qflow/program-space": "workspace:*",
+    "@qflow/project-context-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/provider-hyperframes-aws-lambda": "workspace:*",
     "@qflow/provider-hyperframes-local": "workspace:*",
     "@qflow/provider-qflowhub": "workspace:*",
     "@qflow/provider-image-opencv-local": "workspace:*",
-    "@qflow/provider-kie": "workspace:*",
     "@qflow/provider-media-local": "workspace:*",
     "@qflow/provider-whisperx-local": "workspace:*",
-    "@qflow/provider-xiaomi-mimo": "workspace:*",
     "@qflow/ranking": "workspace:*",
     "@qflow/ranking-studio": "workspace:*",
     "@qflow/raster": "workspace:*",
@@ -248,6 +250,7 @@
     "@qflow/seedance-kits": "workspace:*",
     "@qflow/seedream": "workspace:*",
     "@qflow/sound": "workspace:*",
+    "@qflow/sound-studio": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/speech-alignment": "workspace:*",
@@ -278,6 +281,7 @@
     "cmu-pronouncing-dictionary": "3.0.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vite": "8.2.2"
+    "vite": "8.2.2",
+    "cjs-module-lexer": "2.2.1"
   }
 }

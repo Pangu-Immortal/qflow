@@ -55,8 +55,12 @@ This keeps actual video available to the renderer's exact source-frame preparati
 CSS is scoped to the generated program root with `@scope`; `:scope` styles that root. The HTML can
 contain arbitrary local structure, SVG, internal stacking, masks and backdrop filters. The optional
 `setup` string is a JavaScript function body with `root` and `data` arguments. It returns a synchronous
-`render(localFrame)` function, evaluated on initial load and every `hf-seek`. Express animation state
-as a function of this frame and inputs so any worker can begin at any frame. Async work belongs to
+`render(localFrame)` function, evaluated on initial load and active `hf-seek` events. Outside the
+Present's lifetime, the dispatcher settles the boundary pose once instead of repeatedly updating
+an invisible program. Active seeks always redraw, including the same frame after resources become
+ready, and seeking back into the Present computes its requested pose directly. Prepare stable
+objects in `setup`; express animation state as a function of frame and inputs so any worker can
+begin at any frame. Async work belongs to
 material preparation before rendering; browser resources belong in the program's declared artifacts.
 Use `hyperframesResourceUri(artifact.resource)` in resource-bearing markup or CSS.
 

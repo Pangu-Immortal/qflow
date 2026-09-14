@@ -23,3 +23,33 @@ over a graph state, deterministic Producers, validators and temporary Resources;
 Endpoint selection, handlers and concurrency for that disposable session private and returns the evaluated
 state. This is an execution boundary, not a second Runtime Profile, Build type, cross-Build scheduler or
 preview registry.
+
+`RuntimeHostControl.logs(build, lines)` optionally exposes a bounded tail of active Build evidence.
+Finished logs belong to `BuildResultManifest.executionLog` and are read through the project's Repository;
+reading a finished log needs no Runtime or execution Provider. Runtime process logs keep their separate
+process-control operation.
+
+`prepare`, `preflight`, `doctor` and Program lifecycle operations accept explicit Endpoint instance
+names. Build preflight uses resolved Endpoints, not every Provider offering the capability. Omitting
+a scope retains whole-Profile inspection or preparation.
+
+`prepareHostPackages` keeps exact releases in separate ordinary npm installations below the Host
+package home. `HostPackageProgress.logPath` identifies live and retained npm output; failures include
+that path. npm owns each installation's dependency tree and lockfile. No parallel package inventory is
+maintained. `RuntimeInvocationObservation` passes direct-call progress and diagnostics through the
+same Provider callbacks used in Builds, without giving immediate calls durable Operation semantics.
+
+## Execution choices and lifetime
+
+`createRuntime({ endpoints })` scopes a submission to the selected Endpoint instances. The local Host
+records those choices and its project package root with the active execution request. Its long-lived
+Worker supervises carriers with independent per-Build module and registry contexts. Managed
+Programs remain independently warm. `runWorker` accepts an internal carrier entry point; execution
+readiness and Endpoint capacity are independent of the number of unfinished Builds. Other Hosts own
+their choice of code-loading and physical execution mechanisms.
+
+Submission clients use `const controller = await host.controller(); await controller.worker.up()`
+to start execution, then `const runtime = await host.createRuntime(); await runtime.build(request)`
+to submit work. `RuntimeHostExecution` does not run a second embedded Worker loop. A local carrier
+may stop accepting new Builds and drain; its assigned Builds stay in place and all carriers continue
+using the same resource accounting. Process policy belongs to the local Runtime, not this Host ABI.

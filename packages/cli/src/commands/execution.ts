@@ -1,12 +1,14 @@
+import { readExecutionLog } from "@qflow/runtime";
 import type { BuildResultManifest, BuildResultRepository } from "@qflow/build-result";
 import type { NodeRuntimeHost } from "@qflow/runtime-host-node";
 
 import type { CliCommand, ExecutionCommand } from "../command.js";
-import { activityObservationKey, buildProgressLines, observeBuildView } from "../observation.js";
+import { activityObservationKey, buildProgressLines, buildProgressView, observeBuildView } from "../observation.js";
 import type { CliIo } from "../output.js";
 import type { CliRuntimeController } from "../runtime-port.js";
 import { formatOperationProgress } from "../runtime-view.js";
 import { buildStatusView } from "../view.js";
+import type { CliBuildStatusView } from "../view.js";
 import type { OperationalWriter } from "./types.js";
 
 type OpenProjectResults = () => Promise<{
@@ -14,8 +16,21 @@ type OpenProjectResults = () => Promise<{
   close(): void | Promise<void>;
 }>;
 
+function statusDetailLines(build: CliBuildStatusView | null): string[] {
+  return [
+    ...(build?.failure === undefined ? [] : [`Reason    ${build.failure}`]),
+    ...(build?.commands ?? []).map((command) => `${command.endpoint}: ${formatOperationProgress(command.progress)}`),
+    ...(build?.operations ?? []).map((operation) => {
+      const label = `${operation.endpoint}${operation.receipt === undefined ? "" : ` · task ${operation.receipt.id}`}`;
+      const detail = operation.failure !== undefined ? `${operation.failure.code} — ${operation.failure.message}`
+        : operation.progress === undefined ? operation.state : formatOperationProgress(operation.progress);
+      return `${label}: ${detail}${operation.count === undefined ? "" : ` ×${operation.count}`}`;
+    }),
+  ];
+}
+
 export function isExecutionCommand(args: CliCommand): args is ExecutionCommand {
-  return args.command === "status" || args.command === "cancel" || args.command === "activity"
+  return args.command === "logs" || args.command === "status" || args.command === "cancel" || args.command === "activity"
     || (args.command === "result" && (args.action === "finish" || args.action === "discard"));
 }
 
@@ -23,6 +38,7 @@ export function isExecutionCommand(args: CliCommand): args is ExecutionCommand {
 export async function runExecutionCommand(input: {
   readonly args: ExecutionCommand;
   readonly runtimeProfile: string | undefined;
+  readonly resolveProjectRuntime?: () => Promise<string | undefined>;
   readonly io: CliIo;
   readonly runtimeHost: (profile: string) => Promise<NodeRuntimeHost>;
   readonly runtimeController: (profile: string) => Promise<CliRuntimeController>;
@@ -30,6 +46,53 @@ export async function runExecutionCommand(input: {
   readonly write: OperationalWriter;
 }): Promise<void> {
   const { args, runtimeProfile, io, runtimeHost, runtimeController, openProjectResults, write } = input;
+  if (args.command === "logs") {
+    const opened = await openProjectResults();
+    let source: "runtime" | "result" | "unavailable" = "unavailable";
+    let view: import("@qflow/runtime").ExecutionLogView | undefined;
+    let finished = false;
+    try {
+      const result = await opened.repository.read(args.build);
+      finished = result?.outcome !== undefined;
+      if (result?.executionLog !== undefined) {
+        const chunks = await opened.repository.openFile(args.build, result.executionLog);
+        if (chunks === undefined) throw new Error(`Build ${args.build} execution log file is unavailable`);
+        view = await readExecutionLog(chunks, args.lines);
+        source = "result";
+      }
+    } finally { await opened.close(); }
+    const activeProfile = !finished && view === undefined
+      ? runtimeProfile ?? await input.resolveProjectRuntime?.() : undefined;
+    if (activeProfile !== undefined) {
+      const control = await (await runtimeHost(activeProfile)).openControl({ readOnly: true });
+      try { view = await control.logs?.(args.build, args.lines); }
+      finally { await control.close(); }
+      if (view !== undefined) source = "runtime";
+      // Result finishing can move the log between the first read and the active read.
+      if (view === undefined) {
+        const completed = await openProjectResults();
+        try {
+          const result = await completed.repository.read(args.build);
+          if (result?.executionLog !== undefined) {
+            const chunks = await completed.repository.openFile(args.build, result.executionLog);
+            if (chunks !== undefined) { view = await readExecutionLog(chunks, args.lines); source = "result"; }
+          }
+        } finally { await completed.close(); }
+      }
+    }
+    const records = view?.records ?? [];
+    const omitted = (view?.total ?? 0) - records.length;
+    write({ format: "qflow.cli-logs@1", build: args.build, source, records, omittedRecords: omitted },
+      view === undefined ? "No execution log recorded" : "Build execution log", "info",
+      [["Build", args.build], ["Source", source]], [
+        ...(omitted > 0 ? [`Showing last ${records.length} records; ${omitted} earlier records omitted. Use --lines to read more.`] : []),
+        ...records.map((record) => `${new Date(record.time).toISOString()}  ${record.endpoint}  ${record.command}  ${
+          record.kind === "phase" ? record.phase : record.kind === "diagnostic" || record.kind === "failed"
+            ? `${record.kind}: ${record.message}` : record.kind}`),
+      ]);
+    return;
+  }
+
   if (args.command === "status" && runtimeProfile === undefined) {
     const openedResults = await openProjectResults();
     let result;
@@ -42,7 +105,7 @@ export async function runExecutionCommand(input: {
       throw new Error(`Build ${args.build} has no finished Result; select its Runtime to observe active execution`);
     }
     const finished = result?.outcome !== undefined;
-    const build = result === undefined ? null : buildStatusView({ id: result.id, result });
+    const build = result === undefined ? null : buildStatusView({ id: result.id, result, verbose: args.presentation.verbose });
     const outcome = result?.outcome;
     write({ format: "qflow.cli-status@1", build }, result === undefined
       ? "Build Result not found"
@@ -56,11 +119,12 @@ export async function runExecutionCommand(input: {
       ...(build?.title === undefined ? [] : [["Title", build.title] as const]),
       ...(outcome === undefined ? [] : [["Outcome", outcome] as const]),
       ...(!finished && result !== undefined ? [["Result", "open"] as const] : []),
-      ...(build?.result.outputCount === undefined ? [] : [["Outputs", String(build.result.outputCount)] as const]),
-    ], !finished && result !== undefined
-      ? ["Select the Runtime to inspect active work."]
-      : []);
-    if (result === undefined || !finished) io.setExitCode?.(1);
+      ...(build?.targets?.length ? [["Targets", build.targets.join(", ")] as const] : []),
+    ], [
+      ...statusDetailLines(build),
+      ...(!finished && result !== undefined ? ["Select the Runtime to inspect active work."] : []),
+    ]);
+    if (result === undefined || !finished || outcome === "failed") io.setExitCode?.(1);
     return;
   }
 
@@ -98,11 +162,12 @@ export async function runExecutionCommand(input: {
           return {
             id: item.id,
             work: status.work,
-            ...(item.outcome === undefined ? {} : { outcome: item.outcome }),
+            phases: buildProgressView(item).phases,
             ...(status.attention === undefined ? {} : { attention: status.attention }),
           };
         });
-        const currentView = activityObservationKey(worker.state, activity.builds);
+        const currentView = JSON.stringify([activity.builds.length,
+          activityObservationKey(worker.state, activity.builds.slice(0, args.limit))]);
         if (args.watch && currentView === previous) return;
         previous = currentView;
         const value = {
@@ -111,7 +176,7 @@ export async function runExecutionCommand(input: {
           worker: worker.state,
           builds,
           ...(activity.builds.length <= args.limit ? {} : { omittedBuilds: activity.builds.length - args.limit }),
-          capacity: activity.capacity,
+          ...(args.presentation.verbose ? { capacity: activity.capacity } : {}),
         };
         const buildLines = activity.builds.slice(0, args.limit).map((item) => {
           const requestProgress = item.requests === undefined || item.requests.total === 0
@@ -119,20 +184,16 @@ export async function runExecutionCommand(input: {
             : ` · ${item.requests.completed}/${item.requests.total} steps`;
           return `${item.id}: ${buildStatusView({ id: item.id, runtime: item }).work.state}`
             + requestProgress
+            + Object.entries(buildProgressView(item).phases).map(([phase, count]) => ` · ${count} ${phase}`).join("")
             + `${item.stop?.cause === "execution-failed" ? " · stopping after failure" : item.cancellationRequested ? " · cancelling" : ""}`
             + `${item.issue === undefined ? "" : ` · ${item.issue.message}`}`;
         });
-        const activeOperations = activity.builds.flatMap((item) => item.operations)
-          .filter((item) => item.status === "pending");
         const operationLines = args.presentation.verbose
-          ? activity.builds.flatMap((build) => build.operations.filter((item) => item.status === "pending")
-              .map((item) => `${build.id} · ${item.endpoint}: ${item.progress === undefined
-                ? item.status
-                : formatOperationProgress(item.progress)}`)).slice(0, args.limit)
+          ? activity.builds.slice(0, args.limit).flatMap((build) => buildProgressView(build).details
+              .map((detail) => `${build.id} · ${detail}`))
           : [];
         write(value, "Runtime activity", activity.builds.length === 0 ? "success" : "info", [
           ["Active Builds", String(activity.builds.length)],
-          ["Active Operations", String(activeOperations.length)],
           ["Worker", worker.state],
         ], [
           ...buildLines,
@@ -187,7 +248,6 @@ export async function runExecutionCommand(input: {
         ...(result === undefined ? {} : { result }),
         ...(resultReadError === undefined ? {} : { resultReadError }),
         verbose: args.presentation.verbose,
-        operationLimit: args.limit,
       });
       const attention = build?.attention;
       const humanTitle = !found
@@ -226,14 +286,9 @@ export async function runExecutionCommand(input: {
             ["Result", "saving"] as const,
           ] : resultOutcome !== undefined ? [
             ["Outcome", resultOutcome] as const,
-            ...(build?.result.outputCount === undefined
-              ? [] : [["Outputs", String(build.result.outputCount)] as const]),
           ] : [["State", build?.work.state ?? "unknown"] as const]),
-        ], (build?.operations ?? []).map((operation) => operation.failure !== undefined
-          ? `${operation.endpoint}${operation.receipt === undefined ? "" : ` · task ${operation.receipt.id}`}: ${operation.failure.code} — ${operation.failure.message}`
-          : operation.progress === undefined
-            ? `${operation.endpoint}${operation.receipt === undefined ? "" : ` · task ${operation.receipt.id}`}: ${operation.state}`
-            : `${operation.endpoint}${operation.receipt === undefined ? "" : ` · task ${operation.receipt.id}`}: ${formatOperationProgress(operation.progress)}`)
+          ...(build?.targets?.length ? [["Targets", build.targets.join(", ")] as const] : []),
+        ], statusDetailLines(build)
           .concat(attention === undefined ? [] : [
             `Attention  ${attention.message}`,
             ...(attention.action === undefined ? [] : [`Action     ${attention.action}`]),

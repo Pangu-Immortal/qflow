@@ -72,6 +72,7 @@ export type ProjectResultCommand =
     });
 
 export type ExecutionCommand =
+  | (CommandBase & RuntimeOption & { readonly command: "logs"; readonly build: string; readonly lines: number })
   | (CommandBase & RuntimeOption & {
       readonly command: "status";
       readonly build: string;
@@ -115,6 +116,7 @@ export type RuntimeOperationCommand =
   | (CommandBase & RuntimeOption & {
       readonly command: "runtime";
       readonly action: "up";
+      readonly endpoints?: readonly string[];
       readonly maxWaitMs?: number;
     })
   | (CommandBase & RuntimeOption & {
@@ -136,12 +138,14 @@ export type RuntimeOperationCommand =
 export type ProgramsCommand =
   | (CommandBase & RuntimeOption & {
       readonly command: "programs";
+      readonly endpoints?: readonly string[];
       readonly action: "up";
       readonly maxWaitMs?: number;
       readonly limit: number;
     })
   | (CommandBase & RuntimeOption & {
       readonly command: "programs";
+      readonly endpoints?: readonly string[];
       readonly action: "down" | "status";
       readonly limit: number;
     });
@@ -182,6 +186,7 @@ export type EnvironmentCommand =
     })
   | (CommandBase & ProjectOption & RuntimeOption & {
       readonly command: "doctor";
+      readonly endpoints?: readonly string[];
       readonly limit: number;
     });
 
@@ -190,6 +195,7 @@ export type WorkerCommand = CommandBase & {
   readonly profile: string;
   readonly readyFile: string;
   readonly workerOwner: string;
+  readonly executionRoot?: string;
   readonly packageRoot?: string;
 };
 

@@ -11,7 +11,7 @@ These conventions describe work inside the Qflow repository. Project extensions 
 |---|---|---|
 | Package directory | kebab-case | `packages/speech-alignment/` |
 | Package name | `@qflow/` scope | `@qflow/speech-alignment` |
-| Provider package | `provider-` prefix | `@qflow/provider-kie` |
+| Provider package | `provider-` prefix | `@studio/provider-images` |
 | TypeScript file | kebab-case | `align.ts` |
 | Exported type | PascalCase | `SpeechAlignment` |
 | Exported function | camelCase | `createSpeechAlignment` |

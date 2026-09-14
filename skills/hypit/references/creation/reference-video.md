@@ -40,6 +40,13 @@ replace an item, add to a collection, or temporarily cover it. Document the syst
 its changes in time. Camera boundaries help navigation; meaning and continuity determine which
 things belong together.
 
+Speak aloud as the understanding develops: share a specific finding, its significance for this work
+and the next question being examined, while continuing the investigation. Once the direction is supported, present a
+short account of the reference's structure with representative frames or a word-labeled grid:
+what persists, what changes on which idea, and which relationships suit the user's adaptation.
+Analysis and Timeline retain the detailed evidence; the visible account helps the user assess your
+reading and contribute their taste. Routine progress does not require another approval.
+
 Build an account of behavior that can become an editable production. A fixed screen image may be
 the evidence the passage needs; a changing comparison also needs its arrivals, states and handoffs.
 Retain what the objects do together as well as what each looks like. Several implementations can
@@ -83,19 +90,28 @@ The local `qflow media` commands expose the source at the scale needed:
 - `boundaries` locates abrupt visual changes worth inspecting;
 - `fetch` saves a supported video link locally.
 
-Use broad grids across the full reference to follow its development. For a long reference, read
-manageable passages while keeping their place in the whole clear. Inspect dense sequences around
-the entries, changes and exits of its distinct visual systems. Choose the range and sampling
-interval for the behavior being investigated. A brief animation needs neighboring frames; small
-writing needs a larger cell or a full-resolution frame. A broad grid can miss brief events between
-samples. Follow the developing idea and the visual systems through closer sequences to understand
-their changes and handoffs.
+Read grids along the developing explanation, using the transcript's phrases and word times as the
+preferred guide for spoken references. Pass `--transcript` to keep those words beside the frames;
+`--around` can locate the phrase whose picture change you want to understand.
+
+Continuously adjust the viewed range, sampling interval and cell size to the question. Widen the
+range to understand an argument or a persistent system; narrow it and bring samples closer to trace
+an entrance, change or handoff; enlarge a frame to read its typography or spatial detail. These are
+scales of the same investigation. Move between them whenever a detail changes the explanation or
+the explanation directs attention elsewhere. A long reference can be read in manageable passages
+while keeping its whole development clear.
+
+Samples establish what appears at their times, with gaps between them. A wider overview can miss a
+brief event even when neighboring samples look unchanged. Follow the words and visual systems
+through those intervals at a useful density, accounting for their entries, changes, persistence and
+exits. A few representative stills cannot supply that temporal account.
 
 ```bash
 qflow transcribe references/ad/source.mp4 \
   --language en --to references/ad/transcript.json
 
 qflow media tile references/ad/source.mp4 --start 0 --end 12 --every 1 \
+  --transcript references/ad/transcript.json \
   --to references/ad/evidence/opening.jpg
 
 qflow media tile references/ad/source.mp4 --start 6.8 --end 8.4 --every 0.1 \
@@ -196,3 +212,7 @@ Keep the current question, passages or systems still to examine, and next useful
 `PROGRESS.md`. Write discoveries into Analysis and Timeline while they are fresh, and revise those
 accounts when the reading changes. When resuming, read these files and reopen the source at the
 recorded locations. The user's goal remains in Brief and your new design in Treatment.
+
+When the intended adaptation depends on an action's exact movement or camera path, preserve a useful
+source excerpt as motion evidence for [reference-directed generation](../playbooks/craft/video-direction.md#let-footage-carry-motion-that-matters).
+The analysis explains what matters; the footage can carry that movement into the model request.

@@ -9,7 +9,7 @@ The package owns two distinct speech operations:
 - `mimo-v2.5-tts-voiceclone` uses one accepted audio voice reference to create independent speech.
 
 It contains no API URL, credential, retry, queue or Xiaomi wire encoding. Those belong to a Runtime
-Endpoint such as `@qflow/provider-xiaomi-mimo`. Both models return the shared `GeneratedAudioSet`;
+Endpoint implementing the selected speech capability. Both models return the shared `GeneratedAudioSet`;
 the author Surfaces expose its primary member as an ordinary audio Resource.
 
 ```xml

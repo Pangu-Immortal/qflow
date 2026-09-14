@@ -22,13 +22,16 @@ export function localHyperframesBrowserProgram(
   input: {
     readonly id: string;
     readonly nodePath: string;
-    readonly hyperframesCliPath: string;
+    readonly hyperframesCliPath: string | (() => string);
     readonly ffprobePath: string;
     readonly ffmpegPath?: string;
   },
 ): ManagedProgram {
+  const cliPath = () => typeof input.hyperframesCliPath === "string" ? input.hyperframesCliPath : input.hyperframesCliPath();
   const probeBrowser = async (): Promise<ManagedProgramState> => {
-    const located = await run(input.nodePath, [input.hyperframesCliPath, "browser", "path"]);
+    let executable: string;
+    try { executable = cliPath(); } catch (error) { return { state: "down", detail: error instanceof Error ? error.message : String(error) }; }
+    const located = await run(input.nodePath, [executable, "browser", "path"]);
     if (!located.ok) return { state: "down", detail: `HyperFrames browser is unavailable: ${located.output}` };
     const path = located.output.trim();
     if (path.length === 0 || path.includes("\n") || path.includes("\r")) {
@@ -44,7 +47,7 @@ export function localHyperframesBrowserProgram(
     id: input.id,
     installation: {
       probe: probeBrowser,
-      commands: [{ command: input.nodePath, args: [input.hyperframesCliPath, "browser", "ensure"] }],
+      get commands() { return [{ command: input.nodePath, args: [cliPath(), "browser", "ensure"] }]; },
     },
     async probe(): Promise<ManagedProgramState> {
       const browser = await probeBrowser();

@@ -618,9 +618,32 @@ test("a failed Result exposes task receipts and credential references without a 
       build: { outcome: string; operations: unknown[] };
     };
     assert.equal(inspected.build.outcome, "failed");
-    assert.deepEqual(inspected.build.operations, [operation]);
+    assert.deepEqual(inspected.build.operations, [{
+      endpoint: operation.endpoint, status: operation.status, receipt: operation.receipt, failure: operation.failure,
+    }]);
+    const detailed = await jsonCommand(["inspect", id, "--verbose"], root) as { build: { operations: unknown[] } };
+    assert.deepEqual(detailed.build.operations, [operation]);
     const human = await humanCommand(["inspect", id], root);
     assert.match(human, /remote-task-1/);
     assert.match(human, /DOWNLOAD_FAILED/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("logs reads finished evidence without a Runtime and clearly limits the tail", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-cli-logs-"));
+  try {
+    const id = "bld_20260913T130000000Z_0000000001";
+    const result = await FileBuildResult.create(join(root, ".qflow/results"), {
+      id, source: { path: "main.svml" }, targets: [], publishedOutputs: [],
+    });
+    const records = ["started", "completed"].map((kind, time) => ({ format: "qflow.execution-log@1", time, kind, endpoint: "renderer", command: "c1" }));
+    await result.finish({ outcome: "complete", executionLog: (async function* () {
+      yield Buffer.from(records.map((record) => JSON.stringify(record) + "\n").join(""));
+    })() });
+    await writeFile(join(root, ".qflow/runtime"), "missing-profile.json\n");
+    assert.deepEqual(await jsonCommand(["logs", id, "--lines", "1"], root), {
+      format: "qflow.cli-logs@1", build: id, source: "result", records: [records[1]], omittedRecords: 1,
+    });
+    assert.match(await humanCommand(["logs", id, "--lines", "1"], root), /earlier records omitted/u);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

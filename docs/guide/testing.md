@@ -60,18 +60,10 @@ test("compiles the expected exports", async () => {
 
 ### Provider tests
 
-Test Endpoint implementations with real or simulated external services. Environment-gated: check
-for required credentials or executables and skip when absent.
-
-```typescript
-test("generates a video", async (t) => {
-  if (!process.env.KIE_API_KEY) {
-    t.skip("KIE_API_KEY not set");
-    return;
-  }
-  // ... real API call
-});
-```
+Exercise request mapping, media transport and task progression against a controlled service fixture.
+The [project Provider example](https://github.com/qflow-ai/qflow/tree/main/examples/provider-package)
+includes a lifecycle test that collects a returned image without spending on generation. Live calls
+use the selected service and explicit spending scope; an available key alone does not authorize them.
 
 ### Architecture boundaries
 

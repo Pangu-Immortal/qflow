@@ -273,7 +273,7 @@ test("Run imports are a prologue and Runtime settings are not language elements"
     <author source="./main.svml"/><target output="film"/><import from="@example/run" as="run"/>
   </svrun>`), /bad\.svrun:2:\d+:.*opening prologue/u);
   assert.throws(() => parseRunDocument("bad.svrun", `<svrun version="1">
-    <author source="./main.svml"/><target output="film"/><provider name="kie"/>
+    <author source="./main.svml"/><target output="film"/><provider name="images"/>
   </svrun>`), /does not accept <provider>/u);
 });
 

@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   installExternalPackageResolution,
+  externalPackageInstallRoot,
   locateNodePackage,
   resolveNodePackageExecutable,
   resolveNodePackageResource,
@@ -33,15 +34,19 @@ test("one physical locator distinguishes CLI packages, resources and project own
   const project = await mkdtemp(join(tmpdir(), "qflow-locator-project-"));
   const machine = await mkdtemp(join(tmpdir(), "qflow-locator-machine-"));
   try {
-    const cli = await machinePackage(machine, "cli-only", {
+    const cli = await machinePackage(externalPackageInstallRoot(machine, "cli-only", "1.2.3"), "cli-only", {
       version: "1.2.3",
       type: "module",
       bin: { tool: "./bin/tool.mjs" },
     }, { "bin/tool.mjs": "export {};\n" });
-    const resource = await machinePackage(machine, "resource-only", {
+    const resource = await machinePackage(externalPackageInstallRoot(machine, "resource-only", "2.3.4"), "resource-only", {
       version: "2.3.4",
     }, { "files/value.txt": "value\n" });
     const fromDistribution = join(distribution, "packages", "provider", "activation.mjs");
+    await mkdir(join(fromDistribution, ".."), { recursive: true });
+    await writeFile(join(fromDistribution, "..", "package.json"), JSON.stringify({
+      dependencies: { "cli-only": "1.2.3", "resource-only": "2.3.4" },
+    }));
     const options = {
       from: fromDistribution,
       distributionRoots: [distribution],
@@ -64,21 +69,24 @@ test("one physical locator distinguishes CLI packages, resources and project own
   }
 });
 
-test("machine npm fallback preserves ESM import conditions", async () => {
+test("machine npm fallback preserves ESM conditions and each importing package's version", async () => {
   const machine = await mkdtemp(join(tmpdir(), "qflow-esm-machine-"));
   try {
-    await machinePackage(machine, "import-only", {
-      version: "1.0.0",
-      type: "module",
-      exports: { ".": { import: "./index.mjs" } },
-    }, { "index.mjs": "export const value = 42;\n" });
+    for (const [version, value] of [["1.0.0", 42], ["2.0.0", 84]] as const) {
+      await machinePackage(externalPackageInstallRoot(machine, "import-only", version), "import-only", {
+        version, type: "module", exports: { ".": { import: "./index.mjs" } },
+      }, { "index.mjs": `export const value = ${value};\n` });
+      const consumer = join(machine, `consumer-${version}`);
+      await mkdir(consumer);
+      await writeFile(join(consumer, "package.json"), JSON.stringify({ dependencies: { "import-only": version } }));
+      await writeFile(join(consumer, "entry.mjs"), 'export { value } from "import-only";\n');
+    }
     installExternalPackageResolution([machine]);
-    const specifier = "import-only";
-    const imported = await import(specifier) as { readonly value?: unknown };
-    assert.equal(imported.value, 42);
-  } finally {
-    await rm(machine, { recursive: true, force: true });
-  }
+    const first = await import(join(machine, "consumer-1.0.0", "entry.mjs"));
+    const second = await import(join(machine, "consumer-2.0.0", "entry.mjs"));
+    assert.equal(first.value, 42);
+    assert.equal(second.value, 84);
+  } finally { await rm(machine, { recursive: true, force: true }); }
 });
 
 test("package Source resolution reads one public export without activating package code", async () => {

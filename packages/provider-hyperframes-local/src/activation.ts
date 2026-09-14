@@ -21,7 +21,7 @@ const localHyperframesRuntimeAdapter = createRuntimeEndpointAdapterFacet({
     if (context.pool === undefined) throw new Error("local HyperFrames Provider Pool is required");
     const config = runtimeConfigObject(context.config, "local HyperFrames");
     runtimeConfigExact(config, [
-      "nodePath", "hyperframesCliPath", "ffprobePath", "ffmpegPath", "workers", "quality", "browserGpu",
+      "nodePath", "hyperframesCliPath", "ffprobePath", "ffmpegPath", "workers", "maxWorkers", "quality", "browserGpu",
       "defaultConcurrency", "browserCapacity", "initializationTimeoutMs", "frameTimeoutMs", "processTimeoutMs", "maxProcessOutputBytes", "maxRenderedBytes",
     ], "local HyperFrames");
     runtimeConfigString(config.nodePath, "HyperFrames nodePath");
@@ -43,11 +43,12 @@ const localHyperframesRuntimeAdapter = createRuntimeEndpointAdapterFacet({
     const configuredCli = runtimeConfigString(config.hyperframesCliPath, "HyperFrames hyperframesCliPath");
     const configuredFfprobe = runtimeConfigString(config.ffprobePath, "HyperFrames ffprobePath");
     const nodePath = resolveRuntimeExecutable(context.dataRoot, configuredNode ?? process.execPath);
-    const hyperframesCliPath = resolveRuntimeExecutable(context.dataRoot, configuredCli ?? defaultHyperframesCliPath());
+    const hyperframesCliPath = () => resolveRuntimeExecutable(context.dataRoot, configuredCli ?? defaultHyperframesCliPath());
     const configuredFfmpeg = runtimeConfigString(config.ffmpegPath, "HyperFrames ffmpegPath");
     const ffmpegPath = resolveRuntimeExecutable(context.dataRoot, configuredFfmpeg ?? "ffmpeg");
     const ffprobePath = resolveRuntimeExecutable(context.dataRoot, configuredFfprobe ?? "ffprobe");
     const defaultConcurrency = runtimeConfigPositiveInteger(config.defaultConcurrency, "HyperFrames defaultConcurrency");
+    const maxWorkers = runtimeConfigPositiveInteger(config.maxWorkers, "HyperFrames maxWorkers");
     const browserCapacity = runtimeConfigPositiveInteger(config.browserCapacity, "HyperFrames browserCapacity");
     const initializationTimeoutMs = runtimeConfigPositiveInteger(config.initializationTimeoutMs, "HyperFrames initializationTimeoutMs");
     const frameTimeoutMs = runtimeConfigPositiveInteger(config.frameTimeoutMs, "HyperFrames frameTimeoutMs");
@@ -59,10 +60,10 @@ const localHyperframesRuntimeAdapter = createRuntimeEndpointAdapterFacet({
         instance: context.instance,
         pool: context.pool,
         nodePath,
-        hyperframesCliPath,
         ffprobePath,
         ffmpegPath,
         ...(workers === undefined ? {} : { workers: workers as HyperframesWorkers }),
+        ...(maxWorkers === undefined ? {} : { maxWorkers }),
         ...(quality === undefined ? {} : { quality: quality as HyperframesQuality }),
         ...(browserGpu === undefined ? {} : { browserGpu: browserGpu as HyperframesBrowserGpu }),
         ...(defaultConcurrency === undefined ? {} : { defaultConcurrency }),

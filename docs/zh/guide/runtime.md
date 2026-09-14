@@ -200,8 +200,12 @@ BYOK 或本地 Provider 时可以编辑 Profile 或选择另一份 Profile。
 
 `runtime up` 先让 npm 把所选 Adapter 的精确上游包准备到机器共享目录，再准备所选的**本地**
 Managed Program 并启动本地 Worker。它不会启动、重启、登录或探测 QflowHub 这类远程 Endpoint。
-`runtime down` 只停止本地 Worker；由 Runtime 管理的本地 Program 会继续可用，直到显式运行
+`runtime down` 停止本地 Worker 和它的执行进程；由 Runtime 管理的本地 Program 会继续可用，直到显式运行
 `programs down`。
+
+`runtime up`、`programs up|status|down` 和 `doctor` 都可以用 `--endpoint <instance>` 只处理已选定的
+服务；需要多个服务时可以重复这个参数。不传时处理整个 Profile。Build 规划则检查本次工作实际选中的
+Endpoint。可选上游包按准确版本分别安装，准备一个版本不会替换另一个版本，npm 的下载缓存仍然共享。
 
 `doctor` 才是主动但只读的环境检查。它解析已声明的凭据，并允许每个所选 Endpoint 检查真实
 环境；远程 Provider 因而可以访问一次有界的模型目录或能力接口。登录成功只证明凭据存在，
@@ -217,18 +221,21 @@ Result 写入或活跃状态清理失败时，decision 保持不变，并记录 
 只读取已保存的 Build facts、已结束 Operation 值、工作字节和固定 Result Repository，不加载或调用 Producer
 与 Endpoint。Result writer 核对并写入同一个 Result，再删除工作目录，最后原子删除整个 SQLite 活跃聚合。
 同一个 Build 同时只能被一个 Result writer 占用；这个互斥 lease 不是 phase，也不改变 decision。
-进程若硬中断，下一 Worker 只撤销遗留 lease、记录 attention，不自动执行存储动作。工作字节丢失会明确失败，不补生成。
+硬中断后，协调进程撤销遗留的 Result writer lease。已有终态、但 Result 写入中断的 Build 保留 attention，
+由 `result finish` 收尾；丢失执行进程的活跃 Build 则结束这次尝试，将已有事实写入 Result。
+工作字节丢失会明确失败，不补生成。
 已结束 Build 不恢复；复用以前的 Result 必须在新的 `.svrun` 中显式写 Candidate。
 
-运行中的 Worker 会在 Build 第一次需要某个已安装 Component 包时加载它。后续 Build 可以在
-不重启 Worker 的情况下新增 Component 包；Worker 会沿完整依赖闭包只加载尚未见过的部分。
-已经加载的包代码不会热更新，因此修改包代码或更新 Distribution 后，仍需等 Worker 空闲再将
-其停止，然后提交下一次 Build。
+每次 Build 都使用独立加载的项目实现和选定的 Provider 配置。修改项目组件或
+Profile 后，新的 Build 使用新实现，已经开始的工作继续使用它加载的实现。Managed Program 有独立
+生命周期，本地模型可以继续保持就绪。并发 Build 共享执行基础设施，远程等待不占用整单执行名额；
+具体工作的并发仍遵循其声明的资源额度。
+本地 Runtime 可以在已完成工作的内存积累后轮换执行进程：已有 Build 留在原进程做完，新 Build 进入新进程，
+已经就绪的常驻服务继续可用。
 
-Worker 记录启动时规范化后的完整 Runtime Profile。Profile 在 Worker 存活期间改变时，`status` 会报告
-配置已变化，`up` 会拒绝静默复用旧进程，Worker 也会停止；重新启动才会激活新环境。这里保存的是活动
-进程配置文本，不是哈希，也不进入 Build Result。SQLite 另外只固定当前活跃执行使用的 credential 与
-Endpoint 选择，避免新 Endpoint 配置轮询旧 handle。
+执行进程丢失会结束它承载的活跃 Build，并保留已完成的产物和已有的远程回执，不会用修改后的代码重新运行
+同一次 Build。继续制作时创建新 Build 并显式复用。组件后来主动读取的文件仍遵循正常文件语义。
+更新 Distribution 或修改协调进程继承的环境变量，仍需先保留活跃工作，再重启这一启动进程。
 
 Runtime 包是本地可信部署代码，其安装版本由 npm 或 pnpm 管理。Qflow 只在显式 `runtime up` /
 `packages install` 边界选择精确依赖并调用 npm，不维护第二份包锁，也不会把元数据冒充成沙箱。

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createPricingOutput, renderCliError, writeCliHelp, writeCliOutput } from "../src/output.js";
+import { createPlanOutput, createPricingOutput, renderCliError, writeCliHelp, writeCliOutput } from "../src/output.js";
 import type { PlanNeed, PricingEntry } from "../src/output.js";
 import { parseCommand } from "../src/arguments.js";
 
@@ -95,7 +95,8 @@ test("plan presents useful choices and readable requests without default graph i
     },
   } as const;
   const output = capture(human, presentation);
-  assert.match(output, /take\.video\s+← preview/u);
+  assert.match(output, /Run choices\s+1/u);
+  assert.doesNotMatch(output, /← preview/u);
   assert.match(output, /Requests\s+1/u);
   assert.match(output, /Preflight\s+ready/u);
   assert.doesNotMatch(output, /Runtime\s+ready/u);
@@ -104,6 +105,7 @@ test("plan presents useful choices and readable requests without default graph i
   const verbose = capture({ ...human, verbose: true }, presentation);
   assert.match(verbose, /Requests\s+1/u);
   assert.match(verbose, /unused\.image/u);
+  assert.match(verbose, /take\.video\s+← preview/u);
 });
 
 test("plan names the Provider and price page behind each request, and points at --runtime when it cannot", () => {
@@ -164,9 +166,9 @@ test("plan names the Provider and price page behind each request, and points at 
   assert.doesNotMatch(output, /seedance@1#/u);
 
   const verbose = capture({ ...human, verbose: true }, { kind: "plan", machine: { ...base, providers: [
-    { request: "seedance:one", capability: "@qflow/seedance@1#seedance-2-mini", status: "ambiguous", endpoints: ["qflowhub.default", "kie.default"] },
+    { request: "seedance:one", capability: "@qflow/seedance@1#seedance-2-mini", status: "ambiguous", endpoints: ["qflowhub.default", "images.personal"] },
   ] } });
-  assert.match(verbose, /@qflow\/seedance@1#seedance-2-mini\n\s+qflowhub\.default, kie\.default all offer it/u);
+  assert.match(verbose, /@qflow\/seedance@1#seedance-2-mini\n\s+qflowhub\.default, images\.personal all offer it/u);
 });
 
 test("pricing presents Provider-owned material beside the corresponding Needs", () => {
@@ -180,15 +182,15 @@ test("pricing presents Provider-owned material beside the corresponding Needs", 
       }],
     }, {
       request: "image:one", capability: "@qflow/gpt-image@1#gpt-image-2", status: "resolved",
-      endpoint: "kie.default", use: "@qflow/provider-kie",
-      pricing: { kind: "page", url: "https://kie.ai/pricing" },
+      endpoint: "images.personal", use: "@studio/provider-images",
+      pricing: { kind: "page", url: "https://images.example/pricing" },
     }], [{
       request: "seedance:one", step: "video::component::presenter.generate", port: "generation",
       capability: "@qflow/seedance@1#seedance-2", endpoint: "qflowhub.default",
       summary: { fields: { duration: 5, resolution: "720p" }, references: {} }, pending: [],
     }, {
       request: "image:one", step: "video::component::portrait.generate", port: "generation",
-      capability: "@qflow/gpt-image@1#gpt-image-2", endpoint: "kie.default", pending: [],
+      capability: "@qflow/gpt-image@1#gpt-image-2", endpoint: "images.personal", pending: [],
     }]),
   } as const;
   const output = capture(human, presentation);
@@ -196,7 +198,7 @@ test("pricing presents Provider-owned material beside the corresponding Needs", 
   assert.match(output, /https:\/\/qflow\.ai\/v1\/pricing\?model=bytedance%2Fseedance-2/u);
   assert.match(output, /"per_second_usd": 0\.1045/u);
   assert.match(output, /duration 5 · resolution 720p/u);
-  assert.match(output, /Pricing page\s+https:\/\/kie\.ai\/pricing/u);
+  assert.match(output, /Pricing page\s+https:\/\/images\.example\/pricing/u);
 
   const verbose = capture({ ...human, verbose: true }, presentation);
   assert.match(verbose, /"per_second_usd": 0\.1045/u);
@@ -304,12 +306,54 @@ test("run check treats historical reuse as a normal summary", () => {
       targets: ["final.video"],
       candidates: 1,
       satisfactions: 1,
+      historicalOutputCount: 1,
       unresolvedHistoricalOutputs: [{ candidate: "previous", build: "bld_previous", output: "take.video" }],
     },
   });
   assert.match(output, /Targets\s+final\.video/u);
   assert.match(output, /Reuse\s+1 historical Output/u);
   assert.doesNotMatch(output, /unresolved|bld_previous|Candidate/u);
+});
+
+test("plan scope omits unused branches while retaining every demanded request and diagnostic", () => {
+  const needs = Array.from({ length: 61 }, (_, index): PlanNeed => ({
+    request: `need-${index}`, step: `item-${index}`, port: "request", capability: "example@1#render", pending: [],
+    ...(index === 60 ? { issue: "missing source" } : {}),
+  }));
+  const plan = {
+    format: "qflow.cli-plan@1" as const, ok: false, run: "build.svrun", targetCount: 2,
+    targets: ["final.video", "poster.image"], steps: 400, requestCount: needs.length, requestIssueCount: 1,
+    choiceCount: 35, choices: Array.from({ length: 35 }, (_, i) => ({ output: `old-${i}`, candidate: `selected-${i}` })),
+    unreached: Array.from({ length: 125 }, (_, i) => ({ output: `unused-${i}`, operation: "old-producer" })),
+    needs, providers: needs.map((need) => ({ request: need.request, capability: need.capability, status: "resolved" as const, endpoint: "local" })),
+    preflight: { ok: false, capabilityCount: 2, capabilities: ["a", "b"], diagnosticCount: 2,
+      diagnostics: [{ severity: "warning" as const, code: "WARNING", message: "first" },
+        { severity: "error" as const, code: "REQUIRED", message: "last required error" }] },
+  };
+  const machine = createPlanOutput(plan, { verbose: false, limit: 1 });
+  const parsed = JSON.parse(capture({ ...human, json: true }, { kind: "plan", machine }));
+  assert.equal(parsed.choiceCount, 35);
+  assert.equal("choices" in parsed, false);
+  assert.equal("unreached" in parsed, false);
+  assert.equal("steps" in parsed, false);
+  assert.equal(parsed.needs.length, 61);
+  assert.equal(parsed.providers.length, 61);
+  assert.deepEqual(parsed.targets, plan.targets);
+  assert.deepEqual(parsed.preflight.diagnostics, plan.preflight.diagnostics);
+  const rendered = capture(human, { kind: "plan", machine });
+  assert.match(rendered, /missing source/u);
+  assert.match(rendered, /last required error/u);
+  assert.doesNotMatch(rendered, /old-\d|unused-\d/u);
+  assert.match(rendered, /request summary unavailable/u);
+  assert.doesNotMatch(rendered, /no parameters/u);
+
+  const detailed = createPlanOutput(plan, { verbose: true, limit: 1 });
+  assert.equal(detailed.choices?.length, 1);
+  assert.equal(detailed.omittedChoices, 34);
+  assert.equal(detailed.unreached?.length, 1);
+  assert.equal(detailed.omittedUnreached, 124);
+  assert.equal(detailed.needs?.length, 61);
+  assert.deepEqual(detailed.preflight?.diagnostics, plan.preflight.diagnostics);
 });
 
 test("help is concise and describes stable rather than complete output", () => {

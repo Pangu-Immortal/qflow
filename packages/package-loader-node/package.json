@@ -5,11 +5,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./module-scope": "./src/module-scope.ts"
   },
   "dependencies": {
     "@qflow/component-kit": "workspace:*",
     "@qflow/host": "workspace:*",
-    "@qflow/protocol": "workspace:*"
+    "@qflow/protocol": "workspace:*",
+    "cjs-module-lexer": "2.2.1",
+    "typescript": "5.9.3"
   }
 }

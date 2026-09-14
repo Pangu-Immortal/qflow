@@ -7,7 +7,7 @@ description: 开始 Qflow 开发工作。
 
 | 工具 | 版本 | 用于 |
 |---|---|---|
-| Node.js | 22.12+ | 所有工作 |
+| Node.js | 22.15+ | 所有工作 |
 | pnpm | 10.33.x | workspace 管理；由根目录 `packageManager` 字段选择 |
 | Python | 3.10–3.13 | 本地 WhisperX 与 OpenCV Managed Program |
 | uv | latest | Python 环境管理 |

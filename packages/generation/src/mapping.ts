@@ -2,9 +2,15 @@ import { canonicalize } from "@qflow/protocol";
 import type { BlobRef, CanonicalValue, CapabilityRef } from "@qflow/protocol";
 
 import { isMediaPort } from "./ports.js";
-import type { GenerationMediaRole, GenerationMediaValue, GenerationPortTable } from "./ports.js";
+import type { GenerationMediaValue, GenerationPortTable } from "./ports.js";
 import { presentPorts } from "./request.js";
 import type { GenerationRequest } from "./request.js";
+
+/** Per-reference fields consumed by the service's resource transport rather than its generation body. */
+export type GenerationArtifactUrlResolver = (
+  artifact: BlobRef,
+  fields?: Readonly<Record<string, string | number | boolean>>,
+) => Promise<string>;
 
 /**
  * How one service names the fields of one model's declared input ports.
@@ -13,8 +19,6 @@ import type { GenerationRequest } from "./request.js";
  * Provider package therefore never imports a model package: the model owns what
  * it eats, the service owns what it calls that on the wire.
  */
-export type GenerationArtifactUrlResolver = (artifact: BlobRef) => Promise<string>;
-
 export type GenerationFieldMapping =
   /** One scalar written as-is. */
   | { readonly as: "value"; readonly field: string; readonly whenAbsent?: CanonicalValue }
@@ -23,14 +27,15 @@ export type GenerationFieldMapping =
   /** Several scalars written as one array. */
   | { readonly as: "valueArray"; readonly field: string; readonly whenAbsent?: CanonicalValue }
   /** One media item written as a resolved URL. */
-  | { readonly as: "url"; readonly field: string; readonly whenAbsent?: CanonicalValue }
+  | { readonly as: "url"; readonly field: string; readonly resourceFields?: readonly string[]; readonly whenAbsent?: CanonicalValue }
   /** Several media items written as one array of resolved URLs. */
-  | { readonly as: "urlArray"; readonly field: string; readonly whenAbsent?: CanonicalValue }
+  | { readonly as: "urlArray"; readonly field: string; readonly resourceFields?: readonly string[]; readonly whenAbsent?: CanonicalValue }
   /** Media items written as objects carrying the resolved URL and their item fields. */
   | {
       readonly as: "itemObject";
       readonly field: string;
       readonly urlKey: string;
+      readonly resourceFields?: readonly string[];
       readonly fieldKeys: Readonly<Record<string, string>>;
       readonly whenAbsent?: CanonicalValue;
     };
@@ -95,11 +100,9 @@ export function selectWireModelForRequest(
   return selectWireModel(mapping, present);
 }
 
-async function urlsOf(
-  values: readonly GenerationMediaValue[],
-  resolve: GenerationArtifactUrlResolver,
-): Promise<string[]> {
-  return await Promise.all(values.map((item) => resolve(item.artifact)));
+function resourceFields(item: GenerationMediaValue, names: readonly string[] = []) {
+  return Object.fromEntries(names.filter((name) => item.fields?.[name] !== undefined)
+    .map((name) => [name, item.fields![name]!]));
 }
 
 /**
@@ -127,13 +130,15 @@ export async function compileWireRequest(
     } else if (field.as === "valueArray") {
       input[field.field] = supplied as readonly CanonicalValue[];
     } else if (field.as === "url") {
-      input[field.field] = await resolve((supplied[0] as GenerationMediaValue).artifact);
+      const item = supplied[0] as GenerationMediaValue;
+      input[field.field] = await resolve(item.artifact, resourceFields(item, field.resourceFields));
     } else if (field.as === "urlArray") {
-      input[field.field] = await urlsOf(supplied as readonly GenerationMediaValue[], resolve);
+      input[field.field] = await Promise.all((supplied as readonly GenerationMediaValue[])
+        .map((item) => resolve(item.artifact, resourceFields(item, field.resourceFields))));
     } else {
       const media = supplied as readonly GenerationMediaValue[];
       input[field.field] = await Promise.all(media.map(async (item) => ({
-        [field.urlKey]: await resolve(item.artifact),
+        [field.urlKey]: await resolve(item.artifact, resourceFields(item, field.resourceFields)),
         ...Object.fromEntries(Object.entries(field.fieldKeys)
           .filter(([source]) => item.fields?.[source] !== undefined)
           .map(([source, target]) => [target, item.fields![source] as CanonicalValue])),
@@ -178,30 +183,23 @@ export function assertMappingCoversPorts(
     if (isMediaPort(port)) {
       const media = port.value;
       const itemFields = media.itemFields ?? [];
-      if (itemFields.length > 0) {
-        assert(field.as === "itemObject", `${subject} must use itemObject because the port carries item fields`);
-        for (const item of itemFields) {
-          if (item.optional === true) continue;
-          assert(field.fieldKeys[item.name] !== undefined,
-            `${subject} does not map required item field ${item.name}`);
-        }
-        Object.keys(field.fieldKeys).forEach((name) => assert(
-          itemFields.some((item) => item.name === name),
-          `${subject} maps unknown item field ${name}`,
-        ));
-        continue;
-      }
-      assert(media.accepts.length === 1,
+      assert(itemFields.length > 0 || media.accepts.length === 1,
         `${subject} accepts ${media.accepts.join(", ")}; declare one port per media role so each maps to one wire field`);
       assert(field.as === "url" || field.as === "urlArray" || field.as === "itemObject",
         `${subject} must resolve media to a URL`);
       if (field.as === "url") {
         assert(port.maxItems === 1, `${subject} uses url but the port accepts up to ${port.maxItems} items`);
       }
-      if (field.as === "itemObject") {
-        assert(field.fieldKeys !== undefined && Object.keys(field.fieldKeys).length === 0,
-          `${subject} itemObject must not map undeclared item fields`);
+      const mappedFields = [
+        ...(field.resourceFields ?? []),
+        ...(field.as === "itemObject" ? Object.keys(field.fieldKeys) : []),
+      ];
+      for (const item of itemFields) {
+        if (item.optional !== true) assert(mappedFields.includes(item.name),
+          `${subject} does not map required item field ${item.name}`);
       }
+      for (const name of mappedFields) assert(itemFields.some((item) => item.name === name),
+        `${subject} maps unknown item field ${name}`);
       continue;
     }
     if (port.maxItems > 1) {

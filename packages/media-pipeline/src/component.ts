@@ -66,6 +66,7 @@ function plannedMediaNeed(
   port: string,
   capability: CapabilityRef,
   roles: Readonly<Record<string, string>> = {},
+  present?: PlannedNeedFacet["present"],
 ): PlannedNeedFacet {
   return {
     producer,
@@ -75,6 +76,7 @@ function plannedMediaNeed(
       return { constraints: {}, pendingInputs: plannedNeedInputs(state, step, roles) };
     },
     present(specification) {
+      if (present !== undefined) return present(specification);
       const references: Record<string, number> = {};
       for (const item of specification.pendingInputs) {
         const role = item.role;
@@ -85,6 +87,18 @@ function plannedMediaNeed(
     },
   };
 }
+
+const presentAudioRender: NonNullable<PlannedNeedFacet["present"]> = (specification) => {
+  const request = specification.constraints as Partial<RenderAudioNeed>;
+  if (request.plan === undefined) return { fields: {}, references: {} };
+  const { plan, range } = request;
+  return { fields: {
+    startFrame: [range?.startFrame ?? 0],
+    endFrameExclusive: [range?.endFrameExclusive ?? plan.frameCount],
+    frameRate: [`${plan.frameRate.numerator}/${plan.frameRate.denominator}`],
+    sampleRate: [plan.sampleRate],
+  }, references: {} };
+};
 
 export const mediaPipelineComponent = {
   validators: [
@@ -363,8 +377,8 @@ export const mediaPipelineComponent = {
       mediaPipelineCapabilities.projectSpeechEvidenceAudio,
       { media: "audio" },
     ),
-    plannedMediaNeed(mediaPipelineProducers.renderAudio, "audio", mediaPipelineCapabilities.renderAudio, { plan: "audio" }),
-    plannedMediaNeed(mediaPipelineProducers.renderAudioRange, "audio", mediaPipelineCapabilities.renderAudio, { plan: "audio" }),
+    plannedMediaNeed(mediaPipelineProducers.renderAudio, "audio", mediaPipelineCapabilities.renderAudio, {}, presentAudioRender),
+    plannedMediaNeed(mediaPipelineProducers.renderAudioRange, "audio", mediaPipelineCapabilities.renderAudio, {}, presentAudioRender),
     plannedMediaNeed(mediaPipelineProducers.mux, "media", mediaPipelineCapabilities.mux, { visual: "video", audio: "audio" }),
   ],
 } satisfies ComponentPackage;

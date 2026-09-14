@@ -64,6 +64,11 @@ language and delivery density the actual work needs.
 
 ## Let the sample carry the character
 
+When choosing or designing a sample, prefer the performed language and a delivery compatible with
+the new piece when available. A sample carries pronunciation and phrasing cues as well as timbre;
+cross-language identity transfer does not by itself establish the target accent or cadence. Preserve
+a supplied identity and direct those target-language qualities explicitly in the requests.
+
 Choose a short, natural line that gives the intended voice room to show itself. A curious question
 followed by a pleased response can demonstrate a lively character: "Wait, you did all that with one
 photo? Okay, now you've got my attention." A considered observation can suit the second casting.

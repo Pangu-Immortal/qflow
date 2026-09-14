@@ -24,6 +24,10 @@ parody UI. It does not automatically inherit the host's iPhone capture paragraph
 
 ## Work with the example
 
+The example Profiles use local media/rendering and QflowHub for hosted capabilities. They illustrate
+execution choices; connect the intended account or select project Providers before paid work.
+Existing production projects can retain their own Providers independently of these example defaults.
+
 With a configured Runtime and installed Distribution, run from this directory:
 
 ```bash

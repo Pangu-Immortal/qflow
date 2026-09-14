@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, realpath, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { externalPackageInstallRoot } from "@qflow/package-loader-node";
 
 export type RegistryPackageSpec = {
   readonly name: string;
@@ -10,11 +11,13 @@ export type RegistryPackageSpec = {
 
 export type HostPackageReport = RegistryPackageSpec & {
   readonly root: string;
+  readonly logPath?: string;
   readonly action: "already-installed" | "installed";
 };
 
 export type HostPackageProgress = RegistryPackageSpec & {
   readonly phase: "checking" | "installing" | "ready";
+  readonly logPath?: string;
 };
 
 function exactVersion(value: string): boolean {
@@ -63,18 +66,20 @@ export async function inspectHostPackage(
   root: string,
 ): Promise<HostPackageReport | undefined> {
   const required = parseRegistryPackageSpec(specifier);
-  const version = await installedVersion(resolve(root), required.name);
+  const installation = externalPackageInstallRoot(root, required.name, required.version);
+  const version = await installedVersion(installation, required.name);
   return version === required.version
-    ? { ...required, root: resolve(root), action: "already-installed" }
+    ? { ...required, root: installation, action: "already-installed" }
     : undefined;
 }
 
-function runNpm(root: string, specifiers: readonly string[]): Promise<void> {
+async function runNpm(root: string, specifiers: readonly string[], logPath: string): Promise<void> {
+  // npm's prefix and cwd must denote the same physical project (not /tmp vs /private/tmp).
+  const cwd = await realpath(root);
   const npmArgs = [
     "install",
-    "--prefix", root,
+    "--prefix", cwd,
     "--save-exact",
-    "--package-lock=false",
     "--no-audit",
     "--no-fund",
     "--omit=dev",
@@ -83,27 +88,30 @@ function runNpm(root: string, specifiers: readonly string[]): Promise<void> {
   const windows = process.platform === "win32";
   const command = windows ? (process.env.ComSpec ?? "cmd.exe") : "npm";
   const args = windows ? ["/d", "/s", "/c", "npm.cmd", ...npmArgs] : npmArgs;
-  return new Promise((done, reject) => {
-    const child = spawn(command, args, {
-      shell: false,
-      windowsHide: true,
-      stdio: ["ignore", "pipe", "pipe"],
+  const log = await open(logPath, "a");
+  await log.write(`\n${new Date().toISOString()} npm ${npmArgs.join(" ")}\n`);
+  try {
+    await new Promise<void>((done, reject) => {
+      const child = spawn(command, args, {
+        cwd,
+        shell: false,
+        windowsHide: true,
+        stdio: ["ignore", log.fd, log.fd],
+      });
+      child.on("error", (error) => reject(new Error(`Cannot start npm: ${error.message}. Log: ${logPath}`, { cause: error })));
+      child.on("close", (code) => {
+        if (code === 0) done();
+        else reject(new Error(`npm install failed (exit ${code ?? "signal"}). Log: ${logPath}`));
+      });
     });
-    let output = "";
-    child.stdout.on("data", (chunk: Buffer) => { output = `${output}${chunk.toString()}`.slice(-32_000); });
-    child.stderr.on("data", (chunk: Buffer) => { output = `${output}${chunk.toString()}`.slice(-32_000); });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) done();
-      else reject(new Error(`npm install failed${output.trim().length === 0 ? "" : `: ${output.trim().split("\n").at(-1)}`}`));
-    });
-  });
+  } finally {
+    await log.close();
+  }
 }
 
 /**
- * Install missing upstream packages into one user/machine npm home.
- * npm's ordinary package.json is the only persistent package-set record; Qflow
- * creates no lock, receipt, hash inventory or project-local copy.
+ * Reuse each exact upstream release in its own npm installation. npm owns its
+ * package.json, lockfile and dependencies; Qflow keeps no parallel inventory.
  */
 export async function prepareHostPackages(
   specifiers: readonly string[],
@@ -113,46 +121,35 @@ export async function prepareHostPackages(
   },
 ): Promise<readonly HostPackageReport[]> {
   const root = resolve(options.root);
-  const byName = new Map<string, RegistryPackageSpec>();
+  const bySpecifier = new Map<string, RegistryPackageSpec>();
   for (const specifier of specifiers) {
     const parsed = parseRegistryPackageSpec(specifier);
-    const previous = byName.get(parsed.name);
-    if (previous !== undefined && previous.version !== parsed.version) {
-      throw new Error(`${parsed.name} is required at both ${previous.version} and ${parsed.version}`);
-    }
-    byName.set(parsed.name, parsed);
+    bySpecifier.set(parsed.specifier, parsed);
   }
-  const required = [...byName.values()].sort((left, right) => left.name.localeCompare(right.name));
-  const missing: RegistryPackageSpec[] = [];
+  const required = [...bySpecifier.values()].sort((left, right) => left.specifier.localeCompare(right.specifier));
+  const reports: HostPackageReport[] = [];
   for (const item of required) {
+    const installation = externalPackageInstallRoot(root, item.name, item.version);
     options.onProgress?.({ ...item, phase: "checking" });
-    if (await installedVersion(root, item.name) !== item.version) missing.push(item);
-  }
-  if (missing.length > 0) {
-    await mkdir(root, { recursive: true });
-    try {
-      await readFile(join(root, "package.json"), "utf8");
-    } catch (error) {
-      if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error;
-      await writeFile(join(root, "package.json"), `${JSON.stringify({
+    const missing = await installedVersion(installation, item.name) !== item.version;
+    const logPath = join(installation, "install.log");
+    if (missing) {
+      await mkdir(installation, { recursive: true });
+      await writeFile(join(installation, "package.json"), `${JSON.stringify({
         name: "qflow-machine-packages",
         private: true,
         description: "Upstream npm packages used on demand by Qflow",
-        dependencies: {},
+        dependencies: { [item.name]: item.version },
       }, null, 2)}\n`, "utf8");
+      options.onProgress?.({ ...item, phase: "installing", logPath });
+      await runNpm(installation, [item.specifier], logPath);
     }
-    for (const item of missing) options.onProgress?.({ ...item, phase: "installing" });
-    await runNpm(root, missing.map((item) => item.specifier));
-  }
-  const installed = new Set(missing.map((item) => item.name));
-  const reports: HostPackageReport[] = [];
-  for (const item of required) {
-    const version = await installedVersion(root, item.name);
+    const version = await installedVersion(installation, item.name);
     if (version !== item.version) {
-      throw new Error(`npm did not install ${item.specifier} into ${root}`);
+      throw new Error(`npm did not install ${item.specifier} into ${installation}. Log: ${logPath}`);
     }
     options.onProgress?.({ ...item, phase: "ready" });
-    reports.push({ ...item, root, action: installed.has(item.name) ? "installed" : "already-installed" });
+    reports.push({ ...item, root: installation, ...(missing ? { logPath } : {}), action: missing ? "installed" : "already-installed" });
   }
   return reports;
 }

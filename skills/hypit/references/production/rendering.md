@@ -106,16 +106,25 @@ can bind these capabilities to different compatible Endpoints.
 
 For the local HyperFrames Provider, `workers` selects independent Chrome processes within one render.
 They share the staged document and decoded source frames, capture different parts of the selected
-interval, and produce one encoded result. `defaultConcurrency` limits simultaneous render Needs;
-optional `browserCapacity` budgets their combined worker counts. These belong to the Runtime
+interval, and produce one encoded result. Prefer `workers: "auto"` for ordinary local rendering;
+the Provider adjusts capture concurrency within its reserved ceiling using the current job's work.
+An explicit worker count preserves that deployment choice. `defaultConcurrency` limits simultaneous render Needs;
+optional `browserCapacity` budgets their combined browser reservations. These belong to the Runtime
 configuration; the Source keeps the same render declaration. [Runtime profiles](../environment/profile.md)
 explains shared capacity and inspecting the selected Provider's configuration. The local HyperFrames
-Provider supports range requests; the AWS Lambda Provider currently accepts whole documents only.
+Provider supports range requests. A project Provider declares the request forms its deployment supports.
 
 A short interval reduces frame capture and source-frame extraction, but still prepares the document's
-declared assets and validates typed Surfaces. More workers accelerate capture, with preparation and
-final encoding contributing separately. Reusing media through the Run avoids generation work; it does
+declared assets and validates typed Surfaces. Extra browsers help only while the machine can use them;
+preparation and final encoding contribute separately. Reusing media through the Run avoids generation work; it does
 not preserve a previous render's temporary preparation.
+
+For a local composition change, render the interval that shows the changed relationship and its
+handoffs. Keep accepted material selected in the Run, then render the complete deliverable when
+the composition is ready. Frame ranges reduce repeated work without changing the authored clock.
+While rendering, communicate the current phase and meaningful progress. The Provider reports
+decoding, browser startup, capture, encoding and storage; `qflow logs <build-id>` preserves their
+timings and execution details when a slow or failed stage needs investigation.
 
 A local render timeout ends that execution attempt and releases capacity after its work has stopped.
 Its failure and already completed Outputs belong to the Build Result. Continue through a new Run

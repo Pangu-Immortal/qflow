@@ -24,3 +24,5 @@ where = ["src"]
 
 [tool.uv]
 package = true
+# Rebuild this small service wheel when its packaged Python implementation changes.
+cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*.py" }]

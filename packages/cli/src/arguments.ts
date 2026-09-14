@@ -18,6 +18,7 @@ type RawOptions = {
   readonly presentation: CliOutputOptions;
   readonly workspaceRoot?: string;
   readonly assetRoots: readonly string[];
+  readonly endpoints: readonly string[];
   readonly packageRoot?: string;
   readonly runtimeProfile?: string;
   readonly follow: boolean;
@@ -36,6 +37,7 @@ type RawOptions = {
   readonly watch: boolean;
   readonly readyFile?: string;
   readonly workerOwner?: string;
+  readonly executionRoot?: string;
   readonly reason?: string;
   readonly slot?: string;
   readonly credentialFile?: string;
@@ -155,6 +157,12 @@ export function parseCommand(argv: readonly string[]): CliCommand {
         ...optionalProject(options),
       };
     }
+    case "logs": {
+      const [build, rest] = requiredPositional(tail, "logs requires one Build id");
+      const options = commandOptions(command, rest, "--runtime", "--workspace", "--lines");
+      return { command, build, lines: options.lines, presentation: options.presentation,
+        ...optionalProject(options), ...optionalRuntime(options) };
+    }
     case "status": {
       const [build, rest] = requiredPositional(tail, "status requires one Build id");
       const options = commandOptions(command, rest, "--runtime", "--workspace", "--watch", "--max-wait-ms", "--limit");
@@ -205,12 +213,13 @@ export function parseCommand(argv: readonly string[]): CliCommand {
     case "auth": return parseAuthCommand(tail);
     case "doctor": {
       const [profile, rest] = optionalPositional(tail);
-      const options = commandOptions(command, rest, "--workspace", "--runtime", "--limit");
+      const options = commandOptions(command, rest, "--workspace", "--runtime", "--limit", "--endpoint");
       if (profile !== undefined && options.runtimeProfile !== undefined) {
         throw new Error("doctor accepts the Runtime Profile either positionally or with --runtime, not both");
       }
       return {
         command,
+        ...(options.endpoints.length === 0 ? {} : { endpoints: options.endpoints }),
         presentation: options.presentation,
         limit: options.limit,
         ...optionalProject(options),
@@ -223,7 +232,7 @@ export function parseCommand(argv: readonly string[]): CliCommand {
     }
     case "_worker": {
       const [profile, rest] = requiredPositional(tail, "internal Worker launch is incomplete");
-      const options = commandOptions(command, rest, "--ready-file", "--worker-owner", "--package-root");
+      const options = commandOptions(command, rest, "--ready-file", "--worker-owner", "--package-root", "--execution-root");
       if (options.readyFile === undefined || options.workerOwner === undefined) {
         throw new Error("internal Worker launch is incomplete");
       }
@@ -232,6 +241,7 @@ export function parseCommand(argv: readonly string[]): CliCommand {
         profile,
         readyFile: options.readyFile,
         workerOwner: options.workerOwner,
+        ...(options.executionRoot === undefined ? {} : { executionRoot: options.executionRoot }),
         presentation: options.presentation,
         ...optionalPackageRoot(options),
       };
@@ -305,7 +315,7 @@ function parseRuntimeCommand(tail: readonly string[]): RuntimeSelectionCommand |
   }
   const [profile, rest] = optionalPositional(values);
   const allowed = action === "up" || action === "down"
-    ? ["--runtime", "--max-wait-ms"] as const
+    ? action === "up" ? ["--runtime", "--max-wait-ms", "--endpoint"] as const : ["--runtime", "--max-wait-ms"] as const
     : action === "status"
       ? ["--runtime", "--limit"] as const
       : ["--runtime", "--lines"] as const;
@@ -320,7 +330,7 @@ function parseRuntimeCommand(tail: readonly string[]): RuntimeSelectionCommand |
     ...optionalProject(options),
   };
   if (action === "up" || action === "down") {
-    return { ...common, action, ...(options.maxWaitMs === undefined ? {} : { maxWaitMs: options.maxWaitMs }) };
+    return { ...common, action, ...(action === "up" && options.endpoints.length > 0 ? { endpoints: options.endpoints } : {}), ...(options.maxWaitMs === undefined ? {} : { maxWaitMs: options.maxWaitMs }) };
   }
   if (action === "status") return { ...common, action, limit: options.limit };
   return { ...common, action, lines: options.lines };
@@ -333,7 +343,7 @@ function parseProgramsCommand(tail: readonly string[]): ProgramsCommand {
   }
   const [profile, rest] = optionalPositional(values);
   const options = commandOptions(`programs ${action}`, rest,
-    "--runtime", "--workspace", "--limit", "--max-wait-ms");
+    "--runtime", "--workspace", "--limit", "--max-wait-ms", "--endpoint");
   if (action !== "up" && options.maxWaitMs !== undefined) {
     throw new Error("--max-wait-ms applies to programs up");
   }
@@ -341,6 +351,7 @@ function parseProgramsCommand(tail: readonly string[]): ProgramsCommand {
   const runtime = runtimeOption(profile ?? options.runtimeProfile);
   const common = {
     command: "programs" as const,
+    ...(options.endpoints.length === 0 ? {} : { endpoints: options.endpoints }),
     action,
     presentation: options.presentation,
     limit: options.limit,
@@ -403,6 +414,7 @@ function parseOptions(values: readonly string[]): RawOptions {
   let runtimeProfile: string | undefined;
   let follow = false;
   let maxWaitMs: number | undefined;
+  const endpoints: string[] = [];
   let outputName: string | undefined;
   let title: string | undefined;
   let note: string | undefined;
@@ -421,6 +433,7 @@ function parseOptions(values: readonly string[]): RawOptions {
   let watch = false;
   let readyFile: string | undefined;
   let workerOwner: string | undefined;
+  let executionRoot: string | undefined;
   let reason: string | undefined;
   let slot: string | undefined;
   let credentialFile: string | undefined;
@@ -429,7 +442,7 @@ function parseOptions(values: readonly string[]): RawOptions {
   for (let index = 0; index < values.length; index += 1) {
     const item = values[index]!;
     if (!item.startsWith("--")) throw new Error(`unexpected positional argument ${item}`);
-    const repeatable = [
+    const repeatable = item === "--endpoint" || [
       "--json", "--jsonl", "--watch", "--verbose", "--debug",
       "--no-color", "--follow", "--asset-root", "--highlight",
     ].includes(item);
@@ -450,6 +463,7 @@ function parseOptions(values: readonly string[]): RawOptions {
       index += 1;
       continue;
     }
+    if (item === "--endpoint") { endpoints.push(optionValue(values, index, "--endpoint requires an Endpoint name")); index += 1; continue; }
     if (item === "--workspace") {
       workspaceRoot = resolve(optionValue(values, index, "--workspace requires a directory")); index += 1; continue;
     }
@@ -506,6 +520,9 @@ function parseOptions(values: readonly string[]): RawOptions {
     if (item === "--worker-owner") {
       workerOwner = optionValue(values, index, "--worker-owner requires an identity"); index += 1; continue;
     }
+    if (item === "--execution-root") {
+      executionRoot = resolve(optionValue(values, index, "--execution-root requires a path")); index += 1; continue;
+    }
     if (item === "--reason") {
       reason = optionValue(values, index, "--reason requires text"); index += 1; continue;
     }
@@ -527,6 +544,7 @@ function parseOptions(values: readonly string[]): RawOptions {
     presentation: { json: json || jsonl, ...(jsonl ? { jsonl: true } : {}), color, verbose },
     assetRoots,
     follow,
+    endpoints,
     highlightedOutputs,
     clearTitle,
     clearNote,
@@ -546,6 +564,7 @@ function parseOptions(values: readonly string[]): RawOptions {
     ...(destination === undefined ? {} : { destination }),
     ...(readyFile === undefined ? {} : { readyFile }),
     ...(workerOwner === undefined ? {} : { workerOwner }),
+    ...(executionRoot === undefined ? {} : { executionRoot }),
     ...(reason === undefined ? {} : { reason }),
     ...(slot === undefined ? {} : { slot }),
     ...(credentialFile === undefined ? {} : { credentialFile }),

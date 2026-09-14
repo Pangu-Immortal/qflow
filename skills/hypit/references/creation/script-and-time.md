@@ -36,12 +36,12 @@ Choose Script structure from the thought being expressed and the performance car
 ```svml
 <script id="story">
   <hook>
-    <HOST> @claim! I made @proof <Qflow | Hai-Pit> || work overnight @/proof.
+    <HOST> @claim! I made the @proof <API | A P I> || work overnight @/proof.
   </hook>
 </script>
 ```
 
-Here the viewer reads `Qflow` while the performance says `Hai-Pit`. The pair is one indivisible
+Here the viewer reads `API` while the performance receives `A P I`. The pair is one indivisible
 Alignment Unit. `||` ends one on-screen Caption Cue after that unit and lets the next Cue begin with
 `work`; `proof` remains one semantic range, and `claim` is a semantic point that other layers can use.
 
@@ -111,15 +111,18 @@ Chinese, English and mixed-script grouping, spacing and their fit in the picture
 Choose pronunciation while writing the Script. For coined names, unfamiliar brands and abbreviations
 whose reading needs direction, use Dual Text to keep the intended display spelling and give the
 performer a clear spoken form. Write that form as readable words, syllables or letter names in the
-performed language. This lets the request express the sound the work needs.
+performed language. Keep ordinary spelling when it already expresses the intended reading; an
+English name inside Chinese speech does not automatically need a phonetic replacement. The spoken
+side is literal model input, so invented respellings and punctuation can suggest unintended sounds.
+Use a reading established for the selected language and voice, and retain the user's chosen spelling.
 
 ```svml
 <script id="story">
   <opening>
-    <HOST> I make videos with <Qflow | Hai-Pit> and write with <ChatGPT | chat G P T>.
+    <HOST> This app connects through an <API | A P I>.
   </opening>
   <closing>
-    <HOST> Here is what I made with <Qflow | Hai-Pit>.
+    <HOST> The same <API | A P I> works here too.
   </closing>
 </script>
 ```
@@ -247,6 +250,12 @@ reaction, demonstration or held pause. Keep related performances at a coherent d
 estimates can retain fractions with `--rounding none`. `ceil` rounds upward to a whole second, while
 `round` chooses the nearest one. Most video requests use whole seconds; choose the final literal with
 the selected model's supported values and the intended performance in mind.
+
+An energetic performance can still give a dense explanation room to breathe. Use the reference's
+pronunciation-unit count over its spoken passages to inform a candidate rate, then choose for the target's language,
+terminology and actions. Inspect the effective density after rounding each request: fitting every
+line into the shortest supported duration can make the whole delivery rushed. Keep the chosen rate
+and meaningful padding with the production's direction so later Segments follow the same decision.
 
 Let that estimate inform the shape of the passage. A short line may belong with the next response,
 benefit from a little fuller wording, or leave room for a meaningful action. A long passage may read

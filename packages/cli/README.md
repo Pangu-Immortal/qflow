@@ -11,9 +11,37 @@ Source imports decide which language and component packages give the source mean
 Profile separately selects Credential Stores and Endpoints allowed to execute work. The CLI does not
 invent targets, candidates or Provider choices.
 
-Human output is compact by default. `--json` emits a command-specific view rather than raw compiler,
-Runtime or Repository objects. `--verbose` adds operational detail; it never turns the command into
-an internal state dump.
+Human and JSON output answer the same command-specific question. `--json` changes encoding;
+`--verbose` expands scope. Compiler, Runtime and Repository objects are not default reports.
+
+| Command | Default scope | Explicit detail |
+| --- | --- | --- |
+| `check` | Validation, targets and counts | `--verbose`: exported names/types and historical references |
+| `plan` | Targets, demanded requests, Endpoint selection and diagnostics | `--verbose`: Run choices, graph step count and unreached declarations |
+| `pricing` | Requests that may incur a Provider charge and their rate material | `--verbose`: declared no-charge requests and original documents |
+| `status`, `activity` | Current work, Provider-reported phases and failures | `--verbose`: individual operations; activity also includes capacity reservations |
+| `inspect` | Targets and explicitly highlighted Outputs, outcome and failure evidence | `--output <name>` selects one Output; `--verbose` browses all available Outputs and receipts |
+| `doctor`, `programs` | Complete diagnostics; program discovery or the unmet result of an explicit lifecycle action | `--verbose`: successful lifecycle details; `--limit` bounds the healthy program list |
+
+Run choices count explicit Candidate selections, which can supply existing work or execute an
+alternative producer. They are not a count of reused files. Result output counts describe all
+available named Outputs, including forwarded ones; they are not a count of newly generated assets.
+`history <output>` lists Builds containing that name, including reuse, rather than deduplicating
+generation events or guessing whether mutable external files still contain the same bytes.
+`inspect` chooses names before resolving references, so an unrelated Output cannot delay or break
+inspection of a target. It reports the number of other Outputs without reading their descriptions.
+
+`plan` retains every target, demanded request and preflight diagnostic in both encodings. `--limit`
+bounds expanded detail, not the work inventory before grouping. `inspect` likewise keeps its default
+target/highlight selection intact; `--limit` bounds the broader `--verbose` list, with an omitted count.
+No-charge classification continues to belong to the selected Endpoint's pricing declaration.
+
+Build follow and status include Provider-reported local Command activity as well as asynchronous
+Operations. Follow coalesces counters into readable updates and continues to distinguish execution
+from Result saving. Status groups identical active Operations and retains failures by default;
+completed receipts are detail. Activity reports the phases that trigger its updates and ignores
+changes confined to Builds outside the displayed page. Providers own the phase vocabulary; the CLI
+does not interpret model or renderer names.
 
 ## Project and Runtime context
 
@@ -24,7 +52,8 @@ directory, including when `--workspace` is supplied.
 
 Runtime-aware commands use an explicit `--runtime` for that invocation, or read exactly the resolved
 project's `.qflow/runtime` pointer. `runtime use` writes the pointer; a Profile filename by itself does
-not select it. Project selection is also available on `paths`, `doctor`, execution status/control,
+not select it. The pointer is a file, separate from the Profile's `dataRoot`; a directory at that
+path is reported explicitly and preserved. Project selection is also available on `paths`, `doctor`, execution status/control,
 Runtime operations, `programs` and `auth`. Machine-wide `packages` operations have no project selector.
 
 `paths` shows the effective locations and whether the Profile came from a command argument, a project
@@ -46,6 +75,9 @@ settings without searching arbitrary records for a request-shaped object. When a
 made by an earlier Build step, that direct graph edge stays symbolic until the file exists; the rest
 of the request is still shown. A complete request is resolved through the same Endpoint Registry as
 the Build, including the Endpoint's `supports` check.
+Each component's planned-Need presentation owns its useful request fields. An empty presentation
+means the summary is unavailable, not that the request has no parameters. Structured render inputs
+are summarized by their owning packages; the CLI does not traverse upstream graphs to invent them.
 
 `pricing <run>` uses that selected Runtime to read Provider-owned rate material. The default report
 summarizes requests whose resolved Endpoint explicitly declares `pricing.kind: "local"` as having no
@@ -74,3 +106,24 @@ machine-view union. `main.ts` resolves project and selected Runtime context sepa
 syntax, then routes these command groups. Result commands do not consult or construct a Runtime,
 and the generic CLI cannot silently choose a Result Repository or a Provider-specific login
 flow.
+
+## Execution logs
+
+`qflow logs <build-id> [--workspace <project>] [--runtime <profile>] [--lines <count>]` reads Build
+execution phases and Provider diagnostics. It reads a finished Result directly, without opening the
+Runtime; an active Build is read through Runtime control. The selected Repository handles file access.
+`--lines` limits the tail and the report states the omitted count; JSON carries records plus that count.
+`inspect` exposes an available log separately from authored Outputs. `qflow runtime logs` reads the
+Worker process log instead, for Runtime startup or process-level failures.
+
+Project context resolution is owned by [`@qflow/project-context-node`](../project-context-node/README.md).
+CLI, Studio and creation tools call that same package; the CLI is not another environment owner.
+
+`doctor`, `programs up|status|down`, and `runtime up` accept repeated `--endpoint <instance>` values.
+The same Endpoint scope reaches package preparation and Program operations. Omission means the whole
+Profile. Build preflight instead uses the Endpoints resolved for that Build's concrete requests.
+An unrelated offered capability does not add another credential or Program requirement.
+
+Upstream package installation reports an `install.log` path at preparation time. Exact package
+releases coexist below the machine home, each with npm's own package.json and lockfile. `paths` shows
+the home; `packages status <name@version>` checks the requested release rather than a mutable latest copy.

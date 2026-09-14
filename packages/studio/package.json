@@ -28,6 +28,7 @@
     "@qflow/performance-studio": "workspace:*",
     "@qflow/sound-studio": "workspace:*",
     "@qflow/program-space": "workspace:*",
+    "@qflow/project-context-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/ranking-studio": "workspace:*",
     "@qflow/run": "workspace:*",

@@ -141,6 +141,7 @@ export function createLocalWhisperXProvider(config: CreateLocalWhisperXProviderO
           const audioPath = join(work, "alignment-evidence.wav");
           await writeFile(audioPath, audio);
           const signal = AbortSignal.timeout(requestTimeoutMs);
+          await context.reportProgress?.({ phase: "Checking local transcription service" });
           const healthResponse = await fetch(`${normalizedBaseUrl}/health`, { signal });
           const health = await limitedJson(healthResponse, Math.min(maxResponseBytes, 64 * 1024), "WhisperX health");
           assert(health.value !== null && typeof health.value === "object" && !Array.isArray(health.value),
@@ -164,6 +165,7 @@ export function createLocalWhisperXProvider(config: CreateLocalWhisperXProviderO
             && healthValue.compute === expectedCompute
             && healthValue.batchSize === expectedBatchSize,
           "WhisperX service runtime identity differs from the configured Provider");
+          await context.reportProgress?.({ phase: "Transcribing and aligning words" });
           const transcriptionResponse = await fetch(`${normalizedBaseUrl}/transcribe`, {
             method: "POST",
             headers: { "content-type": "application/json" },
@@ -181,6 +183,7 @@ export function createLocalWhisperXProvider(config: CreateLocalWhisperXProviderO
           const evidence: AlignedTranscriptEvidence = sealAlignedTranscriptEvidence({
             passages,
           });
+          await context.reportProgress?.({ phase: "Word timing ready" });
           return result(canonicalize(evidence));
         } finally {
           await rm(work, { recursive: true, force: true }).catch(() => {});

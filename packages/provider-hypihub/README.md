@@ -1,21 +1,26 @@
 # `@qflow/provider-qflowhub`
 
 Thin Qflow Runtime Provider for a QflowHub deployment. It is an optional default gateway for
-paid generation and WhisperX alignment requests; callers may keep their own Provider and select QflowHub only
-when its OAuth login is configured.
+paid generation and WhisperX alignment requests. Select it for a chosen QflowHub account, with OAuth
+or an API key in the configured Credential Store; other Providers remain ordinary Profile choices.
 
-It maps the currently shipped image/video model capabilities to QflowHub, including image edits and
+`doctor` is read-only. If a stored OAuth access token needs refresh, it reports that account access
+and refresh validity remain unchecked; it does not rotate credentials or conclude that their Store
+is read-only. Authorized execution and pricing reads retain the normal refresh-and-persist path.
+An actual refresh rejection calls for reconnecting the selected account.
+
+Its mapping table declares the image/video/speech model capabilities it implements, including image edits and
 image-to-video first-frame inputs, submits jobs, polls them, downloads the first-class assets and
 admits them into the current Build's working byte area. Image references use QflowHub's documented
 `reference_images` object shape (`[{ "url": "…" }]`); video references use the public
-`reference_image_urls`, `reference_videos`, and `reference_audios` fields (with `ref_video_url`
-for one video). First/last-frame images use `first_frame` and `last_frame`.
+`reference_image_urls`, `reference_videos`, and `reference_audios` fields. A single reference video
+remains in `reference_videos`; `ref_video_url` is reserved for a model's source-video port. First/last-frame images use `first_frame` and `last_frame`.
 
 Seedance 2.5 (`@qflow/seedance` model `2.5`) maps to `bytedance/seedance-2-5` and supports
 `480p`, `720p` and `1080p`. The Provider passes the authored `resolution` to `POST /v1/videos`;
 omitting it in the Seedance Surface defaults to `720p`.
 
-The current QflowHub GPT Image 2 route exposes the same request surface as its KIE upstream:
+The current QflowHub GPT Image 2 route has these service-specific limits:
 
 | Resolution | Ratios unavailable at this Endpoint | `background` |
 | --- | --- | --- |
@@ -23,9 +28,13 @@ The current QflowHub GPT Image 2 route exposes the same request surface as its K
 | `2K` | `5:4`, `4:5`, `3:1`, `1:3`, `9:21` | omit |
 | `4K` | `3:1`, `1:3`, `9:21` | omit |
 
-QflowHub owns this support check independently: it neither imports the KIE Provider nor narrows the
-GPT Image model package. When the service surface changes, this Provider can change without changing
+QflowHub owns this support check independently: it leaves the GPT Image model package unchanged. When the service surface changes, this Provider can change without changing
 the model or another Provider.
+
+Model identity is preserved across input modes: Seedream 5 Lite references use the Lite image-edit
+route, and Grok 1.5 Preview remains the Preview model. A deployment's current catalogue may offer
+newer models or omit one implemented here. Availability and unsupported-input errors retain their
+service explanation; they do not imply expired credentials or authorize substituting another model.
 
 For moving portraits, [Volcengine Matting](../volcengine-matting/README.md) maps
 `@qflow/volcengine-matting@1#matte-portrait-video` to `POST /v1/videos` with
@@ -35,8 +44,8 @@ references; the returned job uses the same polling and asset collection lifecycl
 account's `/v1/models` establishes availability. The processed video enters ordinary Normalize,
 then either semantic alignment for a Script performance or Media Track for B-roll.
 
-The existing [Background Removal](../background-removal/README.md) package handles single images
-through KIE Recraft. This Provider does not bind that separate image capability either.
+[Background Removal](../background-removal/README.md) declares a separate single-image capability.
+This Provider does not currently implement it; select a project Provider for that operation.
 
 Runtime Profile example:
 
@@ -68,8 +77,16 @@ Resources are uploaded through a session from `POST /v1/files/uploads`, followed
 regional multipart instructions returned by QflowHub. The Provider follows the server-selected part
 size and part concurrency, retries a failed part with a fresh signed URL, completes or cancels that
 one upload, and then passes the returned HTTPS URL to generation or transcription. One
-Resource identity is uploaded once within one Runtime operation. Qflow keeps no upload catalog or
-cross-Build cache. Embedded callers may replace this transport with `publicAssetUrl`.
+Resource identity with the same declared person-reference classification is uploaded once within one Runtime operation. Qflow keeps no upload catalog or
+cross-Build cache. Seedance visual references can carry `personReference` in their media fields;
+the mapping declares it as a resource-transport field and the upload session receives
+`is_person_reference`, preserving true, false and omission. It stays out of the generation body.
+QflowHub stores the authored classification and prepares the applicable upstream person reference;
+this Provider does not detect faces or select an upstream private-avatar group.
+
+Embedded callers may replace transport with `publicAssetUrl(artifact, resources, fields)`. That
+callback receives the declared resource fields and must preserve any required service preparation,
+such as uploading a marked person reference through QflowHub before returning its URL.
 
 OAuth login stores the access token, refresh token and expiry as one opaque credential value. The
 browser callback only confirms that authorization returned to the CLI; the CLI reports success after
@@ -97,7 +114,7 @@ the Provider does not maintain a second list of billing formulas or calculate a 
 QflowHub declares MiMo Voice Design and Voice Clone together with every other capability it serves; it
 never hides one. Voice Design produces an accepted voice-reference Resource, and Voice Clone uses
 that reference to produce independent speech. Qflow does not expose MiMo preset voices. When another
-selected Endpoint offers the same capability (a local WhisperX or the official MiMo
+selected Endpoint offers the same capability (such as local WhisperX or a project-owned speech
 Provider), the Runtime Profile's `bindings` say which Endpoint serves it.
 
 Execution policy remains local to this Provider:

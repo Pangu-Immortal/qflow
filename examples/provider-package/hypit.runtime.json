@@ -1,0 +1,12 @@
+{
+  "format": "qflow.runtime-local@1",
+  "dataRoot": ".qflow/execution",
+  "credentials": { "os": { "use": "@qflow/credential-store-os" } },
+  "endpoints": {
+    "images.personal": {
+      "use": "@example/provider-images",
+      "config": { "baseUrl": "https://images.example", "apiKey": { "store": "os", "key": "images.personal" } }
+    }
+  },
+  "bindings": { "@qflow/gpt-image@1#gpt-image-2": "images.personal" }
+}

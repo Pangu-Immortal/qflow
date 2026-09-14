@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { encodeOAuth2Credential } from "@qflow/runtime";
 
 import { EndpointRegistry, MemoryResourceStore } from "@qflow/driver-node";
 import { defineEndpointPackage } from "@qflow/endpoint-kit";
@@ -233,6 +234,20 @@ test("QflowHub prices the wire route selected by an authored future input", asyn
   });
 });
 
+test("QflowHub doctor leaves expired OAuth refresh validity unknown without misidentifying the Store", async () => {
+  const diagnostics = await diagnoseQflowHubProvider({ fetch: async () => {
+    throw new Error("Read-only doctor must not rotate an expired credential");
+  } }, {
+    credentials: { apiKey: { secret: encodeOAuth2Credential({
+      accessToken: "expired", refreshToken: "unverified-refresh", expiresAt: Date.now() - 1_000,
+    }) } },
+    capabilities: [whisperXCapabilities.alignment],
+  });
+  assert.equal(diagnostics[0]?.code, "QFLOWHUB_OAUTH_REFRESH_UNCHECKED");
+  assert.equal(diagnostics[0]?.severity, "warning");
+  assert.doesNotMatch(diagnostics[0]!.message, /credential is read-only/u);
+});
+
 test("QflowHub doctor checks the authenticated catalogue only when actively invoked", async () => {
   let calls = 0;
   const diagnostics = await diagnoseQflowHubProvider({ fetch: async (input, init) => {
@@ -353,8 +368,8 @@ test("QflowHub uploads one referenced Resource once and submits its HTTPS URL", 
   const request = need(sealSeedanceRequest("seedance-2-mini", {
     prompt: ["A presenter turns toward camera."],
     referenceImage: [
-      { role: "image", artifact: reference },
-      { role: "image", artifact: reference },
+      { role: "image", artifact: reference, fields: { personReference: true } },
+      { role: "image", artifact: reference, fields: { personReference: true } },
     ],
     resolution: ["720p"], aspectRatio: ["16:9"], duration: [5],
     generateAudio: [false], webSearch: [false],
@@ -372,6 +387,7 @@ test("QflowHub uploads one referenced Resource once and submits its HTTPS URL", 
       assert.equal(body.bytes, referenceBytes.byteLength);
       assert.equal(body.mime_type, "image/png");
       assert.equal(body.filename, "reference.png");
+      assert.equal(body.is_person_reference, true);
       return Response.json({
         upload_mode: "s3_multipart",
         upload_id: "up_reference",
@@ -667,4 +683,54 @@ test("QflowHub polling errors and operation deadlines fail without settlement po
   assert.equal(offline.status, "failed");
   assert.match(offline.status === "failed" ? offline.failure.message : "", /offline/);
   assert.equal(requests, 1);
+});
+
+test("reference URL reuse includes its authored classification and forwards it to custom transport", async () => {
+  const resources = new MemoryResourceStore();
+  const reference = await resources.put(new Uint8Array([1, 2, 3]), "image/png");
+  const flags = [true, false, undefined, true];
+  const request = need(sealSeedanceRequest("seedance-2-mini", {
+    prompt: ["A person waves."], resolution: ["720p"], aspectRatio: ["9:16"],
+    duration: [5], generateAudio: [false], webSearch: [false],
+    referenceImage: flags.map((flag) => ({ role: "image", artifact: reference,
+      ...(flag === undefined ? {} : { fields: { personReference: flag } }) })),
+  }) as unknown as CanonicalValue);
+  const seen: unknown[] = [];
+  const provider = createQflowHubProvider({
+    publicAssetUrl: async (_artifact, _resources, fields) => {
+      seen.push(fields);
+      return `https://media.test/${String(fields?.personReference)}`;
+    },
+    fetch: async (input, init) => {
+      if (String(input).includes("/models/")) return Response.json({ endpoints: ["videos"] });
+      assert.deepEqual(JSON.parse(String(init?.body)).reference_image_urls, flags.map((flag) => `https://media.test/${String(flag)}`));
+      return Response.json({ id: "classified-inputs", status: "queued" });
+    },
+  });
+  const registry = new EndpointRegistry();
+  await provider.install(registry);
+  const resolved = registry.resolve(request);
+  assert.equal(resolved.status, "resolved");
+  assert.equal(resolved.registration.kind, "asynchronous");
+  const started = await resolved.registration.endpoint.start({ command: { kind: "fulfill-need", id: "classified", need: request }, need: request, resources,
+    credentials: { apiKey: { secret: "test-key" } }, operation: "classified" });
+  assert.equal(started.status, "pending");
+  assert.deepEqual(seen, [{ personReference: true }, { personReference: false }, {}]);
+});
+
+test("an unavailable model reports availability without prescribing another login", async () => {
+  const request = need(sealSeedanceRequest("seedance-2-mini", {
+    prompt: ["A presenter speaks."], resolution: ["720p"], aspectRatio: ["9:16"],
+    duration: [5], generateAudio: [true], webSearch: [false],
+  }) as unknown as CanonicalValue);
+  const endpoint = await endpointFor(request, async () => Response.json({ error: "model_not_found" }, { status: 404 }));
+  const outcome = await endpoint.start({
+    command: { kind: "fulfill-need", id: "command:unavailable", need: request },
+    need: request, resources: new MemoryResourceStore(),
+    credentials: { apiKey: { secret: "test-key" } }, operation: "operation:unavailable",
+  });
+  assert.equal(outcome.status, "failed");
+  if (outcome.status !== "failed") return;
+  assert.match(outcome.failure.message, /404.*model_not_found/u);
+  assert.doesNotMatch(outcome.failure.message, /sign in|auth login/iu);
 });

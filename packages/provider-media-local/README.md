@@ -53,6 +53,5 @@ programme-audio rendering and final muxing remain Build-only. This is declared p
 Runtime and Studio contain no media capability allowlist.
 
 Video-backed normalization is video-authoritative so an AAC packet tail cannot extend the program
-past its final picture. Audio-only normalization is audio-authoritative. The AWS Lambda media Provider
-must return the same public contracts and timing laws; Lambda is an execution topology, not another
-author meaning.
+past its final picture. Audio-only normalization is audio-authoritative. Other implementations of these capabilities must preserve the same public values and timing laws;
+a different execution topology leaves author meaning unchanged.

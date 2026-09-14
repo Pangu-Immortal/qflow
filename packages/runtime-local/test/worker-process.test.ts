@@ -85,13 +85,13 @@ test("one live detached Runtime Worker survives repeated starts and stale startu
     assert.equal(afterMissingStartupMarker.pid, first.pid);
 
     await writeFile(profile, JSON.stringify({ format: "qflow.runtime-local@1", changed: true }), "utf8");
-    assert.equal((await runtimeProcessStatus(profile, dataRoot)).configuration, "changed");
-    await assert.rejects(
-      ensureRuntimeProcess(profile, dataRoot, { command: "must-not-run", args: [] }, 5_000),
-      /Runtime Profile changed/u,
-    );
+    assert.equal((await ensureRuntimeProcess(profile, dataRoot, { command: "must-not-run", args: [] }, 5_000)).pid, first.pid);
 
-    assert.equal((await stopRuntimeProcess(profile, dataRoot, 5_000)).state, "stopped");
+    const otherProfile = join(root, "other-runtime.json");
+    await writeFile(otherProfile, JSON.stringify({ format: "qflow.runtime-local@1", dataRoot }), "utf8");
+    assert.equal((await ensureRuntimeProcess(otherProfile, dataRoot, { command: "must-not-run", args: [] }, 5_000)).pid, first.pid);
+    assert.equal((await runtimeProcessStatus(otherProfile, dataRoot)).pid, first.pid);
+    assert.equal((await stopRuntimeProcess(otherProfile, dataRoot, 5_000)).state, "stopped");
     assert.equal((await runtimeProcessStatus(profile, dataRoot)).state, "stopped");
   } finally {
     await stopRuntimeProcess(profile, dataRoot, 1_000).catch(() => undefined);

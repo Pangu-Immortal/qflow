@@ -1,3 +1,4 @@
+import { preserveExecutionLog } from "@qflow/build-result";
 import type {
   BuildResultFileRef,
   ExternalFileAccess,
@@ -120,10 +121,13 @@ class S3BuildResultWriter implements BuildResultWriter {
       await this.#repository.deleteWriter(this.#build);
       return manifest;
     }
+    const executionLog = await preserveExecutionLog(input.executionLog,
+      async (path, chunks, mediaType) => await this.#repository.writeFile(this.#build, path, chunks, mediaType));
     const now = Date.now();
     const updated: BuildResultManifest = {
       ...manifest,
       outcome: input.outcome,
+      ...(executionLog === undefined ? {} : { executionLog }),
       ...(input.operations === undefined ? {} : { operations: input.operations }),
       finishedAt: manifest.finishedAt ?? now,
       ...(input.failure === undefined ? {} : { failure: input.failure }),

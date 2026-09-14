@@ -20,6 +20,7 @@
     "@qflow/markup": "workspace:*",
     "@qflow/model-kit": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
+    "@qflow/project-context-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/provider-qflowhub": "workspace:*",
     "@qflow/runtime": "workspace:*",

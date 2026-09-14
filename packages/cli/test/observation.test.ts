@@ -27,14 +27,23 @@ function view(
     outstandingCommands: pending,
     operations: [
       ...Array.from({ length: pending }, () => ({
-        endpoint: "kie.default",
+        endpoint: "images.default",
         status: "pending" as const,
         progress: { phase: "generating" },
       })),
-      ...Array.from({ length: completed }, () => ({ endpoint: "kie.default", status: "completed" as const })),
+      ...Array.from({ length: completed }, () => ({ endpoint: "images.default", status: "completed" as const })),
     ],
   };
 }
+
+test("local command activity appears without verbose and wakes observation when frame counts change", () => {
+  const initial = { ...view("running", 0, 0), commands: [{ id: "render", endpoint: "local.example",
+    progress: { phase: "drawing", completed: 40, total: 100, unit: "frames" } }] };
+  const advanced = { ...initial, commands: [{ ...initial.commands[0]!,
+    progress: { ...initial.commands[0]!.progress, completed: 60 } }] };
+  assert.notEqual(buildObservationKey(initial), buildObservationKey(advanced));
+  assert.match(buildProgressLines(buildProgressView(initial), { verbose: false, limit: 20 }).join("\n"), /drawing.*40\/100 frames/);
+});
 
 test("Build observation ignores Worker turn churn and coalesces rapid real progress", async () => {
   const running = view("running", 7, 0);

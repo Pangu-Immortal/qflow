@@ -150,7 +150,9 @@ export function createLocalResultWriter(
               ...(operation.failure === undefined ? {} : { failure: operation.failure }),
             };
           });
+          const executionLog = await options.executionLogs?.open(execution.build);
           await reopened.writer.finish({
+            ...(executionLog === undefined ? {} : { executionLog }),
             operations,
             outcome: execution.decision.outcome,
             ...(execution.decision.reason === undefined ? {} : { failure: execution.decision.reason }),
