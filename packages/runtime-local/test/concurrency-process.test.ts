@@ -22,8 +22,16 @@ async function until(predicate: () => boolean | Promise<boolean>): Promise<void>
   }
 }
 
-for (const scenario of [{ count: 100, capacity: 8 }, { count: 1000, capacity: 1000 }]) {
+// Ordinary regressions exercise queueing and fully concurrent submissions without making
+// every package test compete with a thousand-Build load experiment. The scale suite uses
+// the same production path and assertions, and runs by itself through test/run.mjs.
+const scenarios = process.env.QFLOW_RUNTIME_SCALE_TESTS === "1"
+  ? [{ count: 1000, capacity: 1000 }]
+  : [{ count: 24, capacity: 8 }, { count: 24, capacity: 24 }];
+
+for (const scenario of scenarios) {
   test(`${scenario.count} Builds advance local work while remote capacity is ${scenario.capacity}`, { timeout: 120_000 }, async (t) => {
+    const setupAt = Date.now();
     const root = await mkdtemp(join(tmpdir(), "qflow-many-builds-"));
     const dataRoot = join(root, "runtime");
     const profile = join(root, "profile.json");
@@ -99,6 +107,7 @@ for (const scenario of [{ count: 100, capacity: 8 }, { count: 1000, capacity: 10
         });
       }
       const startedAt = Date.now();
+      t.diagnostic(`prepared ${ids.length} Builds in ${startedAt-setupAt}ms`);
       supervision = superviseBuilds({ profile, dataRoot, readyFile: join(root,"ready"), owner:"concurrency-test", launch:{command:process.execPath,args:[join(distribution,"bin/qflow.mjs")]}, signal:abort.signal,ready:async()=>{} });
       await until(() => local.size === scenario.count && starts.size === scenario.capacity);
       assert.equal(processes.size, 1, "remote requests share one process, with private module bindings per Build");
@@ -121,11 +130,13 @@ for (const scenario of [{ count: 100, capacity: 8 }, { count: 1000, capacity: 10
       }
       t.diagnostic(`local-ready=${allLocalAt-startedAt}ms total=${Date.now()-startedAt}ms executor-rss=${Math.round(peakRss/1024/1024)}MiB processes=${processes.size}`);
     } finally {
+      const cleanupAt = Date.now();
       completed = true; submitted = true;
       for (const response of pending) if (!response.writableEnded) response.end(JSON.stringify({complete:true}));
       abort.abort(); await supervision;
       server.closeAllConnections(); await new Promise<void>((resolve) => server.close(() => resolve()));
       state.close(); await rm(root,{recursive:true,force:true});
+      t.diagnostic(`executor shutdown and fixture cleanup=${Date.now()-cleanupAt}ms`);
     }
   });
 }

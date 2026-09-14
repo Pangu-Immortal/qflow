@@ -22,6 +22,10 @@ function managedPython(project) {
 }
 
 const suites = {
+  "runtime-scale": {
+    files: ["packages/runtime-local/test/concurrency-process.test.ts"],
+    env: { QFLOW_RUNTIME_SCALE_TESTS: "1" },
+  },
   "image-opencv": {
     files: ["packages/provider-image-opencv-local/test/provider.test.ts"],
     env: {

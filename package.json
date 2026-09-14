@@ -172,6 +172,7 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "test": "node test/run.mjs",
+    "test:runtime-scale": "node test/run.mjs runtime-scale",
     "test:whisperx-service": "uv run --project services/whisperx --frozen python -m unittest discover -s services/whisperx/tests -p \"test_*.py\"",
     "test:image-opencv": "node test/run.mjs image-opencv",
     "qflow": "node bin/qflow.mjs",

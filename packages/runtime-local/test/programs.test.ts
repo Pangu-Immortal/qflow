@@ -359,12 +359,25 @@ test("up stops waiting when a started program exits", async () => {
     start: nodeProgram("process.exit(1);"),
     probe: async () => ({ state: "down", detail: "nothing is answering" }),
   }));
-  const startedAt = Date.now();
-  const result = await bringManagedProgramsUp(path, { ...options, maxWaitMs: 20_000 });
-  assert.ok(Date.now() - startedAt < 5_000, "a dead program must not consume the readiness timeout");
-  assert.equal(result.programs[0]!.action, "unchanged");
-  assert.match(result.programs[0]!.detail ?? "", /process exited; see/u);
-  await assert.rejects(async () => await readFile(join(root, "programs", "example", "process.pid"), "utf8"));
+  const maxWaitMs = 20_000;
+  let waitingAt: number | undefined;
+  try {
+    const result = await bringManagedProgramsUp(path, {
+      ...options, maxWaitMs,
+      onProgress(event) {
+        // Windows starts a separate console through PowerShell before readiness waiting
+        // begins. Its launch time says nothing about detecting an exited service.
+        if (event.phase === "waiting") waitingAt = Date.now();
+      },
+    });
+    assert.notEqual(waitingAt, undefined, "the program must have started");
+    assert.ok(Date.now() - waitingAt! < maxWaitMs, "a dead program must not consume the readiness timeout");
+    assert.equal(result.programs[0]!.action, "unchanged");
+    assert.match(result.programs[0]!.detail ?? "", /process exited; see/u);
+    await assert.rejects(async () => await readFile(join(root, "programs", "example", "process.pid"), "utf8"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("status probes and changes nothing, so it claims no action", async () => {
