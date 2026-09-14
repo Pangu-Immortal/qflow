@@ -20,7 +20,6 @@ import type { CanvasSpace, SpatialFrame, SpatialRegionTimeline } from "@qflow/sp
 
 import { assertFineCaptionParameters, FINE_CAPTION_FAMILY } from "./style.js";
 import { assertFineCaptionSchedule } from "./schedule.js";
-import { karaokeWordActivation } from "./karaoke.js";
 import { joinSurfaces, uniformGap, wordGapBetween, wordGaps } from "./spacing.js";
 import type {
   FineCaptionActiveUnderline,
@@ -693,8 +692,7 @@ function cueElements(
       })();
   const cueMotion = cueAnimation(parameters, durationFrames);
   const cueLoop = parameters.motion.loopTarget === "cue" ? loopAnimation(parameters, durationFrames) : undefined;
-  const exclusiveFrames = exclusiveActivationFrames(atoms, atomFrames);
-  const activationFrames = karaokeWordActivation(atoms, wordText, exclusiveFrames);
+  const activationFrames = exclusiveActivationFrames(atoms, atomFrames);
   const gapPx = `${compactNumber(parameters.layout.wordGapPx)}px`;
   const atomSurfaces = atoms.map((atom) => atom.wordIds.map((wordId) => wordText.get(wordId) ?? ""));
   // A Cue whose boundaries all agree carries one `column-gap`, which is also what keeps a row that
@@ -846,8 +844,6 @@ function cueElements(
     if (timing === undefined) throw new Error(`Fine Caption is missing timing for Atom ${atom.id}`);
     const activationTiming = activationFrames.get(atom.id);
     if (activationTiming === undefined) throw new Error(`Fine Caption is missing activation timing for Atom ${atom.id}`);
-    const exclusiveTiming = exclusiveFrames.get(atom.id);
-    if (exclusiveTiming === undefined) throw new Error(`Fine Caption is missing exclusive timing for Atom ${atom.id}`);
     const atomId = `atom-${atomIndex + 1}`;
     const surfaces = atomSurfaces[atomIndex] ?? [];
     // The base glyphs and the activated copy stacked over them are laid out from this one list, so
@@ -949,9 +945,8 @@ function cueElements(
         ],
         animation: activeBoxAnimation(
           parameters,
-          // The capsule marks the word being read, so it follows the word-grouped window.
-          activationTiming.start,
-          activationTiming.end,
+          parameters.activeBox.mode === "current" ? activationTiming.start : timing.start,
+          parameters.activeBox.mode === "current" ? activationTiming.end : timing.end,
           durationFrames,
         ),
         attributes: [{ name: "data-caption-active-box", value: "isolated" }],
@@ -1022,11 +1017,7 @@ function cueElements(
       kind: "glyph" | "underline",
     ): void => {
       const activeId = `${atomId}-${suffix}`;
-      // The step paints one whole word, so it follows the word-grouped window in both modes. The
-      // wipe travels across the letterforms of one Unit and keeps that Unit's own interval, with
-      // `current` still owning its span exclusively.
-      const wipes = kind === "glyph" && parameters.karaoke.transition === "wipe";
-      const activeTiming = wipes ? (mode === "current" ? exclusiveTiming : timing) : activationTiming;
+      const activeTiming = mode === "current" ? activationTiming : timing;
       push({
         id: activeId,
         parent: atomId,
@@ -1040,7 +1031,7 @@ function cueElements(
           // clip has opened and this was still cutting the outline off at the glyph advance.
           { name: "position", value: "absolute" },
         ],
-        animation: wipes
+        animation: kind === "glyph" && parameters.karaoke.transition === "wipe"
           ? karaokeWipeAnimation(parameters, mode, activeTiming.start, activeTiming.end, durationFrames)
           : activationStepAnimation(mode, activeTiming.start, activeTiming.end, durationFrames),
         attributes: [{ name: kind === "glyph" ? "data-caption-karaoke" : "data-caption-active-underline", value: mode }],

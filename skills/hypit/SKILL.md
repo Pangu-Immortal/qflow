@@ -235,9 +235,6 @@ practical, revisit that choice and carry the improvement into the work and its n
 
 ## Where the current question is answered
 
-Read the selected reference page in full so its judgment, usage and boundaries stay connected; follow
-additional routes as the current question requires.
-
 | When the question is about | Read |
 | --- | --- |
 | how to express a work through materials, components and authored relationships, and how execution realizes it | `references/production/system.md` |

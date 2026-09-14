@@ -84,9 +84,7 @@ caption.primary {
 
 The same Caption pipeline serves English and Chinese. Script emits English lexical words and
 individual Han characters as Display Words; punctuation stays with its display word. Fine uses
-those units for timing, while authored Cues remain complete reading phrases. Step highlighting groups
-adjacent units that form a word in the displayed Cue, using `Intl.Segmenter`; the underlying Script
-units and measured times stay intact. This grouping affects emphasis, not authored Cue boundaries.
+those units for timing and active Paint, while authored Cues remain complete reading phrases.
 Dual Text retains its complete alignment unit even when it displays or speaks several words.
 
 `word-gap` applies between Latin words and at Chinese/Latin boundaries. Adjacent Han characters and
@@ -103,18 +101,18 @@ font fallbacks supply the required glyphs; the layout does not select a font by 
 
 Both count limits are omitted above so the example flows by available width. For a compact
 single-line treatment, author coherent Cues and choose a font, size and width that fit those Cues.
-`karaoke: off` keeps a complete Cue steady; `current` and `trail` follow speech timing, with step
-emphasis sharing one activation window across each detected word's units.
+`karaoke: off` keeps a complete Cue steady; `current` and `trail` follow its timed units, which are
+normally individual characters in Chinese.
 
 | Effect | Recipe | Visible behavior |
 | --- | --- | --- |
-| Whole-word emphasis | `karaoke: current; karaoke-transition: step` | The complete current word takes the active Paint at its first unit's start, returning to base Paint at the group's end. |
-| Accumulating emphasis | `karaoke: trail; karaoke-transition: step` | Each complete word takes the active Paint at its first unit's start and keeps it for the rest of the Cue. |
+| Whole-character emphasis | `karaoke: current; karaoke-transition: step` | The complete current unit takes the active Paint at its start, returning to base Paint at its end. |
+| Accumulating emphasis | `karaoke: trail; karaoke-transition: step` | Each complete unit takes the active Paint at its start and keeps it for the rest of the Cue. |
 | Sweeping fill | `karaoke: trail; karaoke-transition: wipe` | Paint sweeps inside each unit's glyphs during that unit's own time window. |
 | Spoken-unit appearance | `atom-reveal: on-start` | Each complete unit appears at its start. |
 | Typing appearance | `atom-reveal: typewriter` | Whole graphemes appear in sequence within each unit, starting with its first grapheme at the unit's start. A normal Han unit appears as a complete character. |
 
-`step` is the default Karaoke transition. Choose it for ordinary whole-word highlighting;
+`step` is the default Karaoke transition. Choose it for ordinary Chinese character highlighting;
 `wipe` deliberately produces partial glyph fills. Cue width and duration do not supply a substitute
 clock for either mode. `atom-reveal` controls text appearing, independently of Karaoke recoloring
 already visible text. A Dual Text span shares one timing unit, so its display words activate together

@@ -114,7 +114,7 @@ or quantity and unit together when separating them would make either screen stat
 ### Language changes the reading unit
 
 English commonly uses a word as its smallest timed display unit; Chinese uses individual Han
-characters. That gives Chinese precise character timing, while a Cue still holds a meaningful
+characters. That gives Chinese precise character highlighting, while a Cue still holds a meaningful
 phrase. A Chinese Cue can comfortably contain more characters than an English Cue contains words.
 Choose its length from meaning, reading time and the space the actual font occupies. A fixed word
 or character count cannot make that choice. Count the display side of Dual Text when judging fit.
@@ -127,16 +127,15 @@ or character count cannot make that choice. Count the display side of Dual Text 
 
 Fine already leaves adjacent Han characters together without English word gaps. Its `word-gap`
 controls spaced boundaries, including Chinese/Latin transitions; `letter-spacing` adjusts tracking.
-The same timing supports a stable complete Cue, current-word color or a trail. For flowing
+The same timing supports a stable complete Cue, current-character color or a trail. For flowing
 Chinese speech, a readable phrase with restrained emphasis often works better than a separate bounce
 or reveal on every character. Choose the response for the performance's energy.
 
-For whole-word highlighting, use `karaoke: current` with `karaoke-transition: step`.
-Fine groups adjacent display units into words and lights their complete glyphs together from the
-first unit's time. Choose `trail` when already spoken words should stay highlighted. The grouping is
-a presentation choice; Script keeps its individual character times. `wipe` instead sweeps inside
-each unit's glyphs over that unit's speech window. Both use speech timing, including uneven delivery
-and pauses. Making a Cue longer changes its reading group, not the underlying character timing.
+For whole-character highlighting, use `karaoke: current` with `karaoke-transition: step`.
+Choose `trail` instead of `current` when the already spoken characters should stay highlighted.
+`step` activates the complete timed unit at its start; `wipe` is a different visual choice that
+sweeps inside its glyphs. Both follow each unit's own speech time, including uneven delivery and
+pauses. Making a Cue longer changes its reading group, not its character timing.
 
 Text appearing and text changing color are separate choices. `atom-reveal: all` keeps the complete
 Cue available to read while Karaoke supplies emphasis; `on-start` reveals whole spoken units, and
