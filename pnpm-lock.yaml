@@ -96,6 +96,9 @@ importers:
       '@qflow/deck-track-studio':
         specifier: workspace:*
         version: link:packages/deck-track-studio
+      '@qflow/elevenlabs-speech':
+        specifier: workspace:*
+        version: link:packages/elevenlabs-speech
       '@qflow/estimate':
         specifier: workspace:*
         version: link:packages/estimate
@@ -105,6 +108,9 @@ importers:
       '@qflow/film-studio':
         specifier: workspace:*
         version: link:packages/film-studio
+      '@qflow/fishaudio-speech':
+        specifier: workspace:*
+        version: link:packages/fishaudio-speech
       '@qflow/fonts-open':
         specifier: workspace:*
         version: link:packages/fonts-open
@@ -306,6 +312,24 @@ importers:
       vitepress:
         specifier: ^1.6.4
         version: 1.6.4(@algolia/client-search@5.56.0)(@types/node@24.10.1)(lightningcss@1.33.0)(postcss@8.5.28)(search-insights@2.17.3)(typescript@5.9.3)
+
+  examples/complex-explainer/packages/launch-scenes: {}
+
+  examples/complex-explainer/packages/opening-system:
+    dependencies:
+      '@explainer/visual-language':
+        specifier: file:../visual-language
+        version: link:../visual-language
+
+  examples/complex-explainer/packages/single-line-captions: {}
+
+  examples/complex-explainer/packages/visual-language: {}
+
+  examples/complex-explainer/packages/web-scenes:
+    dependencies:
+      '@explainer/visual-language':
+        specifier: file:../visual-language
+        version: link:../visual-language
 
   examples/minimal-author-package/packages/example-component:
     devDependencies:
@@ -1033,6 +1057,27 @@ importers:
         specifier: workspace:*
         version: link:../source
 
+  packages/elevenlabs-speech:
+    dependencies:
+      '@qflow/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/model-kit':
+        specifier: workspace:*
+        version: link:../model-kit
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
+
   packages/endpoint-kit:
     dependencies:
       '@qflow/protocol':
@@ -1132,6 +1177,27 @@ importers:
       '@qflow/timeline':
         specifier: workspace:*
         version: link:../timeline
+
+  packages/fishaudio-speech:
+    dependencies:
+      '@qflow/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/model-kit':
+        specifier: workspace:*
+        version: link:../model-kit
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
 
   packages/fonts-open:
     dependencies:
@@ -2162,6 +2228,12 @@ importers:
       '@qflow/driver-node':
         specifier: workspace:*
         version: link:../driver-node
+      '@qflow/elevenlabs-speech':
+        specifier: workspace:*
+        version: link:../elevenlabs-speech
+      '@qflow/fishaudio-speech':
+        specifier: workspace:*
+        version: link:../fishaudio-speech
       '@qflow/mimo-speech':
         specifier: workspace:*
         version: link:../mimo-speech

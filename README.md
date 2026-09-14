@@ -201,3 +201,5 @@ commands and the repository layout.
 ## License
 
 Qflow is released under the [Qflow Open Source License](./LICENSE). The videos and other outputs you create belong to you; third-party models and services may have their own terms.
+
+Partnership Community: [LINUX DO](https://linux.do/)

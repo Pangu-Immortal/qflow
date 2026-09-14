@@ -108,13 +108,23 @@ catalog to verify configured capabilities; ordinary preflight never makes that r
 declares QflowHub's public pricing page, `https://qflow.ai/commercial/pricing/`, as its price source.
 For each selected Need, `readPricing` resolves the corresponding QflowHub model and returns the service's
 authenticated `GET /v1/pricing?model=<model>` response unchanged together with that URL. It covers
-generation, alignment, Voice Design, and Voice Clone through the same mechanism;
+generation, alignment, Voice Design and Voice Clone through the same mechanism;
 the Provider does not maintain a second list of billing formulas or calculate a request total.
 
-QflowHub declares MiMo Voice Design and Voice Clone together with every other capability it serves; it
-never hides one. Voice Design produces an accepted voice-reference Resource, and Voice Clone uses
-that reference to produce independent speech. Qflow does not expose MiMo preset voices. When another
-selected Endpoint offers the same capability (such as local WhisperX or a project-owned speech
+The Provider declares its implemented speech capabilities alongside image, video and alignment.
+Voice Design produces an accepted voice-reference Resource, and Voice Clone uses that
+reference to produce independent speech. All of them use `POST /v1/audio/speech`:
+
+| Package | Capability | QflowHub model | Request fields |
+| --- | --- | --- | --- |
+| `@qflow/mimo-speech` | `mimo-v2.5-tts-voicedesign` | `mimo-v2.5-tts-voicedesign` | `input`, `voice_description` |
+| `@qflow/mimo-speech` | `mimo-v2.5-tts-voiceclone` | `mimo-v2.5-tts-voiceclone` | `input`, `reference_audio`, optional `prompt` |
+| `@qflow/fishaudio-speech` | `voice-design-1` | `fishaudio/voice-design-1` | `input`, `voice_description` |
+| `@qflow/fishaudio-speech` | `voice-clone` | `fishaudio/voice-clone` | `input`, `reference_audio`, optional `prompt`, constant `voice_description` title |
+| `@qflow/elevenlabs-speech` | `eleven_ttv_v3` | `eleven_ttv_v3` | `input`, `voice_description` |
+
+Each returned preview becomes one member of the audio set. These Model packages do not expose preset
+voices. When another selected Endpoint offers the same capability (such as local WhisperX or a project-owned speech
 Provider), the Runtime Profile's `bindings` say which Endpoint serves it.
 
 Execution policy remains local to this Provider:
