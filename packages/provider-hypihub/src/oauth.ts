@@ -65,7 +65,7 @@ export function createQflowHubAuth(options: {
       throw new Error("QflowHub OAuth credential is read-only; run qflow auth login with a writable Credential Store");
     }
     refreshing = (async () => {
-      const deadline = requestDeadline(options.requestTimeoutMs);
+      const deadline = requestDeadline(options.requestTimeoutMs, () => new Error("QflowHub OAuth refresh timed out"));
       try {
         const response = await deadline.wait(options.fetch(tokenEndpoint, {
           method: "POST",

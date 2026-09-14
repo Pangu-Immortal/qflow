@@ -100,12 +100,14 @@ class QflowHubHttpError extends Error {
 class QflowHubClient {
   readonly baseUrl: string;
   readonly timeout: number;
+  readonly oauthTimeout: number;
   readonly downloadAttempts: number;
   readonly fetcher: typeof globalThis.fetch;
   readonly uploader: QflowHubUploader;
   constructor(options: {
     readonly baseUrl: string;
     readonly timeout: number;
+    readonly oauthTimeout: number;
     readonly uploadConcurrency: number;
     readonly uploadPartTimeout: number;
     readonly uploadPartAttempts: number;
@@ -114,6 +116,7 @@ class QflowHubClient {
   }) {
     this.baseUrl = options.baseUrl.replace(/\/$/u, "");
     this.timeout = options.timeout;
+    this.oauthTimeout = options.oauthTimeout;
     this.downloadAttempts = options.downloadAttempts;
     this.fetcher = options.fetcher;
     this.uploader = new QflowHubUploader({
@@ -125,14 +128,18 @@ class QflowHubClient {
       fetch: this.fetcher,
     });
   }
-  async json(path: string, auth: QflowHubAuth, init: RequestInit = {}, refreshOnUnauthorized = true): Promise<Record<string, unknown>> {
+  async json(path: string, auth: QflowHubAuth, init: RequestInit = {}, refreshOnUnauthorized = true,
+    onResponse?: (response: Response) => Promise<void>): Promise<Record<string, unknown>> {
+    const token = await auth.token();
     const deadline = requestDeadline(this.timeout);
     try {
-      const response = await deadline.wait(this.fetcher(`${this.baseUrl}${path}`, { ...init, signal: deadline.signal, headers: { authorization: `Bearer ${await auth.token()}`, ...(init.headers ?? {}) } }));
+      const response = await deadline.wait(this.fetcher(`${this.baseUrl}${path}`, { ...init, signal: deadline.signal, headers: { authorization: `Bearer ${token}`, ...(init.headers ?? {}) } }));
+      if (response.status !== 401 && onResponse !== undefined) await deadline.wait(onResponse(response));
       const text = await deadline.wait(response.text()); let body: unknown = {};
       if (response.status === 401 && refreshOnUnauthorized && auth.canRefresh()) {
+        deadline.finish();
         await auth.refresh();
-        return await this.json(path, auth, init, false);
+        return await this.json(path, auth, init, false, onResponse);
       }
       if (!response.ok) throw new QflowHubHttpError(response.status, `QflowHub returned HTTP ${response.status}: ${text.slice(0, 300)}`);
       try { body = text.length === 0 ? {} : JSON.parse(text); } catch { throw new Error(`QflowHub returned invalid JSON (${response.status})`); }
@@ -165,24 +172,40 @@ class QflowHubClient {
       ...(personReference === undefined ? {} : { isPersonReference: personReference }) }, auth);
   }
 
-  async transcribe(body: Record<string, unknown>, auth: QflowHubAuth): Promise<Record<string, unknown>> {
+  async transcribe(body: Record<string, unknown>, auth: QflowHubAuth,
+    report?: (message: string) => Promise<void>): Promise<Record<string, unknown>> {
     return await this.json("/audio/transcriptions", auth, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
+    }, true, async (response) => {
+      const requestId = response.headers.get("x-request-id");
+      if (requestId === null || !/^[A-Za-z0-9_-]{1,200}$/u.test(requestId)) return;
+      let retrieval = "";
+      const location = response.headers.get("location");
+      if (location !== null) {
+        try {
+          const url = new URL(location, this.baseUrl);
+          const expected = new URL(`${this.baseUrl}/audio/transcriptions/${encodeURIComponent(requestId)}`);
+          if (url.href === expected.href) retrieval = `; result lookup: ${url.href}`;
+        } catch { /* A malformed Location does not erase the request identifier. */ }
+      }
+      await report?.(`QflowHub transcription request ${requestId} (HTTP ${response.status})${retrieval}`);
     });
   }
   async speech(auth: QflowHubAuth, body: Record<string, unknown>, refreshOnUnauthorized = true): Promise<readonly { readonly bytes: Uint8Array; readonly mediaType: string }[]> {
+    const token = await auth.token();
     const deadline = requestDeadline(this.timeout);
     try {
       const response = await deadline.wait(this.fetcher(`${this.baseUrl}/audio/speech`, {
         method: "POST",
-        headers: { authorization: `Bearer ${await auth.token()}`, "content-type": "application/json" },
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
         body: JSON.stringify({ ...body, output: "b64_json" }),
         signal: deadline.signal,
       }));
       const bytes = new Uint8Array(await deadline.wait(response.arrayBuffer()));
       if (response.status === 401 && refreshOnUnauthorized && auth.canRefresh()) {
+        deadline.finish();
         await auth.refresh();
         return await this.speech(auth, body, false);
       }
@@ -226,7 +249,7 @@ function authFor(context: EndpointInvocationContext, client: QflowHubClient): Qf
   return createQflowHubAuth({
     credential: credential(context.credentials),
     baseUrl: client.baseUrl,
-    requestTimeoutMs: client.timeout,
+    requestTimeoutMs: client.oauthTimeout,
     fetch: client.fetcher,
   });
 }
@@ -235,7 +258,7 @@ function pricingAuth(credentials: Readonly<Record<string, EndpointCredential>>, 
   return createQflowHubAuth({
     credential: credential(credentials),
     baseUrl: client.baseUrl,
-    requestTimeoutMs: client.timeout,
+    requestTimeoutMs: client.oauthTimeout,
     fetch: client.fetcher,
   });
 }
@@ -311,6 +334,7 @@ export async function diagnoseQflowHubProvider(
   const client = new QflowHubClient({
     baseUrl: apiBaseUrl(options.baseUrl ?? "https://qflow.ai/v1"),
     timeout: options.requestTimeoutMs ?? 30_000,
+    oauthTimeout: options.oauthRequestTimeoutMs ?? 30_000,
     uploadConcurrency: options.uploadConcurrency ?? 8,
     uploadPartTimeout: options.uploadPartTimeoutMs ?? 5 * 60_000,
     uploadPartAttempts: options.uploadPartAttempts ?? 3,
@@ -320,7 +344,7 @@ export async function diagnoseQflowHubProvider(
   const auth = createQflowHubAuth({
     credential: { secret: apiKey },
     baseUrl: client.baseUrl,
-    requestTimeoutMs: client.timeout,
+    requestTimeoutMs: client.oauthTimeout,
     fetch: client.fetcher,
   });
   const response = await client.json("/models", auth);
@@ -487,6 +511,7 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
   const client = new QflowHubClient({
     baseUrl: apiBaseUrl(options.baseUrl ?? "https://qflow.ai/v1"),
     timeout: requestTimeoutMs,
+    oauthTimeout: oauthRequestTimeoutMs,
     uploadConcurrency: options.uploadConcurrency ?? 8,
     uploadPartTimeout: uploadPartTimeoutMs,
     uploadPartAttempts,
@@ -496,6 +521,7 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
   const pricingClient = new QflowHubClient({
     baseUrl: apiBaseUrl(options.baseUrl ?? "https://qflow.ai/v1"),
     timeout: pricingRequestTimeoutMs,
+    oauthTimeout: oauthRequestTimeoutMs,
     uploadConcurrency: options.uploadConcurrency ?? 8,
     uploadPartTimeout: uploadPartTimeoutMs,
     uploadPartAttempts,
@@ -531,7 +557,7 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
         response_format: "verbose_json",
         language: request.language,
         timestamp_granularities: ["segment", "word"],
-      }, auth);
+      }, auth, async (message) => { await context.reportDiagnostic?.({ level: "info", message }); });
       const evidence = sealAlignedTranscriptEvidence({
         passages: interpretWhisperXTranscript(response as WhisperXTranscriptResponse, request.sampleFrames),
       });

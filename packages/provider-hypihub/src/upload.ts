@@ -120,7 +120,7 @@ async function acquireUploadSlot(origin: string, auth: UploadAuth, limit: number
   };
 }
 
-/** Uploads media through QflowHub's session-negotiated private regional S3 multipart flow. */
+/** Uploads media using the transfer mode negotiated by the selected QflowHub service. */
 export class QflowHubUploader {
   readonly baseUrl: string;
   readonly requestTimeout: number;
@@ -179,16 +179,18 @@ export class QflowHubUploader {
   }
 
   private async jsonOnce(path: string, auth: UploadAuth, init: RequestInit, timeoutMs: number, retryAuth = true): Promise<Record<string, unknown>> {
+    const token = await uploadToken(auth);
     const request = requestDeadline(timeoutMs);
     const deadline = Date.now() + timeoutMs;
     try {
       const response = await request.wait(this.fetcher(`${this.baseUrl}${path}`, {
         ...init,
         signal: request.signal,
-        headers: { authorization: `Bearer ${await uploadToken(auth)}`, ...(init.headers ?? {}) },
+        headers: { authorization: `Bearer ${token}`, ...(init.headers ?? {}) },
       }));
       const text = await request.wait(response.text());
       if (response.status === 401 && retryAuth && uploadCanRefresh(auth)) {
+        request.finish();
         await (auth as QflowHubAuth).refresh();
         return await this.jsonOnce(path, auth, init, Math.max(1, deadline - Date.now()), false);
       }
@@ -214,6 +216,16 @@ export class QflowHubUploader {
   }
 
   private async signParts(uploadId: string, declarations: readonly PartDeclaration[], auth: UploadAuth): Promise<Map<number, Record<string, unknown>>> {
+    // QflowHub accepts at most 128 part declarations per signing request.
+    if (declarations.length > 128) {
+      const signed = new Map<number, Record<string, unknown>>();
+      for (let offset = 0; offset < declarations.length; offset += 128) {
+        for (const [number, part] of await this.signParts(uploadId, declarations.slice(offset, offset + 128), auth)) {
+          signed.set(number, part);
+        }
+      }
+      return signed;
+    }
     const startedAt = Date.now();
     this.log(`part signing started upload=${uploadId} parts=${declarations.length}`);
     const response = await this.json(`/files/uploads/${encodeURIComponent(uploadId)}/parts`, auth, {
@@ -396,9 +408,30 @@ export class QflowHubUploader {
       this.log(`upload session request failed elapsed=${this.elapsed(policyStartedAt)} reason=${this.safeReason(error)}`);
       throw error;
     }
-    assert(policy.upload_mode === "s3_multipart", "QflowHub returned an unknown upload mode");
-    const result = await this.uploadDirect(input.bytes, auth, policy);
+    assert(policy.upload_mode === "s3_multipart" || policy.upload_mode === "api_multipart",
+      "QflowHub returned an unknown upload mode");
+    const result = policy.upload_mode === "api_multipart"
+      ? await this.uploadApi(input, auth, policy)
+      : await this.uploadDirect(input.bytes, auth, policy);
     this.log(`upload finished bytes=${input.bytes.byteLength} mime=${input.mediaType} elapsed=${this.elapsed(startedAt)}`);
     return result;
+  }
+
+  private async uploadApi(input: QflowHubUploadInput, auth: UploadAuth, policy: Record<string, unknown>): Promise<string> {
+    const endpoint = new URL(requiredString(policy.endpoint, "QflowHub file upload endpoint"), this.baseUrl);
+    assert(endpoint.href === `${this.baseUrl}/files`, "QflowHub file upload endpoint must belong to the selected service");
+    if (policy.max_bytes !== undefined) {
+      assert(input.bytes.byteLength <= requiredInteger(policy.max_bytes, "QflowHub file upload byte limit"),
+        "QflowHub reference exceeds the negotiated file upload byte limit");
+    }
+    const form = new FormData();
+    form.set("file", new Blob([new Uint8Array(input.bytes)], { type: input.mediaType }),
+      input.filename ?? `reference.${extension(input.mediaType)}`);
+    form.set("purpose", input.purpose ?? "reference");
+    if (input.isPersonReference !== undefined) form.set("is_person_reference", String(input.isPersonReference));
+    const response = await this.json("/files", auth, { method: "POST", body: form });
+    const url = requiredString(response.url, "QflowHub file upload URL");
+    assertHTTPS(url, "QflowHub file upload URL");
+    return url;
   }
 }

@@ -74,9 +74,13 @@ to the selected deployment's origin or an existing `/v1`/`/v1beta` base. The Run
 normalizes it to `/v1`; missing or insufficient user
 credentials should be resolved at [qflow.ai](https://qflow.ai). Referenced image, audio and video
 Resources are uploaded through a session from `POST /v1/files/uploads`, followed by the private
-regional multipart instructions returned by QflowHub. The Provider follows the server-selected part
+regional multipart instructions or `api_multipart` file POST selected by QflowHub. The latter sends
+one multipart/form-data file to the selected service's `/v1/files`, preserving reference purpose
+and person classification; an uncertain file POST is not repeated automatically.
+For direct multipart uploads, the Provider follows the server-selected part
 size and part concurrency, retries a failed part with a fresh signed URL, completes or cancels that
-one upload, and then passes the returned HTTPS URL to generation or transcription. One
+one upload, and then passes the returned HTTPS URL to generation or transcription. Signing requests
+contain at most the service's 128-part limit; all batches belong to the same upload. One
 Resource identity with the same declared person-reference classification is uploaded once within one Runtime operation. Qflow keeps no upload catalog or
 cross-Build cache. Seedance visual references can carry `personReference` in their media fields;
 the mapping declares it as a resource-transport field and the upload session receives
@@ -97,13 +101,23 @@ selected Store is writable. Its Endpoint receives only the credential slot it de
 operation for replacing that same slot; it cannot enumerate the Store, choose another key or read
 another Endpoint's credentials. A raw credential remains an ordinary static API key.
 
+Refresh uses `oauthRequestTimeoutMs` during generation, transcription, uploads and pricing too.
+It completes before the subsequent API request starts its own deadline. A stalled refresh reports
+an OAuth refresh timeout without starting that API request.
+
 The service currently requires whole-file and per-part SHA-256 values as fields of its signed upload
 protocol. They exist only while transferring bytes; Qflow never uses them as Resource identity,
 Result metadata, lookup keys or reuse evidence. Signed URLs and their query credentials are removed
 from surfaced upload errors.
 
 The default remote alignment model is `victor-upmeet/whisperx`; `transcriptionModel` may select another
-QflowHub model that exposes the `transcriptions` route. `qflow doctor` reads the authenticated model
+QflowHub model that exposes the `transcriptions` route. When transcription response headers include
+`X-Request-Id`, the Provider records it in the existing execution diagnostics before reading the body.
+A matching same-service `Location` is retained as the authenticated result lookup URL, including on
+an HTTP failure or interrupted response body. This is a receipt for investigation, not automatic
+resubmission or Build restoration. No receipt can be recorded if no response headers arrive.
+
+`qflow doctor` reads the authenticated model
 catalog to verify configured capabilities; ordinary preflight never makes that request. The package
 declares QflowHub's public pricing page, `https://qflow.ai/commercial/pricing/`, as its price source.
 For each selected Need, `readPricing` resolves the corresponding QflowHub model and returns the service's

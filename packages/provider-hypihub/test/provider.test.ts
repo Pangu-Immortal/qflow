@@ -28,6 +28,62 @@ function need(constraints: CanonicalValue): Need {
   };
 }
 
+for (const operation of ["pricing", "generation"] as const) {
+  test(`QflowHub ${operation} waits for separately bounded OAuth before starting the API deadline`, async () => {
+    const request = need(sealSeedanceRequest("seedance-2-mini", {
+      prompt: ["A presenter"], resolution: ["720p"], aspectRatio: ["9:16"],
+      duration: [5], generateAudio: [true], webSearch: [false],
+    }) as unknown as CanonicalValue);
+    for (const stalls of [false, true]) {
+      let saved = false;
+      let apiCalls = 0;
+      const credentials = { apiKey: {
+        secret: encodeOAuth2Credential({ accessToken: "expired", refreshToken: "refresh", expiresAt: 1 }),
+        replace: async () => { saved = true; },
+      } };
+      const provider = createQflowHubProvider({
+        // A successful refresh intentionally outlasts the ordinary API deadline.
+        requestTimeoutMs: stalls ? 1_000 : 5,
+        pricingRequestTimeoutMs: stalls ? 1_000 : 5,
+        oauthRequestTimeoutMs: stalls ? 15 : 1_000,
+        fetch: async (input, init) => {
+          if (String(input).endsWith("/oauth/token")) {
+            if (stalls) return await new Promise<Response>((_resolve, reject) => {
+              init!.signal!.addEventListener("abort", () => reject(init!.signal!.reason), { once: true });
+            });
+            await new Promise(resolve => setTimeout(resolve, 20));
+            return Response.json({ access_token: "fresh", refresh_token: "rotated", expires_in: 3600 });
+          }
+          apiCalls += 1;
+          assert.equal((init!.headers as Record<string, string>).authorization, "Bearer fresh");
+          if (String(input).includes("/models/")) return Response.json({ endpoints: ["videos"] });
+          if (String(input).endsWith("/videos")) return Response.json({ id: "job_oauth", status: "queued" });
+          return Response.json({ pricing: {} });
+        },
+      });
+      if (operation === "pricing") {
+        const result = Promise.resolve(provider.readPricing!({ request, credentials: async () => credentials }));
+        if (stalls) await assert.rejects(result, /QflowHub OAuth refresh timed out/u);
+        else assert.equal((await result).length, 1);
+      } else {
+        const registry = new EndpointRegistry();
+        await provider.install(registry);
+        const resolution = registry.resolve(request);
+        assert.equal(resolution.status, "resolved");
+        assert.equal(resolution.registration.kind, "asynchronous");
+        const result = await resolution.registration.endpoint.start({
+          command: { kind: "fulfill-need", id: "command:oauth", need: request },
+          need: request, resources: new MemoryResourceStore(), credentials, operation: "operation:oauth",
+        });
+        assert.equal(result.status, stalls ? "failed" : "pending");
+        if (result.status === "failed") assert.match(result.failure.message, /QflowHub OAuth refresh timed out/u);
+      }
+      assert.equal(saved, !stalls);
+      assert.equal(apiCalls, stalls ? 0 : operation === "pricing" ? 1 : 2);
+    }
+  });
+}
+
 async function endpointFor(request: Need, fetch: typeof globalThis.fetch): Promise<AsyncEndpoint> {
   const registry = new EndpointRegistry();
   await createQflowHubProvider({ fetch, pollIntervalMs: 0, requestTimeoutMs: 1_000 }).install(registry);
@@ -771,3 +827,44 @@ test("an unavailable model reports availability without prescribing another logi
   assert.match(outcome.failure.message, /404.*model_not_found/u);
   assert.doesNotMatch(outcome.failure.message, /sign in|auth login/iu);
 });
+
+for (const mode of ['success', 'error', 'body-timeout'] as const) {
+  test(`hosted transcription keeps its receipt on ${mode} without resubmitting`, async () => {
+    const resources = new MemoryResourceStore();
+    const artifact = await resources.put(wav(32_000), 'audio/wav');
+    const request: Need = {
+      id: 'need:transcription-receipt', capability: whisperXCapabilities.alignment,
+      returns: speechEvidenceTypes.alignedTranscript,
+      constraints: whisperXRequestForEvidenceAudio(sealSpeechEvidenceAudio({ artifact, sampleFrames: 32_000 }), { language: 'en' }) as unknown as CanonicalValue,
+      result: 'record:transcription-receipt',
+    };
+    const messages: string[] = [];
+    let submissions = 0;
+    const registry = new EndpointRegistry();
+    await createQflowHubProvider({
+      requestTimeoutMs: 40,
+      publicAssetUrl: async () => 'https://assets.test/evidence.wav',
+      fetch: async (input) => {
+        if (String(input).includes('/models/')) return Response.json({ endpoints: ['transcriptions'] });
+        submissions++;
+        const headers = { 'x-request-id': 'req_example', location: '/v1/audio/transcriptions/req_example' };
+        if (mode === 'body-timeout') return new Response(new ReadableStream({ start() {} }), { headers });
+        return Response.json(mode === 'success' ? { words: [{ word: 'hello', start: 0.1, end: 0.4 }] } : { error: 'upstream unavailable' }, { status: mode === 'success' ? 200 : 502, headers });
+      },
+    }).install(registry);
+    const resolution = registry.resolve(request);
+    assert.equal(resolution.status, 'resolved');
+    assert.equal(resolution.registration.kind, 'immediate');
+    const work = resolution.registration.handler({
+      command: { kind: 'fulfill-need', id: 'command:receipt', need: request },
+      need: request, resources, credentials: { apiKey: { secret: 'test-key' } },
+      reportDiagnostic: async (entry) => { messages.push(entry.message); },
+    });
+    if (mode === 'success') await work;
+    else await assert.rejects(Promise.resolve(work), mode === 'error' ? /502/ : /timed out/);
+    assert.equal(submissions, 1);
+    assert.equal(messages.length, 1);
+    assert.match(messages[0]!, /request req_example/);
+    assert.match(messages[0]!, /https:\/\/qflow.ai\/v1\/audio\/transcriptions\/req_example/);
+  });
+}

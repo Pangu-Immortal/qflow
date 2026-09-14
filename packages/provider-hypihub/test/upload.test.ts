@@ -243,3 +243,51 @@ test("upload sessions preserve explicit person-reference flags and omission", as
     await f.uploader().upload({ ...input, ...(flag === undefined ? {} : { isPersonReference: flag }) }, "test-key");
   }
 });
+
+for (const person of [undefined, false, true]) {
+  test(`API multipart upload preserves file and person classification ${person}`, async () => {
+    const f = fixture(async (url, init) => {
+      if (url.endsWith('/files/uploads')) return Response.json({ upload_mode: 'api_multipart', endpoint: '/v1/files', max_bytes: 100 });
+      if (url.endsWith('/files')) {
+        assert.equal(init.method, 'POST');
+        assert.equal(new Headers(init.headers).get('content-type'), null);
+        assert.ok(init.body instanceof FormData);
+        assert.equal(init.body.get('purpose'), 'reference');
+        assert.equal(init.body.get('is_person_reference'), person === undefined ? null : String(person));
+        const file = init.body.get('file') as File;
+        assert.equal(file.name, 'reference.mp4');
+        assert.equal(file.type, 'video/mp4');
+        assert.deepEqual(new Uint8Array(await file.arrayBuffer()), input.bytes);
+        return Response.json({ url: 'https://hub.test/files/result' });
+      }
+    });
+    assert.equal(await f.uploader().upload({ ...input, ...(person === undefined ? {} : { isPersonReference: person }) }, 'test-key'), 'https://hub.test/files/result');
+    assert.equal(f.calls.length, 2);
+  });
+}
+
+test('API multipart rejects a foreign endpoint and never repeats an ambiguous file POST', async () => {
+  for (const foreign of [true, false]) {
+    let posts = 0;
+    const f = fixture((url) => {
+      if (url.endsWith('/files/uploads')) return Response.json({ upload_mode: 'api_multipart', endpoint: foreign ? 'https://other.test/v1/files' : '/v1/files' });
+      if (url.endsWith('/files')) { posts++; throw new Error('connection lost'); }
+    });
+    await assert.rejects(f.uploader().upload(input, 'test-key'), foreign ? /selected service/ : /connection lost/);
+    assert.equal(posts, foreign ? 0 : 1);
+  }
+});
+
+test('large uploads sign at most 128 parts per request and complete every part', async () => {
+  const batches: number[] = [];
+  const f = fixture((url, init) => {
+    if (url.endsWith('/files/uploads')) return Response.json({ upload_mode: 's3_multipart', upload_id: 'up_test', part_size: 1, part_count: 129, concurrency: 8 });
+    if (url.endsWith('/parts')) batches.push(JSON.parse(String(init.body)).parts.length);
+    if (url.endsWith('/complete')) {
+      const parts = JSON.parse(String(init.body)).parts;
+      assert.deepEqual(parts.map((part: { part_number: number }) => part.part_number), Array.from({ length: 129 }, (_, i) => i + 1));
+    }
+  });
+  await f.uploader().upload({ ...input, bytes: new Uint8Array(129) }, 'test-key');
+  assert.deepEqual(batches, [128, 1]);
+});
