@@ -63,9 +63,11 @@ asset as an ordinary project file and select it with `file` and `satisfy` in the
 the file Output; downstream preparation and alignment still run when needed. A completed SemanticTake
 can instead be reused directly through its existing Result Output.
 
-Use `status <build-id> --verbose` for active task receipts and `inspect <build-id> --json` for the
-finished Result's execution records. They include the Endpoint, Need identity, credential references,
-known task ID, and the recorded error or last progress. Secret values stay in their Credential Store.
+Use `status <build-id> --verbose` for task IDs, Endpoints and progress. Use
+`inspect <build-id> --verbose --json` for the Result's full retained execution records, including
+available credential references and receipts; increase `--limit` if the report lists omitted records.
+Secret values stay in their Credential Store. `--json` changes encoding, while `--verbose` requests
+these details.
 
 ## Plan the selected Run
 
@@ -182,7 +184,7 @@ qflow activity
 qflow runtime status
 ```
 
-`activity` shows active Builds and shared Provider capacity. The Worker may advance many unrelated
+`activity` shows active Builds; `activity --verbose` also shows shared Provider capacity. The Worker may advance many unrelated
 Builds together. Capacity belongs to the exact Endpoint instances, real shared pools, and any narrower
 model limits declared by those Endpoints. Builds share only those actual resources, so unrelated work
 can advance together.
@@ -196,7 +198,7 @@ status remains evidence, rather than a condition the old Build must resolve befo
 Providers that expose `actionLimits` can separately limit asynchronous `submit`, `poll` and `collect`
 actions through `concurrency` and `rate: { limit, periodMs }`. These budgets share the Profile's pool.
 Task occupancy, overlapping network actions and starts permitted per time period are different quantities;
-`activity --json` exposes the actual resource claims. Provider-local documentation owns available settings.
+`activity --verbose --json` exposes the actual resource claims. Provider-local documentation owns available settings.
 
 ## Separate active work from Result outcome
 

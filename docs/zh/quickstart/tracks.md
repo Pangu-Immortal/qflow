@@ -226,7 +226,7 @@ Track 都会作为独立输入进入 Film。输出 `{music-bed.audio}` 是普通
 | `placement` | 是 | 与 Item 形式匹配的 `SpatialPoint`、`SpatialFrame` 或 `SpatialPath` |
 | `style` | 是 | 由 SVS Recipe 与精确字体字节共同编译出的 `text:Style` |
 
-`during` 属性接受字面字符串 `"program"`（表示完整 ProgramSpace），或用于语义计时的 Selection 引用：
+`during` 属性接受字面字符串 `"program"`（表示完整 Timeline），或用于语义计时的 Selection、Segment 引用。同一套时间接口也接受作者声明的 `start`/`end` 窗口和 `at`/`for` 事件：
 
 ```svml
 <text:Style id="callout-style" recipe={recipes.text.callout} font={title-font}/>
@@ -315,7 +315,7 @@ Run 时，继续使用内联 `P`/`Span`/`Break`。
 
 ### deck:DepthStack
 
-`id`、`semantic`、`canvas`、`frame` 与 `appearance` 全部必填，`until` 同样必填——它说明什么结束这叠卡片：字面量 `"program.end"`、一个 Moment，或一个 Selection。只有在指向 Selection 时才可以再加 `until-boundary="start" | "end"` 来选择用它的哪一端结束，默认是 `end`；在另外两种情况下给出这个属性会被拒绝，而不是被忽略。
+`id`、`timeline`、`canvas`、`frame` 与 `appearance` 全部必填。同一份 Timeline 提供作者时间和已放置的语义锚点。`until` 同样必填，指定这叠卡片何时结束：Moment、Selection 或 Segment 的边界，或 `8s`、`program.end` 等作者时间。Selection 或 Segment 可以用 `until-boundary="start" | "end"` 选择首尾，默认是 `end`。
 
 ### deck:Card
 

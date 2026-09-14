@@ -34,8 +34,8 @@ Script 的语义标尺包含 `2M + 2N + 2` 个点：Token 与 Segment 的首尾�
 
 - `<script id="story">` 产生 `Narrative.id = story`，它派生出的 Selection、Moment、Segment
   excerpt 与 CaptionDocument 全部携带 `narrativeId = story`；
-- 被 Film 选择的 Timeline 的 `id` 就是 `ProgramSpace.id`，所有终端 Track 都携带同一个
-  `programSpaceId`；
+- 所有终端 Track 的 `programSpaceId` 指向 Film 选定的 Timeline。`ProgramSpace` 是 Timeline
+  内含的公共时钟与范围结构，不是另一种需要单独声明的时间线；
 - 每个 Instant 保留 Space 身份，来自语义的来源额外保留 Narrative 身份；消费者的公开领域
   身份（通常就是 SVML `id`）作为 `subjectId`。
 
@@ -96,7 +96,7 @@ Semantic token evidence 得到只读 Cue 时间，不伪装成可拖动的 Tempo
 Film 与 Script 的解释也不留在 Studio 核心：`film-studio` 声明 Film 的时间来源和终端 Track
 引用规则；`script-studio` 拥有 Script Source map 与 marker 移动。Studio 只选择
 `narrativeId` 与当前 Timeline 一致的 Script，再把语义修改委托回该 Companion。
-直接声明的 Space 提供物理时间线，不需要 Script 轨道。`at="2s"` 表示作者编排的事件时刻，
+零 Take 的 Timeline 提供同样的物理时间范围，不需要 Script 轨道。`at="2s"` 表示作者编排的事件时刻，
 可以单独用于 Instant，也可以与 `for` 配合形成 Window；其时间修改回写 SVML。
 
 这里的 binding 名不是全局地址。Markup 在降低语法时保留作者元素和输入范围，Elaborator

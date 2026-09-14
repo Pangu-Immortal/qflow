@@ -40,8 +40,7 @@ SVS（`.svs`）文件使用类 CSS 语法定义可复用的类型化配置值。
 
 ## Film
 
-Film 外观只拥有画布清除颜色。画布尺寸是显式的 `space:Canvas` 图值，帧率来自
-ProgramSpace。
+Film 外观只拥有画布清除颜色。画布尺寸是显式的 `space:Canvas` 图值，帧率来自 Timeline 使用的 Clock。
 
 ```svs
 film.vertical {

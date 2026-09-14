@@ -174,7 +174,8 @@ older one, Result storage resolves that explicit path once and records the new F
 the finished Result that owns the value; no bytes are copied and no reverse index is maintained.
 Forwarding applies only to a complete public Output. Structured JSON cannot recursively point at
 another Output; a historical value consumed inside a new Fragment is an ordinary input and the new
-Fragment's Output belongs to the current Result.
+Fragment's Output belongs to the current Result. Its nested media still references the original files;
+new JSON structure does not require copying the existing images, video or audio.
 
 ### build-record
 
@@ -193,13 +194,15 @@ Connects a Candidate to a Logical Output:
 | Attribute | Description |
 |---|---|
 | `output` | The Logical Output to satisfy |
-| `candidate` | The Candidate id (from `build-record`) |
+| `candidate` | The Candidate id declared by `build-record`, `file`, `value` or a Fragment export |
 
 The Planner reads the complete Author Graph and Run Graph together. It prunes default Operations
 that selected Candidates replace while retaining any Author Outputs the selected Candidate itself
 still consumes. This is a
-new Build, not a continuation of the old one. Downstream processing (normalization, WhisperX,
-captioning, rendering) still runs against the reused media.
+new Build, not a continuation of the old one. Reusing generated video leaves normalization and semantic
+preparation downstream; reusing a prepared SemanticTake retains those results too. Caption, MG and
+rendering recompute where they remain on the selected route. Choose the Output whose meaning matches
+what should stay unchanged.
 
 Core does not label a Candidate as “exact” or “substitute”. Choosing a Candidate is the Run
 author's explicit implementation decision for that Build. Type compatibility is checked; creative
@@ -216,8 +219,9 @@ to one current Logical Output:
 ```
 
 The file is read relative to the `.svrun`. If it becomes a completed public Output on the Target
-route, it is written into the Build Result like any generated media. There is no hidden history
-lookup. A supplied image, recorded video or other compatible result uses the same mechanism.
+route, the Result records an explicit external-file reference. It does not copy the file into each
+new Result. The reference remains live: replacing the file changes subsequent reads, and removing it
+makes that dependency unavailable. A supplied image or recorded video uses the same mechanism.
 
 ## Runtime Profile
 
@@ -342,7 +346,8 @@ Doctor always validates the project's selected Result Repository. When a Runtime
 passed explicitly, it also validates every selected Runtime role, Endpoint configuration, credential
 presence and bounded environment probe. It never starts the Worker or performs a paid request.
 
-When a Profile is present, Doctor intentionally performs a **full profile audit**. For the environment required by one Run, use
+With a Profile, Doctor checks the whole Profile unless scoped with repeated `--endpoint <instance>`
+flags. For the environment required by one Run, use
 `plan`: it checks only capabilities demanded by that finite plan. Missing readiness is returned in
 `preflight` and gives the command a non-zero exit status, while the frozen plan remains available in
 JSON for inspection.
@@ -357,8 +362,9 @@ qflow check reference.svml
 qflow plan reference.svrun
 ```
 
-Review the frozen BuildPlan before spending money. The plan shows every Operation and Needs the
-Scheduler would issue. With a selected Runtime, it also reports only the relevant Endpoint, credential and
+Review the selected work before spending money. The default plan shows Targets, demanded external
+requests and their available parameters; `--verbose` adds graph and Candidate-selection details.
+With a selected Runtime, it also reports the relevant Endpoint, credential and
 external-program diagnostics. It never starts external work.
 
 `plan` may run without a Runtime at all. Both `plan` and `build` may omit `--runtime` after
@@ -413,8 +419,9 @@ receipts remain available, and further execution uses a new Build with explicit 
 qflow inspect <build-id>
 ```
 
-`inspect` reads the project-owned Result directly and shows its Targets plus a bounded list of
-completed public Outputs. Use `--output <name>` for one exact Output or `--limit <count>` to show more:
+`inspect` reads the project-owned Result directly and shows its Targets, highlighted Outputs and
+failure evidence. Use `--output <name>` for one exact Output, or `--verbose` to browse the other Outputs
+and execution receipts. `--limit <count>` expands that detailed list. Export a selected Output with:
 
 ```bash
 qflow get <build-id> \

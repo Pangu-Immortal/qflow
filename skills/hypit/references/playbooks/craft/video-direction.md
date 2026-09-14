@@ -158,6 +158,10 @@ performance.
 
 ## Choose the generation relationship
 
+Seedance 2 Mini at 720p is the usual starting point for generated performances, balancing capability
+and cost. Choose for the intended shot and the user's available services; the selected model's
+installed vocabulary owns supported resolutions, references and request lengths.
+
 Generated-video models commonly expose some combination of three relationships:
 
 | Relationship | When it fits |

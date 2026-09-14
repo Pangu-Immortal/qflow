@@ -150,7 +150,7 @@ qflow inspect <build-id>
 ```
 
 Qflow 永远不会猜测两个名字代表同一份作者意图。每次执行 `build` 都会得到新的 Build id 和独立 Result 目录，即使源码完全没变。后续 Run 只有明确写出旧 Build id 与 Output 时才复用；若旧 Output 本身继续转发到更老的 Result，就沿显式关系向前解析，不把文件复制进新 Result。
-转发只适用于完整的公开 Output；结构化 JSON 不能在内部递归指向另一个 Output。历史值若只是新 Fragment 的一项输入，Fragment 产生的新 Output 仍属于当前 Result。
+转发只适用于完整的公开 Output；结构化 JSON 不能在内部递归指向另一个 Output。历史值若只是新 Fragment 的一项输入，Fragment 产生的新 Output 仍属于当前 Result，但其内部的媒体继续引用原文件；新 JSON 结构不要求复制已有图片、视频或音频。
 
 ### build-record
 
@@ -169,9 +169,9 @@ Qflow 永远不会猜测两个名字代表同一份作者意图。每次执行 `
 | 属性 | 说明 |
 |---|---|
 | `output` | 要满足的逻辑输出 |
-| `candidate` | Candidate 标识符（来自 `build-record`） |
+| `candidate` | 由 `build-record`、`file`、`value` 或 Fragment 导出声明的 Candidate 标识符 |
 
-Planner 会同时读取完整 Author Graph 与 Run Graph：裁剪所选 Candidate 替代掉的默认 Operation，同时保留该 Candidate 自身仍然消费的 Author Output。这是一次新的 Build，而非旧 Build 的延续。下游处理（归一化、WhisperX、字幕生成、渲染）仍然会对复用的媒体执行。
+Planner 会同时读取完整 Author Graph 与 Run Graph：裁剪所选 Candidate 替代掉的默认 Operation，同时保留该 Candidate 自身仍然消费的 Author Output。这是一次新的 Build，而非旧 Build 的延续。复用生成视频时，归一化和语义准备仍在下游；复用已经准备好的 SemanticTake 时，也保留这些结果。字幕、MG 和渲染只在仍被所选路线需要时计算。选择哪个 Output，取决于哪些内容应该保留不变。
 
 Core 不再给 Candidate 标注 `exact` 或 `substitute`。选择 Candidate 本身就是这次运行的明确实现决定。系统校验类型兼容性，但不猜测创作等价性，也不把这种判断作为冗余元信息沿整条图传播。
 
@@ -184,7 +184,7 @@ Core 不再给 Candidate 标注 `exact` 或 `substitute`。选择 Candidate 本�
 <satisfy output="opening-shot.video" candidate="approved-opening"/>
 ```
 
-文件相对于 `.svrun` 读取。如果它在 Target 路线上成为已经完成的公开 Output，就像生成媒体一样写入 Build Result。系统没有隐式历史查找；用户提供的图片、录制的视频和其他兼容产物也使用同一个机制。
+文件相对于 `.svrun` 读取。如果它在 Target 路线上成为已完成的公开 Output，Result 保存明确的外部文件引用，不会为每次 Build 复制一份文件。引用保持实时性：替换文件会改变后续读取，删除文件会使依赖不可用。用户提供的图片、录制的视频使用相同机制。
 
 ## Runtime Profile
 
@@ -326,7 +326,8 @@ qflow doctor
 Doctor 总会校验项目选择的 Result Repository；存在已选或显式传入的 Runtime Profile 时，还会校验全部
 Runtime 角色、Endpoint 配置、凭据是否存在和有界环境探测。它不启动 Worker，也不发付费请求。
 
-存在 Profile 时，`doctor` 有意检查完整 Runtime Profile。若只想检查某次 Run 真正需要的环境，请使用带
+存在 Profile 时，`doctor` 默认检查整个 Profile，也可以重复 `--endpoint <instance>` 限定服务。
+若只想检查某次 Run 真正需要的环境，请使用带
 所选 Runtime 的 `plan`。未就绪会写入 `preflight` 并令命令非零退出，但 JSON 中仍保留
 冻结计划供检查。
 
@@ -340,8 +341,9 @@ qflow check reference.svml
 qflow plan reference.svrun
 ```
 
-在花费资金之前审查冻结的 BuildPlan。该计划展示调度器将发出的每个 Operation 和 Needs；选择
-Runtime 后只预检这次计划真正需要的 Endpoint、凭据和外部程序，不启动任何外部工作。
+花费资金前审查所选工作。默认计划展示 Target、实际需要的外部请求及其已知参数；
+`--verbose` 增加图和 Candidate 选择详情。选择 Runtime 后预检这次计划需要的 Endpoint、
+凭据和外部程序，不启动任何外部工作。
 
 `plan` 可以完全不带 Runtime；执行过 `qflow runtime use` 后，`plan` 和 `build` 都不必再写
 `--runtime`。`build` 必须能找到所选或显式 Profile。
@@ -387,8 +389,9 @@ Output 和记录下来的任务凭据会保留；后续执行通过新 Build 显
 qflow inspect <build-id>
 ```
 
-`inspect` 直接读取项目里的 Build Result，列出最终 Target 和一页实际完成的公开 Output；用
-`--output <name>` 精确查看一个 Output，或用 `--limit <count>` 增加显示数量：
+`inspect` 直接读取项目 Result，默认展示 Target、高亮 Output 和失败证据。
+`--output <name>` 精确查看一个 Output；`--verbose` 浏览其他 Output 和任务回执，
+`--limit <count>` 扩展这个详细列表。导出指定 Output 用：
 
 ```bash
 qflow get <build-id> \

@@ -188,6 +188,12 @@ That Endpoint must actually be declared and support the capability. A single eli
 needs no binding; multiple unbound choices are an error. Use the Model and Provider READMEs and
 `plan` to establish actual support rather than inferring compatibility from similar model names.
 
+Readiness and package discovery are separate. Explicit bindings let capability-scoped commands load
+the named Endpoints directly. Without a binding, discovering which Provider can serve a capability
+can require loading the Profile's Endpoint packages; a declared but uninstalled package can therefore
+block discovery even when its service would not ultimately be used. Correct that declaration or make
+the intended binding explicit. An unused account need not be logged in merely to resolve the work.
+
 ## Set capacity at the resource it describes
 
 The Runtime Worker and HyperFrames `workers` are different things. The Worker schedules many Builds;

@@ -15,7 +15,7 @@ Companion 是应用贡献。项目组件可以在同一个物理包中，以独�
 
 Track Companion 匹配组件的终端 Type 与作者 Surface，使用组件公开值描述时间线实体、标签、素材预览和 Inspector 字段。图形可以公开外观、内容、位置和事件时间，而不必暴露每一个内部绘制数值。
 
-控件与交互由 Studio 提供，Companion 选择标量、列表或记录控件，并将其绑定到 Source 值。Film Companion 指明 Film 的时间来源与 Track；Script Companion 支持移动 Selection、Moment 标记所需的源码映射。作者声明的 ProgramSpace 支持没有 Script 轨道的动画。
+控件与交互由 Studio 提供，Companion 选择标量、列表或记录控件，并将其绑定到 Source 值。Film Companion 指明 Film 的 Timeline 与 Track；Script Companion 支持移动 Selection、Moment 标记所需的源码映射。同一种 Timeline 也支持没有 Take 和 Script 行的动画，其作者声明的结束时间定义完整范围。
 
 ## 让编辑保留含义
 

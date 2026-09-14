@@ -1,56 +1,142 @@
 ---
 title: Runtime
-description: The execution boundary outside Qflow source and Core.
+description: Select execution services, run independent Builds and keep their Results available.
 ---
 
-Qflow keeps four decisions separate:
+The Source describes the work. The Run chooses its Targets and Candidates. The Runtime executes
+those choices using the selected services; the project keeps the resulting Outputs.
 
-| Owner | Decides |
-|---|---|
-| Workspace | Which source files and local assets compilation may read |
-| Runtime Profile | Which environmental packages may be used |
-| Local Runtime | How active Builds are durably advanced and observed |
-| Project Build Results | Which completed public Outputs belong to each Build |
+| Owner | Responsibility |
+| --- | --- |
+| Project | Sources, assets, component packages and the selected Runtime Profile |
+| Distribution | The installed executable, public SDKs and execution implementation |
+| Runtime Profile | Provider Endpoints, credential references, bindings and shared capacity |
+| Build | One execution attempt using the selected graph and configuration |
+| Result repository | Completed public Outputs, outcome and retained execution evidence |
 
-Core is a domain neutral state machine. It accepts facts, derives Commands and verifies returned
-Records. It does not start processes, read credentials, choose Providers or know that a Build makes
-video.
+Core plans and advances dependencies without knowing that they make a video. A new component or
+[Provider](./providers.md) supplies its behavior through the same package interfaces.
 
-`@qflow/runtime-local` is the default execution environment. It owns one Worker, scheduler, the
-pending-submission and active-execution state, and one SQLite database. Those are one implementation,
-not user-selectable pseudo-components.
+## Select the project and Profile
+
+Run commands from the video project, or select it explicitly with `--workspace`. Otherwise the
+nearest `package.json` above the current directory establishes the project; when none exists, the
+current directory is the project. Source filenames and Runtime configuration do not choose this boundary.
+
+```bash
+qflow paths
+qflow runtime init
+```
+
+`runtime init` writes an editable starter `qflow.runtime.json` and selects it through the project's
+`.qflow/runtime` file. It preserves an existing Profile and performs no installation, login or execution.
+The starter offers QflowHub for hosted generation and WhisperX, with local media processing and rendering.
+Choose the services that fit the work before preparing them. Local inference and project Providers can
+use the same setup, including alongside QflowHub.
+
+Use `qflow runtime use <profile>` to select an existing Profile. An explicit `--runtime <profile>`
+overrides it for one invocation. Commands read only the selected project's pointer; they do not inherit
+another project's selection. Relative command-line paths are relative to the current directory.
 
 ## Runtime Profile
 
-The Profile contains only environmental choices that genuinely vary:
+A small local-processing Profile looks like this:
 
 ```json
 {
   "format": "qflow.runtime-local@1",
   "dataRoot": ".qflow/runtimes/local",
-  "credentials": {
-    "env": { "use": "@qflow/credential-store-env" }
-  },
+  "credentials": {},
   "endpoints": {
-    "media": { "use": "@qflow/provider-media-local" }
+    "media.local": { "use": "@qflow/provider-media-local" }
   },
   "bindings": {}
 }
 ```
 
-* `credentials` selects stores for explicit credential references.
-* `endpoints` selects exact Provider implementations and their configuration.
-* `bindings` says which Endpoint serves a capability that several selected Endpoints offer, keyed by
-  `name@version#capability` and naming an Endpoint instance. Providers never hide what they can do;
-  this is the deployment's decision, and `doctor` reports a contested capability that lacks one.
+`dataRoot` locates active execution data and working files, separately from the `.qflow/runtime`
+selection file. Each `endpoints` entry selects an installed Provider and its configuration. Credentials
+use references into a selected store; secret values stay outside the Profile and Sources.
 
-The official video Distribution selects the local Runtime before opening this file. The Profile
-does not repeat a `runtime.use` selector that cannot make another choice. Another application may
-provide a different Runtime Host at its Distribution assembly boundary without changing Core or
-the generic CLI.
+A single compatible Endpoint can serve a capability without a binding. When several offer it, a
+binding states which instance to use. For example, with an explicitly configured local WhisperX:
 
-Result storage belongs to the project, not the execution environment. A project may select it in
-`qflow.results.json`; omitting the file uses the same filesystem default:
+```json
+"bindings": {
+  "@qflow/whisperx@1#whisperx-alignment": "whisperx.local"
+}
+```
+
+Installing a package makes it available; selecting it gives it a role in this environment. The Model
+owns request meaning, and the Provider owns support, service mapping and pricing. A failed service
+request does not silently select another account. Read the chosen Provider's README for its settings.
+
+## Prepare only the services needed now
+
+```bash
+qflow auth status
+qflow doctor --endpoint media.local
+qflow runtime up --endpoint media.local
+qflow runtime status
+```
+
+Use the actual Endpoint names from the Profile; repeat `--endpoint` for several. Omission covers the
+whole Profile. `doctor` reads configuration and performs the selected Providers' diagnostics without
+submitting generation. Read warnings as well as errors: a stored credential or reachable catalogue
+is not proof that every request will succeed. With no Runtime selected, doctor checks project Results only.
+
+`runtime up` prepares the selected local dependencies and Managed Programs, then starts the Worker.
+It does not log into or start hosted services. `programs up|status|down` manages those local helpers
+separately. Initial inference setup can require substantial downloads; compare that effort with hosted
+execution and choose the route before starting preparation.
+
+`plan <run>` checks the work's demanded capabilities and cheap readiness. Provider discovery needs
+installed package declarations; it may load other declared Endpoints when no explicit binding selects
+a route. Unused services need not be running or logged in. `build` provisions nothing: it requires
+its dependencies ready, starts an available Worker if necessary, and submits one Build.
+[Runs and Builds](../quickstart/run.md) explains planning, prices, authorization and explicit reuse.
+
+## Execute independently of the terminal
+
+```bash
+qflow build build.svrun --follow
+qflow status <build-id> --watch
+qflow logs <build-id> --lines 80
+```
+
+The Worker owns execution. `--follow` and `status --watch` observe it; closing that terminal or reaching
+a watch timeout does not cancel the Build. To stop a specific attempt, use `qflow cancel <build-id>`.
+Remote cancellation is best effort, and completed Outputs remain available.
+
+A failed attempt stays failed. A new Run can select its useful Outputs for a new Build. If execution
+has finished but Result storage needs attention, `status` names `qflow result finish <build-id>`:
+that completes the pending save, without executing generation again.
+
+Build logs retain Provider phases and diagnostics. `runtime logs` instead reads Worker startup and
+process errors; installation and service logs belong to the selected Managed Program. A missing
+terminal transcript does not imply missing execution evidence.
+
+## Share capacity, retain independent work
+
+Several Builds can progress together. Limits belong to the account, deployment or local compute
+resource using them. Remote waiting does not reserve a whole-Build slot that blocks unrelated local
+work. Providers can distinguish active tasks from short submit, poll and collect calls. Inspect
+`qflow activity --verbose` for shared capacity alongside active work.
+
+Builds use independent loaded project implementations and selected configuration. Editing a project
+component or Profile applies to the next Build; already started work keeps its loaded implementation.
+Managed Programs have separate lifetimes, so a warm WhisperX model can serve multiple Builds.
+
+Distribution updates and changes to the Worker's inherited shell environment concern its process
+lifetime. Inspect active work before restarting it: `runtime down` ends active execution contexts,
+while `programs down` stops helpers separately. A lost executor ends its attempts; continuation uses
+new Builds and explicit reuse. This is execution separation, not a security sandbox or a frozen copy
+of files a component reads later.
+
+## Keep products with the project
+
+Without extra configuration, Results live in `.qflow/results`. A project can select another location
+or repository through `qflow.results.json`, independently of its Runtime Profile:
 
 ```json
 {
@@ -60,215 +146,17 @@ Result storage belongs to the project, not the execution environment. A project 
 }
 ```
 
-Installing a package only makes an implementation available. A Profile must select it. The Profile
-contains no Workspace, author imports or creative routing.
+The S3 adapter can instead store Results in a bucket and project prefix. The selected adapter owns
+access and credentials; changing Result storage does not move the active Runtime or upload external
+file references automatically. A submitted Build retains its chosen destination, and changing that
+selection does not migrate history.
 
-## Local state
+Results publish completed public Outputs as they become available and retain the terminal outcome.
+A new Output can reference an existing file, including within a composite; it does not necessarily
+create new media bytes. Explicit local file references remain live. Keep dependencies available for
+future reuse. `get` creates a separate export when a person or another tool needs those files.
 
-Selecting a Profile writes a project pointer. Execution data stays under `dataRoot`:
-
-```text
-.qflow/
-  runtime
-  runtimes/
-    local/
-      runtime.sqlite
-      work/
-      worker/
-      programs/
-  results/
-    <UTC-date>/
-      <build-id>/
-        result.json
-        files/
-        values/
-```
-
-`check` and `plan` do not create Runtime data. Submission first prepares a non-schedulable row.
-Only after the Result draft, attachments and working directory exist does one SQLite transaction make
-the Build claimable. A pending submission left by a hard interruption is removed only by the exact
-`qflow result discard <build-id>` operation; nothing scans or guesses.
-
-An Execution stores active facts, Provider Operations, `wakeAt`, its current turn, cancellation, one
-immutable decision and optional attention. It stores no phase. Once Result saving and working-directory
-cleanup succeed, one transaction removes all owned SQLite rows with the Execution root last. Runtime
-retains no finished Build-history row.
-
-Every Build committed to a persistent Runtime must provide its project Result location and Author
-Catalog. Execution without a Result is not a hidden alternate mode.
-
-Historical content lives in the selected project Result repository, not Runtime SQLite. With the
-default repository, `.qflow/results/<UTC-date>/<build-id>/result.json` names final Targets and every public
-Author Output that actually completed on their route. Resource bytes are under that Result's `files/`;
-Composite Value Documents are under `values/`; each document keeps canonical domain data separate
-from its nested Resource-path bindings. `builds`, `history`, `inspect`, `get` and `build-record` use
-the same repository interface. An active Build waiting for a detached Worker carries the exact repository
-location it was given, so changing a Profile later cannot redirect that in-flight Build.
-
-Author Graph and Run Graph remain compiler inputs. The Planner applies every `satisfy` globally,
-computes the resulting dependency closure, and only then emits the immutable execution Definition:
-selected initial Records, Producer steps, `Output -> Record` bindings, goals and Targets. Candidate
-ids and the two source graphs do not enter Runtime persistence. Only zero-input Candidate sources
-reached by that plan are then read, whether they name a local value, local file or historical Output.
-A directly selected historical
-Output gives Result storage one whole-Output forwarding address; historical inputs used inside a
-new operation are staged once before the Build becomes active and produce ordinary current outputs.
-
-The Result manifest itself may carry a human title, note and a list of highlighted public Outputs. Edit
-those fields with `qflow result edit <build-id>`; this changes only that Build's `result.json`, does
-not open the Runtime and does not create a project-wide metadata index. Studio reads the same fields
-and can therefore show finished Builds even when no Runtime is selected.
-
-`running` is neither a Result conclusion nor a persisted state. The stable Host `BuildView` derives
-`submitting / ready / running / waiting / saving-result` from active facts. CLI and Studio consume that
-view, never raw submission or execution persistence records. Once execution records its one `complete`, `failed` or
-`cancelled` decision, a Worker can never claim it again. A Result has no `outcome` while accepting public
-Outputs and is finished with exactly the same outcome. Result or cleanup failure adds independent
-`attention = { step, error }` without changing the decision. Result browsing returns only finished
-Results newest first, while an exact Build-id read can inspect a draft.
-
-Every public Build id has the form `bld_YYYYMMDDTHHMMSSmmmZ_NNNNNNNNNN`. The UTC portion gives
-Results a natural order; the final random nonce only prevents same-millisecond collisions and says
-nothing about content equality or reuse. Pagination is keyset-based: `builds --before <build-id>` and
-`history ... --before <build-id>` continue strictly before the last id returned.
-
-For an S3-compatible repository:
-
-```json
-{
-  "format": "qflow.build-results@1",
-  "use": "@qflow/build-result-s3",
-  "config": {
-    "bucket": "my-video-results",
-    "prefix": "projects/episode-12",
-    "region": "us-east-1"
-  }
-}
-```
-
-The AWS SDK uses its normal credential chain. `endpoint` and `forcePathStyle` are available for
-S3-compatible services. The prefix is the project boundary: each project should have its own
-prefix. S3 changes only where complete Results live; it does not move Runtime SQLite, Provider capacity or
-an active Build's temporary Resources into the bucket.
-
-The S3 adapter maps each ordered Build id to a reversible newest-first physical prefix. It can request
-one bounded delimiter page from object storage without a central index or duplicate catalog. Result
-files are streamable by byte range, so
-Studio video/audio requests do not load a whole remote file into memory first. `qflow doctor
-[profile] --workspace <project>` actively checks the selected Result Repository as well as the Runtime;
-the storage check performs only a bounded read-only listing and does not scan Result history.
-
-The Workspace is resolved independently from the explicit `--workspace`, the project containing the
-Runtime pointer, or the entry source directory. Runtime configuration cannot widen source access.
-
-## Execution turns and concurrency
-
-`build` commits a fresh Build and returns. SQLite durably records every Build that needs another turn;
-the Worker materializes its state only while advancing it and writes accepted facts back immediately.
-There is no Build concurrency setting and Build identity is not a capacity resource.
-
-Each Endpoint instance is its own capacity pool by default. A Profile may give several Endpoint
-instances the same `pool` only when they truly share one account, deployment or compute quota;
-Endpoint packages may also apply a narrower exact-model limit. These are capacity claims, not queues.
-Work from separate Builds shares only those exact resources. Each resource has one limit: an
-immediate call releases its slot when it returns, while an asynchronous Operation keeps the same slot
-until it becomes terminal. Unrelated Builds and Commands may advance together.
-
-Cancellation is best effort. Work that has not begun is withdrawn; running work stops receiving
-new commands and an Endpoint may try to cancel an already submitted external operation. The active
-Build is still advanced once to write its Result, without running generation Commands.
-Completed output is retained and never rolled back.
-
-Asynchronous Operations are stored before Endpoint `start()`. Immediate Producers and Endpoints
-store a live command receipt before invocation and the complete Core event after return. If only the
-started state survives, that Build fails explicitly; the same command is never invoked again.
-
-## Managed Programs
-
-An Endpoint may declare a long-lived helper such as a warm local WhisperX service. The Endpoint owns
-its probe and optional start command; the local Runtime only supervises it.
-
-```bash
-qflow programs status
-qflow programs up
-qflow programs down
-```
-
-`programs up` first prepares the selected Endpoint packages' upstream npm dependencies, then operates
-their declared programs. The commands do not open SQLite or Credential Stores.
-
-## Lifecycle
-
-```bash
-qflow runtime init
-qflow runtime use qflow.runtime.json
-qflow runtime up
-qflow runtime status
-qflow runtime logs
-qflow runtime down
-```
-
-`runtime init` writes the video Distribution's starter Profile to `qflow.runtime.json` and selects
-it for the resolved project. It refuses to overwrite an existing file. This is a local file operation:
-it installs no package, contacts no service, requests no credential and starts no Worker. The official
-starter selects QflowHub for remote generation, WhisperX, plus local media processing and
-HyperFrames rendering. This is a Distribution default, not a Core rule; edit the Profile or select a
-different one when using BYOK or local Providers.
-
-`runtime use` binds one explicit Profile to one already resolved project. The project comes from
-`--workspace`, or from the current directory's declared package boundary; the selection never
-defines that boundary. Commands read only `<project>/.qflow/runtime`: they do not scan for a
-conventionally named Profile and do not inherit a selection from a parent project. Separate projects
-therefore select separately, even when their Profiles declare equivalent external Endpoints.
-
-`runtime up` asks npm to prepare the selected adapters' exact upstream packages in the shared
-machine home, prepares declared **local** Managed Programs, then starts the local Worker. It does not
-start, restart, log into or probe remote Endpoints such as QflowHub. `runtime down` stops only the
-local Worker and its execution processes; separately managed local Programs remain available until `programs down`.
-
-Use `--endpoint <instance>` on `runtime up`, `programs up|status|down`, or `doctor` to operate on a
-chosen service; repeat it for several services. Omitting it covers the whole Profile. Build planning
-checks the Endpoints actually selected for that work. Optional upstream package versions have separate
-installations, so preparing one version does not replace another; npm retains its shared download cache.
-
-`doctor` is the active read-only environment check. It resolves declared credentials and lets each
-selected Endpoint verify its real environment; a remote Provider may therefore contact its bounded
-catalog or capability endpoint. Login proves only that a credential exists, while a successful doctor
-proves that the selected Endpoint's declared capabilities can be routed by that account at that moment.
-Ordinary `check`, `plan` and Build preflight
-never run these active probes and never turn environment inspection into a hidden network request.
-
-`build` performs no provisioning: it runs cheap read-only preflight, submits work only when ready, and ensures the Worker
-is available. `activity` and `cancel` observe or control active work. `status` reads Runtime and Result as
-independent sources, so failure on one side neither invents nor hides facts on the other. Without a
-Runtime, a finished Result proves only its own outcome.
-
-If Result writing or active-state cleanup fails, the decision remains immutable and attention identifies
-the exact `result` or `cleanup` step. After fixing the external problem, an operator may run
-`qflow result finish <build-id>`. The one-shot Result writer uses only stored Build facts, finished
-Operation values, working bytes and the exact Result Repository; it never loads or invokes a Producer
-or Endpoint. It idempotently writes the Result, removes the working directory, then atomically removes
-the active SQLite aggregate. Only one Result writer may own that work at a time; this mutual-
-exclusion lease is not a phase and never changes the decision. After a hard interruption, the coordinator
-clears abandoned Result-writer leases. An already decided Build whose Result writing was interrupted retains attention
-for `result finish`; a Build that lost its executor is concluded and its available facts are written to
-Result. Missing bytes fail explicitly instead of being regenerated.
-Reusing an earlier Result is an explicit Candidate in a new `.svrun`, not hidden Runtime behavior.
-
-Each Build uses its own loaded project implementation and selected Provider configuration. Editing project components or changing Profile selections therefore applies to the next
-Build while already started work keeps its loaded implementation. Managed Programs keep their own
-lifetime, so a warm model remains available across Builds. Concurrent Builds share execution
-infrastructure. Remote waiting does not reserve a whole-Build slot; declared resource limits apply
-to the work using those resources.
-The local Runtime can rotate execution processes as completed-work memory accumulates: existing Builds
-finish in their current process while new Builds use another. Warm services stay available.
-
-If an executor is lost, its affected attempts end with completed Outputs and available remote receipts;
-it is not restarted with newly edited code. Continue through a new Build and explicit reuse. Files
-read later by a component retain ordinary filesystem semantics. Distribution updates and changes to
-the coordinator's inherited shell environment still require restarting that bootstrap process after
-preserving active work.
-
-Runtime packages are trusted local deployment code. npm or pnpm owns their installed versions;
-Qflow only selects exact requirements and invokes npm at the explicit `runtime up`/`packages install`
-boundary. It has no second package lock and does not claim that metadata is a sandbox.
+`builds`, `history`, `inspect` and `get` read project Results without requiring the original Runtime.
+For exact storage and execution interfaces, see the
+[Result package](https://github.com/qflow-ai/qflow/blob/main/packages/build-result/README.md) and
+[local Runtime package](https://github.com/qflow-ai/qflow/blob/main/packages/runtime-local/README.md).

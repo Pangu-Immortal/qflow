@@ -44,15 +44,13 @@ authored animation. Space can contain independent contributions or a coordinated
 internal tree. [System relationships](references/production/system.md) explains this adaptive
 organization and connects it to materials and execution.
 
-Choose component boundaries through shared behavior. An ordinary media presentation can use Media;
-a playing video and a diagram exchanging space can share a scene that owns their layout and motion.
-Independent Caption or overlays can remain peers. Use an existing component when its behavior fits;
-create a project component when a new relationship deserves its own expression. A one-off scene is
-normal production work. Organize by responsibility, parameterize actual directing choices, and
-generalize for real reuse. These are separate decisions: a self-contained scene can have a fixed
-design and few or no editable parameters. Before implementing a new visual system, read
-[Component design](references/production/component-design.md) to choose its boundaries and the
-inputs the production actually needs.
+Choose component boundaries through shared behavior: coordinated layout and motion can share a
+scene; independent contributions can remain peers. Use an existing component when its behavior fits,
+or create a project component for a new relationship. A one-off scene is normal production work.
+Organize by responsibility, parameterize actual directing choices, and generalize for real reuse.
+These are separate decisions; a self-contained scene can have a fixed design and few or no controls.
+Before implementing a new visual system, read [Component design](references/production/component-design.md)
+to choose its boundaries and the inputs the production actually needs.
 
 For spoken work, prefer to author meaning in Script and let the accepted performance give it time.
 In a clone, discover what a cut, picture, reveal or sound responds to, then recreate that relationship
@@ -70,8 +68,7 @@ choices, so a whole scene can respond to a Moment and separate components can sh
 ## Direct the material
 
 Material direction carries practical knowledge of how generation models respond to prompts and
-references. Use that experience to turn the creative answer into effective requests. Composition
-uses your understanding of the work to organize the resulting material into meaningful behavior.
+references. Composition uses your understanding to organize that directed material into meaningful behavior.
 
 Keep the whole creative intention in view, then give each part the direction it can realize.
 Translate planned composition into the generated material's appearance, framing and performance;
@@ -80,34 +77,21 @@ attitude remain useful when they describe what that material should look, sound 
 [Direction and its inputs](references/production/system.md#give-each-part-the-direction-it-can-realize)
 explains this division.
 
-For creator-led social video, favor compelling casting, a distinctive, appealing voice, and a
-performance with a clear attitude toward the subject and listener. Outgoing or restrained, let that
-relationship shape the voice, expression and timing, with a few decisive details. Give humor,
-contrast or surprise an expression the audience can experience in the piece itself, and translate
-the chosen idea into sensory and performable direction.
+For creator-led social video, favor compelling casting, an appealing voice and a clear attitude
+toward the subject and listener. Let that relationship shape expression and timing. Humor, contrast
+or surprise needs an expression the audience can experience in the work.
 
-Before writing or adapting an image prompt, read
-[Image direction](references/playbooks/craft/image-direction.md) and apply it to the intended picture,
-including when starting from an existing project's prompt. UGC, podcast and street-interview images
-usually share the Kit's fixed iPhone-video capture language. Follow it with Person, Shot and Setting:
-strong, specific casting; a deliberate camera encounter; and a place with a considered palette.
-The Craft owns the explicit appearance, proportion and reusable speaking-view guidance.
-Before choosing, designing or changing a character's voice, read
-[Voice direction](references/playbooks/craft/voice-direction.md). Before writing or adapting a video
-prompt, performance Recipe or action, read [Video direction](references/playbooks/craft/video-direction.md)
-and the selected Kit's wording and choices. For movement-led adaptation, that page also explains
-letting a video reference carry dance, action or camera behavior. Apply these references when adapting earlier work as well.
-For A-roll, B-roll, Caption, MG or sound relationships, read the Craft that owns what the work should
-accomplish. Use installed vocabulary and package-local documentation for
-the exact Surface, inputs and limits. Craft supplies directing judgment; package documentation
-supplies the means to express it.
-Treat existing project prompts and Recipes as earlier directing choices. Compare their assumptions
-with the current Brief, Treatment and relevant Craft, and carry them forward while the same artistic
-relationship still serves this work.
+Before writing or adapting an image prompt, read [Image direction](references/playbooks/craft/image-direction.md).
+Before choosing or changing a voice, read [Voice direction](references/playbooks/craft/voice-direction.md).
+Before writing or adapting a video prompt, performance Recipe or action, read
+[Video direction](references/playbooks/craft/video-direction.md) and the selected Kit's wording and choices.
+These pages own capture language, casting, reference relationships and model-specific direction;
+video direction also covers footage references for movement-led work. Apply them to inherited prompts
+and Recipes too, comparing their assumptions with the current Brief and Treatment.
 
-GPT Image 2 and Seedance 2 Mini at 720p are the usual starting points for generated pictures and
-performances, balancing capability and cost. Choose for the actual work; the image and video
-crafts explain resolution and duration choices.
+For A-roll, B-roll, Caption, MG or sound relationships, read the Craft that owns the directing question.
+Craft supplies judgment and model-selection guidance; installed vocabulary, Kits and package-local
+documentation supply the exact Surfaces, request wording, inputs and limits.
 
 ## Prepare for the work at hand
 
@@ -279,7 +263,7 @@ practical, revisit that choice and carry the improvement into the work and its n
 | drawing a component's elements, animation, resources or prepared surfaces | `references/production/component-visuals.md` |
 | writing a Caption family with new word relationships, scheduling or layout | `references/production/caption-authoring.md` |
 | `plan`, Provider pricing information, `build`, a retry or interrupted submission, following work, Results and exports | `references/production/builds.md` |
-| showing the editable work before export: Comments, Studio timeline, parameters and timestamped feedback | `references/production/studio.md` |
+| showing the editable work before export: Comments, Studio timeline, parameters, timestamped feedback and interface language | `references/production/studio.md` |
 | giving a component useful timeline entities, picture selection and author controls | `references/production/studio-companions.md` |
 | Film assembly, pure MG with authored time, picture and sound, final rendering or a selected frame interval | `references/production/rendering.md` |
 | judging the preview or finished Result and deciding what to fix | `references/production/review.md` |

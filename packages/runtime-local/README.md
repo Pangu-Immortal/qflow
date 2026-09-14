@@ -122,6 +122,12 @@ for a submission that never became active and therefore has no Result to save.
 Source imports select author packages. Runtime Profile entries select only code allowed to access files,
 credentials, processes or networks. Installing a package changes neither selection.
 
+Endpoint scoping happens before activation when explicit instance IDs are supplied, or when every
+requested capability has a binding. Otherwise discovery loads the Profile's Endpoint packages to
+find eligible implementations. Thus unused service readiness is not required, but an uninstalled
+declared package can still prevent unbound discovery. `scopedProfile` owns this distinction; package
+names are not used to guess which capabilities they supply.
+
 The lifecycle commands have deliberately narrow meanings:
 
 - `qflow runtime init` writes and selects the Distribution's starter Profile; it performs no setup or

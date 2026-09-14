@@ -73,16 +73,18 @@ composition already expresses the relationship. A new shared visual role can be 
 [Component design](../../production/component-design.md) connects that visual idea to semantic behavior,
 useful author controls and its place in the actual composition.
 
-The package owns reusable mechanics, default chrome and any bundled assets that belong to its
-identity. Source and Recipe supply this work's text, media, palette, placement and events. A surface
-may also accept an authored theme or background when customization is part of its design.
+The component owns its visual behavior and design. Source and Recipe supply the content, media,
+events and directing choices that belong outside it. A one-off scene can retain its illustrative
+text, palette and detailed layout internally; a shared treatment can expose the variation its uses
+actually need. Independence gives a responsibility an owner, without requiring every design choice
+to become an input.
 
 ## Expose meaningful control
 
-A useful Surface offers the content and relationships an author needs: rows or slots, labels,
-icons, a Frame, Styles, outer visibility, reveal Selections or Moments, and initial state where it
-makes sense. Avoid hardcoding this video's number of answers, speaker side, product or palette into
-reusable behavior. Expose a useful range rather than every internal pixel or animation calculation.
+A useful Surface offers the content and relationships the production needs. Derive its inputs from
+the decisions the author will supply or revise: these may include content, placement, visibility,
+semantic events or a chosen treatment. For reuse, expose the variation shared uses demonstrate;
+internal geometry and animation can continue to realize a coherent fixed design.
 
 `preset` means content already present in the initial state of a component that supports it. It is
 not a substitute for a Style and not a generic timing escape. A reveal Window, a point activation

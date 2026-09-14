@@ -29,7 +29,7 @@ internal drawing value.
 Studio supplies the controls and interactions. A Companion selects scalar, list or record controls
 and binds them to source values. A Film Companion identifies the Film's time source and Tracks;
 a Script Companion supports the source mapping needed to relocate Selection and Moment markers.
-An authored ProgramSpace supports animation without a Script lane.
+The same Timeline supports animation with no Takes or Script lane; its authored end defines the extent.
 
 ## Make edits meaningful
 

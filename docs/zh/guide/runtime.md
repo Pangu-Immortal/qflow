@@ -1,48 +1,131 @@
 ---
 title: Runtime
-description: Qflow Source 与 Core 之外的执行边界。
+description: 选择执行服务，独立运行 Build，并保留可持续使用的 Result。
 ---
 
-Qflow 把四个决定分开：
+Source 描述作品，Run 选择 Target 与 Candidate，Runtime 使用选定服务执行这些决定，
+项目保留实际得到的 Output。
 
-| 所有者 | 决定什么 |
-|---|---|
-| Workspace | 编译能读取哪些 Source 和本地素材 |
-| Runtime Profile | 允许使用哪些环境包 |
-| Local Runtime | 活跃 Build 如何持久推进和被观察 |
-| 项目 Build Results | 每个 Build 实际完成了哪些公开 Output |
+| 所有者 | 职责 |
+| --- | --- |
+| 项目 | Source、素材、组件包与选定的 Runtime Profile |
+| Distribution | 安装的可执行程序、公共 SDK 与执行实现 |
+| Runtime Profile | Provider Endpoint、凭据引用、路由与共享容量 |
+| Build | 使用选定依赖图和配置的一次执行尝试 |
+| Result 仓库 | 已完成的公开 Output、执行结果和保留的运行证据 |
 
-Core 是领域无关的状态机。它接收事实、派生 Command、验证 Record，不启动进程、不读取凭证、
-不选择 Provider，也不知道 Build 最终是不是视频。
+Core 只规划和推进依赖，不需要知道作品是一条视频。新组件或
+[Provider](./providers.md) 通过相同的包接口提供自己的行为。
 
-`@qflow/runtime-local` 是默认执行环境。它自己拥有 Worker、调度器、待提交状态、活跃执行状态和 SQLite。
-这些是同一个本地实现，不再伪装成需要用户逐项选择的组件。
+## 先确定项目，再选择 Profile
+
+从视频项目运行命令，或用 `--workspace` 明确指定项目。否则使用当前目录向上最近的
+`package.json`；没有时，以当前目录为项目。Source 文件名和 Runtime 配置都不决定这个边界。
+
+```bash
+qflow paths
+qflow runtime init
+```
+
+`runtime init` 写入可编辑的起始 `qflow.runtime.json`，通过项目的 `.qflow/runtime`
+文件选择它。已有 Profile 会保留；此操作不安装、不登录、不执行。
+起始配置提供 QflowHub 托管生成和 WhisperX，以及本地媒体处理、渲染。先按作品需要选择服务，
+再准备它们。本地推理、项目 Provider 可以走同一条路径，也可以与 QflowHub 混合使用。
+
+`qflow runtime use <profile>` 选择已有配置；`--runtime <profile>` 只覆盖当前命令。
+命令只读取当前项目的选择，不继承其他项目的 Runtime。命令行相对路径以当前目录为基准。
 
 ## Runtime Profile
 
-Profile 只保留真正会随环境变化的选择：
+一个只配置本地媒体处理的例子：
 
 ```json
 {
   "format": "qflow.runtime-local@1",
   "dataRoot": ".qflow/runtimes/local",
-  "credentials": {
-    "env": { "use": "@qflow/credential-store-env" }
-  },
+  "credentials": {},
   "endpoints": {
-    "media": { "use": "@qflow/provider-media-local" }
-  }
+    "media.local": { "use": "@qflow/provider-media-local" }
+  },
+  "bindings": {}
 }
 ```
 
-官方视频 Distribution 在打开文件前已经明确选择 Local Runtime，因此 Profile 不再重复一个无法产生第二种
-选择的 `runtime.use`。另一种应用若确实拥有不同 Runtime Host，应在自己的 Distribution 组装边界提供它；
-Core 与通用 CLI 都不需要知道具体实现，也不预建没有第二个实现验证过的 Host 插件注册表。
+`dataRoot` 放活跃执行数据和工作文件，与 `.qflow/runtime` 选择文件分开。
+`endpoints` 选择已安装的 Provider 及其配置。凭据通过选定 Store 中的引用获取，
+密钥值不写进 Profile 或 Source。
 
-`credentials` 选择凭证存储，`endpoints` 选择明确的 Provider 实现。Result 仓库不属于执行环境，
-因此不能放进 Runtime Profile。
+只有一个兼容 Endpoint 时无需 binding；多个 Endpoint 都能提供同一能力时，用 binding
+表达选择。例如已明确配置本地 WhisperX 后：
 
-项目可以在根目录放置独立的 `qflow.results.json`：
+```json
+"bindings": {
+  "@qflow/whisperx@1#whisperx-alignment": "whisperx.local"
+}
+```
+
+安装包使实现可用，选择它才赋予它当前环境中的角色。Model 拥有请求含义，Provider 拥有
+服务支持、接口映射和价格来源。请求失败不会偷偷改用另一个账户。具体配置看所选 Provider 的 README。
+
+## 按当前需要准备服务
+
+```bash
+qflow auth status
+qflow doctor --endpoint media.local
+qflow runtime up --endpoint media.local
+qflow runtime status
+```
+
+使用 Profile 里的实际 Endpoint 名称，可重复 `--endpoint` 选择多个；省略时覆盖整个 Profile。
+`doctor` 读取配置、运行 Provider 的诊断，不提交生成。除了错误，也要阅读警告：有凭据或能读取
+模型目录，不代表每种请求一定成功。没有选定 Runtime 时，doctor 只检查项目 Result。
+
+`runtime up` 准备所选本地依赖和 Managed Program，再启动 Worker；它不登录或启动托管服务。
+`programs up|status|down` 单独管理这些本地助手。首次推理环境准备可能涉及大量下载，
+应先比较本地准备成本和托管方式，再选择执行路径。
+
+`plan <run>` 检查当前工作需要的能力和轻量就绪状态。发现 Provider 能力需要可加载的包声明；
+没有明确 binding 时，可能需要加载其他已声明 Endpoint。未使用的服务不必启动或登录。
+`build` 不做安装准备：依赖已就绪时，按需启动 Worker 并提交一次 Build。
+[Run 与 Build](../quickstart/run.md) 说明规划、价格、付费授权和显式复用。
+
+## 执行独立于观察终端
+
+```bash
+qflow build build.svrun --follow
+qflow status <build-id> --watch
+qflow logs <build-id> --lines 80
+```
+
+Worker 拥有执行。`--follow` 和 `status --watch` 只是观察；关闭终端或等待超时不会取消 Build。
+停止某一次尝试用 `qflow cancel <build-id>`。远程取消尽力而为，已经完成的 Output 会保留。
+
+失败的尝试保持失败。新 Run 可以选择已有 Output，开启新的 Build。如果执行已经结束，
+只是 Result 保存需要处理，`status` 会指出 `qflow result finish <build-id>`：它只完成待保存工作，
+不会重新生成素材。
+
+Build 日志保留 Provider 阶段和诊断。`runtime logs` 查看 Worker 启动和进程错误；
+安装、服务日志属于相应 Managed Program。终端记录丢失不意味着执行证据也丢失。
+
+## 共享容量，独立推进
+
+多个 Build 可以同时推进。限制属于实际使用的账户、部署或本地计算资源。
+远程等待不会占住一个整条 Build 的名额、阻止其他 Build 的本地工作。
+Provider 可以分别声明任务容量和 submit、poll、collect 的短调用限制。
+`qflow activity --verbose` 展示活跃工作和共享容量。
+
+每个 Build 使用独立加载的项目实现和选定配置。修改项目组件或 Profile 影响下一次 Build，
+已开始的工作保留已加载的实现。Managed Program 有独立生命周期，预热好的 WhisperX 可以服务多个 Build。
+
+更新 Distribution 或改变 Worker 继承的 shell 环境，涉及进程生命周期。重启前检查活跃工作：
+`runtime down` 会结束活跃执行上下文，`programs down` 单独停止助手。
+执行器丢失会结束所属尝试，之后通过新 Build 显式复用。这种执行分离不是安全沙箱，
+也不会冻结组件之后才读取的文件。
+
+## 产物留在项目里
+
+默认 Result 位于 `.qflow/results`。项目通过独立的 `qflow.results.json` 选择位置或仓库，
+不放进 Runtime Profile：
 
 ```json
 {
@@ -52,190 +135,15 @@ Core 与通用 CLI 都不需要知道具体实现，也不预建没有第二个�
 }
 ```
 
-没有这个文件时使用同样的本地默认值。Runtime Profile 可以被多个项目复用，而每个项目仍拥有自己的
-Result 地址。
+S3 适配器可以把 Result 放进桶及项目专属前缀。适配器负责访问和凭据；更换 Result 存储不会
+搬走活跃 Runtime，也不会自动上传外部文件引用。已提交 Build 保留提交时的目标位置，
+修改选择不迁移历史。
 
-安装包只增加一种可选实现，不会自动激活。Profile 不包含 Workspace、作者 import 或隐藏的
-创作路由。
+Result 在公开 Output 完成时发布它们，最后保留终态。新 Output 可以引用已有文件，复合值内部也一样，
+不意味着多一份素材。显式本地文件引用保持实时性；继续复用时需要保留它们的依赖。
+需要交给人或其他工具的独立文件时，用 `get` 另行导出。
 
-## 本地状态
-
-选择 Profile 会写入项目指针，执行数据位于 `dataRoot`：
-
-```text
-.qflow/
-  runtime
-  runtimes/
-    local/
-      runtime.sqlite
-      work/
-      worker/
-      programs/
-  results/
-    <UTC-date>/
-      <build-id>/
-        result.json
-        files/
-        values/
-```
-
-`check` 和 `plan` 不创建 Runtime 数据。提交时先建立不可调度的暂存行；Result draft、附件和工作目录
-准备完成后，一个 SQLite 事务才会让这个 Build 可领取。硬中断留下的待提交状态只能由
-`qflow result discard <build-id>` 精确删除；系统不扫描或猜测。
-
-SQLite 的 Execution 只保存活跃执行事实、Provider Operation、`wakeAt`、当前 turn、取消请求、唯一 decision
-和可选 attention；不保存 phase。每个活跃 Execution 有独立临时字节目录。Result 保存与工作目录清理完成后，
-Definition/Facts、Operation、Catalog、容量票据和 Execution 根在一个事务中删除。Runtime 中不存在已结束
-Build 的历史行。
-
-持久 Runtime 的每个 Build 都必须在提交完成前提供项目 Result 地址和 Author Catalog。没有 Result 的
-执行不会作为另一种隐藏模式存在。
-
-历史内容属于所选的项目 Result 仓库，不属于 Runtime SQLite。使用默认仓库时，
-`.qflow/results/<UTC-date>/<build-id>/result.json` 记录最终 Target，以及这条执行路线上真正完成的所有公开
-Author Output；Resource 字节放在该 Result 的 `files/`，Composite Value Document 放在 `values/`，
-领域数据与嵌套 Resource 的路径绑定彼此分开。`builds`、`history`、
-`inspect`、`get` 和 `build-record` 都通过同一个仓库接口读取。提交给独立 Worker 的 Build 会带着
-当时选定的项目仓库位置；之后修改项目配置或从别的目录查询，活跃 Build 仍使用该准确地址。
-
-Author Graph 与 Run Graph 仍是两份完整的编译输入。Planner 全局应用所有 `satisfy`，求出替换后的依赖闭包，
-然后才生成不可变执行 Definition：选中的初始 Record、Producer step、`Output → Record` 绑定、goal 与 Target。
-Candidate id 和两张源码图都不会进入 Runtime 持久化。只有被该计划真正选中的零输入 Candidate 来源才会随后
-读取，无论它指向本地值、本地文件还是历史 Output。历史 Output 若被直接选为公开 Output，Result 只保存一个
-完整 Output 的转发地址；历史内容若被新 Operation 消费，则在 Build 生效前暂存一次，新产物照常属于当前 Result。
-
-Result manifest 自己可以保存人类标题、备注和重点公开 Output。使用 `qflow result edit <build-id>`
-修改的只是该 Build 的 `result.json`；它不打开 Runtime，也不建立项目级元数据索引。Studio 直接读取
-这些字段，所以即使没有选择 Runtime，也能从 Result 列出历史 Build。
-
-`running` 不是 Result 结论，也不是持久状态。Host 用活跃事实派生稳定的 `BuildView`：
-`submitting / ready / running / waiting / saving-result`。CLI 和 Studio 只消费这个视图，不读取原始提交行或
-Execution 持久记录。Execution 根据 `wakeAt` 与 turn 推进；
-Execution 一旦写入唯一的 `complete / failed / cancelled` decision，就永远不能再被 Worker 领取。Result 在
-接受公开 Output 期间没有 `outcome`，完成时写入与 decision 完全相同的 outcome。Result 或清理失败只增加
-独立的 `attention = { step, error }`，不会改写 decision。历史浏览按 Build id 从新到旧只列出已有 outcome 的 Result；按
-Build id 精确读取仍能看见 Result draft。
-
-公开 Build id 固定为 `bld_YYYYMMDDTHHMMSSmmmZ_NNNNNNNNNN`。UTC 部分给 Result 自然时间顺序；末尾
-随机串只用于避免同一毫秒冲突，不表达内容相等或复用。分页使用游标：`builds --before <build-id>` 与
-`history ... --before <build-id>` 从上一页最后一个 id 之前继续。
-
-使用 S3 或兼容服务时，项目的 `qflow.results.json` 改为：
-
-```json
-{
-  "format": "qflow.build-results@1",
-  "use": "@qflow/build-result-s3",
-  "config": {
-    "bucket": "my-video-results",
-    "prefix": "projects/episode-12",
-    "region": "us-east-1"
-  }
-}
-```
-
-AWS SDK 使用它通常的凭证链；兼容服务还可以配置 `endpoint` 与 `forcePathStyle`。`prefix` 是项目
-边界，每个项目应使用自己的 prefix。S3 只改变完整 Build Result 的存放位置，不会把 Runtime
-SQLite、Provider 容量或活跃 Build 的临时 Resource 搬进 bucket。
-
-S3 adapter 会把有序 Build id 可逆地映射成“最新优先”的物理 prefix，因此对象存储可以直接返回有界
-的一页，不需要中央索引或重复 catalog。Result 文件支持按字节范围流式读取，因此 Studio 预览远端
-视频或音频时，不会先把完整文件装进内存。`qflow doctor [profile] --workspace <project>` 会同时主动
-检查 Runtime 和项目选择的 Result Repository；存储检查只做一次有上限的只读列表，不扫描历史 Result。
-
-Workspace 独立由显式 `--workspace`、Runtime 指针所在项目或入口 Source 目录确定。Runtime 配置
-不能扩大源码读取范围。
-
-## Execution turn 与并发
-
-`build` 保存一个全新 Build 后立即返回。SQLite 持久保存所有仍需要下一轮推进的 Build；Worker 只在推进
-期间临时物化状态，并立即写回已经接受的 facts。没有 Build 并发配置，Build 身份也不是容量资源。
-
-真正约束外部工作的容量只有 Endpoint 声明的 Provider 总池与其下面的模型 Lane。不同 Build 的 Command
-共享这些真实容量。每项资源只有一个 `limit`：立即调用返回后释放，异步 Operation 则一直占用到终态；
-互不冲突的 Build 与 Command 可以一起推进。
-
-异步 Endpoint 在调用 `start` 前先保存 Operation；立即 Producer/Endpoint 在调用前先保存 command
-交接状态。进程若停在“已开始但结果未落盘”的窗口，该 Build 明确失败，同一个 command 不会再次调用。
-
-取消是尽力而为：未开始的 Build 仍由 Worker 领取一次，但不会执行生成 Command，只写 Result
-终态与清理；运行中的 Build 不再接收新 Command，Endpoint 可以尝试取消已经提交的外部 Operation。
-已经完成并交接的 Output 保留，不做回滚。
-
-## Managed Programs
-
-Endpoint 可以声明 WhisperX 这类需要常驻的辅助程序。Endpoint 提供探测和可选启动命令，本地
-Runtime 只负责管理它。
-
-```bash
-qflow programs status
-qflow programs up
-qflow programs down
-```
-
-`programs up` 会先准备所选 Endpoint 包的上游 npm 依赖，再操作其声明的程序。这些命令不打开
-SQLite 或 Credential Store。
-
-## 生命周期
-
-```bash
-qflow runtime init
-qflow runtime use qflow.runtime.json
-qflow runtime up
-qflow runtime status
-qflow runtime logs
-qflow runtime down
-```
-
-`runtime init` 会把视频 Distribution 提供的起始 Profile 写入 `qflow.runtime.json`，并为已经解析
-出的项目选择它；已有文件一律拒绝覆盖。这只是本地文件操作：不安装包、不连接服务、不索取凭据，
-也不启动 Worker。官方起始 Profile 使用 QflowHub 提供远程生成、WhisperX，使用本地
-Endpoint 处理媒体并通过 HyperFrames 渲染。这是 Distribution 的开箱选择，不是 Core 规则；使用
-BYOK 或本地 Provider 时可以编辑 Profile 或选择另一份 Profile。
-
-`runtime use` 把一份显式 Profile 绑定到一个已经解析完成的项目。项目来自 `--workspace`，
-或当前目录声明的 package 边界；Runtime 选择不能反过来定义项目。命令只读取
-`<project>/.qflow/runtime`，不会扫描约定文件名，也不会继承父项目的选择。即使几个项目声明
-了等价的外部 Endpoint，它们也必须分别完成选择。
-
-`runtime up` 先让 npm 把所选 Adapter 的精确上游包准备到机器共享目录，再准备所选的**本地**
-Managed Program 并启动本地 Worker。它不会启动、重启、登录或探测 QflowHub 这类远程 Endpoint。
-`runtime down` 停止本地 Worker 和它的执行进程；由 Runtime 管理的本地 Program 会继续可用，直到显式运行
-`programs down`。
-
-`runtime up`、`programs up|status|down` 和 `doctor` 都可以用 `--endpoint <instance>` 只处理已选定的
-服务；需要多个服务时可以重复这个参数。不传时处理整个 Profile。Build 规划则检查本次工作实际选中的
-Endpoint。可选上游包按准确版本分别安装，准备一个版本不会替换另一个版本，npm 的下载缓存仍然共享。
-
-`doctor` 才是主动但只读的环境检查。它解析已声明的凭据，并允许每个所选 Endpoint 检查真实
-环境；远程 Provider 因而可以访问一次有界的模型目录或能力接口。登录成功只证明凭据存在，
-doctor 成功才证明该账户此刻可以路由所选 Endpoint 声明的能力。普通 `check`、`plan` 和 Build 预检都不会运行这类
-主动探测，也不会把环境检查偷换成隐藏网络请求。
-
-`build` 不做部署：它执行便宜只读预检，只在就绪后提交，并确保
-Worker 可用。`activity`、`cancel` 用来观察和控制活跃工作；`status` 分别读取 Runtime 与 Result，一边失败
-不会伪造或吞掉另一边的事实。没有 Runtime 时，已完成 Result 也只证明 Result 的 outcome，不能反推 Runtime。
-
-Result 写入或活跃状态清理失败时，decision 保持不变，并记录 `attention.step = result | cleanup`。修好外部
-问题后，操作人显式执行 `qflow result finish <build-id>`。它打开一次性 Result writer，不启动执行 Worker；
-只读取已保存的 Build facts、已结束 Operation 值、工作字节和固定 Result Repository，不加载或调用 Producer
-与 Endpoint。Result writer 核对并写入同一个 Result，再删除工作目录，最后原子删除整个 SQLite 活跃聚合。
-同一个 Build 同时只能被一个 Result writer 占用；这个互斥 lease 不是 phase，也不改变 decision。
-硬中断后，协调进程撤销遗留的 Result writer lease。已有终态、但 Result 写入中断的 Build 保留 attention，
-由 `result finish` 收尾；丢失执行进程的活跃 Build 则结束这次尝试，将已有事实写入 Result。
-工作字节丢失会明确失败，不补生成。
-已结束 Build 不恢复；复用以前的 Result 必须在新的 `.svrun` 中显式写 Candidate。
-
-每次 Build 都使用独立加载的项目实现和选定的 Provider 配置。修改项目组件或
-Profile 后，新的 Build 使用新实现，已经开始的工作继续使用它加载的实现。Managed Program 有独立
-生命周期，本地模型可以继续保持就绪。并发 Build 共享执行基础设施，远程等待不占用整单执行名额；
-具体工作的并发仍遵循其声明的资源额度。
-本地 Runtime 可以在已完成工作的内存积累后轮换执行进程：已有 Build 留在原进程做完，新 Build 进入新进程，
-已经就绪的常驻服务继续可用。
-
-执行进程丢失会结束它承载的活跃 Build，并保留已完成的产物和已有的远程回执，不会用修改后的代码重新运行
-同一次 Build。继续制作时创建新 Build 并显式复用。组件后来主动读取的文件仍遵循正常文件语义。
-更新 Distribution 或修改协调进程继承的环境变量，仍需先保留活跃工作，再重启这一启动进程。
-
-Runtime 包是本地可信部署代码，其安装版本由 npm 或 pnpm 管理。Qflow 只在显式 `runtime up` /
-`packages install` 边界选择精确依赖并调用 npm，不维护第二份包锁，也不会把元数据冒充成沙箱。
+`builds`、`history`、`inspect`、`get` 读取项目 Result，不依赖原 Runtime。
+精确存储和执行接口见
+[Result 包](https://github.com/qflow-ai/qflow/blob/main/packages/build-result/README.md) 与
+[本地 Runtime 包](https://github.com/qflow-ai/qflow/blob/main/packages/runtime-local/README.md)。

@@ -32,8 +32,8 @@ The identity chain is author-visible rather than synthesized by Studio:
 
 - `<script id="story">` becomes `Narrative.id = story`; every Selection, Moment, Segment excerpt
   and CaptionDocument from that Script carries `narrativeId = story`;
-- the selected Timeline id becomes `ProgramSpace.id`; every terminal Track carries that exact
-  `programSpaceId`;
+- every terminal Track's `programSpaceId` names the selected Timeline. `ProgramSpace` is the shared
+  clock/range shape contained in Timeline, not a second author-declared time axis;
 - every projected Instant carries the space identity; semantic sources also carry the Narrative
   identity. Each includes the consumer's public domain identity (normally its SVML `id`) as `subjectId`.
 
@@ -43,8 +43,9 @@ identity published by the component's public Program.
 
 These values are ordinary runtime provenance, not random hashes or Studio metadata. They let a
 consumer and its inverse reject a same-named Selection from another Script or a Track projected on
-another timeline. A Script id therefore names one Narrative across the active Source closure; if two
-distinct Scripts declare the same id, Studio refuses the ambiguous inverse instead of choosing one.
+another timeline. A Script id therefore names one Narrative across the active Source closure.
+The Script Surface declares that identity, and compilation rejects duplicates before Studio needs
+to choose a source.
 
 A `TemporalWindow` contains two complete Instants and a non-empty half-open span. Its endpoints may
 have different sources and different authorities, so a Window never pretends to have one source.
@@ -88,7 +89,7 @@ Film and Script interpretation also remain outside Studio core. `film-studio` de
 reference supplies the time axis and which child references are terminal Tracks; `script-studio` owns
 Script source observation and marker relocation. Studio selects the Script source map whose
 `narrativeId` exactly matches the active Timeline and delegates the edit back to that companion.
-An authored Space supplies the physical timeline without a Script lane.
+A zero-Take Timeline supplies the same physical time range without requiring a Script lane.
 
 The binding name is not used as a global address. Markup retains the exact author element and input
 range while decoding, Elaborator hygienizes that endpoint with its Source unit, and the compiled

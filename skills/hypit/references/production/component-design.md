@@ -69,6 +69,11 @@ several independent objects. Sharing a Moment does not by itself require a share
 
 ## Keep implementation changes local
 
+Use the work's revisions to check its boundaries: a change to one visual responsibility should
+remain with its owner, while a shared change should flow through a shared dependency. When an edit
+requires reconstructing the same decision across several scenes, consolidate that decision's source.
+The aim is to make the relationship explicit, whether its owner is a fixed implementation or an author input.
+
 Keep revisions local as the scene grows. Separate independently edited scene bodies, styling and
 frame evaluation into ordinary source modules while sharing their actual mechanics. A palette,
 typing function or media-sampling helper can be an ordinary project dependency; it needs no Surface
@@ -78,8 +83,7 @@ own their realization, including any fixed design specific to this piece.
 
 Derive related geometry from one layout. A pointer's destination should come from the target it
 clicks; an attached badge should follow its pointer; two presentations of one playing source should
-share their sampling. Then revising a layout changes its dependent motion with it. Repeatedly fixing
-the same choice in several places is evidence that its ownership needs consolidating.
+share their sampling. Then revising a layout changes its dependent motion with it.
 
 Choose visual grouping and timing independently. A combined scene can respond to spoken Moments;
 separate Tracks can share an authored event. What belongs together on the canvas does not decide

@@ -1,6 +1,6 @@
 {
   "name": "@qflow/qflow",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "homepage": "https://qflow.ai",
   "repository": {
     "type": "git",
@@ -125,6 +125,8 @@
     "packages/*/README.md",
     "packages/temporal-markup/EDITING.md",
     "packages/studio/INSPECTOR.md",
+    "packages/studio/LOCALIZATION.md",
+    "packages/studio/locales/*.json",
     "services/image-opencv/pyproject.toml",
     "services/image-opencv/package.json",
     "services/image-opencv/uv.lock",

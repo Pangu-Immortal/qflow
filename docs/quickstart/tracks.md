@@ -283,8 +283,9 @@ places flowing text inside a `SpatialFrame`:
 | `placement` | yes | `SpatialPoint`, `SpatialFrame` or `SpatialPath`, matching the item form |
 | `style` | yes | A `text:Style` compiled from an SVS Recipe plus exact font bytes |
 
-The `during` attribute accepts either the literal string `"program"` for the complete ProgramSpace,
-or a Selection reference for semantic timing:
+The `during` attribute accepts the literal string `"program"` for the complete Timeline,
+or a Selection or Segment reference for semantic timing. The same temporal interface also accepts
+authored `start`/`end` windows and `at`/`for` events:
 
 ```svml
 <text:Style id="callout-style" recipe={recipes.text.callout} font={title-font}/>
@@ -387,8 +388,8 @@ same Frame and moves the whole stack.
 
 ### deck:DepthStack
 
-`id`, `canvas`, `frame` and `appearance` are required, together with `semantic` for performance time
-or `space` for authored animation. `until` says
+`id`, `timeline`, `canvas`, `frame` and `appearance` are required. The same Timeline supplies authored
+times and any placed semantic anchors. `until` says
 what ends the deck: a Moment, a Selection or Segment boundary, or an authored time such as `8s`.
 With a Selection or Segment, `until-boundary="start" | "end"` chooses its edge; the default is `end`.
 

@@ -44,7 +44,7 @@ The prefix comes from the `as=` attribute; the path comes from `namespace.name` 
 ## Film
 
 Film appearance owns only the canvas clear color. Canvas dimensions are an explicit
-`space:Canvas` graph value, while frame rate comes from ProgramSpace.
+`space:Canvas` graph value, while frame rate comes from the Timeline's Clock.
 
 ```svs
 film.vertical {

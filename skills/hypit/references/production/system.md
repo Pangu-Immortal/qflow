@@ -177,6 +177,11 @@ Targets and Candidates. Visual grouping, paint order and execution dependency re
 relationships: one scene can require several material requests, while one material can supply
 several appearances.
 
+These graphs have different jobs. The Author Graph offers the work's public Outputs and their
+default computations. The Run Graph supplies Targets and explicit alternative Candidates. Planning
+applies those choices, follows the selected dependencies and freezes one execution definition for
+the Build. Runtime advances that selected work; it does not reconsider Candidates or rediscover reuse.
+
 A **Run** selects which public Outputs to complete through **Targets**, and can choose a different
 **Candidate** for an Output. That Candidate might be a supplied file, a prior Result, or a computation
 provided by a Run Fragment.
@@ -185,6 +190,12 @@ For a Caption revision, keep the existing SemanticTake and target the final vide
 already supplies the performance and its timing; the changed Caption and downstream rendering remain
 work to do. This separates revising the video from repeating media generation. The Run records that
 reuse explicitly.
+
+Selecting only the generated video instead leaves normalization and semantic preparation downstream.
+Selecting the Take keeps those prepared relationships too; selecting the final composition would
+also keep its earlier layout. Choose the boundary that preserves the material without preserving the
+thing being edited. A new named Output can reference existing bytes, including inside a composite
+value; a new Build does not by itself mean new media or another stored copy.
 
 A submitted execution is a **Build**. Its **Result** retains completed public Outputs for inspection,
 delivery and future selection, including useful Outputs completed before a later failure.
