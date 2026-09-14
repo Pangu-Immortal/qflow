@@ -1,7 +1,9 @@
 name: Publish npm
-run-name: "npm ${{ inputs.version }} — ${{ inputs.publish && 'publish' || 'package only' }}"
+run-name: "npm ${{ github.event.release.tag_name || inputs.version }} — ${{ (github.event_name == 'release' || inputs.publish) && 'publish' || 'package only' }}"
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       version:
@@ -21,32 +23,60 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  checks:
-    if: github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/ci.yml
-
-  package:
-    needs: checks
+  version:
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
-      - name: Confirm release version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Confirm version and main ancestry
         id: version
         env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          PRERELEASE: ${{ github.event.release.prerelease }}
           EXPECTED_VERSION: ${{ inputs.version }}
         run: |
+          git merge-base --is-ancestor HEAD origin/main
           node --input-type=module <<'JS'
           import { readFileSync, appendFileSync } from 'node:fs';
           const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
-          if (!/^\d+\.\d+\.\d+$/.test(version) || version !== process.env.EXPECTED_VERSION) {
+          if (!/^\d+\.\d+\.\d+$/.test(version)) {
+            throw new Error('package.json must declare a stable npm version.');
+          }
+          if (process.env.EVENT_NAME === 'release') {
+            if (process.env.PRERELEASE === 'true' || process.env.RELEASE_TAG !== `v${version}`
+              || process.env.GITHUB_REF !== `refs/tags/v${version}`) {
+              throw new Error('Publish a stable Release tagged v<package.json version>.');
+            }
+          } else if (version !== process.env.EXPECTED_VERSION) {
             throw new Error('Enter the stable version already committed in main/package.json.');
           }
           appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);
           JS
+
+  checks:
+    needs: version
+    uses: ./.github/workflows/ci.yml
+
+  package:
+    needs: [version, checks]
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -56,7 +86,7 @@ jobs:
         run: npm run pack:distribution
       - name: Check the packaged CLI
         env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
           npm install --prefix "$RUNNER_TEMP/qflow-install" "$PWD/dist/release/qflow-qflow-$VERSION.tgz" --no-audit --no-fund
           "$RUNNER_TEMP/qflow-install/node_modules/.bin/qflow" --version
@@ -70,12 +100,12 @@ jobs:
           if-no-files-found: error
       - name: Record the release inputs
         env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
           echo "Prepared @qflow/qflow@$VERSION from $GITHUB_SHA. Download npm-package to inspect the tarball and README." >> "$GITHUB_STEP_SUMMARY"
 
   publish:
-    if: inputs.publish
+    if: github.event_name == 'release' || inputs.publish
     needs: package
     runs-on: ubuntu-latest
     permissions:
@@ -92,7 +122,53 @@ jobs:
         with:
           name: npm-package
           path: release
+      - name: Check whether the immutable npm version already exists
+        id: registry
+        env:
+          VERSION: ${{ needs.package.outputs.version }}
+        run: |
+          node --input-type=module <<'JS'
+          import { appendFileSync } from 'node:fs';
+          const response = await fetch(`https://registry.npmjs.org/@qflow%2fqflow/${process.env.VERSION}`,
+            { signal: AbortSignal.timeout(30000) });
+          if (!response.ok && response.status !== 404) {
+            throw new Error(`npm version lookup failed: HTTP ${response.status}`);
+          }
+          const exists = response.ok;
+          appendFileSync(process.env.GITHUB_OUTPUT, `exists=${exists}\n`);
+          if (exists) {
+            appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+              `@qflow/qflow@${process.env.VERSION} already exists; npm publish and latest are unchanged.\n`);
+          }
+          JS
       - name: Publish the prepared tarball
+        if: steps.registry.outputs.exists == 'false'
         env:
           VERSION: ${{ needs.package.outputs.version }}
         run: npm publish "./release/qflow-qflow-$VERSION.tgz" --access public --tag latest
+
+  release-assets:
+    if: github.event_name == 'release'
+    needs: [package, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-package
+          path: release
+      - name: Attach the package to the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          VERSION: ${{ needs.package.outputs.version }}
+        run: |
+          filename="qflow-qflow-$VERSION.tgz"
+          assets="$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')"
+          if printf '%s\n' "$assets" | grep -Fxq "$filename"; then
+            echo "Release already contains $filename; leaving it unchanged."
+          else
+            gh release upload "$RELEASE_TAG" "release/$filename"
+          fi

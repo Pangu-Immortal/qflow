@@ -59,11 +59,22 @@ README for the npm page: public image URLs, both GIFs, and a link to the full vi
 The repository READMEs remain unchanged. `dist/release/README.md` shows the packaged text.
 Publish the resulting tarball with `npm publish dist/release/qflow-qflow-<version>.tgz --access public`.
 
-For GitHub Actions, commit the next stable npm version in `package.json` to `main`, then open
-**Actions → Publish npm → Run workflow** on `main` and enter that version. Leave **Publish to npm**
-unchecked to run Linux/Windows checks and download the packaged README and tarball; check it to
-publish that run's tarball as `latest` after those checks pass. Each run uses the commit selected
-when it starts. Pushes and tags do not publish, and the workflow does not change versions or create tags.
+For a formal release, commit the next stable npm version in `package.json` to `main`. Open
+**Releases → Draft a new release**, choose that commit with tag `v<version>` (for example `v0.1.8`),
+write the release notes, and publish the Release. The tagged commit must contain this workflow.
+`Publish npm` verifies the tag/version match and that the commit belongs to main's history, runs
+Linux/Windows checks, builds and checks the packaged CLI, then publishes to npm as `latest` and
+attaches the tarball to the Release. Checks and packaging use the triggering commit, even if main
+advances meanwhile. This path supports stable releases, not prereleases.
+
+**Actions → Publish npm → Run workflow** on `main` remains available: enter the committed version
+and leave **Publish to npm** unchecked for checks and downloadable packaging only; check it for a
+manual npm publication. To finish a failed Release publication, fix the external problem and rerun
+that Release's workflow. If code must change, prepare a new version and Release. An existing npm
+version is skipped without changing `latest`; an existing Release attachment is retained.
+Pushing main, pushing a tag alone, or saving a draft Release does not publish npm. The workflow
+does not edit versions or create tags. A visible Release can precede successful npm publication;
+check its Actions result before announcing that the npm version is available.
 
 The npm package's Trusted Publisher settings must allow GitHub Actions from organization `qflow-ai`,
 repository `qflow`, workflow `publish-npm.yml`, with direct `npm publish` enabled and no environment
