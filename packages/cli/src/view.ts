@@ -164,6 +164,8 @@ export function buildStatusView(options: {
     ? "unavailable" as const
     : options.result?.outcome ?? (options.result === undefined ? "missing" as const : "open" as const);
   const issue = options.runtime?.issue;
+  const operations = (options.runtime?.operations ?? options.result?.operations ?? [])
+    .filter((item) => options.verbose || item.status !== "completed");
   return {
     id: options.id,
     ...((options.runtime?.targets ?? options.result?.targets) === undefined ? {} : {
@@ -197,9 +199,8 @@ export function buildStatusView(options: {
           }
         : { message: options.resultReadError! },
     }),
-    ...((options.runtime?.operations ?? options.result?.operations ?? []).some((item) => item.status !== "completed") ? {
-      operations: groupOperationViews((options.runtime?.operations ?? options.result?.operations ?? [])
-        .filter((item) => item.status !== "completed")
+    ...(operations.length > 0 ? {
+      operations: groupOperationViews(operations
         .map((item) => ({
           ...(!options.verbose ? {} : "operation" in item ? { id: item.operation } : item.id === undefined ? {} : { id: item.id }),
           ...(item.receipt === undefined || (!options.verbose && item.failure === undefined) ? {} : { receipt: item.receipt }),

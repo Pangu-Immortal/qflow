@@ -26,17 +26,19 @@ import {
   filmTypes,
 } from "@qflow/film";
 import type { ModuleManifest } from "@qflow/protocol";
-import { svsFrontend } from "@qflow/svs";
+import { svsFrontend, svsRecipeType } from "@qflow/svs";
 import {
   decodeCanvasSurface,
   spatialManifest,
   spatialMarkupSurfaces,
   spatialModuleRef,
+  spatialTypes,
 } from "@qflow/spatial";
 import {
   MarkupSurfaceRegistry,
   createMarkupAuthorFrontend,
 } from "@qflow/markup";
+import type { StructuredElement, SurfaceResolvedReference } from "@qflow/markup";
 import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
 
 const fixtureModule = { name: "example.film-fixture", version: "1" } as const;
@@ -100,7 +102,7 @@ const validStyles = `<sheet version="1">
   }
 </sheet>`;
 
-async function compileFilm(options: { readonly styles?: string } = {}) {
+async function compileFilm(options: { readonly styles?: string; readonly tracks?: string } = {}) {
   const surfaces = new MarkupSurfaceRegistry();
   surfaces.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
@@ -141,7 +143,7 @@ async function compileFilm(options: { readonly styles?: string } = {}) {
       <fixture:Inputs/>
       <space:Canvas id="vertical" width="1080" height="1920"/>
       <film:Film id="main" canvas={vertical} timeline={semantic} appearance={recipes.film.vertical}>
-        <film:Track source={visual}/><film:Track source={audio}/>
+        ${options.tracks ?? '<film:Track source={visual}/><film:Track source={audio}/>'}
       </film:Film>
     </svml>`),
     closure,
@@ -179,4 +181,45 @@ test("Film rejects an invalid package-owned Recipe during check", async () => {
     compileFilm({ styles: `<sheet version="1">film.vertical { width: 1080; }</sheet>` }),
     /Film Recipe requires exactly/u,
   );
+});
+
+test("Film rejects a repeated Track reference during check, before executing its inputs", async () => {
+  for (const track of ["visual", "audio"]) {
+    await assert.rejects(
+      compileFilm({ tracks: `<film:Track source={${track}}/><film:Track source={${track}}/>` }),
+      /cannot include the same Track more than once/u,
+    );
+  }
+});
+
+test("Film distinguishes component output ports and resolves duplicate aliases", async () => {
+  const range = { source: "main.svml", start: 0, end: 1 };
+  const refs = new Map<string, SurfaceResolvedReference>();
+  for (const [path, type] of [["canvas", spatialTypes.canvas], ["timeline", timelineTypes.track]] as const) {
+    refs.set(path, { path, type, ref: { kind: "record", id: path } });
+  }
+  refs.set("appearance", { path: "appearance", type: svsRecipeType,
+    ref: { kind: "record", id: "appearance" }, record: { id: "appearance", type: svsRecipeType,
+      value: { kind: "inline", value: { path: "film", properties: { background: "#000000" } } } } });
+  for (const [path, component, output, type] of [
+    ["board.visual", "board", "visual", compositionTypes.visualTrack],
+    ["board.audio", "board", "audio", compositionTypes.audioTrack],
+    ["other.visual", "other", "visual", compositionTypes.visualTrack],
+    ["board-alias.visual", "board", "visual", compositionTypes.visualTrack],
+  ] as const) {
+    refs.set(path, { path, type, ref: { kind: "component-output", component, output } });
+  }
+  const decode = (paths: string[]) => {
+    const element: StructuredElement = { kind: "element", name: "film:Film", range,
+      attributes: { id: "main", canvas: { kind: "reference", path: "canvas" },
+        timeline: { kind: "reference", path: "timeline" }, appearance: { kind: "reference", path: "appearance" } },
+      children: paths.map(path => ({ kind: "element", name: "film:Track", range, children: [],
+        attributes: { source: { kind: "reference", path } } })),
+    };
+    return decodeFilmSurface({ element, sourceName: "main.svml", resolveReference: path => refs.get(path),
+      resolveAsset: () => { throw new Error("Film reads explicit references only"); } });
+  };
+  const compiled = await decode(["board.visual", "board.audio", "other.visual"]);
+  assert.deepEqual(compiled.components[0]?.inputs["track-2"], refs.get("board.audio")!.ref);
+  assert.throws(() => decode(["board.visual", "board-alias.visual"]), /cannot include the same Track more than once/u);
 });

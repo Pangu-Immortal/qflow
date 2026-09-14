@@ -117,7 +117,10 @@ export const decodeFilmSurface: StructuredSurfaceHandler = ({ element, resolveRe
     const name = `track-${index + 1}`;
     return { name, kind: trackKind(source), source };
   });
-  if (new Set(tracks.map((track) => track.name)).size !== tracks.length) {
+  const sourceKeys = tracks.map(({ source: { ref } }) => ref.kind === "record"
+    ? `record\u0000${ref.id}`
+    : `component-output\u0000${ref.component}\u0000${ref.output}`);
+  if (new Set(sourceKeys).size !== tracks.length) {
     throw new Error(`${element.name} cannot include the same Track more than once`);
   }
   const fragment = createFilmAssemblyFragment({ name: "@qflow/film/surface-assembly@1", tracks });

@@ -42,7 +42,7 @@ test("status groups identical active requests and retains late failures without 
   const runtime = {
     id: "build", targets: ["final"], activity: "running",
     operations: [...pending,
-      { id: "done", endpoint: "chosen", status: "completed" },
+      { id: "done", endpoint: "chosen", status: "completed", receipt: { id: "completed-remote" } },
       { id: "failed", endpoint: "chosen", status: "failed", receipt: { id: "failed-remote" },
         failure: { code: "NETWORK", message: "download failed" } }],
     commands: [{ id: "raw-command-id", endpoint: "renderer", progress: { phase: "capturing", completed: 50, total: 100, unit: "frames" } }],
@@ -57,6 +57,17 @@ test("status groups identical active requests and retains late failures without 
   assert.equal(view.commands?.[0]?.progress.completed, 50);
   assert.equal(view.commands?.[0]?.id, undefined);
   const detailed = buildStatusView({ id: "build", runtime, verbose: true });
-  assert.equal(detailed.operations?.length, 31);
+  assert.equal(detailed.operations?.length, 32);
   assert.equal(detailed.operations?.[0]?.receipt?.id, "remote-0");
+  assert.equal(detailed.operations?.find(item => item.state === "completed")?.receipt?.id, "completed-remote");
+});
+
+test("finished status retains completed receipts only when requested", () => {
+  const result = { outcome: "complete", outputs: {}, operations: [
+    { id: "done", endpoint: "chosen", status: "completed", receipt: { id: "remote-task" } },
+  ] } as unknown as BuildResultManifest;
+  assert.equal(buildStatusView({ id: "build", result }).operations, undefined);
+  const detailed = buildStatusView({ id: "build", result, verbose: true });
+  assert.equal(detailed.operations?.[0]?.receipt?.id, "remote-task");
+  assert.equal(detailed.work.outcome, "complete");
 });

@@ -28,7 +28,8 @@ node bin/qflow.mjs check examples/semantic-composition/chat.svml --workspace exa
 node bin/qflow.mjs build examples/semantic-composition/chat.svrun --workspace examples/semantic-composition --runtime examples/semantic-composition/qflow.runtime.json --follow
 ```
 
-The Profile selects local HyperFrames and FFmpeg. Use the machine's prepared browser/media tools;
+The Profile selects local HyperFrames and FFmpeg. Its execution data lives in `.qflow/runtimes/local`;
+`.qflow/runtime` is reserved for the project's Profile-selection file. Use the machine's prepared browser/media tools;
 there is no hosted generation account in this example. The final Output is `final.video`. The same
 Run can be opened in Studio, where its component lane and physical clock work without a Script lane.
 For an independent project, install `@qflow/qflow`, copy the component into `packages/`, replace its workspace
