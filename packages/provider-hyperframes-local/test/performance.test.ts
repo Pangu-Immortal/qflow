@@ -13,7 +13,9 @@ import { projectProgramWindow } from "../../../test/temporal-fixture.js";
 import { movingFrame, crossfade } from "../../../examples/semantic-composition/packages/performance-styles/src/render.js";
 import { renderHyperframesVisual } from "../src/index.js";
 
-test("project Performance Styles render movement, empty override, resumed playback, tail and two-source blending", async () => {
+test("project Performance Styles render movement, empty override, resumed playback, tail and two-source blending", {
+  skip: process.env.QFLOW_BROWSER_TESTS !== "1",
+}, async () => {
   const root=await mkdtemp(join(tmpdir(),"qflow-performance-"));
   try {
     const resources=new MemoryResourceStore();
@@ -21,7 +23,8 @@ test("project Performance Styles render movement, empty override, resumed playba
       const path=join(root,`${name}.mp4`);
       const raw=Buffer.from(Array.from({length:8*64*64},()=>color).flat());
       const result=spawnSync("ffmpeg",["-v","error","-y","-f","rawvideo","-pix_fmt","rgb24","-s","64x64","-r","30","-i","pipe:0","-c:v","libx264","-crf","0","-pix_fmt","yuv420p",path],{input:raw});
-      assert.equal(result.status,0,result.stderr.toString());
+      if(result.error)throw result.error;
+      assert.equal(result.status,0,result.stderr?.toString());
       return resources.put(await readFile(path),"video/mp4");
     };
     const a=await makeVideo("red",[220,20,20]),b=await makeVideo("blue",[20,20,220]);
@@ -39,7 +42,8 @@ test("project Performance Styles render movement, empty override, resumed playba
       const video=await renderHyperframesVisual({document},{resources,workers:1,quality:"high",processTimeoutMs:120000});
       const file=join(root,`${name}.mp4`);await writeFile(file,(await resources.get(video.artifact.resource))!);
       const decoded=spawnSync("ffmpeg",["-v","error","-i",file,"-f","rawvideo","-pix_fmt","rgb24","pipe:1"]);
-      assert.equal(decoded.status,0,decoded.stderr.toString());return decoded.stdout;
+      if(decoded.error)throw decoded.error;
+      assert.equal(decoded.status,0,decoded.stderr?.toString());return decoded.stdout;
     };
     const pixels=await render("move",resolvePerformance(timeline,"presenter",set));
     const pixel=(data:Buffer,f:number,x:number)=>[...data.subarray((f*64*64+32*64+x)*3,(f*64*64+32*64+x)*3+3)];

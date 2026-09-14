@@ -1,6 +1,6 @@
 {
   "name": "@qflow/qflow",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "homepage": "https://qflow.ai",
   "repository": {
     "type": "git",
@@ -279,7 +279,7 @@
     "@puppeteer/browsers": "3.2.2",
     "koffi": "3.2.1",
     "puppeteer-core": "25.10.0",
-    "sharp": "0.35.3",
+    "sharp": "0.35.4",
     "cmu-pronouncing-dictionary": "3.0.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",

@@ -12,7 +12,17 @@ const cleanupMs = 5_000;
 /** Chrome starts its own process group, so stopping only the Node child is insufficient. */
 async function killRenderTree(pid: number): Promise<void> {
   if (process.platform === "win32") {
-    await exec("taskkill", ["/PID", String(pid), "/T", "/F"], { windowsHide: true, timeout: cleanupMs });
+    try {
+      await exec("taskkill", ["/PID", String(pid), "/T", "/F"], { windowsHide: true, timeout: cleanupMs });
+    } catch (error) {
+      // The worker may exit after reporting completion, before taskkill opens it.
+      // Ask the OS whether it is gone; localized taskkill output is not an API.
+      try { process.kill(pid, 0); }
+      catch (probeError) {
+        if ((probeError as NodeJS.ErrnoException).code === "ESRCH") return;
+      }
+      throw error;
+    }
     return;
   }
   const { stdout } = await exec("ps", ["-A", "-o", "pid=,ppid="], { timeout: cleanupMs });

@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
 import {
   installExternalPackageResolution,
@@ -82,8 +83,8 @@ test("machine npm fallback preserves ESM conditions and each importing package's
       await writeFile(join(consumer, "entry.mjs"), 'export { value } from "import-only";\n');
     }
     installExternalPackageResolution([machine]);
-    const first = await import(join(machine, "consumer-1.0.0", "entry.mjs"));
-    const second = await import(join(machine, "consumer-2.0.0", "entry.mjs"));
+    const first = await import(pathToFileURL(join(machine, "consumer-1.0.0", "entry.mjs")).href);
+    const second = await import(pathToFileURL(join(machine, "consumer-2.0.0", "entry.mjs")).href);
     assert.equal(first.value, 42);
     assert.equal(second.value, 84);
   } finally { await rm(machine, { recursive: true, force: true }); }
