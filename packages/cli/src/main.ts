@@ -62,7 +62,8 @@ export async function runCli(
   distribution: CliDistribution,
 ): Promise<void> {
   if (argv.length === 0 || argv[0] === "help" || argv.includes("--help")) {
-    const topic = argv[0] === "help" ? argv[1] : argv.includes("--help") ? argv[0] : undefined;
+    const topic = argv[0] === "help" ? argv[1] : argv[0] === "--help" ? undefined
+      : argv.includes("--help") ? argv[0] : undefined;
     writeCliHelp(io, topic);
     return;
   }

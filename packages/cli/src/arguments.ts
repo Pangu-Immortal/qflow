@@ -13,6 +13,7 @@ import type {
   RuntimeSelectionCommand,
 } from "./command.js";
 import type { CliColorMode, CliOutputOptions } from "./output.js";
+import { CliUsageError } from "./usage-error.js";
 
 type RawOptions = {
   readonly presentation: CliOutputOptions;
@@ -48,6 +49,15 @@ type RawOptions = {
 const commonOptions = ["--json", "--color", "--no-color", "--verbose", "--debug"] as const;
 
 export function parseCommand(argv: readonly string[]): CliCommand {
+  try { return parseArguments(argv); }
+  catch (error) {
+    if (error instanceof CliUsageError) throw error;
+    throw new CliUsageError(error instanceof Error ? error.message : String(error),
+      argv[0] === undefined ? "qflow help" : `qflow help ${argv[0]}`, { cause: error });
+  }
+}
+
+function parseArguments(argv: readonly string[]): CliCommand {
   const [command, ...tail] = argv;
   switch (command) {
     case "check": {
@@ -246,7 +256,8 @@ export function parseCommand(argv: readonly string[]): CliCommand {
         ...optionalPackageRoot(options),
       };
     }
-    default: throw new Error(usage());
+    default: throw new CliUsageError(command === undefined ? "A command is required"
+      : `Unknown command ${JSON.stringify(command)}`, "qflow help");
   }
 }
 

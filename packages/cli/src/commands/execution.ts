@@ -83,13 +83,19 @@ export async function runExecutionCommand(input: {
     const records = view?.records ?? [];
     const omitted = (view?.total ?? 0) - records.length;
     write({ format: "qflow.cli-logs@1", build: args.build, source, records, omittedRecords: omitted },
-      view === undefined ? "No execution log recorded" : "Build execution log", "info",
+      view === undefined ? "Execution log unavailable" : "Build execution log", view === undefined ? "warning" : "info",
       [["Build", args.build], ["Source", source]], [
+        ...(view !== undefined ? [] : [finished
+          ? "This Result has no saved execution log."
+          : activeProfile === undefined
+            ? "No saved log found in this project. Select the Build's Runtime with --runtime <profile> to check active execution."
+            : "No log found in this project's Results or the selected Runtime. Check the Build id and project selection."]),
         ...(omitted > 0 ? [`Showing last ${records.length} records; ${omitted} earlier records omitted. Use --lines to read more.`] : []),
         ...records.map((record) => `${new Date(record.time).toISOString()}  ${record.endpoint}  ${record.command}  ${
           record.kind === "phase" ? record.phase : record.kind === "diagnostic" || record.kind === "failed"
             ? `${record.kind}: ${record.message}` : record.kind}`),
       ]);
+    if (view === undefined) io.setExitCode?.(1);
     return;
   }
 

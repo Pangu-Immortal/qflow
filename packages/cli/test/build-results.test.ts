@@ -33,11 +33,11 @@ function completedState(): BuildState {
   } as unknown as BuildState;
 }
 
-async function fixture(root: string): Promise<void> {
+async function fixture(root: string, id = "bld_20260902T110000000Z_0000000001", source = "main.svml"): Promise<void> {
   const result = await FileBuildResult.create(join(root, ".qflow", "results"), {
-    id: "bld_20260902T110000000Z_0000000001",
+    id,
     title: "episode-stage",
-    source: { path: "main.svml" },
+    source: { path: source },
     run: { path: "build.svrun" },
     targets: ["stage.value"],
     publishedOutputs: [{ name: "stage.value", output: "logical:stage" }],
@@ -645,5 +645,45 @@ test("logs reads finished evidence without a Runtime and clearly limits the tail
       format: "qflow.cli-logs@1", build: id, source: "result", records: [records[1]], omittedRecords: 1,
     });
     assert.match(await humanCommand(["logs", id, "--lines", "1"], root), /earlier records omitted/u);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("history continuation keeps the same project and Source query", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow cli pagination "));
+  try {
+    const older = "bld_20260902T110000000Z_0000000001";
+    const newer = "bld_20260902T110000002Z_0000000001";
+    await fixture(root, older, "selected source.svml");
+    await fixture(root, "bld_20260902T110000001Z_0000000001", "unrelated.svml");
+    await fixture(root, newer, "selected source.svml");
+    const args = ["history", "stage.value", "--source", join(root, "selected source.svml"), "--limit", "1"];
+    const human = await humanCommand(args, root);
+    assert.match(human, /Repeat this command with --before (\S+), keeping the other options/u);
+    const cursor = /--before (\S+),/u.exec(human)![1]!;
+    const next = await jsonCommand([...args, "--before", cursor], root) as { entries: { build: string }[] };
+    assert.deepEqual(next.entries.map((item) => item.build), [older]);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("logs reports unavailable evidence as unsuccessful, while an existing empty log is valid", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-cli-missing-log-"));
+  try {
+    const id = "bld_20260902T110000000Z_0000000001";
+    for (const state of ["missing", "no-log", "empty-log"] as const) {
+      if (state === "no-log") await fixture(root);
+      if (state === "empty-log") {
+        const result = await FileBuildResult.create(join(root, ".qflow/results"), {
+          id: "bld_20260902T110000001Z_0000000001", source: { path: "main.svml" }, targets: [], publishedOutputs: [],
+        });
+        await result.finish({ outcome: "complete", executionLog: (async function* () {})() });
+      }
+      let exit = 0;
+      let output = "";
+      await runCli(["logs", state === "empty-log" ? "bld_20260902T110000001Z_0000000001" : id, "--workspace", root, "--json"], {
+        write: (text) => { output += text; }, setExitCode: (code) => { exit = code; },
+      }, resultDistribution());
+      assert.equal(exit, state === "empty-log" ? 0 : 1);
+      assert.equal(JSON.parse(output).source, state === "empty-log" ? "result" : "unavailable");
+    }
   } finally { await rm(root, { recursive: true, force: true }); }
 });

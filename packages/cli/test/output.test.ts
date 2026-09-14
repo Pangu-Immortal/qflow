@@ -381,3 +381,27 @@ test("Result help makes exact Output addressing explicit", () => {
   assert.match(output, /--output <name> --to <path>/u);
   assert.match(output, /Composite Output becomes a directory/u);
 });
+
+test("argument errors give command help in text and JSON without suggesting a stack trace", () => {
+  for (const [args, help] of [
+    [["plan"], "qflow help plan"],
+    [["status", "a-build", "--typo"], "qflow help status"],
+    [["plna"], "qflow help"],
+  ] as const) {
+    let failure: unknown;
+    try { parseCommand(args); } catch (error) { failure = error; }
+    assert.ok(failure instanceof Error);
+    const text = renderCliError(failure, { json: false, color: false, unicode: false, debug: false });
+    assert.ok(text.includes(help));
+    assert.doesNotMatch(text, /--debug|stack trace/u);
+    const json = JSON.parse(renderCliError(failure, { json: true, color: false, unicode: false, debug: false }));
+    assert.equal(json.error.code, "CLI_USAGE");
+    assert.equal(json.error.help, help);
+  }
+});
+
+test("an unknown help topic reports the typo without dumping unrelated commands", () => {
+  let output = "";
+  assert.throws(() => writeCliHelp({ write(text) { output += text; } }, "plna"), /Unknown help topic "plna"/u);
+  assert.equal(output, "");
+});

@@ -54,7 +54,9 @@ export async function runProjectResultCommand(input: {
       const label = item.title === undefined ? item.id : `${item.title} · ${item.id}`;
       const run = item.run === undefined ? "" : ` · ${item.run}`;
       return `${label}: ${item.outcome} · ${new Date(item.createdAt).toLocaleString()}${run} · ${item.targetCount} target${item.targetCount === 1 ? "" : "s"}`;
-    }).concat(page.next === undefined ? [] : [`Older    qflow builds --before ${page.next}`]));
+    }).concat(page.next === undefined ? [] : [
+      `Older    Repeat this command with --before ${page.next}, keeping the other options.`,
+    ]));
     return;
   }
 
@@ -89,7 +91,9 @@ export async function runProjectResultCommand(input: {
       const label = item.title === undefined ? item.build : `${item.title} · ${item.build}`;
       return `${label}: ${item.outcome} · ${new Date(item.createdAt).toLocaleString()}`
         + (args.presentation.verbose ? ` · ${item.output.kind} · ${item.output.type}` : "");
-    }).concat(page.next === undefined ? [] : [`Older    qflow history ${args.outputName} --before ${page.next}`]));
+    }).concat(page.next === undefined ? [] : [
+      `Older    Repeat this command with --before ${page.next}, keeping the other options.`,
+    ]));
     return;
   }
 

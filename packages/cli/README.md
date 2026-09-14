@@ -14,6 +14,11 @@ invent targets, candidates or Provider choices.
 Human and JSON output answer the same command-specific question. `--json` changes encoding;
 `--verbose` expands scope. Compiler, Runtime and Repository objects are not default reports.
 
+Argument errors use `CLI_USAGE` and point to the relevant `qflow help <command>`; JSON retains that
+command in `error.help`. Unknown help topics fail explicitly. Runtime and execution failures retain
+their own diagnostics and optional `--debug` trace. Result pagination changes only the `--before`
+cursor on the current query, preserving its project, Source filter and other options.
+
 | Command | Default scope | Explicit detail |
 | --- | --- | --- |
 | `check` | Validation, targets and counts | `--verbose`: exported names/types and historical references |
@@ -113,6 +118,9 @@ flow.
 execution phases and Provider diagnostics. It reads a finished Result directly, without opening the
 Runtime; an active Build is read through Runtime control. The selected Repository handles file access.
 `--lines` limits the tail and the report states the omitted count; JSON carries records plus that count.
+An unavailable log reports `source: "unavailable"` and exits unsuccessfully; a readable log with zero
+records is a successful empty result. The human report distinguishes a finished Result with no log
+from a lookup that still needs the Build's Runtime or correct project selection.
 `inspect` exposes an available log separately from authored Outputs. `qflow runtime logs` reads the
 Worker process log instead, for Runtime startup or process-level failures.
 

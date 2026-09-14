@@ -3,6 +3,7 @@ import { relative, resolve } from "node:path";
 import type { CanonicalValue } from "@qflow/protocol";
 
 import type { OperationalMachineView } from "./machine-view.js";
+import { CliUsageError } from "./usage-error.js";
 
 export type CliTerminal = {
   readonly isTTY: boolean;
@@ -986,6 +987,7 @@ export function writeCliHelp(io: CliIo, topic?: string): void {
       io.write(`${selected.join("\n")}\n`);
       return;
     }
+    throw new CliUsageError(`Unknown help topic ${JSON.stringify(topic)}`, "qflow help");
   }
   io.write([
     colors.accent(colors.strong("Qflow")),
@@ -1044,6 +1046,7 @@ export function renderCliError(error: unknown, options: {
       error: {
         code,
         message: source.message,
+        ...(source instanceof CliUsageError ? { help: source.help } : {}),
         ...(options.debug && trace !== undefined && trace.length > 0 ? { trace } : {}),
       },
     }, null, 2)}\n`;
@@ -1058,6 +1061,8 @@ export function renderCliError(error: unknown, options: {
   ];
   if (options.debug && trace !== undefined && trace.length > 0) {
     lines.push("", colors.dim(trace));
+  } else if (source instanceof CliUsageError) {
+    lines.push("", `Usage    ${source.help}`);
   } else {
     lines.push("", colors.dim("Run with --debug to include the internal stack trace."));
   }
