@@ -105,7 +105,7 @@ test("QflowHub Seedance 2.5 resolves and submits 1080p without downgrading", asy
   let submitted: unknown;
   const endpoint = await endpointFor(request, async (input, init) => {
     const url = String(input);
-    if (url.endsWith("/models/bytedance%2Fseedance-2-5")) return Response.json({ endpoints: ["videos"] });
+    if (url.endsWith("/models/seedance-2.5")) return Response.json({ endpoints: ["videos"] });
     if (url.endsWith("/videos")) {
       submitted = JSON.parse(String(init?.body));
       return Response.json({ id: "job_seedance25_1080p", status: "queued" });
@@ -119,7 +119,7 @@ test("QflowHub Seedance 2.5 resolves and submits 1080p without downgrading", asy
   });
   assert.equal(started.status, "pending");
   assert.deepEqual(submitted, {
-    model: "bytedance/seedance-2-5", prompt: "A presenter speaks to camera.",
+    model: "seedance-2.5", prompt: "A presenter speaks to camera.",
     resolution: "1080p", aspect_ratio: "9:16", seconds: 5, generate_audio: true, web_search: false,
   });
 });
@@ -236,11 +236,11 @@ test("QflowHub returns its current model-pricing document", async () => {
   const provider = createQflowHubProvider({
     pricingRequestTimeoutMs: 1_000,
     fetch: async (input, init) => {
-      assert.equal(String(input), "https://qflow.ai/v1/pricing?model=bytedance%2Fseedance-2");
+      assert.equal(String(input), "https://qflow.ai/v1/pricing?model=seedance-2");
       assert.equal((init?.headers as Record<string, string>).authorization, "Bearer test-key");
       return Response.json({
         object: "model_pricing",
-        model: "bytedance/seedance-2",
+        model: "seedance-2",
         pricing: { mode: "per_second", per_second_usd: 0.1045 },
       });
     },
@@ -257,10 +257,10 @@ test("QflowHub returns its current model-pricing document", async () => {
     request,
     credentials: async () => ({ apiKey: { secret: "test-key" } }),
   }), [{
-    source: "https://qflow.ai/v1/pricing?model=bytedance%2Fseedance-2",
+    source: "https://qflow.ai/v1/pricing?model=seedance-2",
     data: {
       object: "model_pricing",
-      model: "bytedance/seedance-2",
+      model: "seedance-2",
       pricing: { mode: "per_second", per_second_usd: 0.1045 },
     },
   }]);
@@ -270,8 +270,8 @@ test("QflowHub prices the wire route selected by an authored future input", asyn
   const provider = createQflowHubProvider({
     pricingRequestTimeoutMs: 1_000,
     fetch: async (input) => {
-      assert.equal(String(input), "https://qflow.ai/v1/pricing?model=gpt-image-2-image-to-image");
-      return Response.json({ object: "model_pricing", model: "gpt-image-2-image-to-image" });
+      assert.equal(String(input), "https://qflow.ai/v1/pricing?model=gpt-image-2");
+      return Response.json({ object: "model_pricing", model: "gpt-image-2" });
     },
   });
   const request = {
@@ -288,7 +288,7 @@ test("QflowHub prices the wire route selected by an authored future input", asyn
   });
   assert.deepEqual(document?.data, {
     object: "model_pricing",
-    model: "gpt-image-2-image-to-image",
+    model: "gpt-image-2",
   });
 });
 
@@ -527,12 +527,12 @@ test("QflowHub uploads one referenced Resource once and submits its HTTPS URL", 
       assert.equal(body.parts.length, 3);
       return Response.json({ url: "https://qflow.ai/files/as_reference.png" });
     }
-    if (url.endsWith("/v1/models/bytedance%2Fseedance-2-mini")) {
+    if (url.endsWith("/v1/models/seedance-2-mini")) {
       return Response.json({ endpoints: ["videos"] });
     }
     if (url.endsWith("/v1/videos")) {
       const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
-      assert.equal(body.model, "bytedance/seedance-2-mini");
+      assert.equal(body.model, "seedance-2-mini");
       assert.deepEqual(body.reference_image_urls, [
         "https://qflow.ai/files/as_reference.png",
         "https://qflow.ai/files/as_reference.png",
