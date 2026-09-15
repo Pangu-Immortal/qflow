@@ -12,6 +12,7 @@ import { videoCliDistribution } from "./distribution.js";
 import { runMediaCli } from "./media.js";
 import { runVocabularyCli } from "./vocabulary.js";
 import { runCaptureCli } from "./capture.js";
+import { runVersionCli } from "./version.js";
 
 export {
   createVideoCompiler,
@@ -35,6 +36,7 @@ export function runVideoCli(
   io: CliIo,
   packages: readonly LoadedPackage[] = [],
 ): Promise<void> {
+  if (argv[0] === "version") return runVersionCli(argv, io);
   installDistributionPackageResolution(videoCliDistribution.packageRoot === undefined
     ? []
     : [videoCliDistribution.packageRoot]);

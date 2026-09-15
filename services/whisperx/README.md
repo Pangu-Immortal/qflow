@@ -19,8 +19,8 @@ semantic projection combines this evidence with one explicit Script Segment late
 ## Install
 
 For an ordinary installed Distribution, select the local WhisperX Endpoint and run
-`qflow runtime up`. The Runtime creates this environment in the machine Program Home only when it is
-missing, and reuses it across projects and sessions. The commands below are contributor/operator
+`qflow programs up --endpoint <instance>`. The Runtime creates or reconciles the cold environment in
+the machine Program Home and reuses a running service across projects and sessions. The commands below are contributor/operator
 diagnostics for a deliberately managed deployment:
 
 WhisperX 3.8.6 supports Python 3.10 through 3.13. The checked-in lock selects Python 3.13:
@@ -32,7 +32,8 @@ uv run --project services/whisperx --frozen qflow-whisperx-prepare
 uv run --project services/whisperx --frozen qflow-whisperx-check
 ```
 
-The first model start may download ASR and alignment weights. Production should put the relevant
+The first model start may download ASR weights; first use of a language can download its alignment
+model during the request. Production should put the relevant
 Hugging Face cache on persistent storage. `qflow-whisperx-prepare` separately installs NLTK's
 `punkt_tab` sentence data through NLTK's own downloader. This resource is required by WhisperX
 alignment and is prepared explicitly before the warm service starts, never inside an inference request.
@@ -70,6 +71,12 @@ Configuration is deployment state:
 
 The Node Provider must configure the same model, device, compute, batch size, service version and
 WhisperX version. A mismatch fails before transcription results are accepted.
+
+The service logs ASR loading, transcription, language-model loading and word alignment where those
+operations run. Completion entries include elapsed times. A loading entry means the library call
+has begun and may include a weight download; the download client supplies any transfer progress.
+Transcripts and audio content are not included in these service progress entries. `/health` answers
+after ASR loading, so a healthy service may still prepare a language model on its first request.
 
 ## Package preparation
 

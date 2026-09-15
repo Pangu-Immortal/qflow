@@ -5,6 +5,7 @@ import { creationCommands, isCreationCommand, writeCreationHelp } from "./creati
 import { isMediaCommand, mediaCommands, writeMediaHelp } from "./media.js";
 import { writeVocabularyHelp } from "./vocabulary.js";
 import { writeCaptureHelp } from "./capture.js";
+import { runVersionCli, writeVersionHelp } from "./version.js";
 
 const argv = process.argv.slice(2);
 const json = argv.includes("--json");
@@ -67,6 +68,7 @@ async function main(): Promise<void> {
     const topic = argv[0] === "help" ? argv[1]
       : argv[0] === "--help" ? undefined
       : argv.includes("--help") ? argv[0] : undefined;
+    if (topic === "version") { writeVersionHelp(io); return; }
     if (isCreationCommand(topic)) {
       writeCreationHelp(io, topic);
       return;
@@ -86,12 +88,13 @@ async function main(): Promise<void> {
     }
     writeCliHelp(io, topic);
     if (topic === undefined) {
-      io.write(`\nCreation tools (one request through the selected Runtime Profile, no Build)\n${
+      io.write(`\nInstallation\n  version [--check] [--registry <url>] [--json]\n\nCreation tools (one request through the selected Runtime Profile, no Build)\n${
         creationCommands.map((item) => `  ${item}`).join("\n")}\n  qflow help <tool> for each\n`
         + `\nStudio\n  studio --run <build.svrun>\n  qflow studio --help for session options\n\nPreparation (local tools and project files)\n  media ${mediaCommands.join(" | ")}\n  capture screenshot | run | install-browser\n  vocabulary\n  qflow help media, qflow help capture, qflow help vocabulary\n`);
     }
     return;
   }
+  if (argv[0] === "version") { await runVersionCli(argv, io); return; }
   const { runVideoCli } = await import("./index.js");
   await runVideoCli(argv, io);
 }

@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 
 import { FileBuildResultRepository } from "@qflow/build-result";
 import { createRunFrontendHostFacet } from "@qflow/run";
 
 import { runCli } from "../src/main.js";
+import { commandHint } from "../src/command-hint.js";
 import type { CliDistribution } from "../src/distribution.js";
 import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-kit";
 
@@ -220,6 +221,29 @@ test("Build confirms durable submission before following stable work progress", 
   assert.match(output, /Target\s+result/u);
   assert.match(output, /Work\s+0 requests/u);
   assert.match(output, /Ctrl-C stops watching; the Build continues\./u);
+
+  output = "";
+  let progress = "";
+  const projectRoot = dirname(source);
+  const runtimeProfile = resolve("/p/a selected runtime.json");
+  await runCli([
+    "build", source, "--workspace", projectRoot, "--runtime", runtimeProfile,
+    "--follow", "--max-wait-ms", "0", "--json",
+  ], {
+    write(text) { output += text; }, writeProgress(text) { progress += text; },
+  }, distribution(calls, [], "./main.svml", execution));
+  const build = JSON.parse(output).build;
+  assert.equal(build.work.state, "working");
+  assert.match(progress, /Working/u);
+
+  output = "";
+  await runCli([
+    "build", source, "--workspace", projectRoot, "--runtime", runtimeProfile,
+  ], { write(text) { output += text; } }, distribution(calls, [], "./main.svml", execution));
+  const id = /Watch\s+qflow status (\S+)/u.exec(output)?.[1];
+  assert.ok(id);
+  assert.ok(output.includes(commandHint(["status", id, "--watch"], { projectRoot, runtimeProfile })));
+  assert.ok(output.includes(commandHint(["cancel", id], { projectRoot, runtimeProfile })));
 });
 
 test("plan preserves the selected work summary but exits non-zero when cheap preflight fails", async () => {

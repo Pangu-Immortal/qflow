@@ -5,12 +5,13 @@ import type { NodeRuntimeHost } from "@qflow/runtime-host-node";
 import { qflowHostPackageRoot, inspectHostPackage, prepareHostPackages } from "@qflow/runtime-host-node";
 
 import type { CliCommand, EnvironmentCommand } from "../command.js";
+import { commandHint } from "../command-hint.js";
 import type { CliDistribution } from "../distribution.js";
 import { acquireOAuthCredential } from "../oauth.js";
 import { writeCliOutput } from "../output.js";
 import type { CliIo } from "../output.js";
 import { qflowHostStateRoot, qflowProjectStateRoot } from "../paths.js";
-import type { CliManagedProgramReport, CliRuntimeController } from "../runtime-port.js";
+import type { CliManagedProgramProgress, CliManagedProgramReport, CliRuntimeController } from "../runtime-port.js";
 import type { OperationalWriter } from "./types.js";
 
 function programRecord(item: CliManagedProgramReport) {
@@ -27,8 +28,12 @@ function programDescription(item: CliManagedProgramReport): string {
     ...(item.detail === undefined ? [] : [item.detail]),
   ])];
   return `${item.id}: ${item.state.state}${details.length === 0 ? "" : ` — ${details.join("; ")}`}`
+    + (item.endpoint === item.id ? "" : ` · endpoint ${item.endpoint}`)
     + (item.pid === undefined ? "" : ` · PID ${item.pid}`)
-    + (item.logPath === undefined ? "" : ` · log ${item.logPath}`);
+    + (item.logPath === undefined ? "" : ` · log ${item.logPath}`)
+    + (item.installationLogPath === undefined || item.installationLogPath === item.logPath
+      ? "" : ` · installation log ${item.installationLogPath}`)
+    + (item.errorLogPath === undefined ? "" : ` · stderr ${item.errorLogPath}`);
 }
 
 export function isEnvironmentCommand(args: CliCommand): args is EnvironmentCommand {
@@ -58,10 +63,11 @@ export async function runEnvironmentCommand(input: {
   const selectionDescription = profileSource === "argument"
     ? "command argument (this invocation only)"
     : runtimeSelectionFile ?? "none";
-  const reportProgramProgress = args.presentation.json
+  const progressWriter = args.presentation.json ? io.writeProgress : io.writeProgress ?? io.write;
+  const reportProgramProgress = progressWriter === undefined
     ? undefined
-    : (event: { readonly id: string; readonly phase: "checking" | "installing" | "starting" | "waiting" | "ready"; readonly logPath?: string }): void => {
-      if (!args.presentation.verbose && event.phase !== "installing" && event.phase !== "starting") return;
+    : (event: CliManagedProgramProgress): void => {
+      if (!args.presentation.verbose && event.detail === undefined && event.phase !== "installing" && event.phase !== "starting") return;
       const verb = {
         checking: "Checking",
         installing: "Installing",
@@ -69,12 +75,12 @@ export async function runEnvironmentCommand(input: {
         waiting: "Waiting for",
         ready: "Ready",
       }[event.phase];
-      io.write(`  · ${verb} ${event.id}${event.logPath === undefined ? "" : ` · log ${event.logPath}`}\n`);
+      progressWriter(`  · ${verb} ${event.id}${event.detail === undefined ? "" : ` — ${event.detail}`}${event.logPath === undefined ? "" : ` · log ${event.logPath}`}\n`);
     };
-  const reportPackageProgress = args.presentation.json
+  const reportPackageProgress = progressWriter === undefined
     ? undefined
     : (event: { readonly specifier: string; readonly phase: "checking" | "installing" | "ready"; readonly logPath?: string }): void => {
-      if (event.phase === "installing") io.write(`  · Installing ${event.specifier}${event.logPath === undefined ? "" : ` · log ${event.logPath}`}\n`);
+      if (event.phase === "installing") progressWriter(`  · Installing ${event.specifier}${event.logPath === undefined ? "" : ` · log ${event.logPath}`}\n`);
     };
   const reportCredentialProgress = args.presentation.json
     ? io.writeProgress
@@ -183,22 +189,25 @@ export async function runEnvironmentCommand(input: {
         ? await controller.programs.down(args.endpoints === undefined ? {} : { endpoints: args.endpoints })
         : await controller.programs.report(args.endpoints === undefined ? {} : { endpoints: args.endpoints });
     const ready = result.programs.every((item) => item.state.state === "ready");
-    const desiredState = args.action === "down" ? !result.programs.some((item) => item.state.state === "ready") : ready;
-    const lifecycleOk = args.action === "status" || desiredState;
     const needsAttention = (item: typeof result.programs[number]) => args.action === "down"
-      ? item.state.state === "ready" : item.state.state !== "ready";
+      ? item.state.state !== "down" || (item.action !== "stopped" && item.action !== "nothing-to-stop")
+      : item.state.state !== "ready";
+    // Readiness describes the service, not whether a stop was performed. An owned process can
+    // still be loading, and another command may have declined a concurrent stop during preparation.
+    const lifecycleOk = args.action === "status" || !result.programs.some(needsAttention);
     const relevant = result.programs.filter((item) => args.presentation.verbose || args.action === "status" || needsAttention(item));
     const urgent = relevant.filter(needsAttention);
     const shownPrograms = [...urgent, ...relevant.filter((item) => !needsAttention(item)).slice(0, Math.max(0, args.limit - urgent.length))];
     const omittedPrograms = relevant.length - shownPrograms.length;
     const title = args.action === "up"
-      ? desiredState ? "External programs ready" : "External programs need attention"
+      ? lifecycleOk ? "External programs ready" : "External programs need attention"
       : args.action === "down"
-        ? desiredState ? "External programs stopped" : "Some external programs are still running"
+        ? lifecycleOk ? "External programs stopped" : "External program stop needs attention"
         : "External program status";
     write({
       format: "qflow.cli-programs@1",
       action: args.action,
+      ok: lifecycleOk,
       ready,
       programCount: result.programs.length,
       readyCount: result.programs.filter((item) => item.state.state === "ready").length,
@@ -278,9 +287,12 @@ export async function runEnvironmentCommand(input: {
       const worker = await controller.worker.down({
         ...(args.maxWaitMs === undefined ? {} : { maxWaitMs: args.maxWaitMs }),
       });
+      const stopped = worker.state === "stopped";
       write({ format: "qflow.cli-runtime-down@1", worker: worker.state },
-        "Runtime Worker is down", "success", [["Worker", worker.state]],
-        ["Managed programs were left running. Stop them explicitly with qflow programs down."]);
+        stopped ? "Runtime Worker is down" : "Runtime Worker is still running",
+        stopped ? "success" : "warning", [["Worker", worker.state]],
+        [`Managed programs were left running. To stop them: ${commandHint(["programs", "down"], { projectRoot, runtimeProfile: resolve(profile) })}`]);
+      if (!stopped) io.setExitCode?.(1);
       return;
     }
 
@@ -324,7 +336,8 @@ export async function runEnvironmentCommand(input: {
       };
       write(machine, attention
         ? "Local Runtime needs attention"
-        : ready ? "Local Runtime ready" : "Runtime Worker stopped",
+        : ready ? "Local Runtime ready" : worker.state === "running"
+          ? "Runtime Worker running; Programs not ready" : "Runtime Worker stopped",
       attention ? "warning" : ready ? "success" : "info", [
         ["Worker", worker.state],
         ["Active Builds", String(activity.builds.length)],
@@ -365,6 +378,10 @@ export async function runEnvironmentCommand(input: {
           kind: item.kind,
           configured: item.configured,
           writable: item.writable,
+          ...(item.acquisition === undefined ? {} : { acquisition: {
+            kind: item.acquisition.kind,
+            authorizationEndpoint: item.acquisition.authorizationEndpoint,
+          } }),
         }));
         write({
           format: "qflow.cli-auth-status@1",
@@ -374,8 +391,12 @@ export async function runEnvironmentCommand(input: {
         }, "Credential status", "info", [
           ["Endpoint", args.endpoint],
           ["Configured", `${credentials.filter((item) => item.configured).length}/${credentials.length}`],
-        ], credentials.slice(0, args.limit).map((item) =>
-          `${item.slot}: ${item.configured ? "configured" : "missing"} · ${item.writable ? "writable" : "read-only"}`));
+        ], credentials.slice(0, args.limit).map((item) => {
+          const entry = !item.writable ? "managed by its external credential source"
+            : item.acquisition === undefined ? "login uses secure secret input"
+            : `login opens OAuth: ${item.acquisition.authorizationEndpoint}`;
+          return `${item.slot}: ${item.configured ? "configured" : "missing"} · ${item.writable ? "writable" : "read-only"} · ${entry}`;
+        }));
       } else if (args.action === "login") {
         const [item] = credentials;
         if (item === undefined) throw new Error(`Endpoint ${args.endpoint} has no matching credential`);

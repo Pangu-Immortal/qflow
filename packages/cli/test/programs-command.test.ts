@@ -3,8 +3,9 @@ import { resolve } from "node:path";
 import test from "node:test";
 
 import { runCli } from "../src/main.js";
+import { commandHint } from "../src/command-hint.js";
 import type { CliDistribution } from "../src/distribution.js";
-import type { CliManagedProgramReport, CliRuntimeController } from "../src/runtime-port.js";
+import type { CliManagedProgramProgress, CliManagedProgramReport, CliRuntimeController } from "../src/runtime-port.js";
 
 const io = { write: () => {} };
 
@@ -87,7 +88,7 @@ test("scoped preparation and startup receive the same explicit Endpoint set", as
 test("program discovery preserves readiness and failed shutdown names the service still running", async () => {
   const reports: CliManagedProgramReport[] = [
     ...Array.from({ length: 25 }, (_, index) => ({ id: `ready-${index}`, endpoint: "chosen", state: { state: "ready" as const } })),
-    { id: "needs-help", endpoint: "other", state: { state: "down", detail: "cannot connect" } },
+    { id: "needs-help", endpoint: "other", action: "nothing-to-stop", state: { state: "down", detail: "cannot connect" } },
   ];
   let output = "";
   await runCli(["programs", "status", "/tmp/profile.json", "--json", "--limit", "2"], {
@@ -129,6 +130,67 @@ test("program status may report down without failing the observation", async () 
   }]));
   assert.equal(exitCode, undefined);
   assert.match(output, /speech-evidence\.local: down/u);
+  assert.match(output, /endpoint speech\.primary/u, "expose the selector accepted by --endpoint");
+});
+
+test("a declined stop stays visible even when the service is not Ready", async () => {
+  const busy: CliManagedProgramReport = {
+    id: "preparing", endpoint: "chosen", action: "unchanged",
+    state: { state: "down", detail: "not serving yet" },
+    detail: "another command owns this Program's preparation or lifecycle change; inspect its logs",
+    installationLogPath: "/tmp/install.log",
+  };
+  for (const json of [false, true]) {
+    let output = "";
+    let exitCode: number | undefined;
+    await runCli(["programs", "down", "/p/profile.json", "--limit", "1", ...(json ? ["--json"] : [])], {
+      write(text) { output += text; }, setExitCode(code) { exitCode = code; },
+    }, distribution([], [busy]));
+    assert.equal(exitCode, 1);
+    if (json) {
+      const value = JSON.parse(output);
+      assert.equal(value.ok, false);
+      assert.equal(value.ready, false);
+      assert.equal(value.programs[0].installationLogPath, busy.installationLogPath);
+    } else {
+      assert.match(output, /stop needs attention/u);
+      assert.match(output, /another command owns/u);
+      assert.doesNotMatch(output, /External programs stopped/u);
+    }
+  }
+  let output = "";
+  await runCli(["programs", "down", "/p/profile.json", "--json"], {
+    write(text) { output += text; },
+  }, distribution([], [{ id: busy.id, endpoint: busy.endpoint, state: busy.state, action: "nothing-to-stop" }]));
+  const stopped = JSON.parse(output);
+  assert.equal(stopped.ok, true);
+  assert.equal(stopped.ready, false, "a successful stop is not service readiness");
+});
+
+test("Runtime headlines preserve a running Worker when Programs are down or stop fails", async () => {
+  const selected = {
+    bootstrapPackages: [],
+    openRuntimeHost: async () => ({
+      controller: async () => ({
+        worker: {
+          status: async () => ({ state: "running" }),
+          down: async () => ({ state: "running" }),
+        },
+        programs: { report: async () => ({ programs: [{ id: "loading", endpoint: "chosen", state: { state: "down", detail: "loading" }, pid: 12 }] }) },
+      }),
+      openControl: async () => ({ activity: async () => ({ builds: [], capacity: [] }), close: async () => {} }),
+    }),
+  } as unknown as CliDistribution;
+  for (const action of ["status", "down"]) {
+    let output = "";
+    let exitCode: number | undefined;
+    await runCli(["runtime", action, "/p/profile.json"], {
+      write(text) { output += text; }, setExitCode(code) { exitCode = code; },
+    }, selected);
+    assert.doesNotMatch(output, /Runtime Worker stopped|Runtime Worker is down/u);
+    assert.match(output, action === "status" ? /Programs not ready/u : /Worker is still running/u);
+    assert.equal(exitCode, action === "status" ? undefined : 1);
+  }
 });
 
 test("program startup reports actions, not no-op checks", async () => {
@@ -172,6 +234,8 @@ test("programs and runtime startup retain failure evidence in human and JSON out
     detail: "service is still loading",
     pid: 321,
     logPath: "/tmp/local-service/program.log",
+    installationLogPath: "/tmp/local-service/install.log",
+    errorLogPath: "/tmp/local-service/program.err.log",
   };
   for (const command of ["programs", "runtime"]) {
     for (const json of [false, true]) {
@@ -190,15 +254,45 @@ test("programs and runtime startup retain failure evidence in human and JSON out
         assert.equal(item.endpoint, report.endpoint);
         assert.equal(item.detail, report.detail);
         assert.equal(item.logPath, report.logPath);
+        assert.equal(item.installationLogPath, report.installationLogPath);
+        assert.equal(item.errorLogPath, report.errorLogPath);
         assert.equal(item.pid, report.pid);
       } else {
         assert.match(output, /health endpoint is not answering/u);
         assert.match(output, /service is still loading/u);
         assert.match(output, /PID 321/u);
         assert.match(output, /\/tmp\/local-service\/program\.log/u);
+        assert.match(output, /\/tmp\/local-service\/install\.log/u);
+        assert.match(output, /\/tmp\/local-service\/program\.err\.log/u);
       }
     }
   }
+});
+
+test("JSON startup keeps live preparation evidence on stderr and one result on stdout", async () => {
+  let output = "";
+  let progress = "";
+  const selected = {
+    bootstrapPackages: [],
+    openRuntimeHost: async () => ({
+      prepare: async () => [],
+      controller: async () => ({
+        programs: {
+          async up(options: { onProgress?: (event: CliManagedProgramProgress) => void }) {
+            options.onProgress?.({ id: "example", phase: "installing", logPath: "/tmp/install.log", detail: "Prepare sentence data" });
+            assert.match(progress, /Prepare sentence data.*\/tmp\/install\.log/u);
+            assert.equal(output, "", "no partial JSON or progress text reaches stdout");
+            return { dataRoot: "/tmp", programs: [{ id: "example", endpoint: "example", state: { state: "ready" } }] };
+          },
+        },
+      }),
+    }),
+  } as unknown as CliDistribution;
+  await runCli(["programs", "up", "/project/profile.json", "--json"], {
+    write(text) { output += text; },
+    writeProgress(text) { progress += text; },
+  }, selected);
+  assert.equal(JSON.parse(output).readyCount, 1);
 });
 
 test("runtime up validates the Runtime before it starts Programs", async () => {
@@ -247,4 +341,14 @@ test("runtime status keeps scheduling phases out of the default view", async () 
   assert.match(output, /Local Runtime ready/u);
   assert.match(output, /Active Builds\s+0/u);
   assert.doesNotMatch(output, /\bStarting\b|\bWaiting\b|\bDecided\b|Running turn|Capacity in use/u);
+});
+
+test("Worker stop suggests Program control in the same project and Profile", async () => {
+  const projectRoot = resolve("/tmp");
+  const runtimeProfile = resolve("/tmp/a selected profile.json");
+  let output = "";
+  await runCli(["runtime", "down", "--workspace", projectRoot, "--runtime", runtimeProfile], {
+    write(text) { output += text; },
+  }, distribution([]));
+  assert.ok(output.includes(commandHint(["programs", "down"], { projectRoot, runtimeProfile })));
 });

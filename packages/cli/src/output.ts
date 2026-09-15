@@ -971,6 +971,9 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       "  qflow auth login <endpoint-instance> [--runtime <profile>] [--slot <name>] [--from <secret-file>]",
       "  qflow auth logout <endpoint-instance> [--runtime <profile>] [--slot <name>]",
       "  All auth actions accept --workspace <project> to use that project's selection.",
+      "  status shows credential presence and the Provider's declared browser login, if any.",
+      "  login opens that browser flow or securely prompts for the secret; --from imports a secret instead.",
+      "  Configure the service's Endpoint first. Storing a key does not install a Provider or select bindings.",
     ],
   };
   const selected = topics[topic];

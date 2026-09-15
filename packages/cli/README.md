@@ -14,10 +14,27 @@ invent targets, candidates or Provider choices.
 Human and JSON output answer the same command-specific question. `--json` changes encoding;
 `--verbose` expands scope. Compiler, Runtime and Repository objects are not default reports.
 
+Design reports for the decision they support: retain relevant facts, uncertainty and usable object
+selectors, with direct access to omitted detail. Shorter output is useful when the next action
+remains well-founded. Observe the command result separately from service availability; titles,
+exit codes and JSON must preserve that distinction. A lifecycle refusal cannot become success just
+because a health probe is down. These rules concern presentation and composition of existing
+operations, not a prescribed production workflow.
+
 Argument errors use `CLI_USAGE` and point to the relevant `qflow help <command>`; JSON retains that
 command in `error.help`. Unknown help topics fail explicitly. Runtime and execution failures retain
 their own diagnostics and optional `--debug` trace. Result pagination changes only the `--before`
 cursor on the current query, preserving its project, Source filter and other options.
+
+Concrete follow-up commands keep the selected project and, for execution operations, Runtime Profile.
+Result-only commands need no Runtime. Arguments in displayed commands are quoted for POSIX shells
+or PowerShell on Windows, including paths with spaces. The CLI formats these existing commands;
+it does not choose which one the Agent must execute next.
+
+`build --follow` and `status --watch` report coalesced progress through `CliIo.writeProgress` when
+provided, including in JSON mode. The executable writes that channel to stderr; stdout remains the
+final machine result. A stopped Worker ends observation with evidence-reading commands, without
+promising to restart failed execution or describing the interruption as a Result storage failure.
 
 | Command | Default scope | Explicit detail |
 | --- | --- | --- |
@@ -60,6 +77,12 @@ project's `.qflow/runtime` pointer. `runtime use` writes the pointer; a Profile 
 not select it. The pointer is a file, separate from the Profile's `dataRoot`; a directory at that
 path is reported explicitly and preserved. Project selection is also available on `paths`, `doctor`, execution status/control,
 Runtime operations, `programs` and `auth`. Machine-wide `packages` operations have no project selector.
+
+`auth status <endpoint>` reports credential presence, write access, and the Provider's declared
+OAuth authorization endpoint when present. This describes how a subsequent `auth login` acquires a
+credential; it does not classify the secret already stored or verify remote account access.
+Without browser acquisition, login uses secure input. `--from <file>` explicitly imports a secret
+instead. Credential entry operates on an already declared Endpoint and changes no Provider or binding.
 
 `paths` shows the effective locations and whether the Profile came from a command argument, a project
 selection or neither. Its JSON fields `profileSource` and `selectionFile` expose that distinction; the
@@ -131,6 +154,10 @@ CLI, Studio and creation tools call that same package; the CLI is not another en
 The same Endpoint scope reaches package preparation and Program operations. Omission means the whole
 Profile. Build preflight instead uses the Endpoints resolved for that Build's concrete requests.
 An unrelated offered capability does not add another credential or Program requirement.
+Program rows show the configured Endpoint selector alongside an internal Program ID when they differ.
+The `programs` JSON `ok` field reports whether this command succeeded; `ready` reports service
+readiness. Successful stopping can therefore report `ok: true` with `ready: false`. A declined stop remains visible even
+while the service is still preparing and cannot yet answer its health probe.
 
 Upstream package installation reports an `install.log` path at preparation time. Exact package
 releases coexist below the machine home, each with npm's own package.json and lockfile. `paths` shows

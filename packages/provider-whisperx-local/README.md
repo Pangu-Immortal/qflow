@@ -85,8 +85,14 @@ Program needs restarting, and account for active work using it.
 
 Preparation commands write `install.log`; the running service writes `program.log`, with stderr in
 `program.err.log` on Windows. Inspect the stderr file for Python model-loading and download messages.
+`programs status` reports these files as `installationLogPath`, `logPath` and `errorLogPath` when they
+exist, even before installation finishes. Preparation notices name the Python environment and NLTK
+commands separately. The service logs the start and completion of ASR loading, transcription,
+language-alignment model loading and alignment, with elapsed times. Loading may include a download;
+transfer details come from the underlying client, not an estimated percentage from the Provider.
 The service health endpoint becomes available after ASR loading. A startup readiness wait expiring
-can leave that process still loading; check its reported PID and logs before starting another process.
+can leave that process still loading. Its PID is recorded when spawned; repeated `up` observes it,
+and `programs down` can stop it during loading. PID liveness and service readiness are separate facts.
 
 Python installation, Python packages, NLTK sentence data, ASR weights and language-alignment weights
 are separate downloads. `UV_PYTHON_INSTALL_MIRROR` configures a Python distribution mirror;

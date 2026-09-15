@@ -45,3 +45,6 @@ video package by name.
 before a cold start, even when the installation probe already passes. The declared commands use the
 Provider's ordinary package manager. A healthy running Program is reused before this preparation is
 considered; Runtime does not inspect source files or infer implementation versions.
+`ManagedProgramCommand.label` optionally names a command's purpose for progress and log headings.
+It is display text supplied by the Program owner, not a phase to persist or interpret. Runtime
+reports generic process/probe facts; the service itself owns domain-specific progress in its logs.

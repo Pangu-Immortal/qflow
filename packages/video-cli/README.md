@@ -11,15 +11,38 @@ reusable Source directly, for example
 `<import as="ugc" source="@qflow/gpt-image-kits/phone-ugc-v1"/>`; resolving that Source does not
 activate package code.
 
-From any project:
+`qflow version` reports the Distribution version, physical root and launcher independently of a
+project or Runtime. `qflow version --check` also reads the package's `latest` tag at
+`https://registry.npmjs.org/`; `--registry <url>` explicitly selects another registry. `--json`
+returns `qflow.cli-version@1`. A failed check retains local facts, leaves the remote version unknown
+and exits nonzero. A different version is not automatically newer: the launcher may be a newer
+checkout or the mirror may lag. The command links release notes and never installs or updates.
+Skill installers own their separate installed copies; this command does not scan Agent directories.
+`qflow --version` remains a local version-only query.
+
+Commands below serve independent authoring decisions. Start with the current project's material;
+local inspection and estimation need no generation account:
 
 ```bash
 cd path/to/project
-qflow runtime init
-qflow auth login qflowhub.default
-qflow doctor
-qflow runtime up
 qflow check main.svml
+qflow measure main.svml --segment hook --language en
+```
+
+When the work needs execution, the project selects a Runtime Profile. `qflow runtime init` creates
+an editable starter; its Endpoint entries describe available routes, not choices made by the user.
+Keep an existing chosen service, or configure the chosen local or hosted Provider and its capability
+bindings. QflowHub is the recommended integrated hosted route in the official Distribution; other
+services use project Provider packages. If the user chooses QflowHub,
+`qflow auth login qflowhub.default` connects that account.
+`qflow doctor --endpoint <name>` checks a selected Endpoint;
+`qflow runtime up --endpoint <name>` prepares that Endpoint and starts the Worker. Repeat the flag
+for several chosen Endpoints; omitting it prepares the whole Profile. `qflow programs up --endpoint
+<name>` prepares a local helper independently of the Worker.
+
+With the selected execution environment:
+
+```bash
 qflow plan build.svrun
 qflow build build.svrun --follow
 qflow status <build-id> --watch
@@ -29,7 +52,6 @@ qflow history <source-output-name> [--source ./main.svml]
 qflow inspect <build-id> [--output <source-output-name>]
 qflow get <build-id> --output final.video --to ./final.mp4
 qflow cancel <build-id>
-qflow doctor
 ```
 
 `transcribe` runs one immediate request through the selected Runtime Profile, with no Build,
@@ -62,6 +84,11 @@ comes back: pictures, clips and accepted voice references (`@qflow/mimo-speech`)
 that produced them, so they are declared in the Source and go through `plan` and `build`. To hear a
 voice or learn a passage's real length before authoring the rest, build a Run whose target is that
 speech output and reuse it as a Candidate.
+
+Provider selection is checked before `transcribe` invokes the service. Multiple matching Endpoints
+can remain in the Profile: `bindings` chooses one for the capability. An unsupported request reports
+the selected binding and Provider-owned rejection reasons so the author can adjust the request or
+choose a compatible Endpoint. It does not imply that an account needs payment or login.
 
 Two more families are local, stateless and spend nothing. `qflow media` exposes the source at chosen
 times and scales, and `qflow vocabulary`

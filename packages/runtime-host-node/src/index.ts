@@ -203,6 +203,8 @@ export type RuntimeHostProviderQuery = {
 export type ManagedProgramProgress = {
   readonly id: string;
   readonly phase: "checking" | "installing" | "starting" | "waiting" | "ready";
+  readonly logPath?: string;
+  readonly detail?: string;
 };
 
 export type ManagedProgramReport = {
@@ -215,6 +217,8 @@ export type ManagedProgramReport = {
     | { readonly state: "mismatch"; readonly detail: string };
   readonly detail?: string;
   readonly logPath?: string;
+  readonly installationLogPath?: string;
+  readonly errorLogPath?: string;
   readonly pid?: number;
 };
 

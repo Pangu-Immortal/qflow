@@ -2636,6 +2636,9 @@ importers:
       '@qflow/validation':
         specifier: workspace:*
         version: link:../validation
+      koffi:
+        specifier: 3.2.1
+        version: 3.2.1
     devDependencies:
       '@qflow/build-result':
         specifier: workspace:*

@@ -1,6 +1,8 @@
 import type { BuildResultManifest } from "@qflow/build-result";
 
 import type { CliBuildSubmission, CliBuildView, CliRuntimeControl, CliRuntimeController } from "./runtime-port.js";
+import { commandHint } from "./command-hint.js";
+import type { CommandScope } from "./command-hint.js";
 import { formatOperationProgress } from "./runtime-view.js";
 
 const FIRST_HEARTBEAT_MS = 30_000;
@@ -122,6 +124,7 @@ export async function observeBuildView(
     readonly maxWaitMs?: number;
     readonly controller?: CliRuntimeController;
     readonly onProgress?: (value: BuildProgressView) => void;
+    readonly commandScope?: CommandScope;
   } = {},
 ): Promise<CliBuildView | undefined> {
   let view: CliBuildView | undefined = initial;
@@ -158,8 +161,9 @@ export async function observeBuildView(
       const worker = await options.controller.worker.status();
       if (worker.state !== "running") {
         throw new Error(
-          `Runtime Worker is ${worker.state}; Build ${build} remains durable. `
-          + `Run qflow runtime up, then run qflow status ${build} --watch again`,
+          `Runtime Worker is ${worker.state}; stopped watching Build ${build}. `
+          + `Inspect the Runtime with ${commandHint(["runtime", "status"], options.commandScope)}; `
+          + `read execution evidence with ${commandHint(["logs", build], options.commandScope)}`,
         );
       }
     }
@@ -184,6 +188,7 @@ export async function observeBuild(
     readonly controller?: CliRuntimeController;
     readonly readResult: () => Promise<BuildResultManifest | undefined>;
     readonly onProgress?: (value: BuildProgressView) => void;
+    readonly commandScope?: CommandScope;
   },
 ): Promise<CliBuildSubmission> {
   const finishFromResult = async (): Promise<CliBuildSubmission> => {
