@@ -86,7 +86,11 @@ For creator-led social video, favor compelling casting, an appealing voice and a
 toward the subject and listener. Let that relationship shape expression and timing. Humor, contrast
 or surprise needs an expression the audience can experience in the work.
 
-Before writing or adapting an image prompt, read [Image direction](references/playbooks/craft/image-direction.md).
+**Before writing or adapting an image prompt, read
+[Image direction](references/playbooks/craft/image-direction.md) and the chosen Kit.** This is
+empirical knowledge of how the image model responds, including capture wording and high-leverage
+casting and composition anchors; general prompting fluency does not reliably supply it. Carry the
+relevant findings into the actual prompt, using the examples to understand their force and scope.
 Before choosing or changing a voice, read [Voice direction](references/playbooks/craft/voice-direction.md).
 Before writing or adapting a video prompt, performance Recipe or action, read
 [Video direction](references/playbooks/craft/video-direction.md) and the selected Kit's wording and choices.
@@ -224,8 +228,10 @@ practical, revisit that choice and carry the improvement into the work and its n
   relevant Skill references, Sources, Runs, project Results and Runtime status.
   The project-files reference below owns document responsibilities and the suggested layout.
 - **Project ownership.** Preserve unrelated Source, Recipe, Run, assets, and project-package work.
-  Make production changes at their owning source; keep Result media intact. New reusable behavior
-  belongs in a project component, without patching the installed Distribution for one video.
+  Make production changes at their owning source; keep Result media intact. Author new visual
+  behavior in project components. When execution problems arise, actively investigate and pursue
+  a suitable repair through the [integration guidance](references/environment/model-and-provider.md),
+  explaining material changes and what they establish.
 - **Done means watched.** Watch and listen to the actual deliverable and judge it against the Brief,
   Treatment, and relevant reference relationships. Judge its performance, sound, clarity, visual
   hierarchy, timing, character, and suitability for publishing. Browser review can settle the composition before export; when

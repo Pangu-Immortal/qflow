@@ -56,6 +56,7 @@ unless the decision has changed.
 | [Two-person podcast](formats/two-person-podcast.md) | complementary host views, conversational reactions, product interaction or lifestyle coverage |
 | [Street interview](formats/street-interview.md) | a motivated encounter, guest/interviewer/shared views, reveals or tracked Caption |
 | [Ranking and listicle](formats/ranking-listicle.md) | a persistent comparison or board whose state changes with the argument |
+| [Presenter-led visual explainer](formats/presenter-led-explainer.md) | spoken performance joining evolving demonstrations and MG, with the presenter moving between full-frame, inset and covered views |
 | [Narration-led work](formats/narration-led-demo.md) | independent narration organizing products, hands, screens, demonstrations, montage, or MG |
 
 A format page is useful when its relationships illuminate this work. It is not a category the

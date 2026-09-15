@@ -105,6 +105,9 @@ coordinated explainer scenes. Trace why a behavior has its owner, what drives it
 inputs a changed brief would replace. Their notes explain those choices; the scene lists are each
 production's design. In the explainer, scenes retain fixed internal details while Script events,
 Caption and presenter framing remain independently authored.
+For that whole-work relationship, read [Presenter-led visual explainers](../playbooks/formats/presenter-led-explainer.md).
+The [explainer's craft notes](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/productions/explainer/CRAFT-NOTES.md)
+trace concrete revisions back to their design decisions and source owners.
 
 ## Let meaning drive the behavior
 

@@ -17,6 +17,8 @@ on-camera delivery. A mixed work can move between these relationships when the s
 
 State that relationship in Treatment. It determines how performance, picture coverage, visual
 proof, and later review should be understood.
+[Presenter-led visual explainers](presenter-led-explainer.md) covers the related form whose accepted
+on-camera performance remains available while demonstrations and graphics lead much of the picture.
 
 ## Direct one spoken spine and many visual answers
 

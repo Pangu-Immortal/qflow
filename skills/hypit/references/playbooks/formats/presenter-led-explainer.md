@@ -1,0 +1,134 @@
+# Presenter-led visual explainers
+
+Read this when a spoken performance carries an explanation while demonstrations, comparisons and
+motion graphics develop much of its visual argument. The presenter may lead the frame, share it,
+move into an inset or disappear behind another contribution. Complexity comes from relationships
+developing together, not from a required number of effects or components.
+
+## Follow the argument through changing objects
+
+Understand what the audience should grasp and how the picture makes it graspable. A comparison
+can begin with two alternatives, keep them visible as the explanation examines each, then change
+their relationship when a third possibility appears. The continuing objects give the viewer a
+memory of the argument. Their entrance, movement, settled state and eventual departure all matter.
+
+Read the reference's speech and picture together through
+[transcript-linked grids](../../creation/reference-video.md). Change the range and sampling interval
+around the question being investigated: a whole passage reveals the argument, while a short handoff
+reveals whether an object was replaced, moved, cropped or covered. Let each observation revise the
+whole-piece reading, and share the understanding as it develops. A list of pictured nouns leaves
+out the behavior that makes the sequence worth recreating.
+
+For the target, express the useful relationship with its own subject and evidence. A failed action
+needs an attempted action and a perceptible consequence. A claim about reuse needs a recognizable
+structure whose content changes while its useful behavior survives. Exact wording can stay in
+Caption while objects demonstrate what the words mean. Graphic text has a separate job when a label,
+number or comparison helps the viewer read that demonstration.
+
+## Compose the performance and its presentation independently
+
+A Take supplies accepted performance, media and local word timing. Place it on the complete Timeline;
+the picture's arrangement can change several times during that same Take. A new layout usually calls
+for a presentation change, while a different spoken line or acted beat may call for new material.
+One scene may also develop across several Takes. Spoken segment boundaries do not prescribe scene
+boundaries or camera cuts.
+
+Use [Performance](../../production/performance.md) for presentation of the Timeline's existing visual
+material and [Media](../../production/media.md) for independent supplied material. A full-frame view,
+a circular crop and a moving viewport can share the same playing source. Its playback clock continues
+while the frame moves; foreground and enlarged background views of that source need the same sample.
+Let the visual emphasis follow who or what currently carries the idea, including returning to the
+presenter for an expressive reaction or direct address.
+
+Speech sound remains an independently connected contribution when MG covers the presenter. Genuinely
+independent narration uses the [narration-led relationship](narration-led-demo.md). A montage or silent
+ending can occupy ordinary time outside any Take: the complete Timeline has room for both semantic
+anchors and independently authored events. No invented performance is needed to create that room.
+
+## Give events meaning and transitions duration
+
+Name the spoken idea that motivates a change in Script, then connect its Moment or Selection to the
+component. That establishes why the event happens there. Local durations and easing establish how
+the change unfolds. A phrase can start a movement that continues into the next phrase; the settled
+state can remain useful long after the entrance finishes.
+
+Design handoffs from the states on both sides: what remains present, which geometry should meet,
+and where attention should land. A brief presentation Use can connect two longer treatments without
+changing the underlying footage. Read the actual contribution's interval and override semantics;
+shared timing does not make independent Tracks mutually exclusive.
+[Temporal projection](../../production/track-authoring.md#keep-selection-projection-and-consumption-distinct)
+and the owning component documentation supply exact syntax.
+
+## Choose a visual language, then complete its systems
+
+Turn the intended character into palette, type, edge treatment, depth, texture and motion choices.
+Judge them together in a representative passage with actual media. A style change can alter all
+these relationships: recoloring a glossy interface alone may leave its old visual character intact.
+Keep the accepted shared decisions in Recipes or ordinary code dependencies so related scenes evolve
+together. Specific colors and effects belong to this work's Treatment.
+
+Choose the realization that expresses the desired appearance well. A small raster animation can be
+right for a stepped pixel flag; a different work may need continuous cloth motion or true geometry.
+The reference supplies the appearance and behavior to understand, not a compulsory implementation.
+
+Preserve the detail that makes the scene convincing when simplifying it. Removing a redundant title
+changes the remaining layout; a folder still needs readable contents, and a working terminal needs
+visible activity while the narration describes it. A demonstration has a designed hold as well as
+an entrance. [Graphic composition](../craft/graphic-compositions.md) owns this visual judgment.
+
+## Organize the behavior at its useful scale
+
+Separate contributions that have independent reasons to change. Keep an interacting pointer, dragged
+object and destination together when they share geometry and motion. Ordinary functions and modules
+can organize their implementation; they need not each become a Track or package. A shared palette
+has code consumers without becoming a visible object.
+
+Supply the inputs the production actually directs: selected assets, meaningful events and useful
+presentation choices. A one-off scene can retain fixed internal dimensions and artwork. Caption
+position or color may deserve Inspector controls while a redesign of an illustrated editor belongs
+in its code. Independence, parameterization and cross-project reuse remain separate decisions;
+[Component design](../../production/component-design.md) owns that distinction.
+
+Make frame evaluation describe the current state, including before and after each event. Then a
+direct seek, a nearby-frame inspection and a range render can show the same designed behavior.
+Derive connected motion from shared layout so moving a target also moves its pointer destination.
+[Drawing](../../production/component-visuals.md) explains the browser-program implementation.
+
+## Develop the work with visible feedback
+
+Use generated material for the photographed or illustrated content it should actually contain.
+Use recorded interfaces when their literal state and actions are evidence; keep a recording as
+reusable material whose crop and timing can be revised. Authored MG can demonstrate a relationship
+without pretending to be a measured product recording. Material direction and reference relationships
+belong to their [Craft pages](../index.md#craft).
+
+Review a useful passage in its surrounding composition as the design develops. Explain what it
+demonstrates and what is still being built. Comments can carry a change of visual idea that no
+parameter panel can express; Studio exposes the Timeline and the choices that are useful to adjust.
+Follow a timestamped comment to the responsible Source, Recipe, media or scene implementation.
+The timestamp locates evidence; the desired change may concern a recurring system throughout the work.
+
+Preserve accepted material through explicit Run choices while revising the composition. Seek and
+review the changed action and its handoffs; export the encoded film when that deliverable is wanted.
+[Review](../../production/review.md) and [Studio](../../production/studio.md) own the interaction;
+[Rendering](../../production/rendering.md) owns render scope and resource choices.
+
+## Study one complete production
+
+The [complex spoken explainer](https://github.com/qflow-ai/qflow/tree/main/examples/complex-explainer)
+is a finished 137-second example with 17 accepted Takes. Its guide links the film, editable sources,
+media archive and project packages. Reading its code and notes needs no media download; opening the
+full picture uses the supplied media/Result archive. The default Run reuses that accepted material.
+
+| Question to trace | Concrete source |
+| --- | --- |
+| How did the design change, and what made the revisions useful? | [Treatment and craft notes](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/productions/explainer/CRAFT-NOTES.md) |
+| How does a spoken phrase become a scene event? | [Script](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/productions/explainer/authors/script.svml) and [Main Source](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/productions/explainer/authors/main.svml) |
+| How do existing footage, a moving viewport and independent graphics coexist? | [Opening system and Performance Styles](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/packages/opening-system/README.md) |
+| What belongs inside a coordinated demonstration? | [Scene map, inputs and internal modules](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/packages/web-scenes/README.md) |
+| How can Caption stay independently editable? | [Project Caption package](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/packages/single-line-captions/README.md) |
+
+Carry the reasoning into the new commission: identify which objects, relationships and events it
+needs, then author that model. This example's scene inventory, pixel treatment and export settings
+belong to its production; the other [video examples](https://github.com/qflow-ai/qflow/tree/main/examples)
+show different useful organizations.
