@@ -60,6 +60,9 @@ Qflow 本身免费使用；Coding Agent 和模型服务各有自己的账号与�
 QflowHub 是我们推荐的托管模型服务，也可以使用你自己的 API 或本地模型。
 把服务名称和 API 文档告诉 Agent，它会据此配置合适的连接。
 
+[Agent 工作环境与入口合作方](./docs/zh/guide/agents.md) ·
+[模型与部署服务](./docs/zh/guide/service-partners.md)
+
 ## 示例
 
 ### UGC

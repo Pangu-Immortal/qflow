@@ -10,6 +10,13 @@ Runs, assets, local packages, Profile selection, and Results. They can live in u
 and none is installed as a side effect of another. `npx skills add qflow-ai/qflow -g` installs the
 Skill's knowledge; the executable is the separate npm package `@qflow/qflow`.
 
+Work from the capabilities of the current Agent environment: project-file access, command execution,
+service connectivity and a way to return previews or media to the user. A browser interface can
+control a remote execution environment; its files, processes and localhost addresses belong there.
+Use the environment's available preview forwarding or file delivery, and retain the project and
+accepted material in storage that lasts beyond a disposable session. Reading the Skill establishes
+available knowledge; the actual tools and locations establish what can run.
+
 ## Find the installation already available
 
 An available launcher can identify its version and physical locations:

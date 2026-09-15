@@ -9,6 +9,8 @@ creative direction, and makes the pictures, performances, graphics, sound, and e
 
 ## Install the Skill
 
+[Use Qflow in your Agent](./agents.md) covers working environments and Agent-entry partners.
+
 ```bash
 npx skills add qflow-ai/qflow -g
 ```

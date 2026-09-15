@@ -12,6 +12,8 @@ the reference, create the material, and compose an editable video.
 - A Coding Agent that can use skills, such as Claude Code or Codex.
 - A reference video or a description of the video you want.
 
+See [Use Qflow in your Agent](./guide/agents.md) for Agent environments and entry partners.
+
 ## 1. Install the Qflow skill
 
 ```bash
@@ -63,6 +65,9 @@ account. You can also use your own keys through existing or project-written Prov
 local and hosted capabilities. The Agent connects what the next part of the work needs, explains
 progress and shows its reference understanding before developing the material plan. Generation
 accounts can be chosen when that plan establishes the models you need.
+
+[Model and deployment services](./guide/service-partners.md) introduces service partners and
+your own deployment option. [Models and Providers](./guide/providers.md) explains how they connect.
 
 ## 4. Agree on the cost and let production run
 

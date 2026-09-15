@@ -7,6 +7,8 @@ description: 把参考视频或创作 Brief 交给 Agent，得到可继续编辑
 
 ## 安装 Skill
 
+[在你的 Agent 中使用 Qflow](./agents.md)介绍工作环境与 Agent 入口合作方。
+
 ```bash
 npx skills add qflow-ai/qflow -g
 ```

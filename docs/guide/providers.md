@@ -11,7 +11,8 @@ The Runtime Profile binds the requested capability to an Endpoint.
 Qflow's official Distribution includes local Providers and the QflowHub Provider. Other services
 connect through packages owned by the production or their authors. The Agent can implement a new
 service through the public SDK, just as it can create a visual component for a video.
-[Service partners](./service-partners.md) introduces independent partners through that same path.
+[Model and deployment services](./service-partners.md) introduces independent partners through that
+same path. Choosing a service is separate from [choosing an Agent environment](./agents.md).
 
 QflowHub is the recommended integrated hosted service. **BYOK** means bringing an account's own
 API key: the key connects to the service that issued it, through a compatible Provider. Tell the
@@ -26,6 +27,7 @@ and charges.
 | --- | --- |
 | Use another key for the same service | The credential reference and selected Endpoint configuration |
 | Use another compatible service address | The address or deployment options supported by the Provider |
+| Run the model on your own cloud deployment | Prepare its inference service, then configure a compatible Provider or implement its API |
 | Use the same model through a different API | Install or write a Provider for that API and select its Endpoint |
 | Use a model not yet defined | Add a Model package and a Provider that supports its request |
 
@@ -36,6 +38,23 @@ A Profile chooses the route; an error on that route does not authorize spending 
 For an existing installation, inspect the selected Profile and credential status first. A starter
 Profile supplies configuration examples; choose the services you want before connecting accounts or
 preparing their dependencies. [Runs and Builds](../quickstart/run.md) shows the commands.
+
+## Use your own model deployment
+
+You can run a model on compute you control and connect the resulting inference service to Qflow.
+The cloud platform provides deployment and compute; the Model defines the generation request;
+the Provider implements the serving API; the Endpoint selects the deployed address and credentials.
+
+An existing Provider can connect to a deployment with the same complete protocol. A different API
+can use a project package such as `packages/provider-my-cloud/`. The serving protocol determines
+that implementation boundary, rather than the cloud platform's brand. If the model is not already
+described by Qflow, add its Model definition as well.
+
+Preparing a deployment can involve model files, compute configuration and a serving process.
+Your Agent can use the chosen platform's and model's instructions to establish that service, its
+persistence and compute costs. Platform-management access and inference access may be separate.
+Once available, the deployment receives ordinary requests through its Endpoint; provisioning a
+deployment and executing a video Build have separate lifetimes.
 
 ## Add a Model
 

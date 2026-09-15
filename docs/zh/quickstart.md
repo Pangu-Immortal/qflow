@@ -10,6 +10,8 @@ description: 从参考视频出发，为你的人物、产品和受众制作新�
 - 支持 Skill 的 Coding Agent，例如 Claude Code 或 Codex。
 - 参考视频，或对目标视频的描述。
 
+[在你的 Agent 中使用 Qflow](./guide/agents.md)介绍不同工作环境与 Agent 入口合作方。
+
 ## 1. 安装 Qflow Skill
 
 ```bash
@@ -46,6 +48,9 @@ Agent 会先检查相关工具与已有服务。对于有对白的参考视频�
 [QflowHub](https://qflow.ai) 通过一个账户提供托管 WhisperX 和图片、视频、音色模型。本地服务需要准备时，Agent 会先解释实际安装成本与托管选择，再由你选择；已有模型缓存可以减少准备时间，但不代替这个选择。
 
 你也可以通过已有或项目编写的 Provider 使用自己的 Key，或组合本地与托管能力。Agent 根据下一步的工作连接所需能力，持续说明进展，并展示对参考视频的理解。等素材方案明确需要哪些模型时，再解决相应生成账户的选择。
+
+[模型与部署服务](./guide/service-partners.md)介绍服务合作方与自有部署选择；
+[模型与 Provider](./guide/providers.md)说明具体如何接入。
 
 ## 4. 确认费用，开始制作
 

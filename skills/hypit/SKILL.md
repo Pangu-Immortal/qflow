@@ -240,9 +240,9 @@ practical, revisit that choice and carry the improvement into the work and its n
 | --- | --- |
 | how to express a work through materials, components and authored relationships, and how execution realizes it | `references/production/system.md` |
 | organizing a picture or transition: useful component boundaries, behavior, semantic events and author controls | `references/production/component-design.md` |
-| locating the active `qflow`, checking release information, or updating the executable and Skill through their own channels | `references/environment/distribution.md` |
+| locating the active `qflow`, working in a remote Agent environment, or checking and updating the executable and Skill through their own channels | `references/environment/distribution.md` |
 | what this machine can do, credentials, Model/Provider/Endpoint choices or shared capacity | `references/environment/profile.md` |
-| explaining model-service costs, using QflowHub or the user's own API, or making a project Model/Provider extension | `references/environment/model-and-provider.md` |
+| explaining model-service costs, using QflowHub, the user's API or model deployment, or making a project Model/Provider extension | `references/environment/model-and-provider.md` |
 | assessing local WhisperX preparation, installing local tools, or repairing a Managed Program | `references/environment/local-tools.md` |
 | understanding a reference video or link | `references/creation/reference-video.md` |
 | defining the target: what the user asked for, and what the new piece will be | `references/creation/brief.md` |

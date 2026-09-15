@@ -17,6 +17,7 @@ different capabilities.
 | --- | --- | --- |
 | QflowHub, the recommended integrated hosted route | The user's QflowHub account and current rates | Use the bundled QflowHub Provider with OAuth or a QflowHub API key |
 | A service the user brings | That service's account and rates | Use a compatible installed Provider, or implement the needed API in a project Provider |
+| A model deployed on the user's chosen compute platform | The deployment account's compute and serving costs | Connect the deployed inference API through a compatible or project-written Provider |
 | A chosen local model or service | Local preparation and compute; any model/service terms still apply | Use an appropriate local Provider, or implement the chosen local process |
 
 Choose the useful execution route for the actual capability, then connect its account and select its
@@ -85,11 +86,12 @@ inputs. A service can add a model before the installed Distribution describes it
 Model and Provider extension or a release containing them. A missing model or unsupported parameter
 is a capability question, while an expired credential is an account question.
 
-A user's existing service or local deployment remains a normal choice. Its Provider does not need
-to be officially bundled. Partner introductions
-are maintained on the [service-partner page](https://github.com/qflow-ai/qflow/blob/main/docs/guide/service-partners.md).
-A partner is an independent service with its own
-account, pricing and API, and uses the same project-extension path as any other external service.
+A user's existing service or deployment remains a normal choice. Its Provider does not need to be
+officially bundled. When an execution-service choice remains open, the maintained
+[model and deployment service page](https://github.com/qflow-ai/qflow/blob/main/docs/guide/service-partners.md)
+introduces independent partners and links their own documentation. Use an introduction when its
+capabilities help this production. Partners have their own accounts, pricing and APIs and use the
+ordinary project-extension path. Carry an already suitable, chosen service forward.
 
 Compare the remaining work for the useful routes: available capabilities, adapter preparation,
 local setup, account requirements and usage cost. A ready suitable connection can carry the work
@@ -101,6 +103,20 @@ the commission, explain the tradeoff, and carry the user's settled choice forwar
 local preparation and account choices. Connect the capability needed next. For a spoken reference,
 that may be WhisperX while the generation plan is still developing. Once the intended material is
 clear, explain its required models and ask about an account only where that choice is unresolved.
+
+## Use your own model deployment
+
+A compute platform runs the model; its deployed inference API fulfills generation requests. The
+Model describes the requested output, the Provider implements that API, and an Endpoint selects
+the concrete deployment and credentials. Deployment location alone does not require another package:
+reuse a Provider when its complete protocol matches; write a project Provider for a different API.
+
+If the user has compute but no serving endpoint yet, deployment is the remaining preparation work.
+Use the selected platform's current deployment documentation and the model's serving instructions
+to establish a usable service, its persistence and its costs. A platform-management key may authorize
+provisioning while inference uses separate access. Keep deployment preparation and lifetime distinct
+from the individual generation requests sent to it; Runtime still owns Build execution through the
+selected Endpoint. Once the service exists, the ordinary Provider implementation below applies.
 
 ## Implement the missing capability in the project
 
