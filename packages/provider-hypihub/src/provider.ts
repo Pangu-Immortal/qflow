@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { requestDeadline } from "@qflow/runtime-kit";
 import type { AsyncEndpoint, EndpointCredential, EndpointFulfillment, EndpointInvocationContext, EndpointPollContext, EndpointPricingReader, EndpointStartContext, EndpointOutcome, ImmediateEndpointHandler } from "@qflow/endpoint-kit";
 import { defineEndpointPackage, wakeAfter } from "@qflow/endpoint-kit";
@@ -22,6 +23,29 @@ import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-kit";
 import { createQflowHubAuth, hypiHubCredentialNeedsRefresh } from "./oauth.js";
 import type { QflowHubAuth } from "./oauth.js";
 import { QflowHubHttpError, QflowHubServiceError, hypiHubJobFailure } from "./errors.js";
+
+function distributionVersion(): string {
+  try {
+    const manifest = JSON.parse(readFileSync(new URL("../../../package.json", import.meta.url), "utf8")) as {
+      readonly name?: unknown; readonly version?: unknown;
+    };
+    if (manifest.name !== "@qflow/qflow" || typeof manifest.version !== "string" || manifest.version.length === 0) {
+      return "unknown";
+    }
+    return manifest.version;
+  } catch {
+    return "unknown";
+  }
+}
+
+const userAgent = `qflow/${distributionVersion()}`;
+
+const identifiedFetch = (fetcher: typeof globalThis.fetch): typeof globalThis.fetch =>
+  async (input, init) => {
+    const headers: Record<string, string> = { "user-agent": userAgent };
+    new Headers(init?.headers).forEach((value, name) => { headers[name] = value; });
+    return await fetcher(input, { ...init, headers });
+  };
 
 export const hypiHubProviderModuleRef = { name: "@qflow/provider-qflowhub", version: "1" } as const;
 
@@ -113,7 +137,7 @@ class QflowHubClient {
     this.timeout = options.timeout;
     this.oauthTimeout = options.oauthTimeout;
     this.downloadAttempts = options.downloadAttempts;
-    this.fetcher = options.fetcher;
+    this.fetcher = identifiedFetch(options.fetcher);
     this.uploader = new QflowHubUploader({
       baseUrl: this.baseUrl,
       requestTimeoutMs: this.timeout,
