@@ -198,6 +198,10 @@ commands and the repository layout.
   </tr>
 </table>
 
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=qflow-ai/qflow&type=Date)](https://www.star-history.com/#qflow-ai/qflow&Date)
+
 ## License
 
 Qflow is released under the [Qflow Open Source License](./LICENSE). The videos and other outputs you create belong to you; third-party models and services may have their own terms.
