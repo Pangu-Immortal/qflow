@@ -26,6 +26,14 @@ of work. A key can authorize an implemented API connection; it does not implemen
 QflowHub's maintained integration reduces connection work. Project Providers let the Agent connect
 the services the user already has without waiting for official support.
 
+Project extensions and defects in a maintained integration are different responsibilities. An
+already supported QflowHub operation should work through the bundled Provider without each project
+repairing it. The actual installed release, requested model, operation and public error evidence
+make an integration problem actionable. Check for a relevant
+[published fix](distribution.md#check-and-update-the-relevant-installation); an unpublished fix or
+a locally patched client does not establish that the released client works. Explain any remaining
+blocker and the available choices without presenting an integration repair as routine BYOK setup.
+
 ## Explain the connection in the user's terms
 
 Relate the service to the result it enables: transcribing the reference, generating the requested
