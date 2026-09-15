@@ -31,8 +31,15 @@ The current QflowHub GPT Image 2 route has these service-specific limits:
 QflowHub owns this support check independently: it leaves the GPT Image model package unchanged. When the service surface changes, this Provider can change without changing
 the model or another Provider.
 
-Model identity is preserved across input modes: Seedream 5 Lite references use the Lite image-edit
-route, and Grok 1.5 Preview remains the Preview model. A deployment's current catalogue may offer
+Model identity and input mode are separate. The mapping uses QflowHub's canonical model names:
+`gpt-image-2`, `seedream-5-lite`, `minimax-h3`, `grok-imagine-video` and the individual Seedance names.
+An image request without references uses `/images/generations`; image edits use `/images/edits`
+with the same model name. Video requests use `/videos`, preserving reference images, reference
+videos and first/last frames in their distinct fields. Old operation-specific names are not needed
+to express these modes; compatibility with previously released clients belongs to the service.
+
+Seedream 5 Lite remains Lite across input modes, and Grok 1.5 Preview remains Preview.
+A deployment's current catalogue may offer
 newer models or omit one implemented here. Availability and unsupported-input errors retain their
 service explanation; they do not imply expired credentials or authorize substituting another model.
 
@@ -148,8 +155,10 @@ catalog to verify configured capabilities; ordinary preflight never makes that r
 declares QflowHub's public pricing page, `https://qflow.ai/commercial/pricing/`, as its price source.
 For each selected Need, `readPricing` resolves the corresponding QflowHub model and returns the service's
 authenticated `GET /v1/pricing?model=<model>` response unchanged together with that URL. It covers
-generation, alignment, Voice Design and Voice Clone through the same mechanism;
-the Provider does not maintain a second list of billing formulas or calculate a request total.
+generation, alignment, Voice Design and Voice Clone through the same mechanism. The document's
+per-operation prices are retained alongside its default price, including when references are still
+pending. A model's default price is not a quote for every input mode. The Provider does not maintain
+a second list of billing formulas or calculate a request total.
 
 The Provider declares its implemented speech capabilities alongside image, video and alignment.
 Voice Design produces an accepted voice-reference Resource, and Voice Clone uses that

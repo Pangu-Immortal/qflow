@@ -312,8 +312,7 @@ function cardIdentifiers(card: Record<string, unknown>): readonly string[] {
   return [card.id, card.canonical_name].filter((name): name is string => typeof name === "string");
 }
 
-/** The additional model names a card answers to. QflowHub publishes the per-operation
- *  routing names used by the Provider mapping table as aliases of one canonical card. */
+/** Additional names explicitly published by the service for this card. */
 function cardAliases(card: Record<string, unknown>): readonly string[] {
   return Array.isArray(card.aliases)
     ? card.aliases.filter((name): name is string => typeof name === "string")

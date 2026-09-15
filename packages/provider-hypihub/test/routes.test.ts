@@ -240,3 +240,18 @@ test("exact model identity survives reference mode and preview selection", async
     assert.equal((await compile(preview, request, resolve)).model, "grok-imagine-video-1.5-preview");
   }
 });
+
+test("canonical image models keep generation and edit operations distinct", async () => {
+  for (const name of ["gpt-image-2", "seedream-5-lite", "nano-banana-2", "nano-banana-pro"]) {
+    const route = hypiHubRoutes.find((item) => item.capability.name === name)!;
+    for (const images of [[], [{ role: "image", artifact: image }]]) {
+      const prepared = route.prepare({ ports: { prompt: ["A scene"], images } });
+      assert.equal(prepared.model, name);
+      assert.equal(prepared.operation, images.length ? "image_edits" : "images");
+      const compiled = await prepared.compile(resolve);
+      assert.equal(compiled.model, name);
+      assert.deepEqual((compiled.input as Record<string, CanonicalValue>).reference_images,
+        images.length ? [{ url: "data:image/png;base64,AQID" }] : []);
+    }
+  }
+});

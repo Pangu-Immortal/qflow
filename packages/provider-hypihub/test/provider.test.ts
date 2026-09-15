@@ -267,12 +267,20 @@ test("QflowHub returns its current model-pricing document", async () => {
   }]);
 });
 
-test("QflowHub prices the wire route selected by an authored future input", async () => {
+test("QflowHub retains operation prices when canonical-model references are still pending", async () => {
+  const rateCard = {
+    object: "model_pricing", model: "gpt-image-2",
+    pricing: { mode: "per_image", per_image_usd: 0.03 },
+    operations: [
+      { operation: "text-to-image", pricing: { mode: "per_image", per_image_usd: 0.03 } },
+      { operation: "image-to-image", pricing: { mode: "per_image", per_image_usd: 0.05 } },
+    ],
+  };
   const provider = createQflowHubProvider({
     pricingRequestTimeoutMs: 1_000,
     fetch: async (input) => {
       assert.equal(String(input), "https://qflow.ai/v1/pricing?model=gpt-image-2");
-      return Response.json({ object: "model_pricing", model: "gpt-image-2" });
+      return Response.json(rateCard);
     },
   });
   const request = {
@@ -287,10 +295,7 @@ test("QflowHub prices the wire route selected by an authored future input", asyn
     request,
     credentials: async () => ({ apiKey: { secret: "test-key" } }),
   });
-  assert.deepEqual(document?.data, {
-    object: "model_pricing",
-    model: "gpt-image-2",
-  });
+  assert.deepEqual(document?.data, rateCard);
 });
 
 test("QflowHub doctor leaves expired OAuth refresh validity unknown without misidentifying the Store", async () => {
@@ -320,6 +325,30 @@ test("QflowHub doctor checks the authenticated catalogue only when actively invo
   });
   assert.equal(calls, 1);
   assert.deepEqual(diagnostics, []);
+});
+
+test("QflowHub doctor recognizes canonical cards without legacy aliases or substituting variants", async () => {
+  const cards = [
+    { id: "gpt-image-2", endpoints: ["images", "image_edits"] },
+    { id: "seedream-5-lite", endpoints: ["images", "image_edits"] },
+    { id: "minimax-h3", endpoints: ["videos"] },
+    { id: "grok-imagine-video", endpoints: ["videos"] },
+    { id: "seedance-2-mini", endpoints: ["videos"] },
+  ];
+  const capabilities = [
+    { module: { name: "@qflow/gpt-image", version: "1" }, name: "gpt-image-2" },
+    { module: { name: "@qflow/seedream", version: "1" }, name: "seedream-5-lite" },
+    { module: { name: "@qflow/minimax-h3", version: "1" }, name: "minimax-h3" },
+    { module: { name: "@qflow/grok-imagine", version: "1" }, name: "grok-imagine-video" },
+    seedanceEndpoints.mini!.capability,
+    { module: { name: "@qflow/grok-imagine", version: "1" }, name: "grok-imagine-video-1.5-preview" },
+  ];
+  const diagnostics = await diagnoseQflowHubProvider({
+    fetch: async () => Response.json({ data: cards }),
+  }, { credentials: { apiKey: { secret: "test-key" } }, capabilities });
+  assert.equal(diagnostics.length, 1);
+  assert.equal(diagnostics[0]?.code, "QFLOWHUB_CAPABILITY_UNAVAILABLE");
+  assert.match(diagnostics[0]!.message, /grok-imagine-video-1\.5-preview/u);
 });
 
 test("QflowHub declares both MiMo speech capabilities; who serves them is the Profile's binding", async () => {
