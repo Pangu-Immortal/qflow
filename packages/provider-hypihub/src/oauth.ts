@@ -1,6 +1,7 @@
 import type { EndpointCredential } from "@qflow/endpoint-kit";
 import { decodeOAuth2Credential, encodeOAuth2Credential } from "@qflow/runtime";
 import { requestDeadline } from "@qflow/runtime-kit";
+import { QflowHubHttpError } from "./errors.js";
 
 const OAUTH_CLIENT_ID = "hyc_d5d5e8e7131b0c877756e66c";
 const REFRESH_SKEW_MS = 60_000;
@@ -78,10 +79,12 @@ export function createQflowHubAuth(options: {
           signal: deadline.signal,
         }));
         const text = await deadline.wait(response.text());
+        if (!response.ok) throw new QflowHubHttpError(response.status, response, text, {
+          method: "POST", url: tokenEndpoint,
+        });
         let body: OAuthTokenResponse;
         try { body = JSON.parse(text) as OAuthTokenResponse; }
         catch { throw new Error(`QflowHub OAuth refresh returned invalid JSON (${response.status})`); }
-        if (!response.ok) throw new Error(`QflowHub OAuth refresh failed (${response.status}): ${text.slice(0, 200)}`);
         assert(typeof body.access_token === "string" && body.access_token.length > 0,
           "QflowHub OAuth refresh returned no access token");
         accessToken = body.access_token;

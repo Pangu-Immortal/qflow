@@ -10,7 +10,7 @@ import type { AsyncEndpoint } from "@qflow/endpoint-kit";
 import {
   LocalBuildScheduler,
 } from "@qflow/runtime";
-import type { OperationSnapshot, OperationStore, OperationUpdate } from "@qflow/runtime";
+import type { OperationSnapshot, OperationStore, OperationUpdate, RuntimeExecutionContext } from "@qflow/runtime";
 import { capabilities, createGreetingBuild, createParallelGreetingBuild, producers as greetingProducers, types } from "../../core/test/greeting-fixture.js";
 
 function memoryOperations(): OperationStore {
@@ -268,6 +268,63 @@ test("an asynchronous Endpoint starts once and is polled until complete", async 
   assert.equal(starts, 1);
   assert.equal(polls, 1);
   assert.equal((await operations.read(pending.operation))?.status, "completed");
+});
+
+test("asynchronous actions expose progress before returning without treating it as acknowledgement", async () => {
+  const operations = memoryOperations();
+  const progress: unknown[] = [];
+  const log: unknown[] = [];
+  let reportReady!: () => void;
+  let finishAction!: () => void;
+  const reported = new Promise<void>((resolve) => { reportReady = resolve; });
+  const finish = new Promise<void>((resolve) => { finishAction = resolve; });
+  const executor = asyncExecutor({
+    async start(context) {
+      await context.reportProgress?.({ phase: "Preparing inputs", completed: 0, total: 2, unit: "files" });
+      await context.reportProgress?.({ phase: "Preparing inputs", completed: 1, total: 2, unit: "files" });
+      reportReady();
+      await finish;
+      return { status: "pending", handle: { job: "one" }, receipt: { id: "one" } };
+    },
+    async poll(context) {
+      await context.reportProgress?.({ phase: "Reading remote result" });
+      return { status: "ready", handle: context.handle };
+    },
+    async collect(context) {
+      await context.reportProgress?.({ phase: "Receiving output" });
+      return { status: "completed", result: { value: { kind: "inline", value: "done" } } };
+    },
+  }, operations);
+  const context: RuntimeExecutionContext = {
+    build: "progress-build",
+    reportProgress: async (value) => { progress.push(value); },
+    recordExecution: async (value) => { log.push(value); },
+  };
+  const running = executor.run(createGreetingBuild(), context);
+  try {
+    await reported;
+    assert.deepEqual(progress, [0, 1].map((completed) => ({ endpoint: "generation.local",
+      progress: { phase: "Preparing inputs", completed, total: 2, unit: "files" },
+    })));
+    assert.deepEqual(log, [
+      { endpoint: "generation.local", kind: "started" },
+      { endpoint: "generation.local", kind: "phase", phase: "Preparing inputs" },
+    ]);
+    const [pending] = await operations.list({ build: context.build });
+    assert.equal(pending!.submission, "started");
+    assert.equal(pending!.handle, undefined);
+    assert.equal(pending!.receipt, undefined);
+  } finally { finishAction(); }
+  await running;
+  const [submitted] = await operations.list({ build: context.build });
+  assert.equal(submitted!.receipt!.id, "one");
+  const ready = await executor.advanceOperation(submitted!, context);
+  const completed = await executor.advanceOperation(ready, context);
+  assert.deepEqual(completed.completion, { value: { kind: "inline", value: "done" } });
+  assert.equal(completed.remoteEnded, true);
+  assert.deepEqual(progress.slice(2), ["Reading remote result", "Receiving output"].map((phase) => ({
+    endpoint: "generation.local", progress: { phase },
+  })));
 });
 
 test("a submission error ends its attempt and a new Build can submit normally", async () => {

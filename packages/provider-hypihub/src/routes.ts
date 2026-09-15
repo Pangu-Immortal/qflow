@@ -1,5 +1,6 @@
 import {
   compileWireRequest,
+  selectWireModelForRequest,
   generationTypes,
   sealGeneratedAudioSet,
   sealGeneratedImageSet,
@@ -11,12 +12,21 @@ import type { BlobRef, CapabilityRef, CanonicalValue, StoredValue, TypeRef } fro
 import type { EndpointRequest, EndpointSupport } from "@qflow/endpoint-kit";
 import { hypiHubMappings } from "./mapping.js";
 
+export type QflowHubModelOperation = "images" | "image_edits" | "videos" | "audio_speech" | "transcriptions";
+
+/** Request identity is available before resolving any reference into a service URL. */
+export type QflowHubPreparedRequest = {
+  readonly model: string;
+  readonly operation: QflowHubModelOperation;
+  readonly compile: (resolve: GenerationArtifactUrlResolver) => Promise<{ readonly model: string; readonly input: CanonicalValue }>;
+};
+
 export type QflowHubRoute = (typeof hypiHubMappings)[number] & {
   readonly key: string;
   readonly returns: TypeRef;
   readonly media: "image" | "video" | "audio";
   readonly supports?: (request: EndpointRequest) => EndpointSupport;
-  readonly compile: (constraints: CanonicalValue, resolve: GenerationArtifactUrlResolver) => Promise<{ readonly model: string; readonly input: CanonicalValue }>;
+  readonly prepare: (constraints: CanonicalValue) => QflowHubPreparedRequest;
   readonly packageResult: (artifacts: readonly BlobRef[]) => StoredValue;
 };
 
@@ -60,11 +70,22 @@ export const hypiHubRoutes: readonly QflowHubRoute[] = hypiHubMappings.map((mapp
         return reason === undefined ? { status: "supported" } : { status: "unsupported", reason };
       },
     } : {}),
-    compile: async (constraints, resolve) => {
+    prepare: (constraints) => {
       const request = constraints as unknown as GenerationRequest;
       const rejection = hypiHubGenerationRejection(mapping, request);
       if (rejection !== undefined) throw new Error(rejection);
-      return normalizeQflowHubRequest(mapping, await compileWireRequest(mapping, request, resolve));
+      const model = selectWireModelForRequest(mapping, request);
+      // Image editing is determined by authored media ports, before their URLs exist.
+      const hasReferences = Object.entries(mapping.fields).some(([port, field]) =>
+        (field.as === "url" || field.as === "urlArray" || field.as === "itemObject")
+          && (request.ports[port]?.length ?? 0) > 0);
+      const operation = mapping.result === "audio" ? "audio_speech" : mapping.result === "video" ? "videos"
+        : hasReferences ? "image_edits" : "images";
+      return {
+        model,
+        operation,
+        compile: async (resolve) => normalizeQflowHubRequest(mapping, await compileWireRequest(mapping, request, resolve)),
+      };
     },
     packageResult: (artifacts) => ({
       kind: "inline",

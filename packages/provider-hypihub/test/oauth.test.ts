@@ -52,3 +52,20 @@ test("a static QflowHub API key remains an ordinary non-refreshing credential", 
   assert.equal(await auth.token(), "static-api-key");
   assert.equal(auth.canRefresh(), false);
 });
+
+test("rejected refresh retains its public reason and request id without storing response credentials", async () => {
+  const auth = createQflowHubAuth({
+    credential: {
+      secret: encodeOAuth2Credential({ accessToken: "old", refreshToken: "secret-refresh", expiresAt: 1 }),
+      replace: async () => { throw new Error("Rejected refresh must not replace a credential"); },
+    }, baseUrl: "https://qflow.ai", requestTimeoutMs: 1_000,
+    fetch: async () => Response.json({ error: "invalid_grant", error_description: "Refresh grant expired",
+      access_token: "unexpected-secret", refresh_token: "unexpected-refresh" },
+    { status: 400, headers: { "x-request-id": "req-refresh" } }),
+  });
+  await assert.rejects(auth.token(), (error: Error) => {
+    assert.match(error.message, /HTTP 400; invalid_grant; POST https:\/\/qflow.ai\/oauth\/token; request=req-refresh: Refresh grant expired/u);
+    assert.doesNotMatch(error.message, /unexpected|secret-refresh/u);
+    return true;
+  });
+});

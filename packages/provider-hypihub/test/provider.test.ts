@@ -10,6 +10,7 @@ import { mimoSpeechEndpoints, sealMimoSpeechRequest } from "@qflow/mimo-speech";
 import { fishAudioSpeechEndpoints, sealFishAudioSpeechRequest } from "@qflow/fishaudio-speech";
 import { elevenLabsSpeechEndpoints, sealElevenLabsSpeechRequest } from "@qflow/elevenlabs-speech";
 import { generationTypes } from "@qflow/generation";
+import { gptImageEndpoints, sealGptImage2Request } from "@qflow/gpt-image";
 import { sealSeedanceRequest, seedanceEndpoints } from "@qflow/seedance";
 import { sealSpeechEvidenceAudio } from "@qflow/speech";
 import { speechEvidenceTypes } from "@qflow/speech-evidence";
@@ -588,6 +589,9 @@ test("QflowHub stops before paid submission when a reference upload fails", asyn
     requestTimeoutMs: 1_000,
     fetch: async (input, init) => {
       const url = String(input);
+      if (url.endsWith("/v1/models/bytedance%2Fseedance-2-mini")) {
+        return Response.json({ endpoints: ["videos"] });
+      }
       if (url.endsWith("/v1/files/uploads")) {
         return Response.json({
           upload_mode: "s3_multipart",
@@ -641,6 +645,7 @@ test("QflowHub stops before paid submission when a reference upload fails", asyn
   assert.equal(uploadAttempts, 2);
   assert.equal(cancelled, true);
   assert.equal(paidSubmissions, 0);
+  assert.match(outcome.status === "failed" ? outcome.failure.message : "", /request preparation failed.*generation not submitted/u);
   assert.doesNotMatch(outcome.status === "failed" ? outcome.failure.message : "", /must-not-leak/u);
 });
 
@@ -811,6 +816,117 @@ test("reference URL reuse includes its authored classification and forwards it t
   assert.deepEqual(seen, [{ personReference: true }, { personReference: false }, {}]);
 });
 
+test("generation and voice cloning check their exact catalogue operation before resolving references", async () => {
+  const resources = new MemoryResourceStore();
+  const image = await resources.put(new Uint8Array([1, 2, 3]), "image/png");
+  const voice = await resources.put(wav(100), "audio/wav");
+  const cases = [
+    {
+      endpoint: seedanceEndpoints.mini!, model: "bytedance/seedance-2-mini", operation: "videos", path: "/videos",
+      constraints: sealSeedanceRequest("seedance-2-mini", {
+        prompt: ["A presenter speaks."], referenceImage: [{ role: "image", artifact: image }],
+        resolution: ["720p"], aspectRatio: ["9:16"], duration: [5], generateAudio: [true], webSearch: [false],
+      }),
+      references: true,
+    },
+    {
+      endpoint: gptImageEndpoints.image!, model: "gpt-image-2-image-to-image", operation: "image_edits", path: "/images/edits",
+      constraints: sealGptImage2Request({ prompt: ["Edit this portrait."], aspectRatio: ["1:1"], resolution: ["1K"],
+        images: [{ role: "image", artifact: image }],
+      }),
+      references: true,
+    },
+    {
+      endpoint: gptImageEndpoints.image!, model: "gpt-image-2-text-to-image", operation: "images", path: "/images/generations",
+      constraints: sealGptImage2Request({ prompt: ["A portrait."], aspectRatio: ["1:1"], resolution: ["1K"] }),
+      references: false,
+    },
+    {
+      endpoint: mimoSpeechEndpoints.voiceClone, model: "mimo-v2.5-tts-voiceclone", operation: "audio_speech", path: "/audio/speech",
+      constraints: sealMimoSpeechRequest("mimo-v2.5-tts-voiceclone", {
+        text: ["Continue speaking."], voiceReference: [{ role: "audio", artifact: voice }],
+      }),
+      references: true,
+    },
+  ];
+  for (const item of cases) for (const availability of ["missing", "different-operation", "undeclared", "unknown", "available"] as const) {
+    const events: string[] = [];
+    const progress: string[] = [];
+    const registry = new EndpointRegistry();
+    await createQflowHubProvider({
+      publicAssetUrl: async (artifact) => {
+        events.push("reference");
+        return `https://media.test/${artifact.resource}`;
+      },
+      fetch: async (input, init) => {
+        const url = new URL(String(input));
+        if (url.pathname === `/v1/models/${encodeURIComponent(item.model)}`) {
+          events.push("catalogue");
+          if (availability === "missing") return Response.json({ error: { code: "model_not_found", message: "No route for this account." } }, {
+            status: 404, headers: { "x-request-id": "catalogue-request" },
+          });
+          if (availability === "unknown") throw new Error("Connection closed before catalogue response");
+          if (availability === "undeclared") return Response.json({ id: item.model });
+          return Response.json({ endpoints: availability === "different-operation" ? ["transcriptions"] : [item.operation] });
+        }
+        assert.equal(url.pathname, `/v1${item.path}`);
+        events.push("submit");
+        const body = JSON.parse(String(init?.body));
+        assert.equal(body.model, item.model);
+        if (item.operation === "image_edits") assert.equal(body.reference_images.length, 1);
+        if (item.operation === "images") assert.equal(body.reference_images, undefined);
+        if (item.operation === "audio_speech") return new Response(new Uint8Array(wav(100)), { headers: { "content-type": "audio/wav" } });
+        return Response.json({ id: "selected-job", status: "queued" });
+      },
+    }).install(registry);
+    const request: Need = {
+      id: "need:catalogue", capability: item.endpoint.capability, returns: item.endpoint.returns,
+      constraints: item.constraints as unknown as CanonicalValue, result: "result:catalogue",
+    };
+    const selected = registry.resolve(request);
+    assert.equal(selected.status, "resolved");
+    const context = {
+      command: { kind: "fulfill-need" as const, id: "command:catalogue", need: request }, need: request, resources,
+      credentials: { apiKey: { secret: "test-key" } }, operation: "operation:catalogue",
+      reportProgress: async (value: { readonly phase?: string }) => { progress.push(value.phase!); },
+    };
+    let failed: { code?: string; message: string } | undefined;
+    if (selected.registration.kind === "asynchronous") {
+      const outcome = await selected.registration.endpoint.start(context);
+      if (outcome.status === "failed") failed = outcome.failure;
+      else assert.equal(outcome.status, "pending");
+    } else {
+      assert.equal(selected.registration.kind, "immediate");
+      try { await selected.registration.handler(context); }
+      catch (error) { failed = error as Error & { code?: string }; }
+    }
+    if (availability === "available") {
+      assert.equal(failed, undefined);
+      assert.deepEqual(events, item.references ? ["catalogue", "reference", "submit"] : ["catalogue", "submit"]);
+      assert.match(progress.at(-1)!, /Submitting QflowHub request/u);
+    } else {
+      assert.ok(failed);
+      assert.deepEqual(events, ["catalogue"], "neither a reference nor another model is tried");
+      assert.match(failed.message, /model catalogue check failed.*references uploaded=0; generation not submitted/u);
+      assert.ok(failed.message.includes(`model=${item.model}; operation=${item.operation}`));
+      if (availability === "missing") {
+        assert.equal(failed.code, "model_not_found");
+        assert.match(failed.message, /HTTP 404.*request=catalogue-request.*No route for this account/u);
+      } else if (availability === "different-operation") {
+        assert.match(failed.message, /does not list operation.*listed operations: transcriptions/u);
+      } else if (availability === "undeclared") {
+        assert.match(failed.message, /returned no valid operation list.*is unknown/u);
+        assert.doesNotMatch(failed.message, /does not list operation|model_not_found/u);
+      } else {
+        assert.match(failed.message, /Connection closed before catalogue response/u);
+        assert.doesNotMatch(failed.message, /model_not_found/u);
+      }
+      assert.equal(progress.length, 1);
+      assert.match(progress[0]!, /Reading QflowHub model catalogue/u);
+    }
+  }
+});
+
 test("an unavailable model reports availability without prescribing another login", async () => {
   const request = need(sealSeedanceRequest("seedance-2-mini", {
     prompt: ["A presenter speaks."], resolution: ["720p"], aspectRatio: ["9:16"],
@@ -827,6 +943,105 @@ test("an unavailable model reports availability without prescribing another logi
   assert.match(outcome.failure.message, /404.*model_not_found/u);
   assert.doesNotMatch(outcome.failure.message, /sign in|auth login/iu);
 });
+
+test("HTTP evidence keeps model, request id and the complete public reason without inferring account action", async () => {
+  const request = need(sealSeedanceRequest("seedance-2-mini", {
+    prompt: ["A presenter speaks."], resolution: ["720p"], aspectRatio: ["9:16"],
+    duration: [5], generateAudio: [true], webSearch: [false],
+  }) as unknown as CanonicalValue);
+  for (const [status, code] of [[404, "model_not_found"], [401, "account_disabled"], [402, "insufficient_credits"]] as const) {
+    let calls = 0;
+    const reason = `A detailed public reason. ${"detail ".repeat(70)}End of reason.`;
+    const endpoint = await endpointFor(request, async (url) => {
+      calls++;
+      if (String(url).includes("/models/")) return Response.json({ endpoints: ["videos"] });
+      return Response.json({ error: { code, message: reason }, internal: "not-public-evidence" }, {
+        status, headers: { "x-request-id": "req-evidence" },
+      });
+    });
+    const outcome = await endpoint.start({
+      command: { kind: "fulfill-need", id: "command:evidence", need: request }, need: request,
+      resources: new MemoryResourceStore(), credentials: { apiKey: { secret: "private-key" } }, operation: "evidence",
+    });
+    assert.equal(calls, 2);
+    assert.equal(outcome.status, "failed");
+    if (outcome.status !== "failed") continue;
+    assert.equal(outcome.failure.code, code);
+    assert.match(outcome.failure.message, new RegExp(`HTTP ${status}`));
+    assert.match(outcome.failure.message, /POST https:\/\/qflow.ai\/v1\/videos; model=bytedance\/seedance-2-mini; request=req-evidence/u);
+    assert.ok(outcome.failure.message.endsWith(reason));
+    assert.doesNotMatch(outcome.failure.message, /auth login|Sign in|private-key|not-public-evidence/u);
+  }
+});
+
+test("terminal jobs preserve service error codes and receipts on both submission and polling", async () => {
+  const request = need(sealSeedanceRequest("seedance-2-mini", {
+    prompt: ["A presenter speaks."], resolution: ["720p"], aspectRatio: ["9:16"],
+    duration: [5], generateAudio: [true], webSearch: [false],
+  }) as unknown as CanonicalValue);
+  for (const phase of ["start", "poll"] as const) {
+    const endpoint = await endpointFor(request, async (url) => String(url).includes("/models/")
+      ? Response.json({ endpoints: ["videos"] })
+      : Response.json({ id: "job-rejected", status: "failed", model: "bytedance/seedance-2-mini",
+        error_code: "upstream_rejected", error: "Reference could not be processed" }));
+    const context = {
+      command: { kind: "fulfill-need", id: "command:job", need: request } as const, need: request,
+      resources: new MemoryResourceStore(), credentials: { apiKey: { secret: "test-key" } }, operation: "job",
+    };
+    const outcome = phase === "start" ? await endpoint.start(context) : await endpoint.poll({ ...context,
+      handle: { contract: "qflow.qflowhub-operation@1", jobId: "job-rejected", startedAt: Date.now(),
+        route: `${request.capability.module.name}@${request.capability.module.version}#${request.capability.name}` },
+    });
+    assert.equal(outcome.status, "failed");
+    if (outcome.status !== "failed") continue;
+    assert.equal(outcome.failure.code, "upstream_rejected");
+    assert.deepEqual(outcome.receipt, { id: "job-rejected" });
+    assert.match(outcome.failure.message, /job-rejected failed; upstream_rejected; model=bytedance\/seedance-2-mini: Reference could not be processed/u);
+  }
+});
+
+for (const kind of ["pricing", "speech"] as const) {
+  test(`${kind} failures retain service evidence across their throwing boundary`, async () => {
+    const request: Need = kind === "pricing" ? need(sealSeedanceRequest("seedance-2-mini", {
+      prompt: ["A presenter."], resolution: ["720p"], aspectRatio: ["9:16"],
+      duration: [5], generateAudio: [true], webSearch: [false],
+    }) as unknown as CanonicalValue) : {
+      id: "need:voice", ...mimoSpeechEndpoints.voiceDesign,
+      constraints: sealMimoSpeechRequest("mimo-v2.5-tts-voicedesign", {
+        text: ["A short sample."], voiceDescription: ["Warm and confident."],
+      }) as unknown as CanonicalValue, result: "voice",
+    };
+    let calls = 0;
+    const provider = createQflowHubProvider({ fetch: async (url) => {
+      calls++;
+      if (String(url).includes("/models/")) return Response.json({ endpoints: ["audio_speech"] });
+      return Response.json({ error: { code: "no_available_provider", message: "No route is ready" } }, {
+        status: 503, headers: { "x-request-id": `req-${kind}` },
+      });
+    } });
+    const credentials = { apiKey: { secret: "private-credential" } };
+    const invoke = async () => {
+      if (kind === "pricing") return await provider.readPricing!({ request, credentials: async () => credentials });
+      const registry = new EndpointRegistry();
+      await provider.install(registry);
+      const selected = registry.resolve(request);
+      assert.equal(selected.status, "resolved");
+      assert.equal(selected.registration.kind, "immediate");
+      return await selected.registration.handler({ need: request, credentials, resources: new MemoryResourceStore(),
+        command: { kind: "fulfill-need", id: "voice", need: request },
+      });
+    };
+    await assert.rejects(invoke, (error: Error) => {
+      assert.match(error.message, /HTTP 503; no_available_provider/u);
+      assert.ok(error.message.includes(`request=req-${kind}`));
+      assert.ok(error.message.includes(kind === "pricing" ? "model=bytedance/seedance-2-mini" : "model=mimo-v2.5-tts-voicedesign"));
+      assert.ok(error.message.endsWith("No route is ready"));
+      assert.doesNotMatch(error.message, /private-credential|auth login/u);
+      return true;
+    });
+    assert.equal(calls, kind === "pricing" ? 1 : 2);
+  });
+}
 
 for (const mode of ['success', 'error', 'body-timeout'] as const) {
   test(`hosted transcription keeps its receipt on ${mode} without resubmitting`, async () => {

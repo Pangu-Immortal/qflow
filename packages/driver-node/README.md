@@ -17,6 +17,11 @@ Build. Credentials are resolved only for slots declared by the selected endpoint
 of the same credential are coalesced. Cancellation is best effort and never rolls back completed work.
 A failed action retains its receipt and error for the Result; the Driver does not retry or reconcile it.
 
+Immediate calls and asynchronous submit, poll and collect actions receive the same progress and
+diagnostic callbacks. Progress reaches the caller while the action is running; changes of phase also
+enter the execution log. The Endpoint supplies the content, and the Driver forwards it with the
+selected Endpoint identity without interpreting service-specific phases or treating progress as a receipt.
+
 `acceptOperation()` validates an already received value without making a remote call. Runtime can
 retain such a sibling result when another Need fails, without polling unfinished jobs to completion.
 The Driver validates returned values before offering a command result to Core. It does not load

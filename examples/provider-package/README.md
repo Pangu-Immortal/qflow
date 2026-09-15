@@ -23,6 +23,18 @@ The example service uses Bearer authentication for these API operations:
 | Read rates | `GET /rates?model=gpt-image-2` → service-owned fields and a `description` stating rates, units and conditions |
 | Collect result | GET the signed image URL without the account key |
 
+HTTP failures expose a public `{ "error": { "code": "…", "message": "…" } }` and optional
+`X-Request-Id`; failed tasks carry the same `error` object. The Provider preserves these fields,
+the failed API operation or task ID, and omits unrelated response fields and signed URLs.
+This example schema is not a universal service-error format: adapt the interpretation to the chosen API.
+
+Known request limits and model identity are resolved before the media URL resolver can upload.
+This service exposes no model-catalogue endpoint, so the example invents none. Services with a
+documented query can use it before transferring references. Request preparation, submission and
+collection report live activity through `reportProgress`; queued/running task responses supply
+pending progress between calls. The Provider follows the selected mapping without substituting
+another model or account after a failure.
+
 `start` records the received task ID through `checkpoint` before returning it. Runtime owns polling,
 capacity and durable operation state. `poll` returns `ready` for completed remote work; `collect`
 stores the image through `context.resources` and returns the Model's declared value. The Provider
