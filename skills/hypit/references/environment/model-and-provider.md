@@ -1,8 +1,54 @@
 # Models, services, and Keys
 
-Read this when the user brings a Key, chooses another service, or needs a model that is not yet
-available. Connecting a service through a project package is ordinary production work, like making
-a project component. Qflow supplies the extension interfaces; the production selects implementations.
+Read this when explaining what a production needs beyond the installed tools, when the user brings
+a Key or chooses another service, or when a model is not yet available. Connecting a service through
+a project package is ordinary production work, like making a project component. Qflow supplies the
+extension interfaces; the production selects implementations.
+
+## Separate the service choice from the way it is connected
+
+**QflowHub names a service. BYOK (bring your own key) describes using an account the user supplies.**
+They answer different questions. A QflowHub API key still connects QflowHub; another service's key
+connects that service. OAuth and API keys are ways to authorize a connection, not different model
+capabilities. There is no project-wide BYOK mode: the Profile can select different services for
+different capabilities.
+
+| Execution route | Account and charges | Connection work |
+| --- | --- | --- |
+| QflowHub, the recommended integrated hosted route | The user's QflowHub account and current rates | Use the bundled QflowHub Provider with OAuth or a QflowHub API key |
+| A service the user brings | That service's account and rates | Use a compatible installed Provider, or implement the needed API in a project Provider |
+| A chosen local model or service | Local preparation and compute; any model/service terms still apply | Use an appropriate local Provider, or implement the chosen local process |
+
+Choose the useful execution route for the actual capability, then connect its account and select its
+Endpoint. A missing credential, a missing API adapter and an unavailable model are different pieces
+of work. A key can authorize an implemented API connection; it does not implement that connection.
+QflowHub's maintained integration reduces connection work. Project Providers let the Agent connect
+the services the user already has without waiting for official support.
+
+## Explain the connection in the user's terms
+
+Relate the service to the result it enables: transcribing the reference, generating the requested
+performance, or supplying another piece of material. Explain what already works and what this
+connection adds. Use the information already supplied to make a recommendation; ask only for facts
+or choices that remain unresolved. Describe a concrete outcome such as generating the presenter's
+speaking footage, the useful service, and the remaining account or setup choice. The Agent owns API
+research, package implementation and Profile wiring; the user need only supply missing service
+information, secure access and consequential choices. The authoring vocabulary below helps you
+implement that decision.
+
+Qflow supplies the open-source framework and tools. Access to the Coding Agent and usage of image,
+video, speech or other model services belong to their respective accounts and terms. Installing
+Qflow adds no model credits. Check the access actually available to this Agent and project; a
+subscription name alone does not establish which generation services it can invoke. Explain costs
+from the selected route and actual work. Reusing an existing Output avoids
+regenerating that material; new material still needs whatever execution and rates its Provider uses.
+
+When the user brings a key, establish its issuing service and relevant API documentation or address
+from the supplied information. QflowHub's website
+creates credentials for QflowHub, not a place to import another service's Key. QflowHub itself can be
+connected through its supported OAuth or API-key flow. Use the selected Endpoint's
+[credential setup](profile.md#put-secrets-behind-credential-references) to store the secret and
+connect its reference. Payment methods and account offers come from that service's current information.
 
 ## Know which fact is changing
 
@@ -20,9 +66,11 @@ implement the same capability.
 | Use the same model through a different API | Reuse an installed suitable Provider, or write a project Provider |
 | Use a model not yet described | Add its Model definition and an implementation of its capability |
 
-A Key alone does not identify its service protocol. Establish the service and relevant API docs from
-the user's information, known configuration or a concise question. Similar model labels do not prove
-that uploads, input parameters, task handling or results match. For an existing exact capability,
+Similar model labels do not prove that uploads, input parameters, task handling or results match.
+An "OpenAI-compatible" chat endpoint does not establish compatibility with the image, video,
+reference-upload or asynchronous-job APIs this production needs. Changing `baseUrl` is appropriate
+when that Provider's actual required protocol matches the selected service.
+For an existing exact capability,
 map the request in the Provider; keep the Model and creative prompt unchanged. Resolve a service's
 unsupported combination explicitly, such as requesting 2K where it only offers 1K.
 
@@ -37,14 +85,12 @@ inputs. A service can add a model before the installed Distribution describes it
 Model and Provider extension or a release containing them. A missing model or unsupported parameter
 is a capability question, while an expired credential is an account question.
 
-A user's existing service or local deployment remains a normal choice. BYOK means using that chosen
-account through a Provider; it does not require an officially bundled adapter. Partner introductions
+A user's existing service or local deployment remains a normal choice. Its Provider does not need
+to be officially bundled. Partner introductions
 are maintained on the [service-partner page](https://github.com/qflow-ai/qflow/blob/main/docs/guide/service-partners.md).
 A partner is an independent service with its own
 account, pricing and API, and uses the same project-extension path as any other external service.
 
-Service choice and authentication method are different questions: QflowHub itself accepts OAuth or
-an API key. In a BYOK request, establish which service the user's key belongs to and what it supports.
 Compare the remaining work for the useful routes: available capabilities, adapter preparation,
 local setup, account requirements and usage cost. A ready suitable connection can carry the work
 forward. A new project Provider makes another service possible, but its API mapping and validation
@@ -69,10 +115,15 @@ Follow one concrete request through the service:
    media-reference roles in its request. A genuinely new model needs a Model definition as well.
 2. Map those inputs to the API's fields and media transport. Declare `supports` for real service
    limits, considering authored inputs that are not yet produced. Support checks and pricing
-   receive the request, not a graph to reverse-engineer.
+   receive the request, not a graph to reverse-engineer. Determine what the request already tells
+   you before uploading resources; a service's own capability query, where available, can add
+   account-specific evidence without selecting a different request.
 3. Resolve only the declared CredentialRefs. Return immediate results directly, or implement
    `start`, `poll` and, where useful, `collect` for acknowledged remote tasks. Record the received
    task ID promptly; let Runtime drive the lifecycle and retain it through interruptions.
+   Use `reportProgress` for work inside a call, including reference preparation and collection;
+   returned pending progress describes the acknowledged task between calls. Preserve the service's
+   public failure reason and what was actually submitted, so the next decision rests on evidence.
 4. Admit returned media through `context.resources` and return the declared result type. Declare
    capacity for the actual account/deployment. Supply the pricing page or `readPricing` material
    with units and conditions, without inventing a bill for unknown future inputs.

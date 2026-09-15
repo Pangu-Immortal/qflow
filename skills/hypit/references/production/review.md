@@ -39,12 +39,25 @@ style and behavior. The actual production image establishes its framing and colo
 video shows how moving faces and gestures interact with Caption and MG. Inspect those interactions
 with the material that will appear in the deliverable.
 
-## Separate legality from judgment
+## Show what the current work establishes
 
 `qflow check` can establish that the Source and graph are legal. Studio can establish what the
 configured composition displays. A completed Build can establish what the selected Endpoints actually
 produced. Creative review asks a different question: does this composition perform the
 Treatment and the useful relationships learned from the reference?
+
+Present intermediate work with its purpose, what it already realizes and the important work still
+needed for the Brief. A storyboard can settle framing; the produced performance establishes how
+a person actually moves and speaks. A working preview can support either discussion. Make its
+current scope clear so the user can give useful direction, and continue the remaining work within
+the agreed commission. [Environment selection](../environment/profile.md) owns unresolved service choices.
+
+Read missing behavior through its material and presentation together. For intended speech, listen to
+the selected Film: an available audio file establishes material, while admission and the chosen
+Sound or Audio contribution establish whether that material reaches the Film. For intended physical
+action, examine the footage itself as well as the viewport animation. Use
+[media admission](media.md), [sound presentation](sound.md) and [Film assembly](rendering.md)
+to complete those relationships. Silence or stillness can equally be intentional when they serve the Brief.
 
 Look at the complete Film at its intended delivery size as well as the components inside it. A component that looks
 attractive in isolation may still cover a face, compete with a Hook, arrive on the wrong word, or

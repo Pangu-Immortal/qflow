@@ -22,6 +22,15 @@ Open your video project in the Agent. The Skill supplies production knowledge; t
 supplies the executable tools. The Agent checks for an existing installation and helps prepare any
 missing tools. You do not need to clone the Qflow repository.
 
+Qflow's framework is free to use; your Coding Agent and any model services use their own accounts
+and pricing. Installing the Skill or executable does not include generation credits. If you bring
+an API key, tell the Agent which service issued it and share its API documentation.
+
+For an existing installation, ask the Agent to check `qflow version --check` and the
+[release notes](https://github.com/qflow-ai/qflow/releases). Older versions can use
+`qflow --version` and `npm view @qflow/qflow@latest version`. The executable and Skill have separate
+update channels; the Agent can update the relevant installation while preserving your project.
+
 ## 2. Bring a reference and explain what should change
 
 <video controls playsInline preload="metadata" width="100%" src="https://storage.googleapis.com/qflow-public-assets/quickstart/2026-09-10/clone_a_video_with_your_product.mp4"></video>

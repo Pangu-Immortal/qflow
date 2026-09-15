@@ -13,6 +13,13 @@ connect through packages owned by the production or their authors. The Agent can
 service through the public SDK, just as it can create a visual component for a video.
 [Service partners](./service-partners.md) introduces independent partners through that same path.
 
+QflowHub is the recommended integrated hosted service. **BYOK** means bringing an account's own
+API key: the key connects to the service that issued it, through a compatible Provider. Tell the
+Agent which service you already use and provide its API documentation; the Agent can handle the
+connection and project package. A key authorizes requests but does not implement that API. One
+project can use different services for different capabilities, with each service's own account
+and charges.
+
 ## Choose the change that matches the need
 
 | You want to… | Change |

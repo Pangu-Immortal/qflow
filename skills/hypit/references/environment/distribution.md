@@ -16,10 +16,12 @@ An available launcher can identify its version and physical locations:
 
 ```bash
 qflow --version
+qflow version
 qflow --help
 qflow paths
 ```
 
+`version` identifies the executing Distribution and launcher without opening a project or Runtime.
 `paths` includes the active Distribution, project, and host locations. A missing Runtime Profile is
 a separate setup question from whether the executable is installed.
 
@@ -79,6 +81,48 @@ executable Distribution. After installation or an update, use the selected launc
 The installed Distribution is the authority for exact Surface syntax. If a package or Surface named
 by the Skill is absent from `qflow vocabulary`, check package selection and the installed release.
 Explain whether the work needs an available package, a supported alternative or a Distribution update.
+
+## Check and update the relevant installation
+
+Use the installed version and release information to understand available capabilities or a reported
+fix. The active launcher above identifies what is running. Check the latest published executable
+without installing anything:
+
+```bash
+qflow version --check
+```
+
+This reads npm's public registry and prints the source and release-notes link. Use `--registry <url>`
+with `--check` for a chosen mirror, or `--json` for structured output. A different version can mean
+a newer local checkout or a stale mirror; a failed query leaves the remote version unknown. Neither
+observation changes the project or starts an upgrade. Ordinary `qflow version` and `--version` stay
+local. For an older executable without this command, the existing package-manager query still works:
+
+```bash
+npm view @qflow/qflow@latest version
+```
+
+`npm view` reads the configured npm registry; a stale mirror or failed query leaves the upstream version
+uncertain. The [Qflow releases](https://github.com/qflow-ai/qflow/releases) explain published changes.
+Tell the user which change matters to this work and which installation needs it. Updating follows
+the selected installation method above, respecting the project's chosen version and lockfile.
+
+An installed Skill has its own source and installation scope. For the
+[skills installer](https://github.com/vercel-labs/skills#skills-update), inspect its current help and
+installed records (`npx skills list -g` for the global scope). When updating a globally installed
+Qflow Skill, use a targeted update:
+
+```bash
+npx skills update qflow -g
+```
+
+This changes that installed Skill; it is not a read-only check. Use the scope and
+options supported by the actual installer. A different installer or explicitly selected checkout
+uses its own update method. Updating Qflow need not update unrelated skills or project dependencies.
+Read the updated Skill from the installation the Agent uses; an already loaded instruction can
+still reflect its earlier contents. Report what was updated and what remains unchanged or unknown.
+
+## Project changes and execution code
 
 A contributor checkout can execute its own Distribution after its documented workspace setup, but it
 is a development arrangement, not an assumed location for ordinary production. Use one only when the

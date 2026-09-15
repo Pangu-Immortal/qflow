@@ -14,8 +14,11 @@ identify the work being commissioned and the material connected to it.
 Watch the reference, inspect its frames, and read the words in time. Discover why the work holds
 attention, and make the aesthetic and technical choices that bring the new piece to life.
 
-Take responsibility for creative and technical execution. Bring the user into meaningful choices
-about their goal, private facts, connecting services, substantial machine preparation and spending.
+Take responsibility for realizing the requested viewing experience. When the available material or
+services realize only part of it, explain what the current work demonstrates, what remains missing,
+and how to complete it. Let that gap guide the next useful action while keeping the commissioned
+result in view. Bring the user into meaningful choices about their goal, private facts, connecting
+services, substantial machine preparation and spending.
 Carry their settled choices into the work and project notes. Image, video and audio models produce
 your directed material; Author Packages express the composition; the Runtime runs the production.
 
@@ -98,8 +101,17 @@ documentation supply the exact Surfaces, request wording, inputs and limits.
 ## Prepare for the work at hand
 
 Start with the requested work and the next useful result. Establish the reference and intended
-change, locate the relevant project and tools, and explain what can proceed now. For a spoken
-reference, WhisperX's transcript and word times connect speech with picture changes. Before
+change, locate the relevant project and tools, and explain what can proceed now. Installing the Skill
+and [executable](references/environment/distribution.md) provides authoring tools; it supplies no
+generation account or model credits.
+As the intended material becomes clear, explain the capabilities it needs and the useful service
+choices in the user's terms. QflowHub is the recommended integrated hosted service; a user's own API key
+connects the service that issued it, through an installed or project-written Provider. Service choice
+and credential setup are distinct. When connecting a service or explaining a missing capability,
+read [Models and Providers](references/environment/model-and-provider.md) for the decision, connection
+work and public SDK. Carry an already chosen service forward at the capabilities it can fulfill.
+
+For a spoken reference, WhisperX's transcript and word times connect speech with picture changes. Before
 preparing a new local inference service, explain its remaining setup effort alongside hosted
 WhisperX; available weights can reduce that effort without deciding the user's service choice. Use
 [environment selection](references/environment/profile.md#choose-the-practical-capability-path-with-the-user)
@@ -107,11 +119,13 @@ to recommend a practical route, including QflowHub's integrated hosted transcrip
 Carry working, chosen services forward. Prepare the chosen path and reconsider it when actual
 progress changes its usefulness. A Profile-wide readiness report describes configuration; the
 current production determines which findings matter next.
+Judge preparation by what it enables for this work. When downloads or model loading dominate,
+use [local preparation and network routes](references/environment/local-tools.md#make-network-preparation-practical)
+to read the evidence, assess caches or mirrors, and explain the useful next move. Settled choices
+support continued work; new facts make changed recommendations worth discussing.
 
-As the material plan becomes concrete, connect the required generation capabilities through the
-user's chosen accounts. [Models and Providers](references/environment/model-and-provider.md)
-explains BYOK and project-owned extensions. Official local and QflowHub Providers are starting
-implementations; new services can be connected through the same public package interfaces.
+Connect the required generation capabilities through the user's chosen accounts as the material
+plan becomes concrete. Explain the remaining preparation and cost alongside what can proceed now.
 Reference interpretation and component work can proceed alongside setup they do not depend on.
 
 ## Understand and adapt
@@ -212,9 +226,9 @@ practical, revisit that choice and carry the improvement into the work and its n
 - **Project ownership.** Preserve unrelated Source, Recipe, Run, assets, and project-package work.
   Make production changes at their owning source; keep Result media intact. New reusable behavior
   belongs in a project component, without patching the installed Distribution for one video.
-- **Done means watched.** Watch the actual deliverable and judge it against the Brief, Treatment,
-  and relevant reference relationships. Judge its clarity, visual hierarchy, timing, character,
-  and suitability for publishing. Browser review can settle the composition before export; when
+- **Done means watched.** Watch and listen to the actual deliverable and judge it against the Brief,
+  Treatment, and relevant reference relationships. Judge its performance, sound, clarity, visual
+  hierarchy, timing, character, and suitability for publishing. Browser review can settle the composition before export; when
   delivering an encoded video, inspect that file too. Explain the important choices and limitations.
   Alongside the finished video, show the editable production in
   [Studio](references/production/studio.md#show-the-finished-work) when it is readily accessible
@@ -226,9 +240,9 @@ practical, revisit that choice and carry the improvement into the work and its n
 | --- | --- |
 | how to express a work through materials, components and authored relationships, and how execution realizes it | `references/production/system.md` |
 | organizing a picture or transition: useful component boundaries, behavior, semantic events and author controls | `references/production/component-design.md` |
-| locating an existing `qflow` installation, or installing or updating the executable after Skill setup | `references/environment/distribution.md` |
+| locating the active `qflow`, checking release information, or updating the executable and Skill through their own channels | `references/environment/distribution.md` |
 | what this machine can do, credentials, Model/Provider/Endpoint choices or shared capacity | `references/environment/profile.md` |
-| a new model, another service or Key for an existing model, or a project Model/Provider extension | `references/environment/model-and-provider.md` |
+| explaining model-service costs, using QflowHub or the user's own API, or making a project Model/Provider extension | `references/environment/model-and-provider.md` |
 | assessing local WhisperX preparation, installing local tools, or repairing a Managed Program | `references/environment/local-tools.md` |
 | understanding a reference video or link | `references/creation/reference-video.md` |
 | defining the target: what the user asked for, and what the new piece will be | `references/creation/brief.md` |

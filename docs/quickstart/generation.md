@@ -58,7 +58,7 @@ qflow measure main.svml --segment hook --language en --pace normal --rounding ro
 ```
 
 ```svml
-<seedance:ReferenceVideo id="hook-take" model="mini" prompt={hook-prompt} duration="7">
+<seedance:ReferenceVideo id="hook-take" model="mini" prompt={hook-prompt} duration="7" generate-audio="true">
   …
 </seedance:ReferenceVideo>
 ```
@@ -103,7 +103,7 @@ model-selected duration or an integer from 4 through 30 seconds:
 
 ```svml
 <seedance:ReferenceVideo id="long-take" model="2.5"
-  prompt={long-direction} duration="30" resolution="720p">
+  prompt={long-direction} duration="30" resolution="720p" generate-audio="true">
   <seedance:Reference image={presenter-reference} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>
