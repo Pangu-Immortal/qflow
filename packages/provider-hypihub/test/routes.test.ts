@@ -33,7 +33,7 @@ test("QflowHub GPT image requests use canonical edit references and the authored
       images: [{ role: "image", artifact: image }],
     },
   }, resolve);
-  assert.equal(result.model, "gpt-image-2-image-to-image");
+  assert.equal(result.model, "gpt-image-2");
   assert.deepEqual(result.input, {
     prompt: "edit",
     aspect_ratio: "1:1",
@@ -90,7 +90,7 @@ test("QflowHub image-to-video requests preserve Qflow's first-frame semantics", 
       firstFrame: [{ role: "image", artifact: image }],
     },
   }, resolve);
-  assert.equal(result.model, "minimax-h3/image-to-video");
+  assert.equal(result.model, "minimax-h3");
   assert.deepEqual(result.input, {
     prompt: "animate",
     seconds: 5,
@@ -132,7 +132,7 @@ test("QflowHub Seedance sends reference images through the public top-level fiel
       ],
     },
   }, resolve);
-  assert.equal(result.model, "bytedance/seedance-2");
+  assert.equal(result.model, "seedance-2");
   assert.deepEqual(result.input, {
     prompt: "animate",
     seconds: 5,
@@ -151,7 +151,7 @@ test("QflowHub MiniMax reference mode preserves the public image array", async (
     prompt: ["animate"], duration: [6], aspectRatio: ["16:9"],
     referenceImage: [{ role: "image", artifact: image }],
   } }, resolve);
-  assert.equal(result.model, "minimax-h3/reference-to-video");
+  assert.equal(result.model, "minimax-h3");
   assert.deepEqual(result.input, {
     prompt: "animate", seconds: 6, aspect_ratio: "16:9",
     resolution: "2k",
@@ -236,8 +236,7 @@ test("exact model identity survives reference mode and preview selection", async
   const preview = hypiHubRoutes.find((item) => item.capability.name === "grok-imagine-video-1.5-preview")!;
   for (const images of [[], [{ role: "image", artifact: image }]]) {
     const request = { ports: { prompt: ["A scene"], ...(images.length ? { images } : {}) } };
-    assert.equal((await compile(lite, request, resolve)).model,
-      images.length ? "seedream/5-lite-image-to-image" : "seedream/5-lite-text-to-image");
+    assert.equal((await compile(lite, request, resolve)).model, "seedream-5-lite");
     assert.equal((await compile(preview, request, resolve)).model, "grok-imagine-video-1.5-preview");
   }
 });
