@@ -1,9 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { GenerationArtifactUrlResolver } from "@qflow/generation";
 import type { EndpointSupport } from "@qflow/endpoint-kit";
 import type { CanonicalValue } from "@qflow/protocol";
 
 import { hypiHubRoutes } from "../src/routes.js";
+import type { QflowHubRoute } from "../src/routes.js";
+
+async function compile(route: QflowHubRoute, constraints: CanonicalValue, resolve: GenerationArtifactUrlResolver) {
+  return await route.prepare(constraints).compile(resolve);
+}
 
 const image = {
   kind: "blob" as const,
@@ -18,7 +24,7 @@ const resolveAudio = async () => "data:audio/wav;base64,AQID";
 test("QflowHub GPT image requests use canonical edit references and the authored resolution tier", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "gpt-image-2");
   assert.ok(route);
-  const result = await route.compile({
+  const result = await compile(route, {
     ports: {
       prompt: ["edit"],
       aspectRatio: ["1:1"],
@@ -47,7 +53,7 @@ test("QflowHub GPT image requests use canonical edit references and the authored
     status: "unsupported",
     reason: "QflowHub GPT Image 2 accepts the background option only at 1K; omit it at 2K",
   });
-  await assert.rejects(route.compile(unsupported, resolve), /background option only at 1K/u);
+  await assert.rejects(compile(route, unsupported, resolve), /background option only at 1K/u);
 
   for (const constraints of [
     { ports: { prompt: ["portrait"], aspectRatio: ["5:4"], resolution: ["2K"] } },
@@ -77,7 +83,7 @@ test("QflowHub GPT image requests use canonical edit references and the authored
 test("QflowHub image-to-video requests preserve Qflow's first-frame semantics", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "minimax-h3");
   assert.ok(route);
-  const result = await route.compile({
+  const result = await compile(route, {
     ports: {
       prompt: ["animate"],
       duration: [5],
@@ -96,7 +102,7 @@ test("QflowHub image-to-video requests preserve Qflow's first-frame semantics", 
 test("QflowHub sends audio references through the public top-level field", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "minimax-h3");
   assert.ok(route);
-  const result = await route.compile({
+  const result = await compile(route, {
     ports: {
       prompt: ["animate"],
       duration: [5],
@@ -112,7 +118,7 @@ test("QflowHub sends audio references through the public top-level field", async
 test("QflowHub Seedance sends reference images through the public top-level field", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "seedance-2");
   assert.ok(route);
-  const result = await route.compile({
+  const result = await compile(route, {
     ports: {
       prompt: ["animate"],
       duration: [5],
@@ -141,7 +147,7 @@ test("QflowHub Seedance sends reference images through the public top-level fiel
 test("QflowHub MiniMax reference mode preserves the public image array", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "minimax-h3");
   assert.ok(route);
-  const result = await route.compile({ ports: {
+  const result = await compile(route, { ports: {
     prompt: ["animate"], duration: [6], aspectRatio: ["16:9"],
     referenceImage: [{ role: "image", artifact: image }],
   } }, resolve);
@@ -159,7 +165,7 @@ test("QflowHub preserves reference-video roles for one or several videos", async
   const video = { ...image, mediaType: "video/mp4" };
   const resolveVideo = async (artifact: typeof video) => `https://qflow.ai/files/${artifact.resource.slice(-1)}.mp4`;
 
-  const single = await route.compile({ ports: {
+  const single = await compile(route, { ports: {
     prompt: ["animate"], duration: [6],
     referenceVideo: [{ role: "video", artifact: video }],
   } }, resolveVideo);
@@ -168,7 +174,7 @@ test("QflowHub preserves reference-video roles for one or several videos", async
     reference_videos: ["https://qflow.ai/files/1.mp4"],
   });
 
-  const multiple = await route.compile({ ports: {
+  const multiple = await compile(route, { ports: {
     prompt: ["animate"], duration: [6],
     referenceVideo: [
       { role: "video", artifact: video },
@@ -184,7 +190,7 @@ test("QflowHub preserves reference-video roles for one or several videos", async
 test("QflowHub MiMo Speech mappings use the public audio speech fields", async () => {
   const voiceDesign = hypiHubRoutes.find((item) => item.capability.name === "mimo-v2.5-tts-voicedesign");
   assert.ok(voiceDesign);
-  const result = await voiceDesign.compile({
+  const result = await compile(voiceDesign, {
     ports: { text: ["hello"], voiceDescription: ["warm and calm"] },
   }, resolve);
   assert.equal(result.model, "mimo-v2.5-tts-voicedesign");
@@ -192,7 +198,7 @@ test("QflowHub MiMo Speech mappings use the public audio speech fields", async (
 
   const voiceClone = hypiHubRoutes.find((item) => item.capability.name === "mimo-v2.5-tts-voiceclone");
   assert.ok(voiceClone);
-  const cloned = await voiceClone.compile({
+  const cloned = await compile(voiceClone, {
     ports: {
       text: ["hello again"],
       instruction: ["quiet and direct"],
@@ -213,7 +219,7 @@ test("Seedance person metadata reaches resource transport without changing video
     for (const flag of [true, false, undefined]) {
       const fields = flag === undefined ? {} : { personReference: flag };
       const seen: unknown[] = [];
-      const result = await route.compile({ ports: {
+      const result = await compile(route, { ports: {
         prompt: ["animate"], duration: [5],
         [port]: [{ role: port === "referenceVideo" ? "video" : "image", artifact: image, fields }],
       } }, async (_artifact, metadata) => { seen.push(metadata); return "https://media.test/ref"; });
@@ -230,8 +236,22 @@ test("exact model identity survives reference mode and preview selection", async
   const preview = hypiHubRoutes.find((item) => item.capability.name === "grok-imagine-video-1.5-preview")!;
   for (const images of [[], [{ role: "image", artifact: image }]]) {
     const request = { ports: { prompt: ["A scene"], ...(images.length ? { images } : {}) } };
-    assert.equal((await lite.compile(request, resolve)).model,
-      "seedream-5-lite");
-    assert.equal((await preview.compile(request, resolve)).model, "grok-imagine-video-1.5-preview");
+    assert.equal((await compile(lite, request, resolve)).model, "seedream-5-lite");
+    assert.equal((await compile(preview, request, resolve)).model, "grok-imagine-video-1.5-preview");
+  }
+});
+
+test("canonical image models keep generation and edit operations distinct", async () => {
+  for (const name of ["gpt-image-2", "seedream-5-lite", "nano-banana-2", "nano-banana-pro"]) {
+    const route = hypiHubRoutes.find((item) => item.capability.name === name)!;
+    for (const images of [[], [{ role: "image", artifact: image }]]) {
+      const prepared = route.prepare({ ports: { prompt: ["A scene"], images } });
+      assert.equal(prepared.model, name);
+      assert.equal(prepared.operation, images.length ? "image_edits" : "images");
+      const compiled = await prepared.compile(resolve);
+      assert.equal(compiled.model, name);
+      assert.deepEqual((compiled.input as Record<string, CanonicalValue>).reference_images,
+        images.length ? [{ url: "data:image/png;base64,AQID" }] : []);
+    }
   }
 });

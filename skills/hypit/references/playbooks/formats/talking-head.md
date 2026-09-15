@@ -3,6 +3,8 @@
 A compelling person speaks to the viewer. Their attitude carries the piece; Caption, evidence and MG
 help the viewer follow it. A ranking board is one possible companion, not a requirement of UGC.
 For that relationship, combine this page with [Ranking](ranking-listicle.md).
+When evolving demonstrations and MG carry much of the argument, use
+[Presenter-led visual explainers](presenter-led-explainer.md) for their relationship to that performance.
 
 ## One useful image can carry the whole performance
 

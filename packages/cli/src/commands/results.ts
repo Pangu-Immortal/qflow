@@ -13,6 +13,7 @@ import {
   projectPath,
 } from "../view.js";
 import type { OperationalWriter } from "./types.js";
+import { commandHint } from "../command-hint.js";
 
 export function isProjectResultCommand(args: CliCommand): args is ProjectResultCommand {
   return args.command === "builds" || args.command === "history" || args.command === "inspect"
@@ -120,7 +121,7 @@ export async function runProjectResultCommand(input: {
         ] : []),
       ], [
         ...(build.failure === undefined ? [] : [`Reason    ${build.failure}`]),
-        ...(build.executionLog === undefined ? [] : [`Execution log    qflow logs ${build.id}`]),
+        ...(build.executionLog === undefined ? [] : [`Execution log    ${commandHint(["logs", build.id], { projectRoot })}`]),
         ...(build.operations ?? []).map((operation) =>
           `${operation.endpoint}: ${operation.status}${operation.receipt === undefined ? "" : ` · task ${operation.receipt.id}`}`
           + (operation.failure === undefined ? "" : ` · ${operation.failure.code}: ${operation.failure.message}`)),

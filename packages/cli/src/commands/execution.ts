@@ -1,8 +1,11 @@
+import { resolve } from "node:path";
+
 import { readExecutionLog } from "@qflow/runtime";
 import type { BuildResultManifest, BuildResultRepository } from "@qflow/build-result";
 import type { NodeRuntimeHost } from "@qflow/runtime-host-node";
 
 import type { CliCommand, ExecutionCommand } from "../command.js";
+import { commandHint } from "../command-hint.js";
 import { activityObservationKey, buildProgressLines, buildProgressView, observeBuildView } from "../observation.js";
 import type { CliIo } from "../output.js";
 import type { CliRuntimeController } from "../runtime-port.js";
@@ -37,6 +40,7 @@ export function isExecutionCommand(args: CliCommand): args is ExecutionCommand {
 /** Inspect or control accepted Build work. Observation never owns execution. */
 export async function runExecutionCommand(input: {
   readonly args: ExecutionCommand;
+  readonly projectRoot: string;
   readonly runtimeProfile: string | undefined;
   readonly resolveProjectRuntime?: () => Promise<string | undefined>;
   readonly io: CliIo;
@@ -46,6 +50,10 @@ export async function runExecutionCommand(input: {
   readonly write: OperationalWriter;
 }): Promise<void> {
   const { args, runtimeProfile, io, runtimeHost, runtimeController, openProjectResults, write } = input;
+  const commandScope = {
+    projectRoot: input.projectRoot,
+    ...(runtimeProfile === undefined ? {} : { runtimeProfile: resolve(runtimeProfile) }),
+  };
   if (args.command === "logs") {
     const opened = await openProjectResults();
     let source: "runtime" | "result" | "unavailable" = "unavailable";
@@ -164,7 +172,7 @@ export async function runExecutionCommand(input: {
           controller.worker.status(),
         ]);
         const builds = activity.builds.slice(0, args.limit).map((item) => {
-          const status = buildStatusView({ id: item.id, runtime: item });
+          const status = buildStatusView({ id: item.id, runtime: item, commandScope });
           return {
             id: item.id,
             work: status.work,
@@ -219,23 +227,23 @@ export async function runExecutionCommand(input: {
       let result: BuildResultManifest | undefined;
       let resultReadError: string | undefined;
       let openedResults: Awaited<ReturnType<OpenProjectResults>> | undefined;
+      if (args.watch && view !== undefined && view.issue === undefined) {
+        const controller = await runtimeController(runtimeProfile);
+        view = await observeBuildView(runtime, args.build, view, {
+          ...(args.maxWaitMs === undefined ? {} : { maxWaitMs: args.maxWaitMs }),
+          controller,
+          commandScope,
+          onProgress: (progress) => {
+            const report = io.writeProgress ?? (args.presentation.json ? undefined : io.write);
+            for (const line of buildProgressLines(progress, {
+              verbose: args.presentation.verbose,
+              limit: args.limit,
+            })) report?.(`${line}\n`);
+          },
+        });
+      }
       try {
         openedResults = await openProjectResults();
-        if (args.watch && view !== undefined && view.issue === undefined) {
-          const controller = await runtimeController(runtimeProfile);
-          view = await observeBuildView(runtime, args.build, view, {
-            ...(args.maxWaitMs === undefined ? {} : { maxWaitMs: args.maxWaitMs }),
-            controller,
-            ...(args.presentation.json ? {} : {
-              onProgress: (progress) => {
-                for (const line of buildProgressLines(progress, {
-                  verbose: args.presentation.verbose,
-                  limit: args.limit,
-                })) io.write(`${line}\n`);
-              },
-            }),
-          });
-        }
         result = await openedResults.repository.read(args.build);
       } catch (error) {
         resultReadError = error instanceof Error ? error.message : String(error);
@@ -250,6 +258,7 @@ export async function runExecutionCommand(input: {
       const issue = view?.issue;
       const build = !found ? null : buildStatusView({
         id: view?.id ?? result!.id,
+        commandScope,
         ...(view === undefined ? {} : { runtime: view }),
         ...(result === undefined ? {} : { result }),
         ...(resultReadError === undefined ? {} : { resultReadError }),
@@ -338,7 +347,7 @@ export async function runExecutionCommand(input: {
         outcome: finished.outcome,
         ...(finished.issue === undefined ? {} : { attention: {
           message: finished.issue.message,
-          action: `qflow result finish ${args.build}`,
+          action: commandHint(["result", "finish", args.build], commandScope),
         } }),
       }, finished.issue === undefined ? "Result finished" : "Result still needs attention",
       finished.issue === undefined ? "success" : "error", [
@@ -356,6 +365,7 @@ export async function runExecutionCommand(input: {
       : await openedResults.repository.read(args.build).finally(async () => await openedResults.close());
     const build = active === undefined && finished === undefined ? null : buildStatusView({
       id: args.build,
+      commandScope,
       ...(active === undefined ? {} : { runtime: active }),
       ...(finished === undefined ? {} : { result: finished }),
     });

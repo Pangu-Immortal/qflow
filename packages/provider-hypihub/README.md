@@ -31,10 +31,43 @@ The current QflowHub GPT Image 2 route has these service-specific limits:
 QflowHub owns this support check independently: it leaves the GPT Image model package unchanged. When the service surface changes, this Provider can change without changing
 the model or another Provider.
 
-Model identity is preserved across input modes: Seedream 5 Lite references use the Lite image-edit
-route, and Grok 1.5 Preview remains the Preview model. A deployment's current catalogue may offer
+Model identity and input mode are separate. The mapping uses QflowHub's canonical model names:
+`gpt-image-2`, `seedream-5-lite`, `minimax-h3`, `grok-imagine-video` and the individual Seedance names.
+An image request without references uses `/images/generations`; image edits use `/images/edits`
+with the same model name. Video requests use `/videos`, preserving reference images, reference
+videos and first/last frames in their distinct fields. Old operation-specific names are not needed
+to express these modes; compatibility with previously released clients belongs to the service.
+
+Seedream 5 Lite remains Lite across input modes, and Grok 1.5 Preview remains Preview.
+A deployment's current catalogue may offer
 newer models or omit one implemented here. Availability and unsupported-input errors retain their
 service explanation; they do not imply expired credentials or authorize substituting another model.
+
+Before resolving or uploading references, the Provider prepares the exact model and operation from
+the authored ports and its mapping, then queries that model's authenticated directory entry. Image
+editing is determined from the mapped media inputs, without manufacturing placeholder URLs or
+uploading to discover the request mode. The same preparation serves images, videos and speech.
+The request is then translated with real reference URLs and submitted to the selected operation.
+These are internal Provider functions; Author Sources, CLI commands and Runtime scheduling are unchanged.
+
+Progress identifies the directory query, request preparation and submission. A directory failure
+retains the model, operation and service evidence, and states that this invocation uploaded no
+references and submitted no generation. A missing or malformed operation list leaves support unknown;
+an explicit list without the requested operation reports the actual list. No alternative model,
+operation or account is attempted. Directory support alone does not establish balance, every input
+combination or eventual generation success. Preparation failure also reports that generation was not
+submitted; an interrupted submission retains its actual evidence without claiming no remote work exists.
+
+The Provider interprets QflowHub's [HTTP errors](https://qflow.ai/api-reference/errors/) and
+[job errors](https://qflow.ai/api-reference/jobs/) locally. Failures retain the service code,
+HTTP method/route/status, requested model and `X-Request-Id` when available, plus the public reason.
+`Retry-After` remains evidence and does not start another generation attempt. Job failures retain
+`error_code`, `error` and their receipt even when the create response is already terminal.
+Known error messages are not cut to a fixed prefix; only an unstructured non-JSON response uses
+a marked excerpt. Unrelated response fields and signed asset URLs are not diagnostic content.
+Runtime and Result retain ordinary failure codes/messages without interpreting QflowHub fields.
+Immediate Endpoint exceptions keep the same evidence in their message. A `401` alone does not
+choose OAuth over API-key configuration or establish that another login will fix the account.
 
 For moving portraits, [Volcengine Matting](../volcengine-matting/README.md) maps
 `@qflow/volcengine-matting@1#matte-portrait-video` to `POST /v1/videos` with
@@ -122,8 +155,10 @@ catalog to verify configured capabilities; ordinary preflight never makes that r
 declares QflowHub's public pricing page, `https://qflow.ai/commercial/pricing/`, as its price source.
 For each selected Need, `readPricing` resolves the corresponding QflowHub model and returns the service's
 authenticated `GET /v1/pricing?model=<model>` response unchanged together with that URL. It covers
-generation, alignment, Voice Design and Voice Clone through the same mechanism;
-the Provider does not maintain a second list of billing formulas or calculate a request total.
+generation, alignment, Voice Design and Voice Clone through the same mechanism. The document's
+per-operation prices are retained alongside its default price, including when references are still
+pending. A model's default price is not a quote for every input mode. The Provider does not maintain
+a second list of billing formulas or calculate a request total.
 
 The Provider declares its implemented speech capabilities alongside image, video and alignment.
 Voice Design produces an accepted voice-reference Resource, and Voice Clone uses that
@@ -148,7 +183,7 @@ Execution policy remains local to this Provider:
 | `requestTimeoutMs` | 300 seconds | ordinary Provider HTTP requests |
 | `oauthRequestTimeoutMs` | 30 seconds | OAuth token exchange and refresh |
 | `pricingRequestTimeoutMs` | 30 seconds | authenticated pricing requests |
-| `operationTimeoutMs` | 20 minutes | one remote asynchronous operation |
+| `operationTimeoutMs` | 20 minutes | how long this Provider observes one asynchronous operation; expiry does not cancel the remote job |
 | `uploadConcurrency` | 8 | whole file sessions per origin/credential within this process |
 | `uploadPartTimeoutMs` | 5 minutes | one upload part |
 | `uploadPartAttempts` | 3 | attempts for one upload part |

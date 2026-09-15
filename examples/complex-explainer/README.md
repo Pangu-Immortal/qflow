@@ -73,6 +73,7 @@ explains joining exported parts. The archive also includes `productions/explaine
 | How does each coordinated scene behave? | [Web scenes](packages/web-scenes/README.md) |
 | How do the presenter and opening graphics move? | [Opening system](packages/opening-system/README.md) |
 | How are cue boundaries and one-line captions handled? | [Caption package](packages/single-line-captions/README.md) |
+| Where does the shared palette live without becoming another Track? | [Visual language](packages/visual-language/README.md) |
 | Which existing material should a new Build use? | [Render Run](productions/explainer/runs/render.svrun) |
 
 Generated and normalized Outputs remain in the entry Source where the Run can satisfy them explicitly.
@@ -90,7 +91,10 @@ Tracks. The scene's state is computed from frame time, making direct seeking and
 possible. Script Moments locate spoken changes; authored durations shape how those changes unfold.
 
 Read the [Treatment](productions/explainer/TREATMENT.md) and
-[craft notes](productions/explainer/CRAFT-NOTES.md) for the practical reasoning. Components use public
+[craft notes](productions/explainer/CRAFT-NOTES.md) for the practical reasoning: recovering behavior
+beyond a list of objects, the style change, scene boundaries, semantic events, framing and review.
+The [presenter-led visual explainer playbook](https://github.com/qflow-ai/qflow/blob/main/skills/qflow/references/playbooks/formats/presenter-led-explainer.md)
+draws out the whole-work relationship for other productions. Components use public
 Author Package and Companion interfaces; Studio and Core contain no dispatch for this example.
 
 ## Materials and editorial copy

@@ -182,6 +182,7 @@ test("up preserves installation logs through service startup and down stops it",
   const status = await reportManagedPrograms(path, options);
   assert.equal(status.programs[0]!.pid, pid);
   assert.equal(status.programs[0]!.logPath, join(root, "programs", "example", "program.log"));
+  assert.equal(status.programs[0]!.installationLogPath, join(root, "programs", "example", "install.log"));
 
   await rm(marker, { force: true });
   const stopped = await takeManagedProgramsDown(path, options);
@@ -316,17 +317,18 @@ test("a failing install stops before starting anything, and says which command f
   assert.match(await readFile(result.programs[0]!.logPath!, "utf8"), /no such project/u);
 });
 
-test("installation output is readable while preparation is still running", async () => {
+test("ongoing preparation exposes its log and excludes another preparation", async () => {
   const { root, path, options } = await project((root) => ({
     id: "downloader",
     installation: {
       commands: [nodeProgram(`
         const fs = require('node:fs');
+        fs.appendFileSync(process.argv[2], 'once\\n');
         process.stdout.write('fetching dependency\\n');
         const timer = setInterval(() => {
           if (fs.existsSync(process.argv[1])) { clearInterval(timer); process.stderr.write('download complete\\n'); }
         }, 10);
-      `, join(root, "release"))],
+      `, join(root, "release"), join(root, "preparations"))],
       probe: async () => ({ state: "down", detail: "not installed" }),
     },
     probe: async () => ({ state: "down", detail: "not running" }),
@@ -345,12 +347,59 @@ test("installation output is readable while preparation is still running", async
     }
     assert.match(output, /fetching dependency/u);
     assert.equal(done, false);
+    const status = (await reportManagedPrograms(path, options)).programs[0]!;
+    assert.equal(status.installationLogPath, logPath);
+    assert.equal(status.logPath, undefined, "preparation output is not a running service log");
+    const again = (await bringManagedProgramsUp(path, options)).programs[0]!;
+    assert.equal(again.action, "unchanged");
+    assert.match(again.detail!, /another command owns/u);
+    assert.equal(again.installationLogPath, logPath);
+    const down = (await takeManagedProgramsDown(path, options)).programs[0]!;
+    assert.match(down.detail!, /another command owns/u);
+    assert.equal(await readFile(join(root, "preparations"), "utf8"), "once\n");
   } finally {
     await writeFile(join(root, "release"), "continue");
     await pending;
   }
   assert.match(await readFile(logPath!, "utf8"), /download complete/u);
   await rm(root, { recursive: true, force: true });
+});
+
+test("a loading process is visible and reused after a readiness wait, and down can stop it", async () => {
+  const { root, path, options } = await project((root) => ({
+    id: "loading",
+    start: nodeProgram(`require('node:fs').appendFileSync(process.argv[1], 'once\\n'); ${STAY_ALIVE}`, join(root, "starts")),
+    probe: async () => ({ state: "down", detail: "model loading" }),
+  }));
+  try {
+    const first = (await bringManagedProgramsUp(path, { ...options, maxWaitMs: 0 })).programs[0]!;
+    assert.equal(first.action, "unchanged");
+    assert.ok(first.pid, "ownership is published before readiness");
+    const status = (await reportManagedPrograms(path, options)).programs[0]!;
+    assert.equal(status.pid, first.pid);
+    assert.equal(status.state.state, "down", "a live PID is not readiness");
+
+    let observed!: () => void;
+    const waiting = new Promise<void>((resolve) => { observed = resolve; });
+    const pending = bringManagedProgramsUp(path, { ...options, maxWaitMs: 20_000,
+      onProgress(event) { if (event.phase === "waiting") observed(); },
+    });
+    await waiting;
+    // Give the synthetic child an opportunity to write its startup evidence, not to become Ready.
+    for (let attempt = 0; attempt < 100; attempt++) {
+      if (await readFile(join(root, "starts"), "utf8").catch(() => "") === "once\n") break;
+      await sleep(20);
+    }
+    assert.equal(await readFile(join(root, "starts"), "utf8"), "once\n");
+    const down = (await takeManagedProgramsDown(path, options)).programs[0]!;
+    assert.equal(down.action, "stopped", "observing readiness does not prevent stopping the service");
+    const second = (await pending).programs[0]!;
+    assert.match(second.detail!, /process exited/u);
+    assert.equal(second.pid, undefined);
+  } finally {
+    await takeManagedProgramsDown(path, options);
+    await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  }
 });
 
 test("up stops waiting when a started program exits", async () => {

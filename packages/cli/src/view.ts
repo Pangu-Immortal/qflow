@@ -8,6 +8,8 @@ import type {
 import { buildIdCreatedAt } from "@qflow/protocol";
 import type { TypeRef } from "@qflow/protocol";
 import type { BuildView } from "@qflow/runtime-host-node";
+import { commandHint } from "./command-hint.js";
+import type { CommandScope } from "./command-hint.js";
 
 export type PublicOutputKind = "scalar" | "resource" | "composite";
 
@@ -159,6 +161,7 @@ export function buildStatusView(options: {
   readonly result?: BuildResultManifest;
   readonly resultReadError?: string;
   readonly verbose?: boolean;
+  readonly commandScope?: CommandScope;
 }): CliBuildStatusView {
   const resultState = options.resultReadError !== undefined
     ? "unavailable" as const
@@ -195,7 +198,7 @@ export function buildStatusView(options: {
       attention: issue !== undefined
         ? {
             message: issue.message,
-            ...(issue.scope === "result" ? { action: `qflow result finish ${options.id}` } : {}),
+            action: commandHint(["result", "finish", options.id], options.commandScope),
           }
         : { message: options.resultReadError! },
     }),

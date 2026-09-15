@@ -33,6 +33,8 @@ export type RuntimeDoctorDiagnostic = {
 };
 
 export type ManagedProgramCommand = {
+  /** Optional human-readable purpose, supplied by the program owner. Not a lifecycle state. */
+  readonly label?: string;
   readonly command: string;
   readonly args: readonly string[];
   readonly cwd?: string;

@@ -84,7 +84,7 @@ State what is being fetched or run, how it is progressing and what would make th
 different. [Local tools](local-tools.md#make-network-preparation-practical) covers caches, mirrors and
 network diagnosis. Time already spent installing is not a reason to continue an unsuitable route.
 
-Switching from BYOK or local execution to QflowHub changes the selected service and may change the
+Switching from another service or local execution to QflowHub changes the selected service and may change the
 billing account. That remains a user choice when the earlier route encounters authentication, quota,
 rate-limit or service errors. An OAuth page follows the decision to connect the selected account.
 
@@ -172,7 +172,7 @@ These names describe different facts about the same work:
 For example, an authored video request determines what to generate. The Run can satisfy its output
 with an existing Result so that generation is no longer demanded. If it remains demanded, the Model
 produces a Need; the Profile resolves its capability to one Endpoint; the Provider maps that request
-to the chosen service. The same author semantics can therefore work through BYOK or QflowHub when
+to the chosen service. The same author semantics can therefore work through different services when
 both implement the exact capability, without putting those account choices into SVML.
 
 A binding key is the complete `name@version#capability`, not a guessed vendor model label. For
@@ -249,19 +249,27 @@ environment variable and is read-only.
 Inspect one Endpoint's credential slots without revealing their values:
 
 ```bash
-qflow auth status qflowhub.default
+qflow auth status <selected-endpoint>
 ```
 
 Once the user has chosen to connect that account, use its declared acquisition flow or the selected
 store's interactive input:
 
 ```bash
-qflow auth login qflowhub.default
+qflow auth login <selected-endpoint>
 ```
 
-For an OAuth Endpoint, this command opens the Provider's browser flow immediately. Another Endpoint
-may securely prompt for its exact secret or accept `--from <secret-file>`. An Endpoint backed by the read-only environment store is configured
-in the Worker process environment instead.
+The Endpoint already identifies the service and its Provider. `auth status` shows whether a
+credential exists and the Provider's declared browser acquisition when present. For a writable
+OAuth Endpoint, `auth login` opens that browser flow immediately; without a browser acquisition it
+securely prompts for the secret. `--from <secret-file>` explicitly imports a secret instead of
+opening OAuth. An Endpoint backed by the read-only environment store is configured in the Worker
+process environment instead.
+
+For example, after choosing QflowHub, `qflow auth login qflowhub.default` uses its browser login;
+`qflow auth login qflowhub.default --from /private/path/qflowhub-key.txt` instead stores a QflowHub API
+key. A different service uses its own configured Endpoint and key. Credential entry does not create
+that service's Provider, select a model binding, or transfer another service's balance to QflowHub.
 
 Keep secrets out of Author Sources, Runs, Runtime Profile JSON, project documentation, command
 arguments, commits, and conversation text. Ask the user to complete a Provider browser flow or secure
@@ -287,6 +295,13 @@ submits no generation request. A successful login followed by a failing doctor i
 report the Provider's current explanation rather than treating credential storage as proof of
 reachability.
 
+Keep the failing request's scope with its evidence: selected Endpoint, requested model or capability,
+and the returned status, code and explanation. These describe what failed; infer a cause only as far
+as they support it. For example, `model_not_found` establishes that this request could not reach the
+named model through that route, but does not itself establish a missing payment or permission.
+Use the account-visible service information when investigating availability; a public model catalogue
+alone cannot establish access for this account. Explain what is known and what still needs checking.
+
 `plan` knows the chosen Target and Candidates, so it identifies the capabilities this Run will demand
 and applies the selected Endpoint's normal request-support check. Its preflight checks configuration,
 credential presence, packages, executables, and relevant Managed Programs without actively probing a
@@ -300,6 +315,8 @@ support interpretation, Script and visual planning. Existing media can support c
 HyperFrames MG, Caption and Typography when those serve the Brief. Generated performances and
 measured speech timing depend on the corresponding capabilities becoming available. Keep the
 completed work and the remaining dependency clear so the user can decide how to proceed.
+When showing that work, [composition review](../production/review.md#show-what-the-current-work-establishes)
+helps distinguish useful intermediate evidence from the intended deliverable.
 
 When the user brings another model, service, or Key, use
 [Models and Providers](model-and-provider.md) to distinguish credential setup, Endpoint configuration,

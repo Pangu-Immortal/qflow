@@ -41,7 +41,7 @@
 
 Qflow gives AI agents (Claude Code, Codex...) a language and system to create video. Drop in a video, and your agent clones it as a complete workflow: footage, captions, B-roll and effects, all anchored to words instead of seconds.
 
-**To be clear:** cloning a video is the fastest way in, not the only one. You can start from our templates, or just describe the video you want and your agent writes the workflow from scratch. Generation models are optional too: a workflow can compile captions, motion graphics and code-rendered visuals into a finished video without calling a single model, so a video can cost exactly $0.
+**To be clear:** cloning a video is the fastest way in, not the only one. You can start from our templates, or just describe the video you want and your agent writes the workflow from scratch. Generation models are optional too: a workflow can compile captions, motion graphics and code-rendered visuals into a finished video without calling a generation model or incurring its service charges.
 
 ![SVML source and live video preview](https://github.com/user-attachments/assets/981c28e8-ddab-4164-85bc-03b5d71275dc)
 
@@ -55,6 +55,13 @@ npx skills add qflow-ai/qflow -g
 
 This installs the Skill. On first use, your agent checks for the Qflow executable and helps prepare
 it if needed. Your video project can live anywhere.
+
+Qflow is free to use; your Coding Agent and model services have their own accounts and charges.
+QflowHub is our recommended hosted model service. You can also use your own API or local models;
+tell your agent the service name and API documentation so it can set up the appropriate connection.
+
+[Agent environments and entry partners](./docs/guide/agents.md) ·
+[Model and deployment services](./docs/guide/service-partners.md)
 
 ## Examples
 
@@ -146,9 +153,9 @@ Your agent can check the environment, request the credentials the video needs, g
 ## Why Qflow
 
 - **Clone any video:** drop in a video, get the whole workflow — footage, captions, B-roll, effects. Not a script breakdown.
-- **One workflow, 100 variants:** the second video costs almost nothing; the hundredth is a loop.
+- **One workflow, 100 variants:** reuse the composition and existing material; generate the parts that change.
 - **Pluggable components:** swap the host without touching the captions. Use the library, fork it, or write your own.
-- **Open source, $0:** no seat pricing, no per-render fees, no watermark. Arcads charges $220/mo, Creatify $39, before you render anything — but Qflow is $0.
+- **Open source:** no Qflow seat pricing, per-render fees or added watermark. Model-service usage is billed by the service you choose.
 
 ## What Qflow Can Build
 
@@ -159,7 +166,7 @@ Drop in a video and your agent clones the whole workflow — or describe what yo
 - **TikTok Shop and affiliate videos** — one format that converts, a new SKU every day. Swap the product, the price, the CTA; the structure that worked stays untouched.
 - **AI UGC and talking heads** — narration, word-level captions, B-roll, comment stickers, beat-synced cuts, all wired automatically.
 - **Podcast and interview clips** — split-screen layouts, speaker-aware captions, reaction overlays.
-- **Code-rendered videos** — visuals driven entirely by front-end code. Compiled from source, zero API calls, 0 dollars a video.
+- **Code-rendered videos** — visuals driven entirely by front-end code, rendered locally without generation API calls.
 - **Localized versions** — the same video in ten languages. Rewrite a line and the timing re-flows itself.
 
 ## Stay Tuned with Us

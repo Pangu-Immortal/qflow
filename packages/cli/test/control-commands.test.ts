@@ -5,6 +5,7 @@ import test from "node:test";
 import type { CliDistribution } from "../src/distribution.js";
 import { runCli } from "../src/main.js";
 import type { CliCredentialControl, CliRuntimeControl } from "../src/runtime-port.js";
+import { commandHint } from "../src/command-hint.js";
 
 test("activity opens Runtime control without constructing execution Providers", async () => {
   const calls: string[] = [];
@@ -138,9 +139,14 @@ test("status --watch follows active execution, then reads its finished Result", 
   } as unknown as CliDistribution;
   let output = "";
 
+  let progress = "";
   await runCli([
     "status", "build-watch", "--runtime", "/tmp/runtime.json", "--watch", "--json",
-  ], { write: (text) => { output += text; } }, distribution);
+  ], {
+    write: (text) => { output += text; },
+    writeProgress: (text) => { progress += text; },
+  }, distribution);
+  assert.match(progress, /Working/u);
 
   const result = JSON.parse(output) as {
     readonly build: { readonly id: string; readonly work: { readonly outcome: string }; readonly result: { readonly state: string } };
@@ -264,7 +270,7 @@ test("status preserves Runtime decision and attention when its Result Store is u
     createdAt: 1,
     activity: "saving-result" as const,
     outcome: "failed" as const,
-    issue: { scope: "result" as const, message: "S3 unavailable" },
+    issue: { scope: "result" as "result" | "cleanup", message: "S3 unavailable" },
     cancellationRequested: false,
     targets: [],
     acceptedRecords: 0,
@@ -287,23 +293,34 @@ test("status preserves Runtime decision and attention when its Result Store is u
   let exitCode = 0;
 
   await runCli([
-    "status", view.id, "--runtime", "/tmp/runtime.json", "--json",
+    "status", view.id, "--workspace", "/tmp", "--runtime", "/tmp/runtime with space.json", "--json",
   ], { write: (text) => { output += text; }, setExitCode: (code) => { exitCode = code; } }, distribution);
 
   const result = JSON.parse(output) as {
     readonly build: {
       readonly work: { readonly outcome: string };
       readonly result: { readonly state: string };
-      readonly attention: { readonly message: string };
+      readonly attention: { readonly message: string; readonly action: string };
     };
   };
   assert.equal(result.build.work.outcome, "failed");
   assert.equal(result.build.result.state, "unavailable");
   assert.equal(result.build.attention.message, "S3 unavailable");
+  assert.equal(result.build.attention.action, commandHint(["result", "finish", view.id], {
+    projectRoot: resolve("/tmp"), runtimeProfile: resolve("/tmp/runtime with space.json"),
+  }));
   assert.deepEqual((result.build as { operations?: unknown }).operations, [{
     endpoint: "images.internal", state: "failed", failure: { code: "REMOTE", message: "provider detail" },
   }]);
   assert.equal(exitCode, 1);
+  view.issue = { scope: "cleanup", message: "temporary resource cleanup unavailable" };
+  output = "";
+  await runCli([
+    "status", view.id, "--workspace", "/tmp", "--runtime", "/tmp/runtime with space.json", "--json",
+  ], { write: (text) => { output += text; } }, distribution);
+  const cleanup = JSON.parse(output).build.attention;
+  assert.equal(cleanup.message, "temporary resource cleanup unavailable");
+  assert.equal(cleanup.action, result.build.attention.action);
 });
 
 test("result finish writes only an already-decided Result that needs attention", async () => {
@@ -496,6 +513,52 @@ test("auth opens only one Endpoint credential control, never the execution Runti
   assert.equal("key" in machine.credentials[0]!, false);
 });
 
+test("auth status exposes declared acquisition without acquiring or revealing credentials", async () => {
+  const acquisition = {
+    kind: "oauth2-pkce", authorizationEndpoint: "https://service.example/authorize",
+    tokenEndpoint: "https://service.example/token", clientId: "example-client", scopes: ["inference"],
+  };
+  const distribution = {
+    openRuntimeHost: async () => ({
+      openCredentials: async () => ({
+        credentials: async () => [
+          { endpoint: "service.project", slot: "browser", label: "Service access", kind: "secret",
+            configured: false, writable: true, ref: { store: "os", key: "private-reference" }, acquisition,
+            secret: "not-for-display" },
+          { endpoint: "service.project", slot: "key", label: "Service key", kind: "secret",
+            configured: false, writable: true, ref: { store: "os", key: "private-reference" } },
+          { endpoint: "service.project", slot: "external", label: "External key", kind: "secret",
+            configured: false, writable: false, ref: { store: "env", key: "PRIVATE_KEY" } },
+        ],
+        putCredential: async () => { throw new Error("Status must not acquire a credential"); },
+        close() {},
+      }),
+      createRuntime: async () => { throw new Error("Status must not start execution"); },
+    }),
+  } as unknown as CliDistribution;
+  for (const json of [true, false]) {
+    let output = "";
+    await runCli(["auth", "status", "service.project", "--runtime", "/tmp/runtime.json", ...(json ? ["--json"] : [])], {
+      write: (text) => { output += text; },
+      readSecret: async () => { throw new Error("Status must not request user input"); },
+    }, distribution);
+    assert.doesNotMatch(output, /not-for-display|private-reference|PRIVATE_KEY|example-client/u);
+    if (json) {
+      const view = JSON.parse(output);
+      assert.equal(view.format, "qflow.cli-auth-status@1");
+      assert.deepEqual(view.credentials[0].acquisition, {
+        kind: "oauth2-pkce", authorizationEndpoint: "https://service.example/authorize",
+      });
+      assert.equal(view.credentials[1].acquisition, undefined);
+      assert.equal(view.credentials[2].writable, false);
+    } else {
+      assert.match(output, /login opens OAuth: https:\/\/service.example\/authorize/u);
+      assert.match(output, /login uses secure secret input/u);
+      assert.match(output, /managed by its external credential source/u);
+    }
+  }
+});
+
 test("runtime logs returns only the requested tail and hides its path by default", async () => {
   const distribution = {
     openRuntimeHost: async (path: string) => ({
@@ -626,4 +689,36 @@ test("cancelling an already failed execution preserves and reports its stop reas
     { write: (text) => { output += text; } }, distribution);
   assert.match(output, /already stopping after failure/);
   assert.match(output, /Original execution failure/);
+});
+
+test("a stopped Worker ends observation with scoped evidence commands, not a Result-read failure", async () => {
+  const projectRoot = resolve("/tmp");
+  const runtimeProfile = resolve("/tmp/selected runtime.json");
+  let closed = false;
+  let resultOpened = false;
+  const selected = {
+    openRuntimeHost: async () => ({
+      openControl: async () => ({
+        inspect: async () => ({
+          id: "waiting-build", createdAt: Date.now(), activity: "waiting", cancellationRequested: false,
+          targets: [], acceptedRecords: 0, outstandingCommands: 1, operations: [],
+        }),
+        close() { closed = true; },
+      }),
+      controller: async () => ({ worker: {
+        status: async () => ({ state: "stopped", profile: runtimeProfile, logPath: "/tmp/worker.log" }),
+      } }),
+    }),
+    openProjectResults: async () => { resultOpened = true; throw new Error("must not be mistaken for result storage"); },
+  } as unknown as CliDistribution;
+  await assert.rejects(runCli([
+    "status", "waiting-build", "--workspace", projectRoot, "--runtime", runtimeProfile, "--watch", "--json",
+  ], { write() {} }, selected), (error: Error) => {
+    assert.match(error.message, /Runtime Worker is stopped; stopped watching Build waiting-build/u);
+    assert.ok(error.message.includes(commandHint(["runtime", "status"], { projectRoot, runtimeProfile })));
+    assert.ok(error.message.includes(commandHint(["logs", "waiting-build"], { projectRoot, runtimeProfile })));
+    return true;
+  });
+  assert.equal(closed, true);
+  assert.equal(resultOpened, false);
 });

@@ -97,6 +97,10 @@ Build reuse an already warm local model. Use scoped `programs down` when a helpe
 A healthy service stays warm across repeated `up` calls. Local WhisperX reconciles its packaged Python
 environment before a cold start; uv reuses cached dependencies and weights. This is separate from
 loading project component code for a new Build.
+A service still loading can also have a live PID: repeated `up` observes that owned process instead
+of starting another one. A readiness wait can end with the process still alive. Check its probe and
+log to understand why it is not Ready. Concurrent preparation of the same Program reports its
+existing owner and available logs; repeating the command does not accelerate that preparation.
 
 Ordinary projects use these declarations instead of running a service's internal `uv sync` or Python
 entry point by hand. Contributor/operator commands in a service README are for diagnosing that
@@ -146,9 +150,16 @@ process is downloading, unpacking or loading a model. Managed Program preparatio
 service startup reports `program.log`. On Windows, service stderr is in the adjacent `program.err.log`,
 where Python logging and download errors may appear. Read the relevant recent output while a long
 command runs. Logs expose the subprocess's output; some downloaders suppress progress outside a terminal.
+`programs status` reports existing installation and service log paths, including when preparation has
+not yet started the service. These files retain history; their presence does not mean work is active.
+`--json` keeps the final result on stdout and sends live preparation notices to stderr. WhisperX's own
+log distinguishes ASR loading, transcription, first-use language-model loading and word alignment.
 Use available transfer progress, cache growth and process activity to judge whether waiting remains
 reasonable for this commission; a quiet log alone does not establish a stalled download.
 A longer timeout helps a healthy slow transfer finish; it does not improve an unusable route.
+Use each observation to decide whether to wait, change a download route or recommend another service,
+and share what that means for the piece. Let the process carry out a known wait while you advance
+independent work; reading the same output repeatedly adds no new evidence.
 
 Mainland China and other restricted networks can make particular hosts slow or unreachable. Use the
 user's network context and actual transfer evidence to choose a reachable source, rather than
@@ -157,6 +168,12 @@ changing the part that is actually blocked. Explain the changed outlook promptly
 a practical alternative when local preparation would dominate the production time. QflowHub can
 remove local speech-model preparation and also supply later generation; the account choice remains
 with the user. Continue independent reference and component work meanwhile.
+
+A **mirror** is an alternative server supplying copies of packages or model files. It can provide a
+better route when the original host is slow or unreachable. It changes where bytes are acquired;
+the selected dependency versions and model still define what runs. It neither replaces the Provider
+nor pays for generation. A cache already contains downloaded files and may avoid that transfer;
+a proxy routes requests to their original destinations. Choose the remedy for the blocked resource.
 
 Mirrors address particular download clients and hosts:
 
@@ -168,10 +185,42 @@ Mirrors address particular download clients and hosts:
 | Hugging Face weights | `HF_ENDPOINT` selects a compatible Hub endpoint; `HF_HOME` / `HF_HUB_CACHE` select reusable cache locations. A model's redirected weight host and its language-alignment download must also be reachable. |
 | FFmpeg, browser and other binaries | Use the selected package manager's binary-download settings or a compatible official prebuilt installation. An npm/PyPI mirror does not generally redirect these downloads. Homebrew bottles, browser archives and GitHub release assets have their own sources. |
 
-Use a mirror the user or organization trusts, with settings scoped to the preparing command or
-session. Explain persistent machine-wide changes when those are useful. Keep the selected package
+Make a route change explicit: explain the blocked download, the proposed source and which command
+or service will use it. Use a mirror the user or organization trusts, with settings scoped to the
+preparing command or session. An established preparation choice can cover this work; an unresolved
+trust or machine-wide configuration choice belongs with the user. Keep the selected package
 versions and record the effective preparation choices for the next session. Read the actual download
 host afterward to establish that the intended route was used.
+
+For example, after choosing local WhisperX and assessing HF-Mirror as a suitable route for a Hub
+download, pass its endpoint to the command that starts the service:
+
+```bash
+HF_ENDPOINT=https://hf-mirror.com qflow programs up --endpoint whisperx.local
+```
+
+In PowerShell, scope the environment change and restore the previous setting:
+
+```powershell
+$previousQflowHfEndpoint = $env:HF_ENDPOINT
+try {
+  $env:HF_ENDPOINT = 'https://hf-mirror.com'
+  qflow programs up --endpoint whisperx.local
+} finally {
+  $env:HF_ENDPOINT = $previousQflowHfEndpoint
+}
+```
+
+The started process retains its inherited setting. An already running service keeps its earlier
+environment; an additional `up` observes it, so arrange any needed stop/start around active work.
+Inspect the transfer host and progress in the service log: setting the variable is a request to that
+client, not evidence that every weight download used the mirror.
+
+For npm, a read-only check such as
+`npm view @qflow/qflow versions --json --registry https://registry.npmmirror.com`
+shows which releases that registry currently offers. Pass the same `--registry` to the chosen npm
+installation command if it has the needed version. Python's frozen URL limitation above needs its
+own solution; changing a pip setting cannot repair a uv download.
 
 Useful source documentation includes [uv settings](https://docs.astral.sh/uv/reference/environment/),
 [TUNA's PyPI mirror](https://mirrors.tuna.tsinghua.edu.cn/help/pypi/),

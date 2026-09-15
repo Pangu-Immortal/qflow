@@ -148,7 +148,7 @@ test("a Profile that does not serve the capability stops before anything is spen
     };
     await assert.rejects(
       runCreationCli(["transcribe", "speech.wav", "--to", "speech.json", "--language", "en"], capture().io, unserved),
-      /No Endpoint in .*qflow\.runtime\.json serves @qflow\/whisperx@1#whisperx-alignment; qflow plan --runtime/u,
+      /No Endpoint in .*qflow\.runtime\.json serves @qflow\/whisperx@1#whisperx-alignment; configure an Endpoint/u,
     );
     assert.equal(invoked, false);
   } finally {
@@ -184,5 +184,41 @@ test("Chinese transcription explicitly sends zh and retains individual character
       { text: "你", start_seconds: 0.1, end_seconds: 0.24 },
       { text: "好！", start_seconds: 0.5, end_seconds: 1.1 },
     ]);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("transcription explains ambiguous selection and preserves unsupported request reasons before invoking", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-transcribe-selection-"));
+  try {
+    await writeFile(join(root, "speech.wav"), wav(16_000));
+    for (const selection of [
+      { status: "ambiguous" as const, endpoints: ["local.words", "hosted.words"] },
+      { status: "unsupported" as const, binding: "hosted.words",
+        rejections: [{ endpoint: "hosted.words", message: "This deployment does not support zh alignment" }] },
+    ]) {
+      let invoked = false;
+      const env: CreationEnvironment = { cwd: root, openHost: async () => ({
+        profile: join(root, "runtime.json"), host: {
+          providers: async (requests) => requests.map((request) => ({
+            request: request.request, capability: request.capability, ...selection,
+          })),
+          invoke: async () => { invoked = true; throw new Error("must not invoke rejected selection"); },
+        },
+      }) };
+      await assert.rejects(runCreationCli([
+        "transcribe", "speech.wav", "--to", "speech.json", "--language", "zh",
+      ], capture().io, env), (error: Error) => {
+        if (selection.status === "ambiguous") {
+          assert.match(error.message, /local\.words, hosted\.words/u);
+          assert.match(error.message, /bindings\["@qflow\/whisperx@1#whisperx-alignment"\]/u);
+        } else {
+          assert.match(error.message, /binding: hosted\.words/u);
+          assert.match(error.message, /hosted\.words: This deployment does not support zh alignment/u);
+        }
+        assert.doesNotMatch(error.message, /keep exactly one|qflow plan --runtime/u);
+        return true;
+      });
+      assert.equal(invoked, false);
+    }
   } finally { await rm(root, { recursive: true, force: true }); }
 });

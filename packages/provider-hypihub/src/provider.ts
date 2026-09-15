@@ -16,10 +16,12 @@ import {
 } from "@qflow/whisperx";
 import type { WhisperXTranscriptResponse } from "@qflow/whisperx";
 import { hypiHubRouteForCapability, hypiHubRoutes } from "./routes.js";
+import type { QflowHubModelOperation } from "./routes.js";
 import { QflowHubUploader } from "./upload.js";
 import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-kit";
 import { createQflowHubAuth, hypiHubCredentialNeedsRefresh } from "./oauth.js";
 import type { QflowHubAuth } from "./oauth.js";
+import { QflowHubHttpError, QflowHubServiceError, hypiHubJobFailure } from "./errors.js";
 
 export const hypiHubProviderModuleRef = { name: "@qflow/provider-qflowhub", version: "1" } as const;
 
@@ -64,18 +66,15 @@ function apiBaseUrl(value: string): string {
 }
 function credential(credentials: Readonly<Record<string, EndpointCredential>>) {
   const value = credentials.apiKey?.secret;
-  assert(typeof value === "string" && value.length > 0, "QflowHub login is unavailable; run qflow auth login for QflowHub");
+  assert(typeof value === "string" && value.length > 0, "QflowHub apiKey credential is unavailable; configure this Endpoint's credential with a QflowHub API key or OAuth login");
   return credentials.apiKey!;
 }
-function guidedMessage(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
-  return /API key is unavailable|QflowHub login is unavailable|HTTP 401\b/iu.test(message)
-    ? `${message}. Sign in to QflowHub at https://qflow.ai with qflow auth login`
-    : message;
+function failureMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 function failure(error: unknown): EndpointOutcome {
-  const message = guidedMessage(error);
-  return { status: "failed", failure: { code: "QFLOWHUB_ERROR", message } };
+  const message = failureMessage(error);
+  return { status: "failed", failure: { code: error instanceof QflowHubServiceError ? error.code : "QFLOWHUB_ERROR", message } };
 }
 
 function jobId(value: Record<string, unknown>): string {
@@ -84,17 +83,13 @@ function jobId(value: Record<string, unknown>): string {
   return id;
 }
 
-type QflowHubModelOperation = "images" | "image_edits" | "videos" | "audio_speech" | "transcriptions";
-
 async function verifyModelRoute(client: QflowHubClient, auth: QflowHubAuth, model: string, operation: QflowHubModelOperation): Promise<void> {
   const card = await client.json(`/models/${encodeURIComponent(model)}`, auth);
   const endpoints = card.endpoints;
-  assert(Array.isArray(endpoints) && endpoints.includes(operation),
-    `QflowHub model ${model} is not enabled for ${operation} with this API key`);
-}
-
-class QflowHubHttpError extends Error {
-  constructor(readonly status: number, message: string) { super(message); }
+  assert(Array.isArray(endpoints) && endpoints.every((value) => typeof value === "string"),
+    `QflowHub model ${model} returned no valid operation list; support for ${operation} is unknown`);
+  assert(endpoints.includes(operation),
+    `QflowHub model ${model} does not list operation ${operation}; listed operations: ${endpoints.join(", ") || "none"}`);
 }
 
 class QflowHubClient {
@@ -141,7 +136,13 @@ class QflowHubClient {
         await auth.refresh();
         return await this.json(path, auth, init, false, onResponse);
       }
-      if (!response.ok) throw new QflowHubHttpError(response.status, `QflowHub returned HTTP ${response.status}: ${text.slice(0, 300)}`);
+      if (!response.ok) {
+        const input = typeof init.body === "string" ? JSON.parse(init.body) as Record<string, unknown> : undefined;
+        throw new QflowHubHttpError(response.status, response, text, {
+          method: init.method ?? "GET", url: `${this.baseUrl}${path}`,
+          ...(typeof input?.model === "string" ? { model: input.model } : {}),
+        });
+      }
       try { body = text.length === 0 ? {} : JSON.parse(text); } catch { throw new Error(`QflowHub returned invalid JSON (${response.status})`); }
       return object(body, "QflowHub response");
     } finally { deadline.finish(); }
@@ -210,7 +211,10 @@ class QflowHubClient {
         return await this.speech(auth, body, false);
       }
       if (!response.ok) {
-        throw new Error(`QflowHub returned HTTP ${response.status}: ${Buffer.from(bytes).toString("utf8").slice(0, 300)}`);
+        throw new QflowHubHttpError(response.status, response, Buffer.from(bytes).toString("utf8"), {
+          method: "POST", url: `${this.baseUrl}/audio/speech`,
+          ...(typeof body.model === "string" ? { model: body.model } : {}),
+        });
       }
       const responseType = response.headers.get("content-type")?.split(";", 1)[0] ?? "audio/mpeg";
       if (!responseType.includes("json")) return [{ bytes, mediaType: responseType }];
@@ -308,8 +312,7 @@ function cardIdentifiers(card: Record<string, unknown>): readonly string[] {
   return [card.id, card.canonical_name].filter((name): name is string => typeof name === "string");
 }
 
-/** The additional model names a card answers to. QflowHub publishes the per-operation
- *  routing names used by the Provider mapping table as aliases of one canonical card. */
+/** Additional names explicitly published by the service for this card. */
 function cardAliases(card: Record<string, unknown>): readonly string[] {
   return Array.isArray(card.aliases)
     ? card.aliases.filter((name): name is string => typeof name === "string")
@@ -325,7 +328,7 @@ export async function diagnoseQflowHubProvider(
   },
 ): Promise<readonly RuntimeDoctorDiagnostic[]> {
   const apiKey = context.credentials.apiKey?.secret;
-  assert(typeof apiKey === "string" && apiKey.length > 0, "QflowHub login is unavailable");
+  assert(typeof apiKey === "string" && apiKey.length > 0, "QflowHub credential is unavailable");
   if (hypiHubCredentialNeedsRefresh(apiKey)) return [{
     severity: "warning",
     code: "QFLOWHUB_OAUTH_REFRESH_UNCHECKED",
@@ -377,21 +380,11 @@ export async function diagnoseQflowHubProvider(
     if (!available) diagnostics.push({
       severity: "error",
       code: "QFLOWHUB_CAPABILITY_UNAVAILABLE",
-      message: `QflowHub login cannot currently route ${capabilityKey(capability)}`,
+      message: `The QflowHub catalogue returned for this credential does not list a route for ${capabilityKey(capability)}`,
       subject: capabilityKey(capability),
     });
   }
   return diagnostics;
-}
-
-function generationOperation(route: (typeof hypiHubRoutes)[number], input: Record<string, unknown>): QflowHubModelOperation {
-  if (route.media === "audio") return "audio_speech";
-  if (route.media === "video") return "videos";
-  const hasReferences = Object.entries(input).some(([key, value]) => {
-    if (!["images", "reference_images", "reference_image_urls", "reference_videos", "reference_audios", "first_frame", "last_frame"].includes(key)) return false;
-    return Array.isArray(value) ? value.length > 0 : typeof value === "string" && value.length > 0;
-  });
-  return hasReferences ? "image_edits" : "images";
 }
 
 async function complete(client: QflowHubClient, auth: QflowHubAuth, route: (typeof hypiHubRoutes)[number], id: string, artifacts: ResourceStore): Promise<EndpointOutcome> {
@@ -401,14 +394,44 @@ async function complete(client: QflowHubClient, auth: QflowHubAuth, route: (type
   return { status: "completed", result: { value: route.packageResult(blobs) } };
 }
 
-async function synthesizeAudio(client: QflowHubClient, context: EndpointInvocationContext, publicAssetUrl: CreateQflowHubProviderOptions["publicAssetUrl"]): Promise<EndpointFulfillment> {
+async function prepareGeneration(client: QflowHubClient, context: EndpointInvocationContext, publicAssetUrl: CreateQflowHubProviderOptions["publicAssetUrl"]) {
   const route = hypiHubRouteForCapability(context.need.capability);
-  assert(route !== undefined && route.media === "audio", "QflowHub does not implement this exact capability");
+  assert(route !== undefined, "QflowHub does not implement this exact capability");
+  const request = route.prepare(context.need.constraints);
   const auth = authFor(context, client);
-  const compiled = await route.compile(context.need.constraints, async (artifact, fields) => publicAssetUrl === undefined
-    ? await client.upload(artifact, context.resources, auth, fields)
-    : await publicAssetUrl(artifact, context.resources, fields));
-  await verifyModelRoute(client, auth, compiled.model, "audio_speech");
+  await context.reportProgress?.({ phase: `Reading QflowHub model catalogue: ${request.model} (${request.operation})` });
+  try {
+    await verifyModelRoute(client, auth, request.model, request.operation);
+  } catch (error) {
+    throw new QflowHubServiceError(error instanceof QflowHubServiceError ? error.code : "QFLOWHUB_ERROR",
+      `QflowHub model catalogue check failed; model=${request.model}; operation=${request.operation}; references uploaded=0; generation not submitted: ${failureMessage(error)}`);
+  }
+  await context.reportProgress?.({ phase: `Preparing QflowHub request: ${request.model} (${request.operation})` });
+  const uploaded = new Map<string, Promise<string>>();
+  const resolve = (artifact: BlobRef, fields?: Readonly<Record<string, string | number | boolean>>): Promise<string> => {
+    const key = JSON.stringify([artifact.resource, canonicalize(fields ?? {})]);
+    const existing = uploaded.get(key);
+    if (existing !== undefined) return existing;
+    const promise = publicAssetUrl === undefined
+      ? client.upload(artifact, context.resources, auth, fields)
+      : publicAssetUrl(artifact, context.resources, fields);
+    uploaded.set(key, promise);
+    return promise;
+  };
+  let compiled;
+  try {
+    compiled = await request.compile(resolve);
+  } catch (error) {
+    throw new QflowHubServiceError(error instanceof QflowHubServiceError ? error.code : "QFLOWHUB_ERROR",
+      `QflowHub request preparation failed; model=${request.model}; operation=${request.operation}; generation not submitted: ${failureMessage(error)}`);
+  }
+  return { route, auth, compiled, operation: request.operation };
+}
+
+async function synthesizeAudio(client: QflowHubClient, context: EndpointInvocationContext, publicAssetUrl: CreateQflowHubProviderOptions["publicAssetUrl"]): Promise<EndpointFulfillment> {
+  const { route, auth, compiled, operation } = await prepareGeneration(client, context, publicAssetUrl);
+  assert(route.media === "audio", "QflowHub audio capabilities use an immediate endpoint");
+  await context.reportProgress?.({ phase: `Submitting QflowHub request: ${compiled.model} (${operation})` });
   const audio = await client.speech(auth, { model: compiled.model, ...(compiled.input as Record<string, unknown>) });
   const artifacts = await Promise.all(audio.map(async (item) => await context.resources.put(item.bytes, item.mediaType)));
   return { value: route.packageResult(artifacts) };
@@ -418,33 +441,20 @@ function endpoint(client: QflowHubClient, pollIntervalMs: number, maxOperationMs
   return {
     async start(context: EndpointStartContext) {
       try {
-        const route = hypiHubRouteForCapability(context.need.capability);
-        assert(route !== undefined, "QflowHub does not implement this exact capability");
-        const auth = authFor(context, client);
-        const uploaded = new Map<string, Promise<string>>();
-        const resolve = (artifact: BlobRef, fields?: Readonly<Record<string, string | number | boolean>>): Promise<string> => {
-          const key = JSON.stringify([artifact.resource, canonicalize(fields ?? {})]);
-          const existing = uploaded.get(key);
-          if (existing !== undefined) return existing;
-          const promise = publicAssetUrl === undefined
-            ? client.upload(artifact, context.resources, auth, fields)
-            : publicAssetUrl(artifact, context.resources, fields);
-          uploaded.set(key, promise);
-          return promise;
-        };
-        const compiled = await route.compile(context.need.constraints, resolve);
+        const { route, auth, compiled, operation } = await prepareGeneration(client, context, publicAssetUrl);
         assert(route.media !== "audio", "QflowHub audio capabilities use an immediate endpoint");
         const input = compiled.input as Record<string, unknown>;
-        const operation = generationOperation(route, input);
         const path = operation === "image_edits" ? "/images/edits"
           : operation === "images" ? "/images/generations" : "/videos";
-        await verifyModelRoute(client, auth, compiled.model, operation);
+        await context.reportProgress?.({ phase: `Submitting QflowHub request: ${compiled.model} (${operation})` });
         const response = await client.json(path, auth, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": context.operation }, body: JSON.stringify({ model: compiled.model, ...input }) });
         const status = response.status;
         const remoteEnded = status === "succeeded" || status === "completed";
         const handle: Handle = { contract: "qflow.qflowhub-operation@1", jobId: jobId(response), route: capabilityKey(route.capability), startedAt: Date.now() };
         const receipt = { id: handle.jobId };
         await context.checkpoint?.({ handle: canonicalize(handle), receipt, ...(remoteEnded ? { remoteEnded: true as const } : {}) });
+        const rejected = hypiHubJobFailure(response, handle.jobId);
+        if (rejected !== undefined) return { ...failure(rejected), receipt };
         return remoteEnded ? { status: "ready", handle: canonicalize(handle), receipt }
           : { ...wakeAfter(canonicalize(handle), pollIntervalMs, Date.now(), { phase: "submitted" }), receipt };
       } catch (error) {
@@ -457,15 +467,13 @@ function endpoint(client: QflowHubClient, pollIntervalMs: number, maxOperationMs
         assert(route !== undefined && handle.contract === "qflow.qflowhub-operation@1" && handle.route === capabilityKey(route.capability), "QflowHub handle is invalid");
         if (Date.now() - handle.startedAt > maxOperationMs) {
           return { status: "failed",
-            failure: { code: "QFLOWHUB_OPERATION_TIMEOUT", message: "QflowHub operation timed out" } };
+            receipt: { id: handle.jobId },
+            failure: { code: "QFLOWHUB_OPERATION_TIMEOUT", message: `QflowHub job ${handle.jobId} exceeded this Provider's operationTimeoutMs (${maxOperationMs}); remote outcome is unknown` } };
         }
         const job = await client.json(`/jobs/${encodeURIComponent(handle.jobId)}`, authFor(context, client)); const status = job.status;
         if (status === "queued" || status === "running" || status === "in_progress") return wakeAfter(canonicalize(handle), pollIntervalMs, Date.now(), { phase: String(status) });
-        if (status === "failed" || status === "queue_expired" || status === "cancelled") {
-          const detail = [job.error, job.message, job.reason, job.detail]
-            .find((value) => typeof value === "string" && value.length > 0);
-          throw new Error(`QflowHub job ${status}${typeof detail === "string" ? `: ${detail}` : ""}`);
-        }
+        const rejected = hypiHubJobFailure(job, handle.jobId);
+        if (rejected !== undefined) return { ...failure(rejected), receipt: { id: handle.jobId } };
         if (status !== "succeeded" && status !== "completed") throw new Error(`QflowHub returned unknown job status ${String(status)}`);
         return { status: "ready", handle: context.handle, receipt: { id: handle.jobId } };
       } catch (error) {
@@ -473,10 +481,12 @@ function endpoint(client: QflowHubClient, pollIntervalMs: number, maxOperationMs
       }
     },
     async collect(context) {
-      const handle = object(context.handle, "QflowHub handle") as unknown as Handle;
-      const route = hypiHubRouteForCapability(context.need.capability);
-      assert(route !== undefined && handle.route === capabilityKey(route.capability), "QflowHub collection route differs");
-      return await complete(client, authFor(context, client), route, handle.jobId, context.resources);
+      try {
+        const handle = object(context.handle, "QflowHub handle") as unknown as Handle;
+        const route = hypiHubRouteForCapability(context.need.capability);
+        assert(route !== undefined && handle.route === capabilityKey(route.capability), "QflowHub collection route differs");
+        return await complete(client, authFor(context, client), route, handle.jobId, context.resources);
+      } catch (error) { return failure(error); }
     },
 
   };
@@ -529,13 +539,8 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
     fetcher: options.fetch ?? globalThis.fetch,
   });
   const asyncEndpoint = endpoint(client, options.pollIntervalMs ?? 10_000, operationTimeoutMs, options.publicAssetUrl);
-  const audioEndpoint: ImmediateEndpointHandler = async (context) => {
-    try {
-      return await synthesizeAudio(client, context, options.publicAssetUrl);
-    } catch (error) {
-      throw new Error(guidedMessage(error), { cause: error });
-    }
-  };
+  const audioEndpoint: ImmediateEndpointHandler = async (context) =>
+    await synthesizeAudio(client, context, options.publicAssetUrl);
   const transcriptionModel = options.transcriptionModel?.trim() || "victor-upmeet/whisperx";
   const whisperXEndpoint: ImmediateEndpointHandler = async (context) => {
     try {
@@ -564,7 +569,7 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
       await context.reportProgress?.({ phase: "Word timing ready" });
       return { value: { kind: "inline", value: canonicalize(evidence) } };
     } catch (error) {
-      throw new Error(guidedMessage(error), { cause: error });
+      throw new Error(failureMessage(error), { cause: error });
     }
   };
   const oauthOrigin = new URL(options.baseUrl ?? "https://qflow.ai").origin;
@@ -574,7 +579,7 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
     readPricing: hypiHubPricingReader(pricingClient, transcriptionModel),
     credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") },
     credentialInputs: { apiKey: {
-      label: "QflowHub login",
+      label: "QflowHub credential",
       acquisition: {
         kind: "oauth2-pkce",
         authorizationEndpoint: new URL("/oauth/consent", oauthOrigin).toString(),

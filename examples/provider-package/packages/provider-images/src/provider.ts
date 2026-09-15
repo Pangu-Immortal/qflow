@@ -1,6 +1,6 @@
 import { canonicalize, defineEndpointPackage, wakeAfter } from "@qflow/qflow/endpoint-kit";
 import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow/endpoint-kit";
-import { compileWireRequest, generationTypes, sealGeneratedImageSet } from "@qflow/qflow/generation";
+import { compileWireRequest, generationTypes, sealGeneratedImageSet, selectWireModelForRequest } from "@qflow/qflow/generation";
 import type { GenerationRequest, GenerationWireMapping } from "@qflow/qflow/generation";
 
 export const providerModule = { name: "@example/provider-images", version: "1" } as const;
@@ -24,6 +24,13 @@ function object(value: unknown): Record<string, unknown> {
 function text(value: unknown): string {
   if (typeof value !== "string" || value.length === 0) throw new Error("Expected nonempty service text");
   return value;
+}
+// This illustrative service documents these fields as its public failure evidence.
+function publicFailure(value: unknown): { code: string; message: string } | undefined {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const error = value as Record<string, unknown>;
+  if (typeof error.code !== "string" || typeof error.message !== "string") return undefined;
+  return { code: error.code, message: error.message.replace(/https?:\/\/\S+/giu, "[redacted-url]") };
 }
 function address(value: string): string {
   const url = new URL(value);
@@ -57,7 +64,16 @@ export function createImageProvider(options: {
       ...init, headers: { ...init.headers, authorization: `Bearer ${secret}` },
       signal: AbortSignal.timeout(30_000),
     });
-    if (!response.ok) throw new Error(`Image service ${path} returned HTTP ${response.status}`);
+    if (!response.ok) {
+      let error: ReturnType<typeof publicFailure>;
+      try { error = publicFailure(object(await response.json()).error); }
+      catch { /* A missing public error body leaves the HTTP evidence intact. */ }
+      const requestId = response.headers.get("x-request-id");
+      throw Object.assign(new Error(`Image service ${init.method ?? "GET"} ${path} returned HTTP ${response.status}`
+        + (requestId === null ? "" : `; request=${requestId}`)
+        + (error === undefined ? "" : `; ${error.code}: ${error.message}`)),
+      error === undefined ? {} : { code: error.code });
+    }
     return object(await response.json());
   }
   const endpoint: AsyncEndpoint = {
@@ -65,7 +81,11 @@ export function createImageProvider(options: {
       const supported = support(context.need);
       if (supported.status === "unsupported") throw new Error(supported.reason);
       const secret = key(context.credentials);
-      const request = await compileWireRequest(mapping, context.need.constraints as unknown as GenerationRequest,
+      const authored = context.need.constraints as unknown as GenerationRequest;
+      const model = selectWireModelForRequest(mapping, authored);
+      // This service has no catalogue query; its known request limits were checked above.
+      await context.reportProgress?.({ phase: `Preparing image request: ${model}` });
+      const request = await compileWireRequest(mapping, authored,
         async (artifact) => {
           const bytes = await context.resources.get(artifact.resource);
           if (bytes === undefined) throw new Error("Reference image is unavailable");
@@ -74,6 +94,7 @@ export function createImageProvider(options: {
           });
           return address(text(upload.url));
         });
+      await context.reportProgress?.({ phase: `Submitting image request: ${model}` });
       const task = await json("/tasks", secret, {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(request),
       });
@@ -87,15 +108,20 @@ export function createImageProvider(options: {
       if (task.state === "queued" || task.state === "running") {
         return wakeAfter({ id }, interval, Date.now(), { phase: task.state });
       }
-      if (task.state === "failed") return {
-        status: "failed", failure: { code: "IMAGE_SERVICE_FAILED", message: "Image service task failed" },
-      };
+      if (task.state === "failed") {
+        const error = publicFailure(task.error);
+        return { status: "failed", receipt: { id }, failure: {
+          code: error?.code ?? "IMAGE_SERVICE_FAILED",
+          message: `Image service task ${id} failed${error === undefined ? "" : `: ${error.message}`}`,
+        } };
+      }
       if (task.state !== "succeeded") throw new Error("Image service returned an unknown task state");
       return { status: "ready", handle: { id, url: address(text(task.url)) } };
     },
     async collect(context) {
       // The service returns a signed asset URL; account credentials go only to its API.
       const url = address(text(object(context.handle).url));
+      await context.reportProgress?.({ phase: "Receiving generated image" });
       const response = await fetcher(url, { signal: AbortSignal.timeout(60_000) });
       if (!response.ok) throw new Error(`Image download returned HTTP ${response.status}`);
       const mediaType = response.headers.get("content-type")?.split(";")[0]?.trim();
@@ -113,8 +139,11 @@ export function createImageProvider(options: {
     actionLimits: { submit: { concurrency: 1 }, poll: { concurrency: 4 }, collect: { concurrency: 1 } },
     pricing: { kind: "page", url: `${base}/pricing` },
     async readPricing(context) {
-      const source = `${base}/rates?model=gpt-image-2`;
-      const rates = await json("/rates?model=gpt-image-2", key(await context.credentials()));
+      const model = selectWireModelForRequest(mapping, context.request.constraints as unknown as GenerationRequest,
+        context.request.pendingInputs?.map((input) => input.input));
+      const path = `/rates?model=${encodeURIComponent(model)}`;
+      const source = `${base}${path}`;
+      const rates = await json(path, key(await context.credentials()));
       return [{ source, data: canonicalize(rates), summary: text(rates.description) }];
     },
     capabilities: [{ capability, returns: generationTypes.imageSet, lifecycle: "asynchronous", supports: support, endpoint }],

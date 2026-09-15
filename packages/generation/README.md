@@ -9,6 +9,16 @@ implementations. `sealGenerationPortTable` describes a model's inputs; `Generati
 `selectWireModelForRequest` applies the same route selection without resolving media bytes. During
 planning, a Provider may add the model-port names already attached as future graph inputs; the
 selector does not inspect graph structure or interpret media roles.
+Route selection here applies declared input-mode mappings for the already chosen exact capability;
+it does not search for an alternative model, service or account.
+
+`compileWireRequest` awaits its media URL resolver, so compilation can have external effects when
+that resolver uploads files. Use `selectWireModelForRequest` for request identity and known-port
+checks before those effects; pricing and execution can share the same mapping. A Provider can also
+describe its API operation from the authored ports. Service-specific support queries belong to that
+Provider and only use operations its API actually exposes. The generic helper neither queries a
+catalogue nor switches to another route after a failure. Actual URL resolution belongs to request
+execution, not to discovering a model name or making a planning placeholder.
 
 The package owns `GenerationRequest`, `GeneratedImageSet` and `GeneratedVideoSet` identities,
 schemas, validators and graph facets. Generated sets are atomic Products: a Provider persists the

@@ -101,7 +101,7 @@ export type EndpointInvocationContext = {
   readonly credentials: Readonly<Record<string, EndpointCredential>>;
   /** Explicit non-secret diagnostic output. The Provider owns its content, never its storage. */
   readonly reportDiagnostic?: (diagnostic: import("@qflow/runtime").ExecutionDiagnostic) => Promise<void>;
-  /** Report non-secret activity of a long local call without creating a remote Operation. */
+  /** Report non-secret activity while an immediate call or asynchronous action is still running. */
   readonly reportProgress?: (progress: OperationProgress) => Promise<void>;
 };
 

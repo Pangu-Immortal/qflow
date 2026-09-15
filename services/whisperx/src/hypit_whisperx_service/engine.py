@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import importlib.metadata as metadata
+import logging
 import math
 import os
 import threading
+import time
 from typing import Any, Mapping
 
 from .audio import CanonicalAudio
 from .config import ServiceConfig
 from .resources import assert_punkt_tab
+
+logger = logging.getLogger("qflow.whisperx")
 
 
 class InferenceInputError(ValueError):
@@ -104,11 +108,14 @@ class WhisperXEngine:
         self._config = config
         self._inference_lock = threading.Lock()
         self._alignment_models: dict[str, tuple[object, object]] = {}
+        started = time.monotonic()
+        logger.info("loading ASR model=%s; uncached weights may download during this call", config.model)
         self._asr = whisperx_module.load_model(
             config.model,
             config.device,
             compute_type=config.compute,
         )
+        logger.info("ASR model ready in %.1fs", time.monotonic() - started)
         self._whisperx_version = metadata.version("whisperx")
 
     def identity(self) -> dict[str, object]:
@@ -123,6 +130,8 @@ class WhisperXEngine:
     def _alignment_model(self, language: str) -> tuple[object, object]:
         model = self._alignment_models.get(language)
         if model is None:
+            started = time.monotonic()
+            logger.info("loading alignment model for language=%s; uncached weights may download during this call", language)
             loaded = self._whisperx.load_align_model(
                 language_code=language,
                 device=self._config.device,
@@ -131,6 +140,7 @@ class WhisperXEngine:
                 raise RuntimeError("WhisperX returned an invalid alignment model")
             model = loaded
             self._alignment_models[language] = model
+            logger.info("alignment model ready for language=%s in %.1fs", language, time.monotonic() - started)
         return model
 
     def transcribe(self, audio: CanonicalAudio, language: str | None) -> dict[str, object]:
@@ -144,11 +154,14 @@ class WhisperXEngine:
         if not self._inference_lock.acquire(blocking=False):
             raise InferenceBusyError("the warm WhisperX model is already executing one request")
         try:
+            started = time.monotonic()
+            logger.info("transcribing %.2fs of audio, language=%s", audio.duration_sec, language or "auto")
             transcription = self._asr.transcribe(
                 samples,
                 batch_size=self._config.batch_size,
                 language=language,
             )
+            logger.info("transcription completed in %.1fs", time.monotonic() - started)
             detected = transcription.get("language") or language or "en"
             if not isinstance(detected, str) or not detected.strip():
                 raise RuntimeError("WhisperX did not return a valid language")
@@ -156,8 +169,11 @@ class WhisperXEngine:
             if not isinstance(segments, list):
                 raise RuntimeError("WhisperX transcription returned invalid segments")
             if not segments:
+                logger.info("no speech segments; alignment is unnecessary")
                 return {"language": detected, "segments": []}
             alignment_model, metadata_value = self._alignment_model(detected)
+            started = time.monotonic()
+            logger.info("aligning %d speech segments, language=%s", len(segments), detected)
             aligned = self._whisperx.align(
                 segments,
                 alignment_model,
@@ -168,6 +184,8 @@ class WhisperXEngine:
             )
             if not isinstance(aligned, Mapping):
                 raise RuntimeError("WhisperX returned an invalid alignment result")
-            return normalize_alignment(detected, aligned)
+            result = normalize_alignment(detected, aligned)
+            logger.info("word timing ready in %.1fs", time.monotonic() - started)
+            return result
         finally:
             self._inference_lock.release()

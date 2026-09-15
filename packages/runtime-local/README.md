@@ -6,12 +6,29 @@ worklist. Project-owned Build Results hold finished public Outputs.
 Managed Program preparation writes subprocess stdout and stderr directly to that Program's
 `install.log`, so dependency-download output is readable before installation finishes. Installation
 and startup progress expose `logPath`; failed installation reports retain it with a short error.
+Each preparation command adds its owner-supplied purpose (or executable name) and start/end time to
+the log. Command arguments and environment values are not copied into these headings.
 The files belong to the Program's configured state directory. Service output uses `program.log`
 and, on Windows, a separate `program.err.log` for stderr. Keeping installation output separate
 preserves it when Windows opens fresh service logs at startup.
 The CLI retains Program failure reasons, PIDs and log paths in `programs` and `runtime up` reports.
 Human output stays compact for successful preparation; `programs status --verbose` also shows
 ready helpers, and JSON retains the reported details independently of verbosity.
+With `--json`, preparation notices use stderr; stdout remains the final JSON result. Status reports
+existing `installationLogPath`, `logPath` and Windows `errorLogPath` separately. These paths identify
+historical files, not currently running phases.
+
+Each Program Home has OS-owned exclusion for preparation, spawning and stopping. Concurrent lifecycle
+commands for that home return the observed facts and a busy explanation; other Programs remain
+independent. The empty `lifecycle.lock` file is only a lock address. The OS releases ownership on
+command exit; no phase record, expiry, stale-lock deletion or recovery procedure is attached to it.
+This uses the Distribution's existing native binding dependency for POSIX `flock` and Windows
+exclusive file handles, rather than coordinating all services in a central table.
+
+Startup publishes `process.pid` before waiting for the probe, then releases exclusion. Repeated `up`
+observes that live process; `down` can stop it while it is still loading. A readiness observation
+timeout leaves the process alone and reports that it remains alive. This is Program lifecycle
+coordination, separate from Build execution; it does not retry or recover Builds.
 
 A Runtime Profile selects only the environmental parts that genuinely vary:
 

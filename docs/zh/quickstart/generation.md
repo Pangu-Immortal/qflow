@@ -55,7 +55,7 @@ qflow measure main.svml --segment hook --language en --pace normal --rounding ro
 ```
 
 ```svml
-<seedance:ReferenceVideo id="hook-take" model="mini" prompt={hook-prompt} duration="7">
+<seedance:ReferenceVideo id="hook-take" model="mini" prompt={hook-prompt} duration="7" generate-audio="true">
   …
 </seedance:ReferenceVideo>
 ```
@@ -92,7 +92,7 @@ Seedance 2.5 复用同样的 Surface，而不是由 Runtime 把别的模型偷�
 
 ```svml
 <seedance:ReferenceVideo id="long-take" model="2.5"
-  prompt={long-direction} duration="30" resolution="720p">
+  prompt={long-direction} duration="30" resolution="720p" generate-audio="true">
   <seedance:Reference image={presenter-reference} person-reference="true"/>
   <seedance:Reference audio={presenter-voice}/>
 </seedance:ReferenceVideo>

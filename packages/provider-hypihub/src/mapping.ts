@@ -12,8 +12,8 @@ const MIMO_SPEECH: ModuleRef = { name: "@qflow/mimo-speech", version: "1" };
 const FISHAUDIO_SPEECH: ModuleRef = { name: "@qflow/fishaudio-speech", version: "1" };
 const ELEVENLABS_SPEECH: ModuleRef = { name: "@qflow/elevenlabs-speech", version: "1" };
 
-const seedance = (name: string, model: string): GenerationWireMapping => ({
-  capability: { module: SEEDANCE, name }, result: "video", routes: [{ model }],
+const seedance = (name: string): GenerationWireMapping => ({
+  capability: { module: SEEDANCE, name }, result: "video", routes: [{ model: name }],
   fields: {
     prompt: { as: "value", field: "prompt" },
     referenceImage: { as: "urlArray", field: "reference_image_urls", resourceFields: ["personReference"] },
@@ -38,15 +38,12 @@ export const hypiHubMappings: readonly GenerationWireMapping[] = [
       format: { as: "value", field: "format", whenAbsent: "WEBM" },
     },
   },
-  seedance("seedance-2", "seedance-2"),
-  seedance("seedance-2-fast", "seedance-2-fast"),
-  seedance("seedance-2-mini", "seedance-2-mini"),
-  seedance("seedance-2.5", "seedance-2.5"),
+  seedance("seedance-2"),
+  seedance("seedance-2-fast"),
+  seedance("seedance-2-mini"),
+  seedance("seedance-2.5"),
   {
-    capability: { module: GPT_IMAGE, name: "gpt-image-2" }, result: "image", routes: [
-      { model: "gpt-image-2", whenPresent: ["images"] },
-      { model: "gpt-image-2" },
-    ],
+    capability: { module: GPT_IMAGE, name: "gpt-image-2" }, result: "image", routes: [{ model: "gpt-image-2" }],
     fields: {
       prompt: { as: "value", field: "prompt" },
       aspectRatio: { as: "value", field: "aspect_ratio" },
@@ -66,10 +63,7 @@ export const hypiHubMappings: readonly GenerationWireMapping[] = [
     },
   })),
   {
-    capability: { module: SEEDREAM, name: "seedream-5-lite" }, result: "image", routes: [
-      { model: "seedream-5-lite", whenPresent: ["images"] },
-      { model: "seedream-5-lite" },
-    ],
+    capability: { module: SEEDREAM, name: "seedream-5-lite" }, result: "image", routes: [{ model: "seedream-5-lite" }],
     fields: {
       prompt: { as: "value", field: "prompt" },
       aspectRatio: { as: "value", field: "aspect_ratio" },
@@ -80,13 +74,7 @@ export const hypiHubMappings: readonly GenerationWireMapping[] = [
     },
   },
   {
-    capability: { module: MINIMAX, name: "minimax-h3" }, result: "video", routes: [
-      { model: "minimax-h3", whenPresent: ["lastFrame"] },
-      { model: "minimax-h3", whenPresent: ["firstFrame"] },
-      { model: "minimax-h3", whenPresent: ["referenceImage"] },
-      { model: "minimax-h3", whenPresent: ["referenceVideo"] },
-      { model: "minimax-h3" },
-    ],
+    capability: { module: MINIMAX, name: "minimax-h3" }, result: "video", routes: [{ model: "minimax-h3" }],
     fields: {
       prompt: { as: "value", field: "prompt" }, duration: { as: "value", field: "seconds" },
       resolution: { as: "value", field: "resolution", whenAbsent: "2k" }, aspectRatio: { as: "value", field: "aspect_ratio" },
@@ -98,10 +86,7 @@ export const hypiHubMappings: readonly GenerationWireMapping[] = [
     },
   },
   {
-    capability: { module: GROK, name: "grok-imagine-video" }, result: "video", routes: [
-      { model: "grok-imagine-video", whenPresent: ["images"] },
-      { model: "grok-imagine-video" },
-    ],
+    capability: { module: GROK, name: "grok-imagine-video" }, result: "video", routes: [{ model: "grok-imagine-video" }],
     fields: {
       prompt: { as: "value", field: "prompt" }, duration: { as: "value", field: "seconds" },
       resolution: { as: "value", field: "resolution" }, aspectRatio: { as: "value", field: "aspect_ratio" },

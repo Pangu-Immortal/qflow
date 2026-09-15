@@ -35,6 +35,12 @@ reuse completed Outputs. A closed terminal or interrupted
 observation is distinct from a failed Provider request inside the Build. Finishing an incomplete
 Result is covered below and does not require regenerating media.
 
+Follow-up commands printed by the CLI retain the project and relevant Runtime. Preserve that scope
+when adapting a command. Watching with `--json` still reports coalesced progress on stderr while
+stdout carries the final JSON; read both channels when the terminal tool exposes them. Translate the
+reported work, relevant uncertainty and useful next action into a concise update for the user.
+The Runtime owns execution; a conversational update or a detached observer does not pause it.
+
 For a slow or failed stage, read its retained execution evidence:
 
 ```bash

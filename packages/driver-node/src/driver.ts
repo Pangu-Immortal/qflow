@@ -22,6 +22,7 @@ import type {
   CredentialStore,
   CredentialValue,
   OperationSnapshot,
+  OperationProgress,
   OperationStore,
   RuntimeExecutionContext,
   RuntimeExecutionResult,
@@ -349,6 +350,23 @@ export class NodeDriver {
     return result;
   }
 
+  #endpointObservers(endpoint: string, context?: RuntimeExecutionContext) {
+    let phase: string | undefined;
+    return {
+      reportProgress: async (progress: OperationProgress) => {
+        await context?.reportProgress?.({ endpoint, progress });
+        if (progress.phase !== phase) {
+          phase = progress.phase;
+          await context?.recordExecution?.({ endpoint, kind: "phase", phase });
+        }
+      },
+      ...(context?.recordExecution === undefined ? {} : {
+        reportDiagnostic: (diagnostic: import("@qflow/runtime").ExecutionDiagnostic) =>
+          context.recordExecution!({ endpoint, kind: "diagnostic", ...diagnostic }),
+      }),
+    };
+  }
+
   async #advanceOperationStep(
     operation: OperationSnapshot,
     registration: EndpointRegistration,
@@ -374,10 +392,7 @@ export class NodeDriver {
         command: structuredClone(command), need: structuredClone(command.need),
         resources: this.#resourceStore(operation.build), operation: operation.id,
         credentials: await this.#endpointCredentials({ ...registration, credentials: operation.credentials ?? registration.credentials ?? {} }),
-        ...(runtimeContext.recordExecution === undefined ? {} : {
-          reportDiagnostic: (diagnostic: import("@qflow/runtime").ExecutionDiagnostic) =>
-            runtimeContext.recordExecution!({ endpoint: operation.endpoint, kind: "diagnostic", ...diagnostic }),
-        }),
+        ...this.#endpointObservers(operation.endpoint, runtimeContext),
         checkpoint: async (checkpoint: import("@qflow/endpoint-kit").EndpointCheckpoint) => {
           await operations.update(operation.id, { status: "pending", ...checkpoint,
             submission: "accepted", acknowledgedAt: operation.acknowledgedAt ?? Date.now(), wakeAt: Date.now(), progress: { phase: checkpoint.remoteEnded ? "collecting" : "submitted" } });
@@ -493,7 +508,6 @@ export class NodeDriver {
         );
       }
     }
-    let phase: string | undefined;
     await context?.recordExecution?.({ endpoint: executable.endpointId, kind: "started" });
     try {
       const result = await executable.registration.handler({
@@ -501,16 +515,7 @@ export class NodeDriver {
         need: structuredClone(executable.command.need),
         resources: this.#resourceStore(context?.build),
         credentials: await this.#endpointCredentials(executable.registration),
-        reportProgress: async (progress) => {
-          await context?.reportProgress?.({ endpoint: executable.endpointId, progress });
-          if (progress.phase !== phase) {
-            phase = progress.phase;
-            await context?.recordExecution?.({ endpoint: executable.endpointId, kind: "phase", phase });
-          }
-        },
-        ...(context?.recordExecution === undefined ? {} : {
-          reportDiagnostic: (diagnostic) => context.recordExecution!({ endpoint: executable.endpointId, kind: "diagnostic", ...diagnostic }),
-        }),
+        ...this.#endpointObservers(executable.endpointId, context),
       });
       const event = await this.#endpointEvent(state, executable, result);
       await context?.recordExecution?.({ endpoint: executable.endpointId, kind: "completed" });

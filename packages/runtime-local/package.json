@@ -24,7 +24,8 @@
     "@qflow/runtime-kit": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
     "@qflow/store-sqlite": "workspace:*",
-    "@qflow/validation": "workspace:*"
+    "@qflow/validation": "workspace:*",
+    "koffi": "3.2.1"
   },
   "devDependencies": {
     "@qflow/build-result": "workspace:*",

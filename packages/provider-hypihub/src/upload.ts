@@ -2,6 +2,7 @@ import { requestDeadline } from "@qflow/runtime-kit";
 import { createHash } from "node:crypto";
 
 import type { QflowHubAuth } from "./oauth.js";
+import { QflowHubHttpError, QflowHubServiceError, safeQflowHubReason } from "./errors.js";
 
 type UploadAuth = QflowHubAuth | string;
 
@@ -45,12 +46,6 @@ function apiBaseUrl(value: string): string {
   const trimmed = value.trim().replace(/\/+$/u, "");
   assert(trimmed.length > 0, "QflowHub upload base URL is empty");
   return `${trimmed.replace(/\/(?:v1beta|v1)$/iu, "")}/v1`;
-}
-
-class QflowHubHTTPError extends Error {
-  constructor(readonly status: number, message: string, readonly retryAfterMs?: number, readonly code?: string) {
-    super(message);
-  }
 }
 
 export type QflowHubUploaderOptions = {
@@ -149,7 +144,7 @@ export class QflowHubUploader {
 
   private safeReason(error: unknown): string {
     const message = error instanceof Error ? error.message : String(error);
-    return message.replace(/https?:\/\/\S+/giu, "[redacted-url]").slice(0, 300);
+    return safeQflowHubReason(message);
   }
 
   private async json(path: string, auth: UploadAuth, init: RequestInit = {}): Promise<Record<string, unknown>> {
@@ -159,7 +154,7 @@ export class QflowHubUploader {
       try {
         return await this.jsonOnce(path, auth, init, Math.max(1, deadline - Date.now()));
       } catch (error) {
-        const http = error instanceof QflowHubHTTPError ? error : undefined;
+        const http = error instanceof QflowHubHttpError ? error : undefined;
         // Existing-session operations are idempotent. A new session may only
         // be retried after an explicit 429 rejection, never an unknown result.
         const retryable = http !== undefined
@@ -200,14 +195,9 @@ export class QflowHubUploader {
         if (response.ok) throw new Error(`QflowHub returned invalid JSON (${response.status})`);
       }
       if (!response.ok) {
-        const errorBody = body !== null && typeof body === "object" && "error" in body ? body.error : undefined;
-        const code = errorBody !== null && typeof errorBody === "object" && "code" in errorBody
-          && typeof errorBody.code === "string" ? errorBody.code : undefined;
-        const retryAfter = response.headers.get("retry-after");
-        const parsedRetry = retryAfter === null ? NaN : /^\d+$/u.test(retryAfter.trim())
-          ? Number(retryAfter) * 1000 : Date.parse(retryAfter) - Date.now();
-        throw new QflowHubHTTPError(response.status, `QflowHub returned HTTP ${response.status}: ${this.safeReason(text)}`,
-          Number.isFinite(parsedRetry) ? Math.max(0, parsedRetry) : undefined, code);
+        throw new QflowHubHttpError(response.status, response, text, {
+          method: init.method ?? "GET", url: `${this.baseUrl}${path}`,
+        });
       }
       return object(body, "QflowHub response");
     } finally {
@@ -365,12 +355,12 @@ export class QflowHubUploader {
       this.log(`multipart upload failed upload=${uploadId} reason=${this.safeReason(error)}`);
       try { await this.json(`/files/uploads/${encodeURIComponent(uploadId)}`, auth, { method: "DELETE" }); }
       catch (cancelError) {
-        if (!(cancelError instanceof QflowHubHTTPError && (cancelError.status === 404
+        if (!(cancelError instanceof QflowHubHttpError && (cancelError.status === 404
           || (cancelError.status === 409 && cancelError.code === "upload_completed")))) {
           this.log(`upload cancellation still pending upload=${uploadId} reason=${this.safeReason(cancelError)}`);
         }
       }
-      throw new Error(this.safeReason(error));
+      throw error instanceof QflowHubServiceError ? error : new Error(this.safeReason(error));
     }
   }
 

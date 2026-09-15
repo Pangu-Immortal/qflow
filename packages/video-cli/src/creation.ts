@@ -159,9 +159,14 @@ async function selectedProvider(host: CreationHost, need: Need, profile: string)
   }]);
   const subject = capabilityName(need.capability);
   assert(provider !== undefined && provider.status !== "unresolved",
-    `No Endpoint in ${profile} serves ${subject}; qflow plan --runtime ${profile} shows which Endpoint each capability needs`);
+    `No Endpoint in ${profile} serves ${subject}; configure an Endpoint that supports this capability and check its binding in that Profile`);
   assert(provider.status !== "ambiguous",
-    `Several Endpoints in ${profile} serve ${subject}: ${(provider.endpoints ?? []).join(", ")}; keep exactly one`);
+    `Several Endpoints in ${profile} serve ${subject}: ${(provider.endpoints ?? []).join(", ")}; select one with bindings[${JSON.stringify(subject)}] in that Profile`);
+  assert(provider.status !== "unsupported",
+    `The configured Endpoints in ${profile} do not support this request for ${subject}`
+    + (provider.binding === undefined ? "" : ` (binding: ${provider.binding})`)
+    + `: ${(provider.rejections ?? []).map((item) => `${item.endpoint}: ${item.message}`).join("; ") || "no support reason supplied"}`
+    + "; adjust the request or select a compatible Endpoint in that Profile");
   return provider;
 }
 

@@ -35,12 +35,21 @@ without changing Core demand. Each resource declares a `limit` and optional `uni
 A capability may add `resources` and a pure `unitsForRequest(request)` resolver for quantities of
 already declared resources. Runtime admits all claims atomically for one `fulfill-need` Command.
 
-A long immediate call can report its current activity with
+A running immediate call or asynchronous action can report its current activity with
 `await context.reportProgress?.({ phase: "processing", completed: 12, total: 40, unit: "items" })`.
 The Provider chooses meaningful phases and quantities and reports non-secret, human-readable facts.
 The Runtime attaches them to the currently executing Command; they do not change its outcome,
 scheduling or Core facts. Completion clears the live activity. Direct callers may omit the callback.
-For asynchronous work, return `progress` in the existing pending outcome instead.
+For asynchronous work, these callbacks describe work inside `start`, `poll` or `collect`, such as
+preparing references or downloading results. A returned `pending.progress` describes the acknowledged
+remote task between actions. Neither form of progress substitutes for a received task ID or receipt.
+
+Separate facts available from the request from actions needed to fulfill it. Check known input
+limits and determine the requested service operation before transferring its resources. If the
+service exposes account-specific capability information, use that evidence for the selected request;
+an API without such a query needs no invented discovery step. A Provider owns the meaning of its
+public error codes and reasons. Preserve the failed operation and that evidence, distinguishing what
+was never submitted from a submission whose remote outcome is unknown.
 
 Asynchronous execution moves forward through `start`, `poll`, and optional `collect`. `start` returns
 a task handle; `pending` means an acknowledged task is still running. `ready` records remote completion

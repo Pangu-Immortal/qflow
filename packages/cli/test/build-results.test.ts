@@ -3,6 +3,7 @@ import { mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { commandHint } from "../src/command-hint.js";
 import test from "node:test";
 
 import { FileBuildResult, FileBuildResultRepository } from "@qflow/build-result";
@@ -610,7 +611,7 @@ test("a failed Result exposes task receipts and credential references without a 
       need: { id: "generation-1", capability: valueType },
       credentials: { apiKey: { store: "os", key: "personal-api-key" } },
       receipt: { id: "remote-task-1" }, status: "failed" as const,
-      failure: { code: "DOWNLOAD_FAILED", message: "network timed out" },
+      failure: { code: "DOWNLOAD_FAILED", message: `HTTP 502; request=req-example; ${"public reason ".repeat(35)}last diagnostic detail` },
       createdAt: 1, acknowledgedAt: 2,
     };
     await result.finish({ outcome: "failed", failure: "download failed", operations: [operation] });
@@ -626,6 +627,7 @@ test("a failed Result exposes task receipts and credential references without a 
     const human = await humanCommand(["inspect", id], root);
     assert.match(human, /remote-task-1/);
     assert.match(human, /DOWNLOAD_FAILED/);
+    assert.ok(human.includes(operation.failure.message));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -641,6 +643,9 @@ test("logs reads finished evidence without a Runtime and clearly limits the tail
       yield Buffer.from(records.map((record) => JSON.stringify(record) + "\n").join(""));
     })() });
     await writeFile(join(root, ".qflow/runtime"), "missing-profile.json\n");
+    assert.ok((await humanCommand(["inspect", id], root)).includes(
+      commandHint(["logs", id], { projectRoot: root }),
+    ));
     assert.deepEqual(await jsonCommand(["logs", id, "--lines", "1"], root), {
       format: "qflow.cli-logs@1", build: id, source: "result", records: [records[1]], omittedRecords: 1,
     });

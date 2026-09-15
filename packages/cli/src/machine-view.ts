@@ -9,6 +9,8 @@ type ProgramStateView = {
   readonly detail?: string;
   readonly pid?: number;
   readonly logPath?: string;
+  readonly installationLogPath?: string;
+  readonly errorLogPath?: string;
 };
 type AttentionView = { readonly message: string; readonly action?: string };
 
@@ -18,12 +20,12 @@ export type OperationalMachineView =
   | { readonly format: "qflow.cli-runtime-selection@1"; readonly selected: boolean; readonly removed?: boolean; readonly profile?: string; readonly project?: string }
   | { readonly format: "qflow.cli-paths@1"; readonly project: string; readonly projectState: string; readonly profileSource: "argument" | "project" | "none"; readonly selectionFile: string; readonly profile?: string; readonly runtimeData?: string; readonly hostState: string; readonly machinePackages: string; readonly distribution?: string }
   | { readonly format: "qflow.cli-package@1"; readonly action: "install" | "status"; readonly package: string; readonly ready: boolean }
-  | { readonly format: "qflow.cli-programs@1"; readonly action: "up" | "down" | "status"; readonly ready: boolean; readonly programCount: number; readonly readyCount: number; readonly programs: readonly ProgramStateView[]; readonly omittedPrograms?: number }
+  | { readonly format: "qflow.cli-programs@1"; readonly action: "up" | "down" | "status"; readonly ok: boolean; readonly ready: boolean; readonly programCount: number; readonly readyCount: number; readonly programs: readonly ProgramStateView[]; readonly omittedPrograms?: number }
   | { readonly format: "qflow.cli-runtime-up@1"; readonly ready: boolean; readonly worker: string; readonly preparedPackages: number; readonly programs: { readonly total: number; readonly ready: number; readonly items: readonly ProgramStateView[] } }
   | { readonly format: "qflow.cli-runtime-logs@1"; readonly lines: readonly string[]; readonly totalLines: number; readonly omittedLines: number; readonly path?: string }
   | { readonly format: "qflow.cli-runtime-down@1"; readonly worker: string }
   | { readonly format: "qflow.cli-runtime-status@1"; readonly ready: boolean; readonly attention: boolean; readonly worker: { readonly state: string; readonly configuration?: string }; readonly builds: Readonly<Record<string, number>>; readonly programs: { readonly total: number; readonly ready: number; readonly unavailable: readonly ProgramStateView[] }; readonly capacity: { readonly active: number } }
-  | { readonly format: "qflow.cli-auth-status@1"; readonly endpoint: string; readonly credentials: readonly { readonly endpoint: string; readonly slot: string; readonly label: string; readonly kind: string; readonly configured: boolean; readonly writable: boolean }[]; readonly omittedCredentials?: number }
+  | { readonly format: "qflow.cli-auth-status@1"; readonly endpoint: string; readonly credentials: readonly { readonly endpoint: string; readonly slot: string; readonly label: string; readonly kind: string; readonly configured: boolean; readonly writable: boolean; readonly acquisition?: { readonly kind: string; readonly authorizationEndpoint: string } }[]; readonly omittedCredentials?: number }
   | { readonly format: "qflow.cli-auth-change@1"; readonly endpoint: string; readonly slot: string; readonly configured: boolean; readonly changed?: boolean }
   | { readonly format: "qflow.cli-builds@1"; readonly builds: readonly { readonly id: string; readonly createdAt: string; readonly title?: string; readonly outcome: string; readonly run?: string; readonly targetCount: number; readonly targets?: readonly string[]; readonly omittedTargets?: number; readonly outputCount: number }[]; readonly next?: string }
   | { readonly format: "qflow.cli-history@1"; readonly output: string; readonly source?: string; readonly entries: readonly { readonly build: string; readonly title?: string; readonly createdAt: string; readonly outcome: string; readonly output: CliOutputView }[]; readonly next?: string }

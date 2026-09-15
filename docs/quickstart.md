@@ -12,6 +12,8 @@ the reference, create the material, and compose an editable video.
 - A Coding Agent that can use skills, such as Claude Code or Codex.
 - A reference video or a description of the video you want.
 
+See [Use Qflow in your Agent](./guide/agents.md) for Agent environments and entry partners.
+
 ## 1. Install the Qflow skill
 
 ```bash
@@ -21,6 +23,15 @@ npx skills add qflow-ai/qflow -g
 Open your video project in the Agent. The Skill supplies production knowledge; the `qflow` package
 supplies the executable tools. The Agent checks for an existing installation and helps prepare any
 missing tools. You do not need to clone the Qflow repository.
+
+Qflow's framework is free to use; your Coding Agent and any model services use their own accounts
+and pricing. Installing the Skill or executable does not include generation credits. If you bring
+an API key, tell the Agent which service issued it and share its API documentation.
+
+For an existing installation, ask the Agent to check `qflow version --check` and the
+[release notes](https://github.com/qflow-ai/qflow/releases). Older versions can use
+`qflow --version` and `npm view @qflow/qflow@latest version`. The executable and Skill have separate
+update channels; the Agent can update the relevant installation while preserving your project.
 
 ## 2. Bring a reference and explain what should change
 
@@ -54,6 +65,9 @@ account. You can also use your own keys through existing or project-written Prov
 local and hosted capabilities. The Agent connects what the next part of the work needs, explains
 progress and shows its reference understanding before developing the material plan. Generation
 accounts can be chosen when that plan establishes the models you need.
+
+[Model and deployment services](./guide/service-partners.md) introduces service partners and
+your own deployment option. [Models and Providers](./guide/providers.md) explains how they connect.
 
 ## 4. Agree on the cost and let production run
 

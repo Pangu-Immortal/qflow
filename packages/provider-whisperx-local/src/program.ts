@@ -126,10 +126,12 @@ export function localWhisperXProgram(options: LocalWhisperXProgramOptions): Mana
         probe: installationProbe,
         prepareBeforeStart: true,
         commands: [{
+          label: "Prepare the locked Python environment",
           command: "uv",
           args: ["sync", "--project", localWhisperXManagedProject, "--frozen", "--no-editable"],
           env: { UV_PROJECT_ENVIRONMENT: environment },
         }, {
+          label: "Prepare NLTK sentence data",
           command: pythonEnvironmentCommand(environment, "qflow-whisperx-prepare"),
           args: ["--nltk-data", nltkData],
           env: { QFLOW_WHISPERX_NLTK_DATA: nltkData },

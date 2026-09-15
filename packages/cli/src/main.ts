@@ -17,6 +17,7 @@ import { createPlanOutput, createPricingOutput, writeCliHelp, writeCliOutput } f
 import type { CliIo, CliMachineView } from "./output.js";
 import { parseCommand } from "./arguments.js";
 import type { CliCommand, RuntimeOption } from "./command.js";
+import { commandHint } from "./command-hint.js";
 import { assertPlannedRequests, assertPreflight, createCatalogDescriptor, describePlanNeeds, describePlanPricing, describePlanProviders, evaluatePlanNeeds, preflightPlan } from "./build-planning.js";
 import { buildProgressLines, observeBuild } from "./observation.js";
 import { isProjectResultCommand, runProjectResultCommand } from "./commands/results.js";
@@ -180,14 +181,11 @@ export async function runCli(
 
   let runtimeProfile = acceptsRuntimeContext(args) ? args.runtimeProfile : undefined;
   let runtimeSelectionFile: string | undefined;
-  const runtimeWasExplicit = runtimeProfile !== undefined;
-  let runtimeNeedsHint = runtimeWasExplicit;
   if (acceptsRuntimeContext(args) && runtimeProfile === undefined && args.command !== "logs") {
     const selected = await findRuntimeProfile(await commandProjectRoot());
     if (selected !== undefined) {
       runtimeProfile = selected.profile;
       runtimeSelectionFile = selected.selectionFile;
-      runtimeNeedsHint = false;
     }
   }
   const runtimeController = async (profile: string): Promise<CliRuntimeController> => {
@@ -228,6 +226,7 @@ export async function runCli(
   if (isExecutionCommand(args)) {
     await runExecutionCommand({
       args,
+      projectRoot: await commandProjectRoot(),
       runtimeProfile,
       io,
       runtimeHost,
@@ -347,6 +346,7 @@ export async function runCli(
     if (runtimeProfile === undefined) {
       throw new Error("build requires a Runtime; run qflow runtime init, select one with runtime use, or pass --runtime <profile>");
     }
+    const commandScope = { projectRoot: projectResultsRoot, runtimeProfile: resolve(runtimeProfile) };
     const buildResults = await projectResults(projectResultsRoot);
     let loadedRun;
     try {
@@ -435,7 +435,7 @@ export async function runCli(
         ]),
       ].join(" · ");
       if (args.follow && "view" in built && !args.presentation.json) {
-        const acceptedView = buildStatusView({ id: built.id, runtime: built.view });
+        const acceptedView = buildStatusView({ id: built.id, runtime: built.view, commandScope });
         const targets = built.view.targets.slice(0, args.limit);
         writeOperational({
           format: "qflow.cli-build@1",
@@ -452,15 +452,15 @@ export async function runCli(
         built = await observeBuild(runtime, built, {
           ...(args.maxWaitMs === undefined ? {} : { maxWaitMs: args.maxWaitMs }),
           controller,
+          commandScope,
           readResult: async () => await buildResults.repository.read(built.id),
-          ...(args.presentation.json ? {} : {
-            onProgress: (progress) => {
-              for (const line of buildProgressLines(progress, {
-                verbose: args.presentation.verbose,
-                limit: args.limit,
-              })) io.write(`${line}\n`);
-            },
-          }),
+          onProgress: (progress) => {
+            const report = io.writeProgress ?? (args.presentation.json ? undefined : io.write);
+            for (const line of buildProgressLines(progress, {
+              verbose: args.presentation.verbose,
+              limit: args.limit,
+            })) report?.(`${line}\n`);
+          },
         });
       }
       const finished = "completion" in built;
@@ -491,6 +491,7 @@ export async function runCli(
       });
       const buildView = buildStatusView({
         id: built.id,
+        commandScope,
         ...(activeView === undefined ? {} : { runtime: activeView }),
         ...(finishedResult === undefined ? {} : { result: finishedResult }),
         verbose: args.presentation.verbose,
@@ -501,7 +502,7 @@ export async function runCli(
           ? buildView
           : { ...buildView, title: args.title },
       };
-      const runtimeHint = runtimeNeedsHint ? ` --runtime ${runtimeProfile}` : "";
+      const resultScope = { projectRoot: projectResultsRoot };
       const resultTargets = finishedResult?.targets.flatMap((name) => {
         const output = finishedResult.outputs[name];
         return output === undefined ? [] : [{ name, output }];
@@ -509,11 +510,11 @@ export async function runCli(
       const finishedLines = resultTargets.length === 0 && targetPresentations.length === 0
         ? [
             ...(completionReason === undefined ? [] : [`Reason   ${completionReason}`]),
-            `Inspect  qflow inspect ${built.id}`,
+            `Inspect  ${commandHint(["inspect", built.id], resultScope)}`,
           ]
         : [
             ...(completionReason === undefined ? [] : [`Reason   ${completionReason}`]),
-            `Inspect  qflow inspect ${built.id}`,
+            `Inspect  ${commandHint(["inspect", built.id], resultScope)}`,
             ...resultTargets
               .filter((item) => item.output.value.kind === "inline")
               .slice(0, args.limit)
@@ -524,14 +525,14 @@ export async function runCli(
               .filter((item) => item.output.value.kind !== "inline")
               .slice(0, args.limit)
               .map((item) =>
-                `Export   qflow get ${built.id} --output ${item.name} --to <path>`),
+                `Export   ${commandHint(["get", built.id, "--output", item.name], resultScope)} --to <path>`),
             ...(resultTargets.length > 0 ? [] : targetPresentations
               .filter((item) => item.inline !== undefined)
               .slice(0, args.limit)
               .map((item) => `Result   ${item.published.name} = ${item.inline}`)),
           ];
       const humanTitle = issue !== undefined
-        ? "Result needs attention"
+        ? "Build needs attention"
         : finished
           ? buildOutcome === "complete"
             ? "Build complete"
@@ -551,14 +552,14 @@ export async function runCli(
           ] : []),
           ...(issue === undefined ? [] : [
             ["Execution", buildOutcome ?? machine.build.work.state] as const,
-            ["Result", "needs attention"] as const,
+            [issue.scope === "cleanup" ? "Cleanup" : "Result", "needs attention"] as const,
           ]),
         ], finished ? finishedLines : issue !== undefined ? [
-          `Result   ${issue.scope}: ${issue.message}`,
-          `Finish   qflow result finish ${built.id}${runtimeHint}`,
+          `Attention  ${issue.scope}: ${issue.message}`,
+          `Finish   ${commandHint(["result", "finish", built.id], commandScope)}`,
         ] : [
-          `Watch    qflow status ${built.id}${runtimeHint} --watch`,
-          `Cancel   qflow cancel ${built.id}${runtimeHint}`,
+          `Watch    ${commandHint(["status", built.id, "--watch"], commandScope)}`,
+          `Cancel   ${commandHint(["cancel", built.id], commandScope)}`,
         ]);
       if (buildOutcome === "failed" || issue !== undefined) io.setExitCode?.(1);
     } finally {
