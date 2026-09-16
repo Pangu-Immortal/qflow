@@ -220,7 +220,13 @@ commands and the repository layout.
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=qflow-ai/qflow&type=Date)](https://www.star-history.com/#qflow-ai/qflow&Date)
+<a href="https://www.star-history.com/?repos=qflow-ai%2Fqflow&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=qflow-ai/qflow&type=date&theme=dark&logscale&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=qflow-ai/qflow&type=date&logscale&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=qflow-ai/qflow&type=date&logscale&legend=top-left" />
+ </picture>
+</a>
 
 ## Contributors
 
