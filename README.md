@@ -225,6 +225,12 @@ commands and the repository layout.
     </td>
     <td>Monid is the OpenRouter for agent tools: one key, one wallet, hundreds of tools, billed per call. Qflow can route Seedance video, images, speech and word-level transcription to Monid.</td>
   </tr>
+  <tr>
+    <td width="220" align="center">
+      <a href="https://www.hiapi.ai"><img alt="HiAPI" src="./docs/public/hiapi.png" width="165"></a>
+    </td>
+    <td>HiAPI is a unified API platform for AI image, video, audio, and language models. Connect GPT Image 2.5, Seedance 2.0, Veo 3.1, Kling, Wan, and other popular models through one platform. Pay as you go with no monthly fee, with free trial credits available for new users.</td>
+  </tr>
 </table>
 
 ## ⭐ Star History
