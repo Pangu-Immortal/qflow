@@ -677,7 +677,7 @@ export async function executeNormalizeMedia(
         "setsar=1",
       ].join(",");
       const visualInput = animation === undefined
-        ? [...encoding.inputArgs, "-autorotate", "-i", input, "-map", `0:${plan.video.index}`]
+        ? [...encoding.inputArgs, "-autorotate", "1", "-i", input, "-map", `0:${plan.video.index}`]
         : ["-f", "concat", "-safe", "0", "-i", await animatedWebpConcat(env, animation, work), "-map", "0:v:0"];
       // The execution format must retain the source's alpha while materializing
       // the program clock. Both encodings publish the same SynchronizedMedia type.

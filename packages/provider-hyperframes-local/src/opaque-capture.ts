@@ -40,7 +40,7 @@ export async function createOpaqueFrameCapture(session: CaptureSession) {
         return ready;
       },
       background(value: string, pending: Promise<unknown>[]) {
-        for (const match of value.matchAll(/url\(\s*(?:"((?:\\.|[^"])*)"|'((?:\\.|[^'])*)'|([^)]*))\s*\)/gu)) {
+        for (const match of value.matchAll(/url\(\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([^\s"'()]+))\s*\)/gu)) {
           const url = (match[1] ?? match[2] ?? match[3] ?? "").trim();
           if (url) pending.push(this.load(url));
         }

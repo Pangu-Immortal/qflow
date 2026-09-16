@@ -49,7 +49,7 @@ test("browser selection rejects ambiguous choices and floating versions", () => 
   assert.throws(() => browserExecutablePath({ chromePath: process.execPath, browserVersion: recommendedBrowserVersion }), /mutually exclusive/u);
   assert.throws(() => browserExecutablePath({ browserVersion: "latest" }), /exact four-part/u);
   assert.throws(() => browserExecutablePath({ chromePath: "" }), /must not be empty/u);
-  const chosen = { browserVersion: "151.0.7922.71", browserCacheDirectory: "/tmp/explicit-browser-cache" };
+  const chosen = { browserVersion: "151.0.7922.71", browserCacheDirectory: join(tmpdir(), "explicit-browser-cache") };
   const program = localHyperframesBrowserProgram({ ...chosen, id: "render", nodePath: process.execPath, ffprobePath: "ffprobe" });
   assert.equal(program.installation!.commands[0]!.args.at(-1), chosen.browserVersion);
   assert.equal(program.installation!.commands[0]!.args.at(-2), chosen.browserCacheDirectory);
