@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { assertCompositableSurfaceRef } from "@qflow/media";
+import { mediaProcessEnv } from "./process-env.js";
 import type { CompositableSurfaceRef } from "@qflow/media";
 
 type JsonObject = Record<string, unknown>;
@@ -57,7 +58,7 @@ async function runProcess(args: {
       shell: false,
       windowsHide: true,
       stdio: ["ignore", "pipe", "pipe"],
-      env: { PATH: process.env.PATH ?? "" },
+      env: mediaProcessEnv(),
     });
     const stdout: Buffer[] = [];
     let bytes = 0;
