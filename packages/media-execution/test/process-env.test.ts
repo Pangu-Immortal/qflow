@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { basename } from "node:path";
 import test from "node:test";
 
 import { mediaProcessEnv } from "../src/process-env.js";
@@ -15,7 +16,7 @@ test("media processes inherit PATH without the rest of the Host environment", ()
       if (process.env.SYSTEMROOT !== undefined) assert.equal(env.SYSTEMROOT, process.env.SYSTEMROOT);
       if (process.env.PATHEXT !== undefined) assert.equal(env.PATHEXT, process.env.PATHEXT);
     }
-    const report = spawnSync(process.execPath, ["-e", "process.stdout.write(JSON.stringify({ secret: process.env.QFLOW_MEDIA_ENV_PROBE, path: Boolean(process.env.PATH), systemRoot: Boolean(process.env.SYSTEMROOT) }))"], {
+    const report = spawnSync(basename(process.execPath), ["-e", "process.stdout.write(JSON.stringify({ secret: process.env.QFLOW_MEDIA_ENV_PROBE, path: Boolean(process.env.PATH), systemRoot: Boolean(process.env.SYSTEMROOT) }))"], {
       env,
       encoding: "utf8",
       windowsHide: true,
@@ -28,5 +29,15 @@ test("media processes inherit PATH without the rest of the Host environment", ()
   } finally {
     if (previous === undefined) delete process.env.QFLOW_MEDIA_ENV_PROBE;
     else process.env.QFLOW_MEDIA_ENV_PROBE = previous;
+  }
+});
+
+test("media binaries can start by PATH under the reduced media environment", {
+  skip: ["ffmpeg", "ffprobe"].some(command => spawnSync(command, ["-version"], { stdio: "ignore", windowsHide: true }).status !== 0),
+}, () => {
+  for (const command of ["ffmpeg", "ffprobe"]) {
+    const child = spawnSync(command, ["-version"], { env: mediaProcessEnv(), encoding: "utf8", windowsHide: true });
+    assert.equal(child.status, 0, `${command}: ${child.error?.message ?? child.stderr}`);
+    assert.ok(child.stdout.startsWith(`${command} version`));
   }
 });
