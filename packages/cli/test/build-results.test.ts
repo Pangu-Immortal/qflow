@@ -684,7 +684,7 @@ test("history through a directory alias still finds a Source after its directory
     const history = await jsonCommand(["history", "stage.value", "--source", join(alias, "chapter", "main.svml")], alias) as {
       source: string; entries: { build: string }[];
     };
-    assert.equal(history.source, "chapter/main.svml");
+    assert.equal(history.source, join("chapter", "main.svml"));
     assert.deepEqual(history.entries.map((entry) => entry.build), [id]);
   } finally { await rm(parent, { recursive: true, force: true }); }
 });
