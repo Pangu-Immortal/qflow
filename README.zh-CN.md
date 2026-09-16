@@ -201,6 +201,12 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
 
 [![Star History Chart](https://api.star-history.com/svg?repos=qflow-ai/qflow&type=Date)](https://www.star-history.com/#qflow-ai/qflow&Date)
 
+## 贡献者
+
+<a href="https://github.com/qflow-ai/qflow/graphs/contributors">
+  <img alt="Contributors" src="https://contrib.rocks/image?repo=qflow-ai/qflow">
+</a>
+
 ## 许可证
 
 Qflow 采用 [Qflow 开源许可证](./LICENSE)。你创作的视频和其他产出归你所有；第三方模型与服务可能另有条款。
