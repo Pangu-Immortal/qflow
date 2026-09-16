@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.metadata as metadata
 import json
 import sys
+import argparse
 
 from . import PROTOCOL, SERVICE_VERSION
 from .config import ServiceConfig
@@ -12,6 +13,9 @@ from .resources import assert_punkt_tab
 def main() -> None:
     if not ((3, 10) <= sys.version_info[:2] < (3, 14)):
         raise RuntimeError(f"WhisperX service requires Python >=3.10,<3.14; got {sys.version.split()[0]}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--models", action="store_true", help="Check selected cached models without downloading")
+    arguments = parser.parse_args()
     config = ServiceConfig.from_environment()
     assert_punkt_tab(config.nltk_data_root)
     import numpy  # noqa: F401
@@ -26,6 +30,9 @@ def main() -> None:
     }
     if versions["whisperx"] != "3.8.6":
         raise RuntimeError(f"expected whisperx 3.8.6, got {versions['whisperx']}")
+    if arguments.models:
+        from .models import check_models
+        check_models(config)
     print(json.dumps({
         "ok": True,
         "protocol": PROTOCOL,

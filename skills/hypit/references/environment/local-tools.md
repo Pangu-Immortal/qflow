@@ -88,6 +88,7 @@ Program commands leave the Worker lifecycle alone:
 
 | Intention | Command |
 | --- | --- |
+| Prepare resources without starting helpers | `qflow programs prepare --endpoint <instance>` |
 | Prepare and start the selected helpers | `qflow programs up --endpoint <instance>` |
 | Inspect their current state | `qflow programs status --endpoint <instance>` |
 | Stop helpers managed by Qflow | `qflow programs down --endpoint <instance>` |
@@ -148,7 +149,8 @@ merge this fragment into the Profile, retaining the other services the productio
 {
   "endpoints": {
     "whisperx.local": {
-      "use": "@qflow/provider-whisperx-local"
+      "use": "@qflow/provider-whisperx-local",
+      "config": { "alignmentLanguages": ["zh", "en"] }
     }
   },
   "bindings": {
@@ -170,10 +172,17 @@ download. Weigh accuracy needs against setup and inference time, including the h
 The Provider README owns exact settings, compute choices and the distinction between transcription
 and language-specific alignment. Configure the chosen model before preparing it.
 
-With the Endpoint and model selected, run `qflow runtime up --endpoint whisperx.local`. The first preparation may install Python
-and download model weights, while later projects reuse the machine Program. Success means the configured
-service identity answers its health probe; `qflow doctor --endpoint whisperx.local` then checks that
-selected service.
+Set `alignmentLanguages` to this production's actual languages; the example above chooses Chinese
+and English. Run `qflow programs prepare --endpoint whisperx.local` to prepare the selected model,
+language weights and sentence data without starting the service. Then `qflow runtime up --endpoint
+whisperx.local` starts the helper and Worker; it can also perform preparation when needed. Preparation
+may install Python and download weights. Startup and inference only read prepared resources.
+
+A healthy service does not imply every language is prepared. Add a newly needed language to the
+Profile and run `programs prepare` even if the service is online. Keep its cache selection unchanged
+when adding resources to that running service. A missing language resource fails with an explicit
+preparation instruction; do not retry inference hoping it will download weights. The Provider README
+owns optional model cache selection. Native upstream caches remain reusable by default.
 
 ## Make network preparation practical
 

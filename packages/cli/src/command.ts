@@ -146,7 +146,7 @@ export type ProgramsCommand =
   | (CommandBase & RuntimeOption & {
       readonly command: "programs";
       readonly endpoints?: readonly string[];
-      readonly action: "down" | "status";
+      readonly action: "prepare" | "down" | "status";
       readonly limit: number;
     });
 

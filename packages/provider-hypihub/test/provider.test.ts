@@ -678,7 +678,7 @@ test("QflowHub stops before paid submission when a reference upload fails", asyn
   assert.doesNotMatch(outcome.status === "failed" ? outcome.failure.message : "", /must-not-leak/u);
 });
 
-test("QflowHub fulfills the Provider-neutral WhisperX alignment capability", async () => {
+for (const language of ["en", "ko"]) test(`QflowHub forwards ${language} for the Provider-neutral WhisperX alignment capability`, async () => {
   const resources = new MemoryResourceStore();
   const bytes = wav(32_000);
   const artifact = await resources.put(bytes, "audio/wav");
@@ -689,7 +689,7 @@ test("QflowHub fulfills the Provider-neutral WhisperX alignment capability", asy
     constraints: whisperXRequestForEvidenceAudio(sealSpeechEvidenceAudio({
       artifact,
       sampleFrames: 32_000,
-    }), { language: "en" }) as unknown as CanonicalValue,
+    }), { language }) as unknown as CanonicalValue,
     result: "record:qflowhub-whisperx",
   };
   let submitted = false;
@@ -732,12 +732,12 @@ test("QflowHub fulfills the Provider-neutral WhisperX alignment capability", asy
       submitted = true;
       const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
       assert.equal(body.model, "victor-upmeet/whisperx");
-      assert.equal(body.language, "en");
+      assert.equal(body.language, language);
       assert.equal(body.response_format, "verbose_json");
       assert.equal(body.url, "https://qflow.ai/files/alignment-evidence.wav");
       assert.deepEqual(body.timestamp_granularities, ["segment", "word"]);
       return Response.json({
-        language: "en",
+        language,
         words: [
           { word: "hello", start: 0.1, end: 0.4 },
           { word: "world", start: 1.2, end: 1.6 },

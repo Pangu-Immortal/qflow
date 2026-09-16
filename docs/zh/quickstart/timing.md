@@ -51,8 +51,9 @@ Timeline 内的所有 Take 共享作者显式声明的 Clock。
   segment={story.segment.answer} media={answer-media.media} language="en"/>
 ```
 
-每次对齐都必须显式填写 `language`，目前只接受 `en` 或 `zh`。该值会原样传给 WhisperX；
-Qflow 不会根据 Script 文本或音频自动检测、分流语言。
+含有台词的 Segment 必须显式填写 `language`，例如 `en`、`zh` 或 `ko`。使用所选
+WhisperX 服务支持的小写两字母或三字母语言代码。该值原样传递；Qflow 不会根据 Script
+文本或音频自动检测、分流语言。无台词的空 Segment 省略 `language`，直接使用归一化媒体边界。
 
 每个输出都自带归一化媒体、Segment 身份、每个作者词语的局部帧窗口以及该 Segment 的全部
 结构锚点：Segment 有两个锚点，每个词也有两个锚点。声学证据只是这一步的实现输入；下游

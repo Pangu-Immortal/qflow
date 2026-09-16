@@ -87,7 +87,11 @@ path and actual dimensions, plus recorded duration and frame rate. Output paths 
 Use an installed compatible browser or prepare the package's tested browser once with
 `qflow capture install-browser`. Installation uses Puppeteer's browser cache and leaves existing
 browsers in place. [Network preparation](../environment/local-tools.md#make-network-preparation-practical)
-explains diagnosing a slow download. `--channel chrome` selects an installed Chrome;
+explains diagnosing a slow download. The package manifest owns the recommended version. For an explicit alternate selection, use
+`--browser-version <exact-version>` and `--browser-cache <directory>` on both preparation and capture.
+`install-browser --browser-download-base-url <url>` selects a compatible archive source for that
+installation only, with no source fallback. Capture never installs the missing browser.
+`--channel chrome` selects an installed Chrome;
 `--browser <executable>` selects another explicit compatible path. `--headed` opens a visible
 window. The script's `options.launch` accepts ordinary Puppeteer launch options, including a chosen
 `userDataDir` when a dedicated persistent browser profile is useful. CLI browser options override

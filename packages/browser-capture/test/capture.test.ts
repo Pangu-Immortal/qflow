@@ -15,6 +15,17 @@ const executablePath = process.env.QFLOW_CAPTURE_TEST_BROWSER ?? await captureBr
 const browserReady = existsSync(executablePath);
 const codecsReady = ["ffprobe"].every((name) => spawnSync(name, ["-version"], { stdio: "ignore" }).status === 0);
 
+test("a missing selected browser refuses capture without using another installed browser", async () => {
+  const cacheDirectory = await mkdtemp(join(tmpdir(), "qflow-capture-empty-cache-"));
+  try {
+    await assert.rejects(withCapture({ browser: { version: "153.0.8010.12", cacheDirectory } }, async () => {
+      assert.fail("a missing selected browser cannot run the task");
+    }), /install-browser/u);
+    const { readdir } = await import("node:fs/promises");
+    assert.deepEqual(await readdir(cacheDirectory), [], "capture does not create an installation");
+  } finally { await rm(cacheDirectory, { recursive: true, force: true }); }
+});
+
 test("capture saves actual page pixels, transparent elements and rectangles at the chosen scale", {
   skip: !browserReady && "Chrome is not installed", timeout: 30_000,
 }, async () => {

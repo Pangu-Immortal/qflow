@@ -42,11 +42,11 @@ export type ManagedProgramCommand = {
 };
 
 export type ManagedProgramInstallation = {
-  /** Truthful inspection of the installed program; no installer-owned receipt. */
+  /** Read-only inspection of the selected environment and resources; no downloads or receipts. */
   probe(): Promise<ManagedProgramState>;
   /** Reconcile an installed environment before a cold start, using its package manager's cache. */
   readonly prepareBeforeStart?: boolean;
-  /** Commands run when installation is missing, or before a cold start when requested above. */
+  /** Explicit preparation commands, run for missing resources or cold reconciliation above. */
   readonly commands: readonly ManagedProgramCommand[];
 };
 

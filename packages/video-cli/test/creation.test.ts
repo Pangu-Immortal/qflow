@@ -159,7 +159,20 @@ test("a Profile that does not serve the capability stops before anything is spen
 test("transcribe requires a spoken language before opening a host", async () => {
   const noHost: CreationEnvironment = { cwd: "/tmp", openHost: async () => { throw new Error("host must not open"); } };
   await assert.rejects(runCreationCli(["transcribe", "speech.wav", "--to", "speech.json"], capture().io, noHost),
-    /requires --language en\|zh\|es/u);
+    /transcribe --language must be an explicit/u);
+});
+
+test("transcribe passes Korean to the selected endpoint", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-transcribe-ko-"));
+  try {
+    await writeFile(join(root, "speech.wav"), wav(32_000));
+    const seen: Need[] = [];
+    await runCreationCli(["transcribe", "speech.wav", "--language", "ko", "--to", "speech.json"], capture().io, {
+      cwd: root, openHost: async () => ({ profile: join(root, "runtime.json"), host: host(seen) }),
+    });
+    assert.equal((seen[0]!.constraints as unknown as WhisperXAlignmentRequest).language, "ko");
+    assert.equal(JSON.parse(await readFile(join(root, "speech.json"), "utf8")).language, "ko");
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("Chinese transcription explicitly sends zh and retains individual character windows", async () => {

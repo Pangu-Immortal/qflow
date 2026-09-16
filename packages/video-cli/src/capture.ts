@@ -25,6 +25,9 @@ Browser options:
   --scale <number>            Device pixel ratio (default: 1)
   --channel <name>            Installed Chrome channel, e.g. chrome
   --browser <path>            Explicit browser executable instead of a channel
+  --browser-version <version> Exact Chrome for Testing version
+  --browser-cache <directory> Cache shared by installation and capture
+  --browser-download-base-url <url> Compatible archive source for install-browser
   --headed                   Show the browser
   --timeout-ms <milliseconds> Page operation and navigation timeout
   --json                     Print all saved files with their actual dimensions
@@ -70,6 +73,7 @@ export async function runCaptureCli(argv: readonly string[], io: CliIo, cwd = pr
     args: (separator < 0 ? argv : argv.slice(0, separator)).slice(2), allowPositionals: true,
     options: {
       viewport: { type: "string" }, scale: { type: "string" }, channel: { type: "string" },
+      "browser-version": { type: "string" }, "browser-cache": { type: "string" }, "browser-download-base-url": { type: "string" },
       browser: { type: "string" }, headed: { type: "boolean" }, "timeout-ms": { type: "string" },
       json: { type: "boolean" }, debug: { type: "boolean" }, verbose: { type: "boolean" },
       "no-color": { type: "boolean" }, color: { type: "string" }, help: { type: "boolean" },
@@ -81,14 +85,19 @@ export async function runCaptureCli(argv: readonly string[], io: CliIo, cwd = pr
   });
   const values = parsed.values;
   if (values.help) { writeCaptureHelp(io); return; }
+  const managedBrowser = {
+    ...(values["browser-version"] === undefined ? {} : { version: values["browser-version"] }),
+    ...(values["browser-cache"] === undefined ? {} : { cacheDirectory: resolve(cwd, values["browser-cache"]) }),
+    ...(values["browser-download-base-url"] === undefined ? {} : { downloadBaseUrl: values["browser-download-base-url"] }),
+  };
   if (command === "install-browser") {
     if (parsed.positionals.length > 0 || args.length > 0) throw new Error("install-browser takes no positional arguments");
     for (const name of Object.keys(values)) {
-      if (!["json", "debug", "verbose", "color", "no-color"].includes(name)) throw new Error(`install-browser does not use --${name}`);
+      if (!["json", "debug", "verbose", "color", "no-color", "browser-version", "browser-cache", "browser-download-base-url"].includes(name)) throw new Error(`install-browser does not use --${name}`);
     }
     io.writeProgress?.("Preparing the capture browser…\n");
     const { installCaptureBrowser } = await import("@qflow/browser-capture");
-    const path = await installCaptureBrowser();
+    const path = await installCaptureBrowser(managedBrowser);
     io.write(values.json ? `${JSON.stringify({ format: "qflow.capture-browser@1", path })}\n` : `Capture browser ready: ${path}\n`);
     return;
   }
@@ -137,6 +146,12 @@ export async function runCaptureCli(argv: readonly string[], io: CliIo, cwd = pr
         ...(values.transparent ? { omitBackground: true } : {}),
       });
     };
+  }
+  if (Object.keys(managedBrowser).length > 0) options = { ...options, browser: { ...options.browser, ...managedBrowser } };
+  if (values.browser || values.channel) {
+    if (Object.keys(managedBrowser).length > 0) throw new Error("Choose managed browser options or --browser/--channel");
+    const { browser: _managed, ...externalOptions } = options;
+    options = externalOptions;
   }
   const launch = { ...options.launch };
   if (values.browser) { launch.executablePath = resolve(cwd, values.browser); delete launch.channel; }

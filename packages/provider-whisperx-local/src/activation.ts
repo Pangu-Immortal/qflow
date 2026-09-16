@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import {
   createRuntimeEndpointAdapterFacet,
   runtimeConfigExact,
@@ -18,7 +19,7 @@ const localWhisperXRuntimeAdapter = createRuntimeEndpointAdapterFacet({
       "baseUrl", "expectedModel", "expectedDevice", "expectedCompute", "expectedBatchSize",
       "expectedServiceVersion", "expectedWhisperXVersion",
       "defaultConcurrency", "requestTimeoutMs", "maxResponseBytes",
-      "serviceCommand",
+      "serviceCommand", "alignmentLanguages", "modelCacheDirectory",
     ], "local WhisperX");
     const baseUrl = runtimeConfigString(config.baseUrl, "WhisperX baseUrl");
     if (baseUrl !== undefined) {
@@ -37,6 +38,12 @@ const localWhisperXRuntimeAdapter = createRuntimeEndpointAdapterFacet({
     const defaultConcurrency = runtimeConfigPositiveInteger(config.defaultConcurrency, "WhisperX defaultConcurrency");
     const requestTimeoutMs = runtimeConfigPositiveInteger(config.requestTimeoutMs, "WhisperX requestTimeoutMs");
     const maxResponseBytes = runtimeConfigPositiveInteger(config.maxResponseBytes, "WhisperX maxResponseBytes");
+    const modelCacheDirectory = runtimeConfigString(config.modelCacheDirectory, "WhisperX modelCacheDirectory");
+    const alignmentLanguages = config.alignmentLanguages;
+    if (alignmentLanguages !== undefined && (!Array.isArray(alignmentLanguages)
+      || alignmentLanguages.some((item) => typeof item !== "string" || !/^[a-z]+$/u.test(item)))) {
+      throw new Error("WhisperX alignmentLanguages must be an array of lowercase language codes");
+    }
     const serviceCommandValue = config.serviceCommand;
     if (serviceCommandValue !== undefined
       && (!Array.isArray(serviceCommandValue) || serviceCommandValue.length === 0
@@ -80,6 +87,8 @@ const localWhisperXRuntimeAdapter = createRuntimeEndpointAdapterFacet({
         expectedServiceVersion: selectedServiceVersion,
         expectedWhisperXVersion: selectedWhisperXVersion,
         ...(serviceCommand === undefined ? {} : { serviceCommand }),
+        ...(alignmentLanguages === undefined ? {} : { alignmentLanguages: alignmentLanguages as string[] }),
+        ...(modelCacheDirectory === undefined ? {} : { modelCacheDirectory: resolve(context.dataRoot, modelCacheDirectory) }),
       }),
     };
   },

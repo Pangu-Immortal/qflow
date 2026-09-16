@@ -245,6 +245,7 @@ export type RuntimeController = {
     down(options?: { readonly maxWaitMs?: number }): Promise<RuntimeWorkerState>;
   };
   readonly programs: {
+    prepare(options?: { readonly endpoints?: readonly string[]; readonly onProgress?: (event: ManagedProgramProgress) => void }): Promise<{ readonly dataRoot: string; readonly programs: readonly ManagedProgramReport[] }>;
     up(options: {
       readonly maxWaitMs?: number;
       readonly onProgress?: (event: ManagedProgramProgress) => void;

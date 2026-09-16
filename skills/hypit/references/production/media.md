@@ -78,6 +78,12 @@ For an already declared Script and prepared spoken performance:
   segment={story.segment.opening} media={performance-media.media} language="en"/>
 ```
 
+Set `language` to this Take's explicit spoken language code, such as `ko` for Korean. The selected
+WhisperX service chooses its language-specific alignment model; ASR size and local resource
+preparation belong to the Runtime Profile. Follow [local tools](../environment/local-tools.md)
+when preparing a new language. The installed `packages/whisperx/README.md` owns the exact language
+expression and preparation examples.
+
 WhisperX supplies timed speech evidence; alignment locates the authored Script in that evidence.
 Script remains the wording authority, and this step establishes where its words occur in the
 performance. The result `opening-semantic.take` contains the same media and that Segment's local

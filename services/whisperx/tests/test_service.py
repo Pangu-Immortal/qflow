@@ -16,7 +16,7 @@ from qflow_whisperx_service.application import RequestError, WhisperXApplication
 from qflow_whisperx_service.audio import AudioInputError, CanonicalAudio, read_canonical_audio  # noqa: E402
 from qflow_whisperx_service.config import ServiceConfig  # noqa: E402
 from qflow_whisperx_service.engine import InferenceBusyError, normalize_alignment, normalize_language  # noqa: E402
-from qflow_whisperx_service.resources import assert_punkt_tab  # noqa: E402
+from qflow_whisperx_service.resources import assert_punkt_tab, UnpreparedResourceError  # noqa: E402
 
 
 def write_wav(path: Path, frames: int = 32_000, rate: int = 16_000, channels: int = 1) -> None:
@@ -57,6 +57,11 @@ class FakeEngine:
 class BusyEngine(FakeEngine):
     def transcribe(self, audio: CanonicalAudio, language: str | None) -> dict[str, object]:
         raise InferenceBusyError("busy")
+
+
+class UnpreparedEngine(FakeEngine):
+    def transcribe(self, audio: CanonicalAudio, language: str | None) -> dict[str, object]:
+        raise UnpreparedResourceError("Korean model is not prepared; run qflow programs prepare")
 
 
 def config(root: Path, **environment: str) -> ServiceConfig:
@@ -139,6 +144,23 @@ class EvidenceTests(unittest.TestCase):
 
 
 class ApplicationTests(unittest.TestCase):
+    def test_missing_resources_reach_the_caller_with_a_preparation_instruction(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "evidence.wav"
+            write_wav(path)
+            application = WhisperXApplication(config(root), UnpreparedEngine())
+            with self.assertRaises(RequestError) as raised:
+                application.transcribe(
+                    {"content-type": "application/json"},
+                    json.dumps({"audio_path": str(path)}).encode(),
+                )
+            response = application.error(raised.exception)
+        self.assertEqual(response.status, 503)
+        body = json.loads(response.body)
+        self.assertEqual(body["error"]["code"], "RESOURCE_NOT_PREPARED")
+        self.assertIn("qflow programs prepare", body["error"]["message"])
+
     def test_health_is_a_complete_provider_handshake(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             application = WhisperXApplication(config(Path(directory)), FakeEngine())

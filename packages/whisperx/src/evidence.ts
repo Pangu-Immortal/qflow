@@ -1,6 +1,7 @@
 import { assertSpeechEvidenceAudioIdentity } from "@qflow/speech";
 import type { SpeechEvidenceAudio } from "@qflow/speech";
 import type { WhisperXAlignmentRequest, WhisperXLanguage } from "./types.js";
+import { parseWhisperXLanguage } from "./types.js";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -14,9 +15,9 @@ export function verifyWhisperXAlignmentRequest(value: unknown): WhisperXAlignmen
   assert(request.audio?.kind === "blob"
     && request.audio.mediaType === "audio/wav"
     && Number.isSafeInteger(request.sampleFrames)
-    && request.sampleFrames > 0
-    && (request.language === "en" || request.language === "zh" || request.language === "es"),
+    && request.sampleFrames > 0,
   "WhisperX alignment request is invalid");
+  parseWhisperXLanguage(request.language);
   return request;
 }
 
@@ -64,6 +65,6 @@ export function whisperXRequestForEvidenceAudio(
   return {
     audio: evidence.artifact,
     sampleFrames: evidence.sampleFrames,
-    language: options.language,
+    language: parseWhisperXLanguage(options.language),
   };
 }

@@ -3512,6 +3512,9 @@ importers:
       '@qflow/package-loader-node':
         specifier: workspace:*
         version: link:../package-loader-node
+      '@qflow/runtime-host-node':
+        specifier: workspace:*
+        version: link:../runtime-host-node
       '@qflow/yt-dlp-service-runtime':
         specifier: workspace:*
         version: link:../../services/yt-dlp

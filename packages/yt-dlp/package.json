@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@qflow/package-loader-node": "workspace:*",
-    "@qflow/yt-dlp-service-runtime": "workspace:*"
+    "@qflow/yt-dlp-service-runtime": "workspace:*",
+    "@qflow/runtime-host-node": "workspace:*"
   }
 }

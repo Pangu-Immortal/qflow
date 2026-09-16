@@ -11,6 +11,7 @@ import type { CapabilityRef } from "@qflow/protocol";
 
 import {
   bringManagedProgramsUp,
+  prepareManagedPrograms,
   declaredManagedPrograms,
   reportManagedPrograms,
   takeManagedProgramsDown,
@@ -311,10 +312,11 @@ test("a failing install stops before starting anything, and says which command f
   assert.equal(result.programs[0]!.action, "unchanged");
   // Naming the command is half of what this test is for, so assert both halves rather than a
   // spelling of the interpreter that only holds on one platform.
-  const detail = result.programs[0]!.detail ?? "";
+  const state = result.programs[0]!.state;
+  const detail = state.state === "ready" ? "" : state.detail;
   assert.ok(detail.startsWith(`${process.execPath} failed:`), detail);
   assert.match(detail, /failed: no such project/u);
-  assert.match(await readFile(result.programs[0]!.logPath!, "utf8"), /no such project/u);
+  assert.match(await readFile(result.programs[0]!.installationLogPath!, "utf8"), /no such project/u);
 });
 
 test("ongoing preparation exposes its log and excludes another preparation", async () => {
@@ -440,4 +442,31 @@ test("status probes and changes nothing, so it claims no action", async () => {
   const result = await reportManagedPrograms(path, options);
   assert.equal(result.programs[0]!.action, undefined);
   assert.deepEqual(result.programs[0]!.state, { state: "down", detail: "nothing is answering" });
+});
+
+
+test("resource preparation runs for an online service and never starts or stops it", async (t) => {
+  let resources = false;
+  const configured = await project((root) => ({
+    id: "resources",
+    async probe() { return { state: "ready" }; },
+    installation: {
+      async probe() {
+        resources = await readFile(join(root, "prepared"), "utf8").then(() => true, () => false);
+        return resources ? { state: "ready" } : { state: "down", detail: "language resource absent" };
+      },
+      commands: [nodeProgram("require('node:fs').writeFileSync(process.argv[1], 'ready')", join(root, "prepared"))],
+    },
+    start: nodeProgram("throw new Error('prepare must not start a process')"),
+  }));
+  t.after(() => rm(configured.root, { recursive: true, force: true }));
+  const prepared = await prepareManagedPrograms(configured.path, configured.options);
+  assert.equal(prepared.programs[0]?.state.state, "ready");
+  assert.equal(prepared.programs[0]?.action, "installed");
+  assert.equal(prepared.programs[0]?.pid, undefined);
+  assert.equal(resources, true);
+  await rm(join(configured.root, "prepared"));
+  const up = await bringManagedProgramsUp(configured.path, configured.options);
+  assert.equal(up.programs[0]?.state.state, "ready");
+  assert.equal(resources, true, "up must not skip missing resources because a process is online");
 });

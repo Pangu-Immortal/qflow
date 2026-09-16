@@ -12,6 +12,9 @@ import { fixtureResource } from "../../../test/fixture-resource.js";
 import {
   decodeWhisperXSemanticTakeSurface,
   whisperXRequestForEvidenceAudio,
+  whisperXComponent,
+  verifyWhisperXAlignmentRequest,
+  parseWhisperXLanguage,
 } from "@qflow/whisperx";
 
 function evidenceAudio(): SpeechEvidenceAudio {
@@ -33,6 +36,39 @@ test("WhisperX receives normalized bytes without authored Segment truth", () => 
   assert.equal("segments" in request, false);
   assert.equal(request.sampleFrames, 16_000);
   assert.equal(request.language, "es");
+});
+
+test("SVML language reaches the alignment request without a service-support table", async () => {
+  const refs = new Map<string, SurfaceResolvedReference>([
+    ["story", { path: "story", ref: { kind: "record", id: "story" }, type: narrativeTypes.narrative }],
+    ["excerpt", { path: "excerpt", ref: { kind: "record", id: "excerpt" }, type: narrativeTypes.excerpt }],
+    ["media", { path: "media", ref: { kind: "record", id: "media" }, type: mediaTypes.synchronized }],
+  ]);
+  // "zzz" deliberately tests expression independently of a deployment's supported languages.
+  for (const language of ["en", "zh", "es", "ko", "ja", "id", "yue", "zzz"]) {
+    const output = await decodeWhisperXSemanticTakeSurface({
+      sourceName: "speech.svml",
+      element: parseStructuredElement({ name: "speech.svml", text:
+        `<whisperx:SemanticTake id="speech" narrative={story} segment={excerpt} media={media} language="${language}"/>`,
+      }, 0).element,
+      resolveReference: (path) => refs.get(path),
+      resolveAsset: () => { throw new Error("No assets expected"); },
+    });
+    const result = await whisperXComponent.producers[0]!.handler({ inputs: {
+      evidence: { value: { kind: "inline", value: evidenceAudio() } },
+      language: { value: output.records[0]!.value },
+    } } as never);
+    assert.equal(verifyWhisperXAlignmentRequest(result.needs!.alignment).language, language);
+  }
+});
+
+test("language spelling is explicit; auto-detection and locale aliases are not guessed", () => {
+  for (const language of [undefined, "", "auto", "und", "KO", "zh-CN", "korean", " ko ", 42]) {
+    assert.throws(() => parseWhisperXLanguage(language), /explicit lowercase/u);
+    assert.throws(() => verifyWhisperXAlignmentRequest({
+      ...whisperXRequestForEvidenceAudio(evidenceAudio(), { language: "en" }), language,
+    }), /explicit lowercase/u);
+  }
 });
 
 test("the real-media Surface materializes an empty Segment from its media domain", async () => {

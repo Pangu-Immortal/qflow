@@ -293,6 +293,8 @@ async function bringUpOwned(
   onProgress?.({ id: program.id, phase: "checking" });
   const initial = await program.probe();
   if (initial.state === "ready") {
+    const prepared = await prepareOwned(root, program, endpoint, onProgress);
+    if (prepared.state.state !== "ready") return prepared;
     onProgress?.({ id: program.id, phase: "ready" });
     return { ...base, action: "already-running", state: initial };
   }
@@ -306,6 +308,10 @@ async function bringUpOwned(
   const installLogPath = join(directory(root, program), "install.log");
   const existingPid = await readPid(root, program);
   if (existingPid !== undefined && processAlive(existingPid)) {
+    if (program.installation !== undefined) {
+      const prepared = await prepareOwned(root, program, endpoint, onProgress);
+      if (prepared.state.state !== "ready") return prepared;
+    }
     release();
     onProgress?.({ id: program.id, phase: "waiting", logPath,
       detail: `observing existing process ${existingPid}` });
@@ -320,23 +326,9 @@ async function bringUpOwned(
   }
   if (existingPid !== undefined) await rm(join(directory(root, program), "process.pid"), { force: true });
   if (program.installation !== undefined) {
-    const installation = await program.installation.probe();
-    if (installation.state !== "ready" || program.installation.prepareBeforeStart === true) {
-      await mkdir(directory(root, program), { recursive: true });
-      await rotateLog(installLogPath);
-      for (const command of program.installation.commands) {
-        onProgress?.({ id: program.id, phase: "installing", logPath: installLogPath, detail: commandLabel(command) });
-        const result = await run(root, command, installLogPath);
-        if (!result.ok) {
-          return { ...base, action: "unchanged", state: initial, logPath: installLogPath, detail: `${command.command} failed: ${result.detail}` };
-        }
-      }
-      const after = await program.installation.probe();
-      if (after.state !== "ready") {
-        return { ...base, action: "unchanged", state: initial, logPath: installLogPath, detail: `installation is ${after.state}: ${after.detail}` };
-      }
-      installed = true;
-    }
+    const prepared = await prepareOwned(root, program, endpoint, onProgress, program.installation.prepareBeforeStart === true);
+    if (prepared.state.state !== "ready") return prepared;
+    installed = prepared.action === "installed";
   }
   if (program.start === undefined) {
     // Nothing to keep running: installation was the whole job.
@@ -433,6 +425,50 @@ async function bringUp(
     const report = await bringUpOwned(root, program, endpoint, maxWaitMs, release, onProgress);
     return { ...await existingLogs(root, program), ...report };
   } finally { release(); }
+}
+
+/** Resource preparation is independent of process readiness. Caller owns the lifecycle lock. */
+async function prepareOwned(
+  root: string, program: ManagedProgram, endpoint: string,
+  onProgress?: (event: ManagedProgramProgress) => void, reconcile = false,
+): Promise<ManagedProgramReport> {
+  const base = { id: program.id, endpoint };
+  const installation = program.installation;
+  if (installation === undefined) return { ...base, action: "unchanged", state: await program.probe() };
+  const logPath = join(directory(root, program), "install.log");
+  const before = await installation.probe();
+  if (before.state === "ready" && !reconcile) return { ...base, action: "unchanged", state: before };
+  await mkdir(root, { recursive: true });
+  await rotateLog(logPath);
+  for (const command of installation.commands) {
+    onProgress?.({ id: program.id, phase: "installing", logPath, detail: commandLabel(command) });
+    const result = await run(root, command, logPath);
+    if (!result.ok) return { ...base, action: "unchanged", state: { state: "down", detail: `${command.command} failed: ${result.detail}` }, installationLogPath: logPath };
+  }
+  const state = await installation.probe();
+  return { ...base, action: state.state === "ready" ? "installed" : "unchanged", state, installationLogPath: logPath };
+}
+
+/** Prepare selected resources without starting, stopping or trusting a running process. */
+export async function prepareManagedPrograms(
+  path: string, options: ManagedProgramOptions = {},
+): Promise<{ readonly dataRoot: string; readonly programs: readonly ManagedProgramReport[] }> {
+  const { dataRoot, programs } = await declaredManagedPrograms(path, options);
+  const reports = await Promise.all(independentPrograms(programs).map(async ({ instance, program }): Promise<ManagedProgramReport> => {
+    const home = directory(dataRoot, program);
+    await mkdir(home, { recursive: true });
+    const { tryProgramLock } = await import("./program-lock.js");
+    const release = tryProgramLock(home);
+    if (release === undefined) return { id: program.id, endpoint: instance, action: "unchanged", state: { state: "down", detail: "another command owns this Program's preparation; inspect its logs" } };
+    try {
+      options.onProgress?.({ id: program.id, phase: "checking" });
+      const report = await prepareOwned(dataRoot, program, instance, options.onProgress);
+      if (report.state.state === "ready") options.onProgress?.({ id: program.id, phase: "ready" });
+      return report;
+    }
+    finally { release(); }
+  }));
+  return { dataRoot, programs: reports };
 }
 
 /** Install when needed and start every external program the Runtime Profile implies. */
