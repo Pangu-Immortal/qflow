@@ -41,7 +41,7 @@ function nonNegativeInteger(value: number, subject: string): number {
 function projectPath(root: string, path: string): string {
   const absolute = isAbsolute(path) ? resolve(path) : resolve(root, path);
   const relation = relative(resolve(root), absolute);
-  assert(relation === "" || (!relation.startsWith("..") && !isAbsolute(relation)),
+  assert(relation === "" || (relation !== ".." && !relation.startsWith(`..${sep}`) && !isAbsolute(relation)),
     `Build Result source ${path} is outside project ${resolve(root)}`);
   return (relation || ".").split(sep).join("/");
 }
