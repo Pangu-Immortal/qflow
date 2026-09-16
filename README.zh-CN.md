@@ -201,9 +201,39 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
 
 <img alt="扫码加入 Qflow 微信群" src="./docs/public/wechat-group.jpg" width="320">
 
+## Launch 伙伴
+
+<table>
+  <tr>
+    <td width="220" align="center">
+      <a href="https://openagents.org/blog/posts/2026-09-08-pilot-user-program-zh-qflow"><img alt="OpenAgents" src="./docs/public/openagents.png" width="180"></a><br>
+      <a href="https://openagents.org/blog/posts/2026-09-08-pilot-user-program-zh-qflow">OpenAgents</a>
+    </td>
+    <td>OpenAgents Workspace 是一个让你管理智能体的产品，它能让你随时随地调用在任何设备上运行的 Agent（手机 + 电脑端均可）。Agents 可以在其中协同合作，帮你完成任务、提升效率。现支持 Claude、Codex、Openclaw、Hermes 等 20 余种 agent 接入（支持模型详情：<a href="https://api-gateway.openagents.org/static/index.html">https://api-gateway.openagents.org/static/index.html</a>）</td>
+  </tr>
+  <tr>
+    <td width="220" align="center">
+      <a href="https://monid.ai?fpr=alvin-45480b">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./docs/public/monid-logo-white.svg">
+          <img alt="Monid" src="./docs/public/monid-logo-blue.svg" width="180">
+        </picture>
+      </a><br>
+      <a href="https://monid.ai?fpr=alvin-45480b">Monid</a>
+    </td>
+    <td>Monid 是 Agent 工具的 OpenRouter：一个 key、一个钱包、数百种工具，按调用计费。Qflow 可以把 Seedance 的视频、图像、语音和词级转写路由到 Monid。</td>
+  </tr>
+</table>
+
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=qflow-ai/qflow&type=Date)](https://www.star-history.com/#qflow-ai/qflow&Date)
+<a href="https://www.star-history.com/?repos=qflow-ai%2Fqflow&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=qflow-ai/qflow&type=date&theme=dark&logscale&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=qflow-ai/qflow&type=date&logscale&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=qflow-ai/qflow&type=date&logscale&legend=top-left" />
+ </picture>
+</a>
 
 ## 贡献者
 
