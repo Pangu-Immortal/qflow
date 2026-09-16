@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -192,95 +192,101 @@ async function pixelFormatAlpha(
   return result;
 }
 
-function suffix(mediaType: string): string {
-  if (mediaType === "image/png") return ".png";
-  if (mediaType === "image/webp") return ".webp";
-  if (mediaType === "video/webm") return ".webm";
-  if (mediaType === "video/mp4") return ".mp4";
-  throw new Error(`Surface media type ${mediaType} is unsupported`);
-}
-
-/**
- * Decode and verify one typed Surface before its bytes enter a renderer.
- *
- * This is an admission gate, not a second media Product. Success returns no
- * side-channel facts; anything a later graph step needs must be an explicit output.
- */
-export async function verifyCompositableSurfaceBytes(options: {
+type SurfaceInspectionOptions = {
   readonly surface: CompositableSurfaceRef;
-  readonly bytes: Uint8Array;
   readonly ffprobePath?: string;
   readonly processTimeoutMs?: number;
   readonly maxProbeOutputBytes?: number;
   readonly signal?: AbortSignal;
+};
+
+/** Inspect bytes supplied by callers that do not already own a staged file. */
+export async function verifyCompositableSurfaceBytes(options: SurfaceInspectionOptions & {
+  readonly bytes: Uint8Array;
+}): Promise<void> {
+  options.signal?.throwIfAborted();
+  assertCompositableSurfaceRef(options.surface);
+  assert(options.bytes.byteLength === options.surface.artifact.size,
+    `Surface ${options.surface.artifact.resource} byte size differs`);
+  const directory = await mkdtemp(join(tmpdir(), "qflow-surface-verify-"));
+  try {
+    // FFprobe detects the encoded media itself; both entry points inspect the same formats.
+    const path = join(directory, "surface");
+    await writeFile(path, options.bytes, { signal: options.signal });
+    await verifyCompositableSurfaceFile({ ...options, path });
+  } finally {
+    await rm(directory, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
+/**
+ * Inspect an existing execution file without copying it. The caller owns the file
+ * and keeps it unchanged until this call settles. Success returns no side-channel facts.
+ */
+export async function verifyCompositableSurfaceFile(options: SurfaceInspectionOptions & {
+  readonly path: string;
 }): Promise<void> {
   const controller = new AbortController();
   const signal = options.signal === undefined ? controller.signal : AbortSignal.any([controller.signal, options.signal]);
   signal.throwIfAborted();
   assertCompositableSurfaceRef(options.surface);
-  assert(options.bytes.byteLength === options.surface.artifact.size,
+  assert((await stat(options.path)).size === options.surface.artifact.size,
     `Surface ${options.surface.artifact.resource} byte size differs`);
+  signal.throwIfAborted();
   const ffprobePath = options.ffprobePath ?? "ffprobe";
   const timeoutMs = options.processTimeoutMs ?? 120_000;
   const maxOutputBytes = options.maxProbeOutputBytes ?? 8 * 1024 * 1024;
-  const directory = await mkdtemp(join(tmpdir(), "qflow-surface-verify-"));
-  try {
-    const path = join(directory, `surface${suffix(options.surface.artifact.mediaType)}`);
-    await writeFile(path, options.bytes, { signal });
-    const pending = [
-      runProcess({
-        executable: ffprobePath,
-        argv: ["-v", "error", "-print_format", "json", "-show_streams", "-count_frames", path],
-        timeoutMs,
-        maxOutputBytes, signal,
-      }),
-      pixelFormatAlpha(ffprobePath, timeoutMs, maxOutputBytes, signal),
-    ] as const;
-    await Promise.allSettled(pending.map(async (job) => {
-      try { return await job; } catch (error) { controller.abort(error); throw error; }
-    }));
-    signal.throwIfAborted();
-    const [probe, formats] = await Promise.all(pending);
-    const root = json(probe, "ffprobe Surface query");
-    assert(Array.isArray(root.streams) && root.streams.length === 1,
-      "Surface must contain exactly one visual stream and no audio or auxiliary streams");
-    const stream = root.streams[0] as ProbeStream;
-    assert(stream.codec_type === "video", "Surface stream is not visual");
-    assert(stream.disposition?.attached_pic !== 1, "Surface cannot be an attached-picture stream");
-    const width = positiveInteger(stream.width, "Surface width");
-    const height = positiveInteger(stream.height, "Surface height");
-    assert(width === options.surface.width && height === options.surface.height,
-      "Surface decoded dimensions differ from its declaration");
-    assert(stream.sample_aspect_ratio === undefined || stream.sample_aspect_ratio === "1:1",
-      "Surface must use square pixels");
-    assert(rotation(stream) === 0, "Surface must not depend on display rotation metadata");
-    assert(stream.field_order === undefined || stream.field_order === "progressive" || stream.field_order === "unknown",
-      "Surface must be progressive");
-    assertSrgb(stream);
+  const pending = [
+    runProcess({
+      executable: ffprobePath,
+      argv: ["-v", "error", "-print_format", "json", "-show_streams", "-count_frames", options.path],
+      timeoutMs,
+      maxOutputBytes, signal,
+    }),
+    pixelFormatAlpha(ffprobePath, timeoutMs, maxOutputBytes, signal),
+  ] as const;
+  await Promise.allSettled(pending.map(async (job) => {
+    try { return await job; } catch (error) { controller.abort(error); throw error; }
+  }));
+  signal.throwIfAborted();
+  const [probe, formats] = await Promise.all(pending);
+  const root = json(probe, "ffprobe Surface query");
+  assert(Array.isArray(root.streams) && root.streams.length === 1,
+    "Surface must contain exactly one visual stream and no audio or auxiliary streams");
+  const stream = root.streams[0] as ProbeStream;
+  assert(stream.codec_type === "video", "Surface stream is not visual");
+  assert(stream.disposition?.attached_pic !== 1, "Surface cannot be an attached-picture stream");
+  const width = positiveInteger(stream.width, "Surface width");
+  const height = positiveInteger(stream.height, "Surface height");
+  assert(width === options.surface.width && height === options.surface.height,
+    "Surface decoded dimensions differ from its declaration");
+  assert(stream.sample_aspect_ratio === undefined || stream.sample_aspect_ratio === "1:1",
+    "Surface must use square pixels");
+  assert(rotation(stream) === 0, "Surface must not depend on display rotation metadata");
+  assert(stream.field_order === undefined || stream.field_order === "progressive" || stream.field_order === "unknown",
+    "Surface must be progressive");
+  assertSrgb(stream);
 
-    assert(typeof stream.pix_fmt === "string" && stream.pix_fmt.length > 0,
-      "Surface pixel format is absent");
-    const pixelAlpha = formats.get(stream.pix_fmt);
-    assert(pixelAlpha !== undefined, `Surface pixel format ${stream.pix_fmt} is unknown to ffprobe`);
-    const taggedAlpha = stream.tags?.alpha_mode === "1" || stream.tags?.alpha_mode === "straight";
-    const hasAlpha = pixelAlpha || taggedAlpha;
-    if (options.surface.alphaMode === "straight") {
-      assert(hasAlpha, "Surface declares straight alpha but its bytes carry no alpha channel");
-    } else {
-      assert(!hasAlpha, "Surface declares opaque pixels but its encoded format carries alpha");
-    }
+  assert(typeof stream.pix_fmt === "string" && stream.pix_fmt.length > 0,
+    "Surface pixel format is absent");
+  const pixelAlpha = formats.get(stream.pix_fmt);
+  assert(pixelAlpha !== undefined, `Surface pixel format ${stream.pix_fmt} is unknown to ffprobe`);
+  const taggedAlpha = stream.tags?.alpha_mode === "1" || stream.tags?.alpha_mode === "straight";
+  const hasAlpha = pixelAlpha || taggedAlpha;
+  if (options.surface.alphaMode === "straight") {
+    assert(hasAlpha, "Surface declares straight alpha but its bytes carry no alpha channel");
+  } else {
+    assert(!hasAlpha, "Surface declares opaque pixels but its encoded format carries alpha");
+  }
 
-    const frameCount = positiveInteger(stream.nb_read_frames ?? stream.nb_frames, "Surface frame count");
-    if (options.surface.timing.kind === "still") {
-      assert(frameCount === 1, "Still Surface must decode to exactly one frame");
-    } else {
-      assert(frameCount === options.surface.timing.frameCount,
-        "Surface decoded frame count differs from its declaration");
-      const rate = rational(stream.avg_frame_rate ?? stream.r_frame_rate, "Surface frame rate");
-      assert(sameRational(rate, options.surface.timing.frameRate),
-        "Surface decoded frame rate differs from its declaration");
-    }
-  } finally {
-    await rm(directory, { recursive: true, force: true }).catch(() => {});
+  const frameCount = positiveInteger(stream.nb_read_frames ?? stream.nb_frames, "Surface frame count");
+  if (options.surface.timing.kind === "still") {
+    assert(frameCount === 1, "Still Surface must decode to exactly one frame");
+  } else {
+    assert(frameCount === options.surface.timing.frameCount,
+      "Surface decoded frame count differs from its declaration");
+    const rate = rational(stream.avg_frame_rate ?? stream.r_frame_rate, "Surface frame rate");
+    assert(sameRational(rate, options.surface.timing.frameRate),
+      "Surface decoded frame rate differs from its declaration");
   }
 }
