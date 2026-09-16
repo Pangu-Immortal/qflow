@@ -32,6 +32,7 @@ export type AuthorizeBrowserLaunch = {
   readonly command: string;
   readonly args: readonly string[];
   readonly windowsVerbatimArguments: boolean;
+  readonly env?: Readonly<Record<string, string>>;
 };
 
 /**
@@ -44,11 +45,14 @@ export function authorizeBrowserLaunch(
 ): AuthorizeBrowserLaunch {
   const platform = options.platform ?? process.platform;
   if (platform === "win32") {
-    const quoted = `"${url.replaceAll("\"", "")}"`;
+    // Expand one environment value after cmd parses the command. Interpolating the
+    // URL into command text would also expand percent sequences inside the URL.
+    const serialized = new URL(url).href;
     return {
       command: options.comSpec ?? process.env.ComSpec ?? "cmd.exe",
-      args: ["/d", "/s", "/c", `start "" ${quoted}`],
+      args: ["/d", "/s", "/v:off", "/c", 'start "" "%QFLOW_OAUTH_AUTHORIZE_URL%"'],
       windowsVerbatimArguments: true,
+      env: { QFLOW_OAUTH_AUTHORIZE_URL: serialized },
     };
   }
   return {
@@ -65,6 +69,7 @@ function openAuthorizeUrl(url: string): void {
     detached: true,
     windowsHide: true,
     windowsVerbatimArguments: launch.windowsVerbatimArguments,
+    ...(launch.env === undefined ? {} : { env: { ...process.env, ...launch.env } }),
   });
   // A missing opener must not crash the CLI; the URL is already on the progress line.
   child.once("error", () => undefined);
