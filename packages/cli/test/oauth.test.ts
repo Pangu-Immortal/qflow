@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { decodeOAuth2Credential } from "@qflow/runtime";
 
-import { acquireOAuthCredential } from "../src/oauth.js";
+import { acquireOAuthCredential, authorizeBrowserLaunch } from "../src/oauth.js";
 
 const acquisition = {
   kind: "oauth2-pkce" as const,
@@ -72,6 +72,19 @@ test("OAuth callback releases another browser connection after sending its page"
   if (!browserConnection.destroyed) {
     await once(browserConnection, "close", { signal: AbortSignal.timeout(1_000) });
   }
+});
+
+test("Windows authorize launch quotes the URL so cmd does not split on query ampersands", () => {
+  const url = "https://identity.example.test/authorize?response_type=code&client_id=client&redirect_uri=http://127.0.0.1:9/callback";
+  const launch = authorizeBrowserLaunch(url, {
+    platform: "win32",
+    comSpec: "C:\\Windows\\System32\\cmd.exe",
+  });
+  assert.equal(launch.command, "C:\\Windows\\System32\\cmd.exe");
+  assert.equal(launch.windowsVerbatimArguments, true);
+  assert.deepEqual(launch.args, ["/d", "/s", "/c", `start "" "${url}"`]);
+  assert.equal(authorizeBrowserLaunch(url, { platform: "darwin" }).command, "open");
+  assert.deepEqual(authorizeBrowserLaunch(url, { platform: "linux" }).args, [url]);
 });
 
 test("OAuth token exchange uses the Endpoint-declared request timeout", async () => {
