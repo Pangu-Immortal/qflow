@@ -2,7 +2,7 @@ import { watch } from "node:fs";
 import type { FSWatcher } from "node:fs";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
@@ -207,7 +207,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       if (isAbsolute(patch.path)) throw new Error("Studio patches must use workspace-relative paths.");
       const absolute = resolve(options.workspaceRoot, patch.path);
       const rel = relative(options.workspaceRoot, absolute);
-      if (rel.startsWith("..") || isAbsolute(rel) || !allowedSourceFiles.has(absolute)) {
+      if (rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel) || !allowedSourceFiles.has(absolute)) {
         throw new Error(`Studio cannot write source file ${patch.path}.`);
       }
       if (!Number.isInteger(patch.range.start) || !Number.isInteger(patch.range.end)

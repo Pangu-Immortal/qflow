@@ -2,7 +2,7 @@ import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { readFile, realpath, stat } from "node:fs/promises";
-import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 import type {
   Awaitable,
@@ -20,7 +20,7 @@ import type { BlobRef } from "@qflow/protocol";
 
 function isWithin(root: string, path: string): boolean {
   const relation = relative(root, path);
-  return relation === "" || (!relation.startsWith("..") && !isAbsolute(relation));
+  return relation === "" || (relation !== ".." && !relation.startsWith(`..${sep}`) && !isAbsolute(relation));
 }
 
 export type NodeFilesystemExternalSource = {
