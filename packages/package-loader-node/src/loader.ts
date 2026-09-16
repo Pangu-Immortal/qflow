@@ -16,7 +16,7 @@ import { externalPackageRoots, locateNodePackage } from "./location.js";
 type PackageJson = {
   readonly name: string;
   readonly version?: string;
-  readonly qflow?: { readonly activation?: string };
+  readonly qflow?: { readonly activation?: string; readonly dependencyInstallEnv?: Readonly<Record<string, Readonly<Record<string, string>>>> };
   readonly dependencies: Readonly<Record<string, string>>;
 };
 
@@ -43,7 +43,19 @@ function parsePackageJson(value: unknown, subject: string): PackageJson {
   return {
     name: text(item.name, `${subject}.name`),
     ...(item.version === undefined ? {} : { version: text(item.version, `${subject}.version`) }),
-    ...(qflow?.activation === undefined ? {} : { qflow: { activation: text(qflow.activation, `${subject}.qflow.activation`) } }),
+    ...(qflow === undefined ? {} : { qflow: {
+      ...(qflow.activation === undefined ? {} : { activation: text(qflow.activation, `${subject}.qflow.activation`) }),
+      ...(qflow.dependencyInstallEnv === undefined ? {} : { dependencyInstallEnv: Object.fromEntries(
+        Object.entries(object(qflow.dependencyInstallEnv, `${subject}.qflow.dependencyInstallEnv`)).map(([name, raw]) => {
+          assert(Object.hasOwn(dependencies, name) && !name.startsWith("@qflow/"), `${subject}: installation environment must name a direct external dependency: ${name}`);
+          const env = object(raw, `${subject}.qflow.dependencyInstallEnv.${name}`);
+          for (const [key, value] of Object.entries(env)) {
+            assert(/^[A-Za-z_][A-Za-z0-9_]*$/u.test(key) && typeof value === "string", `${subject}: invalid installation environment for ${name}`);
+          }
+          return [name, env as Record<string, string>];
+        }),
+      ) }),
+    } }),
     dependencies: Object.fromEntries(Object.entries(dependencies).map(([name, version]) => [
       name,
       text(version, `${subject}.dependencies.${name}`),
@@ -183,11 +195,11 @@ export class NodePackageSelectionMissingError extends Error {
 export async function distributionExternalPackageRequirements(
   specifiers: readonly string[],
   distributionRoot: string,
-): Promise<readonly { readonly name: string; readonly version: string; readonly specifier: string }[]> {
+): Promise<readonly { readonly name: string; readonly version: string; readonly specifier: string; readonly env?: Readonly<Record<string, string>> }[]> {
   const root = resolve(distributionRoot);
   const queue = [...new Set(specifiers.filter((name) => name.startsWith("@qflow/")))].sort();
   const visited = new Set<string>();
-  const external = new Map<string, { readonly name: string; readonly version: string; readonly specifier: string }>();
+  const external = new Map<string, { readonly name: string; readonly version: string; readonly specifier: string; readonly env?: Readonly<Record<string, string>> }>();
   while (queue.length > 0) {
     const name = queue.shift()!;
     if (visited.has(name)) continue;
@@ -199,7 +211,15 @@ export async function distributionExternalPackageRequirements(
         continue;
       }
       const specifier = `${dependency}@${version}`;
-      external.set(specifier, { name: dependency, version, specifier });
+      const requested = physical.json.qflow?.dependencyInstallEnv?.[dependency];
+      const previous = external.get(specifier);
+      const env = { ...previous?.env };
+      for (const [key, value] of Object.entries(requested ?? {})) {
+        assert(env[key] === undefined || env[key] === value, `Conflicting installation environment ${key} for ${specifier}`);
+        env[key] = value;
+      }
+      external.set(specifier, { name: dependency, version, specifier,
+        ...(Object.keys(env).length === 0 ? {} : { env }) });
     }
   }
   return [...external.values()].sort((left, right) => left.specifier.localeCompare(right.specifier));

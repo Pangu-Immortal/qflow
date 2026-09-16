@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -82,6 +82,28 @@ test("Distribution requirements leave project packages to npm and follow interna
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("selected packages own dependency install options and conflicting declarations fail", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-package-install-options-"));
+  try {
+    for (const [name, option] of [["first", "yes"], ["second", "no"]]) {
+      await projectPackage(root, `@qflow/${name}`, `{ format: "qflow.node-package@1" }`, { "example-sdk": "1.2.3" });
+      const path = join(root, "packages", name!, "package.json");
+      const manifest = JSON.parse(await readFile(path, "utf8"));
+      manifest.qflow.dependencyInstallEnv = { "example-sdk": { SDK_SKIP_DOWNLOAD: option } };
+      await writeFile(path, JSON.stringify(manifest));
+    }
+    assert.deepEqual(await distributionExternalPackageRequirements(["@qflow/first"], root), [{
+      name: "example-sdk", version: "1.2.3", specifier: "example-sdk@1.2.3", env: { SDK_SKIP_DOWNLOAD: "yes" },
+    }]);
+    await assert.rejects(distributionExternalPackageRequirements(["@qflow/first", "@qflow/second"], root), /Conflicting installation environment/u);
+    const path = join(root, "packages", "first", "package.json");
+    const manifest = JSON.parse(await readFile(path, "utf8"));
+    manifest.qflow.dependencyInstallEnv = { "unrelated-package": { SDK_SKIP_DOWNLOAD: "yes" } };
+    await writeFile(path, JSON.stringify(manifest));
+    await assert.rejects(distributionExternalPackageRequirements(["@qflow/first"], root), /must name a direct external dependency/u);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("a Distribution package accepts an exact CLI-only dependency from the machine npm home", async () => {

@@ -1,5 +1,5 @@
 /**
- * Preloaded into the disposable capture process, which never enters `bin/qflow.mjs`.
+ * Preloaded into capture and browser-install processes, which never enter `bin/qflow.mjs`.
  *
  * `module.registerHooks` is process-local, so the resolver the launcher installs does not
  * reach a child that Node starts directly. This registers the same resolution environment
@@ -11,11 +11,9 @@
  */
 import { resolve } from "node:path";
 
-// `bin/qflow.mjs` publishes this for every process it starts; the fallback mirrors
-// `packages/video-cli/src/distribution.ts` for callers that import a Distribution directly.
-const distributionRoot = resolve(
-  process.env.QFLOW_DISTRIBUTION_ROOT ?? resolve(import.meta.dirname, "../../.."),
-);
+// This preload belongs to the Provider the parent actually loaded. Inherited shell
+// hints must not redirect its dependencies to a different Qflow installation.
+const distributionRoot = resolve(import.meta.dirname, "../../..");
 
 const { installDistributionPackageResolution, installExternalPackageResolution } =
   await import("../../package-loader-node/src/distribution-resolution.js");

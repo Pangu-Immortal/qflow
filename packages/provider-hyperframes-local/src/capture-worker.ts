@@ -1,3 +1,4 @@
+import { releaseCaptureExitCleanup } from "./capture-exit.js";
 import { captureStagedVisual } from "./capture.js";
 import type { CaptureInput } from "./capture.js";
 
@@ -13,6 +14,7 @@ const finish = (value: { type: "completed" } | { type: "failed"; error: string }
   if (value.type === "failed") { report(value); return; }
   // Successful capture has closed its resources. Flush the result before closing our IPC handle;
   // our own disconnect is not a cancellation by the owner.
+  releaseCaptureExitCleanup();
   process.off("disconnect", disconnected);
   process.off("message", receive);
   if (!process.connected) return;

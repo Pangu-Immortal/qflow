@@ -2,7 +2,6 @@ import { defineEndpointPackage } from "@qflow/endpoint-kit";
 import { mediaTypes } from "@qflow/media";
 import { renderHyperframesCapabilities, verifyHyperframesVisualRequest } from "@qflow/render-hyperframes";
 import { canonicalize } from "@qflow/protocol";
-import { resolveNodePackageExecutable } from "@qflow/package-loader-node";
 import { renderHyperframesVisual, resolveExecutionOptions, renderWorkerLimit } from "./render.js";
 import type { HyperframesExecutionOptions } from "./options.js";
 import { renderProgressReporter } from "./progress.js";
@@ -14,16 +13,11 @@ export type CreateLocalHyperframesProviderOptions = HyperframesExecutionOptions 
   readonly pool?: string;
   /** Used by managed browser installation, not frame capture. */
   readonly nodePath?: string;
-  readonly hyperframesCliPath?: string;
   /** Whole render requests admitted concurrently; independent of frame workers. */
   readonly defaultConcurrency?: number;
   /** Shared Chrome slots across Need executions using this pool. */
   readonly browserCapacity?: number;
 };
-
-export function defaultHyperframesCliPath(): string {
-  return resolveNodePackageExecutable("hyperframes", "hyperframes", { from: import.meta.url });
-}
 
 export function createLocalHyperframesProvider(config: CreateLocalHyperframesProviderOptions) {
   const execution = resolveExecutionOptions(config);
@@ -62,7 +56,10 @@ export function createLocalHyperframesProvider(config: CreateLocalHyperframesPro
           : request.range.endFrameExclusive - request.range.startFrame;
         const progress = renderProgressReporter(context.reportProgress, frameCount);
         try {
-          const visual = await renderHyperframesVisual(request, { ...config, workers: execution.workers, maxWorkers,
+          const visual = await renderHyperframesVisual(request, { ...config,
+            ...(execution.chromePath === undefined ? { browserVersion: execution.browserVersion! } : { chromePath: execution.chromePath }),
+            browserCacheDirectory: execution.browserCacheDirectory,
+            workers: execution.workers, maxWorkers,
             resources: context.resources, onProgress: progress.onProgress,
             ...(context.reportDiagnostic === undefined ? {} : { onDiagnostic: context.reportDiagnostic }) });
           return { value: { kind: "inline", value: canonicalize(visual) } };

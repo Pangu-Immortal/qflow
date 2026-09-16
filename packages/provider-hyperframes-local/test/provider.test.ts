@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 import { mediaTypes, verifyRenderedVisual } from "@qflow/media";
 import type { CompositableSurfaceRef, RenderedVisual } from "@qflow/media";
@@ -13,11 +16,41 @@ import { renderHyperframesCapabilities, hyperframesVisualRequest } from "@qflow/
 import { canonicalize } from "@qflow/protocol";
 import type { CanonicalValue, Need } from "@qflow/protocol";
 
-import { createLocalHyperframesProvider } from "../src/index.js";
+import { createLocalHyperframesProvider, renderHyperframesVisual } from "../src/index.js";
 import { localHyperframesBrowserProgram } from "../src/program.js";
+import { browserExecutablePath } from "../src/browser.js";
 
 const liveEnabled = process.env.QFLOW_BROWSER_TESTS === "1";
 const hasFfprobe = spawnSync("ffprobe", ["-version"], { stdio: "ignore", windowsHide: true }).status === 0;
+
+test("rendering with a missing selection fails without installing or substituting a browser", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qflow-missing-render-browser-"));
+  try {
+    for (const selection of [
+      { browserVersion: "0.0.0.1", browserCacheDirectory: directory },
+      { chromePath: join(directory, "missing-browser") },
+    ]) {
+      await assert.rejects(renderHyperframesVisual({ document: documentFixture() }, {
+        ...selection, resources: new MemoryResourceStore(),
+      }), /Render browser is unavailable/u);
+      assert.deepEqual(await readdir(directory), []);
+    }
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test("an explicit browser renders without installing a managed replacement", { skip: !liveEnabled || !hasFfprobe }, async () => {
+  const chromePath = browserExecutablePath({});
+  const program = localHyperframesBrowserProgram({ chromePath, id: "external", nodePath: process.execPath, ffprobePath: "ffprobe" });
+  assert.equal(program.installation, undefined);
+  assert.equal((await program.probe()).state, "ready");
+  const diagnostics: string[] = [];
+  const visual = await renderHyperframesVisual({ document: documentFixture() }, {
+    chromePath, resources: new MemoryResourceStore(), workers: 1,
+    onDiagnostic: async event => { diagnostics.push(event.message); },
+  });
+  assert.equal(visual.frameCount, 12);
+  assert.ok(diagnostics.some(message => message.includes(`browser ${chromePath}`)));
+});
 
 function documentFixture(surface?: CompositableSurfaceRef) {
   const programSpace = sealProgramSpace({ id: "test-space", durationSec: 1,
@@ -110,12 +143,11 @@ test("the selected HyperFrames Provider owns one idempotent browser installation
   const program = localHyperframesBrowserProgram({
     id: "hyperframes",
     nodePath: process.execPath,
-    hyperframesCliPath: "/hyperframes-cli.js",
     ffprobePath: "ffprobe",
   });
   assert.equal(program.id, "hyperframes");
   assert.equal(program.start, undefined);
-  assert.deepEqual(program.installation?.commands[0]?.args.slice(-2), ["browser", "ensure"]);
+  assert.match(program.installation!.commands[0]!.args.at(-3)!, /browser-install\.ts$/u);
 });
 
 test("local HyperFrames Provider really renders a silent frame-exact MP4 with parallel workers", {

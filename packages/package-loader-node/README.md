@@ -51,3 +51,13 @@ This is trusted execution, not a sandbox. Builtins, native libraries and process
 (including `process.cwd()` and `process.env`) remain shared. Existing module bindings do not change
 under an active Build; a file or dependency first
 read later uses ordinary filesystem semantics. Scoped loading does not make a project tree immutable.
+
+## Dependency installation options
+
+A Distribution package may declare `qflow.dependencyInstallEnv` in its package.json, keyed by its
+ordinary direct external dependency names. Each value is an environment-variable map passed to that
+dependency's explicit npm installation. For example, an owner can disable an SDK's automatic asset
+download and prepare that asset through its ManagedProgram instead. Options do not propagate to
+unrelated installations or the caller's process. Conflicting values from selected packages fail;
+no package wins by discovery order. They are command inputs, not a second dependency inventory,
+readiness record, or new version system. Project packages remain owned by their package manager.

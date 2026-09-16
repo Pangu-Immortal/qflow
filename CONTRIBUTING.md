@@ -27,6 +27,12 @@ pnpm install --frozen-lockfile
 Live Builds additionally need Python 3.10–3.13, uv, ffmpeg and Chromium. The
 [Development Guide](https://qflow.ai/guide/develop/) lists what each one is for.
 
+For a Profile selecting local rendering, run `qflow programs up --runtime <profile> --endpoint
+<render-instance>` before the first render (or `qflow runtime up --runtime <profile>` to prepare
+the Profile and start its Worker). This explicitly prepares Chrome even when pnpm skips dependency
+build scripts. `qflow doctor --runtime <profile>` diagnoses missing setup without installing it.
+See the [local renderer README](packages/provider-hyperframes-local/README.md) for browser overrides.
+
 ## Make the change
 
 | Where you are working | Guide |
@@ -61,7 +67,8 @@ The repository READMEs remain unchanged. `dist/release/README.md` shows the pack
 With FFmpeg and FFprobe available, run
 `npm run check:distribution -- dist/release/qflow-qflow-<version>.tgz` to install that tarball outside
 the checkout, build its chat example component, prepare its font and local renderer, render and export
-the video, and decode the result. It uses a separate Qflow state directory, stops its Runtime Worker,
+the video, and decode the result. It disables implicit Puppeteer downloads, checks missing-browser
+diagnostics, and prepares the browser in an isolated cache. It uses a separate Qflow state directory, stops its Runtime Worker,
 and retains the temporary project on failure. The `npm package execution` workflow runs this on PRs
 and is reused by publication; publication uploads the same tarball that was installed and executed.
 

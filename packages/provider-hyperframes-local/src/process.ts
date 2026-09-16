@@ -1,4 +1,7 @@
 import { spawn } from "node:child_process";
+import { access, stat } from "node:fs/promises";
+import { constants } from "node:fs";
+import { delimiter, isAbsolute, resolve } from "node:path";
 
 type ProcessResult = {
   readonly stdout: Uint8Array;
@@ -11,6 +14,25 @@ export function assert(condition: unknown, message: string): asserts condition {
 export function positiveInteger(value: number, subject: string): number {
   assert(Number.isSafeInteger(value) && value > 0, `${subject} must be a positive integer`);
   return value;
+}
+
+/** The engine's binary override requires a path; resolve our selected command without its fallback search. */
+export async function mediaExecutablePath(value: string): Promise<string> {
+  const pathLike = isAbsolute(value) || value.includes("/") || value.includes("\\");
+  const bases = pathLike ? [resolve(value)]
+    : (process.env.PATH ?? "").split(delimiter).filter(Boolean).map(directory => resolve(directory, value));
+  const extensions = process.platform === "win32" && !/\.[^\\/]+$/u.test(value) ? [".exe", ".com", ""] : [""];
+  for (const base of bases) for (const extension of extensions) {
+    const candidate = `${base}${extension}`;
+    try {
+      if (!(await stat(candidate)).isFile()) continue;
+      await access(candidate, process.platform === "win32" ? constants.F_OK : constants.X_OK);
+      return candidate;
+    } catch (error) {
+      if (!["ENOENT", "ENOTDIR", "EACCES"].includes((error as NodeJS.ErrnoException).code ?? "")) throw error;
+    }
+  }
+  throw new Error(`HyperFrames media executable ${value} is unavailable; correct the Provider's ffmpegPath or ffprobePath.`);
 }
 
 function processEnvironment(): NodeJS.ProcessEnv {

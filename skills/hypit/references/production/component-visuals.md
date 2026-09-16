@@ -95,7 +95,7 @@ When a scene's video viewport and graphics share motion or layout, one component
 together. `browserProgram` from `@qflow/qflow/hyperframes` creates a `program` element's payload. Its HTML
 owns the local structure; CSS supplies layout, stacking, masks, filters and blending; optional
 `setup(root, data)` code returns `render(localFrame)`. This function sets the complete state at that
-frame. A range render may start in the middle, so compute state from the frame and authored inputs.
+frame synchronously. A range render may start in the middle, so compute state from the frame and authored inputs.
 
 Prepare stable structure in `setup`: locate elements, construct geometry and retain reusable drawing
 objects there. Paint static procedural textures once their resources are ready.
@@ -103,6 +103,11 @@ Let `render(localFrame)` update the state that changes with time. This supports 
 fast repeated capture and direct seeking. A program is sampled within its Present's lifetime;
 outside it, the renderer may retain the boundary pose. Re-entry and repeated active seeks must
 produce the complete requested state, including when an image became ready since the last call.
+
+Repeated browser-program instances share one document's HTML/SVG ID space even though their CSS
+is scoped. For SVG masks, gradients or filters, derive each required ID from `root.id` in `setup`
+and update its references together. The installed `@qflow/hyperframes` README owns the browser-program
+API and resource-loading behavior.
 
 For a depth or material effect, choose the representation that carries its visible behavior:
 CSS can tilt a panel, while a deforming textured surface may warrant mesh geometry and Canvas or

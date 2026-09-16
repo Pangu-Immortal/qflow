@@ -249,7 +249,7 @@ practical, revisit that choice and carry the improvement into the work and its n
 | locating the active `qflow`, working in a remote Agent environment, or checking and updating the executable and Skill through their own channels | `references/environment/distribution.md` |
 | what this machine can do, credentials, Model/Provider/Endpoint choices or shared capacity | `references/environment/profile.md` |
 | explaining model-service costs, using QflowHub, the user's API or model deployment, or making a project Model/Provider extension | `references/environment/model-and-provider.md` |
-| assessing local WhisperX preparation, installing local tools, or repairing a Managed Program | `references/environment/local-tools.md` |
+| preparing local WhisperX or a render browser, choosing a browser download source, installing local tools, or repairing a Managed Program | `references/environment/local-tools.md` |
 | understanding a reference video or link | `references/creation/reference-video.md` |
 | defining the target: what the user asked for, and what the new piece will be | `references/creation/brief.md` |
 | cloning with supplied faces or products, changing the Script, language, length, or combining references | `references/creation/transformations.md` |

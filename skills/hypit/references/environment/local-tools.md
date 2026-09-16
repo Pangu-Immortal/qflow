@@ -106,6 +106,39 @@ Ordinary projects use these declarations instead of running a service's internal
 entry point by hand. Contributor/operator commands in a service README are for diagnosing that
 packaged service, not for creating a second project-local installation.
 
+## Prepare the local rendering browser
+
+The selected HyperFrames Provider owns the browser used for rendering. Read the installed
+`@qflow/provider-hyperframes-local` README for the configuration supported by that installation;
+a newer Skill does not add options to an older executable. [Distribution updates](distribution.md#check-and-update-the-relevant-installation)
+explains how to check and update the relevant installation when a needed option is absent.
+
+For ordinary local rendering, use the Provider release's recommended browser. Prepare the selected
+instance explicitly, substituting its actual Profile path and Endpoint name:
+
+```bash
+qflow programs up --runtime <profile> --endpoint <render-instance>
+qflow doctor --runtime <profile>
+```
+
+`runtime up` also prepares selected Programs and starts the Worker. Package installation alone does
+not prepare the browser. `doctor` and Build preflight inspect the selected executable without
+downloading it; a system Chrome installation does not establish that the selected browser is ready.
+If using an existing browser is an intentional deployment choice, select it with `config.chromePath`.
+Use `config.browserVersion` for an explicit managed version when needed. These are alternative
+choices; consult the Provider README for supported values and combinations. Browser environment
+hints and cached alternatives do not override that selection.
+
+When the browser download is blocked, choose a compatible source through the Provider's
+`config.browserDownloadBaseUrl`; an npm registry mirror does not redirect browser archives.
+Check the archive URL, selected version and destination shown by preparation. A failed selected
+mirror reports failure without trying another source. Changing the source preserves a healthy
+cached installation. Use [network preparation](#make-network-preparation-practical) to distinguish
+an unavailable archive from a network problem and choose a route within the user's existing scope.
+After changing Profile or package dependencies, restart an active Worker explicitly when existing
+work permits so it loads the new selection. Browser readiness is not a promise that every GPU or
+page will render; investigate an actual capture failure through its render diagnostics.
+
 ## Select local WhisperX explicitly
 
 Local and hosted WhisperX implement the same alignment capability. When local execution is chosen,
@@ -183,7 +216,8 @@ Mirrors address particular download clients and hosts:
 | Python packages | pip uses `--index-url` / `PIP_INDEX_URL`; uv uses `--default-index` / `UV_DEFAULT_INDEX`. They are different clients. Qflow's managed service uses frozen uv dependencies; consult its Provider README before expecting an index change to redirect locked artifact URLs. |
 | Python runtime | uv's `UV_PYTHON_INSTALL_MIRROR` selects a compatible Python-distribution mirror. A PyPI mirror does not supply Python itself. An already compatible installed Python may avoid this download. |
 | Hugging Face weights | `HF_ENDPOINT` selects a compatible Hub endpoint; `HF_HOME` / `HF_HUB_CACHE` select reusable cache locations. A model's redirected weight host and its language-alignment download must also be reachable. |
-| FFmpeg, browser and other binaries | Use the selected package manager's binary-download settings or a compatible official prebuilt installation. An npm/PyPI mirror does not generally redirect these downloads. Homebrew bottles, browser archives and GitHub release assets have their own sources. |
+| HyperFrames browser | The selected Provider owns the archive source; follow [browser preparation](#prepare-the-local-rendering-browser) and its installed README. |
+| FFmpeg and other binaries | Use the selected package manager's binary-download settings or a compatible official prebuilt installation. An npm/PyPI mirror does not generally redirect these downloads. Homebrew bottles and GitHub release assets have their own sources. |
 
 Make a route change explicit: explain the blocked download, the proposed source and which command
 or service will use it. Use a mirror the user or organization trusts, with settings scoped to the

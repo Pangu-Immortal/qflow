@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import {
   createRuntimeEndpointAdapterFacet,
   runtimeConfigExact,
@@ -11,7 +12,7 @@ import {
 } from "@qflow/runtime-host-node";
 
 import { createLocalHyperframesProvider } from "./provider.js";
-import { defaultHyperframesCliPath } from "./provider.js";
+import { configuredBrowserPath, browserExecutablePath, selectedBrowserVersion } from "./browser.js";
 import type { HyperframesBrowserGpu, HyperframesQuality, HyperframesWorkers } from "./provider.js";
 import { localHyperframesBrowserProgram } from "./program.js";
 
@@ -21,11 +22,10 @@ const localHyperframesRuntimeAdapter = createRuntimeEndpointAdapterFacet({
     if (context.pool === undefined) throw new Error("local HyperFrames Provider Pool is required");
     const config = runtimeConfigObject(context.config, "local HyperFrames");
     runtimeConfigExact(config, [
-      "nodePath", "hyperframesCliPath", "ffprobePath", "ffmpegPath", "workers", "maxWorkers", "quality", "browserGpu",
+      "nodePath", "chromePath", "browserVersion", "browserCacheDirectory", "browserDownloadBaseUrl", "ffprobePath", "ffmpegPath", "workers", "maxWorkers", "quality", "browserGpu",
       "defaultConcurrency", "browserCapacity", "initializationTimeoutMs", "frameTimeoutMs", "processTimeoutMs", "maxProcessOutputBytes", "maxRenderedBytes",
     ], "local HyperFrames");
     runtimeConfigString(config.nodePath, "HyperFrames nodePath");
-    runtimeConfigString(config.hyperframesCliPath, "HyperFrames hyperframesCliPath");
     runtimeConfigString(config.ffprobePath, "HyperFrames ffprobePath");
     const workers = config.workers;
     if (workers !== undefined && workers !== "auto") {
@@ -40,10 +40,21 @@ const localHyperframesRuntimeAdapter = createRuntimeEndpointAdapterFacet({
       throw new Error("HyperFrames browserGpu is invalid");
     }
     const configuredNode = runtimeConfigString(config.nodePath, "HyperFrames nodePath");
-    const configuredCli = runtimeConfigString(config.hyperframesCliPath, "HyperFrames hyperframesCliPath");
+    const configuredChrome = runtimeConfigString(config.chromePath, "HyperFrames chromePath");
+    const browserVersion = runtimeConfigString(config.browserVersion, "HyperFrames browserVersion");
+    const browserDownloadBaseUrl = runtimeConfigString(config.browserDownloadBaseUrl, "HyperFrames browserDownloadBaseUrl");
+    const configuredCache = runtimeConfigString(config.browserCacheDirectory, "HyperFrames browserCacheDirectory");
+    const chromePath = configuredBrowserPath({ ...(configuredChrome === undefined ? {} : {
+      chromePath: resolve(context.dataRoot, configuredChrome),
+    }) });
+    const browser = {
+      ...(browserVersion === undefined ? {} : { browserVersion }),
+      ...(browserDownloadBaseUrl === undefined ? {} : { browserDownloadBaseUrl }),
+      ...(chromePath === undefined ? {} : { chromePath }),
+      ...(configuredCache === undefined ? {} : { browserCacheDirectory: resolve(context.dataRoot, configuredCache) }),
+    };
     const configuredFfprobe = runtimeConfigString(config.ffprobePath, "HyperFrames ffprobePath");
     const nodePath = resolveRuntimeExecutable(context.dataRoot, configuredNode ?? process.execPath);
-    const hyperframesCliPath = () => resolveRuntimeExecutable(context.dataRoot, configuredCli ?? defaultHyperframesCliPath());
     const configuredFfmpeg = runtimeConfigString(config.ffmpegPath, "HyperFrames ffmpegPath");
     const ffmpegPath = resolveRuntimeExecutable(context.dataRoot, configuredFfmpeg ?? "ffmpeg");
     const ffprobePath = resolveRuntimeExecutable(context.dataRoot, configuredFfprobe ?? "ffprobe");
@@ -60,6 +71,7 @@ const localHyperframesRuntimeAdapter = createRuntimeEndpointAdapterFacet({
         instance: context.instance,
         pool: context.pool,
         nodePath,
+        ...browser,
         ffprobePath,
         ffmpegPath,
         ...(workers === undefined ? {} : { workers: workers as HyperframesWorkers }),
@@ -77,11 +89,13 @@ const localHyperframesRuntimeAdapter = createRuntimeEndpointAdapterFacet({
       program: localHyperframesBrowserProgram({
         id: context.instance,
         nodePath,
-        hyperframesCliPath,
+        ...browser,
         ffprobePath,
         ffmpegPath,
       }),
       diagnose: async () => [
+        { severity: "info", code: "HYPERFRAMES_BROWSER_SELECTION", subject: context.instance,
+          message: `${chromePath === undefined ? `Managed Chrome Headless Shell ${selectedBrowserVersion(browser)} (${browserVersion === undefined ? "Provider recommendation" : "Profile version"})` : "Profile browser"}: ${browserExecutablePath(browser)}` },
         ...await diagnoseRuntimeExecutable({ root: context.dataRoot, configured: configuredFfmpeg, fallback: "ffmpeg", subject: "FFmpeg" }),
         ...await diagnoseRuntimeExecutable({
           root: context.dataRoot,

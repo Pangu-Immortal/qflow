@@ -53,3 +53,8 @@ to start execution, then `const runtime = await host.createRuntime(); await runt
 to submit work. `RuntimeHostExecution` does not run a second embedded Worker loop. A local carrier
 may stop accepting new Builds and drain; its assigned Builds stay in place and all carriers continue
 using the same resource accounting. Process policy belongs to the local Runtime, not this Host ABI.
+
+`prepareHostPackages` accepts exact specifier strings or `{ specifier, env }` installation inputs.
+The optional environment is applied only to that npm child process, merged over its inherited
+environment. It is neither persisted as installation status nor returned in package reports.
+The shared installer does not interpret SDK-specific variables; their owning packages supply them.
