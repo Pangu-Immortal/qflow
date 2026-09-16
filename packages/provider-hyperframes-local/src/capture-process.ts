@@ -25,30 +25,31 @@ async function killRenderTree(pid: number): Promise<void> {
     }
     return;
   }
-  const { stdout } = await exec("ps", ["-A", "-o", "pid=,ppid="], { timeout: cleanupMs });
-  const rows = stdout.trim().split("\n").map((line) => line.trim().split(/\s+/u).map(Number));
   const descendants = [pid];
   for (let i = 0; i < descendants.length; i++) {
-    for (const [child, parent] of rows) if (parent === descendants[i] && child !== undefined) descendants.push(child);
+    const children = await exec("pgrep", ["-P", String(descendants[i])], { timeout: cleanupMs })
+      .then(({ stdout }) => stdout.trim().split(/\s+/u).filter(Boolean).map(Number),
+        (error) => { if ((error as { code?: unknown }).code === 1) return []; throw error; });
+    for (const child of children) if (!descendants.includes(child)) descendants.push(child);
   }
+  // Kill the whole tree before waiting: only after every ancestor is dead are
+  // orphaned descendants reparented and reaped, making kill(pid, 0) read ESRCH.
   for (const child of descendants.reverse()) {
     for (const target of [-child, child]) {
       try { process.kill(target, "SIGKILL"); }
       catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error; }
     }
-    // Signal delivery is asynchronous. Wait for execution to stop while the
-    // parent is still alive to reap its child; zombies no longer hold resources.
-    const deadline = Date.now() + cleanupMs;
-    while (true) {
-      const state = await exec("ps", ["-p", String(child), "-o", "stat="], { timeout: cleanupMs })
-        .then(({ stdout }) => stdout.trim(), (error) => {
-          if (error.code === 1 && !error.stdout?.trim()) return "";
-          throw error;
-        });
-      if (state === "" || state.startsWith("Z")) break;
-      if (Date.now() >= deadline) throw new Error(`Render process ${child} did not stop after SIGKILL`);
-      await delay(20);
-    }
+  }
+  const deadline = Date.now() + cleanupMs;
+  let remaining = descendants;
+  while (remaining.length > 0) {
+    remaining = remaining.filter((child) => {
+      try { process.kill(child, 0); return true; }
+      catch (error) { if ((error as NodeJS.ErrnoException).code === "ESRCH") return false; throw error; }
+    });
+    if (remaining.length === 0) break;
+    if (Date.now() >= deadline) throw new Error(`Render process ${remaining[0]} did not stop after SIGKILL`);
+    await delay(20);
   }
 }
 
@@ -82,7 +83,7 @@ export async function runCaptureProcess(
     const kill = () => {
       if (grace !== undefined) clearTimeout(grace);
       killing ??= (child.pid === undefined ? Promise.resolve() : killRenderTree(child.pid)).catch((error) => {
-        failure = new Error(`${failure?.message ?? "Render cleanup failed"}; ${String(error)}`);
+        if (!completed) failure = new Error(`${failure?.message ?? "Render cleanup failed"}; ${String(error)}`);
         child.kill("SIGKILL");
       });
       return killing;
