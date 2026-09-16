@@ -33,6 +33,7 @@ import {
   } from "@qflow/protocol";
 import type { BlobRef, CanonicalValue, StoredValue } from "@qflow/protocol";
 
+import { mediaProcessEnv } from "./process-env.js";
 import { parseMediaInspection } from "./probe.js";
 import {
   compositeAnimatedWebpFrame,
@@ -98,10 +99,7 @@ async function runProcess(args: {
       shell: false,
       windowsHide: true,
       stdio: ["ignore", "pipe", "pipe"],
-      env: {
-        PATH: process.env.PATH ?? "",
-        ...(args.sharedLibraryPath === undefined ? {} : { LD_LIBRARY_PATH: args.sharedLibraryPath }),
-      },
+      env: mediaProcessEnv(args.sharedLibraryPath === undefined ? undefined : { LD_LIBRARY_PATH: args.sharedLibraryPath }),
     });
     const stdout: Buffer[] = [];
     let stdoutBytes = 0;
