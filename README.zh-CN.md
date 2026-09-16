@@ -197,6 +197,12 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
   </tr>
 </table>
 
+<p align="center">
+  <img alt="扫码加入 Qflow 微信群" src="./docs/public/wechat-group.jpg" width="320">
+</p>
+
+<p align="center"><em>扫码加入 Qflow 微信群。</em></p>
+
 ## ⭐ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=qflow-ai/qflow&type=Date)](https://www.star-history.com/#qflow-ai/qflow&Date)
