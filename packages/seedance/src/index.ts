@@ -326,7 +326,24 @@ export const seedanceMarkupSurfaces = [
 
 /** The duration is an author literal on every Seedance Surface, so the manifest is the exact-model module's own. */
 export const seedanceManifest = seedanceBaseDefinition.manifest;
-export const seedanceComponent = seedanceBaseDefinition.component;
+
+const referenceAudioProducers = new Set(Object.values(seedanceEndpoints)
+  .map((endpoint) => endpoint.mediaBindings["referenceAudio"]!.producer.name));
+
+export const seedanceComponent = {
+  ...seedanceBaseDefinition.component,
+  producers: seedanceBaseDefinition.component.producers.map((facet) =>
+    referenceAudioProducers.has(facet.producer.name) ? {
+      ...facet,
+      handler: (context: Parameters<typeof facet.handler>[0]) => {
+        const artifact = context.inputs.artifact?.value;
+        if (artifact?.kind === "blob" && ["audio/mp4", "audio/x-m4a"].includes(artifact.mediaType)) {
+          throw new Error("Seedance reference audio does not accept m4a; convert to wav or mp3");
+        }
+        return facet.handler(context);
+      },
+    } : facet),
+};
 export const seedanceDefinition = seedanceBaseDefinition;
 
 export {
