@@ -106,3 +106,42 @@ test("unavailable family, weight, style and emoji combinations fail before readi
     children: [], range,
   }), /emoji must be color or mono/u);
 });
+
+test("font installation guidance applies only to absent packages and uses the owning manifest", async (t) => {
+  const { cp, mkdir, mkdtemp, readFile, rm, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { pathToFileURL } = await import("node:url");
+  const directory = await mkdtemp(join(tmpdir(), "qflow-font-installation-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const installed = join(directory, "node_modules", "@qflow", "fonts-open");
+  await mkdir(join(installed, "src"), { recursive: true });
+  const manifest = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+  manifest.optionalDependencies["@fontsource-variable/inter"] = "9.8.7";
+  await writeFile(join(installed, "package.json"), JSON.stringify(manifest));
+  for (const name of ["surface.ts", "catalog.ts"]) {
+    await cp(new URL(`../src/${name}`, import.meta.url), join(installed, "src", name));
+  }
+  for (const name of ["media", "package-loader-node"]) {
+    const root = join(directory, "node_modules", "@qflow", name);
+    await mkdir(root, { recursive: true });
+    await writeFile(join(root, "package.json"), JSON.stringify({ name: `@qflow/${name}`, type: "module", exports: "./index.mjs" }));
+    await writeFile(join(root, "index.mjs"), `export * from ${JSON.stringify(import.meta.resolve(`@qflow/${name}`))};`);
+  }
+  const module = await import(pathToFileURL(join(installed, "src", "surface.ts")).href);
+  const face = () => decode(module.decodeOpenFontFaceSurface, {
+    kind: "element", name: "fonts:Face", attributes: { id: "selected", family: "inter", weight: "700", style: "normal" },
+    children: [], range,
+  });
+  await assert.rejects(face(), /qflow packages install @fontsource-variable\/inter@9\.8\.7/u);
+  const font = join(directory, "node_modules", "@fontsource-variable", "inter");
+  await mkdir(font, { recursive: true });
+  await writeFile(join(font, "package.json"), JSON.stringify({ name: "@fontsource-variable/inter", version: "9.8.7" }));
+  await assert.rejects(face(), error => {
+    assert.match(String(error), /does not contain files/u);
+    assert.doesNotMatch(String(error), /Install it once/u);
+    return true;
+  });
+  await writeFile(join(font, "package.json"), "broken manifest");
+  await assert.rejects(face(), SyntaxError);
+});

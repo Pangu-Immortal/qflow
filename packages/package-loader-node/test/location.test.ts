@@ -133,6 +133,7 @@ test("a machine npm fallback resolves an upstream asset the importer declares op
     // `qflow packages install <name>@<version>` tells the author to install exactly this asset, so
     // the version selection must read the same declaration the install was addressed to.
     await writeFile(join(importer, "..", "package.json"), JSON.stringify({
+      dependencies: { "optional-only": "1.0.0" },
       optionalDependencies: { "optional-only": "3.2.1" },
     }));
     const options = {
