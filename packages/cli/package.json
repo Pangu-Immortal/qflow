@@ -27,6 +27,7 @@
     "typescript": "5.9.3"
   },
   "devDependencies": {
+    "@qflow/runtime-local": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/run-markup": "workspace:*",
     "@qflow/workspace-fs-node": "workspace:*"

@@ -203,6 +203,7 @@
     "@qflow/comment-sticker-studio": "workspace:*",
     "@qflow/composition": "workspace:*",
     "@qflow/credential-store-env": "workspace:*",
+    "@qflow/credential-store-file": "workspace:*",
     "@qflow/credential-store-os": "workspace:*",
     "@qflow/deck-track": "workspace:*",
     "@qflow/deck-track-studio": "workspace:*",

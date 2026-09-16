@@ -244,7 +244,16 @@ and project implementation; see [Build execution scope](../production/builds.md#
 
 A Profile names a Credential Store and key; the secret stays in that store. The writable OS store
 uses macOS Keychain or Windows Credential Locker. The environment store reads one explicitly named
-environment variable and is read-only.
+environment variable and is read-only. The writable file store is available for Linux or an explicit
+choice of local file storage; it stores unencrypted values outside the project, not in an OS locker.
+
+`runtime init` writes an editable starter that selects the OS store. Before `auth` or `runtime up`
+on Linux, explicitly change `credentials` to `{ "file": { "use": "@qflow/credential-store-file" } }`
+and change the selected Endpoint's credential reference to `{ "store": "file", "key": "<chosen-key>" }`.
+Preserve other Endpoint settings and bindings. Its default directory is `credentials` under the Host
+state root printed by `qflow paths`; an optional Store `config.path` chooses another private directory.
+On Windows, ensure that directory's ACL is private to the user. Preserve an existing Store choice;
+never switch or migrate credentials just because one Store could not read them.
 
 Inspect one Endpoint's credential slots without revealing their values:
 
@@ -264,7 +273,9 @@ credential exists and the Provider's declared browser acquisition when present. 
 OAuth Endpoint, `auth login` opens that browser flow immediately; without a browser acquisition it
 securely prompts for the secret. `--from <secret-file>` explicitly imports a secret instead of
 opening OAuth. An Endpoint backed by the read-only environment store is configured in the Worker
-process environment instead.
+process environment instead. Login and logout use the declared slot and write capability without
+reading the old credential; a damaged stored value can therefore be replaced or removed. Status and
+execution still report read errors.
 
 For example, after choosing QflowHub, `qflow auth login qflowhub.default` uses its browser login;
 `qflow auth login qflowhub.default --from /private/path/qflowhub-key.txt` instead stores a QflowHub API

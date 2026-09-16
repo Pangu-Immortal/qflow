@@ -28,16 +28,21 @@ export function createLocalCredentialControl(
       : `Endpoint ${endpoint} repeats credential slot ${slot}`);
     return matches[0]!;
   };
-  const status = async (item: typeof descriptions[number]) => ({
+  const describe = async (item: typeof descriptions[number]) => ({
     ...structuredClone(item),
-    configured: await options.credentialStore.resolve(item.ref) !== undefined,
     writable: await writableCredentialStore(options.credentialStore, item.ref) !== undefined,
   });
 
   return {
+    async describeCredentials(endpoint) {
+      return await Promise.all(descriptions.filter((item) => endpoint === undefined || item.endpoint === endpoint).map(describe));
+    },
     async credentials(endpoint) {
       const selected = descriptions.filter((item) => endpoint === undefined || item.endpoint === endpoint);
-      return await Promise.all(selected.map(status));
+      return await Promise.all(selected.map(async (item) => ({
+        ...await describe(item),
+        configured: await options.credentialStore.resolve(item.ref) !== undefined,
+      })));
     },
     async putCredential(endpoint, slot, secret) {
       assert(secret.length > 0, "credential secret is empty");
@@ -45,14 +50,14 @@ export function createLocalCredentialControl(
       const store = await writableCredentialStore(options.credentialStore, item.ref);
       assert(store !== undefined, `CredentialStore ${item.ref.store} is not writable`);
       await store.put(item.ref, { secret });
-      return await status(item);
+      return { ...structuredClone(item), writable: true, configured: true };
     },
     async deleteCredential(endpoint, slot) {
       const item = credential(endpoint, slot);
       const store = await writableCredentialStore(options.credentialStore, item.ref);
       assert(store !== undefined, `CredentialStore ${item.ref.store} is not writable`);
       const deleted = await store.delete(item.ref);
-      return { deleted, credential: await status(item) };
+      return { deleted, credential: { ...structuredClone(item), writable: true, configured: false } };
     },
     close() {
       return options.close?.();

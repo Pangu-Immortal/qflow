@@ -148,7 +148,8 @@ export async function runCli(
     }, "Runtime Profile created", "success", [
       ["Profile", selected.profile],
       ["Project", selected.projectRoot],
-    ], ["No package was installed, no service was contacted and no Worker was started."]);
+    ], ["Review the Profile’s credential stores and Endpoint settings before login or runtime up.",
+      "No package was installed, no service was contacted and no Worker was started."]);
     return;
   }
   if (args.command === "runtime" && args.action === "use") {

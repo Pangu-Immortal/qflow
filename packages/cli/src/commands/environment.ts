@@ -364,13 +364,10 @@ export async function runEnvironmentCommand(input: {
     }
     const credentialsControl = await (await runtimeHost(runtimeProfile)).openCredentials(args.endpoint);
     try {
-      let credentials = await credentialsControl.credentials(args.endpoint);
-      if (args.slot !== undefined) credentials = credentials.filter((item) => item.slot === args.slot);
-      if (credentials.length === 0) throw new Error(`Endpoint ${args.endpoint} has no matching credential`);
-      if (args.slot === undefined && credentials.length > 1 && args.action !== "status") {
-        throw new Error(`Endpoint ${args.endpoint} has several credentials; select one with --slot`);
-      }
       if (args.action === "status") {
+        let credentials = await credentialsControl.credentials(args.endpoint);
+        if (args.slot !== undefined) credentials = credentials.filter((item) => item.slot === args.slot);
+        if (credentials.length === 0) throw new Error(`Endpoint ${args.endpoint} has no matching credential`);
         const view = credentials.slice(0, args.limit).map((item) => ({
           endpoint: item.endpoint,
           slot: item.slot,
@@ -397,7 +394,15 @@ export async function runEnvironmentCommand(input: {
             : `login opens OAuth: ${item.acquisition.authorizationEndpoint}`;
           return `${item.slot}: ${item.configured ? "configured" : "missing"} · ${item.writable ? "writable" : "read-only"} · ${entry}`;
         }));
-      } else if (args.action === "login") {
+        return;
+      }
+      let credentials = await credentialsControl.describeCredentials(args.endpoint);
+      if (args.slot !== undefined) credentials = credentials.filter((item) => item.slot === args.slot);
+      if (credentials.length === 0) throw new Error(`Endpoint ${args.endpoint} has no matching credential`);
+      if (args.slot === undefined && credentials.length > 1) {
+        throw new Error(`Endpoint ${args.endpoint} has several credentials; select one with --slot`);
+      }
+      if (args.action === "login") {
         const [item] = credentials;
         if (item === undefined) throw new Error(`Endpoint ${args.endpoint} has no matching credential`);
         if (!item.writable) {

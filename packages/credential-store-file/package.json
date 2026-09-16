@@ -1,0 +1,21 @@
+{
+  "name": "@qflow/credential-store-file",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "dependencies": {
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-kit": "workspace:*"
+  }
+}

@@ -13,6 +13,7 @@
     "@qflow/cli": "workspace:*",
     "@qflow/compiler-markup-node": "workspace:*",
     "@qflow/composition": "workspace:*",
+    "@qflow/credential-store-file": "workspace:*",
     "@qflow/credential-store-os": "workspace:*",
     "@qflow/driver-node": "workspace:*",
     "@qflow/estimate": "workspace:*",

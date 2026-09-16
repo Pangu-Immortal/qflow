@@ -70,15 +70,18 @@ export type BuildView = {
   }[];
 };
 
-export type RuntimeHostCredentialStatus = {
+export type RuntimeHostCredentialDescription = {
   readonly endpoint: string;
   readonly slot: string;
   readonly label: string;
   readonly kind: "secret" | "json";
   readonly ref: CredentialRef;
   readonly acquisition?: CredentialAcquisition;
-  readonly configured: boolean;
   readonly writable: boolean;
+};
+
+export type RuntimeHostCredentialStatus = RuntimeHostCredentialDescription & {
+  readonly configured: boolean;
 };
 
 export type RuntimeHostControl = {
@@ -105,6 +108,8 @@ export type RuntimeHostResultControl = {
 };
 
 export type RuntimeHostCredentialControl = {
+  /** Endpoint declarations and Store write capability; never reads an existing secret. */
+  describeCredentials(endpoint?: string): Promise<readonly RuntimeHostCredentialDescription[]>;
   credentials(endpoint?: string): Promise<readonly RuntimeHostCredentialStatus[]>;
   putCredential(endpoint: string, slot: string, secret: string): Promise<RuntimeHostCredentialStatus>;
   deleteCredential(endpoint: string, slot: string): Promise<{
