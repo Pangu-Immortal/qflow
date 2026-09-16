@@ -75,6 +75,7 @@ export async function runCaptureProcess(
     });
     let failure: Error | undefined;
     let completed = false;
+    let closed = false;
     let outputBytes = 0;
     let stderr = "";
     let diagnostics = Promise.resolve();
@@ -84,14 +85,27 @@ export async function runCaptureProcess(
       if (grace !== undefined) clearTimeout(grace);
       killing ??= (child.pid === undefined ? Promise.resolve() : killRenderTree(child.pid)).catch((error) => {
         if (!completed) failure = new Error(`${failure?.message ?? "Render cleanup failed"}; ${String(error)}`);
+        diagnostic({ level: "warning", message: `Render process-tree cleanup could not be confirmed: ${String(error)}` });
         child.kill("SIGKILL");
       });
       return killing;
     };
     const stop = (error: Error) => {
       failure ??= error;
+      if (closed) return;
       if (child.connected) child.send({ type: "abort", error: failure.message }, () => {});
-      grace ??= setTimeout(() => { void kill(); }, cleanupMs);
+      awaitExit();
+    };
+    const diagnostic = (value: ExecutionDiagnostic) => {
+      if (onDiagnostic === undefined) return;
+      diagnostics = diagnostics.then(() => onDiagnostic(value))
+        .catch((error) => stop(error instanceof Error ? error : new Error(String(error))));
+    };
+    const awaitExit = () => {
+      grace ??= setTimeout(() => {
+        diagnostic({ level: "warning", message: `Render process did not exit within ${cleanupMs} ms; terminating its remaining process tree` });
+        void kill();
+      }, cleanupMs);
     };
     const abort = () => stop(signal.reason instanceof Error ? signal.reason : new Error(String(signal.reason)));
     signal.addEventListener("abort", abort, { once: true });
@@ -104,10 +118,7 @@ export async function runCaptureProcess(
       pipe?.setEncoding("utf8");
       pipe?.on("data", (text: string) => {
         log(Buffer.from(text), stream === "stderr");
-        if (onDiagnostic !== undefined && text.trim()) {
-          diagnostics = diagnostics.then(() => onDiagnostic({ stream, level: "info", message: text.trimEnd() }))
-            .catch((error) => stop(error instanceof Error ? error : new Error(String(error))));
-        }
+        if (text.trim()) diagnostic({ stream, level: "info", message: text.trimEnd() });
       });
     }
     child.on("message", (value: { type: string; event?: HyperframesRenderProgress; error?: string }) => {
@@ -117,13 +128,20 @@ export async function runCaptureProcess(
         stop(new Error(value.error));
       } else if (value.type === "completed" || value.type === "failed") {
         completed = value.type === "completed";
-        if (!completed) failure ??= new Error(value.error);
-        // The worker has finished cleanup. Terminate any leftover descendants before releasing capacity.
-        void kill();
+        if (completed) {
+          // Successful capture has closed its resources and will disconnect after this message.
+          awaitExit();
+        } else {
+          failure ??= new Error(value.error);
+          // Resource cleanup may itself have failed. Keep the worker alive until
+          // its remaining descendants have been discovered and terminated.
+          void kill();
+        }
       }
     });
     child.on("error", (error) => { failure ??= error; void kill(); });
     child.on("close", () => {
+      closed = true;
       if (grace !== undefined) clearTimeout(grace);
       signal.removeEventListener("abort", abort);
       void (killing ?? Promise.resolve()).then(async () => {
