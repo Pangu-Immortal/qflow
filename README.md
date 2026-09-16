@@ -205,6 +205,19 @@ commands and the repository layout.
   </tr>
 </table>
 
+## Launch Partner
+
+<table>
+  <tr>
+    <td width="220" align="center">
+      <img alt="OpenAgents" src="./docs/public/openagents.png" width="180"><br>
+      OpenAgents<br>
+      <a href="https://openagents.org/blog/posts/2026-09-08-pilot-user-program-zh-qflow">openagents.org</a>
+    </td>
+    <td>OpenAgents Workspace is a product that helps you manage AI agents, allowing you to invoke agents running on any device (whether on a mobile phone or computer) anytime, anywhere. Agents can collaborate within the platform to help you complete tasks and boost efficiency. It currently supports integration with over 20 types of agents, including Claude, Codex, OpenClaw, and Hermes (Details on supported models: <a href="https://api-gateway.openagents.org/static/index.html">https://api-gateway.openagents.org/static/index.html</a>)</td>
+  </tr>
+</table>
+
 ## ⭐ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=qflow-ai/qflow&type=Date)](https://www.star-history.com/#qflow-ai/qflow&Date)

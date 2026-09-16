@@ -201,6 +201,19 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
 
 <img alt="扫码加入 Qflow 微信群" src="./docs/public/wechat-group.jpg" width="320">
 
+## Launch 伙伴
+
+<table>
+  <tr>
+    <td width="220" align="center">
+      <img alt="OpenAgents" src="./docs/public/openagents.png" width="180"><br>
+      OpenAgents<br>
+      <a href="https://openagents.org/blog/posts/2026-09-08-pilot-user-program-zh-qflow">openagents.org</a>
+    </td>
+    <td>OpenAgents Workspace 是一个让你管理智能体的产品，它能让你随时随地调用在任何设备上运行的 Agent（手机 + 电脑端均可）。Agents 可以在其中协同合作，帮你完成任务、提升效率。现支持 Claude、Codex、Openclaw、Hermes 等 20 余种 agent 接入（支持模型详情：<a href="https://api-gateway.openagents.org/static/index.html">https://api-gateway.openagents.org/static/index.html</a>）</td>
+  </tr>
+</table>
+
 ## ⭐ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=qflow-ai/qflow&type=Date)](https://www.star-history.com/#qflow-ai/qflow&Date)
