@@ -12,8 +12,7 @@ import {
 
 // The Distribution root is the replaceable Qflow tool checkout, not this
 // package's source directory and never the author's project.
-const packageRoot = resolve(process.env.QFLOW_DISTRIBUTION_ROOT ?? resolve(import.meta.dirname, "../../.."));
-const installedLauncher = process.env.QFLOW_CLI_LAUNCHER;
+const packageRoot = resolve(import.meta.dirname, "../../..");
 const defaultBuildResultRepository = {
   use: "@qflow/build-result-fs",
   config: { path: ".qflow/results" },
@@ -57,14 +56,8 @@ export const videoCliDistribution: CliDistribution = {
       : { distributionPackageRoot: options.distributionPackageRoot }),
     workerLaunch: {
       command: process.execPath,
-      // The repository launcher registers TypeScript support before entering the CLI.
-      // Tests that import this Distribution directly keep the current Node arguments.
-      args: installedLauncher === undefined
-        ? [
-            ...process.execArgv.filter((item) => !item.startsWith("--test")),
-            fileURLToPath(new URL("./cli.ts", import.meta.url)),
-          ]
-        : [installedLauncher],
+      // The loaded Distribution owns its Worker entry and TypeScript/package resolution.
+      args: [fileURLToPath(new URL("../../../bin/qflow.mjs", import.meta.url))],
     },
   }),
   openProjectResults: async (projectRoot, options) => {

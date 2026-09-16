@@ -76,7 +76,12 @@ export function browserProgramScript(entries: readonly {
         // including repeated frame 0 after images/fonts finish loading.
         if (region !== 'active' && entry.region === region) continue;
         try {
-          entry.render(Math.max(0, Math.min(entry.durationFrames, local)));
+          const result = entry.render(Math.max(0, Math.min(entry.durationFrames, local)));
+          if (result != null && typeof result.then === 'function') {
+            // Observe a later rejection, but never let asynchronous drawing race frame capture.
+            Promise.resolve(result).catch(fail);
+            throw new Error('Browser program render(localFrame) must be synchronous; prepare asynchronous resources before rendering.');
+          }
           entry.region = region;
         }
         catch (error) { fail(error); }

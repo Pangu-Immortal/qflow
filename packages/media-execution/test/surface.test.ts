@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 
-import { verifyCompositableSurfaceBytes } from "@qflow/media-execution";
+import { verifyCompositableSurfaceBytes, verifyCompositableSurfaceFile } from "@qflow/media-execution";
 import type { CompositableSurfaceRef } from "@qflow/media";
 
 const hasMediaTools = spawnSync("ffmpeg", ["-version"], { stdio: "ignore", windowsHide: true }).status === 0
@@ -46,7 +46,7 @@ function surface(bytes: Uint8Array, options: {
   };
 }
 
-test("cancelling Surface validation stops both probes without poisoning later calls", {
+test("cancelling staged Surface inspection stops both probes and preserves the caller's file", {
   skip: process.platform === "win32",
 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), "qflow-surface-cancel-"));
@@ -62,8 +62,10 @@ fs.writeFileSync(${JSON.stringify(marker)} + '-' + process.pid, '');
 setInterval(() => {}, 1000);
 `);
     await chmod(program, 0o755);
+    const path = join(directory, "staged.png");
+    await writeFile(path, bytes);
     const controller = new AbortController();
-    const checking = verifyCompositableSurfaceBytes({ surface: value, bytes, ffprobePath: program,
+    const checking = verifyCompositableSurfaceFile({ surface: value, path, ffprobePath: program,
       signal: controller.signal });
     const rejected = assert.rejects(checking, /stop probes/u);
     let pids: number[] = [];
@@ -77,6 +79,7 @@ setInterval(() => {}, 1000);
     await rejected;
     assert.equal(pids.length, 2);
     for (const pid of pids) assert.throws(() => process.kill(pid, 0), { code: "ESRCH" });
+    assert.deepEqual([...await readFile(path)], [...bytes]);
     await writeFile(program, `#!${process.execPath}
 console.log(JSON.stringify(process.argv.includes('-show_pixel_formats')
  ? { pixel_formats: [{ name: 'rgb24', flags: { alpha: 0 } }] }
@@ -117,6 +120,14 @@ test("Surface byte admission accepts matching still/video bytes and rejects cont
     await verifyCompositableSurfaceBytes({ surface: opaqueSurface, bytes: opaque });
     await verifyCompositableSurfaceBytes({ surface: alphaSurface, bytes: alpha });
     await verifyCompositableSurfaceBytes({ surface: videoSurface, bytes: video });
+    await verifyCompositableSurfaceFile({ surface: videoSurface, path: videoPath });
+    await assert.rejects(verifyCompositableSurfaceFile({ surface: {
+      ...videoSurface, artifact: { ...videoSurface.artifact, size: video.byteLength + 1 },
+    }, path: videoPath }), /byte size differs/u);
+    await assert.rejects(verifyCompositableSurfaceFile({ surface: {
+      ...videoSurface, width: 10,
+    }, path: videoPath }), /dimensions differ/u);
+    assert.deepEqual(await readFile(videoPath), video, "inspection never rewrites or deletes the caller's file");
 
     await assert.rejects(
       verifyCompositableSurfaceBytes({ surface: { ...opaqueSurface, width: 9 }, bytes: opaque }),

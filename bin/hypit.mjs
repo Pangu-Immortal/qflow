@@ -19,8 +19,6 @@ process.emitWarning = function qflowWarning(warning, ...args) {
 };
 
 const distributionRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-process.env.QFLOW_CLI_LAUNCHER ??= import.meta.filename;
-process.env.QFLOW_DISTRIBUTION_ROOT ??= distributionRoot;
 register();
 const {
   installDistributionPackageResolution,

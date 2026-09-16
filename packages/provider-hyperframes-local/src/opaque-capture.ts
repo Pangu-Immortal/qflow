@@ -22,33 +22,61 @@ export async function createOpaqueFrameCapture(session: CaptureSession) {
   const cdp = await getCdpSession(page);
   // MP4 has no alpha channel. The authored Canvas paints over this final matte.
   await cdp.send("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 1 } });
-  // These decoded image handles belong to this page, just like its DOM. Retain
-  // only URLs used by inline background images; changing a style can need a load
-  // even after initializeSession has finished its initial resource readiness.
+  // Image readiness belongs to this page. A seek can select a new image through
+  // attributes, a CSS class or a pseudo-element after initial page readiness.
   await page.evaluate(() => {
     const decoded = new Map<string, Promise<void>>();
+    const images = {
+      load(url: string): Promise<void> {
+        let ready = decoded.get(url);
+        if (ready === undefined) {
+          const image = new Image();
+          image.src = url;
+          ready = image.decode().catch(error => {
+            throw new Error(`HyperFrames image could not be decoded: ${url}`, { cause: error });
+          });
+          decoded.set(url, ready);
+        }
+        return ready;
+      },
+      background(value: string, pending: Promise<unknown>[]) {
+        for (const match of value.matchAll(/url\(\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([^\s"'()]+))\s*\)/gu)) {
+          const url = (match[1] ?? match[2] ?? match[3] ?? "").trim();
+          if (url) pending.push(this.load(url));
+        }
+      },
+      style(style: CSSStyleDeclaration, pending: Promise<unknown>[]) {
+        for (const value of [style.backgroundImage, style.maskImage, style.borderImageSource, style.listStyleImage, style.content]) {
+          this.background(value, pending);
+        }
+      },
+    };
     (window as unknown as { __qflowPrepareImages: () => Promise<void> }).__qflowPrepareImages = async () => {
       const pending: Promise<unknown>[] = [];
-      if (document.fonts.status === "loading") pending.push(document.fonts.ready);
       for (const image of Array.from(document.images)) {
-        if (!image.complete) pending.push(image.decode());
-      }
-      for (const element of Array.from(document.querySelectorAll<HTMLElement>('[style*="background"]'))) {
-        const background = element.style.backgroundImage;
-        for (const match of background.matchAll(/url\(\s*(?:"((?:\\.|[^"])*)"|'((?:\\.|[^'])*)'|([^)]*))\s*\)/gu)) {
-          const url = (match[1] ?? match[2] ?? match[3] ?? "").trim();
-          if (!url) continue;
-          let ready = decoded.get(url);
-          if (ready === undefined) {
-            const image = new Image();
-            image.src = url;
-            ready = image.decode();
-            decoded.set(url, ready);
-          }
-          pending.push(ready);
+        if ((image.currentSrc || image.getAttribute("src") || image.getAttribute("srcset"))
+          && (!image.complete || image.naturalWidth === 0)) {
+          pending.push(image.decode().catch(error => {
+            throw new Error(`HyperFrames image could not be decoded: ${image.currentSrc || image.src}`, { cause: error });
+          }));
         }
       }
+      for (const element of Array.from(document.querySelectorAll("*"))) {
+        images.style(getComputedStyle(element), pending);
+        for (const pseudo of ["::before", "::after"]) {
+          const style = getComputedStyle(element, pseudo);
+          if (style.content !== "none" && style.content !== "normal") images.style(style, pending);
+        }
+      }
+      for (const image of Array.from(document.querySelectorAll("svg image"))) {
+        const href = image.getAttribute("href") ?? image.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+        if (href) pending.push(images.load(new URL(href, document.baseURI).href));
+      }
       await Promise.all(pending);
+      await document.fonts.ready;
+      document.fonts.forEach(font => {
+        if (font.status === "error") throw new Error(`HyperFrames font could not be loaded: ${font.family}`);
+      });
     };
   });
   return async (frame: number) => {

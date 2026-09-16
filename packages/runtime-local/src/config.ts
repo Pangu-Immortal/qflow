@@ -462,7 +462,7 @@ export async function prepareRuntimeConfigPackages(
     ...document.endpoints.map((item) => item.use),
     ...credentials.credentials.map((item) => item.use),
   ], options.distributionPackageRoot);
-  return await prepareHostPackages(requirements.map((item) => item.specifier), {
+  return await prepareHostPackages(requirements, {
     root: qflowHostPackageRoot(options.hostStateRoot),
     ...(options.onProgress === undefined ? {} : { onProgress: options.onProgress }),
   });

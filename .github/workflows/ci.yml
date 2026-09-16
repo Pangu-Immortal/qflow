@@ -25,9 +25,8 @@ jobs:
     # whole path. One matrix rather than two jobs, so a step added here cannot be added to only
     # one of them.
     #
-    # Neither runner image ships ffmpeg, so the media tests that probe for it skip on both legs
-    # alike. That gap is real and older than this matrix; closing it means adding ffmpeg to both,
-    # not to one, which would leave a red leg ambiguous between the two causes.
+    # ffmpeg is installed on both matrix legs before tests run. Adding it to only one
+    # of them would leave a red leg ambiguous between a product bug and a missing binary.
     runs-on: ${{ matrix.os }}
     # A test that never returns would otherwise hold a runner until the six-hour default. The
     # suite takes about a minute; this is the ceiling for a job that has stopped making progress,
@@ -54,6 +53,21 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install ffmpeg on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install ffmpeg on Windows
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg --yes --no-progress
+
+      - name: Inspect the installed media tools
+        run: |
+          ffmpeg -version
+          ffprobe -version
 
       - name: Type check
         run: pnpm check

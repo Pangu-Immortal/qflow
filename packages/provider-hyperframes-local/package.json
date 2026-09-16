@@ -8,7 +8,18 @@
     ".": "./src/index.ts"
   },
   "qflow": {
-    "activation": "./src/activation.ts"
+    "activation": "./src/activation.ts",
+    "renderBrowser": {
+      "version": "152.0.7928.2"
+    },
+    "dependencyInstallEnv": {
+      "@hyperframes/engine": {
+        "PUPPETEER_SKIP_DOWNLOAD": "true"
+      },
+      "@hyperframes/producer": {
+        "PUPPETEER_SKIP_DOWNLOAD": "true"
+      }
+    }
   },
   "dependencies": {
     "@hyperframes/engine": "0.7.101",
@@ -17,13 +28,12 @@
     "@qflow/hyperframes": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/media-execution": "workspace:*",
-    "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/render-hyperframes": "workspace:*",
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
     "@qflow/runtime-kit": "workspace:*",
-    "hyperframes": "0.7.101",
+    "@puppeteer/browsers": "3.2.2",
     "tsx": "4.21.0"
   },
   "devDependencies": {

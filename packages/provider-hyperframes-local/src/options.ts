@@ -2,9 +2,9 @@ export type HyperframesWorkers = number | "auto";
 export type HyperframesQuality = "draft" | "standard" | "high";
 export type HyperframesBrowserGpu = "auto" | "software" | "hardware";
 
-export type HyperframesExecutionOptions = {
+export type HyperframesExecutionOptions = import("./browser.js").BrowserOptions & {
   readonly ffprobePath?: string;
-  /** Final H.264 encoder. Source extraction uses the pinned engine's binary resolver. */
+  /** Selected FFmpeg command for both source extraction and final H.264 encoding. */
   readonly ffmpegPath?: string;
   /** Parallel Chrome workers inside one render. This is separate from Provider request concurrency. */
   readonly workers?: HyperframesWorkers;

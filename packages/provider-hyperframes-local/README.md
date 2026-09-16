@@ -2,7 +2,7 @@
 
 Trusted local Provider for the `@qflow/render-hyperframes#render-visual` capability. It stages the
 Resource dependencies declared by a `HyperframesDocument`, renders a silent MP4 with the
-HyperFrames engine, probes the bytes, and returns a verified `RenderedVisual`. Before staging a typed
+HyperFrames engine, probes the bytes, and returns a verified `RenderedVisual`. Before capturing a typed
 Surface it decodes the exact bytes and checks declared dimensions, still/frame timing, SDR/sRGB and
 opaque/straight-alpha facts. These checks validate the typed rendering input; they do not create
 content identity or hidden output metadata.
@@ -64,12 +64,67 @@ GPU, or `auto` to let the engine decide. Capture uses screenshots and independen
 the CLI's automatic worker and drawElement policies do not override the count. The opaque screenshot
 adapter uses the engine's public session, video injector and page seek protocol plus Chrome CDP.
 It waits for seek completion, dynamic images/fonts and the page compositor before capturing PNGs.
+Image readiness includes CSS class and pseudo-element images, CSS masks and SVG images. A failed
+image decode reports its URL instead of producing a successful frame with missing media. Failed
+declared fonts also fail capture instead of silently leaving fallback glyphs in the output.
 The pinned engine couples its PNG session setup to transparent export, so this adapter initializes
 an opaque session and chooses PNG separately at capture. It does not patch engine methods or files.
 
-The Runtime Adapter also declares one managed browser program. `programs up` invokes the pinned
-HyperFrames CLI's `browser ensure`; its probe resolves and starts that browser and checks
-the FFmpeg/FFprobe toolchain before a Build.
+The Runtime Adapter declares one managed browser program. Prepare it explicitly:
+
+```sh
+qflow programs up --runtime ./qflow.runtime.json --endpoint hyperframes.local
+qflow doctor --runtime ./qflow.runtime.json
+```
+
+Use the instance name from the Profile. `runtime up` also prepares it and starts the Runtime Worker.
+The Provider's `package.json` declares its recommended Chrome Headless Shell version in
+`qflow.renderBrowser.version`, alongside the engine dependency used to test that release. The
+installer consumes that declaration; it does not have a browser version constant or fetch a
+"latest" channel. `config.browserVersion` explicitly selects another exact four-part version.
+Changing the recommendation belongs to a Provider release and requires real rendering tests; a
+Puppeteer recommendation alone is not a HyperFrames compatibility guarantee.
+
+The default cache is `~/.cache/hyperframes/chrome`; `config.browserCacheDirectory` selects another
+location. Only the selected version is used, regardless of other cached or system browsers.
+Projects sharing this cache use the existing ManagedProgram preparation lock/logs under
+`.qflow-render-program`. Readiness comes from the executable and its reported version, not a receipt.
+Explicit preparation reuses a healthy installation or repairs only the selected managed version.
+A failed download reports failure without selecting another version or browser.
+
+`config.browserDownloadBaseUrl` selects a Chrome for Testing archive mirror for explicit preparation.
+It is an absolute HTTP(S) base URL, without credentials, a query or a fragment. The browser library
+appends the selected version, platform and archive name; the mirror must serve that same layout.
+For example, a base of `https://mirror.example/chrome-for-testing` serves archives beneath
+`<base>/<version>/<platform>/chrome-headless-shell-<platform>.zip`. Choose a source maintained by
+the user or organization; this Provider does not keep a mirror list or choose one by region.
+Omitting the setting uses the browser library's official Chrome for Testing source. A configured
+source replaces it: failed transfers or invalid archives fail preparation without trying the official
+source or another mirror. Normal HTTP redirects supplied by the selected server are handled by the
+download library. Preparation displays the complete archive URL, version and destination before
+download. An npm registry setting does not redirect this binary download.
+
+The download source only determines where missing installation bytes come from. It does not change
+the executable selection, and changing it does not invalidate a healthy cached version. No source
+receipt is stored. To install into an empty location, explicitly choose `browserCacheDirectory`.
+
+`config.chromePath` selects a user-managed Chrome/Chromium executable. It cannot be combined with
+`browserVersion` or `browserDownloadBaseUrl`; invalid combinations fail instead of assigning precedence. Relative paths resolve
+from the Runtime Profile root. This mode never downloads or repairs a browser. Its version remains
+under the user's control, including system-browser auto-updates. `HYPERFRAMES_BROWSER_PATH` and
+`PRODUCER_HEADLESS_SHELL_PATH` do not select browsers in this Provider; configure `chromePath`.
+On platforms without a supported managed download, explicitly select an installed browser.
+
+`doctor` displays the selected path and its source, and only inspects it. Build preflight, rendering
+and previews never install a browser. `programs up` / `runtime up` display the selected managed
+version, installation location and download URL before running preparation. The probe runs `--version` and checks
+FFmpeg/FFprobe; it does not promise GPU or page compatibility. Capture receives that same selected
+path as the engine's `chromePath`, including its GPU probe. Active Workers keep their loaded package
+recommendation; restart them explicitly after changing Profile or package dependencies.
+
+The Provider's `qflow.dependencyInstallEnv` disables Puppeteer's browser download while preparing its
+engine/producer npm dependencies. The repository `.puppeteerrc.cjs` does the same for checkout installs.
+No browser postinstall allowlist is required. The former `hyperframesCliPath` option is removed.
 
 The same executor is exported for callers with an already compiled document:
 
@@ -101,6 +156,17 @@ flushes that message and disconnects IPC so it can exit normally. The owner awai
 diagnostics before returning. Normal completion does not enumerate or forcibly terminate processes.
 On failure, cleanup may be incomplete: the child reports the error and keeps IPC open while the owner
 discovers and terminates the remaining process tree, before it can become orphaned.
+The capture child also installs synchronous exit cleanup before loading the engine. Early
+`process.exit()`, uncaught exceptions, and catchable `SIGINT`/`SIGTERM` exits stop descendants
+while their owner still exists, even if browser initialization never returned a session.
+Successful resource closure removes this exit handler. No historical browser PID list is retained.
+
+Uncatchable termination (`SIGKILL`, native crashes, or OS termination on Windows) cannot run that
+cleanup. The owner reports the termination and cannot confirm descendant cleanup; it never searches
+by an already-exited root PID. If an orphan keeps the output pipes open, the owner closes its pipe
+ends after five seconds so the failed invocation can settle. Guaranteed cleanup after an OS hard
+kill requires containment supplied by that deployment (for example a process job or container);
+this local Node implementation does not provide that guarantee.
 
 At cancellation the child receives a stop request and has up to five seconds to clean up. A child
 that remains after cancellation or its completion message is forcibly terminated along with its discovered
@@ -118,7 +184,10 @@ more of the shared render budget on a slow initialization or frame.
 An explicit stage-timeout error names the worker and stage/frame, aborts sibling workers and awaits
 cleanup. A completed worker closes its Chrome immediately.
 
-One call stages the HTML and every declared asset once. Typed Surface validation includes a complete
+One call stages the HTML and every declared asset once. Typed Surface inspection reads the completed
+staged file directly, without retaining its chunks, assembling another whole-file buffer, or writing
+a second temporary copy. The caller keeps that file until inspection and capture have settled.
+Typed Surface validation includes a complete
 decoded-frame count, even for a short render interval. The renderer then finds source-frame windows
 needed by that interval, merges overlapping windows, and extracts them one source/window at a time.
 Decoded PNGs are shared by all workers in this call. Each worker initializes its own page, then takes
@@ -134,9 +203,13 @@ do not share staged files or decoded PNGs. Exact compiler sampling markers retai
 fractional playback rates. There is no SVML rewrite, intermediate cut MP4 or repeat normalization.
 Already compiled video documents need the current compiler's frame markers.
 
-Source extraction uses the pinned engine's FFmpeg/FFprobe resolver. `ffmpegPath` selects the final
-H.264 encoder; `ffprobePath` verifies output and typed surfaces. `nodePath` and `hyperframesCliPath`
-serve managed browser installation. The requested frame range travels in the Model's Need.
+`ffmpegPath` selects both source decoding and final H.264 encoding; `ffprobePath` selects source,
+output and typed Surface inspection. Bare commands resolve through PATH. The capture child passes
+these selected executables to the engine's public binary overrides; inherited
+`HYPERFRAMES_FFMPEG_PATH` / `HYPERFRAMES_FFPROBE_PATH` cannot select a different decoding toolchain.
+`nodePath` selects the managed
+browser installer's Node executable. Capture uses the current Node process's executable.
+The requested frame range travels in the Model's Need; browser paths stay in the Provider.
 
 ```ts
 import { createLocalHyperframesProvider } from "@qflow/provider-hyperframes-local";

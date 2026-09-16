@@ -8,6 +8,120 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { runCaptureProcess } from "../src/capture-process.js";
 import { resolveExecutionOptions } from "../src/render.js";
 import type { CaptureInput } from "../src/capture.js";
+import { browserExecutablePath } from "../src/browser.js";
+
+const exitCleanup = new URL("../src/capture-exit.ts", import.meta.url).href;
+
+test("abrupt engine exit closes its actual Chrome without disturbing another browser", {
+  skip: process.env.QFLOW_BROWSER_TESTS !== "1",
+}, async () => {
+  const { default: puppeteer } = await import("puppeteer-core");
+  const chromePath = browserExecutablePath({});
+  const other = await puppeteer.launch({ executablePath: chromePath, headless: true, args: ["--no-sandbox"] });
+  const root = await mkdtemp(join(tmpdir(), "qflow-abrupt-chrome-"));
+  const pidFile = join(root, "browser");
+  let browserPid: number | undefined;
+  try {
+    const engine = join(root, "engine.mjs");
+    await writeFile(engine, `import { acquireBrowser } from ${JSON.stringify(import.meta.resolve("@hyperframes/engine"))};
+import { writeFileSync } from 'node:fs';
+const { browser } = await acquireBrowser(['--no-sandbox'], {
+  chromePath: ${JSON.stringify(chromePath)}, forceScreenshot: true, enableBrowserPool: false,
+});
+await browser.newPage();
+writeFileSync(${JSON.stringify(pidFile)}, String(browser.process().pid));
+process.exit(7);`);
+    await assert.rejects(runCaptureProcess({
+      document: { frameRate: { numerator: 30, denominator: 1 } },
+      range: { startFrame: 0, endFrameExclusive: 1 }, config: resolveExecutionOptions({}),
+      directory: root, engineModule: pathToFileURL(engine).href,
+    } as CaptureInput, new AbortController().signal, () => {}), /exited before completion/u);
+    browserPid = Number(await readFile(pidFile, "utf8"));
+    try {
+      process.kill(browserPid, 0);
+      assert.notEqual(process.platform, "win32");
+      assert.match(execFileSync("ps", ["-p", String(browserPid), "-o", "stat="], { encoding: "utf8" }).trim(), /^Z/u);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+    }
+    const page = await other.newPage();
+    assert.equal(await page.evaluate(() => 6 * 7), 42);
+  } finally {
+    browserPid ??= await readFile(pidFile, "utf8").then(Number, () => undefined);
+    if (browserPid !== undefined) { try { process.kill(browserPid, "SIGKILL"); } catch {} }
+    await other.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("an uncatchable exit cannot hang on an orphan's inherited output pipes", {
+  skip: process.platform === "win32", timeout: 15_000,
+}, async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-capture-killed-"));
+  let descendant: number | undefined;
+  const diagnostics: string[] = [];
+  try {
+    const entry = join(root, "worker.mjs");
+    await writeFile(entry, `import { spawn } from 'node:child_process';
+process.once('message', () => {
+  const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
+    detached: true, stdio: ['ignore', process.stdout, process.stderr],
+  });
+  child.unref();
+  process.send({ type: 'progress', event: { phase: 'worker-start', browserPid: child.pid } },
+    () => process.kill(process.pid, 'SIGKILL'));
+});`);
+    await assert.rejects(runCaptureProcess({ config: resolveExecutionOptions({}) } as CaptureInput,
+      new AbortController().signal, event => {
+        if ("browserPid" in event) descendant = event.browserPid;
+      }, pathToFileURL(entry), async event => { diagnostics.push(event.message); }), /SIGKILL/u);
+    assert.ok(diagnostics.some(message => /descendant cleanup could not be confirmed/u.test(message)));
+    assert.ok(diagnostics.some(message => /output pipes did not close/u.test(message)));
+  } finally {
+    if (descendant !== undefined) { try { process.kill(descendant, "SIGKILL"); } catch {} }
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+for (const scenario of ["exit-zero", "exit-error", "uncaught", "SIGTERM"] as const) {
+  test(`abrupt capture ${scenario} stops detached children before losing their owner`, {
+    skip: scenario === "SIGTERM" && process.platform === "win32",
+  }, async () => {
+    const root = await mkdtemp(join(tmpdir(), "qflow-abrupt-capture-"));
+    const pidFile = join(root, "descendant");
+    let descendant: number | undefined;
+    try {
+      const engine = join(root, "engine.mjs");
+      const end = scenario === "uncaught" ? "setImmediate(() => { throw new Error('unexpected engine crash'); }); await new Promise(() => {});"
+        : scenario === "SIGTERM" ? "process.kill(process.pid, 'SIGTERM'); await new Promise(() => {});"
+        : `process.exit(${scenario === "exit-zero" ? 0 : 7});`;
+      await writeFile(engine, `import { spawn } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { detached: true, stdio: 'ignore' });
+child.unref();
+writeFileSync(${JSON.stringify(pidFile)}, String(child.pid));
+${end}`);
+      await assert.rejects(runCaptureProcess({
+        document: { frameRate: { numerator: 30, denominator: 1 } },
+        range: { startFrame: 0, endFrameExclusive: 1 }, config: resolveExecutionOptions({}),
+        directory: root, engineModule: pathToFileURL(engine).href,
+      } as CaptureInput, new AbortController().signal, () => {}), /exited before completion/u);
+      descendant = Number(await readFile(pidFile, "utf8"));
+      try {
+        process.kill(descendant, 0);
+        assert.notEqual(process.platform, "win32");
+        assert.match(execFileSync("ps", ["-p", String(descendant), "-o", "stat="], { encoding: "utf8" }).trim(), /^Z/u);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+      }
+    } finally {
+      // Also stop this test's child if an assertion fails before its PID is read.
+      descendant ??= await readFile(pidFile, "utf8").then(Number, () => undefined);
+      if (descendant !== undefined) { try { process.kill(descendant, "SIGKILL"); } catch {} }
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+}
 
 test("a capture failure still terminates a detached process left by failed resource cleanup", async () => {
   const root = await mkdtemp(join(tmpdir(), "qflow-worker-failed-cleanup-"));
@@ -45,9 +159,11 @@ test("a completed renderer finishes its IPC shutdown and exits naturally", async
   try {
     const marker = join(root, "exited");
     const entry = join(root, "worker.mjs");
-    await writeFile(entry, `import { writeFileSync } from 'node:fs';
+    await writeFile(entry, `import { releaseCaptureExitCleanup } from ${JSON.stringify(exitCleanup)};
+import { writeFileSync } from 'node:fs';
 process.on('exit', () => writeFileSync(${JSON.stringify(marker)}, 'natural exit'));
 process.once('message', () => {
+  releaseCaptureExitCleanup();
   process.send({ type: 'completed' }, () => setTimeout(() => process.disconnect(), 100));
 });`);
     await runCaptureProcess({ config: resolveExecutionOptions({}) } as CaptureInput,
@@ -110,11 +226,20 @@ process.stdout.write("resolved:" + Object.keys(module).join(",") + "\\n");`);
     assert.equal(resolved.status, 0, resolved.stderr);
     assert.match(resolved.stdout, /stageHyperframesProject/u);
 
+    const stale = spawnSync(process.execPath, ["--import", tsx, "--import", bootstrap, probe], {
+      encoding: "utf8", timeout: 120_000,
+      env: { ...process.env, QFLOW_DISTRIBUTION_ROOT: join(root, "old-installation") },
+    });
+    assert.equal(stale.status, 0, stale.stderr);
+    assert.match(stale.stdout, /stageHyperframesProject/u);
+
     // The render entry point must actually pass that preload to its child.
     const worker = join(root, "worker.mjs");
-    await writeFile(worker, `process.once("message", async () => {
+    await writeFile(worker, `import { releaseCaptureExitCleanup } from ${JSON.stringify(exitCleanup)};
+process.once("message", async () => {
       const module = await import("@qflow/hyperframes/project");
       process.stdout.write("resolved:" + Object.keys(module).join(",") + "\\n");
+      releaseCaptureExitCleanup();
       process.send({ type: "completed" }, () => process.disconnect());
     });`);
     const diagnostics: string[] = [];
@@ -130,9 +255,11 @@ test("renderer stdout and stderr diagnostics are drained before reporting succes
   const messages: import("@qflow/runtime").ExecutionDiagnostic[] = [];
   try {
     const entry = join(root, "report.mjs");
-    await writeFile(entry, `process.once('message', () => {
+    await writeFile(entry, `import { releaseCaptureExitCleanup } from ${JSON.stringify(exitCleanup)};
+process.once('message', () => {
       process.stdout.write('browser ready\\n');
       process.stderr.write('render diagnostic\\n');
+      releaseCaptureExitCleanup();
       process.send({ type: 'completed' }, () => process.disconnect());
     });`);
     await runCaptureProcess({ config: resolveExecutionOptions({}) } as CaptureInput,
@@ -172,7 +299,9 @@ process.stdout.write(JSON.stringify({ error, diagnostics }));
         const result = scenario === "failed" ? { type: "failed", error: "capture failed" }
           : scenario === "cancelled" ? { type: "progress", event: { phase: "encoding" } }
           : { type: "completed" };
-        await writeFile(entry, `process.once('message', () => {
+        await writeFile(entry, `import { releaseCaptureExitCleanup } from ${JSON.stringify(exitCleanup)};
+process.once('message', () => {
+  ${scenario === 'completed' ? 'releaseCaptureExitCleanup();' : ''}
   process.send(${JSON.stringify(result)}, () => { ${scenario !== "completed" ? "setInterval(() => {}, 1000);" : "process.disconnect();"} });
 });`);
         const run = spawnSync(process.execPath, ["--import", import.meta.resolve("tsx"), runner, entry],

@@ -12,6 +12,8 @@ This package understands only `VisualTrack`, `ProgramSpace` and canvas geometry.
 does not know Caption, Speech, B-roll, Seedance or any other author-domain component. It flattens
 every Track's Presents, orders them by their own absolute stacking keys and emits frame-bound local
 keyframes. An authoring Track never becomes an isolated render stacking surface.
+Terminal text and SVG mask sources retain the same Present-relative frame animations as other
+elements, including direct seeks into the middle of a Present.
 
 It deliberately ignores `AudioTrack`. HyperFrames produces a silent visual fact; the media pipeline
 compiles and renders program audio separately, then an explicit mux Provider joins the two. Changing
@@ -23,6 +25,12 @@ a Provider can verify and name staged bytes without guessing from the hash. A lo
 render Runtime calls `materializeHyperframesHtml()` with its own Artifact URL resolver before
 handing the HTML to HyperFrames. That environment-specific materialization is not a new compiled
 Record and does not change the compiled document.
+Staging assigns short local filenames; opaque Resource IDs are never interpreted as filesystem
+paths or filenames, so their length and punctuation do not restrict the host filesystem.
+`stageHyperframesProject` streams each asset into its staged file. Its `validateSurface(surface, path,
+signal)` callback borrows that completed file during inspection; it receives neither a whole-file
+byte copy nor ownership of the file. The staging caller keeps the directory alive until all work
+has settled, including cancellation.
 
 The document exposes its render domain directly rather than asking an Endpoint to scrape HTML:
 exact rational `frameRate`, integer `frameCount`, and canvas dimensions are explicit document
@@ -53,8 +61,12 @@ places a direct typed child. Every child is placed once, including sampled video
 This keeps actual video available to the renderer's exact source-frame preparation.
 
 CSS is scoped to the generated program root with `@scope`; `:scope` styles that root. The HTML can
-contain arbitrary local structure, SVG, internal stacking, masks and backdrop filters. The optional
-`setup` string is a JavaScript function body with `root` and `data` arguments. It returns a synchronous
+contain arbitrary local structure, SVG, internal stacking, masks and backdrop filters.
+CSS scope does not isolate HTML/SVG IDs. Use classes or data attributes for local queries; when an
+SVG needs an ID for `url(#...)` or `href`, derive it from the unique `root.id` in `setup` and set both
+the definition and its references there. Reusable instances must not repeat hard-coded SVG IDs.
+
+The optional `setup` string is a JavaScript function body with `root` and `data` arguments. It returns a synchronous
 `render(localFrame)` function, evaluated on initial load and active `hf-seek` events. Outside the
 Present's lifetime, the dispatcher settles the boundary pose once instead of repeatedly updating
 an invisible program. Active seeks always redraw, including the same frame after resources become
@@ -63,6 +75,8 @@ objects in `setup`; express animation state as a function of frame and inputs so
 begin at any frame. Async work belongs to
 material preparation before rendering; browser resources belong in the program's declared artifacts.
 Use `hyperframesResourceUri(artifact.resource)` in resource-bearing markup or CSS.
+Returning a Promise from `render` reports an authoring error; frame capture never waits for an
+unbounded asynchronous drawing task or races it.
 
 Ordinary child sampling follows the Present clock. Reframing the parent leaves source playback
 unchanged. `projectTimelineMedia` from `@qflow/qflow/timeline` gives a component selected prepared

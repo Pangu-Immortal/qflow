@@ -3,7 +3,7 @@ import { join, relative, resolve, sep } from "node:path";
 import type { HyperframesDocument } from "@qflow/hyperframes";
 import type { MediaFrameRange } from "@qflow/media";
 import type { HyperframesRenderProgress, resolveExecutionOptions } from "./render.js";
-import { assert, runProcess } from "./process.js";
+import { assert, mediaExecutablePath, runProcess } from "./process.js";
 import { verifyOutput } from "./output.js";
 import { distributeFrameRange, sourceFrameAt, sourceWindows, videoSlots } from "./sampling.js";
 import { renderWorkerLimit } from "./render.js";
@@ -13,7 +13,7 @@ import { createOpaqueFrameCapture } from "./opaque-capture.js";
 export type CaptureInput = {
   readonly document: HyperframesDocument;
   readonly range: MediaFrameRange;
-  readonly config: ReturnType<typeof resolveExecutionOptions>;
+  readonly config: ReturnType<typeof resolveExecutionOptions> & { readonly chromePath: string };
   readonly directory: string;
   readonly engineModule: string;
   readonly producerModule: string;
@@ -36,6 +36,13 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
   const started = performance.now();
   const elapsedMs = () => Math.round(performance.now() - started);
   const engine = await import(input.engineModule) as typeof import("@hyperframes/engine");
+  const [ffmpegPath, ffprobePath] = await Promise.all([
+    mediaExecutablePath(config.ffmpegPath), mediaExecutablePath(config.ffprobePath),
+  ]);
+  // This is one disposable render process. Use the engine's public override
+  // ports here without changing the Runtime owner's environment or other renders.
+  process.env[engine.FFMPEG_PATH_ENV] = ffmpegPath;
+  process.env[engine.FFPROBE_PATH_ENV] = ffprobePath;
   const { createFileServer } = await import(input.producerModule) as typeof import("@hyperframes/producer");
   type Session = Awaited<ReturnType<typeof engine.createCaptureSession>>;
   const sessions = new Set<Session>();
@@ -158,7 +165,7 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
             const source = sources.get(slot.src);
             return source === undefined ? [] : [{ id: slot.id, width: source.width, height: source.height }];
           }),
-        }, injector, { browserGpuMode: config.browserGpu, enableBrowserPool: false, forceScreenshot: true, useDrawElement: false });
+        }, injector, { chromePath: config.chromePath, browserGpuMode: config.browserGpu, enableBrowserPool: false, forceScreenshot: true, useDrawElement: false });
         sessions.add(session);
         signal.throwIfAborted();
         const activeSession = session;
@@ -235,14 +242,14 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
     const output = join(work, "visual.mp4");
     onProgress({ phase: "encoding", elapsedMs: elapsedMs() });
     const crf = { draft: 28, standard: 23, high: 18 }[config.quality];
-    await runProcess({ executable: config.ffmpegPath,
+    await runProcess({ executable: ffmpegPath,
       argv: ["-v", "error", "-y", "-framerate", `${fps.num}/${fps.den}`, "-i", join(outputFrames, "%09d.png"),
         "-frames:v", String(frameCount), "-an", "-c:v", "libx264", "-crf", String(crf),
         "-preset", config.quality === "draft" ? "veryfast" : "medium", "-pix_fmt", "yuv420p", "-movflags", "+faststart", output],
       timeoutMs: config.processTimeoutMs, maxOutputBytes: config.maxProcessOutputBytes, signal });
     const outputStat = await stat(output);
     assert(outputStat.size > 0 && outputStat.size <= config.maxRenderedBytes, "HyperFrames output is empty or exceeds its byte limit");
-    await verifyOutput({ path: output, document: { ...document, frameCount }, ffprobePath: config.ffprobePath,
+    await verifyOutput({ path: output, document: { ...document, frameCount }, ffprobePath,
       timeoutMs: config.processTimeoutMs, maxOutputBytes: config.maxProcessOutputBytes, signal });
     signal.throwIfAborted();
     return output;

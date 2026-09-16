@@ -16,6 +16,11 @@ description: Getting started with Qflow development.
 
 Node.js and pnpm are the only hard requirements. The rest are needed only for live Builds.
 
+Before the first local render, run `qflow programs up --runtime <profile> --endpoint <render-instance>`.
+`qflow runtime up --runtime <profile>` also prepares the Profile's programs and starts its Worker.
+This browser preparation does not depend on pnpm allowing dependency install scripts.
+Use `qflow doctor --runtime <profile>` to inspect missing setup without installing it.
+
 ## Daily workflow
 
 ```bash

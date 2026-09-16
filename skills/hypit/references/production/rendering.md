@@ -104,6 +104,10 @@ HyperFrames compiles the selected composition and renders its picture. Timeline 
 from the included AudioTracks, then picture and sound are muxed into the delivered file. A Runtime
 can bind these capabilities to different compatible Endpoints.
 
+Before the first local render, or when browser startup reports a missing executable, follow
+[browser preparation](../environment/local-tools.md#prepare-the-local-rendering-browser).
+That selected Provider owns browser installation and download configuration.
+
 For the local HyperFrames Provider, `workers` selects independent Chrome processes within one render.
 They share the staged document and decoded source frames, capture different parts of the selected
 interval, and produce one encoded result. Prefer `workers: "auto"` for ordinary local rendering;
@@ -125,6 +129,9 @@ the composition is ready. Frame ranges reduce repeated work without changing the
 While rendering, communicate the current phase and meaningful progress. The Provider reports
 decoding, browser startup, capture, encoding and storage; `qflow logs <build-id>` preserves their
 timings and execution details when a slow or failed stage needs investigation.
+
+Image decode and declared-font loading failures stop capture with an error. Repair the named
+resource in its owning Source or component, then retry with accepted media retained in the Run.
 
 A local render timeout ends that execution attempt and releases capacity after its work has stopped.
 Its failure and already completed Outputs belong to the Build Result. Continue through a new Run

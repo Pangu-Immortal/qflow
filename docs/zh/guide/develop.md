@@ -16,6 +16,11 @@ description: 开始 Qflow 开发工作。
 
 只有 Node.js 与 pnpm 是硬性要求。其余都只在跑真实 Builds 时才需要。
 
+首次本地渲染前执行 `qflow programs up --runtime <profile> --endpoint <render-instance>`。
+`qflow runtime up --runtime <profile>` 也会准备 Profile 的程序并启动 Worker。
+这一步准备浏览器，不依赖 pnpm 放行依赖安装脚本。
+使用 `qflow doctor --runtime <profile>` 检查缺失环境；诊断不会安装浏览器。
+
 ## 日常工作流
 
 ```bash

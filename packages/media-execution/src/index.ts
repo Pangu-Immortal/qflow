@@ -10,7 +10,7 @@ export {
   executeTransformMedia,
 } from "./execute.js";
 export { parseMediaInspection } from "./probe.js";
-export { verifyCompositableSurfaceBytes } from "./surface.js";
+export { verifyCompositableSurfaceBytes, verifyCompositableSurfaceFile } from "./surface.js";
 export { probeMediaToolchain } from "./toolchain.js";
 export type { MediaToolchainState } from "./toolchain.js";
 export type * from "./execute.js";

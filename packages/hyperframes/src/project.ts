@@ -12,9 +12,10 @@ export type HyperframesArtifactReader = (
   artifact: BlobRef,
   signal?: AbortSignal,
 ) => Promise<Uint8Array | AsyncIterable<Uint8Array>>;
+/** Inspect the completed staged file; its lifetime belongs to the staging caller. */
 export type HyperframesSurfaceValidator = (
   surface: CompositableSurfaceRef,
-  bytes: Uint8Array,
+  path: string,
   signal?: AbortSignal,
 ) => Promise<void>;
 
@@ -39,9 +40,7 @@ function extension(mediaType: string): string {
 /**
  * Lay one document out as a directory HyperFrames can render.
  *
- * The same layout serves a local render and a distributed one: the local
- * Provider serves it to the capture engine, and the AWS Provider tars it into a site. If
- * the two laid it out differently, one Need would name two different projects.
+ * A local or hosted Provider can serve the same staged document to its capture engine.
  * Resource names are local to this staged project and carry no content claim.
  */
 export async function stageHyperframesProject(options: {
@@ -63,25 +62,25 @@ export async function stageHyperframesProject(options: {
   await mkdir(artifactDirectory, { recursive: true });
   const paths = new Map<string, string>();
   const surfaces = new Map(document.surfaces.map((surface) => [surface.artifact.resource, surface]));
-  await Promise.allSettled(document.artifacts.map(async (artifact) => {
+  await Promise.allSettled(document.artifacts.map(async (artifact, index) => {
     try {
       signal.throwIfAborted();
-      const name = `${artifact.resource}${extension(artifact.mediaType)}`;
+      // Resource identities are portable protocol values, not filesystem names.
+      const name = `asset-${index}${extension(artifact.mediaType)}`;
       const opened = await read(artifact, signal);
       signal.throwIfAborted();
       const chunks = opened instanceof Uint8Array
         ? (async function* () { yield opened; })()
         : opened;
       const surface = surfaces.get(artifact.resource);
-      const retained: Uint8Array[] = [];
       let size = 0;
-      const target = await open(join(artifactDirectory, name), "w");
+      const path = join(artifactDirectory, name);
+      const target = await open(path, "w");
       try {
         for await (const chunk of chunks) {
           signal.throwIfAborted();
-          await target.write(chunk);
+          await target.writeFile(chunk);
           size += chunk.byteLength;
-          if (surface !== undefined) retained.push(Uint8Array.from(chunk));
         }
       } finally {
         await target.close();
@@ -89,17 +88,9 @@ export async function stageHyperframesProject(options: {
       if (size !== artifact.size) {
         throw new Error(`HyperFrames Artifact ${artifact.resource} size differs`);
       }
-      const bytes = surface === undefined ? undefined : (() => {
-        const value = new Uint8Array(size);
-        let offset = 0;
-        for (const chunk of retained) {
-          value.set(chunk, offset);
-          offset += chunk.byteLength;
-        }
-        return value;
-      })();
       if (surface !== undefined) {
-        await options.validateSurface!(structuredClone(surface), bytes!.slice(), signal);
+        // The validator borrows the completed staged file for this call only.
+        await options.validateSurface!(structuredClone(surface), path, signal);
       }
       paths.set(artifact.resource, `./artifacts/${name}`);
     } catch (error) {

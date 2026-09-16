@@ -17,8 +17,9 @@ Runtime Profile and creates no Build.
 - `downloadVideo(url, target)` downloads one video to the given path. Its caller owns destination
   preparation and overwrite policy. The target extension must be `.mp4`, `.mkv`, `.webm` or `.mov`.
 
-The downloader invokes the locked Python project in `services/yt-dlp` through `uv`, located relative
-to the installed Distribution. Ship its `pyproject.toml` and `uv.lock` with this package's source.
+The downloader locates its declared `@qflow/yt-dlp-service-runtime` package through the active
+Distribution/package resolver and invokes that package's locked Python project through `uv`.
+Ship its `pyproject.toml` and `uv.lock`; the caller's location and a `services/` ancestor are irrelevant.
 `uv` and `ffmpeg` must be available on PATH; the CLI also uses `ffprobe` to report the saved media.
 
 The request selects `bv*+ba/b`, with `res:1080,vcodec:h264` format preferences and `--no-playlist`.

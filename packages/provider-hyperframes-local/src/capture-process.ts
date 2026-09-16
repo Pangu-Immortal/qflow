@@ -1,57 +1,11 @@
 import type { ExecutionDiagnostic } from "@qflow/runtime";
-import { execFile, spawn } from "node:child_process";
-import { promisify } from "node:util";
+import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { setTimeout as delay } from "node:timers/promises";
+import { killRenderTree } from "./process-tree.js";
 import type { CaptureInput } from "./capture.js";
 import type { HyperframesRenderProgress } from "./render.js";
 
-const exec = promisify(execFile);
 const cleanupMs = 5_000;
-
-/** Chrome starts its own process group, so stopping only the Node child is insufficient. */
-async function killRenderTree(pid: number): Promise<void> {
-  if (process.platform === "win32") {
-    try {
-      await exec("taskkill", ["/PID", String(pid), "/T", "/F"], { windowsHide: true, timeout: cleanupMs });
-    } catch (error) {
-      // The worker may exit after reporting completion, before taskkill opens it.
-      // Ask the OS whether it is gone; localized taskkill output is not an API.
-      try { process.kill(pid, 0); }
-      catch (probeError) {
-        if ((probeError as NodeJS.ErrnoException).code === "ESRCH") return;
-      }
-      throw error;
-    }
-    return;
-  }
-  const descendants = [pid];
-  for (let i = 0; i < descendants.length; i++) {
-    const children = await exec("pgrep", ["-P", String(descendants[i])], { timeout: cleanupMs })
-      .then(({ stdout }) => stdout.trim().split(/\s+/u).filter(Boolean).map(Number),
-        (error) => { if ((error as { code?: unknown }).code === 1) return []; throw error; });
-    for (const child of children) if (!descendants.includes(child)) descendants.push(child);
-  }
-  // Kill the whole tree before waiting: only after every ancestor is dead are
-  // orphaned descendants reparented and reaped, making kill(pid, 0) read ESRCH.
-  for (const child of descendants.reverse()) {
-    for (const target of [-child, child]) {
-      try { process.kill(target, "SIGKILL"); }
-      catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error; }
-    }
-  }
-  const deadline = Date.now() + cleanupMs;
-  let remaining = descendants;
-  while (remaining.length > 0) {
-    remaining = remaining.filter((child) => {
-      try { process.kill(child, 0); return true; }
-      catch (error) { if ((error as NodeJS.ErrnoException).code === "ESRCH") return false; throw error; }
-    });
-    if (remaining.length === 0) break;
-    if (Date.now() >= deadline) throw new Error(`Render process ${remaining[0]} did not stop after SIGKILL`);
-    await delay(20);
-  }
-}
 
 /** One disposable execution, with no persisted state or resubmission behavior. */
 export async function runCaptureProcess(
@@ -68,6 +22,7 @@ export async function runCaptureProcess(
     const child = spawn(process.execPath, [
       "--import", import.meta.resolve("tsx"),
       "--import", new URL("./capture-bootstrap.ts", import.meta.url).href,
+      "--import", new URL("./capture-exit.ts", import.meta.url).href,
       fileURLToPath(entry),
     ], {
       detached: process.platform !== "win32", windowsHide: true,
@@ -76,6 +31,7 @@ export async function runCaptureProcess(
     let failure: Error | undefined;
     let completed = false;
     let closed = false;
+    let exited = false;
     let outputBytes = 0;
     let stderr = "";
     let diagnostics = Promise.resolve();
@@ -83,6 +39,14 @@ export async function runCaptureProcess(
     let killing: Promise<void> | undefined;
     const kill = () => {
       if (grace !== undefined) clearTimeout(grace);
+      grace = undefined;
+      // A PID is no longer ours after exit. Inherited pipes can outlive it, but
+      // looking up that old PID cannot recover the former process tree safely.
+      if (exited) {
+        child.stdout?.destroy();
+        child.stderr?.destroy();
+        return Promise.resolve();
+      }
       killing ??= (child.pid === undefined ? Promise.resolve() : killRenderTree(child.pid)).catch((error) => {
         if (!completed) failure = new Error(`${failure?.message ?? "Render cleanup failed"}; ${String(error)}`);
         diagnostic({ level: "warning", message: `Render process-tree cleanup could not be confirmed: ${String(error)}` });
@@ -103,7 +67,9 @@ export async function runCaptureProcess(
     };
     const awaitExit = () => {
       grace ??= setTimeout(() => {
-        diagnostic({ level: "warning", message: `Render process did not exit within ${cleanupMs} ms; terminating its remaining process tree` });
+        diagnostic({ level: "warning", message: exited
+          ? `Render process exited but its output pipes did not close within ${cleanupMs} ms; closing this execution's pipes`
+          : `Render process did not exit within ${cleanupMs} ms; terminating its remaining process tree` });
         void kill();
       }, cleanupMs);
     };
@@ -140,14 +106,25 @@ export async function runCaptureProcess(
       }
     });
     child.on("error", (error) => { failure ??= error; void kill(); });
-    child.on("close", () => {
+    child.once("exit", (code, exitSignal) => {
+      exited = true;
+      if (!completed && failure === undefined) {
+        failure = new Error(`HyperFrames process exited before completion (${exitSignal ?? `code ${String(code)}`})`);
+      }
+      if (exitSignal !== null && killing === undefined) {
+        diagnostic({ level: "warning", message: `Render process was terminated by ${exitSignal}; descendant cleanup could not be confirmed` });
+      }
+      // An abruptly orphaned descendant may still hold stdout/stderr open.
+      awaitExit();
+    });
+    child.on("close", (code, exitSignal) => {
       closed = true;
       if (grace !== undefined) clearTimeout(grace);
       signal.removeEventListener("abort", abort);
       void (killing ?? Promise.resolve()).then(async () => {
         await diagnostics;
-        if (failure !== undefined) reject(failure);
-        else if (!completed) reject(new Error(`HyperFrames process exited before completion: ${stderr}`));
+        if (failure !== undefined) reject(new Error(`${failure.message}${stderr ? `\n${stderr}` : ""}`, { cause: failure }));
+        else if (!completed) reject(new Error(`HyperFrames process exited before completion (${exitSignal ?? `code ${String(code)}`}): ${stderr}`));
         else resolve();
       });
     });

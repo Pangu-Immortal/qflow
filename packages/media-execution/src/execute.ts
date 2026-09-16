@@ -33,6 +33,7 @@ import {
   } from "@qflow/protocol";
 import type { BlobRef, CanonicalValue, StoredValue } from "@qflow/protocol";
 
+import { mediaProcessEnv } from "./process-env.js";
 import { parseMediaInspection } from "./probe.js";
 import {
   compositeAnimatedWebpFrame,
@@ -98,10 +99,7 @@ async function runProcess(args: {
       shell: false,
       windowsHide: true,
       stdio: ["ignore", "pipe", "pipe"],
-      env: {
-        PATH: process.env.PATH ?? "",
-        ...(args.sharedLibraryPath === undefined ? {} : { LD_LIBRARY_PATH: args.sharedLibraryPath }),
-      },
+      env: mediaProcessEnv(args.sharedLibraryPath === undefined ? undefined : { LD_LIBRARY_PATH: args.sharedLibraryPath }),
     });
     const stdout: Buffer[] = [];
     let stdoutBytes = 0;
@@ -678,8 +676,10 @@ export async function executeNormalizeMedia(
         "scale=trunc(iw*max(sar\\,1)/2)*2:trunc(ih*max(1/sar\\,1)/2)*2",
         "setsar=1",
       ].join(",");
+      // FFmpeg enables autorotation by default. Its positive boolean option changed
+      // syntax across releases; no override is needed to materialize source rotation.
       const visualInput = animation === undefined
-        ? [...encoding.inputArgs, "-autorotate", "-i", input, "-map", `0:${plan.video.index}`]
+        ? [...encoding.inputArgs, "-i", input, "-map", `0:${plan.video.index}`]
         : ["-f", "concat", "-safe", "0", "-i", await animatedWebpConcat(env, animation, work), "-map", "0:v:0"];
       // The execution format must retain the source's alpha while materializing
       // the program clock. Both encodings publish the same SynchronizedMedia type.

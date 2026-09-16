@@ -26,6 +26,13 @@ deployments can reuse the same functions to preserve stream selection, timing, c
 This is not an author package, Provider, queue or Core extension. It performs no endpoint selection,
 credential lookup or SVML parsing.
 
+`verifyCompositableSurfaceFile({ surface, path, ... })` inspects a file already staged by an execution
+owner. That owner must keep it unchanged until the call settles, including cancellation; inspection
+neither copies nor removes it. `verifyCompositableSurfaceBytes({ surface, bytes, ... })` remains a
+convenience wrapper for callers that have bytes, creates its own temporary file, and removes that
+file only after probing has settled. Both use the same decoded Surface checks and return no extra
+result facts. Filesystem paths belong to this Node execution boundary, not to Surface or Blob refs.
+
 Audio gain envelopes and audible subranges are evaluated per sample after tempo/looping and Clip
 fades, before the requested range is cropped. Original source and envelope progress therefore survive
 local silence and range rendering. This is generic AudioProgramPlan execution, independent of author

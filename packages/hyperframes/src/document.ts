@@ -229,23 +229,22 @@ function exactFontStyle(element: VisualElement, stableId: StableDomId): string[]
   ];
 }
 
-function renderElement(
-  element: VisualElement,
-  children: ReadonlyMap<string, readonly VisualElement[]>,
-  context: {
-    readonly trackId: string;
-    readonly presentId: string;
-    readonly presentStart: string;
-    readonly presentDuration: string;
-    readonly presentDurationFrames: number;
-    readonly presentStartFrame: number;
-    readonly programNumerator: number;
-    readonly programDenominator: number;
-    readonly stackIndex: number;
-    readonly emittedFilterIds: Set<string>;
-    readonly stableId: StableDomId;
-  },
-): string {
+type ElementContext = {
+  readonly trackId: string;
+  readonly presentId: string;
+  readonly presentStart: string;
+  readonly presentDuration: string;
+  readonly presentDurationFrames: number;
+  readonly presentStartFrame: number;
+  readonly programNumerator: number;
+  readonly programDenominator: number;
+  readonly stackIndex: number;
+  readonly emittedFilterIds: Set<string>;
+  readonly stableId: StableDomId;
+};
+
+/** Every emitted element, including SVG mask sources, keeps the same authored frame clock. */
+function elementPresentation(element: VisualElement, context: ElementContext) {
   const id = context.stableId([context.trackId, context.presentId, element.id]);
   const animationName = element.animation === undefined
     ? undefined
@@ -277,6 +276,16 @@ function renderElement(
     ? ""
     : ` data-qflow-frame-animation data-qflow-animation-start-frame="${context.presentStartFrame}" data-qflow-animation-duration-frames="${animationDurationFrames}" data-qflow-animation-sample-frames="${context.presentDurationFrames}" data-qflow-animation-properties="${animationProperties.join(",")}"`;
   const common = `${commonAttributes}${animationAttributes} style="${escapeHtml(inlineStyle)}"`;
+  return { inlineStyle, commonAttributes: `${commonAttributes}${animationAttributes}`, common };
+}
+
+function renderElement(
+  element: VisualElement,
+  children: ReadonlyMap<string, readonly VisualElement[]>,
+  context: ElementContext,
+): string {
+  const { inlineStyle, commonAttributes, common } = elementPresentation(element, context);
+  const id = context.stableId([context.trackId, context.presentId, element.id]);
   if (element.kind === "mask") {
     const direct = children.get(element.id) ?? [];
     const maskRoot = direct.find((child) => child.id === element.maskElement);
@@ -295,6 +304,7 @@ function renderElement(
       throw new Error(`Local mask ${element.id} mask source must be one terminal owned element.`);
     }
     const maskSource = (() => {
+      const sourcePresentation = elementPresentation(maskRoot, context);
       if (maskRoot.kind === "text") {
         const alignment = maskRoot.style.find((declaration) => declaration.name === "text-align")?.value;
         const anchor = alignment === "right" || alignment === "end" ? "end" : alignment === "left" || alignment === "start" ? "start" : "middle";
@@ -310,17 +320,17 @@ function renderElement(
           ? blockAlignment === "flex-start" ? "0" : blockAlignment === "flex-end" ? "100%" : "50%"
           : String(blockAlignment === "flex-start" ? paddingTop : blockAlignment === "flex-end" ? maskHeight - paddingBottom : (paddingTop + maskHeight - paddingBottom) / 2);
         const baseline = blockAlignment === "flex-start" ? "text-before-edge" : blockAlignment === "flex-end" ? "text-after-edge" : "central";
-        const textStyle = [css(maskRoot.style), ...exactFontStyle(maskRoot, context.stableId), "fill:currentColor"].filter(Boolean).join(";");
-        return `<text${attributes(maskRoot.attributes)} x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="${baseline}" style="${escapeHtml(textStyle)}">${escapeHtml(maskRoot.text)}</text>`;
+        const textStyle = `${sourcePresentation.inlineStyle};fill:currentColor`;
+        return `<text ${sourcePresentation.commonAttributes} x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="${baseline}" style="${escapeHtml(textStyle)}">${escapeHtml(maskRoot.text)}</text>`;
       }
       if (maskRoot.kind === "text-flow" || maskRoot.kind === "path-text") {
         return `<foreignObject x="0" y="0" width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:100%;height:100%">${renderOwned(maskRoot)}</div></foreignObject>`;
       }
       if (maskRoot.kind === "image") {
-        return `<image x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" href="${escapeHtml(hyperframesResourceUri(maskRoot.artifact.resource))}" style="${escapeHtml(css(maskRoot.style))}"/>`;
+        return `<image ${sourcePresentation.common} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" href="${escapeHtml(hyperframesResourceUri(maskRoot.artifact.resource))}"/>`;
       }
       if (maskRoot.kind === "surface" && maskRoot.surface.timing.kind === "still") {
-        return `<image data-qflow-surface-resource="${maskRoot.surface.artifact.resource}" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" href="${escapeHtml(hyperframesResourceUri(maskRoot.surface.artifact.resource))}" style="${escapeHtml(css(maskRoot.style))}"/>`;
+        return `<image ${sourcePresentation.common} data-qflow-surface-resource="${maskRoot.surface.artifact.resource}" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" href="${escapeHtml(hyperframesResourceUri(maskRoot.surface.artifact.resource))}"/>`;
       }
       throw new Error(`Local mask ${element.id} requires a terminal owned text, image or still Surface mask source.`);
     })();

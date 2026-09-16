@@ -73,7 +73,7 @@ export async function inspectHostPackage(
     : undefined;
 }
 
-async function runNpm(root: string, specifiers: readonly string[], logPath: string): Promise<void> {
+async function runNpm(root: string, specifiers: readonly string[], logPath: string, env?: Readonly<Record<string, string>>): Promise<void> {
   // npm's prefix and cwd must denote the same physical project (not /tmp vs /private/tmp).
   const cwd = await realpath(root);
   const npmArgs = [
@@ -96,6 +96,7 @@ async function runNpm(root: string, specifiers: readonly string[], logPath: stri
         cwd,
         shell: false,
         windowsHide: true,
+        env: { ...process.env, ...env },
         stdio: ["ignore", log.fd, log.fd],
       });
       child.on("error", (error) => reject(new Error(`Cannot start npm: ${error.message}. Log: ${logPath}`, { cause: error })));
@@ -114,21 +115,26 @@ async function runNpm(root: string, specifiers: readonly string[], logPath: stri
  * package.json, lockfile and dependencies; Qflow keeps no parallel inventory.
  */
 export async function prepareHostPackages(
-  specifiers: readonly string[],
+  specifiers: readonly (string | { readonly specifier: string; readonly env?: Readonly<Record<string, string>> })[],
   options: {
     readonly root: string;
     readonly onProgress?: (event: HostPackageProgress) => void;
   },
 ): Promise<readonly HostPackageReport[]> {
   const root = resolve(options.root);
-  const bySpecifier = new Map<string, RegistryPackageSpec>();
+  const bySpecifier = new Map<string, RegistryPackageSpec & { readonly env?: Readonly<Record<string, string>> }>();
   for (const specifier of specifiers) {
-    const parsed = parseRegistryPackageSpec(specifier);
-    bySpecifier.set(parsed.specifier, parsed);
+    const parsed = parseRegistryPackageSpec(typeof specifier === "string" ? specifier : specifier.specifier);
+    const env = { ...bySpecifier.get(parsed.specifier)?.env };
+    for (const [key, value] of Object.entries(typeof specifier === "string" ? {} : specifier.env ?? {})) {
+      if (env[key] !== undefined && env[key] !== value) throw new Error(`Conflicting installation environment ${key} for ${parsed.specifier}`);
+      env[key] = value;
+    }
+    bySpecifier.set(parsed.specifier, { ...parsed, ...(Object.keys(env).length === 0 ? {} : { env }) });
   }
   const required = [...bySpecifier.values()].sort((left, right) => left.specifier.localeCompare(right.specifier));
   const reports: HostPackageReport[] = [];
-  for (const item of required) {
+  for (const { env, ...item } of required) {
     const installation = externalPackageInstallRoot(root, item.name, item.version);
     options.onProgress?.({ ...item, phase: "checking" });
     const missing = await installedVersion(installation, item.name) !== item.version;
@@ -142,7 +148,7 @@ export async function prepareHostPackages(
         dependencies: { [item.name]: item.version },
       }, null, 2)}\n`, "utf8");
       options.onProgress?.({ ...item, phase: "installing", logPath });
-      await runNpm(installation, [item.specifier], logPath);
+      await runNpm(installation, [item.specifier], logPath, env);
     }
     const version = await installedVersion(installation, item.name);
     if (version !== item.version) {

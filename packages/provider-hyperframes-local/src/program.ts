@@ -1,54 +1,46 @@
-import { execFile } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
 import { probeMediaToolchain } from "@qflow/media-execution";
 import type { ManagedProgram, ManagedProgramState } from "@qflow/runtime-kit";
-
-function run(executable: string, args: readonly string[]): Promise<{ ok: boolean; output: string }> {
-  return new Promise((resolve) => {
-    execFile(executable, [...args], { timeout: 15_000, shell: false, windowsHide: true }, (error, stdout, stderr) => {
-      resolve(error === null
-        ? { ok: true, output: stdout.trim() }
-        : { ok: false, output: (stderr.trim() || error.message).split("\n").at(-1) ?? "" });
-    });
-  });
-}
+import { browserCacheDirectory, browserDownloadBaseUrl, browserDownloadUrl, browserExecutablePath, configuredBrowserPath, requireBrowserExecutable, selectedBrowserVersion } from "./browser.js";
+import type { BrowserOptions } from "./browser.js";
 
 /**
- * HyperFrames owns the browser cache behind its CLI. It is deployment state,
- * not an author dependency, so the Endpoint lifecycle prepares it only
- * when this Provider is selected.
+ * This Provider owns browser selection and preparation. Probes never install;
+ * rendering receives the same selected executable instead of invoking engine discovery.
  */
 export function localHyperframesBrowserProgram(
-  input: {
+  input: BrowserOptions & {
     readonly id: string;
     readonly nodePath: string;
-    readonly hyperframesCliPath: string | (() => string);
     readonly ffprobePath: string;
     readonly ffmpegPath?: string;
   },
 ): ManagedProgram {
-  const cliPath = () => typeof input.hyperframesCliPath === "string" ? input.hyperframesCliPath : input.hyperframesCliPath();
+  const version = selectedBrowserVersion(input);
+  const selectedPath = browserExecutablePath(input);
+  const baseUrl = browserDownloadBaseUrl(input);
   const probeBrowser = async (): Promise<ManagedProgramState> => {
-    try { cliPath(); } catch (error) { return { state: "down", detail: error instanceof Error ? error.message : String(error) }; }
-    // Readiness asks the engine's own resolver, so it answers for the browser the renderer will
-    // launch: its managed download, a configured override, or Puppeteer's cache.
-    const { resolveHeadlessShellPath } = await import("@hyperframes/engine");
-    const path = resolveHeadlessShellPath({});
-    if (path === undefined) {
-      return { state: "down", detail: "HyperFrames render browser is not downloaded; run qflow runtime up" };
-    }
-    const version = await run(path, ["--version"]);
-    if (!version.ok || version.output.length === 0) {
-      return { state: "mismatch", detail: `HyperFrames browser cannot start: ${version.output}` };
-    }
+    try { await requireBrowserExecutable(selectedPath, version); }
+    catch (error) { return { state: "down", detail: error instanceof Error ? error.message : String(error) }; }
     return { state: "ready" };
   };
   return {
     id: input.id,
-    installation: {
-      probe: probeBrowser,
-      get commands() { return [{ command: input.nodePath, args: [cliPath(), "browser", "ensure"] }]; },
-    },
+    ...(configuredBrowserPath(input) === undefined ? {
+      // Projects sharing this installation also share the existing Program lifecycle lock/logs.
+      stateRoot: join(browserCacheDirectory(input), ".qflow-render-program"),
+      installation: {
+        probe: probeBrowser,
+        commands: [{ label: `Install Chrome Headless Shell ${version} at ${selectedPath} from ${browserDownloadUrl(input)}`, command: input.nodePath, args: [
+          "--import", import.meta.resolve("tsx"),
+          "--import", new URL("./capture-bootstrap.ts", import.meta.url).href,
+          fileURLToPath(new URL("./browser-install.ts", import.meta.url)), browserCacheDirectory(input), version!,
+          ...(baseUrl === undefined ? [] : [baseUrl]),
+        ] }],
+      },
+    } : {}),
     async probe(): Promise<ManagedProgramState> {
       const browser = await probeBrowser();
       if (browser.state !== "ready") return browser;

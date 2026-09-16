@@ -20,7 +20,7 @@ export function writeVersionHelp(io: CliIo): void {
 /** Installation discovery belongs to the executable, independent of video execution and Skill installers. */
 export async function runVersionCli(argv: readonly string[], io: CliIo, environment: VersionEnvironment = {
   packageRoot: resolve(import.meta.dirname, "../../.."),
-  ...(process.env.QFLOW_CLI_LAUNCHER === undefined ? {} : { launcher: process.env.QFLOW_CLI_LAUNCHER }),
+  launcher: resolve(import.meta.dirname, "../../../bin/qflow.mjs"),
   fetch: globalThis.fetch,
 }): Promise<void> {
   let check = false;
