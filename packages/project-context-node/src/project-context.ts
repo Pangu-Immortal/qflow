@@ -1,4 +1,4 @@
-import { stat } from "node:fs/promises";
+import { realpath, stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
 async function nearestProjectPackageRoot(start: string): Promise<string | undefined> {
@@ -28,8 +28,10 @@ export async function resolveProjectRoot(options: {
   readonly cwd?: string;
 } = {}): Promise<string> {
   const start = resolve(options.workspaceRoot ?? options.cwd ?? process.cwd());
-  if (options.workspaceRoot !== undefined) return start;
-  return await nearestProjectPackageRoot(start) ?? start;
+  const selected = options.workspaceRoot !== undefined ? start : await nearestProjectPackageRoot(start) ?? start;
+  // Select through the caller's directory first; following a link before discovery
+  // could choose a different parent project. Source readers also return real paths.
+  return await realpath(selected);
 }
 
 /** Project package discovery cannot escape an already resolved project. */

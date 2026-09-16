@@ -1,7 +1,4 @@
-import {
-  sealGenerationPortRequest,
-  sealGenerationPortTable,
-} from "@qflow/generation";
+import { sealGenerationPortTable } from "@qflow/generation";
 import type {
   GenerationPortTable,
   GenerationPortValue,
@@ -12,6 +9,7 @@ import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/m
 import { defineExactModelModule } from "@qflow/model-kit";
 import { textTypes } from "@qflow/text";
 import type { ResourceId } from "@qflow/protocol";
+import { validateSeedanceInputs } from "./validation.js";
 
 export const seedanceModuleRef = { name: "@qflow/seedance", version: "1" } as const;
 export const seedanceModels = ["seedance-2", "seedance-2-fast", "seedance-2-mini", "seedance-2.5"] as const;
@@ -93,7 +91,7 @@ export const seedancePorts: Readonly<Record<SeedanceModel, GenerationPortTable>>
 export type SeedancePortMap = Readonly<Record<string, readonly GenerationPortValue[]>>;
 
 export function sealSeedanceRequest(model: SeedanceModel, ports: SeedancePortMap): GenerationRequest {
-  return sealGenerationPortRequest(seedancePorts[model], ports);
+  return seedanceEndpointsByModel[model].sealRequest(ports);
 }
 
 const seedanceBaseDefinition = defineExactModelModule({
@@ -110,6 +108,7 @@ const seedanceBaseDefinition = defineExactModelModule({
       : `${model.split("-").map((part) => part[0]!.toUpperCase() + part.slice(1)).join("")}Request`,
     producerName: `request-${model}`,
     ports: seedancePorts[model],
+    validateInputs: validateSeedanceInputs,
   })),
 });
 
@@ -327,23 +326,7 @@ export const seedanceMarkupSurfaces = [
 /** The duration is an author literal on every Seedance Surface, so the manifest is the exact-model module's own. */
 export const seedanceManifest = seedanceBaseDefinition.manifest;
 
-const referenceAudioProducers = new Set(Object.values(seedanceEndpoints)
-  .map((endpoint) => endpoint.mediaBindings["referenceAudio"]!.producer.name));
-
-export const seedanceComponent = {
-  ...seedanceBaseDefinition.component,
-  producers: seedanceBaseDefinition.component.producers.map((facet) =>
-    referenceAudioProducers.has(facet.producer.name) ? {
-      ...facet,
-      handler: (context: Parameters<typeof facet.handler>[0]) => {
-        const artifact = context.inputs.artifact?.value;
-        if (artifact?.kind === "blob" && ["audio/mp4", "audio/x-m4a"].includes(artifact.mediaType)) {
-          throw new Error("Seedance reference audio does not accept m4a; convert to wav or mp3");
-        }
-        return facet.handler(context);
-      },
-    } : facet),
-};
+export const seedanceComponent = seedanceBaseDefinition.component;
 export const seedanceDefinition = seedanceBaseDefinition;
 
 export {

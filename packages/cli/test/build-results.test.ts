@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -644,7 +644,7 @@ test("logs reads finished evidence without a Runtime and clearly limits the tail
     })() });
     await writeFile(join(root, ".qflow/runtime"), "missing-profile.json\n");
     assert.ok((await humanCommand(["inspect", id], root)).includes(
-      commandHint(["logs", id], { projectRoot: root }),
+      commandHint(["logs", id], { projectRoot: await realpath(root) }),
     ));
     assert.deepEqual(await jsonCommand(["logs", id, "--lines", "1"], root), {
       format: "qflow.cli-logs@1", build: id, source: "result", records: [records[1]], omittedRecords: 1,
@@ -668,6 +668,25 @@ test("history continuation keeps the same project and Source query", async () =>
     const next = await jsonCommand([...args, "--before", cursor], root) as { entries: { build: string }[] };
     assert.deepEqual(next.entries.map((item) => item.build), [older]);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("history through a directory alias still finds a Source after its directory is removed", async () => {
+  const parent = await mkdtemp(join(tmpdir(), "qflow-history-alias-"));
+  try {
+    const root = join(parent, "project");
+    const alias = join(parent, "shortcut");
+    await mkdir(join(root, "chapter"), { recursive: true });
+    await writeFile(join(root, "chapter", "main.svml"), "source");
+    await symlink(root, alias, "junction");
+    const id = "bld_20260902T110000000Z_0000000001";
+    await fixture(root, id, "chapter/main.svml");
+    await rm(join(root, "chapter"), { recursive: true });
+    const history = await jsonCommand(["history", "stage.value", "--source", join(alias, "chapter", "main.svml")], alias) as {
+      source: string; entries: { build: string }[];
+    };
+    assert.equal(history.source, join("chapter", "main.svml"));
+    assert.deepEqual(history.entries.map((entry) => entry.build), [id]);
+  } finally { await rm(parent, { recursive: true, force: true }); }
 });
 
 test("logs reports unavailable evidence as unsuccessful, while an existing empty log is valid", async () => {

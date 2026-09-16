@@ -1,4 +1,4 @@
-import { relative, resolve } from "node:path";
+import { relative, resolve, sep } from "node:path";
 
 import type { CanonicalValue } from "@qflow/protocol";
 
@@ -279,7 +279,7 @@ function glyph(io: CliIo, unicode: string, ascii: string): string {
 function shortPath(path: string): string {
   const absolute = resolve(path);
   const local = relative(process.cwd(), absolute);
-  return local.length > 0 && !local.startsWith("..") ? local : absolute;
+  return local.length > 0 && local !== ".." && !local.startsWith(`..${sep}`) ? local : absolute;
 }
 
 function facts(rows: readonly (readonly [string, string])[], colors: Palette): string[] {

@@ -6,6 +6,8 @@ It does not load Providers, install programs, inspect credentials or select serv
 
 1. `resolveProjectRoot({ workspaceRoot?, cwd? })` uses the explicit Workspace, otherwise the nearest
    `package.json` above cwd, otherwise cwd itself. Source and Run filenames do not choose the project.
+   After selecting the existing directory, it returns its real filesystem path so project and Source
+   paths use the same representation. Symlinks do not redirect the preceding parent-project search.
 2. `findRuntimeProfile(projectRoot)` reads only that project's `.qflow/runtime` file and resolves its
    path relative to the project. An entrypoint's explicit `--runtime` overrides this read for that invocation.
 3. The selected Runtime implementation interprets the Profile, including `dataRoot`, Credentials,

@@ -148,6 +148,9 @@ from a lookup that still needs the Build's Runtime or correct project selection.
 Worker process log instead, for Runtime startup or process-level failures.
 
 Project context resolution is owned by [`@qflow/project-context-node`](../project-context-node/README.md).
+History Source filters resolve existing filesystem links before comparing project-relative Result
+paths. A deleted Source or directory remains queryable: only its existing ancestor is resolved and
+the missing path suffix is retained. This is local argument handling, with no saved alias inventory.
 CLI, Studio and creation tools call that same package; the CLI is not another environment owner.
 
 `doctor`, `programs up|status|down`, and `runtime up` accept repeated `--endpoint <instance>` values.

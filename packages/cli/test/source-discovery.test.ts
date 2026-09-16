@@ -83,3 +83,17 @@ test("third-party Frontends discover same-named ABI requirements through physica
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("an in-root Source whose basename starts with .. is still inside the workspace", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-cli-dotdot-name-"));
+  try {
+    const source = join(root, "..keep.svrun");
+    await writeFile(source, `<?svml using="@logical/run@1"?>\nrun`, "utf8");
+    const discovered = await discoverSourcePackages(source, { workspaceRoot: root, packages: [] });
+    assert.deepEqual(discovered.logical, [
+      { abi: sourceFrontendPackageAbi, name: "@logical/run@1" },
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

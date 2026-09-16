@@ -50,3 +50,31 @@ exact fields, constraints, model identity, capability name and validator. The he
 Provider routing, fallback, credentials or Runtime authority.
 
 This is a package-authoring utility, not an author-importable model by itself.
+
+## Model-owned request checks
+
+An endpoint may supply two synchronous, pure functions in addition to its port table:
+
+- `validateInputs(inputs)` checks values already supplied, both in drafts and complete requests.
+  Text and media may still be missing from a draft. Use this for rules such as a reference's media
+  type; do not require a future input to exist.
+- `validateRequest(request)` checks additional relationships that require the complete request.
+  It runs after the port table and `validateInputs`, when every required input is available.
+
+Both return `void` and throw a useful error to reject. They read the supplied values only: no IO,
+Provider selection, request mutation or saved validation result. Existing port rules remain in the
+port table. The helper supplies structural validation before calling either function.
+
+Register each rule once in the endpoint definition. The helper connects these functions to Type
+validators, media/Text bindings, finalization, generation and planning. Planning checks the known
+values and leaves future media on the existing graph edges. A directly supplied request or an
+existing Need receives full validation, just as it does during execution.
+
+For a public request builder, use `model.endpoints.image.sealRequest(ports)`: it canonicalizes the
+request and applies all model rules. `endpoint.validateRequest(value)` checks an existing complete
+request; `endpoint.validateDraft(value)` checks a partially assembled one. Calling the common
+generation port helpers alone applies only the port table, not these model-owned functions.
+
+Keep service-specific limits in the Provider. Its existing `supports` and pre-submission preparation
+should share its own checks, rejecting known unsupported values before resource transfer. This does
+not require the Provider to import the Model implementation or add any fields to the request.

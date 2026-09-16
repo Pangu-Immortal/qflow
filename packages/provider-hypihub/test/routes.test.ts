@@ -2,16 +2,17 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { GenerationArtifactUrlResolver } from "@qflow/generation";
 import type { EndpointSupport } from "@qflow/endpoint-kit";
-import type { CanonicalValue } from "@qflow/protocol";
+import type { BlobRef, CanonicalValue } from "@qflow/protocol";
 
 import { hypiHubRoutes } from "../src/routes.js";
 import type { QflowHubRoute } from "../src/routes.js";
+import { sealGptImage2Request } from "../../gpt-image/src/index.js";
 
 async function compile(route: QflowHubRoute, constraints: CanonicalValue, resolve: GenerationArtifactUrlResolver) {
   return await route.prepare(constraints).compile(resolve);
 }
 
-const image = {
+const image: BlobRef = {
   kind: "blob" as const,
   resource: "res_qflowhub-route-1",
   size: 3,
@@ -20,6 +21,25 @@ const image = {
 
 const resolve = async () => "data:image/png;base64,AQID";
 const resolveAudio = async () => "data:audio/wav;base64,AQID";
+
+test("service restrictions leave the model request valid and reject before resolving uploads", async () => {
+  const route = hypiHubRoutes.find((item) => item.capability.name === "gpt-image-2")!;
+  const request = sealGptImage2Request({
+    prompt: ["edit the cutout"], aspectRatio: ["1:1"], resolution: ["2K"],
+    background: ["opaque"], images: [{ role: "image", artifact: image }],
+  });
+  const constraints = request as unknown as CanonicalValue;
+  assert.equal(route.supports!({ capability: route.capability, returns: route.returns, constraints }).status, "unsupported");
+  let resolved = 0;
+  const upload: GenerationArtifactUrlResolver = async () => { resolved++; return "https://example.test/reference.png"; };
+  await assert.rejects(compile(route, constraints, upload), /background option only at 1K/);
+  assert.equal(resolved, 0);
+
+  const supported = sealGptImage2Request({ ...request.ports, resolution: ["1K"] }) as unknown as CanonicalValue;
+  assert.equal(route.supports!({ capability: route.capability, returns: route.returns, constraints: supported }).status, "supported");
+  await compile(route, supported, upload);
+  assert.equal(resolved, 1);
+});
 
 test("QflowHub GPT image requests use canonical edit references and the authored resolution tier", async () => {
   const route = hypiHubRoutes.find((item) => item.capability.name === "gpt-image-2");
@@ -214,19 +234,20 @@ test("QflowHub MiMo Speech mappings use the public audio speech fields", async (
 });
 
 test("Seedance person metadata reaches resource transport without changing video request fields", async () => {
-  for (const port of ["referenceImage", "referenceVideo", "firstFrame", "lastFrame"] as const) {
-    const route = hypiHubRoutes.find((item) => item.capability.name === "seedance-2-mini")!;
-    for (const flag of [true, false, undefined]) {
-      const fields = flag === undefined ? {} : { personReference: flag };
-      const seen: unknown[] = [];
-      const result = await compile(route, { ports: {
-        prompt: ["animate"], duration: [5],
-        [port]: [{ role: port === "referenceVideo" ? "video" : "image", artifact: image, fields }],
-      } }, async (_artifact, metadata) => { seen.push(metadata); return "https://media.test/ref"; });
-      assert.deepEqual(seen, [fields]);
-      const wireField = { referenceImage: "reference_image_urls", referenceVideo: "reference_videos", firstFrame: "first_frame", lastFrame: "last_frame" }[port];
-      assert.deepEqual((result.input as Record<string, unknown>)[wireField], port.startsWith("reference") ? ["https://media.test/ref"] : "https://media.test/ref");
-      assert.equal(JSON.stringify(result.input).includes("person"), false);
+  for (const route of hypiHubRoutes.filter((item) => item.capability.module.name === "@qflow/seedance")) {
+    for (const port of ["referenceImage", "referenceVideo", "firstFrame", "lastFrame"] as const) {
+      for (const flag of [true, false, undefined]) {
+        const fields = flag === undefined ? {} : { personReference: flag };
+        const seen: unknown[] = [];
+        const result = await compile(route, { ports: {
+          prompt: ["animate"], duration: [5],
+          [port]: [{ role: port === "referenceVideo" ? "video" : "image", artifact: image, fields }],
+        } }, async (_artifact, metadata) => { seen.push(metadata); return "https://media.test/ref"; });
+        assert.deepEqual(seen, [fields]);
+        const wireField = { referenceImage: "reference_image_urls", referenceVideo: "reference_videos", firstFrame: "first_frame", lastFrame: "last_frame" }[port];
+        assert.deepEqual((result.input as Record<string, unknown>)[wireField], port.startsWith("reference") ? ["https://media.test/ref"] : "https://media.test/ref");
+        assert.equal(JSON.stringify(result.input).includes("person"), false);
+      }
     }
   }
 });

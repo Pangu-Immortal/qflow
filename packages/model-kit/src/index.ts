@@ -13,13 +13,13 @@ import type { HostFacet } from "@qflow/host";
 import {
   bindGenerationMedia,
   bindGenerationText,
-  finalizeGenerationRequestDraft,
   generationModuleRef,
   generationProducers,
   generationTypes,
   mediaBindingSchemaFromPort,
   requestDraftSchemaFromPorts,
   requestSchemaFromPorts,
+  sealGenerationPortRequest,
   verifyGenerationMediaBinding,
   verifyRequestDraftAgainstPorts,
   verifyRequestAgainstPorts,
@@ -28,6 +28,7 @@ import type {
   GenerationMediaBinding,
   GenerationMediaPort,
   GenerationPortTable,
+  GenerationRequest,
   GenerationRequestDraft,
 } from "@qflow/generation";
 import { textDependency, textTypes } from "@qflow/text";
@@ -76,6 +77,10 @@ export type ExactModelEndpointSpec = {
   readonly requestTypeName: string;
   readonly producerName: string;
   readonly ports: GenerationPortTable;
+  /** Additional complete-request rules, after port and supplied-input validation. */
+  readonly validateRequest?: (request: GenerationRequest) => void;
+  /** Pure, synchronous checks of supplied values, in drafts and complete requests; throw to reject. */
+  readonly validateInputs?: (inputs: GenerationRequestDraft) => void;
 };
 
 export type ExactModelEndpoint = {
@@ -89,6 +94,9 @@ export type ExactModelEndpoint = {
   readonly mediaBindings: Readonly<Record<string, ExactModelMediaBindingEndpoint>>;
   readonly textBindings: Readonly<Record<string, ExactModelTextBindingEndpoint>>;
   readonly ports: GenerationPortTable;
+  readonly validateRequest: (request: unknown) => void;
+  readonly validateDraft: (draft: unknown) => void;
+  readonly sealRequest: (ports: GenerationRequest["ports"]) => GenerationRequest;
   readonly fragment: ReturnType<typeof sealGraphFragment>;
 };
 
@@ -267,7 +275,7 @@ export function plannedExactModelRequest(
 
   const knownNeed = state.needs.find((need) => need.id === binding.id);
   if (knownNeed !== undefined) {
-    verifyRequestAgainstPorts(endpoint.ports, knownNeed.constraints);
+    endpoint.validateRequest(knownNeed.constraints);
     return {
       model: endpoint.ports.model,
       ports: structuredClone((knownNeed.constraints as unknown as GenerationRequestDraft).ports),
@@ -281,6 +289,12 @@ export function plannedExactModelRequest(
     Object.values(step.outputs).map((record) => [record, step] as const)));
   const requestRecord = generationStep.inputs.request;
   if (requestRecord === undefined) return undefined;
+  const knownRequest = records.get(requestRecord);
+  if (knownRequest !== undefined) {
+    const request = inlineValue<GenerationRequest>(knownRequest.value, `${endpoint.ports.model} request`);
+    endpoint.validateRequest(request);
+    return { model: endpoint.ports.model, ports: structuredClone(request.ports), pendingMedia: [], complete: false };
+  }
   const finalize = producedBy.get(requestRecord);
   if (finalize === undefined || !sameReference(finalize.producer, endpoint.finalizeProducer)) return undefined;
   const finalDraft = finalize.inputs.draft;
@@ -295,7 +309,7 @@ export function plannedExactModelRequest(
       const record = records.get(recordId);
       if (record !== undefined) {
         const draft = inlineValue<GenerationRequestDraft>(record.value, `${endpoint.ports.model} request draft`);
-        verifyRequestDraftAgainstPorts(endpoint.ports, draft);
+        endpoint.validateDraft(draft);
         return draft;
       }
       const step = producedBy.get(recordId);
@@ -354,6 +368,8 @@ export function plannedExactModelRequest(
   };
 
   const draft = rebuildDraft(finalDraft);
+  endpoint.validateDraft(draft);
+  if (pendingMedia.length === 0) endpoint.validateRequest(draft);
   return {
     model: endpoint.ports.model,
     ports: structuredClone(draft.ports),
@@ -502,6 +518,15 @@ export function defineExactModelModule<const Key extends string>(
   };
 
   const endpoints = Object.fromEntries(endpointData.map((item): [Key, ExactModelEndpoint] => {
+    const validateRequest = (request: unknown): void => {
+      verifyRequestAgainstPorts(item.spec.ports, request);
+      item.spec.validateInputs?.(request);
+      item.spec.validateRequest?.(request);
+    };
+    const validateDraft = (draft: unknown): void => {
+      verifyRequestDraftAgainstPorts(item.spec.ports, draft);
+      item.spec.validateInputs?.(draft);
+    };
     const fragment = sealGraphFragment({
       inputs: [{ name: "request", type: item.requestType }],
       operations: [{
@@ -527,6 +552,14 @@ export function defineExactModelModule<const Key extends string>(
       mediaBindings: item.mediaBindings,
       textBindings: item.textBindings,
       ports: item.spec.ports,
+      validateRequest,
+      validateDraft,
+      sealRequest(ports) {
+        const request = sealGenerationPortRequest(item.spec.ports, ports);
+        item.spec.validateInputs?.(request);
+        item.spec.validateRequest?.(request);
+        return request;
+      },
       fragment,
     } satisfies ExactModelEndpoint];
   }));
@@ -540,12 +573,12 @@ export function defineExactModelModule<const Key extends string>(
       validators: endpointData.flatMap((item) => [{
         type: item.requestType,
         handler({ value }) {
-          verifyRequestAgainstPorts(item.spec.ports, inlineRequest(value, item.spec.key));
+          endpoints[item.spec.key]!.validateRequest(inlineRequest(value, item.spec.key));
         },
       }, {
         type: item.draftType,
         handler({ value }) {
-          verifyRequestDraftAgainstPorts(item.spec.ports, inlineRequest(value, `${item.spec.key} draft`));
+          endpoints[item.spec.key]!.validateDraft(inlineRequest(value, `${item.spec.key} draft`));
         },
       }]),
       producers: endpointData.flatMap((item) => [
@@ -555,7 +588,7 @@ export function defineExactModelModule<const Key extends string>(
             const requestRecord = inputs.request;
             assert(requestRecord !== undefined, `${item.spec.key} request input is missing`);
             const request = inlineRequest(requestRecord.value, item.spec.key);
-            verifyRequestAgainstPorts(item.spec.ports, request);
+            endpoints[item.spec.key]!.validateRequest(request);
             return { outputs: {}, needs: { generation: request } };
           },
         },
@@ -570,11 +603,13 @@ export function defineExactModelModule<const Key extends string>(
             verifyGenerationMediaBinding(port, value);
             const artifact = inputs.artifact!.value;
             assert(artifact.kind === "blob", `${binding.port} artifact must be a Blob`);
+            const bound = bindGenerationMedia(item.spec.ports, draft, binding.port, value, artifact);
+            endpoints[item.spec.key]!.validateDraft(bound);
             return {
               outputs: {
                 draft: {
                   kind: "inline" as const,
-                  value: canonicalize(bindGenerationMedia(item.spec.ports, draft, binding.port, value, artifact)),
+                  value: canonicalize(bound),
                 },
               },
               needs: {},
@@ -586,11 +621,13 @@ export function defineExactModelModule<const Key extends string>(
           handler: ({ inputs }: ProducerHandlerContext) => {
             const draft = inlineValue<GenerationRequestDraft>(inputs.draft!.value, `${item.spec.key} draft`);
             const text = inlineValue<Text>(inputs.text!.value, `${binding.port} Text`);
+            const bound = bindGenerationText(item.spec.ports, draft, binding.port, text);
+            endpoints[item.spec.key]!.validateDraft(bound);
             return {
               outputs: {
                 draft: {
                   kind: "inline" as const,
-                  value: canonicalize(bindGenerationText(item.spec.ports, draft, binding.port, text)),
+                  value: canonicalize(bound),
                 },
               },
               needs: {},
@@ -599,18 +636,20 @@ export function defineExactModelModule<const Key extends string>(
         })),
         {
           producer: item.finalizeProducer,
-          handler: ({ inputs }) => ({
-            outputs: {
-              request: {
-                kind: "inline" as const,
-                value: canonicalize(finalizeGenerationRequestDraft(
-                  item.spec.ports,
-                  inlineValue<GenerationRequestDraft>(inputs.draft!.value, `${item.spec.key} draft`),
-                )),
+          handler: ({ inputs }) => {
+            const endpoint = endpoints[item.spec.key]!;
+            const draft = inlineValue<GenerationRequestDraft>(inputs.draft!.value, `${item.spec.key} draft`);
+            endpoint.validateDraft(draft);
+            return {
+              outputs: {
+                request: {
+                  kind: "inline" as const,
+                  value: canonicalize(endpoint.sealRequest(draft.ports)),
+                },
               },
-            },
-            needs: {},
-          }),
+              needs: {},
+            };
+          },
         },
       ]),
       plannedNeeds: Object.values(endpoints).map((endpoint) => exactModelPlannedNeedFacet(endpoint)),

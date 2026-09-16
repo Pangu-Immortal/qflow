@@ -17,7 +17,7 @@ contract, describe the approach in the issue first.
 
 ## Set up
 
-You need Node.js 22.12+ and pnpm 10.33, selected by the root `packageManager` field.
+You need Node.js 22.15+ and pnpm 10.33, selected by the root `packageManager` field.
 
 ```bash
 corepack enable
@@ -57,6 +57,14 @@ Run `npm run pack:distribution` to build public types and write the release tarb
 `dist/release/`. This stages npm's selected files in a temporary directory and adapts the English
 README for the npm page: public image URLs, both GIFs, and a link to the full video examples.
 The repository READMEs remain unchanged. `dist/release/README.md` shows the packaged text.
+
+With FFmpeg and FFprobe available, run
+`npm run check:distribution -- dist/release/qflow-qflow-<version>.tgz` to install that tarball outside
+the checkout, build its chat example component, prepare its font and local renderer, render and export
+the video, and decode the result. It uses a separate Qflow state directory, stops its Runtime Worker,
+and retains the temporary project on failure. The `npm package execution` workflow runs this on PRs
+and is reused by publication; publication uploads the same tarball that was installed and executed.
+
 For a formal release, use the existing GitHub Release workflow. Commit the next stable npm version
 in `package.json` to `main`. Open
 **Releases → Draft a new release**, choose that commit with tag `v<version>` (for example `v0.1.8`),

@@ -166,3 +166,50 @@ test("planning follows the model's declared assembly edges and leaves an upstrea
     references: { image: 2 },
   });
 });
+
+test("model input rules run during assembly while complete-request rules wait for all inputs", async () => {
+  const checked = defineExactModelModule({
+    module: { name: "@test/compare-images", version: "1" },
+    endpoints: [{
+      key: "compare", requestTypeName: "CompareRequest", producerName: "compare", ports,
+      validateInputs(request) {
+        for (const value of request.ports.images ?? []) {
+          if (typeof value === "object" && value.artifact.mediaType === "image/gif") {
+            throw new Error("comparison references must be still images");
+          }
+        }
+      },
+      validateRequest(request) {
+        if (request.ports.prompt?.[0] === "compare" && request.ports.images?.length !== 2) {
+          throw new Error("compare requires two reference images");
+        }
+      },
+    }],
+  });
+  const endpoint = checked.endpoints.compare;
+  const bind = checked.component.producers.find((item) => item.producer.name === endpoint.mediaBindings.images!.producer.name)!;
+  const finalize = checked.component.producers.find((item) => item.producer.name === endpoint.finalizeProducer.name)!;
+  const artifact = { kind: "blob" as const, resource: fixtureResource("compare-image"), size: 4, mediaType: "image/png" };
+  const initial = { kind: "inline" as const, value: sealGenerationRequestDraft(ports, { prompt: ["compare"] }) };
+  const bindImage = async (draft: unknown, mediaType: string) => await bind.handler({ inputs: {
+    draft: { value: draft }, binding: { value: { kind: "inline", value: { role: "image" } } },
+    artifact: { value: { ...artifact, mediaType } },
+  } } as never);
+
+  const first = await bindImage(initial, "image/png");
+  await assert.rejects(async () => finalize.handler({ inputs: { draft: { value: first.outputs.draft } } } as never), /two reference images/);
+  await assert.rejects(bindImage(initial, "image/gif"), /must be still images/);
+  assert.throws(() => endpoint.sealRequest({ prompt: ["compare"], images: [{ role: "image", artifact }] }), /two reference images/);
+  assert.throws(() => endpoint.sealRequest({ prompt: ["draw"], images: [{ role: "image", artifact: { ...artifact, mediaType: "image/gif" } }] }), /must be still images/);
+
+  const second = await bindImage(first.outputs.draft, "image/jpeg");
+  const complete = await finalize.handler({ inputs: { draft: { value: second.outputs.draft } } } as never);
+  assert.ok(complete.outputs.request);
+  const requestValidator = checked.component.validators.find((item) => item.type.name === endpoint.requestType.name)!;
+  await requestValidator.handler({ value: complete.outputs.request } as never);
+
+  // Another model using the same common port vocabulary has not acquired this model's GIF rule.
+  assert.doesNotThrow(() => definition.endpoints.image.sealRequest({
+    prompt: ["draw"], images: [{ role: "image", artifact: { ...artifact, mediaType: "image/gif" } }],
+  }));
+});

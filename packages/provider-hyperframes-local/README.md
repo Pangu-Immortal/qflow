@@ -96,11 +96,20 @@ execution earlier. ResourceStore I/O and Surface probes receive the cancellation
 ResourceStore must implement the port's cancellation behavior, including streaming reads and writes.
 
 Browser launch, source extraction, capture and encoding run in one disposable child process per
-render. At cancellation it receives a stop request and has up to five seconds to clean up. The owner
-then terminates any remaining process tree, including Chrome's separate process groups, and awaits
-the child exit before removing temporary files and returning failure. This also covers engine calls
-that do not accept a signal. The deadline initiates shutdown; the call may spend additional time
-closing resources. Completed Outputs in the Build remain available for a new Run and Build.
+render. After successful capture closes its resources, the child sends its completion message,
+flushes that message and disconnects IPC so it can exit normally. The owner awaits exit and drains
+diagnostics before returning. Normal completion does not enumerate or forcibly terminate processes.
+On failure, cleanup may be incomplete: the child reports the error and keeps IPC open while the owner
+discovers and terminates the remaining process tree, before it can become orphaned.
+
+At cancellation the child receives a stop request and has up to five seconds to clean up. A child
+that remains after cancellation or its completion message is forcibly terminated along with its discovered
+process tree, including Chrome's separate process groups. Cleanup problems are reported through the
+existing diagnostic callback; they do not discard a render already reported as completed. If process
+enumeration fails, the owner still terminates the direct child but cannot confirm descendant cleanup.
+This also covers engine calls that do not accept a signal. The deadline initiates shutdown; the call
+may spend additional time closing resources. Completed Outputs in the Build remain available for a
+new Run and Build.
 
 Deployments may additionally set `initializationTimeoutMs` or `frameTimeoutMs` when they have a
 measured stage deadline. Initialization here means initializing an already created browser session;

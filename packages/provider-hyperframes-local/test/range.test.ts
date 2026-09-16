@@ -103,8 +103,11 @@ test("real selected renders sample video correctly across loop, hold and stretch
     const events: HyperframesRenderProgress[] = [];
     const render = async (name: string, range: { startFrame: number; endFrameExclusive: number } | undefined,
       workers: number) => {
+      const warnings: string[] = [];
       const visual = await renderHyperframesVisual({ document, ...(range === undefined ? {} : { range }) },
-        { resources, workers, quality: "high", processTimeoutMs: 120000, onProgress: (e) => events.push(e) });
+        { resources, workers, quality: "high", processTimeoutMs: 120000, onProgress: (e) => events.push(e),
+          onDiagnostic: async (event) => { if (event.level === "warning") warnings.push(event.message); } });
+      assert.deepEqual(warnings, [], "a completed render should close its resources and exit without forced cleanup");
       const file = join(root, `${name}.mp4`);
       await writeFile(file, (await resources.get(visual.artifact.resource))!);
       const decoded = spawnSync("ffmpeg", ["-v", "error", "-i", file, "-f", "rawvideo", "-pix_fmt", "rgb24", "pipe:1"]);
