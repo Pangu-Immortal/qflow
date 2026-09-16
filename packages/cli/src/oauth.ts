@@ -28,6 +28,49 @@ function tokenExpiry(value: { readonly expires_at?: unknown; readonly expires_in
   return seconds === undefined ? undefined : Date.now() + seconds * 1_000;
 }
 
+export type AuthorizeBrowserLaunch = {
+  readonly command: string;
+  readonly args: readonly string[];
+  readonly windowsVerbatimArguments: boolean;
+};
+
+/**
+ * Open the authorize URL in a browser. Windows `cmd /c start` treats `&` as a command
+ * separator unless the URL is a later quoted token after an explicit window title.
+ */
+export function authorizeBrowserLaunch(
+  url: string,
+  options: { readonly platform?: NodeJS.Platform; readonly comSpec?: string } = {},
+): AuthorizeBrowserLaunch {
+  const platform = options.platform ?? process.platform;
+  if (platform === "win32") {
+    const quoted = `"${url.replaceAll("\"", "")}"`;
+    return {
+      command: options.comSpec ?? process.env.ComSpec ?? "cmd.exe",
+      args: ["/d", "/s", "/c", `start "" ${quoted}`],
+      windowsVerbatimArguments: true,
+    };
+  }
+  return {
+    command: platform === "darwin" ? "open" : "xdg-open",
+    args: [url],
+    windowsVerbatimArguments: false,
+  };
+}
+
+function openAuthorizeUrl(url: string): void {
+  const launch = authorizeBrowserLaunch(url);
+  const child = spawn(launch.command, [...launch.args], {
+    stdio: "ignore",
+    detached: true,
+    windowsHide: true,
+    windowsVerbatimArguments: launch.windowsVerbatimArguments,
+  });
+  // A missing opener must not crash the CLI; the URL is already on the progress line.
+  child.once("error", () => undefined);
+  child.unref();
+}
+
 /** Acquire one OAuth credential from the exact data declared by its Endpoint package. */
 export async function acquireOAuthCredential(
   acquisition: CredentialAcquisition,
@@ -102,13 +145,8 @@ export async function acquireOAuthCredential(
   authorize.searchParams.set("code_challenge", challenge);
   authorize.searchParams.set("code_challenge_method", "S256");
   options.onProgress?.(`Opening sign-in: ${authorize}`);
-  if (options.open === undefined) {
-    const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";
-    const openerArgs = process.platform === "win32" ? ["/c", "start", "", authorize.toString()] : [authorize.toString()];
-    spawn(opener, openerArgs, { stdio: "ignore", detached: true, windowsHide: true }).unref();
-  } else {
-    options.open(authorize.toString());
-  }
+  if (options.open === undefined) openAuthorizeUrl(authorize.toString());
+  else options.open(authorize.toString());
   const code = await callback;
   options.onProgress?.("Authorization returned. Exchanging token…");
   const deadline = AbortSignal.timeout(acquisition.requestTimeoutMs);
