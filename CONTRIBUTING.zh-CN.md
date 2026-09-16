@@ -50,6 +50,14 @@ pnpm test          # 包与服务适配器测试
 脚本在临时目录中使用 npm 选定的文件，从英文 README 生成 npm 页面版本：使用公开图片地址，
 保留两个 GIF，并将完整视频示例改为链接。仓库的两份 README 保持原样。
 `dist/release/README.md` 可用于检查打包后的文案。
+
+准备好 FFmpeg 和 FFprobe 后，运行
+`npm run check:distribution -- dist/release/qflow-qflow-<version>.tgz`。它在仓库外安装该包，
+编译包内的聊天示例组件，准备字体和本地渲染器，渲染、导出并解码视频。检查使用独立的
+Qflow 状态目录，结束时停止自己的 Runtime Worker，失败时保留临时项目。
+`npm package execution` 工作流在 PR 上执行这项检查，发布流程复用它；发布的就是已经
+安装并执行过的同一份 tarball。
+
 正式发布请走现有的 GitHub Release 工作流。把下一个稳定 npm 版本写入 `package.json` 并提交到
 `main`。打开 **Releases → Draft a new release**，选择该提交，打上标签 `v<version>`（例如
 `v0.1.8`），写好发布说明后发布 Release。带标签的提交必须包含此工作流。

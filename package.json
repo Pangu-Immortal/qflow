@@ -168,6 +168,7 @@
   ],
   "scripts": {
     "pack:distribution": "node scripts/pack-distribution.mjs",
+    "check:distribution": "node scripts/check-distribution.mjs",
     "build:public-types": "node scripts/build-public-types.mjs",
     "check": "tsc -p tsconfig.json --noEmit",
     "docs:dev": "vitepress dev docs",
