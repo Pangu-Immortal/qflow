@@ -185,11 +185,11 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
 <table>
   <tr>
     <td>缺陷报告</td>
-    <td><a href="https://github.com/qflow-ai/qflow/issues/new?labels=bug">提交 issue</a></td>
+    <td><a href="https://github.com/qflow-ai/qflow/issues/new?template=bug_report.yml">提交 issue</a></td>
   </tr>
   <tr>
     <td>功能请求</td>
-    <td><a href="https://github.com/qflow-ai/qflow/issues/new?labels=enhancement">提交 issue</a></td>
+    <td><a href="https://github.com/qflow-ai/qflow/issues/new?template=feature_request.yml">提交 issue</a></td>
   </tr>
   <tr>
     <td>问题咨询</td>

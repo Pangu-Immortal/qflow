@@ -193,11 +193,11 @@ commands and the repository layout.
 <table>
   <tr>
     <td>Bug reports</td>
-    <td><a href="https://github.com/qflow-ai/qflow/issues/new?labels=bug">Open an issue</a></td>
+    <td><a href="https://github.com/qflow-ai/qflow/issues/new?template=bug_report.yml">Open an issue</a></td>
   </tr>
   <tr>
     <td>Feature requests</td>
-    <td><a href="https://github.com/qflow-ai/qflow/issues/new?labels=enhancement">Open an issue</a></td>
+    <td><a href="https://github.com/qflow-ai/qflow/issues/new?template=feature_request.yml">Open an issue</a></td>
   </tr>
   <tr>
     <td>Questions</td>

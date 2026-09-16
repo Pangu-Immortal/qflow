@@ -1,0 +1,58 @@
+name: Bug report
+description: Something in Qflow behaves differently than it should.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Run `qflow doctor` in the project first and include what it reports.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you ran, what Qflow did, and the full error text if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The command you ran and the source file, reduced as far as you can get it.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Qflow version
+      description: Output of `qflow version`.
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Coding agent
+      description: The agent you drove the work from, such as Claude Code or Codex, with its version.
+    validations:
+      required: false
+  - type: input
+    id: model-service
+    attributes:
+      label: Model service
+      description: QflowHub, your own API, or a local deployment.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The terminal output, or `qflow logs <build-id>` for a failed Build. Remove anything private.
+      render: text
+    validations:
+      required: false
