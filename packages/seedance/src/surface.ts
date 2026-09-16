@@ -109,6 +109,9 @@ function mediaReference(
   if (value !== undefined && (value.kind !== "blob" || !value.mediaType.startsWith(`${role}/`))) {
     throw new Error(`${subject} must reference ${role} media`);
   }
+  if (value !== undefined && value.kind === "blob" && role === "audio" && ["audio/mp4", "audio/x-m4a"].includes(value.mediaType)) {
+    throw new Error(`${subject} references m4a audio, which Seedance does not accept; convert to wav or mp3 and admit that file`);
+  }
   return reference;
 }
 
