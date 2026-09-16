@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -224,7 +224,7 @@ test("Build confirms durable submission before following stable work progress", 
 
   output = "";
   let progress = "";
-  const projectRoot = dirname(source);
+  const projectRoot = await realpath(dirname(source));
   const runtimeProfile = resolve("/p/a selected runtime.json");
   await runCli([
     "build", source, "--workspace", projectRoot, "--runtime", runtimeProfile,

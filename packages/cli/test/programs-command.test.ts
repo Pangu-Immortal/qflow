@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { realpath } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import test from "node:test";
 
@@ -344,7 +346,7 @@ test("runtime status keeps scheduling phases out of the default view", async () 
 });
 
 test("Worker stop suggests Program control in the same project and Profile", async () => {
-  const projectRoot = resolve("/tmp");
+  const projectRoot = await realpath(tmpdir());
   const runtimeProfile = resolve("/tmp/a selected profile.json");
   let output = "";
   await runCli(["runtime", "down", "--workspace", projectRoot, "--runtime", runtimeProfile], {

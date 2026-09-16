@@ -6,8 +6,10 @@ import {
   mkdtemp,
   readFile,
   readdir,
+  realpath,
   rm,
   stat,
+  symlink,
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -23,6 +25,8 @@ import { defineEndpointPackage } from "@qflow/endpoint-kit";
 import type { AsyncEndpoint, EndpointPackage } from "@qflow/endpoint-kit";
 import type { ComponentPackage } from "@qflow/component-kit";
 import { createLocalRuntime } from "@qflow/runtime-local";
+import { resolveProjectRoot } from "@qflow/project-context-node";
+import { NodeFilesystemWorkspace } from "../../workspace-fs-node/src/index.js";
 import { defineBuild } from "@qflow/core";
 import {
   collectLoadedNodePackageComponents,
@@ -107,6 +111,30 @@ function durableBuildRequest(
     result: resultDestination(directory),
   } as const;
 }
+
+test("a project directory alias admits its Source and stores a project-relative Result path", async () => {
+  const parent = await realpath(await mkdtemp(join(tmpdir(), "qflow-local-project-alias-")));
+  try {
+    const directory = join(parent, "project");
+    const alias = join(parent, "shortcut");
+    await mkdir(directory);
+    await writeFile(join(directory, "main.svml"), "source");
+    await writeFile(join(parent, "outside.svs"), "outside");
+    await symlink(directory, alias, "junction");
+    await symlink(parent, join(directory, "escape"), "junction");
+    const root = await resolveProjectRoot({ workspaceRoot: alias });
+    const session = await new NodeFilesystemWorkspace({ root }).open(join(alias, "main.svml"));
+    await assert.rejects(async () => await session.resolveSource(session.entry, { from: "./escape/outside.svs", alias: "outside" }),
+      { code: "SOURCE_OUTSIDE_ROOT" });
+    const runtime = await createLocalRuntime(projectRuntimeFixture(directory));
+    try {
+      const request = durableBuildRequest(root, "bld_20260916T150000000Z_0000000001", createGreetingBuild());
+      await runtime.build({ ...request, catalog: { ...request.catalog, source: { path: session.entry.id } } });
+      const result = await new FileBuildResultRepository(join(directory, "results")).read(request.id);
+      assert.equal(result?.source.path, "main.svml");
+    } finally { await runtime.close(); }
+  } finally { await rm(parent, { recursive: true, force: true }); }
+});
 
 async function finishClaimedBuild(
   runtime: Awaited<ReturnType<typeof createLocalRuntime>>,

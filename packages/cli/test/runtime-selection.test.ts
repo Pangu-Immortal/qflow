@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
@@ -52,10 +52,10 @@ test("paths reports project selection, invocation override and no selection with
       return JSON.parse(output);
     };
     const absent = await readPaths();
-    assert.equal(absent.project, resolve(root));
+    assert.equal(absent.project, await realpath(root));
     assert.equal(absent.profileSource, "none");
     assert.equal(absent.profile, undefined);
-    assert.equal(absent.selectionFile, join(root, ".qflow", "runtime"));
+    assert.equal(absent.selectionFile, join(await realpath(root), ".qflow", "runtime"));
     const selected = await selectRuntimeProfile(root, profile);
     const project = await readPaths();
     assert.equal(project.profileSource, "project");
@@ -85,7 +85,7 @@ test("project resolution precedes exact project Runtime selection", async () => 
 
     assert.equal(await findRuntimeProfile(nested), undefined);
     const project = await resolveProjectRoot({ cwd: nested });
-    assert.equal(project, resolve(root));
+    assert.equal(project, await realpath(root));
     const found = await findRuntimeProfile(project);
     assert.equal(found?.profile, selected.profile);
     assert.equal(await realpath(found!.projectRoot), selected.projectRoot);
@@ -105,11 +105,29 @@ test("a parent Runtime selection never becomes a child project's selection", asy
     await selectRuntimeProfile(parent, profile);
 
     const project = await resolveProjectRoot({ cwd: child });
-    assert.equal(project, resolve(child));
+    assert.equal(project, await realpath(child));
     assert.equal(await findRuntimeProfile(project), undefined);
   } finally {
     await rm(parent, { recursive: true, force: true });
   }
+});
+
+test("project discovery chooses the caller's parent before resolving directory aliases", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-project-alias-"));
+  try {
+    const caller = join(root, "caller");
+    const targetParent = join(root, "target");
+    const target = join(targetParent, "nested");
+    await mkdir(caller);
+    await mkdir(target, { recursive: true });
+    await writeFile(join(caller, "package.json"), "{}");
+    await writeFile(join(targetParent, "package.json"), "{}");
+    const alias = join(caller, "linked");
+    await symlink(target, alias, "junction");
+    assert.equal(await resolveProjectRoot({ cwd: alias }), await realpath(caller));
+    assert.equal(await resolveProjectRoot({ workspaceRoot: alias }), await realpath(target));
+    await assert.rejects(resolveProjectRoot({ workspaceRoot: join(root, "missing") }), { code: "ENOENT" });
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("runtime use lets later CLI commands reuse the selected Profile", async () => {
