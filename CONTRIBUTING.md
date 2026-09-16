@@ -108,4 +108,4 @@ Branch names and commit subjects share the same prefix: `feat/`, `fix/`, `docs/`
 
 ## Getting help
 
-Ask in [Discord](https://discord.gg/85hnyQnxpn) or [Telegram](https://t.me/qflow).
+Ask in [Discord](https://discord.gg/85hnyQnxpn) or [Telegram](https://t.me/qflowai).
