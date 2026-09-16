@@ -17,7 +17,7 @@ contract, describe the approach in the issue first.
 
 ## Set up
 
-You need Node.js 22.12+ and pnpm 10.33, selected by the root `packageManager` field.
+You need Node.js 22.15+ and pnpm 10.33, selected by the root `packageManager` field.
 
 ```bash
 corepack enable
