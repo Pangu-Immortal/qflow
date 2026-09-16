@@ -11,11 +11,11 @@
  * the same shape WhisperX and OpenCV already use for their Python programs.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import { copyFile, mkdtemp, readdir, rename, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, extname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+
+import { resolveNodePackageResource } from "@qflow/package-loader-node";
 
 /**
  * Whether this is a link to fetch rather than a path to open.
@@ -34,20 +34,16 @@ export function isVideoUrl(value: string): boolean {
 }
 
 /**
- * The uv project holding the pinned `yt-dlp`, found by walking up from this module rather than from
- * the working directory, which is wherever the author happened to run the command from.
+ * The locked uv project is a Distribution package asset, the same way WhisperX and
+ * OpenCV locate their Python programs. Walking parents of this file only works
+ * while the module still sits above `services/` in a contributor checkout.
  */
 function serviceProject(): string {
-  let directory = dirname(fileURLToPath(import.meta.url));
-  while (true) {
-    const candidate = join(directory, "services", "yt-dlp", "pyproject.toml");
-    if (existsSync(candidate)) return dirname(candidate);
-    const parent = dirname(directory);
-    if (parent === directory) {
-      throw new Error("no services/yt-dlp project above this module; the Distribution is incomplete");
-    }
-    directory = parent;
-  }
+  return dirname(resolveNodePackageResource(
+    "@qflow/yt-dlp-service-runtime",
+    "pyproject.toml",
+    { from: import.meta.url },
+  ));
 }
 
 /**

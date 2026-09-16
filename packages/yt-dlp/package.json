@@ -6,5 +6,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@qflow/package-loader-node": "workspace:*",
+    "@qflow/yt-dlp-service-runtime": "workspace:*"
   }
 }
