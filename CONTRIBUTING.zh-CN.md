@@ -12,7 +12,7 @@
 
 ## 环境准备
 
-需要 Node.js 22.12+ 和 pnpm 10.33，版本由根目录的 `packageManager` 字段指定。
+需要 Node.js 22.15+ 和 pnpm 10.33，版本由根目录的 `packageManager` 字段指定。
 
 ```bash
 corepack enable
@@ -27,6 +27,7 @@ pnpm install --frozen-lockfile
 | --- | --- |
 | 新增 Author 包 | [添加 Author 包](https://qflow.ai/zh/guide/author-packages/) |
 | 新增 Provider | [添加 Provider](https://qflow.ai/zh/guide/providers/) |
+| 组件内部 | [组件解剖](https://qflow.ai/zh/guide/component-anatomy/) |
 | Studio 界面翻译 | [Studio 本地化](packages/studio/LOCALIZATION.md) |
 | 编译、Run 与 Build | [Runtime](https://qflow.ai/zh/guide/runtime/) |
 | 命名、模块边界、wire 数据 | [代码规范](https://qflow.ai/zh/guide/conventions/) |
@@ -49,16 +50,28 @@ pnpm test          # 包与服务适配器测试
 脚本在临时目录中使用 npm 选定的文件，从英文 README 生成 npm 页面版本：使用公开图片地址，
 保留两个 GIF，并将完整视频示例改为链接。仓库的两份 README 保持原样。
 `dist/release/README.md` 可用于检查打包后的文案。
-使用 `npm publish dist/release/qflow-qflow-<version>.tgz --access public` 发布生成的 tarball。
+正式发布请走现有的 GitHub Release 工作流。把下一个稳定 npm 版本写入 `package.json` 并提交到
+`main`。打开 **Releases → Draft a new release**，选择该提交，打上标签 `v<version>`（例如
+`v0.1.8`），写好发布说明后发布 Release。带标签的提交必须包含此工作流。
+`Publish npm` 会核对标签与版本一致、且该提交属于 main 的历史，运行 Linux/Windows 检查，
+构建并检查打包后的 CLI，再以 `latest` 发布到 npm，并把 tarball 附加到这次 Release。
+检查与打包使用触发时的提交，即使随后 main 继续前进。此路径只支持稳定版，不支持预发布。
 
-使用 GitHub Actions 时，先把下一个稳定 npm 版本写入 `package.json` 并提交到 `main`，再进入
-**Actions → Publish npm → Run workflow**，选择 `main` 并填写该版本。不勾选 **Publish to npm**
-时，只运行 Linux/Windows 检查并提供 README 和 tarball 下载；勾选后，在检查通过后将本次打出的
-tarball 发布为 `latest`。每次运行使用启动时选定的提交。push 和 tag 不触发发布，工作流不修改版本或创建标签。
+**Actions → Publish npm → Run workflow** 在 `main` 上仍然可用：填写已提交的版本，不勾选
+**Publish to npm** 时只运行 Linux/Windows 检查并提供可下载的 README 与 tarball；勾选后，
+在检查通过后把本次打出的 tarball 发布为 `latest`。补完一次失败的 Release 发布时，先修好
+外部问题再重跑该 Release 的工作流。若必须改代码，准备新版本和新的 Release。已经发布的
+npm 版本会被跳过且不改动 `latest`；已经附在 Release 上的文件会保留。
+push main、只 push 标签、或保存草稿 Release 都不会发布 npm。工作流不修改版本，也不创建标签。
+可见的 Release 可以早于 npm 发布成功；对外宣布该 npm 版本可用前，先看这次 Actions 的结果。
 
 npm 包的 Trusted Publisher 应配置 GitHub Actions：组织 `qflow-ai`、仓库 `qflow`、工作流
 `publish-npm.yml`，允许直接 `npm publish`，环境名称留空。发布 job 使用 OIDC，不需要保存 npm Token。
 已发布的版本不能覆盖；`0.1.2` 等 npm 版本与逻辑接口 `@1` 分开管理。
+
+发布说明应写明变化的用户行为，以及受影响的安装。npm Distribution 与已安装的 Skill 分开更新：
+一次发布若两者都变，请同时链到相关 Skill 变更并说明两条更新路径。已保存的视频项目及其现有素材
+独立于这两种安装。发布后，先核对工作流结果和 npm 上的已发布版本，再告诉用户更新可用。
 
 ## 提交 Pull Request
 
