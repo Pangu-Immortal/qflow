@@ -583,3 +583,15 @@ test("inactive programs settle once, while re-entry and repeated active seeks st
   seek({ detail: { time: 0.5 } });
   assert.deepEqual(root.frames, [0, 0, 0, 30, 15, 0]);
 });
+
+test("an asynchronous browser program reports its unsupported frame behavior instead of racing capture", async () => {
+  const { runInNewContext } = await import("node:vm");
+  const { browserProgramScript } = await import("../src/browser-program.js");
+  const window = { addEventListener() {}, __qflowBrowserProgramError: undefined as string | undefined };
+  runInNewContext(browserProgramScript([{ id: "scene", startFrame: 0, durationFrames: 30,
+    program: { html: "", setup: 'return async frame => { await Promise.resolve(); throw new Error("late drawing failure"); };' },
+  }], 30, 1), { window, document: { getElementById: () => ({}) } });
+  assert.match(window.__qflowBrowserProgramError!, /must be synchronous/u);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.match(window.__qflowBrowserProgramError!, /late drawing failure/u);
+});
