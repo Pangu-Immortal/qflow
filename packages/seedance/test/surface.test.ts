@@ -5,6 +5,7 @@ import { artifactTypes } from "@qflow/artifact";
 import { parseStructuredElement } from "@qflow/markup";
 import type { StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/markup";
 import { textTypes } from "@qflow/text";
+import { fixtureResource } from "../../../test/fixture-resource.js";
 
 import {
   decodeSeedanceFrameVideoSurface,
@@ -25,12 +26,12 @@ const refs = new Map<string, SurfaceResolvedReference>([
   }] as const),
 ]);
 
-async function decode(source: string, handler: StructuredSurfaceHandler) {
+async function decode(source: string, handler: StructuredSurfaceHandler, references = refs) {
   const element = parseStructuredElement({ name: "seedance.svml", text: source }, 0).element;
   return await handler({
     sourceName: "seedance.svml",
     element,
-    resolveReference: (path) => refs.get(path),
+    resolveReference: (path) => references.get(path),
     resolveAsset: () => { throw new Error("no asset"); },
   });
 }
@@ -45,6 +46,27 @@ test("TextVideo exposes prompt-only generation without inventing a usage", async
   });
   assert.deepEqual(result.components[0]?.outputs, { video: "motion.video" });
   assert.equal(Object.keys(result.components[0]?.inputs ?? {}).some((name) => name.includes("media")), false);
+});
+
+test("admitted M4A audio is rejected at decode while future audio remains a graph reference", async () => {
+  const source = '<seedance:ReferenceVideo id="speaker" model="mini" prompt={direction} duration="6"><seedance:Reference image={generated.image}/><seedance:Reference audio={voice.audio}/></seedance:ReferenceVideo>';
+  for (const mediaType of ["audio/mp4", "audio/x-m4a", "audio/wav", "audio/mpeg"]) {
+    const admitted = new Map(refs);
+    admitted.set("voice.audio", {
+      ...refs.get("voice.audio")!,
+      record: {
+        id: "voice", type: artifactTypes.blob,
+        value: { kind: "blob", resource: fixtureResource("admitted-voice"), size: 4, mediaType },
+      },
+    });
+    if (mediaType === "audio/mp4" || mediaType === "audio/x-m4a") {
+      await assert.rejects(decode(source, decodeSeedanceReferenceVideoSurface, admitted), /m4a/);
+    } else {
+      assert.ok((await decode(source, decodeSeedanceReferenceVideoSurface, admitted)).components.length);
+    }
+  }
+  const future = await decode(source, decodeSeedanceReferenceVideoSurface);
+  assert.deepEqual(future.components[0]!.inputs["media-0002:artifact"], refs.get("voice.audio")!.ref);
 });
 
 test("Seedance 2.5 is an exact model with 1080p and auto or 4-30 second duration", async () => {

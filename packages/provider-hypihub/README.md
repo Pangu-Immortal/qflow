@@ -118,6 +118,9 @@ Resource identity with the same declared person-reference classification is uplo
 cross-Build cache. Seedance visual references can carry `personReference` in their media fields;
 the mapping declares it as a resource-transport field and the upload session receives
 `is_person_reference`, preserving true, false and omission. It stays out of the generation body.
+This covers reference images, reference videos, and first/last frames for every declared Seedance
+variant. Omission remains absent on the wire; QflowHub's upload API currently defaults it to false,
+so omission does not enable detection or person-reference preparation.
 QflowHub stores the authored classification and prepares the applicable upstream person reference;
 this Provider does not detect faces or select an upstream private-avatar group.
 
