@@ -30,9 +30,9 @@
   <script id="story">
     <manifest-rule>
       <BOY>Oye! || Este Ferrari || es tuyo?
-      <WIFE>@aja! Ajá.
+      <WIFE>@{aja!} Ajá.
       <BOY>Dame tres reglas || para ganar || tu primer millón.
-      <WIFE>OK || la || primera || es || @manifest! Manifestar.
+      <WIFE>OK || la || primera || es || @{manifest!} Manifestar.
       <BOY>Manifestaste || un Ferrari?
       <WIFE>Me lo || repetí || cada || mañana.
     </manifest-rule>
@@ -41,14 +41,14 @@
       <BOY>Y funcionó?
       <WIFE>No. || Pero || la dos || sí.
       <BOY>Dime.
-      <WIFE>@real-estate! Bienes raíces. || Compra || el || edificio || y cóbrales || renta a || todos.
+      <WIFE>@{real-estate!} Bienes raíces. || Compra || el || edificio || y cóbrales || renta a || todos.
       <BOY>Pero || cómo compraste || el edificio?
       <WIFE>Esa || es || la tres.
     </real-estate-rule>
 
     <bitcoin-rule>
       <BOY>Espera qué?
-      <WIFE>@bitcoin! Bitcoin. || Apreté || el || botón || equivocado || en <2012 | dos mil doce> || y gané || seis || cifras.
+      <WIFE>@{bitcoin!} Bitcoin. || Apreté || el || botón || equivocado || en <2012 | dos mil doce> || y gané || seis || cifras.
       <BOY>Compraste Bitcoin || por accidente?!
       <WIFE>Eso || es || manifestar, || cariño.
     </bitcoin-rule>

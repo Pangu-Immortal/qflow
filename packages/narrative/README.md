@@ -26,4 +26,6 @@ no Tokens. Authored order is independent of gaps, overlap or placement order in 
 Caption uses this content query and the Narrative's display correspondence to select complete
 subtitle units. Timeline projection uses the same semantic references to locate events in physical
 time. Neither operation substitutes for the other. Token lookup returns Tokens, not reconstructed
-source prose: whitespace, comments and source-preserving edits remain the author language's concern.
+source prose: comments and source-preserving edits remain the author language's concern. Caption
+Display Words separately carry `separatorBefore` (`""` or `" "`) so consumers can reconstruct the
+authored display spelling without guessing from Token boundaries or importing an author parser.

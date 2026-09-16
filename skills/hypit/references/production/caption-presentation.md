@@ -48,7 +48,7 @@ to draw. Independent Caption Tracks can intentionally show multiple presentation
 ## A style change can happen inside a Cue
 
 ```text
-test1 || test2 @select test3 || test4 @/select
+test1 || test2 @{select} test3 || test4 @{/select}
 ```
 
 This contains three Cues: `test1`, `test2 test3`, and `test4`. The Selection starts before `test3`;

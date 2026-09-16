@@ -12,9 +12,9 @@ import type { SurfaceResolvedReference } from "@qflow/markup";
 import { countSpeechEstimateUnits } from "@qflow/estimate";
 import type { Text } from "@qflow/text";
 
-const body = `<intro><HOST>Try @brand <qflow|Hai-Pit> @/brand today. ||</intro>
+const body = `<intro><HOST>Try @{brand} <qflow|Hai-Pit> @{/brand} today. ||</intro>
 <gap/>
-<closing><HOST>现在 @name <声工坊|voice workshop> @/name 好用。<|indeed></closing>`;
+<closing><HOST>现在 @{name} <声工坊|voice workshop> @{/name} 好用。<|indeed></closing>`;
 
 function authored() {
   return narrativeValue(parseScript("views.svml", body), "story") as unknown as Narrative;
@@ -44,16 +44,16 @@ test("omitted speech shares display prose while retaining ordinary Narrative and
 });
 
 test("shared text permits semantic markers without changing display; empty groups still fail", () => {
-  const parsed = parseScript("shared", '<intro><HOST><组@part 件@/part化|></intro>');
+  const parsed = parseScript("shared", '<intro><HOST><组@{part}件@{/part}化|></intro>');
   assert.equal(parsed.serializations.speech, "组件化");
   assert.equal(parsed.captionProjection.text, "组件化");
   assert.equal(parsed.selections[0]!.startAnchorId, parsed.tokens[1]!.startAnchorId);
   assert.equal(captionDocument(parsed, "caption", "story").units[0]!.sourceTokenIds.length, 3);
-  for (const body of ['<|>', '< | >', '<@beat!|>', '<...|>']) {
+  for (const body of ['<|>', '< | >', '<@{beat!}|>', '<...|>']) {
     assert.throws(() => parseScript("empty", `<intro>${body}</intro>`), /omitted speech must contain spoken text/u);
   }
   assert.throws(() => parseScript("cue", '<intro><动效|动||效></intro>'), /Cue break cannot occur inside/u);
-  assert.throws(() => parseScript("explicit", '<intro><@bad 字|word></intro>'), /spoken text, not the Dual display side/u);
+  assert.throws(() => parseScript("explicit", '<intro><@{bad} 字|word></intro>'), /spoken text, not the Dual display side/u);
 });
 
 test("Script exports complete author content and a caption view from that same value", () => {

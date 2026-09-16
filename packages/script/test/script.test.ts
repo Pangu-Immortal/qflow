@@ -14,7 +14,7 @@ import {
 } from "@qflow/script";
 
 test("Selection source edits relocate markers by 2M + 2N + 2 Anchor identity", () => {
-  const source = "<one><HOST>@focus alpha beta @/focus gamma</one>\r\n<two><HOST>delta epsilon</two>";
+  const source = "<one><HOST>@{focus} alpha beta @{/focus} gamma</one>\r\n<two><HOST>delta epsilon</two>";
   const parsed = parseScript("selection-adjust.svml", source);
   const movedWords = adjustScriptSelection({
     sourceName: "selection-adjust.svml",
@@ -52,30 +52,30 @@ test("Program boundaries are distinct writable semantic Anchors", () => {
   const source = "<one>alpha</one>\n<two>beta</two>";
   const withSelection = adjustScriptSelection({
     sourceName: "program-boundaries.svml",
-    source: "@focus <one>alpha</one>\n<two>beta @/focus</two>",
-    parsed: parseScript("program-boundaries.svml", "@focus <one>alpha</one>\n<two>beta @/focus</two>"),
+    source: "@{focus} <one>alpha</one>\n<two>beta @{/focus}</two>",
+    parsed: parseScript("program-boundaries.svml", "@{focus} <one>alpha</one>\n<two>beta @{/focus}</two>"),
     adjustment: { id: "focus", startAnchorId: "program:start", endAnchorId: "program:end" },
   });
   const selection = parseScript("program-boundaries.svml", withSelection).selections[0]!;
   assert.deepEqual([selection.startAnchorId, selection.endAnchorId], ["program:start", "program:end"]);
-  assert.match(withSelection, /^~@focus(?=[ <])/u);
-  assert.match(withSelection, /@\/focus~$/u);
+  assert.match(withSelection, /^@\{~focus\}(?=[ <])/u);
+  assert.match(withSelection, /@\{\/focus~\}$/u);
 
   const withMoment = adjustScriptMoment({
     sourceName: "program-boundaries.svml",
-    source: `${source.slice(0, source.indexOf("beta"))}@cue! ${source.slice(source.indexOf("beta"))}`,
+    source: `${source.slice(0, source.indexOf("beta"))}@{cue!} ${source.slice(source.indexOf("beta"))}`,
     parsed: parseScript(
       "program-boundaries.svml",
-      `${source.slice(0, source.indexOf("beta"))}@cue! ${source.slice(source.indexOf("beta"))}`,
+      `${source.slice(0, source.indexOf("beta"))}@{cue!} ${source.slice(source.indexOf("beta"))}`,
     ),
     adjustment: { id: "cue", anchorId: "program:end" },
   });
   assert.equal(parseScript("program-boundaries.svml", withMoment).moments[0]!.anchorId, "program:end");
-  assert.match(withMoment, /@cue!$/u);
+  assert.match(withMoment, /@\{cue!\}$/u);
 });
 
 test("Moment source edits relocate one marker to an exact semantic Anchor", () => {
-  const source = "<one><HOST>alpha @cue! beta</one><two><HOST>gamma</two>";
+  const source = "<one><HOST>alpha @{cue!} beta</one><two><HOST>gamma</two>";
   const moved = adjustScriptMoment({
     sourceName: "moment-adjust.svml",
     source,
@@ -161,16 +161,16 @@ test("A single pipe is literal and a double pipe is an authored Cue Break", () =
   const document = captionDocument(parsed, "story.caption", "story");
   assert.equal(document.cueBreaks.length, 1);
   assert.equal(serializeCaption(parsed), "one | two three || four");
-  assert.deepEqual(document.words.map((word) => word.text), ["one|", "two", "three||", "four"]);
+  assert.deepEqual(document.words.map((word) => word.text), ["one |", "two", "three ||", "four"]);
 });
 
 test("Dual display text cannot contain semantic markers", () => {
   assert.throws(
-    () => parseScript("dual-marker.svml", "<line><@bad | spoken></line>"),
+    () => parseScript("dual-marker.svml", "<line><@{bad} | spoken></line>"),
     (error: unknown) => error instanceof ScriptSyntaxError && error.code === "SCRIPT_DUAL_DISPLAY_MARKER",
   );
 
-  const parsed = parseScript("dual-spoken-selection.svml", "<line><shown | @start spoken words @/start></line>");
+  const parsed = parseScript("dual-spoken-selection.svml", "<line><shown | @{start} spoken words @{/start}></line>");
   assert.equal(parsed.selections.length, 1);
 });
 

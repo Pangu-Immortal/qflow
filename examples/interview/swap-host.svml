@@ -31,7 +31,7 @@
       <CHAD>Hey yo! || Is this Lamborghini || yours?
       <WOJAK>Um, || yeah.
       <CHAD>Give me three rules || to make your || first million.
-      <WOJAK>OK || the || first one || is || @manifest! Manifest.
+      <WOJAK>OK || the || first one || is || @{manifest!} Manifest.
       <CHAD>You manifested || a Lamborghini?
       <WOJAK>I || whispered || it || to || myself || in || the || shower.
     </manifest-rule>
@@ -40,14 +40,14 @@
       <CHAD>Did it really || work?
       <WOJAK>No. || But || rule two || did.
       <CHAD>Say it.
-      <WOJAK>@real-estate! Real estate. || Buy || the || building, || and || charge || everyone || rent.
+      <WOJAK>@{real-estate!} Real estate. || Buy || the || building, || and || charge || everyone || rent.
       <CHAD>But how did you || buy the building?
       <WOJAK>That's || rule three.
     </real-estate-rule>
 
     <bitcoin-rule>
       <CHAD>Wait what?
-      <WOJAK>@bitcoin! Bitcoin. || I || pressed || the || wrong || button || in <2012 | twenty twelve> || and || made || six figures.
+      <WOJAK>@{bitcoin!} Bitcoin. || I || pressed || the || wrong || button || in <2012 | twenty twelve> || and || made || six figures.
       <CHAD>So you || accidentally || bought Bitcoin?!
       <WOJAK>That's || manifesting, || bro.
     </bitcoin-rule>

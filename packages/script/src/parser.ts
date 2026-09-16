@@ -7,6 +7,7 @@ import {
   lexicalUnits,
   lexicalEditRanges,
   splitLeadingClosingPunctuation,
+  splitDisplayPrefix,
 } from "./lexical.js";
 import type {
   CaptionWordAttribute,
@@ -65,33 +66,15 @@ function normalizeWord(value: string): string {
 }
 
 function parseMarker(source: string, offset: number): Marker | undefined {
-  const markerName = String.raw`[a-z][a-z0-9_-]{0,63}`;
-  const rest = source.slice(offset);
-  const closeRight = new RegExp(String.raw`^@\/(${markerName})~`, "u").exec(rest);
-  if (closeRight) {
-    return { id: closeRight[1]!, kind: "close", affinity: "right", length: closeRight[0].length };
+  const match = /^@\{(~)?(\/)?([a-z][a-z0-9_-]{0,63})([!~])?\}/u.exec(source.slice(offset));
+  if (!match) return undefined;
+  const [, left, close, id, suffix] = match;
+  if (close) {
+    if (left || suffix === "!") return undefined;
+    return { id: id!, kind: "close", affinity: suffix === "~" ? "right" : "left", length: match[0].length };
   }
-  const closeLeft = new RegExp(String.raw`^@\/(${markerName})(?![A-Za-z0-9_-])`, "u").exec(rest);
-  if (closeLeft) {
-    return { id: closeLeft[1]!, kind: "close", affinity: "left", length: closeLeft[0].length };
-  }
-  const moment = new RegExp(String.raw`^(~)?@(${markerName})!`, "u").exec(rest);
-  if (moment) {
-    return {
-      id: moment[2]!,
-      kind: "moment",
-      affinity: moment[1] === "~" ? "left" : "right",
-      length: moment[0].length,
-    };
-  }
-  const open = new RegExp(String.raw`^(~)?@(${markerName})(?![A-Za-z0-9_-])`, "u").exec(rest);
-  if (!open) return undefined;
-  return {
-    id: open[2]!,
-    kind: "open",
-    affinity: open[1] === "~" ? "left" : "right",
-    length: open[0].length,
-  };
+  if (suffix === "~") return undefined;
+  return { id: id!, kind: suffix === "!" ? "moment" : "open", affinity: left ? "left" : "right", length: match[0].length };
 }
 
 function segmentAnchorId(segmentId: string, edge: "start" | "end"): string {
@@ -142,8 +125,9 @@ export function parseScript(
 
   const segments: ParsedSegment[] = [];
   const tokens: ParsedToken[] = [];
-  const proseRanges: Array<{ start: number; end: number }> = [];
   const captionRegions: ParsedCaptionRegion[] = [];
+  let precedingCaptionRegion: number | undefined;
+  let pendingCaptionSpace = false;
   const selections = new Map<string, RawSelection>();
   const moments = new Map<string, RawMoment>();
   const captionBreaks: Array<{ readonly tokenIndex: number; readonly range: { readonly start: number; readonly end: number } }> = [];
@@ -261,6 +245,7 @@ export function parseScript(
         positions.push(absoluteStart + index);
         continue;
       }
+      if (dual && raw[index] === "<") fail("SCRIPT_DUAL_NESTED", "Dual Text cannot nest; escape a literal < as \\<.", absoluteStart + index);
       buffer += raw[index];
       index += 1;
       positions.push(absoluteStart + index);
@@ -365,6 +350,7 @@ export function parseScript(
         captionRegions.push({
           id: `caption-region:${captionRegions.length + 1}`,
           display: "",
+          separatorBefore: "",
           segmentId,
           startToken: tokenStart,
           endTokenExclusive: tokenEndExclusive,
@@ -375,21 +361,24 @@ export function parseScript(
       }
       return;
     }
-    const split = splitLeadingClosingPunctuation(displayValue);
-    const previous = captionRegions.at(-1);
-    const canAttachPrevious = previous !== undefined && previous.segmentId === segmentId;
-    if (split.previous && canAttachPrevious) {
-      captionRegions[captionRegions.length - 1] = {
+    // Dual Text edge whitespace is syntax padding; ordinary prose whitespace is content.
+    const raw = kind === "alias" ? cleanProjection(displayValue) : displayValue;
+    const value = ((pendingCaptionSpace ? " " : "") + raw).replace(/\s+/gu, " ");
+    const split = splitDisplayPrefix(value);
+    const previous = precedingCaptionRegion === undefined ? undefined : captionRegions[precedingCaptionRegion];
+    if (previous && split.previous.trim()) {
+      captionRegions[precedingCaptionRegion!] = {
         ...previous,
-        display: cleanProjection(`${previous.display}${split.previous}`),
-        range: { start: previous.range.start, end: range.end },
+        display: previous.display + split.previous.trimEnd(),
       };
     }
-    const display = canAttachPrevious ? split.current : `${split.previous}${split.current}`;
+    pendingCaptionSpace = /\s$/u.test(value);
+    const display = (previous ? split.current : split.previous + split.current).trim();
     if (!display || tokenEndExclusive <= tokenStart) return;
     captionRegions.push({
       id: `caption-region:${captionRegions.length + 1}`,
       display,
+      separatorBefore: previous && /\s$/u.test(split.previous) ? " " : "",
       segmentId,
       startToken: tokenStart,
       endTokenExclusive: tokenEndExclusive,
@@ -397,6 +386,7 @@ export function parseScript(
       marks,
       range,
     });
+    precedingCaptionRegion = captionRegions.length - 1;
   };
 
   const markLastCaptionSurface = (
@@ -484,7 +474,7 @@ export function parseScript(
       tokenEndExclusive: tokens.length,
       range: { start: sourceOffset + start, end: sourceOffset + end },
     });
-    if (captureCaptionRegion && cleanProjection(caption)) {
+    if (captureCaptionRegion) {
       addCaptionRegion(
         caption,
         current.id,
@@ -502,6 +492,10 @@ export function parseScript(
     caption: string | undefined,
     marks: ParsedCaptionRegion["marks"] = [],
   ): void => {
+    const leading = /^\s*/u.exec(raw)![0].length;
+    raw = raw.trim();
+    absoluteStart += leading;
+    if (caption !== undefined) caption = caption.trim();
     const startToken = tokens.length;
     // An omitted speech side shares the written display source. Keep its original offsets:
     // marker edits target these words, not a synthetic copy beyond the pipe.
@@ -526,6 +520,7 @@ export function parseScript(
       if (raw.startsWith("||", index)) {
         fail("SCRIPT_CAPTION_BREAK_DUAL", "Caption Cue break cannot occur inside Dual Text; split the Dual Text into separate units.", absoluteStart + index);
       }
+      if (!shared && raw[index] === "{") fail("SCRIPT_DUAL_SPEECH_ATTRIBUTE", "Display attributes belong to the display side; escape literal braces in speech.", absoluteStart + index);
       if (shared && raw[index] === "{") {
         const before = raw.slice(partStart, index);
         if (!before || /\s$/u.test(before)) {
@@ -551,7 +546,7 @@ export function parseScript(
       }
       const marker = parseMarker(raw, index);
       if (!marker) {
-        if (raw[index] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a valid marker.", absoluteStart + index);
+        if (raw[index] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a delimited @{...} marker; migrate bare markers from 0.1 explicitly.", absoluteStart + index);
         index += 1;
         continue;
       }
@@ -619,6 +614,8 @@ export function parseScript(
           fail("SCRIPT_SEGMENT_DUPLICATE", `Duplicate Segment id "${id}".`, offset);
         }
         const contentStart = offset + open[0].length;
+        precedingCaptionRegion = undefined;
+        pendingCaptionSpace = false;
         current = {
           id,
           index: segments.length,
@@ -660,7 +657,7 @@ export function parseScript(
       offset += marker.length;
       continue;
     }
-    if (source[offset] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a valid marker.", offset);
+    if (source[offset] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a delimited @{...} marker; migrate bare markers from 0.1 explicitly.", offset);
 
     if (source[offset] === "<" && current) {
       const end = findUnescaped(source, ">", offset + 1);
@@ -679,7 +676,7 @@ export function parseScript(
         assertDualDisplayLiteral(inside.slice(0, pipe), offset + 1);
         const markedDisplay = parseMarkedDisplay(inside.slice(0, pipe), offset + 1);
         const display = markedDisplay.display;
-        if (!speech.replace(/~?@\/?[A-Za-z_][A-Za-z0-9_.-]*!?~?/gu, "").trim()) {
+        if (!speech.replace(/@\{[^{}]*\}/gu, "").trim()) {
           fail("SCRIPT_DUAL_EMPTY", "Dual Text speech side must not be empty.", offset);
         }
         consumeSpeechSide(speech, offset + pipe + 2, display, markedDisplay.marks);
@@ -689,6 +686,8 @@ export function parseScript(
       }
       if (!ROLE_LABEL.test(inside)) fail("SCRIPT_ANGLE", `Unknown Script construct <${inside}>.`, offset);
       finishLexicalRun();
+      precedingCaptionRegion = undefined;
+      pendingCaptionSpace = false;
       current.atoms.push({
         kind: "role",
         label: inside,
@@ -715,7 +714,6 @@ export function parseScript(
       offset += 1;
     }
     const raw = source.slice(textStart, offset);
-    if (raw) proseRanges.push({ start: sourceOffset + textStart, end: sourceOffset + offset });
     for (const piece of literalPieces(raw, textStart)) addText(piece.value, piece.value, piece.start, piece.end, true, piece.positions);
     if (source[offset] === "{") {
       const block = parseAttributeBlock(source.slice(offset), offset);
@@ -881,7 +879,6 @@ export function parseScript(
   return {
 
     sourceRange: { start: sourceOffset, end: sourceOffset + source.length },
-    proseRanges,
     segments,
     tokens,
     turns,

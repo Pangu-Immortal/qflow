@@ -75,7 +75,7 @@ time and implements its own schedule or state, while the shared temporal protoco
 time came from. An outer lifetime and child activations are separate inputs when a component persists
 between events.
 
-Script's `@`, `~@`, close markers and Moment syntax belong to `@qflow/script`; media playback belongs
+Script's delimited `@{...}` Selection and Moment syntax belong to `@qflow/script`; media playback belongs
 to `@qflow/media-track`; a graphic component's reveal or preset semantics belong to that component.
 
 ## Independently bound endpoints

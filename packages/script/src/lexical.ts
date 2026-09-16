@@ -71,30 +71,9 @@ export function lexicalEditRanges(value: string): readonly { start: number; end:
   });
 }
 
-/** Canonical prose spacing; punctuation remains display/speech information, never a timing token. */
-function attachProseSpacing(value: string): string {
-  return value
-    .replace(/ +([,.;:!?%…，。！？；：、％‰）】》」』〕〉}\]])/gu, "$1")
-    .replace(/([([{（【《「『〔〈“‘]) +/gu, "$1")
-    // Do not erase a cross-script space: `here 你好` must remain two semantic regions.
-    // Only collapse explicit spaces inside one CJK run; the lexical tokenizer already keeps
-    // adjacent Latin and CJK runs separate when no space was authored.
-    .replace(/([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]) +(?=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])/gu, "$1");
-}
-
+/** Normalize source formatting without inventing or removing language-specific separators. */
 export function cleanProjection(value: string): string {
-  return attachProseSpacing(value.replace(/\s+/gu, " ")).trim();
-}
-
-/** Source formatting keeps line breaks and lexical boundaries, including spaced decimal-like prose. */
-export function cleanHorizontalProse(value: string): string {
-  const collapsed = value.replace(/[ \t]+/gu, " ");
-  const attached = attachProseSpacing(collapsed);
-  const words = (text: string) => lexicalUnits(text).map(unit => unit.text);
-  // A separator in `3 .14` cannot be erased into the different token `3.14`.
-  const before = words(collapsed);
-  const after = words(attached);
-  return before.length === after.length && before.every((word, index) => word === after[index]) ? attached : collapsed;
+  return value.replace(/\s+/gu, " ").trim();
 }
 
 /** Structural markers split atoms but must not invent prose whitespace when those atoms rejoin. */
@@ -102,45 +81,53 @@ export function joinProjection(parts: readonly string[]): string {
   return cleanProjection(parts.join(""));
 }
 
-/**
- * Display units follow the same lexical boundaries as semantic speech tokens. Punctuation is kept
- * for rendering: opening punctuation belongs to the next unit; all other inter-token punctuation
- * belongs to the previous unit. Whitespace is layout, not a display word of its own.
- */
-export function displayWordSurfaces(value: string): readonly string[] {
+export type DisplaySurface = {
+  readonly text: string;
+  readonly separatorBefore: "" | " ";
+};
+
+/** Keep the authored display spelling while assigning punctuation to lexical surfaces. */
+export function displaySurfaces(value: string): readonly DisplaySurface[] {
   const prose = cleanProjection(value);
   const units = lexicalUnits(prose);
-  if (units.length === 0) return [];
-
-  const surfaces: string[] = [];
+  const surfaces: Array<{ text: string; separatorBefore: "" | " " }> = [];
   let cursor = 0;
-  let prefix = "";
   for (const unit of units) {
     const gap = prose.slice(cursor, unit.index);
-    const punctuation = [...gap]
-      .map((character, position) => ({ character, position }))
-      .filter(({ character }) => !/\s/u.test(character));
-    if (surfaces.length === 0) {
-      prefix += punctuation.map(({ character }) => character).join("");
-    } else {
-      const suffix = punctuation
-        .filter(({ character, position }) => !isOpeningPunctuation(character, gap, position, true))
-        .map(({ character }) => character)
-        .join("");
-      const opening = punctuation
-        .filter(({ character, position }) => isOpeningPunctuation(character, gap, position, true))
-        .map(({ character }) => character)
-        .join("");
-      if (suffix) surfaces[surfaces.length - 1] += suffix;
-      prefix += opening;
+    let openingAt = gap.length;
+    for (const match of gap.matchAll(/./gu)) {
+      if (!/\s/u.test(match[0]) && isOpeningPunctuation(match[0], gap, match.index, surfaces.length > 0)) {
+        openingAt = match.index;
+        break;
+      }
     }
-    surfaces.push(`${prefix}${unit.text}`);
-    prefix = "";
+    const closing = gap.slice(0, openingAt);
+    const previous = surfaces.at(-1);
+    if (previous) previous.text += closing.trimEnd();
+    const prefix = (previous ? "" : closing.trimStart()) + gap.slice(openingAt);
+    surfaces.push({ text: prefix + unit.text, separatorBefore: previous && /\s$/u.test(closing) ? " " : "" });
     cursor = unit.index + unit.text.length;
   }
-  const trailing = prose.slice(cursor).replace(/\s+/gu, "");
-  if (trailing) surfaces[surfaces.length - 1] += trailing;
+  const last = surfaces.at(-1);
+  if (last) last.text += prose.slice(cursor);
   return surfaces;
+}
+
+export function displayWordSurfaces(value: string): readonly string[] {
+  return displaySurfaces(value).map(surface => surface.text);
+}
+
+/** Split punctuation before the first lexical unit, retaining every authored separator. */
+export function splitDisplayPrefix(value: string): { previous: string; current: string } {
+  const first = lexicalUnits(value)[0];
+  if (!first) return { previous: value, current: "" };
+  const leading = value.slice(0, first.index);
+  for (const match of leading.matchAll(/./gu)) {
+    if (!/\s/u.test(match[0]) && isOpeningPunctuation(match[0], leading, match.index, false)) {
+      return { previous: leading.slice(0, match.index), current: value.slice(match.index) };
+    }
+  }
+  return { previous: leading, current: value.slice(first.index) };
 }
 
 /** Closing punctuation before a lexical unit belongs to the previous display unit when one exists. */

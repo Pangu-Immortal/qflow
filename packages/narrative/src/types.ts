@@ -50,6 +50,8 @@ export type NarrativeMomentRef = NarrativeMoment & {
 
 /** One author-visible word surface. Punctuation owned by the surface is preserved. */
 export type CaptionDisplayWord = {
+  /** Authored display separator from the preceding word; ignored at a displayed line start. */
+  readonly separatorBefore: "" | " ";
   readonly id: string;
   readonly unitId: string;
   readonly segmentId: string;

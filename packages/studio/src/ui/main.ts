@@ -1034,8 +1034,8 @@ code.element.addEventListener("click", (event) => {
   const clip = clipAtOffset(state.snapshot, offset);
 
   // A click inside marked prose lands inside the innermost marker written there,
-  // not at the start of whatever encloses it. `@amount` places nothing, so
-  // resolving through clips alone would throw the playhead out to `@fee`.
+  // not at the start of whatever encloses it. `@{amount}` places nothing, so
+  // resolving through clips alone would throw the playhead out to `@{fee}`.
   const span = spanAtOffset(state.snapshot, offset);
   // Prose is anywhere a marker was written; whether a clip also covers that
   // offset only decides which clip to select, not whether the click counts.

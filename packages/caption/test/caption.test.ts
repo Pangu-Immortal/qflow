@@ -12,7 +12,7 @@ import { captionDocument, narrativeValue, parseScript } from "@qflow/script";
 import type { Narrative } from "@qflow/narrative";
 
 test("Caption uses complete semantic selections and authored cue breaks", () => {
-  const parsed = parseScript("caption.svml", "<line>one @focus two three @/focus || four</line>");
+  const parsed = parseScript("caption.svml", "<line>one @{focus} two three @{/focus} || four</line>");
   const narrative = narrativeValue(parsed, "story") as unknown as Narrative;
   const document = captionDocument(parsed, "story.caption", "story");
   const selection = narrative.selections[0]!;
@@ -22,10 +22,10 @@ test("Caption uses complete semantic selections and authored cue breaks", () => 
 });
 
 test("Caption selects complete Segments and the program through structural anchors", () => {
-  const parsed = parseScript("caption-ranges.svml", `~@whole
-@opening <intro><HOST>One idea.</intro> @/opening
+  const parsed = parseScript("caption-ranges.svml", `@{~whole}
+@{opening} <intro><HOST>One idea.</intro> @{/opening}
 <answer><GUEST>Another view.</answer>
-@/whole~`);
+@{/whole~}`);
   const narrative = narrativeValue(parsed, "story") as unknown as Narrative;
   const document = captionDocument(parsed, "story.caption", "story");
   const whole = narrative.selections.find((selection) => selection.id === "whole")!;
