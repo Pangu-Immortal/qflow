@@ -210,8 +210,7 @@ commands and the repository layout.
 <table>
   <tr>
     <td width="220" align="center">
-      <a href="https://openagents.org/blog/posts/2026-09-08-pilot-user-program-zh-qflow"><img alt="OpenAgents" src="./docs/public/openagents.png" width="180"></a><br>
-      <a href="https://openagents.org/blog/posts/2026-09-08-pilot-user-program-zh-qflow">OpenAgents</a>
+      <a href="https://openagents.org/blog/posts/2026-09-08-pilot-user-program-zh-qflow"><img alt="OpenAgents" src="./docs/public/openagents.png" width="180"></a>
     </td>
     <td>OpenAgents Workspace is a product that helps you manage AI agents, allowing you to invoke agents running on any device (whether on a mobile phone or computer) anytime, anywhere. Agents can collaborate within the platform to help you complete tasks and boost efficiency. It currently supports integration with over 20 types of agents, including Claude, Codex, OpenClaw, and Hermes (Details on supported models: <a href="https://api-gateway.openagents.org/static/index.html">https://api-gateway.openagents.org/static/index.html</a>)</td>
   </tr>
@@ -222,8 +221,7 @@ commands and the repository layout.
           <source media="(prefers-color-scheme: dark)" srcset="./docs/public/monid-logo-white.svg">
           <img alt="Monid" src="./docs/public/monid-logo-blue.svg" width="150">
         </picture>
-      </a><br>
-      <a href="https://monid.ai?fpr=alvin-45480b">Monid</a>
+      </a>
     </td>
     <td>Monid is the OpenRouter for agent tools: one key, one wallet, hundreds of tools, billed per call. Qflow can route Seedance video, images, speech and word-level transcription to Monid.</td>
   </tr>
