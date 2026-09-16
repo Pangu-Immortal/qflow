@@ -552,7 +552,7 @@ test("Run compilation retains embedded Author attachments for later Runtime stag
   assert.deepEqual(await readAttachment(compiled.attachments[0]), new Uint8Array([8, 6, 7, 5, 3, 0, 9]));
 });
 
-test("filesystem Workspace captures source text and asset identity once", async () => {
+test("filesystem Workspace captures source text and asset identity once", async (t) => {
   const parent = await mkdtemp(join(tmpdir(), "qflow-source-host-"));
   const root = join(parent, "project");
   await mkdir(root);
@@ -564,7 +564,6 @@ test("filesystem Workspace captures source text and asset identity once", async 
   await writeFile(includedPath, "included-first", "utf8");
   await writeFile(outsidePath, "outside", "utf8");
   await writeFile(assetPath, new Uint8Array([1, 2, 3]));
-  await symlink(outsidePath, join(root, "escaped.svs"));
   const workspace = await new NodeFilesystemWorkspace({ root }).open(entryPath);
   const entry = workspace.entry;
   await writeFile(entryPath, "second", "utf8");
@@ -586,18 +585,42 @@ test("filesystem Workspace captures source text and asset identity once", async 
   assert.equal((await workspace.attachments())[0]?.artifact.resource, firstAsset.artifact.resource);
   await assert.rejects(
     async () => await workspace.resolveSource(entry, {
-      from: "./escaped.svs",
+      from: "../outside.svs",
       alias: "escaped",
     }),
     (error: unknown) => error instanceof WorkspaceError && error.code === "SOURCE_OUTSIDE_ROOT",
   );
   await assert.rejects(
     async () => await workspace.resolveAsset(entry, {
-      from: "./escaped.svs",
+      from: "../outside.svs",
       mediaType: "application/octet-stream",
     }),
     (error: unknown) => error instanceof WorkspaceError && error.code === "SOURCE_ASSET_OUTSIDE_ROOT",
   );
+  await t.test("symlink escapes are rejected when the OS permits creating the link", async (t) => {
+    try {
+      await symlink(outsidePath, join(root, "escaped.svs"));
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (process.platform !== "win32" || (code !== "EPERM" && code !== "EACCES")) throw error;
+      t.skip("Windows does not grant file symlink creation permission");
+      return;
+    }
+    await assert.rejects(
+      async () => await workspace.resolveSource(entry, {
+        from: "./escaped.svs",
+        alias: "escaped",
+      }),
+      (error: unknown) => error instanceof WorkspaceError && error.code === "SOURCE_OUTSIDE_ROOT",
+    );
+    await assert.rejects(
+      async () => await workspace.resolveAsset(entry, {
+        from: "./escaped.svs",
+        mediaType: "application/octet-stream",
+      }),
+      (error: unknown) => error instanceof WorkspaceError && error.code === "SOURCE_ASSET_OUTSIDE_ROOT",
+    );
+  });
 });
 
 test("an asset root widens bytes without widening Source imports", async () => {

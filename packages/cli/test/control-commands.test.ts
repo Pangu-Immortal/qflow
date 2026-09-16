@@ -7,6 +7,7 @@ import test from "node:test";
 import type { CliDistribution } from "../src/distribution.js";
 import { runCli } from "../src/main.js";
 import type { CliCredentialControl, CliRuntimeControl } from "../src/runtime-port.js";
+import { createLocalCredentialControl } from "@qflow/runtime-local";
 import { commandHint } from "../src/command-hint.js";
 
 test("activity opens Runtime control without constructing execution Providers", async () => {
@@ -590,7 +591,7 @@ test("auth login explains an environment-owned credential before asking for a se
   let prompted = false;
   let closed = false;
   const credentials = {
-    async credentials() {
+    async describeCredentials() {
       return [{
         endpoint: "images.project",
         slot: "apiKey",
@@ -724,4 +725,38 @@ test("a stopped Worker ends observation with scoped evidence commands, not a Res
   });
   assert.equal(closed, true);
   assert.equal(resultOpened, false);
+});
+
+
+test("auth can replace and delete a credential whose Store cannot read its old value", async () => {
+  let value = "damaged";
+  let reads = 0;
+  const endpoint: Parameters<typeof createLocalCredentialControl>[0]["endpoints"][number] = {
+    instance: { id: "service.project", pool: "service.project" }, offers: [], install() {},
+    credentials: [{ endpoint: "service.project", slot: "apiKey", label: "Service key", kind: "secret",
+      ref: { store: "test", key: "service" } }],
+  };
+  const credentialStore = {
+    owns: () => true,
+    async resolve() { reads++; throw new Error("credential cannot be read"); },
+    async put(_ref: unknown, input: { secret: string }) { value = input.secret; },
+    async delete() { value = ""; return true; },
+  };
+  const distribution = {
+    openRuntimeHost: async () => ({
+      openCredentials: async () => createLocalCredentialControl({ credentialStore, endpoints: [endpoint] }),
+    }),
+  } as unknown as CliDistribution;
+  await assert.rejects(runCli(["auth", "status", "service.project", "--runtime", "/tmp/runtime.json"],
+    { write() {} }, distribution), /credential cannot be read/u);
+  reads = 0;
+  for (const action of ["login", "logout"]) {
+    let output = "";
+    await runCli(["auth", action, "service.project", "--runtime", "/tmp/runtime.json", "--json"], {
+      write(text) { output += text; }, readSecret: async () => "replacement",
+    }, distribution);
+    assert.equal(JSON.parse(output).configured, action === "login");
+    assert.equal(value, action === "login" ? "replacement" : "");
+  }
+  assert.equal(reads, 0, "management must not read the previous or newly written secret");
 });

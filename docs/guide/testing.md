@@ -60,7 +60,7 @@ test("compiles the expected exports", async () => {
 
 ### Provider tests
 
-Exercise request mapping, media transport and task progression against a controlled service fixture.
+Exercise request mapping, media transport and task progression, including failures, against a controlled service fixture.
 The [project Provider example](https://github.com/qflow-ai/qflow/tree/main/examples/provider-package)
 includes a lifecycle test that collects a returned image without spending on generation. Live calls
 use the selected service and explicit spending scope; an available key alone does not authorize them.
@@ -73,7 +73,7 @@ source-text regex tests as a substitute for dependency analysis or architectural
 
 Do not commit customer or brand fixtures, credential traces, paid output artifacts, absolute
 workstation paths or one-off delivery harnesses. Generic live tests may remain only when they are
-explicitly opt-in, use no committed secret and fail before spending money unless their gate is set.
+explicitly opt-in, use no committed secret and incur no cost when not enabled.
 
 ## Environment-gated tests
 

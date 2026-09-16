@@ -9,7 +9,7 @@ import {
 } from "@qflow/media";
 import type { FontArtifactRef, FontStackRef } from "@qflow/media";
 import type { StructuredElement, StructuredSurfaceHandler } from "@qflow/markup";
-import { resolveNodePackageResource } from "@qflow/package-loader-node";
+import { NodePackageNotFoundError, resolveNodePackageResource } from "@qflow/package-loader-node";
 
 import {
   openFontFamilies,
@@ -21,11 +21,17 @@ import type {
   OpenFontStyle,
 } from "./catalog.js";
 
+const fontDependencies = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
+  readonly optionalDependencies: Readonly<Record<string, string>>;
+};
+
 function resolveFontPackageFile(packageName: string, path: string): string {
   try {
     return resolveNodePackageResource(packageName, path, { from: import.meta.url });
   } catch (error) {
-    const version = packageName === "@infolektuell/noto-color-emoji" ? "0.2.0" : "5.3.0";
+    if (!(error instanceof NodePackageNotFoundError)) throw error;
+    const version = fontDependencies.optionalDependencies[packageName];
+    if (version === undefined) throw error;
     throw new Error(
       `${packageName} is needed by this authored font. Install it once with: qflow packages install ${packageName}@${version}`,
       { cause: error },

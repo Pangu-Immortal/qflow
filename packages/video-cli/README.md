@@ -34,7 +34,11 @@ an editable starter; its Endpoint entries describe available routes, not choices
 Keep an existing chosen service, or configure the chosen local or hosted Provider and its capability
 bindings. QflowHub is the recommended integrated hosted route in the official Distribution; other
 services use project Provider packages. If the user chooses QflowHub,
-`qflow auth login qflowhub.default` connects that account.
+`qflow auth login qflowhub.default` connects that account after choosing its CredentialStore.
+The starter selects the OS store for macOS Keychain / Windows Credential Locker. On Linux, or when
+explicitly choosing file storage, edit the Profile's `credentials` and Endpoint reference as shown
+in [file CredentialStore](../credential-store-file/README.md#select-it-before-login) before `auth` or
+`runtime up`. This selection is configuration; execution never switches stores automatically.
 `qflow doctor --endpoint <name>` checks a selected Endpoint;
 `qflow runtime up --endpoint <name>` prepares that Endpoint and starts the Worker. Repeat the flag
 for several chosen Endpoints; omitting it prepares the whole Profile. `qflow programs up --endpoint
