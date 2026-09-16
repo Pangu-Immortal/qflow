@@ -47,7 +47,12 @@ function shim(): string {
       start: parseFloat(ownStart || (present && present.getAttribute('data-start')) || '0') || 0,
       duration: parseFloat(ownDuration || (present && present.getAttribute('data-duration')) || '0') || 0,
       mediaStart: parseFloat(element.getAttribute('data-media-start') || '0') || 0,
-      rate: parseFloat(element.getAttribute('data-playback-rate') || '1') || 1
+      rate: parseFloat(element.getAttribute('data-playback-rate') || '1') || 1,
+      startFrame: Number(element.getAttribute('data-qflow-start-frame')),
+      endFrame: Number(element.getAttribute('data-qflow-end-frame')),
+      sourceFrame: element.getAttribute('data-qflow-source-frame').split('/').map(BigInt),
+      sourceRate: element.getAttribute('data-qflow-source-rate').split('/').map(BigInt),
+      sourceFps: element.getAttribute('data-qflow-source-fps').split('/').map(Number)
     });
   }
   var audioContext;
@@ -149,7 +154,8 @@ function shim(): string {
     }
     for (var record of media) {
       var local = currentSeconds - record.start;
-      var inside = local >= 0 && local < record.duration;
+      var programFrame = Math.round(currentSeconds * fps);
+      var inside = programFrame >= record.startFrame && programFrame < record.endFrame;
       var element = record.element;
       element.style.visibility = inside ? 'visible' : 'hidden';
       // Normalized picture Artifacts are deliberately silent. Programme sound
@@ -157,10 +163,18 @@ function shim(): string {
       element.muted = true;
       if (!inside) { element.pause(); continue; }
       var target = record.mediaStart + (local + frameSeconds / 2) * record.rate;
+      var discrete = scrubbing || programFrame === record.endFrame - 1;
+      if (discrete) {
+        // The renderer floors exact source-frame coordinates. The midpoint of a
+        // programme frame can cross that source boundary at fractional speeds.
+        var a = record.sourceFrame, r = record.sourceRate;
+        var sourceFrame = Number((a[0] * r[1] + BigInt(programFrame - record.startFrame) * r[0] * a[1]) / (a[1] * r[1]));
+        target = (sourceFrame + 0.5) * record.sourceFps[1] / record.sourceFps[0];
+      }
       if (Number.isFinite(element.duration) && element.duration > 0) {
         target = Math.min(target, Math.max(0, element.duration - 0.001));
       }
-      if (scrubbing || local >= record.duration - frameSeconds - 0.000001) {
+      if (discrete) {
         element.pause();
         waits.push(seekDecoded(element, target));
       } else {
