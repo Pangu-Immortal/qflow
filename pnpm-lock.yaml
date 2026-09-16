@@ -3492,7 +3492,14 @@ importers:
         specifier: workspace:*
         version: link:../workspace
 
-  packages/yt-dlp: {}
+  packages/yt-dlp:
+    dependencies:
+      '@qflow/package-loader-node':
+        specifier: workspace:*
+        version: link:../package-loader-node
+      '@qflow/yt-dlp-service-runtime':
+        specifier: workspace:*
+        version: link:../../services/yt-dlp
 
   services/image-opencv: {}
 
