@@ -251,12 +251,7 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
   </tr>
   <tr>
     <td width="220" align="center">
-      <a href="https://api.pollo.ai/?utm_source=qflow">
-        <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="./docs/public/pollo-dark.png">
-          <img alt="Pollo API" src="./docs/public/pollo-light.png" width="150">
-        </picture>
-      </a>
+      <a href="https://api.pollo.ai/?utm_source=qflow"><img alt="Pollo API" src="./docs/public/pollo.jpg" width="120"></a>
     </td>
     <td><a href="https://api.pollo.ai/?utm_source=qflow">Pollo API</a> 通过单个 API 为开发者提供 300 多个 AI 图片与视频模型，价格具备竞争力。一个 API key 即可接入多家模型服务商，请求规模从 10 次到 10000 次以上均可承载。</td>
   </tr>
