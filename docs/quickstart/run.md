@@ -252,7 +252,7 @@ credential references are present. Before `doctor` or a paid/external `build`, c
 credentials referenced by the selected Runtime Profile. First inspect the existing selection:
 
 ```bash
-qflow auth status
+qflow auth status qflowhub.default
 ```
 
 If a needed service is not ready, choose whether to configure that service or another supported

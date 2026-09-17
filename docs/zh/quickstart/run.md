@@ -213,7 +213,7 @@ CLI 必须先确定项目：显式 `--workspace` 直接给出边界；否则使�
 外部 `build` 之前，只配置当前 Runtime Profile 实际引用的凭据。先检查已有选择：
 
 ```bash
-qflow auth status
+qflow auth status qflowhub.default
 ```
 
 需要的服务未就绪时，先决定配置它，还是选择其他支持的本地或托管方式。例如 WhisperX 可以在本机或通过 QflowHub 运行。起始 Endpoint 是配置起点，并不代表已经选择某个账户。

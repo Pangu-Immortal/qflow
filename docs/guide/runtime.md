@@ -74,7 +74,7 @@ request does not silently select another account. Read the chosen Provider's REA
 ## Prepare only the services needed now
 
 ```bash
-qflow auth status
+qflow auth status media.local
 qflow doctor --endpoint media.local
 qflow runtime up --endpoint media.local
 qflow runtime status

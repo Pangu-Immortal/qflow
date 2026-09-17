@@ -70,7 +70,7 @@ qflow runtime init
 ## 按当前需要准备服务
 
 ```bash
-qflow auth status
+qflow auth status media.local
 qflow doctor --endpoint media.local
 qflow runtime up --endpoint media.local
 qflow runtime status
