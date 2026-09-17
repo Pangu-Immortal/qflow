@@ -295,7 +295,7 @@ Use explicit seconds for genuinely clock-based or speechless design.
 Every semantic marker is enclosed in `@{...}`, with `/`, `!` and `~` inside. The marker contributes
 no text or whitespace. `是的@{part}就是这样@{/part}` stays joined; `是的 @{part}就是这样@{/part}`
 keeps its authored space. Do not add spaces to make a marker parse. Markers cannot split a speech
-Token. Attributes stay attached to their display word: `word{emphasis}@{beat!}`. Write literal
+Token or its attached punctuation: write `@{beat!}“测试”`, not `“@{beat!}测试”`. Attributes stay attached to their display word: `word{emphasis}@{beat!}`. Write literal
 `@{part}` as `\@\{part\}`. Bare 0.1 markers require explicit migration before use with 0.2.
 
 Selections may overlap, cross, or span Segments; they are named semantic ranges rather than nested

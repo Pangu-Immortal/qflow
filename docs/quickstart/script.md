@@ -189,7 +189,7 @@ marker; the value is a pair of semantic anchors, not a frame span:
 
 Every marker begins with `@{` and ends with `}`; `/`, `!` and `~` are inside. Names match
 `[a-z][a-z0-9_-]{0,63}`; whitespace and nesting inside a marker are invalid. `@{beat!}` is a Moment;
-`@{part}!` opens a Selection followed by a prose exclamation mark. A marker cannot split a speech Token.
+`@{part}!` opens a Selection followed by a prose exclamation mark. A marker cannot split a speech Token or its attached punctuation: write `@{beat!}“测试”`, not `“@{beat!}测试”`.
 
 
 | Marker | Meaning |

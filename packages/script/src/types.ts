@@ -68,7 +68,7 @@ export type ParsedCaptionRegion = {
   readonly startToken: number;
   readonly endTokenExclusive: number;
   readonly kind: "identity" | "alias" | "hidden";
-  /** Flat word attributes authored on the display side; indices address displayWordSurfaces(display). */
+  /** Flat word attributes authored on the display side; indices address displaySurfaces(display). */
   readonly marks: readonly {
     readonly displayIndex: number;
     readonly attributes: readonly CaptionWordAttribute[];

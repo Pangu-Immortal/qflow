@@ -117,6 +117,15 @@ following characters. Display punctuation attaches to neighboring words without 
 These units support precise timing and highlighting. A Caption Cue can hold a whole phrase of them;
 `||` chooses its handoff independently of character counts or visual line wrapping.
 
+Annotations do not create speech boundaries. Comments are transparent (`hel<!--note-->lo`
+remains `hello`); a postfix attribute or `||` inside a word is invalid. Script analyzes a complete
+prose run before binding these constructs. An explicit Dual correspondence and a speaker/Segment
+boundary remain authored structure. Shared Dual groups still expose their internal speech anchors.
+
+A Dual display side is literal authored text, including symbols and emoji: `<😀|smile>` and
+`<.|dot>` have explicit speech correspondence and require no invented speech token for the symbol.
+A literal-only display is one display surface within that correspondence.
+
 ## Display spelling and separators
 
 Script preserves the normalized display spelling independently of speech tokenization. Ordinary
@@ -139,7 +148,8 @@ Every marker starts with `@{` and ends with `}`. The complete marker is zero-wid
 display; surrounding prose whitespace remains prose. All control sigils belong inside the braces:
 `@{beat!}` is a Moment, whereas `@{part}!` opens a Selection followed by a literal exclamation mark.
 Names match `[a-z][a-z0-9_-]{0,63}`; whitespace and nesting inside a marker are invalid.
-A marker cannot split a speech Token. `hello{emphasis}` is a postfix display attribute; `@{part}`
+A marker cannot split a speech Token or separate it from attached punctuation: place
+`@{beat!}“测试”`, not `“@{beat!}测试”`. `hello{emphasis}` is a postfix display attribute; `@{part}`
 is consumed as one marker and cannot be mistaken for that attribute. Write a literal `@{part}` as
 `\@\{part\}`.
 
@@ -198,6 +208,9 @@ node packages/script/bin/migrate-0.2.mjs /path/to/film.svml --write
 Use `--body` for a file containing a raw Script body rather than outer SVML. The tool converts
 markers only inside Script bodies, leaves comments and escapes intact, and does not touch provider
 prompt references such as `@image1`. It neither installs anything nor runs during a build.
+
+The tool changes marker spelling, not marker placement. Move a marker that separates a word from
+its attached quote or punctuation to the complete word boundary before using that source.
 
 Review authored whitespace after migration: spaces previously discarded by Chinese/punctuation
 normalization now appear. The tool preserves source spaces rather than guessing the author's intent.

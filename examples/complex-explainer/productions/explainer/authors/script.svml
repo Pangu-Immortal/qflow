@@ -43,7 +43,7 @@
       <HOST> 时间上呢， || 它是把稿子当做时间线的： || @{sem-bind!} 动效不是绑定在秒上， || 而是绑定在说的话上。
     </semantic-time>
     <semantic-demo>
-      <HOST> @{sem-examples!} 比如榜单在“@{rank-reveal!} 第一名”这个词上翻开， || 产品图在说“@{product-reveal!} qflow”这时候飞进来。 || @{sem-rewrite-scene!} 就算是重写 @{sem-rewrite!} 稿子、@{sem-voice!} 换掉了配音， || @{sem-adapt!} 动效依然都会精准出现， || @{sem-syntax!} 一个时间点都不用改了！
+      <HOST> @{sem-examples!} 比如榜单在@{rank-reveal!}“ 第一名”这个词上翻开， || 产品图在说@{product-reveal!}“ qflow”这时候飞进来。 || @{sem-rewrite-scene!} 就算是重写 @{sem-rewrite!} 稿子、@{sem-voice!} 换掉了配音， || @{sem-adapt!} 动效依然都会精准出现， || @{sem-syntax!} 一个时间点都不用改了！
     </semantic-demo>
     <result>
       <HOST> 所以用 Qflow 来做视频， || @{result-assets!} 素材生成完就能直接拿到成片， || @{result-upload!} 连一秒钟的剪辑都不需要， || @{result-compare!} 而且跟原来那条爆款的效果 || 完全一模一样！
