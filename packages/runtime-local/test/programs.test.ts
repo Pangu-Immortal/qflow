@@ -219,6 +219,18 @@ test("down leaves a running program without a Qflow process record", async () =>
   assert.match(result.programs[0]!.detail ?? "", /without a Qflow process record/u);
 });
 
+test("down treats a ready probe-only Program as having nothing to stop", async () => {
+  const { path, options } = await project(() => ({
+    id: "toolchain",
+    probe: async () => ({ state: "ready" }),
+  }));
+  const result = await takeManagedProgramsDown(path, options);
+  assert.equal(result.programs[0]!.action, "nothing-to-stop");
+  assert.deepEqual(result.programs[0]!.state, { state: "ready" });
+  assert.equal(result.programs[0]!.detail, undefined);
+  assert.equal(result.programs[0]!.pid, undefined);
+});
+
 test("a program with nothing to start is installed once, and installation is the whole job", async () => {
   const directory = await mkdtemp(join(tmpdir(), "qflow-prepare-"));
   const marker = join(directory, "installed");

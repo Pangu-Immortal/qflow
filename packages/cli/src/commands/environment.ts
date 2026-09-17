@@ -195,11 +195,13 @@ export async function runEnvironmentCommand(input: {
         : await controller.programs.report(args.endpoints === undefined ? {} : { endpoints: args.endpoints });
     const ready = result.programs.every((item) => item.state.state === "ready");
     const needsAttention = (item: typeof result.programs[number]) => args.action === "down"
-      ? item.state.state !== "down" || (item.action !== "stopped" && item.action !== "nothing-to-stop")
+      ? item.action !== "nothing-to-stop"
+        && (item.state.state !== "down" || item.action !== "stopped")
       : item.state.state !== "ready";
     // Readiness describes the service, not whether a stop was performed. An owned process can
     // still be loading, and another command may have declined a concurrent stop during preparation.
     const lifecycleOk = args.action === "status" || !result.programs.some(needsAttention);
+    const stoppedAny = result.programs.some((item) => item.action === "stopped");
     const relevant = result.programs.filter((item) => args.presentation.verbose || args.action === "status" || needsAttention(item));
     const urgent = relevant.filter(needsAttention);
     const shownPrograms = [...urgent, ...relevant.filter((item) => !needsAttention(item)).slice(0, Math.max(0, args.limit - urgent.length))];
@@ -209,7 +211,8 @@ export async function runEnvironmentCommand(input: {
       : args.action === "up"
       ? lifecycleOk ? "External programs ready" : "External programs need attention"
       : args.action === "down"
-        ? lifecycleOk ? "External programs stopped" : "External program stop needs attention"
+        ? lifecycleOk ? stoppedAny ? "External programs stopped" : "No external programs to stop"
+          : "External program stop needs attention"
         : "External program status";
     write({
       format: "qflow.cli-programs@1",
@@ -298,7 +301,7 @@ export async function runEnvironmentCommand(input: {
       write({ format: "qflow.cli-runtime-down@1", worker: worker.state },
         stopped ? "Runtime Worker is down" : "Runtime Worker is still running",
         stopped ? "success" : "warning", [["Worker", worker.state]],
-        [`Managed programs were left running. To stop them: ${commandHint(["programs", "down"], { projectRoot, runtimeProfile: resolve(profile) })}`]);
+        [`Managed Programs are unchanged. To stop processes started by Qflow: ${commandHint(["programs", "down"], { projectRoot, runtimeProfile: resolve(profile) })}`]);
       if (!stopped) io.setExitCode?.(1);
       return;
     }
