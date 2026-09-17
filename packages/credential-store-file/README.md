@@ -4,7 +4,9 @@ A writable CredentialStore for a deployment that explicitly chooses local file s
 Linux without an OS credential locker. It stores unencrypted credential values in an owner-private
 directory outside the video project. On Windows the selected directory must have a private user ACL;
 POSIX file modes do not set Windows ACLs. Choose `@qflow/credential-store-os` when using macOS Keychain
-or Windows Credential Locker, or `@qflow/credential-store-env` for externally supplied, read-only values.
+or Windows Credential Locker, `@qflow/credential-store-platform` to keep each credential in the store its
+host provides — this one where the host has no locker — or `@qflow/credential-store-env` for externally
+supplied, read-only values.
 
 ## Select it before login
 
