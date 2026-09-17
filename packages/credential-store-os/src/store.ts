@@ -141,7 +141,11 @@ function platformBackend(service: string) {
     return { read: macosReader(service), write: macosWriter(service), remove: macosDeleter(service) };
   }
   if (process.platform === "win32") return windowsBackend();
-  throw new Error("OS CredentialStore supports macOS and Windows only");
+  // A Profile that selects this Store cannot be repaired by anything the user does here, and the
+  // other two Stores are the answer, so name them where the failure is read.
+  throw new Error("OS CredentialStore supports macOS and Windows only; select "
+    + "@qflow/credential-store-file (owner-private local file) or @qflow/credential-store-env "
+    + "(externally supplied value) in this Profile's credentials instead");
 }
 
 /** One logical writable store backed by the current user's OS credential locker. */
