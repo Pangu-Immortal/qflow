@@ -25,6 +25,7 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/provider-qflowhub": "workspace:*",
     "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-kit": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
     "@qflow/runtime-local": "workspace:*",
     "@qflow/speech": "workspace:*",

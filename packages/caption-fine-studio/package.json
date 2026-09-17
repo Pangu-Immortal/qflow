@@ -17,6 +17,6 @@
     "@qflow/studio-adapter": "workspace:*",
     "@qflow/fonts-open": "workspace:*",
     "@qflow/caption": "workspace:*",
-    "@qflow/timeline": "workspace:*"
+    "@qflow/temporal": "workspace:*"
   }
 }
