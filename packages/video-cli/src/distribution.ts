@@ -25,15 +25,18 @@ export const videoCliDistribution: CliDistribution = {
   initialRuntimeProfile: {
     format: "qflow.runtime-local@1",
     dataRoot: ".qflow/runtimes/local",
+    // The starter selects the portable Store, so the Profile it writes is openable and writable on
+    // Linux as well: macOS and Windows keep the platform locker, and a Linux host uses an
+    // owner-private file. `os` and `file` stay selectable by name for one explicit backend.
     credentials: {
-      os: { use: "@qflow/credential-store-os" },
+      platform: { use: "@qflow/credential-store-platform" },
     },
     endpoints: {
       "qflowhub.default": {
         use: "@qflow/provider-qflowhub",
         config: {
           baseUrl: "https://qflow.ai",
-          apiKey: { store: "os", key: "qflowhub.oauth" },
+          apiKey: { store: "platform", key: "qflowhub.oauth" },
         },
       },
       "media.local": {
