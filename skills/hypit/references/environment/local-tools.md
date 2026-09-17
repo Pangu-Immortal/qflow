@@ -225,6 +225,7 @@ Mirrors address particular download clients and hosts:
 | Python packages | pip uses `--index-url` / `PIP_INDEX_URL`; uv uses `--default-index` / `UV_DEFAULT_INDEX`. They are different clients. Qflow's managed service uses frozen uv dependencies; consult its Provider README before expecting an index change to redirect locked artifact URLs. |
 | Python runtime | uv's `UV_PYTHON_INSTALL_MIRROR` selects a compatible Python-distribution mirror. A PyPI mirror does not supply Python itself. An already compatible installed Python may avoid this download. |
 | Hugging Face weights | `HF_ENDPOINT` selects a compatible Hub endpoint; `HF_HOME` / `HF_HUB_CACHE` select reusable cache locations. A model's redirected weight host and its language-alignment download must also be reachable. |
+| NLTK sentence data | If preparation reports `NLTK_ALLOW_PROXIED_URLOPEN`, the downloader needs an explicit trust decision for the configured proxy. For a trusted proxy, set that native variable to `1` only on the preparation command; do not switch it on automatically or change inference. |
 | HyperFrames browser | The selected Provider owns the archive source; follow [browser preparation](#prepare-the-local-rendering-browser) and its installed README. |
 | FFmpeg and other binaries | Use the selected package manager's binary-download settings or a compatible official prebuilt installation. An npm/PyPI mirror does not generally redirect these downloads. Homebrew bottles and GitHub release assets have their own sources. |
 

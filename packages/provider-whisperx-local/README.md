@@ -96,6 +96,9 @@ network and cache variables there before `programs up` or `runtime up`. A servic
 retains its earlier environment. Inspect its reported log before deciding whether a selected
 Program needs restarting, and account for active work using it.
 
+If NLTK refuses a proxied fetch during preparation, follow the service’s
+[explicit proxy preparation](../../services/whisperx/README.md#preparing-sentence-data-through-a-proxy).
+
 Preparation commands write `install.log`; the running service writes `program.log`, with stderr in
 `program.err.log` on Windows. Inspect the stderr file for Python model-loading and download messages.
 `programs status` reports these files as `installationLogPath`, `logPath` and `errorLogPath` when they

@@ -91,6 +91,26 @@ Transcripts and audio content are not included in these service progress entries
 after ASR loading; it does not report all language caches as ready. A first request can load a
 prepared aligner into memory, but cannot download it.
 
+## Preparing sentence data through a proxy
+
+NLTK's downloader refuses a proxied request unless the operator explicitly trusts that proxy:
+it cannot enforce its direct-connection address checks through a proxy. This can stop preparation
+while fetching the NLTK data index, even when uv and Hugging Face downloads work.
+
+For a proxy you trust, scope NLTK's native opt-in to the explicit preparation command:
+
+```bash
+NLTK_ALLOW_PROXIED_URLOPEN=1 qflow programs prepare --endpoint whisperx.local
+```
+
+Use your selected Endpoint instance id. On PowerShell, set `$env:NLTK_ALLOW_PROXIED_URLOPEN = "1"`
+for that preparation session, then restore its previous value. The preparation process already
+inherits its caller's environment; no Qflow-specific proxy flag is needed. This setting authorizes
+NLTK to use the configured proxy; it neither selects a mirror nor enables inference downloads.
+Without that trust choice, use a deliberately selected direct route or supply the sentence data
+in the selected NLTK data directory before preparation. Qflow does not change the choice automatically.
+Existing usable sentence data is read locally without refreshing the download index.
+
 ## Package preparation
 
 Local package preparation includes `src/**/*.py` in uv's package cache inputs. Updating service code
