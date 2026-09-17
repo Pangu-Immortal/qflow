@@ -36,7 +36,7 @@ Choose Script structure from the thought being expressed and the performance car
 ```svml
 <script id="story">
   <hook>
-    <HOST> @claim! I made the @proof <API | A P I> || work overnight @/proof.
+    <HOST> @{claim!} I made the @{proof} <API | A P I> || work overnight @{/proof}.
   </hook>
 </script>
 ```
@@ -66,8 +66,8 @@ The author-facing forms are:
 | `||` | A Caption Cue handoff between complete Alignment Units. |
 | `word{emphasis,keyword}` | Boolean attributes on one complete display word for a Caption family to interpret. |
 | `word{importance=2,tone=warm}` | Named string, number or boolean attribute values on that display word. |
-| `@proof ... @/proof` | A Selection: one named semantic range. |
-| `@claim!` | A Moment: one named semantic point. |
+| `@{proof} ... @{/proof}` | A Selection: one named semantic range. |
+| `@{claim!}` | A Moment: one named semantic point. |
 
 A Script contains one or more uniquely named lower-case Segments. A paired Segment can carry prose
 or be wordless; the self-closing form also carries a wordless passage. A Role Cue is a bare turn marker rather than a
@@ -90,7 +90,7 @@ Chinese prose does not require word-by-word markup. The group's Style determines
 `||` still controls which reading phrases appear as separate Cues.
 
 With speech omitted, the left side supplies both projections, so semantic markers can be placed
-there and Studio writes back there: `<组@beat!件化|>`. Display attributes and markers are metadata,
+there and Studio writes back there: `<组@{beat!}件化|>`. Display attributes and markers are metadata,
 not spoken words. Attributes still apply to the preceding display word rather than the whole group.
 With an explicit spoken side, markers continue to belong on that right-hand side.
 
@@ -292,32 +292,38 @@ For a picture, Caption treatment, MG state, sound, or effect that belongs to spo
 Selection or Moment and use the consuming component's Surface to project it through the Timeline.
 Use explicit seconds for genuinely clock-based or speechless design.
 
+Every semantic marker is enclosed in `@{...}`, with `/`, `!` and `~` inside. The marker contributes
+no text or whitespace. `是的@{part}就是这样@{/part}` stays joined; `是的 @{part}就是这样@{/part}`
+keeps its authored space. Do not add spaces to make a marker parse. Markers cannot split a speech
+Token or its attached punctuation: write `@{beat!}“测试”`, not `“@{beat!}测试”`. Attributes stay attached to their display word: `word{emphasis}@{beat!}`. Write literal
+`@{part}` as `\@\{part\}`. Bare 0.1 markers require explicit migration before use with 0.2.
+
 Selections may overlap, cross, or span Segments; they are named semantic ranges rather than nested
 markup. Selection and Moment names share one namespace. Inside spoken text, each marker chooses an
 adjacent semantic boundary:
 
 | Marker | Boundary |
 | --- | --- |
-| `@name` | Open a Selection at the next word's start. |
-| `~@name` | Open a Selection at the previous word's end. |
-| `@/name` | Close a Selection at the previous word's end. |
-| `@/name~` | Close a Selection at the next word's start. |
-| `@name!` | Place a Moment at the next word's start. |
-| `~@name!` | Place a Moment at the previous word's end. |
+| `@{name}` | Open a Selection at the next word's start. |
+| `@{~name}` | Open a Selection at the previous word's end. |
+| `@{/name}` | Close a Selection at the previous word's end. |
+| `@{/name~}` | Close a Selection at the next word's start. |
+| `@{name!}` | Place a Moment at the next word's start. |
+| `@{~name!}` | Place a Moment at the previous word's end. |
 
 Markers may sit between or outside Segments when the meaning crosses structural passages. For
 example, this Selection owns the complete Script program rather than borrowing the first and last
 word boundaries:
 
 ```svml
-~@whole
+@{~whole}
 <opening><HOST>First thought.</opening>
 <answer><HOST>Final answer.</answer>
-@/whole~
+@{/whole~}
 ```
 
 At a Script or Segment edge, the corresponding structural boundary remains available even when
-there is no neighboring word. Thus `@videos videos @/videos` covers exactly that word. For adjacent
+there is no neighboring word. Thus `@{videos} videos @{/videos}` covers exactly that word. For adjacent
 B-roll windows that should also own the pause between words, choose which neighboring Selection
 owns that gap through the explicit affinities; [B-roll craft](../playbooks/craft/b-roll.md) shows the
 shared-boundary forms.

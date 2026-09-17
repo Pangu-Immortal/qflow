@@ -6,7 +6,7 @@ import { projectProgramInstant } from "@qflow/temporal";
 import { parseTemporalInstant } from "@qflow/temporal-markup";
 import { chooseSemanticGesture, formatTemporalPointEdit, semanticGestureSpan } from "../src/temporal-edit.js";
 
-const source = '<one><HOST>@proof One two @/proof three.</one>';
+const source = '<one><HOST>@{proof} One two @{/proof} three.</one>';
 const narrative = parseScript("gesture", source);
 // Duplicate word/Segment boundaries count as one stop, not additional movement steps.
 const frames = [0, 0, 0, 5, 10, 20, 40, 55, 55, 55];

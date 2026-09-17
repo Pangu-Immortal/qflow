@@ -171,7 +171,7 @@ Drop in a video and your agent clones the whole workflow — or describe what yo
 
 ## Stay Tuned with Us
 
-Star us, and you will receive all release notifications from GitHub without any delay!
+Star Qflow to bookmark the project. To receive release notifications, select **Watch → Custom → Releases** on GitHub.
 
 ![Stay tuned with us](https://github.com/user-attachments/assets/cc929974-96b8-4166-b81d-008e130b0f24)
 

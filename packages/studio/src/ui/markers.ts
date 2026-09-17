@@ -55,12 +55,12 @@ export function intentTones(snapshot: StudioSnapshot): ReadonlyMap<string, numbe
  * The Script ranges whose speech the playhead is inside, outermost first.
  *
  * Segments and Selections alike, because a Segment is a level too: `<price>`
- * encloses `@bags`, so drawing only the Selection would show a nesting with its
+ * encloses `@{bags}`, so drawing only the Selection would show a nesting with its
  * outermost level missing.
  *
  * Derived from the Script tokens each range encloses rather than from the clips
  * bound to it, because a range is a claim about speech whether or not anything
- * was placed on it. `@amount` inside `@fee` is still inside `@fee` even when
+ * was placed on it. `@{amount}` inside `@{fee}` is still inside `@{fee}` even when
  * only the outer one drives a Media Item.
  */
 export type ScriptSpan = {
@@ -110,7 +110,7 @@ export function liveRanges(snapshot: StudioSnapshot, frame: number): readonly Sc
  *
  * Clicking marked prose should land inside the thing that was clicked, and the
  * innermost intent is the most specific claim there. Resolving to a clip alone
- * would send a click on `@amount` to whatever encloses it, because a marker that
+ * would send a click on `@{amount}` to whatever encloses it, because a marker that
  * places nothing still means something.
  */
 export function spanAtOffset(snapshot: StudioSnapshot, offset: number): ScriptSpan | undefined {

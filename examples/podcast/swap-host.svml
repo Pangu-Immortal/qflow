@@ -29,8 +29,8 @@
       <DOGE>OK <Pepe | PEP-ay> || so what is || the one single thing || that you literally || can't live without?
     </opening-question>
     <daily-creatine>
-      <PEPE>Creatine. Ten grams || a day, every day. ~@lifestyle || Before my workout, || after my workout, || and honestly? || During my workout.
-      <DOGE>Bro that @/lifestyle sounds || like an addiction.
+      <PEPE>Creatine. Ten grams || a day, every day. @{~lifestyle} || Before my workout, || after my workout, || and honestly? || During my workout.
+      <DOGE>Bro that @{/lifestyle} sounds || like an addiction.
     </daily-creatine>
     <arms-are-asking>
       <PEPE>You know what's || an addiction? || Being skinny. || Take this.

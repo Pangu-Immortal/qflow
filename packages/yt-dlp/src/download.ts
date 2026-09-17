@@ -5,7 +5,7 @@
  * rather than in a folder. `yt-dlp` is what turns one into a file; everything after that reads the
  * file and never learns where it came from.
  *
- * The tool is a pinned Python dependency under `services/yt-dlp`, reached through `uv`, and not a
+ * The tool is a pinned Python dependency prepared explicitly by `qflow media prepare-fetch`, not a
  * binary the machine happens to carry. `yt-dlp` releases constantly because it is chasing sites that
  * keep changing, so an unpinned copy makes the same link fetch differently on two machines. This is
  * the same shape WhisperX and OpenCV already use for their Python programs.
@@ -13,9 +13,9 @@
 import { spawnSync } from "node:child_process";
 import { copyFile, mkdtemp, readdir, rename, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, extname, join } from "node:path";
+import { extname, join } from "node:path";
 
-import { resolveNodePackageResource } from "@qflow/package-loader-node";
+import { requireVideoDownload } from "./environment.js";
 
 /**
  * Whether this is a link to fetch rather than a path to open.
@@ -34,19 +34,6 @@ export function isVideoUrl(value: string): boolean {
 }
 
 /**
- * The locked uv project is a Distribution package asset, the same way WhisperX and
- * OpenCV locate their Python programs. Walking parents of this file only works
- * while the module still sits above `services/` in a contributor checkout.
- */
-function serviceProject(): string {
-  return dirname(resolveNodePackageResource(
-    "@qflow/yt-dlp-service-runtime",
-    "pyproject.toml",
-    { from: import.meta.url },
-  ));
-}
-
-/**
  * Fetch one video into exactly the file the caller named.
  *
  * Video and audio are asked for together and muxed: sites serve the two separately now, so the best
@@ -60,10 +47,14 @@ export async function downloadVideo(url: string, target: string): Promise<void> 
   if (!["mp4", "mkv", "webm", "mov"].includes(container)) {
     throw new Error(`${target} must end in .mp4, .mkv, .webm or .mov`);
   }
+  const executable = requireVideoDownload();
+  const media = spawnSync("ffmpeg", ["-version"], { encoding: "utf8", windowsHide: true, timeout: 15_000 });
+  if (media.status !== 0) throw new Error("FFmpeg is unavailable on PATH; install your selected media toolchain before fetching video");
   const work = await mkdtemp(join(tmpdir(), "qflow-fetch-"));
   try {
-    const result = spawnSync("uv", [
-      "run", "--project", serviceProject(), "--frozen", "yt-dlp",
+    const result = spawnSync(executable, [
+      "--ignore-config", "--no-update", "--no-remote-components", "--no-plugin-dirs",
+      "--no-js-runtimes", "--js-runtimes", `node:${process.execPath}`,
       "--no-playlist", "--no-progress", "--quiet",
       "--format", "bv*+ba/b",
       "--merge-output-format", container,
@@ -72,12 +63,7 @@ export async function downloadVideo(url: string, target: string): Promise<void> 
       url,
     ], { encoding: "utf8", windowsHide: true, timeout: 900_000 });
 
-    if (result.error !== undefined && (result.error as NodeJS.ErrnoException).code === "ENOENT") {
-      throw new Error(
-        "uv is not installed, and a link is fetched by a pinned yt-dlp that uv installs. It is the same "
-        + "tool the WhisperX and OpenCV programs need. Install it (https://docs.astral.sh/uv/), or download "
-        + "the video yourself and pass the path instead.");
-    }
+    if (result.error !== undefined) throw result.error;
     if (result.status !== 0) {
       throw new Error(`yt-dlp could not fetch ${url}: ${(result.stderr ?? "").trim().slice(-2000)}`);
     }

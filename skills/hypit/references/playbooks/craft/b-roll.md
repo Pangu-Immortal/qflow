@@ -82,13 +82,13 @@ each shared boundary must select the same instant. Default markers close on the 
 and open on the next word's start, leaving their intervening pause uncovered.
 
 ```text
-@coffee my coffee @/coffee ~@smoothie my smoothie @/smoothie
+@{coffee} my coffee @{/coffee} @{~smoothie} my smoothie @{/smoothie}
 ```
 
 Here both sides meet at the end of “coffee”; the smoothie picture owns the pause. Alternatively:
 
 ```text
-@coffee my coffee @/coffee~ @smoothie my smoothie @/smoothie
+@{coffee} my coffee @{/coffee~} @{smoothie} my smoothie @{/smoothie}
 ```
 
 Both sides now meet at the start of the next “my”; the coffee picture owns the pause. Keep both

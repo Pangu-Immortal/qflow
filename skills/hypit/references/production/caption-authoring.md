@@ -51,6 +51,11 @@ Track Uses → resolved time windows, Styles and optional speaker filters
 complete Cues + Uses + family parameters → family schedule → VisualTrack
 ```
 
+Consume each display word's `separatorBefore` with its `text`; never rebuild wording by joining
+speech Tokens with spaces or guessing from a writing system. Suppress a separator at the start of
+a displayed Cue/line. Use the same authored boundaries in base glyphs, active layers and backgrounds.
+Separators are display content, not timed Tokens.
+
 Use `@qflow/qflow/caption` for content timing and Use coverage, and `@qflow/qflow/narrative` for
 Script document types. A family Track accepts `document`, `timeline` and ordered `Use` children:
 

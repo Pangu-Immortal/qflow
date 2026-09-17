@@ -52,6 +52,8 @@ export type LocalWhisperXProgramOptions = {
   readonly expectedServiceVersion: string;
   readonly expectedWhisperXVersion: string;
   readonly serviceCommand?: ManagedProgramCommand;
+  readonly alignmentLanguages?: readonly string[];
+  readonly modelCacheDirectory?: string;
 };
 
 export function localWhisperXProgram(options: LocalWhisperXProgramOptions): ManagedProgram {
@@ -85,11 +87,13 @@ export function localWhisperXProgram(options: LocalWhisperXProgramOptions): Mana
     QFLOW_WHISPERX_COMPUTE: expected.compute,
     QFLOW_WHISPERX_BATCH_SIZE: String(expected.batchSize),
     QFLOW_WHISPERX_NLTK_DATA: nltkData,
+    ...(options.modelCacheDirectory === undefined ? {} : { QFLOW_WHISPERX_MODEL_CACHE: options.modelCacheDirectory }),
+    QFLOW_WHISPERX_ALIGNMENT_LANGUAGES: (options.alignmentLanguages ?? []).join(" "),
   };
   const check: ManagedProgramCommand = {
     command: pythonEnvironmentCommand(environment, "qflow-whisperx-check"),
-    args: [],
-    env: { QFLOW_WHISPERX_NLTK_DATA: nltkData },
+    args: ["--models"],
+    env: serviceEnvironment,
   };
   const managedStart: ManagedProgramCommand = {
     command: pythonEnvironmentCommand(environment, "qflow-whisperx-service"),
@@ -131,10 +135,10 @@ export function localWhisperXProgram(options: LocalWhisperXProgramOptions): Mana
           args: ["sync", "--project", localWhisperXManagedProject, "--frozen", "--no-editable"],
           env: { UV_PROJECT_ENVIRONMENT: environment },
         }, {
-          label: "Prepare NLTK sentence data",
+          label: `Prepare WhisperX ${expected.model} and alignment resources for ${(options.alignmentLanguages ?? []).join(", ") || "no selected languages"}`,
           command: pythonEnvironmentCommand(environment, "qflow-whisperx-prepare"),
           args: ["--nltk-data", nltkData],
-          env: { QFLOW_WHISPERX_NLTK_DATA: nltkData },
+          env: serviceEnvironment,
         }],
       },
     } : {}),

@@ -336,8 +336,10 @@ package APIs. The actual service protocol determines whether an existing Provide
 
 ## Prepare the selected environment
 
-After choosing the services for the next work, use `qflow programs up --endpoint <instance>` to
-prepare those helpers, or `qflow runtime up --endpoint <instance>` to start the Worker as well.
+After choosing the services and their needed resources, use `qflow programs prepare --endpoint
+<instance>` to prepare without starting helpers, `qflow programs up --endpoint <instance>` to prepare
+and start them, or `qflow runtime up --endpoint <instance>` to start the Worker as well. Preparation
+remains available for a running service; process health alone does not establish new resource readiness.
 Repeat the flag for several instances. Omission deliberately prepares the whole Profile, even when
 a capability is bound elsewhere. Preparation follows each Provider's declared dependencies and
 Programs; it does not log into remote accounts. `qflow doctor --endpoint <instance>` actively checks

@@ -28,6 +28,7 @@ export {
 } from "./config.js";
 export {
   bringManagedProgramsUp,
+  prepareManagedPrograms,
   reportManagedPrograms,
   takeManagedProgramsDown,
 } from "./programs.js";

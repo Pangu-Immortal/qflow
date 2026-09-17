@@ -170,7 +170,7 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
 
 ## 关注我们
 
-给我们点个 Star，即可第一时间收到 GitHub 的所有版本发布通知！
+欢迎给 Qflow 点个 Star 收藏项目。要接收版本发布通知，请在 GitHub 选择 **Watch → Custom → Releases**。
 
 ![Stay tuned with us](https://github.com/user-attachments/assets/cc929974-96b8-4166-b81d-008e130b0f24)
 

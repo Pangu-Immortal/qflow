@@ -15,6 +15,7 @@
     "@qflow/component-kit": "workspace:*",
     "@qflow/composition": "workspace:*",
     "@qflow/elaborator": "workspace:*",
+    "@qflow/hyperframes": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/narrative": "workspace:*",
     "@qflow/program-space": "workspace:*",

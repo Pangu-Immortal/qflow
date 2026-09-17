@@ -18,7 +18,7 @@
   <import as="look" source="./look.svs"/>
 
   <script id="story">
-    <opening><HOST>Here is @proof the useful part @/proof.</opening>
+    <opening><HOST>Here is @{proof} the useful part @{/proof}.</opening>
   </script>
   <space:Canvas id="canvas" width="720" height="1280"/>
   <program:Clock id="clock" frame-rate="30"/>

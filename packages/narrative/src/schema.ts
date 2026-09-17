@@ -29,6 +29,7 @@ export const narrativeExcerptSchema: ValueSchema = object({
   tokenStart: { schema: integer }, tokenEndExclusive: { schema: integer },
 });
 const captionDisplayWord = object({
+  separatorBefore: { schema: { kind: "string", enum: ["", " "] } },
   id: { schema: string }, unitId: { schema: string }, segmentId: { schema: string },
   turnId: { schema: string }, role: { schema: string, optional: true }, text: { schema: string },
   attributes: { schema: { kind: "array", items: object({

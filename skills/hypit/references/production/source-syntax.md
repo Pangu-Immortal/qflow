@@ -21,7 +21,7 @@ This small Author Source produces Text and Script values; it makes no media requ
   <import as="kit" source="./direction.svs"/>
 
   <script id="story">
-    <opening><HOST>Here is @proof the useful part @/proof.</opening>
+    <opening><HOST>Here is @{proof} the useful part @{/proof}.</opening>
   </script>
   <copy:Value id="direction">She leans in slightly, amused by her own observation.</copy:Value>
   <copy:Render id="prompt" template={kit.performance}>

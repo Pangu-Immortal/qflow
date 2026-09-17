@@ -4,7 +4,7 @@
  * SVML has a small, closed grammar — tags, quoted strings, whole-value
  * references, and Script prose with markers — so it is tokenized directly rather
  * than through a general highlighter that has no grammar for it. The Script
- * markers are the point: `@claim … @/claim` is what a Media Item binds to, so it
+ * markers are the point: `@{claim} … @{/claim}` is what a Media Item binds to, so it
  * has to read as a distinct thing from an ordinary attribute.
  *
  * Tokens are non-overlapping and in source order. Gaps between them are plain
@@ -33,12 +33,30 @@ export type Token = {
 
 const NAME = /^[A-Za-z_][A-Za-z0-9_.:-]*/u;
 const ATTRIBUTE = /^[A-Za-z_][A-Za-z0-9_.:-]*/u;
-/**
- * The Script's own marker grammar: `@id` opens a Selection, `@/id` closes one,
- * `@id!` marks a Moment, and a leading `~` or trailing `~` chooses which side of
- * the neighbouring word the marker binds to.
- */
-const MARKER = /^~?@\/?[a-z][a-z0-9_-]*[!~]?/u;
+/** All control sigils belong inside a delimited Script marker. */
+const MARKER = /^@\{(?:(~)?([a-z][a-z0-9_-]{0,63})(!)?|\/([a-z][a-z0-9_-]{0,63})(~)?)\}/u;
+
+function unescapedIndex(source: string, character: string, from: number, to = source.length): number {
+  for (let index = from; index < to; index++) {
+    if (source[index] === "\\") { index++; continue; }
+    if (source[index] === character) return index;
+  }
+  return -1;
+}
+
+function scriptDecoration(source: string, cursor: number, push: Push, markers = true, attributes = true): number {
+  if (source[cursor] === "\\") return cursor + 2;
+  const marker = markers ? MARKER.exec(source.slice(cursor)) : null;
+  if (marker) {
+    push(cursor, cursor + marker[0].length, "marker", marker[2] ?? marker[4]);
+    return cursor + marker[0].length;
+  }
+  if (attributes && source[cursor] === "{") {
+    const end = unescapedIndex(source, "}", cursor + 1);
+    if (end >= 0) { push(cursor, end + 1, "attr"); return end + 1; }
+  }
+  return cursor + 1;
+}
 
 function localName(tag: string): string {
   const colon = tag.indexOf(":");
@@ -145,11 +163,12 @@ function tokenizeAttributes(source: string, from: number, push: Push): number {
   return cursor;
 }
 
-/** Script prose: Segment and Role Cue tags stay tags; `@id` markers stand out. */
+/** Script prose: Segment and Role Cue tags stay tags; `@{id}` markers stand out. */
 function tokenizeScriptBody(source: string, from: number, tag: string, push: Push): number {
   const close = `</${tag}>`;
   let cursor = from;
   while (cursor < source.length) {
+    if (source[cursor] === "\\") { cursor += 2; continue; }
     if (source.startsWith(close, cursor)) {
       push(cursor, cursor + 2, "punct");
       push(cursor + 2, cursor + 2 + tag.length, "tag");
@@ -164,6 +183,20 @@ function tokenizeScriptBody(source: string, from: number, tag: string, push: Pus
       continue;
     }
     if (source[cursor] === "<") {
+      const endDual = unescapedIndex(source, ">", cursor + 1);
+      const pipe = endDual < 0 ? -1 : unescapedIndex(source, "|", cursor + 1, endDual);
+      if (pipe >= 0) {
+        const shared = !source.slice(pipe + 1, endDual).trim();
+        push(cursor, cursor + 1, "punct");
+        cursor++;
+        while (cursor < pipe) cursor = scriptDecoration(source, cursor, push, shared, true);
+        push(pipe, pipe + 1, "punct");
+        cursor = pipe + 1;
+        while (cursor < endDual) cursor = scriptDecoration(source, cursor, push, true, false);
+        push(endDual, endDual + 1, "punct");
+        cursor = endDual + 1;
+        continue;
+      }
       const closing = source[cursor + 1] === "/";
       const nameStart = cursor + (closing ? 2 : 1);
       const name = NAME.exec(source.slice(nameStart));
@@ -177,19 +210,7 @@ function tokenizeScriptBody(source: string, from: number, tag: string, push: Pus
       cursor = stop;
       continue;
     }
-    // A leading `~` binds the marker to the word on its left, and is part of it.
-    if (source[cursor] === "@" || (source[cursor] === "~" && source[cursor + 1] === "@")) {
-      const marker = MARKER.exec(source.slice(cursor));
-      if (marker !== null) {
-        // Strip the affinity sigils, the `@` and the closing `/` so an opening
-        // marker, its closing marker and a Moment all report the same name.
-        const id = marker[0].replace(/^~?@\/?/u, "").replace(/[!~]$/u, "");
-        push(cursor, cursor + marker[0].length, "marker", id);
-        cursor += marker[0].length;
-        continue;
-      }
-    }
-    cursor += 1;
+    cursor = scriptDecoration(source, cursor, push);
   }
   return cursor;
 }

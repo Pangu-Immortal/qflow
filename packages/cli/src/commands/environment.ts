@@ -175,7 +175,7 @@ export async function runEnvironmentCommand(input: {
     if (runtimeProfile === undefined) throw new Error("programs requires a Runtime Profile");
     const profile = resolve(runtimeProfile);
     const host = await runtimeHost(profile);
-    if (args.action === "up") {
+    if (args.action === "up" || args.action === "prepare") {
       await host.prepare({ ...(args.endpoints === undefined ? {} : { endpoints: args.endpoints }), ...(reportPackageProgress === undefined ? {} : { onProgress: reportPackageProgress }) });
     }
     const controller = await runtimeController(profile);
@@ -185,6 +185,11 @@ export async function runEnvironmentCommand(input: {
         ...(args.maxWaitMs === undefined ? {} : { maxWaitMs: args.maxWaitMs }),
         ...(reportProgramProgress === undefined ? {} : { onProgress: reportProgramProgress }),
       })
+      : args.action === "prepare"
+        ? await controller.programs.prepare({
+          ...(args.endpoints === undefined ? {} : { endpoints: args.endpoints }),
+          ...(reportProgramProgress === undefined ? {} : { onProgress: reportProgramProgress }),
+        })
       : args.action === "down"
         ? await controller.programs.down(args.endpoints === undefined ? {} : { endpoints: args.endpoints })
         : await controller.programs.report(args.endpoints === undefined ? {} : { endpoints: args.endpoints });
@@ -199,7 +204,9 @@ export async function runEnvironmentCommand(input: {
     const urgent = relevant.filter(needsAttention);
     const shownPrograms = [...urgent, ...relevant.filter((item) => !needsAttention(item)).slice(0, Math.max(0, args.limit - urgent.length))];
     const omittedPrograms = relevant.length - shownPrograms.length;
-    const title = args.action === "up"
+    const title = args.action === "prepare"
+      ? lifecycleOk ? "External program resources prepared" : "External program preparation needs attention"
+      : args.action === "up"
       ? lifecycleOk ? "External programs ready" : "External programs need attention"
       : args.action === "down"
         ? lifecycleOk ? "External programs stopped" : "External program stop needs attention"

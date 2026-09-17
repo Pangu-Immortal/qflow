@@ -153,13 +153,14 @@ paths. A deleted Source or directory remains queryable: only its existing ancest
 the missing path suffix is retained. This is local argument handling, with no saved alias inventory.
 CLI, Studio and creation tools call that same package; the CLI is not another environment owner.
 
-`doctor`, `programs up|status|down`, and `runtime up` accept repeated `--endpoint <instance>` values.
+`doctor`, `programs prepare|up|status|down`, and `runtime up` accept repeated `--endpoint <instance>` values.
 The same Endpoint scope reaches package preparation and Program operations. Omission means the whole
 Profile. Build preflight instead uses the Endpoints resolved for that Build's concrete requests.
 An unrelated offered capability does not add another credential or Program requirement.
 Program rows show the configured Endpoint selector alongside an internal Program ID when they differ.
 The `programs` JSON `ok` field reports whether this command succeeded; `ready` reports service
-readiness. Successful stopping can therefore report `ok: true` with `ready: false`. A declined stop remains visible even
+readiness for `up`/`status`, and preparation readiness for `prepare`. The latter does not start the
+service. Successful stopping can therefore report `ok: true` with `ready: false`. A declined stop remains visible even
 while the service is still preparing and cannot yet answer its health probe.
 
 Upstream package installation reports an `install.log` path at preparation time. Exact package

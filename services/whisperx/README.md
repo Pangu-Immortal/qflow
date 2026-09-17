@@ -19,7 +19,9 @@ semantic projection combines this evidence with one explicit Script Segment late
 ## Install
 
 For an ordinary installed Distribution, select the local WhisperX Endpoint and run
-`qflow programs up --endpoint <instance>`. The Runtime creates or reconciles the cold environment in
+`qflow programs prepare --endpoint <instance>` after setting `alignmentLanguages` in its Profile.
+`qflow programs up --endpoint <instance>` also prepares resources and starts the service.
+The Runtime creates or reconciles the cold environment in
 the machine Program Home and reuses a running service across projects and sessions. The commands below are contributor/operator
 diagnostics for a deliberately managed deployment:
 
@@ -28,20 +30,28 @@ WhisperX 3.8.6 supports Python 3.10 through 3.13. The checked-in lock selects Py
 ```bash
 uv python install 3.13
 uv sync --project services/whisperx --frozen
-uv run --project services/whisperx --frozen qflow-whisperx-prepare
-uv run --project services/whisperx --frozen qflow-whisperx-check
+QFLOW_WHISPERX_ALIGNMENT_LANGUAGES="zh en" services/whisperx/.venv/bin/qflow-whisperx-prepare
+QFLOW_WHISPERX_ALIGNMENT_LANGUAGES="zh en" services/whisperx/.venv/bin/qflow-whisperx-check --models
 ```
 
-The first model start may download ASR weights; first use of a language can download its alignment
-model during the request. Production should put the relevant
-Hugging Face cache on persistent storage. `qflow-whisperx-prepare` separately installs NLTK's
-`punkt_tab` sentence data through NLTK's own downloader. This resource is required by WhisperX
-alignment and is prepared explicitly before the warm service starts, never inside an inference request.
+`qflow-whisperx-prepare` explicitly prepares the selected ASR model, language alignment weights and
+NLTK sentence data. `qflow-whisperx-check --models` reads those resources without downloading.
+The service loads prepared resources only. Hugging Face calls use local-files-only APIs; the
+pinned WhisperX torchaudio and NLTK branches have no equivalent switch, so this dedicated inference
+process replaces their downloader entry points with an error. Preparation runs in a separate process
+and retains their native downloaders. These adaptations belong here, not in Runtime or Core.
+The default Pyannote VAD checkpoint ships inside the pinned WhisperX wheel.
+
+Native HF and torch caches are reused by default. An explicit model cache root selects its
+`huggingface/` and `torch/` subdirectories for both preparation and inference. No receipts, hashes or
+parallel resource inventory are maintained. Resource checks read model/tokenizer files and the
+selected language's sentence data. The example shell paths are POSIX; Windows environments use
+`.venv\Scripts\<command>.exe`.
 
 ## Run
 
 ```bash
-uv run --project services/whisperx --frozen qflow-whisperx-service
+services/whisperx/.venv/bin/qflow-whisperx-service
 curl http://127.0.0.1:8765/health
 ```
 
@@ -65,7 +75,9 @@ Configuration is deployment state:
 | `QFLOW_WHISPERX_COMPUTE` | `int8` on CPU | CTranslate2 compute type |
 | `QFLOW_WHISPERX_BATCH_SIZE` | `8` | bounded ASR batch size |
 | `QFLOW_WHISPERX_INPUT_ROOTS` | OS temp directory | path-separated roots the service may read |
-| `QFLOW_WHISPERX_NLTK_DATA` | user SVML cache | prepared, identity-checked NLTK data root |
+| `QFLOW_WHISPERX_NLTK_DATA` | user Qflow cache | selected prepared NLTK data root |
+| `QFLOW_WHISPERX_ALIGNMENT_LANGUAGES` | empty | space-separated languages to prepare; no implicit downloads for others |
+| `QFLOW_WHISPERX_MODEL_CACHE` | upstream caches | optional root for HF and torch model resources |
 | `QFLOW_WHISPERX_MAX_REQUEST_BYTES` | `65536` | HTTP JSON bound |
 | `QFLOW_WHISPERX_MAX_AUDIO_BYTES` | `536870912` | staged canonical WAV bound |
 
@@ -74,9 +86,30 @@ WhisperX version. A mismatch fails before transcription results are accepted.
 
 The service logs ASR loading, transcription, language-model loading and word alignment where those
 operations run. Completion entries include elapsed times. A loading entry means the library call
-has begun and may include a weight download; the download client supplies any transfer progress.
+has begun reading prepared local resources; downloads appear only in preparation logs.
 Transcripts and audio content are not included in these service progress entries. `/health` answers
-after ASR loading, so a healthy service may still prepare a language model on its first request.
+after ASR loading; it does not report all language caches as ready. A first request can load a
+prepared aligner into memory, but cannot download it.
+
+## Preparing sentence data through a proxy
+
+NLTK's downloader refuses a proxied request unless the operator explicitly trusts that proxy:
+it cannot enforce its direct-connection address checks through a proxy. This can stop preparation
+while fetching the NLTK data index, even when uv and Hugging Face downloads work.
+
+For a proxy you trust, scope NLTK's native opt-in to the explicit preparation command:
+
+```bash
+NLTK_ALLOW_PROXIED_URLOPEN=1 qflow programs prepare --endpoint whisperx.local
+```
+
+Use your selected Endpoint instance id. On PowerShell, set `$env:NLTK_ALLOW_PROXIED_URLOPEN = "1"`
+for that preparation session, then restore its previous value. The preparation process already
+inherits its caller's environment; no Qflow-specific proxy flag is needed. This setting authorizes
+NLTK to use the configured proxy; it neither selects a mirror nor enables inference downloads.
+Without that trust choice, use a deliberately selected direct route or supply the sentence data
+in the selected NLTK data directory before preparation. Qflow does not change the choice automatically.
+Existing usable sentence data is read locally without refreshing the download index.
 
 ## Package preparation
 

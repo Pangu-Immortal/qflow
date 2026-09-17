@@ -38,8 +38,7 @@ export const whisperXMarkupSurfaces = [{
           accepts: [mediaTypes.synchronized],
           summary: "Selects the already normalized SynchronizedMedia represented by this Segment." },
         { name: "language", kind: "literal", required: false,
-          values: ["en", "zh", "es"],
-          summary: "For a Segment with Tokens, explicitly selects the English, Chinese or Spanish WhisperX models." },
+          summary: "For a Segment with Tokens, explicitly states its spoken language code. The selected service owns the available alignment models." },
       ],
       ports: [
         { name: "take", type: speechTypes.semanticTake,
@@ -50,7 +49,7 @@ export const whisperXMarkupSurfaces = [{
       notes: [
         "A Segment with Tokens states all five attributes and sends its prepared audio for alignment.",
         "An empty Segment omits language and maps its authored start/end Anchors directly to the prepared-media boundaries.",
-        "For speech, language is never detected from Script text or audio; each alignment call states en, zh or es explicitly.",
+        "For speech, each alignment call states an explicit lowercase two- or three-letter language code; language is not inferred from Script text or audio.",
         "Importing this package is what selects the WhisperX model family; the Runtime separately binds the alignment Need to an Endpoint.",
       ],
     },

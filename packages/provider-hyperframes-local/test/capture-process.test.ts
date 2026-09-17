@@ -4,13 +4,30 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import test from "node:test";
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { runCaptureProcess } from "../src/capture-process.js";
 import { resolveExecutionOptions } from "../src/render.js";
 import type { CaptureInput } from "../src/capture.js";
 import { browserExecutablePath } from "../src/browser.js";
 
 const exitCleanup = new URL("../src/capture-exit.ts", import.meta.url).href;
+
+/** Observe termination once: a reaped process is as stopped as a zombie awaiting its parent. */
+function assertStopped(pid: number): void {
+  if (process.platform === "win32") {
+    assert.throws(() => process.kill(pid, 0), { code: "ESRCH" });
+    return;
+  }
+  // A kill(pid, 0) followed by ps races reaping between the two observations. ps already
+  // distinguishes an absent PID (status 1, no output) from a remaining zombie (status 0, Z).
+  const result = spawnSync("ps", ["-p", String(pid), "-o", "stat="], { encoding: "utf8" });
+  if (result.error) throw result.error;
+  assert.equal(result.stderr.trim(), "");
+  if (result.status === 1 && result.stdout.trim() === "") return;
+  assert.equal(result.status, 0);
+  assert.match(result.stdout.trim(), /^Z/u);
+}
+
 
 test("abrupt engine exit closes its actual Chrome without disturbing another browser", {
   skip: process.env.QFLOW_BROWSER_TESTS !== "1",
@@ -37,13 +54,7 @@ process.exit(7);`);
       directory: root, engineModule: pathToFileURL(engine).href,
     } as CaptureInput, new AbortController().signal, () => {}), /exited before completion/u);
     browserPid = Number(await readFile(pidFile, "utf8"));
-    try {
-      process.kill(browserPid, 0);
-      assert.notEqual(process.platform, "win32");
-      assert.match(execFileSync("ps", ["-p", String(browserPid), "-o", "stat="], { encoding: "utf8" }).trim(), /^Z/u);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
-    }
+    assertStopped(browserPid);
     const page = await other.newPage();
     assert.equal(await page.evaluate(() => 6 * 7), 42);
   } finally {
@@ -107,13 +118,7 @@ ${end}`);
         directory: root, engineModule: pathToFileURL(engine).href,
       } as CaptureInput, new AbortController().signal, () => {}), /exited before completion/u);
       descendant = Number(await readFile(pidFile, "utf8"));
-      try {
-        process.kill(descendant, 0);
-        assert.notEqual(process.platform, "win32");
-        assert.match(execFileSync("ps", ["-p", String(descendant), "-o", "stat="], { encoding: "utf8" }).trim(), /^Z/u);
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
-      }
+      assertStopped(descendant);
     } finally {
       // Also stop this test's child if an assertion fails before its PID is read.
       descendant ??= await readFile(pidFile, "utf8").then(Number, () => undefined);
@@ -141,13 +146,7 @@ throw new Error('engine initialization failed after starting a child');`);
       directory: root, engineModule: pathToFileURL(engine).href,
     } as CaptureInput, new AbortController().signal, () => {}), /engine initialization failed/);
     descendant = Number(await readFile(pidFile, "utf8"));
-    try {
-      process.kill(descendant, 0);
-      assert.notEqual(process.platform, "win32");
-      assert.match(execFileSync("ps", ["-p", String(descendant), "-o", "stat="], { encoding: "utf8" }).trim(), /^Z/u);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
-    }
+    assertStopped(descendant);
   } finally {
     if (descendant !== undefined) { try { process.kill(descendant, "SIGKILL"); } catch {} }
     await rm(root, { recursive: true, force: true });
@@ -191,13 +190,7 @@ setInterval(() => {}, 1000);
         controller.abort(new Error("render deadline"));
       }, pathToFileURL(entry)), /render deadline/u);
     assert.ok(descendant !== undefined);
-    try {
-      process.kill(descendant, 0);
-      assert.notEqual(process.platform, "win32");
-      assert.match(execFileSync("ps", ["-p", String(descendant), "-o", "stat="], { encoding: "utf8" }).trim(), /^Z/u);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
-    }
+    assertStopped(descendant);
   } finally {
     if (descendant !== undefined) { try { process.kill(descendant, "SIGKILL"); } catch {} }
     await rm(root, { recursive: true, force: true });

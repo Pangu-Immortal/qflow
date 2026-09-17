@@ -32,8 +32,8 @@
       <GUY>OK Sarah || so what is || the one single thing || that you literally || can't live without?
     </opening-question>
     <daily-creatine>
-      <GIRL>Creatine. Five grams || a day, every day. ~@lifestyle || I put it || in my coffee, || my smoothie, || and even my || pasta water.
-      <GUY>God I think || you're treating this @/lifestyle || as flour.
+      <GIRL>Creatine. Five grams || a day, every day. @{~lifestyle} || I put it || in my coffee, || my smoothie, || and even my || pasta water.
+      <GUY>God I think || you're treating this @{/lifestyle} || as flour.
     </daily-creatine>
     <arms-are-asking>
       <GIRL>But actually you || need this way || more than I do.

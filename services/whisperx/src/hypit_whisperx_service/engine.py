@@ -10,7 +10,8 @@ from typing import Any, Mapping
 
 from .audio import CanonicalAudio
 from .config import ServiceConfig
-from .resources import assert_punkt_tab
+from .resources import assert_punkt_tab, assert_sentence_data
+from .models import asr_path, alignment_path, alignment_selection, hf_cache, torch_cache, use_local_resources_only
 
 logger = logging.getLogger("qflow.whisperx")
 
@@ -91,6 +92,7 @@ def normalize_alignment(language: str, raw: Mapping[str, Any]) -> dict[str, obje
 
 class WhisperXEngine:
     def __init__(self, config: ServiceConfig):
+        use_local_resources_only()
         assert_punkt_tab(config.nltk_data_root)
         os.environ["NLTK_DATA"] = str(config.nltk_data_root)
         try:
@@ -109,11 +111,12 @@ class WhisperXEngine:
         self._inference_lock = threading.Lock()
         self._alignment_models: dict[str, tuple[object, object]] = {}
         started = time.monotonic()
-        logger.info("loading ASR model=%s; uncached weights may download during this call", config.model)
+        logger.info("loading prepared ASR model=%s", config.model)
         self._asr = whisperx_module.load_model(
-            config.model,
+            asr_path(config),
             config.device,
             compute_type=config.compute,
+            local_files_only=True,
         )
         logger.info("ASR model ready in %.1fs", time.monotonic() - started)
         self._whisperx_version = metadata.version("whisperx")
@@ -131,10 +134,18 @@ class WhisperXEngine:
         model = self._alignment_models.get(language)
         if model is None:
             started = time.monotonic()
-            logger.info("loading alignment model for language=%s; uncached weights may download during this call", language)
+            logger.info("loading prepared alignment model for language=%s", language)
+            try:
+                kind, selected = alignment_path(self._config, language)
+            except ValueError as error:
+                raise InferenceInputError(str(error)) from error
+            assert_sentence_data(self._config.nltk_data_root, language)
             loaded = self._whisperx.load_align_model(
                 language_code=language,
                 device=self._config.device,
+                model_name=selected,
+                model_dir=str(torch_cache(self._config)) if kind == "torchaudio" else hf_cache(self._config),
+                model_cache_only=True,
             )
             if not isinstance(loaded, tuple) or len(loaded) != 2:
                 raise RuntimeError("WhisperX returned an invalid alignment model")
@@ -148,6 +159,11 @@ class WhisperXEngine:
             raise InferenceInputError(
                 f"model {self._config.model!r} is English-only and cannot transcribe {language!r}"
             )
+        if language is not None:
+            try:
+                alignment_selection(language)
+            except ValueError as error:
+                raise InferenceInputError(str(error)) from error
         samples = self._numpy.frombuffer(audio.pcm_s16le, dtype="<i2").astype(self._numpy.float32)
         samples /= 32768.0
         samples = self._numpy.ascontiguousarray(samples)
@@ -162,7 +178,7 @@ class WhisperXEngine:
                 language=language,
             )
             logger.info("transcription completed in %.1fs", time.monotonic() - started)
-            detected = transcription.get("language") or language or "en"
+            detected = transcription.get("language") or language
             if not isinstance(detected, str) or not detected.strip():
                 raise RuntimeError("WhisperX did not return a valid language")
             segments = transcription.get("segments", [])

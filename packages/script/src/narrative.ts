@@ -4,7 +4,7 @@ import type { CaptionAlignmentUnit, CaptionDocument, CaptionDisplayWord } from "
 import { sealText } from "@qflow/text";
 
 import type { ParsedCaptionRegion, ParsedNarrative } from "./types.js";
-import { cleanProjection, displayWordSurfaces, joinProjection, lexicalCount } from "./lexical.js";
+import { cleanProjection, displaySurfaces, joinProjection, lexicalCount } from "./lexical.js";
 
 function turnForRegion(parsed: ParsedNarrative, region: ParsedCaptionRegion): ParsedNarrative["turns"][number] {
   const turn = parsed.turns.find((candidate) =>
@@ -21,7 +21,8 @@ function projectCaption(parsed: ParsedNarrative, id: string, narrativeId: string
   for (const region of parsed.captionProjection.regions) {
     if (region.kind === "hidden") continue;
     const turn = turnForRegion(parsed, region);
-    const surfaces = displayWordSurfaces(region.display);
+    const display = displaySurfaces(region.display);
+    const surfaces = display.map(word => word.text);
     if (surfaces.length === 0) throw new Error(`Caption region ${region.id} contains no visible display surface`);
     // A Dual Text alias is one indivisible N:M correspondence unit. Ordinary prose gives one
     // unit per display surface so the author can place cue/style boundaries between words.
@@ -46,6 +47,7 @@ function projectCaption(parsed: ParsedNarrative, id: string, narrativeId: string
           turnId: turn.id,
           ...(turn.role === undefined ? {} : { role: turn.role }),
           text: surface,
+          separatorBefore: group.indices[groupIndex] === 0 ? region.separatorBefore : display[group.indices[groupIndex]!]!.separatorBefore,
           attributes,
         });
         return wordId;

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 
 import type { CliIo } from "@qflow/cli";
-import { downloadVideo, isVideoUrl } from "@qflow/yt-dlp";
+import { downloadVideo, isVideoUrl, prepareVideoDownload } from "@qflow/yt-dlp";
 import sharp from "sharp";
 
 import { runProcess, runProcessOutput, runProcessWithInput } from "./process.js";
@@ -15,7 +15,7 @@ import type { FrameWords, TranscriptWord } from "./transcript.js";
  * the input media. These commands expose evidence; editorial interpretation belongs to the author.
  */
 
-export const mediaCommands = ["probe", "cut", "frames", "tile", "tiles", "boundaries", "fetch"] as const;
+export const mediaCommands = ["probe", "cut", "frames", "tile", "tiles", "boundaries", "fetch", "prepare-fetch"] as const;
 export type MediaCommand = typeof mediaCommands[number];
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -673,6 +673,7 @@ export function writeMediaHelp(io: CliIo, topic?: MediaCommand): void {
       "    Paginated grids (3 rows by default). Range files contain { start, end, id?, frames?, every? }."],
     boundaries: ["  qflow media boundaries <file> [--rate <samples/s>] [--threshold <0..1>]",
       "    Mechanical adjacent-frame change candidates with scores; never editorial shot labels."],
+    "prepare-fetch": ["  qflow media prepare-fetch", "    Explicitly prepare the pinned yt-dlp environment; does not fetch media."],
     fetch: ["  qflow media fetch <url> --to <video.mp4>", "    A link turned into a file with the pinned yt-dlp, video and audio together."],
   };
   const chosen = topic === undefined ? mediaCommands : [topic];
@@ -697,5 +698,11 @@ export async function runMediaCli(argv: readonly string[], io: CliIo, cwd = proc
   else if (command === "tile") await tile(rest, io, cwd);
   else if (command === "tiles") await tiles(rest, io, cwd);
   else if (command === "boundaries") await boundaries(rest, io, cwd);
-  else await fetch(rest, io, cwd);
+  else if (command === "prepare-fetch") {
+    const parsed = parseArguments(rest, []);
+    assert(parsed.positionals.length === 0, "prepare-fetch takes no positional arguments");
+    io.writeProgress?.("Preparing the selected yt-dlp environment…\n");
+    const executable = prepareVideoDownload();
+    io.write(parsed.json ? `${JSON.stringify({ executable })}\n` : `yt-dlp ready: ${executable}\n`);
+  } else await fetch(rest, io, cwd);
 }

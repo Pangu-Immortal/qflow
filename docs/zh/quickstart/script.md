@@ -113,18 +113,28 @@ dialogue `Text` 包含 Role Cue 前缀，speech `Text` 和 CaptionDocument 会�
 Cue 的切换。这同样适用于其他语言的短语或名字，例如 `<Git Hub|>`。
 
 这时左侧同时提供口播，因此标记也可以放在左侧，Studio 会回写到实际文字上：
-`<组@beat!件化|>`。标记和显示属性不会成为口播内容。若明确写了右侧口播，标记仍然属于
+`<组@{beat!}件化|>`。标记和显示属性不会成为口播内容。若明确写了右侧口播，标记仍然属于
 右侧。两侧都没有口播文字时无效。
 
 `||` 是 **Caption Cue Break** 语法，只能位于完整对齐单元之间，不能写进 Dual Text 或切开
 N:M 单元。字幕稍后才把 CaptionDocument 与 Timeline 汇合得到帧时间。
+
+### 空格与拼写
+
+按想显示的内容书写：`是的 就是这样`、`3개월`、`3 개월`、`3D` 和 `3 D` 会保留各自的
+分隔。连续普通空白规范为一个空格；说话轮次首尾的排版空白和 Dual Text 两侧的边缘空白
+不显示。源码换行不是字幕换行；用 `||` 分 Cue，用所选字幕样式控制视觉换行。
+
+语义标记不贡献文字或空格。`是的@{part}就是这样@{/part}` 连续显示；
+`是的 @{part}就是这样@{/part}` 保留空格。`<文字|>` 用来明确字幕分组，
+不是保护拼写或空格所必需的写法。
 
 ### 扁平词属性
 
 显示词可以带一个扁平的属性块。属性写在词后面，不嵌套，也不表达时间：
 
 ```svml
-<HOST> This is really{emphasis,keyword} important{brand}.</HOST>
+<line><HOST>This is really{emphasis,keyword} important{brand}.</line>
 ```
 
 不写 `=` 的属性值默认为 `true`，也可以写成 `name=value`。Caption 包负责把属性名映射为
@@ -150,33 +160,38 @@ Selection 是内联声明的具名语义**范围**。每个名字只能有一对
 
 ```svml
 <script id="story">
-  @whole
+  @{whole}
   <opening>
-    <HOST> @problem Current tools make agents operate a timeline. @/problem
+    <HOST> @{problem} Current tools make agents operate a timeline. @{/problem}
   </opening>
 
   <answer>
-    <HOST> @solution SVML removes that editing loop. @/solution
+    <HOST> @{solution} SVML removes that editing loop. @{/solution}
   </answer>
-  @/whole~
+  @{/whole~}
 </script>
 ```
 
 ### 语法
 
+所有标记都以 `@{` 开始、以 `}` 结束；`/`、`!`、`~` 均在内部。名称以小写字母开头，
+后续可用小写字母、数字、`_`、`-`，总长不超过 64；内部不允许空白或嵌套。
+`@{beat!}` 是 Moment，`@{part}!` 则是区间首后跟正文感叹号。标记不能切开语音 Token，也不能插到它与附着标点之间：应写 `@{beat!}“测试”`，不能写 `“@{beat!}测试”`。
+
+
 | 标记 | 含义 |
 |---|---|
-| `@id` | 打开，右吸附（从下一个单词开始） |
-| `~@id` | 打开，左吸附（从前一个单词的末尾开始） |
-| `@/id` | 关闭，左吸附（在前一个单词的末尾结束） |
-| `@/id~` | 关闭，右吸附（在下一个单词的起始处结束） |
+| `@{id}` | 打开，右吸附（从下一个单词开始） |
+| `@{~id}` | 打开，左吸附（从前一个单词的末尾开始） |
+| `@{/id}` | 关闭，左吸附（在前一个单词的末尾结束） |
+| `@{/id~}` | 关闭，右吸附（在下一个单词的起始处结束） |
 
 `~` 后缀/前缀控制边界是吸附到左边还是右边。默认的打开标记为右吸附；默认的关闭标记为左吸附。
 
 完整 Script 严格拥有 `2M + 2N + 2` 个有序语义锚点：每个 Token 两个、每个 Segment 两个，
-再加 Program 自己的首尾。最外侧切口仍用 affinity 区分语义：第一个 Segment 前的 `~@id`
-选择 Program start，`@id` 选择首 Segment start；末 Segment 后的 `@/id` 选择末 Segment end，
-`@/id~` 选择 Program end。对齐后它们可能落在同一帧，但作者身份并不相同。
+再加 Program 自己的首尾。最外侧切口仍用 affinity 区分语义：第一个 Segment 前的 `@{~id}`
+选择 Program start，`@{id}` 选择首 Segment start；末 Segment 后的 `@{/id}` 选择末 Segment end，
+`@{/id~}` 选择 Program end。对齐后它们可能落在同一帧，但作者身份并不相同。
 
 ### 多个具名 Selection
 
@@ -186,7 +201,7 @@ Selection 不要求像 XML 标签那样嵌套，它们可以互相交叉：
 
 ```svml
 <demo>
-  <HOST> @a One @b two @/a three @/b.
+  <HOST> @{a} One @{b} two @{/a} three @{/b}.
 </demo>
 ```
 
@@ -202,15 +217,15 @@ Moment 是具名的时间**点**（不是范围）：
 
 ```svml
 <ecosystem>
-  <HOST> @ranking! Image generation, video generation, captions and B-roll
+  <HOST> @{ranking!} Image generation, video generation, captions and B-roll
          all become reusable components.
 </ecosystem>
 ```
 
 | 标记 | 含义 |
 |---|---|
-| `@id!` | 右吸附（时间点位于下一个单词的起始处） |
-| `~@id!` | 左吸附（时间点位于前一个单词的末尾） |
+| `@{id!}` | 右吸附（时间点位于下一个单词的起始处） |
+| `@{~id!}` | 左吸附（时间点位于前一个单词的末尾） |
 
 每个 Moment 名字只出现一次，编译为带有 `anchorId` 的 `NarrativeMoment`。Selection 和 Moment
 共享同一命名空间——同一个 id 不能同时用于两者。
@@ -246,26 +261,26 @@ Moment 是具名的时间**点**（不是范围）：
 
 ```svml
 <script id="story">
-  @whole
+  @{whole}
   <hook>
-    <HOST> @problem Girls, you need to hear this. Never let anyone take credit
-           for your work. @/problem
+    <HOST> @{problem} Girls, you need to hear this. Never let anyone take credit
+           for your work. @{/problem}
   </hook>
 
   <meeting>
-    <HOST> @solution I started sending <BCC | B C C> recaps after every
-           meeting: timestamps, decisions, who said what. @ranking! After
-           the first recap, everything changed. @/solution
+    <HOST> @{solution} I started sending <BCC | B C C> recaps after every
+           meeting: timestamps, decisions, who said what. @{ranking!} After
+           the first recap, everything changed. @{/solution}
   </meeting>
 
   <evidence>
-    <HOST> That gave me @emphasis the courage I was missing @/emphasis.
+    <HOST> That gave me @{emphasis} the courage I was missing @{/emphasis}.
   </evidence>
 
   <payoff>
     <HOST> And guess what? I'm sitting in my old boss's chair now.
   </payoff>
-  @/whole~
+  @{/whole~}
 </script>
 ```
 

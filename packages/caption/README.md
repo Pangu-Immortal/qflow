@@ -7,7 +7,7 @@ Caption has two independent structures: Script organizes displayed words into Cu
 choose how those Cues appear. A Use may begin inside a Cue. It changes presentation without changing
 that Cue's text or restarting its word timing.
 
-`CaptionDocument` owns displayed words, display/pronunciation associations, word attributes and `||`
+`CaptionDocument` owns displayed words with authored separators, display/pronunciation associations, word attributes and `||`
 breaks. `Timeline` owns placed Takes and measured word times. `temporalizeCaptionDocument(document,
 timeline)` joins their identities and returns `TimedCaptionProjection`: complete Cues with original
 unit times. Segment, speaking-turn and explicit Cue boundaries organize this content. No Style is

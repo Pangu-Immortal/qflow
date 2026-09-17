@@ -10,7 +10,7 @@ know that Script, Segment or Narrative exist.
 
 ```svml
 <script id="story">
-  @answer
+  @{answer}
 
   <opening>
     <ALICE> I will make the first point.
@@ -18,7 +18,7 @@ know that Script, Segment or Narrative exist.
   </opening>
 
   <pause/>
-  @/answer
+  @{/answer}
 </script>
 ```
 
@@ -65,8 +65,8 @@ CaptionDocument contracts.
   Role Cue or the Segment close ends that turn.
 - **Dual Text**: one authored speech span with separate display and spoken projections, written
   `<display text | spoken text>`. In `<display text|>`, omitted speech inherits the displayed prose.
-- **Selection marker**: a named semantic range, written `@name ... @/name`.
-- **Moment marker**: a named semantic point, written `@name!`.
+- **Selection marker**: a named semantic range, written `@{name} ... @{/name}`.
+- **Moment marker**: a named semantic point, written `@{name!}`.
 - **CaptionDocument**: the Script-owned caption truth; it contains **Display Words**,
   **Alignment Units** and **Cue Breaks**. It contains no seconds or frames.
 - **Token attribute**: a flat postfix display-word annotation such as `really{emphasis}` or
@@ -86,7 +86,7 @@ Caption Styles choose whether to highlight, reveal or keep the text steady.
 
 In a shared side, markers and display attributes do not enter either text projection. Its speech
 Tokens retain offsets into the actually written left-hand text, so Studio can move an anchor inside
-`<组@beat!件化|>` without expanding the shorthand. Attributes still annotate the preceding display
+`<组@{beat!}件化|>` without expanding the shorthand. Attributes still annotate the preceding display
 word, not the whole group. Whitespace-only speech is omitted; a group with no spoken text on either
 side is invalid. This adds no new public value type or protocol version.
 
@@ -101,8 +101,8 @@ Units; it does not split the Segment, cut the picture or end a Selection.
 <script id="story">
   <exchange>
     <HOST> I use it || every day, || since <2012 | twenty twelve>.
-    <GUEST> Even @proof on holiday @/proof?
-    <HOST> @answer! Especially then.
+    <GUEST> Even @{proof} on holiday @{/proof}?
+    <HOST> @{answer!} Especially then.
   </exchange>
 </script>
 ```
@@ -117,19 +117,53 @@ following characters. Display punctuation attaches to neighboring words without 
 These units support precise timing and highlighting. A Caption Cue can hold a whole phrase of them;
 `||` chooses its handoff independently of character counts or visual line wrapping.
 
+Annotations do not create speech boundaries. Comments are transparent (`hel<!--note-->lo`
+remains `hello`); a postfix attribute or `||` inside a word is invalid. Script analyzes a complete
+prose run before binding these constructs. An explicit Dual correspondence and a speaker/Segment
+boundary remain authored structure. Shared Dual groups still expose their internal speech anchors.
+
+A Dual display side is literal authored text, including symbols and emoji: `<😀|smile>` and
+`<.|dot>` have explicit speech correspondence and require no invented speech token for the symbol.
+A literal-only display is one display surface within that correspondence.
+
+## Display spelling and separators
+
+Script preserves the normalized display spelling independently of speech tokenization. Ordinary
+whitespace runs become one space; leading/trailing whitespace in a Turn and padding at the edges
+of a Dual Text side are omitted. No language-specific rule removes a Chinese space or inserts a
+space between numeric and Korean/Latin tokens. `是的 就是这样`, `3개월`, `3 개월`, `3D` and `3 D`
+therefore remain distinct as authored. Source newlines are prose formatting, not Caption Cue breaks.
+Use `||` for Cues and a family's layout controls for visual rows.
+
+Each `CaptionDisplayWord.separatorBefore` is `""` or `" "`, relative to the preceding displayed word
+in its Turn. Together with `text`, it carries the display spelling to consumers; it is not a speech
+Token and has no timing. A renderer suppresses the leading separator at a displayed line/Cue start.
+Shared groups retain internal separators and individual speech anchors: `<New York|>` is one
+Alignment Unit with a space inside, while `<3D|>` has none. Grouping is a creative choice, not a
+workaround for preserving spelling.
+
 ## Selection and Moment affinity
+
+Every marker starts with `@{` and ends with `}`. The complete marker is zero-width in speech and
+display; surrounding prose whitespace remains prose. All control sigils belong inside the braces:
+`@{beat!}` is a Moment, whereas `@{part}!` opens a Selection followed by a literal exclamation mark.
+Names match `[a-z][a-z0-9_-]{0,63}`; whitespace and nesting inside a marker are invalid.
+A marker cannot split a speech Token or separate it from attached punctuation: place
+`@{beat!}“测试”`, not `“@{beat!}测试”`. `hello{emphasis}` is a postfix display attribute; `@{part}`
+is consumed as one marker and cannot be mistaken for that attribute. Write a literal `@{part}` as
+`\@\{part\}`.
 
 A marker selects the adjacent semantic anchor; it does not write a timecode. Inside a spoken
 passage, its affinity normally chooses a neighboring word boundary:
 
 | Marker | Boundary |
 | --- | --- |
-| `@name` | Selection opens at the next word's start: right affinity. |
-| `~@name` | Selection opens at the previous word's end: left affinity. |
-| `@/name` | Selection closes at the previous word's end: left affinity. |
-| `@/name~` | Selection closes at the next word's start: right affinity. |
-| `@name!` | Moment at the next word's start: right affinity. |
-| `~@name!` | Moment at the previous word's end: left affinity. |
+| `@{name}` | Selection opens at the next word's start: right affinity. |
+| `@{~name}` | Selection opens at the previous word's end: left affinity. |
+| `@{/name}` | Selection closes at the previous word's end: left affinity. |
+| `@{/name~}` | Selection closes at the next word's start: right affinity. |
+| `@{name!}` | Moment at the next word's start: right affinity. |
+| `@{~name!}` | Moment at the previous word's end: left affinity. |
 
 At structural edges, the parser retains the corresponding Segment or program boundary rather than
 inventing a neighboring word. Selection and Moment ids share one namespace. Selections can overlap,
@@ -138,37 +172,50 @@ cross and span Segments; unlike tags, they do not need to nest.
 To join two visual Selections without exposing their inter-word pause, match affinity on both sides:
 
 ```text
-@coffee my coffee @/coffee ~@smoothie my smoothie @/smoothie
-@coffee my coffee @/coffee~ @smoothie my smoothie @/smoothie
+@{coffee} my coffee @{/coffee} @{~smoothie} my smoothie @{/smoothie}
+@{coffee} my coffee @{/coffee~} @{smoothie} my smoothie @{/smoothie}
 ```
 
 These are alternative spellings, not two occurrences to put in the same Script. In the first,
 “coffee” ends both the first Window and the gap's left boundary, so the smoothie Selection owns the
 pause. In the second, the next “my” starts both touching boundaries, so the coffee Selection owns it.
-Plain `@/coffee @smoothie` leaves the gap between previous word end and next word start outside both.
+Plain `@{/coffee} @{smoothie}` leaves the gap between previous word end and next word start outside both.
 The media consumer still decides playback and visual coverage inside those projected Windows.
 
 ## Marker writeback
 
 `adjustScriptSelection` and `adjustScriptMoment` accept explicit anchor identities. A Selection's
-two endpoints are written together. Script owns their legal source sites: token punctuation and
-postfix attributes stay attached, Segment boundaries stay structural, and coincident markers are
-ordered together. Writeback reads the current source, removes the markers, normalizes ordinary
-same-line prose, and places the markers at their requested anchors. Repeated spaces and tabs in
-prose become necessary separators; punctuation uses the same attachment rules as Script's text
-projection. Newlines, blank lines and each line's leading spaces/tabs remain intact. A marker at
-the start of a line is placed after its indentation; whitespace after that marker is prose, not
-additional indentation. Marker-only lines remain blank when the marker leaves. Comments, tags,
-Dual Text and display attributes retain their own syntax and are not passed through prose cleanup.
+two endpoints are moved together; unrelated markers and all source prose remain untouched. Names
+terminate at `}`, so writeback never inserts a separating space or normalizes surrounding prose.
+A no-op adjustment returns the original source. Script owns legal insertion sites: Tokens and
+postfix attributes stay together, Dual Text markers follow the actual speech side, and coincident
+markers written together have deterministic order. Empty self-closing Segments expand only when a
+requested boundary needs an interior insertion site.
 
-Normalization keeps lexical units unchanged and does not restore earlier whitespace spellings.
-It has no persistent formatting state: the same text structure and anchor relationships produce
-the same spelling on repeated edits. Empty self-closing Segments expand when needed to make their
-distinct boundaries writable.
+Writeback reparses the result to retain the requested bindings and unchanged speech, display and
+Narrative/Caption content. Source offsets remain parser-private; no formatting history is stored.
 
-Writeback reparses the result to retain the intended identities and unchanged narrative/caption
-content. These checks concern authored order, not frame order. A consumer's temporal projection
-determines whether the resulting Instant or Window is usable.
+## Explicit migration from 0.1
+
+The 0.2 parser rejects bare `@name` markers. Preview migration from the repository or installed
+Distribution root, then explicitly write the reviewed result:
+
+```sh
+node packages/script/bin/migrate-0.2.mjs /path/to/film.svml
+node packages/script/bin/migrate-0.2.mjs /path/to/film.svml --write
+```
+
+Use `--body` for a file containing a raw Script body rather than outer SVML. The tool converts
+markers only inside Script bodies, leaves comments and escapes intact, and does not touch provider
+prompt references such as `@image1`. It neither installs anything nor runs during a build.
+
+The tool changes marker spelling, not marker placement. Move a marker that separates a word from
+its attached quote or punctuation to the complete word boundary before using that source.
+
+Review authored whitespace after migration: spaces previously discarded by Chinese/punctuation
+normalization now appear. The tool preserves source spaces rather than guessing the author's intent.
+Regenerate affected Narrative, caption and Build results with the new reader/writer together;
+protocol identities remain `@1`. Existing rendered media is not modified by source migration.
 
 ## Complete authored content and narrow exports
 

@@ -878,6 +878,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow programs")),
       colors.dim("Prepare and operate external programs declared by Endpoints in one Runtime Profile."),
       "",
+      "  qflow programs prepare [--runtime <profile>] [--endpoint <instance>]  # resources only; does not start services",
       "  qflow programs up [--runtime <profile>] [--workspace <project>] [--max-wait-ms <ms>]",
       "  qflow programs status [--runtime <profile>] [--workspace <project>]",
       "  qflow programs down [--runtime <profile>] [--workspace <project>]",

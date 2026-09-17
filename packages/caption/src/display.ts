@@ -8,6 +8,7 @@ function assert(condition: unknown, message: string): asserts condition {
 export function assertCaptionDocument(value: CaptionDocument): void {
   assert(value.id.length > 0, "CaptionDocument identity is invalid");
   assert(value.units.length > 0 && value.words.length > 0, "CaptionDocument is empty");
+  for (const word of value.words) assert(word.separatorBefore === "" || word.separatorBefore === " ", "Caption word must declare its authored separator");
   const words = new Map(value.words.map((word) => [word.id, word]));
   assert(words.size === value.words.length, "CaptionDocument word ids are repeated");
   const units = new Set<string>();

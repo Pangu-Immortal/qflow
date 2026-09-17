@@ -23,6 +23,7 @@ import {
 } from "./config.js";
 import {
   bringManagedProgramsUp,
+  prepareManagedPrograms,
   reportManagedPrograms,
   takeManagedProgramsDown,
 } from "./programs.js";
@@ -82,6 +83,7 @@ export async function openLocalRuntimeHost(
         ),
       },
       programs: {
+        prepare: async (programOptions) => await prepareManagedPrograms(profile, { ...programOptions, packageRoot, ...distribution }),
         up: async (programOptions) => await bringManagedProgramsUp(profile, { ...programOptions, packageRoot, ...distribution }),
         down: async (scope) => await takeManagedProgramsDown(profile, { ...scope, packageRoot, ...distribution }),
         report: async (scope) => await reportManagedPrograms(profile, { ...scope, packageRoot, ...distribution }),

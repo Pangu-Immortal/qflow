@@ -11,8 +11,13 @@ needs no browser-library installation or private `node_modules` import path.
 `qflow capture install-browser` explicitly prepares the package's tested Chrome for Testing revision
 in the browser cache (`PUPPETEER_CACHE_DIR`, or `~/.cache/puppeteer`).
 `captureBrowserExecutablePath()` reports that path.
-The package pins Chrome 153.0.8010.12 for the native recording API; `installCaptureBrowser()` uses
-the upstream installer. Existing compatible browsers remain selectable through launch options.
+The recommended version is declared in this package's `package.json` under `qflow.captureBrowser`.
+`installCaptureBrowser()` uses the upstream installer. Both it and `captureBrowserExecutablePath()`
+accept `{ version, cacheDirectory, downloadBaseUrl }`; capture accepts the same selection as
+`options.browser`. CLI equivalents are `--browser-version`, `--browser-cache` and
+`--browser-download-base-url`. A custom download base must serve the upstream archive layout;
+there is no retry against an unselected source. Use the same version and cache when preparing and
+capturing. Capture never installs a browser, and a missing selected executable is an error. Existing compatible browsers remain selectable through launch options.
 
 ## Library
 
@@ -26,6 +31,8 @@ file as it finishes. A task failure closes the browser while preserving earlier 
   `defaultViewport` replaces it. `channel` selects an installed Chrome channel, `executablePath`
   selects a specific executable, and the default uses this package's tested Chrome for Testing.
   `PUPPETEER_CACHE_DIR` selects the cache directory.
+- `browser`: managed browser version/cache selection. It cannot be combined with an explicit
+  `launch.channel` or `launch.executablePath`.
 - `timeoutMs`: operation and navigation timeout for the initial page. Omission keeps Puppeteer's
   default; `0` disables that timeout. Scripts can configure other pages themselves.
 - `ffprobePath`: metadata reader for finished recordings; defaults to `ffprobe` on `PATH`.

@@ -349,8 +349,8 @@ function parseRuntimeCommand(tail: readonly string[]): RuntimeSelectionCommand |
 
 function parseProgramsCommand(tail: readonly string[]): ProgramsCommand {
   const [action, ...values] = tail;
-  if (action !== "up" && action !== "down" && action !== "status") {
-    throw new Error("programs takes up, down or status");
+  if (action !== "prepare" && action !== "up" && action !== "down" && action !== "status") {
+    throw new Error("programs takes prepare, up, down or status");
   }
   const [profile, rest] = optionalPositional(values);
   const options = commandOptions(`programs ${action}`, rest,

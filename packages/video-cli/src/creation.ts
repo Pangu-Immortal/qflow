@@ -21,7 +21,7 @@ import { speechEvidenceTypes } from "@qflow/speech-evidence";
 import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
 import { sealText } from "@qflow/text";
 import { whisperXCapabilities, whisperXRequestForEvidenceAudio } from "@qflow/whisperx";
-import type { WhisperXLanguage } from "@qflow/whisperx";
+import { parseWhisperXLanguage } from "@qflow/whisperx";
 
 import { videoCliDistribution } from "./distribution.js";
 import { runProcess } from "./process.js";
@@ -282,9 +282,7 @@ async function transcribe(argv: readonly string[], io: CliIo, environment: Creat
   const parsed = parseArguments(argv, ["--language", "--to", "--runtime", "--workspace"]);
   assert(parsed.positionals.length === 1, "transcribe takes exactly one audio or video file");
   const source = resolve(environment.cwd, parsed.positionals[0]!);
-  const language = parsed.options.get("--language");
-  assert(language === "en" || language === "zh" || language === "es",
-    "transcribe requires --language en|zh|es for the spoken language (use --language zh for Chinese)");
+  const language = parseWhisperXLanguage(parsed.options.get("--language"), "transcribe --language");
   const to = await destination(parsed, environment.cwd);
   const { profile, host } = await environment.openHost(
     parsed.options.get("--runtime"),
@@ -298,7 +296,7 @@ async function transcribe(argv: readonly string[], io: CliIo, environment: Creat
     id: "need:qflow-transcribe",
     capability: whisperXCapabilities.alignment,
     returns: speechEvidenceTypes.alignedTranscript,
-    constraints: whisperXRequestForEvidenceAudio(audio, { language: language as WhisperXLanguage }),
+    constraints: whisperXRequestForEvidenceAudio(audio, { language }),
     result: "record:qflow-transcribe",
   };
   const provider = await selectedProvider(host, need, profile);
@@ -437,7 +435,7 @@ export function writeCreationHelp(io: CliIo, topic?: CreationCommand): void {
       "qflow transcribe",
       "Establish word times with the whisperx-alignment Endpoint of the selected Runtime Profile.",
       "",
-      "  qflow transcribe <audio|video> --to <transcript.json> --language en|zh|es [--runtime <profile>] [--workspace <project>]",
+      "  qflow transcribe <audio|video> --to <transcript.json> --language <code> [--runtime <profile>] [--workspace <project>]",
       "",
       "Extracts 16 kHz mono speech audio with ffmpeg and writes every word with its start and end in",
       "seconds. One immediate request; no Build, Result or state.",

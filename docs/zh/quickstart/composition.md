@@ -156,7 +156,7 @@ Build Target，也可以直接接到媒体裁切、音频/帧提取或模型参�
 
   <!-- 1. Script: the semantic truth -->
   <script id="story">
-    <opening><HOST>Meaning @demo becomes the source @/demo.</opening>
+    <opening><HOST>Meaning @{demo} becomes the source @{/demo}.</opening>
   </script>
 
   <!-- 2. Generation: Seedance talking head + standalone video -->

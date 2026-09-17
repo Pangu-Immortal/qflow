@@ -125,8 +125,11 @@ or character count cannot make that choice. Count the display side of Dual Text 
 | Chinese | Keep compounds, names, modifiers and their objects together. Let a complete short clause share a Cue when it fits; repeated tiny character groups fragment both meaning and the screen. |
 | Mixed Chinese and English | Read the phrase as a whole. A Latin brand name or number can occupy several Han characters' width; its lexical unit count does not predict that width. |
 
-Fine already leaves adjacent Han characters together without English word gaps. Its `word-gap`
-controls spaced boundaries, including Chinese/Latin transitions; `letter-spacing` adjusts tracking.
+Fine preserves authored display separators in every writing system. Its `word-gap` sizes those
+separators; a Chinese/Latin or number/letter boundary does not create one. Write `是的 就是这样`
+when that space is intended, and `3D` or `3개월` when the text should stay joined. `letter-spacing`
+adjusts glyph tracking. `<expression|>` groups an expression for caption behavior; it is not needed
+to preserve spelling or spaces.
 The same timing supports a stable complete Cue, current-character color or a trail. For flowing
 Chinese speech, a readable phrase with restrained emphasis often works better than a separate bounce
 or reveal on every character. Choose the response for the performance's energy.
