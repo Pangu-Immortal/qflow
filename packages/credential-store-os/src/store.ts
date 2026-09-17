@@ -67,6 +67,8 @@ type WindowsCredentialResult = {
 
 const windowsScript = fileURLToPath(new URL("../runtime/windows-credential.ps1", import.meta.url));
 
+const windowsCredentialTimeoutMs = 10_000;
+
 function windowsCredential(
   operation: "read" | "write" | "delete",
   service: string,
@@ -84,8 +86,13 @@ function windowsCredential(
     const fail = (error: Error): void => {
       if (settled) return;
       settled = true;
+      clearTimeout(timer);
       reject(error);
     };
+    const timer = setTimeout(() => {
+      fail(new Error(`Windows credential ${operation} for ${account} timed out`));
+      child.kill("SIGKILL");
+    }, windowsCredentialTimeoutMs);
     child.on("error", fail);
     child.stdout.on("data", (chunk: Buffer) => {
       stdout += chunk.toString("utf8");
@@ -97,6 +104,7 @@ function windowsCredential(
     });
     child.on("close", (code) => {
       if (settled) return;
+      clearTimeout(timer);
       if (code !== 0) {
         fail(new Error(`Windows credential ${operation} for ${account} failed${stderr.trim().length === 0 ? "" : `: ${stderr.trim()}`}`));
         return;
