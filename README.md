@@ -249,9 +249,9 @@ commands and the repository layout.
   </tr>
   <tr>
     <td width="220" align="center">
-      <a href="https://www.hiapi.ai"><img alt="HiAPI" src="./docs/public/hiapi.png" width="165"></a>
+      <a href="https://www.hiapi.ai/invite/qflow"><img alt="HiAPI" src="./docs/public/hiapi.png" width="165"></a>
     </td>
-    <td><a href="https://www.hiapi.ai">HiAPI</a> is a unified API platform for AI image, video, audio, and language models. Connect GPT Image 2.5, Seedance 2.0, Veo 3.1, Kling, Wan, and other popular models through one platform. Pay as you go with no monthly fee, with free trial credits available for new users.</td>
+    <td><a href="https://www.hiapi.ai/invite/qflow">HiAPI</a> is a unified API platform for AI image, video, audio, and language models. Connect GPT Image 2.5, Seedance 2.0, Veo 3.1, Kling, Wan, and other popular models through one platform. Pay as you go with no monthly fee, with free trial credits available for new users.</td>
   </tr>
   <tr>
     <td width="220" align="center">
