@@ -1,4 +1,4 @@
-const windowsProcessCreation = ["PATHEXT", "SYSTEMROOT", "WINDIR", "ComSpec"] as const;
+const windowsProcessCreation = ["PATHEXT", "SYSTEMROOT", "WINDIR", "ComSpec", "TEMP", "TMP"] as const;
 
 /**
  * ffmpeg and ffprobe are started as PATH executables. The Host environment is
@@ -7,9 +7,10 @@ const windowsProcessCreation = ["PATHEXT", "SYSTEMROOT", "WINDIR", "ComSpec"] as
  */
 export function mediaProcessEnv(
   extra?: Readonly<Record<string, string>>,
+  platform: NodeJS.Platform = process.platform,
 ): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { PATH: process.env.PATH ?? "" };
-  if (process.platform === "win32") {
+  if (platform === "win32") {
     for (const name of windowsProcessCreation) {
       const value = process.env[name];
       if (value !== undefined && value.length > 0) env[name] = value;
