@@ -97,6 +97,18 @@ The underlying character anchors remain available to other Timeline consumers. `
 `word-gap` sizes the separators authored in `CaptionDisplayWord.separatorBefore`. A numeric or
 writing-system boundary does not create a space: `3D` and `3개월` stay joined, while `是的 就是这样`
 keeps its space. Base text, active text, underlines and joined boxes consume the same boundaries.
+For `active-box: trail; active-box-continuity: joined`, Fine measures the complete stationary Cue,
+including the inactive suffix, and joins its painted line rectangles. An over-wide word's internal
+lines are included. Padding and borders extend beyond those rectangles without changing text flow;
+overlapping line backgrounds share one outline and paint translucent color once. Cue motion then
+moves text and decoration together.
+
+This decoration uses HyperFrames' existing local browser-program extension, owned by Fine. Its
+measurement copy uses the same exact-font text and available width, is removed synchronously after
+measurement, and is recomputed when a frame is sought (including after fonts finish loading). It
+adds no layout records to Script, Caption, Timeline or Runtime. Other backends must support the
+selected program format explicitly.
+
 `letter-spacing` controls glyph tracking. Exact font fallbacks supply the required glyphs; the layout
 does not select a font by language.
 

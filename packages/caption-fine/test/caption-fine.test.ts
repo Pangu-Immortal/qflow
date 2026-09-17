@@ -567,13 +567,13 @@ test("Fine uses author separators in ordinary text, shared groups, active copies
   for (const id of ["atom-1-base-3", "atom-1-active-3", "atom-1-underline-3"]) {
     assert.equal(grouped.find(element => element.id === id)!.style.find(style => style.name === "margin-left")?.value, "14px");
   }
-  const backgroundWords = grouped.filter(element => element.id.startsWith("joined-box-2-group-") && element.kind === "text");
+  const backgroundWords = grouped.filter(element => element.id.startsWith("joined-group-") && element.kind === "text");
   assert.deepEqual(backgroundWords.map(element => element.kind === "text" && element.text), ["3", "개월", "만에", "완료했습니다"]);
-  assert.equal(grouped.find(element => element.id === "joined-box-2-group-0-word-2")!.style.find(style => style.name === "margin-left")?.value, "14px");
-  assert.equal(grouped.find(element => element.id === "joined-box-2-gap-1")!.kind, "text");
+  assert.equal(grouped.find(element => element.id === "joined-group-0-word-2")!.style.find(style => style.name === "margin-left")?.value, "14px");
+  assert.equal(grouped.find(element => element.id === "joined-gap-1")!.kind, "text");
   const chinese = render("是的 就是这样");
   assert.equal(chinese.find(element => element.id === "gap-2")!.style.find(style => style.name === "letter-spacing")?.value, "14px");
   assert.equal(chinese.find(element => element.id === "atom-2-entry")!.style.some(style => style.name === "margin-left"), false);
   const joined = render("3D");
-  assert.equal(joined.some(element => element.style.some(style => style.name === "column-gap" || style.name === "margin-left")), false);
+  assert.equal(joined.some(element => element.style.some(style => (style.name === "column-gap" || style.name === "margin-left") && style.value !== "0px")), false);
 });

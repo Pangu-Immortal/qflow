@@ -632,6 +632,9 @@ importers:
       '@qflow/elaborator':
         specifier: workspace:*
         version: link:../elaborator
+      '@qflow/hyperframes':
+        specifier: workspace:*
+        version: link:../hyperframes
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup

@@ -8,6 +8,7 @@ import type {
   VisualColorPaint,
   VisualElement,
   VisualKeyframe,
+  VisualProgramElement,
   VisualStyleDeclaration,
   VisualTextElement,
   VisualTextPaintLayer,
@@ -21,6 +22,8 @@ import type { CanvasSpace, SpatialFrame, SpatialRegionTimeline } from "@qflow/sp
 import { assertFineCaptionParameters, FINE_CAPTION_FAMILY } from "./style.js";
 import { assertFineCaptionSchedule } from "./schedule.js";
 import { uniformGap, wordGaps } from "./spacing.js";
+import { browserProgram } from "@qflow/hyperframes";
+import { joinedBoxSetup } from "./joined-box.js";
 import type {
   FineCaptionActiveUnderline,
   FineCaptionGlyphPaint,
@@ -670,7 +673,7 @@ function cueElements(
     readonly canvas: CanvasSpace;
   },
 ): VisualElement[] {
-  type UnorderedVisualElement = Omit<VisualBoxElement, "order"> | Omit<VisualTextElement, "order">;
+  type UnorderedVisualElement = Omit<VisualBoxElement, "order"> | Omit<VisualTextElement, "order"> | Omit<VisualProgramElement, "order">;
   const elements: VisualElement[] = [];
   let order = 0;
   const push = (element: UnorderedVisualElement): void => {
@@ -702,6 +705,14 @@ function cueElements(
   const marginStart = parameters.layout.direction === "rtl" ? "margin-right" : "margin-left";
   const spacedStyle = (spaced: boolean): readonly VisualStyleDeclaration[] =>
     spaced ? [{ name: marginStart, value: gapPx }] : [];
+  const atomFlow = (words: readonly CaptionDisplayWord[]): VisualStyleDeclaration[] => [
+    ...(uniformGap(wordGaps(words)) === true ? [{ name: "column-gap", value: gapPx }] : []),
+    { name: "display", value: "inline-flex" },
+    { name: "min-width", value: "0" },
+    { name: "overflow-wrap", value: "anywhere" },
+    { name: "white-space", value: "normal" },
+    { name: "word-break", value: parameters.layout.wrap === "grapheme" ? "break-all" : "normal" },
+  ];
   const fonts = parameters.typography.exactFonts;
   const rowStarts = structuralRowStarts(atoms, parameters.layout.maxWordsPerLine);
   if (parameters.layout.maxLines !== undefined) {
@@ -790,60 +801,58 @@ function cueElements(
   });
 
   if (parameters.activeBox.mode === "trail" && parameters.activeBox.continuity === "joined") {
-    for (const [prefixIndex, atom] of atoms.entries()) {
-      const timing = atomFrames.get(atom.id);
-      if (timing === undefined) throw new Error(`Fine Caption is missing timing for Atom ${atom.id}`);
-      const next = atoms[prefixIndex + 1];
+    // Fine owns this drawing program. The renderer only executes its existing browser-program
+    // format; it learns nothing about captions, activation units or their layout rules.
+    push({
+      id: "joined-boxes", parent: "cue", kind: "program",
+      style: [
+        { name: "position", value: "absolute" }, { name: "inset", value: "0" },
+        { name: "padding", value: `${compactNumber(parameters.cueBox.paddingYPx)}px ${compactNumber(parameters.cueBox.paddingXPx)}px` },
+      ],
+      program: browserProgram({
+        html: "{{joined-layout}}" + atoms.map((_, index) => `{{joined-box-${index + 1}}}`).join(""),
+        setup: joinedBoxSetup,
+        css: ":scope { pointer-events: none; }",
+        data: {
+          wordCounts: atomWords.map(words => words.length),
+          background: parameters.activeBox.background, borderColor: parameters.activeBox.borderColor,
+          borderWidth: parameters.activeBox.borderWidthPx, radius: parameters.activeBox.radiusPx,
+          paddingX: parameters.activeBox.paddingXPx, paddingY: parameters.activeBox.paddingYPx,
+        },
+      }),
+    });
+    push({ id: "joined-layout", parent: "joined-boxes", kind: "box",
+      style: [{ name: "visibility", value: "hidden" }],
+      attributes: [{ name: "data-fine-box-layout", value: "" }],
+    });
+    // The complete stationary Cue supplies layout, including the inactive suffix. Its actual
+    // word fragments determine the background; decoration contributes no width to text flow.
+    for (const [index, words] of atomWords.entries()) {
+      if (index > 0 && rowStarts.has(index)) push({ id: `joined-break-${index}`, parent: "joined-layout", kind: "box",
+        style: [{ name: "display", value: "block" }, { name: "height", value: "0" }],
+      });
+      if (!rowStarts.has(index) && words[0]!.separatorBefore === " ") pushSeparator(`joined-gap-${index}`, "joined-layout");
+      const groupId = `joined-group-${index}`;
+      push({ id: groupId, parent: "joined-layout", kind: "box", style: [...atomFlow(words), { name: "max-width", value: "100%" }] });
+      const gaps = wordGaps(words);
+      for (const [wordIndex, word] of words.entries()) {
+        push({ id: `${groupId}-word-${wordIndex}`, parent: groupId, kind: "text", text: word.text, fonts,
+          style: [...transparentGlyphStyle(parameters),
+            ...(uniformGap(gaps) === undefined ? spacedStyle(gaps[wordIndex] ?? false) : [])],
+          attributes: [{ name: "data-fine-box-word", value: "" }],
+        });
+      }
+    }
+    for (const [index, atom] of atoms.entries()) {
+      const timing = atomFrames.get(atom.id)!;
+      const next = atoms[index + 1];
       const nextStart = next === undefined ? durationFrames : atomFrames.get(next.id)?.start;
       if (nextStart === undefined) throw new Error("Fine Caption is missing timing for the next Atom");
-      const layerId = `joined-box-${prefixIndex + 1}`;
-      push({
-        id: layerId,
-        parent: "cue",
-        kind: "box",
-        style: [
-          { name: "box-sizing", value: "border-box" },
-          { name: "direction", value: parameters.layout.direction },
-          { name: "inset", value: "0" },
-          { name: "padding", value: `${compactNumber(parameters.cueBox.paddingYPx)}px ${compactNumber(parameters.cueBox.paddingXPx)}px` },
-          { name: "position", value: "absolute" },
-          { name: "text-align", value: parameters.layout.textAlign },
-        ],
+      push({ id: `joined-box-${index + 1}`, parent: "joined-boxes", kind: "box",
+        style: [{ name: "position", value: "absolute" }, { name: "inset", value: "0" }],
         animation: activeBoxAnimation(parameters, timing.start, nextStart, durationFrames, "current"),
         attributes: [{ name: "data-caption-active-box", value: "joined" }],
       });
-      push({
-        id: `${layerId}-text`,
-        parent: layerId,
-        kind: "box",
-        style: [
-          ...transparentGlyphStyle(parameters).filter(({ name }) => name !== "white-space"),
-          { name: "-webkit-box-decoration-break", value: "clone" },
-          { name: "background", value: parameters.activeBox.background },
-          { name: "border-color", value: parameters.activeBox.borderColor },
-          { name: "border-radius", value: `${compactNumber(parameters.activeBox.radiusPx)}px` },
-          { name: "border-style", value: "solid" },
-          { name: "border-width", value: `${compactNumber(parameters.activeBox.borderWidthPx)}px` },
-          { name: "box-decoration-break", value: "clone" },
-          { name: "display", value: "inline" },
-          { name: "padding", value: `${compactNumber(parameters.activeBox.paddingYPx)}px ${compactNumber(parameters.activeBox.paddingXPx)}px` },
-          { name: "white-space", value: "normal" },
-        ],
-      });
-      for (const [index, words] of atomWords.slice(0, prefixIndex + 1).entries()) {
-        if (index > 0 && rowStarts.has(index)) push({ id: `${layerId}-break-${index}`, parent: `${layerId}-text`, kind: "box",
-          style: [{ name: "display", value: "block" }, { name: "height", value: "0" }],
-        });
-        if (!rowStarts.has(index) && words[0]!.separatorBefore === " ") pushSeparator(`${layerId}-gap-${index}`, `${layerId}-text`);
-        const groupId = `${layerId}-group-${index}`;
-        push({ id: groupId, parent: `${layerId}-text`, kind: "box", style: [{ name: "display", value: "inline-flex" }] });
-        for (const [wordIndex, word] of words.entries()) {
-          push({ id: `${groupId}-word-${wordIndex}`, parent: groupId, kind: "text", text: word.text, fonts,
-            style: [...transparentGlyphStyle(parameters),
-              ...(wordIndex > 0 && word.separatorBefore === " " ? spacedStyle(true) : [])],
-          });
-        }
-      }
     }
   }
 
@@ -917,13 +926,8 @@ function cueElements(
       parent: responseId,
       kind: "box",
       style: [
-        ...(wordGap === true ? [{ name: "column-gap", value: gapPx }] as const : []),
-        { name: "display", value: "inline-flex" },
-        { name: "min-width", value: "0" },
-        { name: "overflow-wrap", value: "anywhere" },
+        ...atomFlow(atomWords[atomIndex]!),
         { name: "position", value: "relative" },
-        { name: "white-space", value: "normal" },
-        { name: "word-break", value: parameters.layout.wrap === "grapheme" ? "break-all" : "normal" },
       ],
       attributes: [{ name: "data-caption-atom", value: atom.id }],
     });

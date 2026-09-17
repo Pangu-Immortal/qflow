@@ -73,6 +73,21 @@ test("Caption Companion projects Cue text and Style from public domain values", 
     title: "#1",
     layers: [{ kind: "text", role: "content", text: "真实字幕" }],
   });
+  for (const [texts, separators, expected] of [
+    [["3", "D"], ["", ""], "3D"],
+    [["3", "개월"], ["", ""], "3개월"],
+    [["是的", "就是这样"], ["", " "], "是的 就是这样"],
+    [["hello", "world"], [" ", " "], "hello world"],
+  ] as const) {
+    const variant = { ...document, words: document.words.map((word, index) => ({ ...word,
+      text: texts[index]!, separatorBefore: separators[index]!,
+    })) };
+    const values = new Map(context.values);
+    values.set("story.caption", variant);
+    assert.equal(projectCaptionContents({ ...context, values })[0]!.display.layers[0]!.kind, "text");
+    assert.deepEqual(projectCaptionContents({ ...context, values })[0]!.display.layers,
+      [{ kind: "text", role: "content", text: expected }]);
+  }
   assert.equal(cue?.presentation?.chrome, "standard");
   assert.equal(cue?.parameterReferences, undefined);
   assert.deepEqual([cue?.startFrame, cue?.endFrameExclusive], [10, 20]);
