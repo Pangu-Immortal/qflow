@@ -223,6 +223,28 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
   </tr>
   <tr>
     <td width="220" align="center">
+      <a href="https://watcha.cn">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./docs/public/watcha-dark.png">
+          <img alt="观猹" src="./docs/public/watcha-light.png" width="170">
+        </picture>
+      </a>
+    </td>
+    <td>观猹是一个专为 AI 开发者打造的创新产品生态与社区，致力于连接优秀产品与高质量用户，助力每一个想法从 Demo 走向真实落地。从产品发现与真实反馈起步，观猹提供发布、分发与声誉追踪等支持，全方位陪伴开发者完成从产品上线到首批用户获取的全过程。</td>
+  </tr>
+  <tr>
+    <td width="220" align="center">
+      <a href="https://tokendance.space/?utm_source=qflow">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./docs/public/tokendance-dark.png">
+          <img alt="TokenDance" src="./docs/public/tokendance-light.png" width="165">
+        </picture>
+      </a>
+    </td>
+    <td>TokenDance 为开发者提供优化了推理成本的统一多模型网关。通过十亿 Token 补贴和开发者计划，TokenDance 帮助早期开发者大幅降低成本，更专注于产品验证与业务增长。</td>
+  </tr>
+  <tr>
+    <td width="220" align="center">
       <a href="https://www.hiapi.ai"><img alt="HiAPI" src="./docs/public/hiapi.png" width="165"></a>
     </td>
     <td>HiAPI 是一个统一的 AI 图片、视频、音频和语言模型 API 平台，支持 GPT Image 2.5、Seedance 2.0、Veo 3.1、可灵、万相等主流模型。HiAPI 提供在线 Playground、Remote MCP 和 Agent Skills，可接入 Claude Code、Cursor 等 AI 编程工具。平台按量付费，无月费，新用户注册可获得免费体验积分。</td>

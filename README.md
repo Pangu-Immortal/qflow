@@ -227,6 +227,28 @@ commands and the repository layout.
   </tr>
   <tr>
     <td width="220" align="center">
+      <a href="https://watcha.cn">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./docs/public/watcha-dark.png">
+          <img alt="Watcha" src="./docs/public/watcha-light.png" width="170">
+        </picture>
+      </a>
+    </td>
+    <td>Watcha is an innovative ecosystem and community built for AI builders, connecting great products with high-quality users to turn every Demo into reality. Starting from AI product discovery and genuine feedback, Watcha provides product publishing, distribution, and reputation tracking to support builders from launch to early adoption.</td>
+  </tr>
+  <tr>
+    <td width="220" align="center">
+      <a href="https://tokendance.space/?utm_source=qflow">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./docs/public/tokendance-dark.png">
+          <img alt="TokenDance" src="./docs/public/tokendance-light.png" width="165">
+        </picture>
+      </a>
+    </td>
+    <td>TokenDance offers builders a unified multi-model gateway with optimized inference costs. Through programs like the Billion-Token Subsidy and the Developer Program, TokenDance helps early-stage builders cut costs so they can focus on product validation and growth.</td>
+  </tr>
+  <tr>
+    <td width="220" align="center">
       <a href="https://www.hiapi.ai"><img alt="HiAPI" src="./docs/public/hiapi.png" width="165"></a>
     </td>
     <td>HiAPI is a unified API platform for AI image, video, audio, and language models. Connect GPT Image 2.5, Seedance 2.0, Veo 3.1, Kling, Wan, and other popular models through one platform. Pay as you go with no monthly fee, with free trial credits available for new users.</td>
