@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -45,5 +45,35 @@ test("the interview example authenticates on Linux, without editing its Profile"
 
     await auth("logout");
     assert.equal(JSON.parse((await auth("status")).stdout).credentials[0].configured, false);
+    assert.deepEqual(await readdir(join(state, "credentials")), []);
+  });
+
+test("the Profile runtime init writes authenticates on Linux, without editing it",
+  { skip: !isLinux, timeout: 120_000 }, async (t) => {
+    const root = await mkdtemp(join(tmpdir(), "qflow-platform-init-"));
+    t.after(() => rm(root, { recursive: true, force: true }));
+    const project = join(root, "project");
+    const state = join(root, "host");
+    await mkdir(project, { recursive: true });
+    const run = (...args: string[]) => exec(process.execPath, [launcher, ...args, "--json"], {
+      cwd: project, env: { ...process.env, QFLOW_STATE_HOME: state }, timeout: 60_000, windowsHide: true,
+    });
+    await run("runtime", "init");
+    const starter = JSON.parse(await readFile(join(project, "qflow.runtime.json"), "utf8"));
+    assert.deepEqual(starter.credentials, { platform: { use: "@qflow/credential-store-platform" } },
+      "a starter that selects a Store Linux cannot open fails every command that follows");
+
+    // Everything below resolves the Profile the starter just wrote and selected, with no flags.
+    const status = async () => JSON.parse((await run("auth", "status", "qflowhub.default")).stdout).credentials[0];
+    assert.equal((await status()).configured, false);
+    assert.equal((await status()).writable, true);
+    const input = join(root, "secret.txt");
+    await writeFile(input, "starter-secret-never-displayed");
+    const login = await run("auth", "login", "qflowhub.default", "--from", input);
+    assert.doesNotMatch(login.stdout, /starter-secret-never-displayed/u);
+    assert.equal((await status()).configured, true);
+    assert.equal((await readdir(join(state, "credentials"))).length, 1);
+    await run("auth", "logout", "qflowhub.default");
+    assert.equal((await status()).configured, false);
     assert.deepEqual(await readdir(join(state, "credentials")), []);
   });

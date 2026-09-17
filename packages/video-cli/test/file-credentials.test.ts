@@ -20,7 +20,7 @@ test("an explicitly selected file Store supports CLI login, repair and logout wi
   await run("runtime", "init", "--workspace", root);
   const profilePath = join(root, "qflow.runtime.json");
   const profile = JSON.parse(await readFile(profilePath, "utf8"));
-  assert.equal(profile.credentials.os.use, "@qflow/credential-store-os", "initialization preserves the existing starter choice");
+  assert.equal(profile.credentials.platform.use, "@qflow/credential-store-platform", "initialization preserves the existing starter choice");
   profile.credentials = { file: { use: "@qflow/credential-store-file" } };
   profile.endpoints = { "qflowhub.default": { ...profile.endpoints["qflowhub.default"], config: {
     ...profile.endpoints["qflowhub.default"].config,
