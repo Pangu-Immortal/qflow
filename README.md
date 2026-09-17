@@ -232,6 +232,12 @@ commands and the repository layout.
   </tr>
   <tr>
     <td width="220" align="center">
+      <a href="https://autoclaw.z.ai"><img alt="AutoClaw" src="./docs/public/autoclaw.png" width="180"></a>
+    </td>
+    <td><a href="https://autoclaw.z.ai">AutoClaw</a> is Z.ai’s desktop AI assistant for work, deeply optimized for GLM models and integrated with specialized knowledge bases and workflows for legal, finance, design, and more.</td>
+  </tr>
+  <tr>
+    <td width="220" align="center">
       <a href="https://openagents.org/blog/posts/2026-09-08-pilot-user-program-zh-qflow"><img alt="OpenAgents" src="./docs/public/openagents.png" width="180"></a>
     </td>
     <td><a href="https://openagents.org">OpenAgents Workspace</a> is a product that helps you manage AI agents, allowing you to invoke agents running on any device (whether on a mobile phone or computer) anytime, anywhere. Agents can collaborate within the platform to help you complete tasks and boost efficiency. It currently supports integration with over 20 types of agents, including Claude, Codex, OpenClaw, and Hermes.</td>
