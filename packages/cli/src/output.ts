@@ -1015,7 +1015,7 @@ export function writeCliHelp(io: CliIo, topic?: string): void {
     row("doctor [profile]", "diagnose selected external setup"),
     row("runtime init|use|unset", "create or select this project's Runtime Profile"),
     row("runtime up|status|logs|down", "prepare and manage the local Build Runtime"),
-    row("programs up|status|down", "manage declared external programs only"),
+    row("programs prepare|up|status|down", "manage declared external programs only"),
     row("packages install|status", "manage pinned upstream packages in the machine home"),
     row("activity [--watch]", "show active Builds and their current phases"),
     row("cancel <build-id>", "withdraw one active Build"),
