@@ -1,0 +1,47 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { processEnvironment, runProcess } from "../src/process.js";
+
+test("Windows HyperFrames children receive TEMP and process-creation variables, not Host secrets", () => {
+  const previous = process.env.QFLOW_HF_ENV_PROBE;
+  const previousTemp = process.env.TEMP;
+  process.env.QFLOW_HF_ENV_PROBE = "secret";
+  process.env.TEMP = "C:\\Windows\\Temp";
+  try {
+    const env = processEnvironment("win32");
+    assert.equal(env.PATH, process.env.PATH);
+    assert.equal(env.TEMP, "C:\\Windows\\Temp");
+    assert.equal(env.QFLOW_HF_ENV_PROBE, undefined);
+    assert.equal(env.HOME, undefined);
+    assert.equal(env.TMPDIR, undefined);
+  } finally {
+    if (previous === undefined) delete process.env.QFLOW_HF_ENV_PROBE;
+    else process.env.QFLOW_HF_ENV_PROBE = previous;
+    if (previousTemp === undefined) delete process.env.TEMP;
+    else process.env.TEMP = previousTemp;
+  }
+});
+
+test("POSIX HyperFrames children receive TMPDIR without Host secrets", async () => {
+  const previous = process.env.QFLOW_HF_ENV_PROBE;
+  process.env.QFLOW_HF_ENV_PROBE = "secret";
+  try {
+    const env = processEnvironment("darwin");
+    assert.equal(env.QFLOW_HF_ENV_PROBE, undefined);
+    assert.equal(env.PATH, process.env.PATH);
+    assert.equal(env.TMPDIR, process.env.TMPDIR);
+    const { stdout } = await runProcess({
+      executable: process.execPath,
+      argv: ["-e", "process.stdout.write(JSON.stringify({ probe: process.env.QFLOW_HF_ENV_PROBE, path: Boolean(process.env.PATH) }))"],
+      timeoutMs: 5_000,
+      maxOutputBytes: 4_096,
+    });
+    const body = JSON.parse(Buffer.from(stdout).toString("utf8")) as { probe?: string; path: boolean };
+    assert.equal(body.probe, undefined);
+    assert.equal(body.path, true);
+  } finally {
+    if (previous === undefined) delete process.env.QFLOW_HF_ENV_PROBE;
+    else process.env.QFLOW_HF_ENV_PROBE = previous;
+  }
+});
