@@ -12,6 +12,16 @@ test("media processes inherit PATH without the rest of the Host environment", ()
     const env = mediaProcessEnv();
     assert.equal(env.PATH, process.env.PATH ?? "");
     assert.equal(env.QFLOW_MEDIA_ENV_PROBE, undefined);
+    const previousTemp = process.env.TEMP;
+    process.env.TEMP = "C:\\Windows\\Temp";
+    try {
+      const windows = mediaProcessEnv(undefined, "win32");
+      assert.equal(windows.TEMP, "C:\\Windows\\Temp");
+      assert.equal(windows.QFLOW_MEDIA_ENV_PROBE, undefined);
+    } finally {
+      if (previousTemp === undefined) delete process.env.TEMP;
+      else process.env.TEMP = previousTemp;
+    }
     if (process.platform === "win32") {
       if (process.env.SYSTEMROOT !== undefined) assert.equal(env.SYSTEMROOT, process.env.SYSTEMROOT);
       if (process.env.PATHEXT !== undefined) assert.equal(env.PATHEXT, process.env.PATHEXT);
