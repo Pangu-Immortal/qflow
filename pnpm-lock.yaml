@@ -93,6 +93,9 @@ importers:
       '@qflow/credential-store-os':
         specifier: workspace:*
         version: link:packages/credential-store-os
+      '@qflow/credential-store-platform':
+        specifier: workspace:*
+        version: link:packages/credential-store-platform
       '@qflow/deck-track':
         specifier: workspace:*
         version: link:packages/deck-track
@@ -962,6 +965,21 @@ importers:
 
   packages/credential-store-os:
     dependencies:
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@qflow/runtime-kit':
+        specifier: workspace:*
+        version: link:../runtime-kit
+
+  packages/credential-store-platform:
+    dependencies:
+      '@qflow/credential-store-file':
+        specifier: workspace:*
+        version: link:../credential-store-file
+      '@qflow/credential-store-os':
+        specifier: workspace:*
+        version: link:../credential-store-os
       '@qflow/runtime':
         specifier: workspace:*
         version: link:../runtime

@@ -2,8 +2,8 @@
   "format": "qflow.runtime-local@1",
   "dataRoot": ".qflow/runtimes/local",
   "credentials": {
-    "os": {
-      "use": "@qflow/credential-store-os"
+    "platform": {
+      "use": "@qflow/credential-store-platform"
     }
   },
   "endpoints": {
@@ -12,7 +12,7 @@
       "config": {
         "baseUrl": "https://qflow.ai",
         "apiKey": {
-          "store": "os",
+          "store": "platform",
           "key": "qflowhub.oauth"
         },
         "defaultConcurrency": 4,

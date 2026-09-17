@@ -205,6 +205,7 @@
     "@qflow/credential-store-env": "workspace:*",
     "@qflow/credential-store-file": "workspace:*",
     "@qflow/credential-store-os": "workspace:*",
+    "@qflow/credential-store-platform": "workspace:*",
     "@qflow/deck-track": "workspace:*",
     "@qflow/deck-track-studio": "workspace:*",
     "@qflow/elevenlabs-speech": "workspace:*",

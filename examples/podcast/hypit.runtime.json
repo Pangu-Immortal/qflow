@@ -5,8 +5,8 @@
     "env": {
       "use": "@qflow/credential-store-env"
     },
-    "os": {
-      "use": "@qflow/credential-store-os"
+    "platform": {
+      "use": "@qflow/credential-store-platform"
     }
   },
   "endpoints": {
@@ -15,7 +15,7 @@
       "config": {
         "baseUrl": "https://qflow.ai",
         "apiKey": {
-          "store": "os",
+          "store": "platform",
           "key": "qflowhub.oauth"
         },
         "defaultConcurrency": 4,
