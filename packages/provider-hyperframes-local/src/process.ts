@@ -35,8 +35,12 @@ export async function mediaExecutablePath(value: string): Promise<string> {
   throw new Error(`HyperFrames media executable ${value} is unavailable; correct the Provider's ffmpegPath or ffprobePath.`);
 }
 
-function processEnvironment(): NodeJS.ProcessEnv {
-  const names = ["PATH", "HOME", "TMPDIR", "LANG", "LC_ALL"] as const;
+export function processEnvironment(platform: NodeJS.Platform = process.platform): NodeJS.ProcessEnv {
+  // POSIX temp is TMPDIR; Windows is TEMP/TMP. HyperFrames writes extracted
+  // frames under %TEMP%\hf-render-… and ffmpeg creates temporary files the same way.
+  const names = platform === "win32"
+    ? ["PATH", "PATHEXT", "SYSTEMROOT", "WINDIR", "ComSpec", "TEMP", "TMP", "USERPROFILE", "LANG", "LC_ALL"] as const
+    : ["PATH", "HOME", "TMPDIR", "LANG", "LC_ALL"] as const;
   return Object.fromEntries(names.flatMap((name) => process.env[name] === undefined
     ? []
     : [[name, process.env[name]]])) as NodeJS.ProcessEnv;
