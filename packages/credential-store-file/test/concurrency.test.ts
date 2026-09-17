@@ -60,8 +60,13 @@ test("two processes placing the same key leave one complete value", { timeout: 1
     const directory = join(root, "private");
     const entries = [{ key: "shared", secret: "first" }, { key: "shared", secret: "second" }];
     const exits = await placeSimultaneously(directory, entries);
+    // Separate processes share no order, and Windows refuses to replace a document while another
+    // replacement of it is in flight. A writer that loses that contest reports why, and one of them
+    // places the credential. Within one process this Store orders the work and both writers place.
+    assert.ok(exits.some((exit) => exit.code === 0),
+      `no writer placed the credential: ${exits.map((exit) => exit.stderr).join(" ")}`);
     for (const [index, exit] of exits.entries()) {
-      assert.equal(exit.code, 0, `writer ${index} failed: ${exit.stderr}`);
+      if (exit.code !== 0) assert.notEqual(exit.stderr.trim(), "", `writer ${index} failed without saying why`);
     }
     // Which replacement lands last is the filesystem's business; that the value is one writer's
     // whole value, and never a mixture of the two, is this Store's.
