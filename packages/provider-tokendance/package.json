@@ -1,0 +1,21 @@
+{
+  "name": "@qflow/provider-tokendance",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "qflow": { "activation": "./src/activation.ts" },
+  "dependencies": {
+    "@qflow/endpoint-kit": "workspace:*",
+    "@qflow/generation": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-kit": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/minimax-h3": "workspace:*",
+    "@qflow/seedance": "workspace:*",
+    "@qflow/seedream": "workspace:*"
+  }
+}

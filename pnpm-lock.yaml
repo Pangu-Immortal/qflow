@@ -183,6 +183,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:packages/protocol
+      '@qflow/provider-hiapi':
+        specifier: workspace:*
+        version: link:packages/provider-hiapi
       '@qflow/provider-hyperframes-local':
         specifier: workspace:*
         version: link:packages/provider-hyperframes-local
@@ -195,6 +198,15 @@ importers:
       '@qflow/provider-media-local':
         specifier: workspace:*
         version: link:packages/provider-media-local
+      '@qflow/provider-monid':
+        specifier: workspace:*
+        version: link:packages/provider-monid
+      '@qflow/provider-pollo':
+        specifier: workspace:*
+        version: link:packages/provider-pollo
+      '@qflow/provider-tokendance':
+        specifier: workspace:*
+        version: link:packages/provider-tokendance
       '@qflow/provider-whisperx-local':
         specifier: workspace:*
         version: link:packages/provider-whisperx-local
@@ -2206,6 +2218,43 @@ importers:
 
   packages/protocol: {}
 
+  packages/provider-hiapi:
+    dependencies:
+      '@qflow/endpoint-kit':
+        specifier: workspace:*
+        version: link:../endpoint-kit
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@qflow/runtime-kit':
+        specifier: workspace:*
+        version: link:../runtime-kit
+    devDependencies:
+      '@qflow/gpt-image':
+        specifier: workspace:*
+        version: link:../gpt-image
+      '@qflow/grok-imagine':
+        specifier: workspace:*
+        version: link:../grok-imagine
+      '@qflow/minimax-h3':
+        specifier: workspace:*
+        version: link:../minimax-h3
+      '@qflow/nano-banana':
+        specifier: workspace:*
+        version: link:../nano-banana
+      '@qflow/seedance':
+        specifier: workspace:*
+        version: link:../seedance
+      '@qflow/seedream':
+        specifier: workspace:*
+        version: link:../seedream
+
   packages/provider-hyperframes-local:
     dependencies:
       '@hyperframes/engine':
@@ -2377,6 +2426,87 @@ importers:
       '@qflow/driver-node':
         specifier: workspace:*
         version: link:../driver-node
+
+  packages/provider-monid:
+    dependencies:
+      '@qflow/endpoint-kit':
+        specifier: workspace:*
+        version: link:../endpoint-kit
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@qflow/runtime-kit':
+        specifier: workspace:*
+        version: link:../runtime-kit
+    devDependencies:
+      '@qflow/seedance':
+        specifier: workspace:*
+        version: link:../seedance
+
+  packages/provider-pollo:
+    dependencies:
+      '@qflow/endpoint-kit':
+        specifier: workspace:*
+        version: link:../endpoint-kit
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@qflow/runtime-kit':
+        specifier: workspace:*
+        version: link:../runtime-kit
+    devDependencies:
+      '@qflow/gpt-image':
+        specifier: workspace:*
+        version: link:../gpt-image
+      '@qflow/grok-imagine':
+        specifier: workspace:*
+        version: link:../grok-imagine
+      '@qflow/minimax-h3':
+        specifier: workspace:*
+        version: link:../minimax-h3
+      '@qflow/nano-banana':
+        specifier: workspace:*
+        version: link:../nano-banana
+
+  packages/provider-tokendance:
+    dependencies:
+      '@qflow/endpoint-kit':
+        specifier: workspace:*
+        version: link:../endpoint-kit
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@qflow/runtime-kit':
+        specifier: workspace:*
+        version: link:../runtime-kit
+    devDependencies:
+      '@qflow/minimax-h3':
+        specifier: workspace:*
+        version: link:../minimax-h3
+      '@qflow/seedance':
+        specifier: workspace:*
+        version: link:../seedance
+      '@qflow/seedream':
+        specifier: workspace:*
+        version: link:../seedream
 
   packages/provider-whisperx-local:
     dependencies:
@@ -3436,9 +3566,21 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@qflow/provider-hiapi':
+        specifier: workspace:*
+        version: link:../provider-hiapi
       '@qflow/provider-qflowhub':
         specifier: workspace:*
         version: link:../provider-qflowhub
+      '@qflow/provider-monid':
+        specifier: workspace:*
+        version: link:../provider-monid
+      '@qflow/provider-pollo':
+        specifier: workspace:*
+        version: link:../provider-pollo
+      '@qflow/provider-tokendance':
+        specifier: workspace:*
+        version: link:../provider-tokendance
       '@qflow/runtime':
         specifier: workspace:*
         version: link:../runtime

@@ -97,7 +97,7 @@ Model and Provider extension or a release containing them. A missing model or un
 is a capability question, while an expired credential is an account question.
 
 A user's existing service or deployment remains a normal choice. Its Provider does not need to be
-officially bundled. When an execution-service choice remains open, the maintained
+officially bundled. When the user names a partner service, the maintained
 [model and deployment service page](https://github.com/qflow-ai/qflow/blob/main/docs/guide/service-partners.md)
 introduces independent partners and links their own documentation. Use an introduction when its
 capabilities help this production. Partners have their own accounts, pricing and APIs and use the
