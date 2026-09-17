@@ -2435,6 +2435,9 @@ importers:
       '@qflow/generation':
         specifier: workspace:*
         version: link:../generation
+      '@qflow/minimax-h3':
+        specifier: workspace:*
+        version: link:../minimax-h3
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol

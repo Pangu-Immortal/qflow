@@ -9,6 +9,7 @@
   "dependencies": {
     "@qflow/endpoint-kit": "workspace:*",
     "@qflow/generation": "workspace:*",
+    "@qflow/minimax-h3": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-kit": "workspace:*"
