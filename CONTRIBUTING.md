@@ -106,6 +106,12 @@ published version before telling users the update is available.
 Branch names and commit subjects share the same prefix: `feat/`, `fix/`, `docs/` for branches and
 `feat:`, `fix:`, `docs:` for commits.
 
+## Issue and PR analysis
+
+Maintainers can request a preliminary AI analysis of an issue or PR from the **Repository analysis**
+Actions workflow. Its advice appears only in that run's summary; issue/PR management stays with
+maintainers. See the [operator guide](.github/ISSUE_AUTOMATION_DESIGN.md) for inputs and limits.
+
 ## Getting help
 
 Ask in [Discord](https://discord.gg/85hnyQnxpn) or [Telegram](https://t.me/qflowai).

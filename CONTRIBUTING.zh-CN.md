@@ -93,6 +93,12 @@ npm 包的 Trusted Publisher 应配置 GitHub Actions：组织 `qflow-ai`、仓�
 
 分支名与提交信息使用同一套前缀：分支用 `feat/`、`fix/`、`docs/`，提交信息用 `feat:`、`fix:`、`docs:`。
 
+## Issue 与 PR 分析
+
+维护者可在 Actions 的 **Repository analysis** 工作流中指定 Issue 或 PR，请求 AI 初步分析。
+建议只显示在该次运行的报告里，Issue 与 PR 的管理仍由维护者操作。
+输入与分析范围详见[维护指南](.github/ISSUE_AUTOMATION_DESIGN.md)。
+
 ## 获取帮助
 
 在 [Discord](https://discord.gg/85hnyQnxpn) 或 [Telegram](https://t.me/qflowai) 提问。
