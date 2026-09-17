@@ -65,6 +65,14 @@ test("programs dispatches lifecycle through the selected Runtime Controller", as
   ]);
 });
 
+test("programs without a Runtime Profile explains how to select one", async () => {
+  const projectRoot = await realpath(tmpdir());
+  await assert.rejects(
+    runCli(["programs", "status", "--workspace", projectRoot], io, distribution([])),
+    /programs requires a Runtime; run qflow runtime init, select one with runtime use, or pass --runtime <profile>/u,
+  );
+});
+
 test("programs accepts prepare, up, down and status", async () => {
   await assert.rejects(
     runCli(["programs", "restart", "/p/qflow.runtime.json"], io, distribution([])),

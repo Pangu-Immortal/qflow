@@ -362,6 +362,7 @@ test("help is concise and describes stable rather than complete output", () => {
   assert.match(output, /^Qflow\n/u);
   assert.match(output, /Results/u);
   assert.match(output, /stable machine view/u);
+  assert.match(output, /programs prepare\|up\|status\|down/u);
   assert.doesNotMatch(output, /Typical flow|complete machine-readable|image --prompt/u);
 });
 

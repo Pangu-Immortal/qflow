@@ -172,7 +172,9 @@ export async function runEnvironmentCommand(input: {
   }
 
   if (args.command === "programs") {
-    if (runtimeProfile === undefined) throw new Error("programs requires a Runtime Profile");
+    if (runtimeProfile === undefined) {
+      throw new Error("programs requires a Runtime; run qflow runtime init, select one with runtime use, or pass --runtime <profile>");
+    }
     const profile = resolve(runtimeProfile);
     const host = await runtimeHost(profile);
     if (args.action === "up" || args.action === "prepare") {
@@ -235,7 +237,9 @@ export async function runEnvironmentCommand(input: {
   }
 
   if (args.command === "runtime") {
-    if (runtimeProfile === undefined) throw new Error("runtime requires a Runtime Profile");
+    if (runtimeProfile === undefined) {
+      throw new Error("runtime requires a Runtime; run qflow runtime init, select one with runtime use, or pass --runtime <profile>");
+    }
     const profile = resolve(runtimeProfile);
     const controller = await runtimeController(profile);
     if (args.action === "up") {

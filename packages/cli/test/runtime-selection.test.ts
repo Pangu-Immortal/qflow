@@ -223,7 +223,7 @@ test("runtime status without a selected Profile reports the missing context inst
     process.chdir(root);
     await assert.rejects(
       async () => await runCli(["runtime", "status"], { write() {} }, {} as CliDistribution),
-      /runtime requires a Runtime Profile/u,
+      /runtime requires a Runtime; run qflow runtime init, select one with runtime use, or pass --runtime <profile>/u,
     );
   } finally {
     process.chdir(previous);
