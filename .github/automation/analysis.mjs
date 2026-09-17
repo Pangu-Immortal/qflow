@@ -80,7 +80,7 @@ export async function analyze(context, { key, model, maxTokens }, request = fetc
   const output = await response.json();
   const choice = output.choices?.[0];
   if (choice?.finish_reason !== 'stop' || typeof choice.message?.content !== 'string' || !choice.message.content.trim()) {
-    throw new Error('DeepSeek did not return a complete analysis');
+    throw new Error(`DeepSeek did not return a complete analysis (finish_reason: ${choice?.finish_reason ?? 'missing'})`);
   }
   return choice.message.content;
 }
