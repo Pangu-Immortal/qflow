@@ -217,7 +217,7 @@ commands and the repository layout.
         </picture>
       </a>
     </td>
-    <td>Watcha is an innovative ecosystem and community built for AI builders, connecting great products with high-quality users to turn every Demo into reality. Starting from AI product discovery and genuine feedback, Watcha provides product publishing, distribution, and reputation tracking to support builders from launch to early adoption.</td>
+    <td><a href="https://watcha.cn">Watcha</a> is an innovative ecosystem and community built for AI builders, connecting great products with high-quality users to turn every Demo into reality. Starting from AI product discovery and genuine feedback, Watcha provides product publishing, distribution, and reputation tracking to support builders from launch to early adoption.</td>
   </tr>
   <tr>
     <td width="220" align="center">
@@ -228,13 +228,13 @@ commands and the repository layout.
         </picture>
       </a>
     </td>
-    <td>TokenDance offers builders a unified multi-model gateway with optimized inference costs. Through programs like the Billion-Token Subsidy and the Developer Program, TokenDance helps early-stage builders cut costs so they can focus on product validation and growth.</td>
+    <td><a href="https://tokendance.space/?utm_source=qflow">TokenDance</a> offers builders a unified multi-model gateway with optimized inference costs. Through programs like the Billion-Token Subsidy and the Developer Program, TokenDance helps early-stage builders cut costs so they can focus on product validation and growth.</td>
   </tr>
   <tr>
     <td width="220" align="center">
       <a href="https://openagents.org/blog/posts/2026-09-08-pilot-user-program-zh-qflow"><img alt="OpenAgents" src="./docs/public/openagents.png" width="180"></a>
     </td>
-    <td>OpenAgents Workspace is a product that helps you manage AI agents, allowing you to invoke agents running on any device (whether on a mobile phone or computer) anytime, anywhere. Agents can collaborate within the platform to help you complete tasks and boost efficiency. It currently supports integration with over 20 types of agents, including Claude, Codex, OpenClaw, and Hermes (<a href="https://openagents.org">https://openagents.org</a>)</td>
+    <td><a href="https://openagents.org">OpenAgents Workspace</a> is a product that helps you manage AI agents, allowing you to invoke agents running on any device (whether on a mobile phone or computer) anytime, anywhere. Agents can collaborate within the platform to help you complete tasks and boost efficiency. It currently supports integration with over 20 types of agents, including Claude, Codex, OpenClaw, and Hermes.</td>
   </tr>
   <tr>
     <td width="220" align="center">
@@ -245,13 +245,24 @@ commands and the repository layout.
         </picture>
       </a>
     </td>
-    <td>Monid is the OpenRouter for agent tools: one key, one wallet, hundreds of tools, billed per call. Qflow can route Seedance video, images, speech and word-level transcription to Monid.</td>
+    <td><a href="https://monid.ai?fpr=alvin-45480b">Monid</a> is the OpenRouter for agent tools: one key, one wallet, hundreds of tools, billed per call. Qflow can route Seedance video, images, speech and word-level transcription to Monid.</td>
   </tr>
   <tr>
     <td width="220" align="center">
       <a href="https://www.hiapi.ai"><img alt="HiAPI" src="./docs/public/hiapi.png" width="165"></a>
     </td>
-    <td>HiAPI is a unified API platform for AI image, video, audio, and language models. Connect GPT Image 2.5, Seedance 2.0, Veo 3.1, Kling, Wan, and other popular models through one platform. Pay as you go with no monthly fee, with free trial credits available for new users.</td>
+    <td><a href="https://www.hiapi.ai">HiAPI</a> is a unified API platform for AI image, video, audio, and language models. Connect GPT Image 2.5, Seedance 2.0, Veo 3.1, Kling, Wan, and other popular models through one platform. Pay as you go with no monthly fee, with free trial credits available for new users.</td>
+  </tr>
+  <tr>
+    <td width="220" align="center">
+      <a href="https://api.pollo.ai/?utm_source=qflow">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./docs/public/pollo-dark.png">
+          <img alt="Pollo API" src="./docs/public/pollo-light.png" width="150">
+        </picture>
+      </a>
+    </td>
+    <td><a href="https://api.pollo.ai/?utm_source=qflow">Pollo API</a> gives developers access to 300+ AI image and video models through a single API, with competitive rates. One API key connects you to multiple model providers and scales from 10 to 10,000+ requests.</td>
   </tr>
 </table>
 

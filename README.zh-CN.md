@@ -213,7 +213,7 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
         </picture>
       </a>
     </td>
-    <td>观猹是一个专为 AI 开发者打造的创新产品生态与社区，致力于连接优秀产品与高质量用户，助力每一个想法从 Demo 走向真实落地。从产品发现与真实反馈起步，观猹提供发布、分发与声誉追踪等支持，全方位陪伴开发者完成从产品上线到首批用户获取的全过程。</td>
+    <td><a href="https://watcha.cn">观猹</a>是一个专为 AI 开发者打造的创新产品生态与社区，致力于连接优秀产品与高质量用户，助力每一个想法从 Demo 走向真实落地。从产品发现与真实反馈起步，观猹提供发布、分发与声誉追踪等支持，全方位陪伴开发者完成从产品上线到首批用户获取的全过程。</td>
   </tr>
   <tr>
     <td width="220" align="center">
@@ -224,13 +224,13 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
         </picture>
       </a>
     </td>
-    <td>TokenDance 为开发者提供优化了推理成本的统一多模型网关。通过百亿 Token 补贴和开发者计划，TokenDance 帮助早期开发者大幅降低成本，更专注于产品验证与业务增长。</td>
+    <td><a href="https://tokendance.space/?utm_source=qflow">TokenDance</a> 为开发者提供优化了推理成本的统一多模型网关。通过百亿 Token 补贴和开发者计划，TokenDance 帮助早期开发者大幅降低成本，更专注于产品验证与业务增长。</td>
   </tr>
   <tr>
     <td width="220" align="center">
       <a href="https://openagents.org/blog/posts/2026-09-08-pilot-user-program-zh-qflow"><img alt="OpenAgents" src="./docs/public/openagents.png" width="180"></a>
     </td>
-    <td>OpenAgents Workspace 是一个让你管理智能体的产品，它能让你随时随地调用在任何设备上运行的 Agent（手机 + 电脑端均可）。Agents 可以在其中协同合作，帮你完成任务、提升效率。现支持 Claude、Codex、Openclaw、Hermes 等 20 余种 agent 接入（详情：<a href="https://openagents.org">https://openagents.org</a>）</td>
+    <td><a href="https://openagents.org">OpenAgents Workspace</a> 是一个让你管理智能体的产品，它能让你随时随地调用在任何设备上运行的 Agent（手机 + 电脑端均可）。Agents 可以在其中协同合作，帮你完成任务、提升效率。现支持 Claude、Codex、Openclaw、Hermes 等 20 余种 agent 接入。</td>
   </tr>
   <tr>
     <td width="220" align="center">
@@ -241,13 +241,24 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
         </picture>
       </a>
     </td>
-    <td>Monid 是 Agent 工具的 OpenRouter：一个 key、一个钱包、数百种工具，按调用计费。Qflow 可以把 Seedance 的视频、图像、语音和词级转写路由到 Monid。</td>
+    <td><a href="https://monid.ai?fpr=alvin-45480b">Monid</a> 是 Agent 工具的 OpenRouter：一个 key、一个钱包、数百种工具，按调用计费。Qflow 可以把 Seedance 的视频、图像、语音和词级转写路由到 Monid。</td>
   </tr>
   <tr>
     <td width="220" align="center">
       <a href="https://www.hiapi.ai"><img alt="HiAPI" src="./docs/public/hiapi.png" width="165"></a>
     </td>
-    <td>HiAPI 是一个统一的 AI 图片、视频、音频和语言模型 API 平台，支持 GPT Image 2.5、Seedance 2.0、Veo 3.1、可灵、万相等主流模型。HiAPI 提供在线 Playground、Remote MCP 和 Agent Skills，可接入 Claude Code、Cursor 等 AI 编程工具。平台按量付费，无月费，新用户注册可获得免费体验积分。</td>
+    <td><a href="https://www.hiapi.ai">HiAPI</a> 是一个统一的 AI 图片、视频、音频和语言模型 API 平台，支持 GPT Image 2.5、Seedance 2.0、Veo 3.1、可灵、万相等主流模型。HiAPI 提供在线 Playground、Remote MCP 和 Agent Skills，可接入 Claude Code、Cursor 等 AI 编程工具。平台按量付费，无月费，新用户注册可获得免费体验积分。</td>
+  </tr>
+  <tr>
+    <td width="220" align="center">
+      <a href="https://api.pollo.ai/?utm_source=qflow">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./docs/public/pollo-dark.png">
+          <img alt="Pollo API" src="./docs/public/pollo-light.png" width="150">
+        </picture>
+      </a>
+    </td>
+    <td><a href="https://api.pollo.ai/?utm_source=qflow">Pollo API</a> 通过单个 API 为开发者提供 300 多个 AI 图片与视频模型，价格具备竞争力。一个 API key 即可接入多家模型服务商，请求规模从 10 次到 10000 次以上均可承载。</td>
   </tr>
 </table>
 
