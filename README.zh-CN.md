@@ -241,7 +241,7 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
         </picture>
       </a>
     </td>
-    <td>TokenDance 为开发者提供优化了推理成本的统一多模型网关。通过十亿 Token 补贴和开发者计划，TokenDance 帮助早期开发者大幅降低成本，更专注于产品验证与业务增长。</td>
+    <td>TokenDance 为开发者提供优化了推理成本的统一多模型网关。通过百亿 Token 补贴和开发者计划，TokenDance 帮助早期开发者大幅降低成本，更专注于产品验证与业务增长。</td>
   </tr>
   <tr>
     <td width="220" align="center">
