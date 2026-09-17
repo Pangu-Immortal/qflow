@@ -60,11 +60,6 @@ export class PlatformCredentialStore implements WritableCredentialStore {
     }
   }
 
-  /** The Store this one delegates to here: the platform locker, or the file Store where there is none. */
-  get backing(): "os" | "file" {
-    return this.#backing;
-  }
-
   owns(ref: CredentialRef): boolean {
     return ref.store === "platform";
   }

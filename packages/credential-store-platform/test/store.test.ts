@@ -6,7 +6,7 @@ import test from "node:test";
 import { credentialRef } from "@qflow/runtime";
 import { FileCredentialStore } from "@qflow/credential-store-file";
 import { OsCredentialStore } from "@qflow/credential-store-os";
-import { PlatformCredentialStore } from "../src/store.js";
+import { PlatformCredentialStore } from "@qflow/credential-store-platform";
 
 /** A locker that keeps entries in memory, so a platform's locker is exercised without touching one. */
 function memoryLocker(entries: Readonly<Record<string, string>> = {}) {
@@ -29,7 +29,6 @@ test("a platform with a locker stores there and never creates a file", async () 
     const directory = join(root, "credentials");
     const locker = memoryLocker();
     const store = new PlatformCredentialStore({ directory, platform: "darwin", locker });
-    assert.equal(store.backing, "os");
     const ref = credentialRef("platform", "qflowhub.oauth");
     assert.equal(await store.resolve(ref), undefined);
     await store.put(ref, { secret: "locker-secret" });
@@ -44,10 +43,13 @@ test("a platform with a locker stores there and never creates a file", async () 
 test("Windows selects the locker as well", async () => {
   const root = await scratch("qflow-platform-credentials-");
   try {
+    const locker = memoryLocker();
     const store = new PlatformCredentialStore({
-      directory: join(root, "credentials"), platform: "win32", locker: memoryLocker(),
+      directory: join(root, "credentials"), platform: "win32", locker,
     });
-    assert.equal(store.backing, "os");
+    await store.put(credentialRef("platform", "qflowhub.oauth"), { secret: "locker-secret" });
+    assert.equal(locker.entries.get("qflowhub.oauth"), "locker-secret");
+    assert.deepEqual(await readdir(root), [], "the file fallback stays untouched where a locker exists");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -56,7 +58,6 @@ test("a platform without a locker stores owner-private documents in the file Sto
   try {
     const directory = join(root, "credentials");
     const store = new PlatformCredentialStore({ directory, platform: "linux" });
-    assert.equal(store.backing, "file");
     const ref = credentialRef("platform", "qflowhub.oauth");
     await store.put(ref, { secret: "file-secret", expiresAt: 42 });
     assert.deepEqual(await store.resolve(ref), { secret: "file-secret", expiresAt: 42 });
