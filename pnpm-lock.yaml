@@ -693,9 +693,9 @@ importers:
       '@qflow/studio-adapter':
         specifier: workspace:*
         version: link:../studio-adapter
-      '@qflow/timeline':
+      '@qflow/temporal':
         specifier: workspace:*
-        version: link:../timeline
+        version: link:../temporal
 
   packages/cli:
     dependencies:
@@ -2144,6 +2144,9 @@ importers:
       '@qflow/timeline':
         specifier: workspace:*
         version: link:../timeline
+      '@qflow/visual-ir':
+        specifier: workspace:*
+        version: link:../visual-ir
 
   packages/performance-studio:
     dependencies:
@@ -3418,6 +3421,9 @@ importers:
       '@qflow/runtime-host-node':
         specifier: workspace:*
         version: link:../runtime-host-node
+      '@qflow/runtime-kit':
+        specifier: workspace:*
+        version: link:../runtime-kit
       '@qflow/runtime-local':
         specifier: workspace:*
         version: link:../runtime-local
