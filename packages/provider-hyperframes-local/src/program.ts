@@ -5,6 +5,7 @@ import { probeMediaToolchain } from "@qflow/media-execution";
 import type { ManagedProgram, ManagedProgramState } from "@qflow/runtime-kit";
 import { browserCacheDirectory, browserDownloadBaseUrl, browserDownloadUrl, browserExecutablePath, configuredBrowserPath, requireBrowserExecutable, selectedBrowserVersion } from "./browser.js";
 import type { BrowserOptions } from "./browser.js";
+import { processEnvironment } from "./process.js";
 
 /**
  * This Provider owns browser selection and preparation. Probes never install;
@@ -44,7 +45,7 @@ export function localHyperframesBrowserProgram(
     async probe(): Promise<ManagedProgramState> {
       const browser = await probeBrowser();
       if (browser.state !== "ready") return browser;
-      const media = await probeMediaToolchain({ ffprobePath: input.ffprobePath, ...(input.ffmpegPath === undefined ? {} : { ffmpegPath: input.ffmpegPath }) });
+      const media = await probeMediaToolchain({ environment: processEnvironment(), ffprobePath: input.ffprobePath, ...(input.ffmpegPath === undefined ? {} : { ffmpegPath: input.ffmpegPath }) });
       return media.state === "ready"
         ? { state: "ready" }
         : { state: media.state, detail: media.detail };

@@ -137,7 +137,7 @@ current directory, `package.json` and explicit paths determine which project the
 | Runtime Profile | which environmental packages, Endpoint instances, credentials, and bindings are selected |
 | Provider Endpoint | how one capability is supported, diagnosed, invoked, and priced |
 | Credential Store | how one explicitly named secret is resolved |
-| Managed Program | how a selected local Endpoint's long-lived helper is prepared and probed |
+| Managed Program | how a selected local Endpoint's resources are prepared and probed, and its helper is started when one exists |
 | Project Result repository | where finished Build Results and their public Outputs live |
 
 Changing an Endpoint does not change the Author Source. Result storage is selected separately in
@@ -257,7 +257,9 @@ the Host state root printed by `qflow paths`, and an optional Store `config.path
 private directory; ensure a Windows directory's ACL is private to the user. Preserve an existing
 Store choice; never switch or migrate credentials just because one Store could not read them.
 
-Inspect one Endpoint's credential slots without revealing their values:
+Inspect credential slots only when the selected Endpoint declares them. A credential-free Endpoint
+such as local media processing needs no auth command; prepare its tools directly. For an Endpoint
+with declared slots, inspect their state without revealing values:
 
 ```bash
 qflow auth status <selected-endpoint>
@@ -345,7 +347,15 @@ remains available for a running service; process health alone does not establish
 Repeat the flag for several instances. Omission deliberately prepares the whole Profile, even when
 a capability is bound elsewhere. Preparation follows each Provider's declared dependencies and
 Programs; it does not log into remote accounts. `qflow doctor --endpoint <instance>` actively checks
-that selected service. `plan` already narrows readiness to the Endpoints resolved for the Run.
+that selected service when diagnosis is useful. `plan` already narrows readiness to the Endpoints
+resolved for the Run. Choose the command for the current question; these are not mandatory checks
+before every Build. Resource readiness does not imply that a helper process exists.
+
+For example, local media work can use `qflow programs prepare --endpoint media.local` to prepare
+only, or `qflow runtime up --endpoint media.local` when execution needs the Worker. Neither requires
+an account. Inspect tool readiness with `qflow programs status --endpoint media.local`, and Worker
+state with `qflow runtime status`. Account connection is a separate decision for services that
+actually declare credential slots.
 
 Use `local-tools.md` when a selected local binary or Managed Program needs installation or repair.
 Read `../production/builds.md` for how submission uses the prepared environment and Worker.

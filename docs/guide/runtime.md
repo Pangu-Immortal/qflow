@@ -73,12 +73,22 @@ request does not silently select another account. Read the chosen Provider's REA
 
 ## Prepare only the services needed now
 
+For local media processing, prepare the selected tools and start the Worker:
+
 ```bash
-qflow auth status media.local
-qflow doctor --endpoint media.local
 qflow runtime up --endpoint media.local
 qflow runtime status
 ```
+
+To prepare resources without starting a helper or Worker, use
+`qflow programs prepare --endpoint media.local`. Inspect their readiness with
+`qflow programs status --endpoint media.local`; use `qflow doctor --endpoint media.local` when
+checking a configuration or diagnosing a failure. These are available tools, not a required sequence.
+
+Local media processing declares no credentials. For a chosen service that declares credential slots,
+inspect those separately with `qflow auth status <endpoint>`. For example, after choosing QflowHub,
+use `qflow auth status qflowhub.default` and connect the account with `qflow auth login qflowhub.default`
+when needed.
 
 Use the actual Endpoint names from the Profile; repeat `--endpoint` for several. Omission covers the
 whole Profile. `doctor` reads configuration and performs the selected Providers' diagnostics without
@@ -86,7 +96,7 @@ submitting generation. Read warnings as well as errors: a stored credential or r
 is not proof that every request will succeed. With no Runtime selected, doctor checks project Results only.
 
 `runtime up` prepares the selected local dependencies and Managed Programs, then starts the Worker.
-It does not log into or start hosted services. `programs up|status|down` manages those local helpers
+It does not log into or start hosted services. `programs prepare|up|status|down` manages those local resources and helpers
 separately. Initial inference setup can require substantial downloads; compare that effort with hosted
 execution and choose the route before starting preparation.
 

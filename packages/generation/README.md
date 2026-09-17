@@ -37,3 +37,9 @@ Media wire mappings (`url`, `urlArray`, `itemObject`) may declare `resourceField
 paths against the declared media fields. False, zero and empty strings remain values; omitted fields
 remain absent. The resolver implements the service protocol; this package knows no particular
 service or classification. Providers using custom transports carry those fields through that boundary.
+
+A Model item field being optional means authors may omit it. If a request supplies that field,
+`mappingSupportsRequest` and final wire compilation require the mapping to carry it through
+`fieldKeys` or `resourceFields`, including an explicit `false`. A service may support requests
+without a particular optional field and refuse requests that supply it; no field is silently dropped.
+Final compilation checks the whole request before resolving or uploading any reference.

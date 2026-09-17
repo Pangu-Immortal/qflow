@@ -53,7 +53,8 @@ credential stored in a locker stays in that locker; a credential stored in a fil
 
 On macOS and Windows the credential is held by the platform locker, with exactly the rules of
 `@qflow/credential-store-os`: it is encrypted and access-controlled by the operating system, and it
-is not readable from another machine.
+follows that locker’s access and synchronization policy. Windows Credential Locker may roam
+credentials through the user’s Microsoft account.
 
 On Linux the credential is held by an owner-private document with exactly the rules of
 `@qflow/credential-store-file`: unencrypted JSON, one document per key, directory mode `0700`, file

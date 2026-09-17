@@ -1,31 +1,12 @@
+import { replaceFile } from "@qflow/file-io-node";
 import { randomUUID } from "node:crypto";
-import { mkdir, open, rename, rm, stat, unlink } from "node:fs/promises";
+import { mkdir, open, rm, stat, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { verifyCredentialRef } from "@qflow/runtime";
 import type { CredentialRef, CredentialValue, WritableCredentialStore } from "@qflow/runtime";
 
 function missing(error: unknown): boolean {
   return error instanceof Error && "code" in error && error.code === "ENOENT";
-}
-
-/**
- * One process reads a credential for one Endpoint action while another action's refresh replaces
- * it, so a read handle and a replacement can reach the same document at the same instant. Windows
- * refuses to replace a file any handle still holds. Each document's work takes its turn instead,
- * keyed by path so separate Store instances over one directory share the same order. Keys are
- * independent: a turn on one document never delays another.
- */
-const documentTurns = new Map<string, Promise<unknown>>();
-
-function onDocument<T>(path: string, work: () => Promise<T>): Promise<T> {
-  const turn = (documentTurns.get(path) ?? Promise.resolve()).then(work, work);
-  // The successor waits for this turn to settle, not to succeed, and the last turn clears the path.
-  const settled = turn.then(() => undefined, () => undefined);
-  documentTurns.set(path, settled);
-  void settled.then(() => {
-    if (documentTurns.get(path) === settled) documentTurns.delete(path);
-  });
-  return turn;
 }
 
 function credentialValue(value: unknown): CredentialValue {
@@ -64,10 +45,6 @@ export class FileCredentialStore implements WritableCredentialStore {
   async resolve(ref: CredentialRef): Promise<CredentialValue | undefined> {
     if (!this.owns(ref)) return undefined;
     const path = this.#path(ref);
-    return await onDocument(path, async () => await this.#read(path));
-  }
-
-  async #read(path: string): Promise<CredentialValue | undefined> {
     try { await this.#privateDirectory(false); } catch (error) {
       if (missing(error)) return undefined;
       throw error;
@@ -93,25 +70,21 @@ export class FileCredentialStore implements WritableCredentialStore {
   async put(ref: CredentialRef, value: CredentialValue): Promise<void> {
     const path = this.#path(ref);
     const contents = JSON.stringify(credentialValue(value));
-    await onDocument(path, async () => {
-      await this.#privateDirectory(true);
-      const temporary = join(this.directory, `.write-${randomUUID()}.tmp`);
-      const file = await open(temporary, "wx", 0o600);
-      try {
-        try { await file.writeFile(`${contents}\n`, "utf8"); } finally { await file.close(); }
-        await rename(temporary, path);
-      } finally { await rm(temporary, { force: true }); }
-    });
+    await this.#privateDirectory(true);
+    const temporary = join(this.directory, `.write-${randomUUID()}.tmp`);
+    const file = await open(temporary, "wx", 0o600);
+    try {
+      try { await file.writeFile(`${contents}\n`, "utf8"); } finally { await file.close(); }
+      await replaceFile(temporary, path);
+    } finally { await rm(temporary, { force: true }); }
   }
 
   async delete(ref: CredentialRef): Promise<boolean> {
     const path = this.#path(ref);
     // Deletion never opens or decodes the old document.
-    return await onDocument(path, async () => {
-      try { await unlink(path); return true; } catch (error) {
-        if (missing(error)) return false;
-        throw error;
-      }
-    });
+    try { await unlink(path); return true; } catch (error) {
+      if (missing(error)) return false;
+      throw error;
+    }
   }
 }

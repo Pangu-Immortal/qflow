@@ -538,12 +538,12 @@ importers:
 
   packages/build-result:
     dependencies:
+      '@qflow/file-io-node':
+        specifier: workspace:*
+        version: link:../file-io-node
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      koffi:
-        specifier: 3.2.1
-        version: 3.2.1
 
   packages/build-result-fs:
     dependencies:
@@ -956,6 +956,9 @@ importers:
 
   packages/credential-store-file:
     dependencies:
+      '@qflow/file-io-node':
+        specifier: workspace:*
+        version: link:../file-io-node
       '@qflow/runtime':
         specifier: workspace:*
         version: link:../runtime
@@ -1140,6 +1143,12 @@ importers:
       cmu-pronouncing-dictionary:
         specifier: 3.0.0
         version: 3.0.0
+
+  packages/file-io-node:
+    dependencies:
+      koffi:
+        specifier: 3.2.1
+        version: 3.2.1
 
   packages/film:
     dependencies:

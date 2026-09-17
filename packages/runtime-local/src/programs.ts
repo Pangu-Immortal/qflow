@@ -296,6 +296,8 @@ async function bringUpOwned(
     const prepared = await prepareOwned(root, program, endpoint, onProgress);
     if (prepared.state.state !== "ready") return prepared;
     onProgress?.({ id: program.id, phase: "ready" });
+    // A usable tool may have no process. Preserve the preparation action in that case.
+    if (program.start === undefined) return prepared;
     return { ...base, action: "already-running", state: initial };
   }
   if (initial.state === "mismatch") {

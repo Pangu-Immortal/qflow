@@ -69,19 +69,27 @@ qflow runtime init
 
 ## 按当前需要准备服务
 
+本地媒体处理可以直接准备所选工具并启动 Worker：
+
 ```bash
-qflow auth status media.local
-qflow doctor --endpoint media.local
 qflow runtime up --endpoint media.local
 qflow runtime status
 ```
+
+只准备资源、暂不启动助手或 Worker 时，使用 `qflow programs prepare --endpoint media.local`。
+通过 `qflow programs status --endpoint media.local` 查看就绪情况；检查配置或排查失败时，
+使用 `qflow doctor --endpoint media.local`。按当前问题选择命令，不必依次执行所有检查。
+
+本地媒体处理没有凭据要求。选中的服务若声明了凭据槽，再单独使用
+`qflow auth status <endpoint>` 检查。例如，选择 QflowHub 后使用
+`qflow auth status qflowhub.default`，需要连接账户时执行 `qflow auth login qflowhub.default`。
 
 使用 Profile 里的实际 Endpoint 名称，可重复 `--endpoint` 选择多个；省略时覆盖整个 Profile。
 `doctor` 读取配置、运行 Provider 的诊断，不提交生成。除了错误，也要阅读警告：有凭据或能读取
 模型目录，不代表每种请求一定成功。没有选定 Runtime 时，doctor 只检查项目 Result。
 
 `runtime up` 准备所选本地依赖和 Managed Program，再启动 Worker；它不登录或启动托管服务。
-`programs up|status|down` 单独管理这些本地助手。首次推理环境准备可能涉及大量下载，
+`programs prepare|up|status|down` 单独管理这些本地资源和助手。首次推理环境准备可能涉及大量下载，
 应先比较本地准备成本和托管方式，再选择执行路径。
 
 `plan <run>` 检查当前工作需要的能力和轻量就绪状态。发现 Provider 能力需要可加载的包声明；

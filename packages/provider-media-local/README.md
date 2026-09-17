@@ -43,7 +43,8 @@ Source. Local HyperFrames extracts alpha-preserving PNGs and composites them aga
 Canvas and lower visual layers before encoding the final MP4.
 
 The Runtime Adapter declares the selected `ffmpeg`/`ffprobe` pair as an external, non-daemon Program.
-Its shared probe checks the encoders and filters used by the execution body. Compatible custom paths
+Its probe checks that the selected executables start in the media execution environment. It does not
+guarantee every codec or filter for every task; an unsupported operation reports FFmpeg’s actual error. Custom paths
 remain valid; the package neither pins a semantic Capability to one FFmpeg version nor mutates a
 system package manager.
 

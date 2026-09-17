@@ -89,8 +89,9 @@ export function selectWireModelForRequest(
   request: GenerationRequest,
   pendingPorts: readonly string[] = [],
 ): string {
-  assert(mappingSupportsRequest(mapping, request),
-    `${mapping.capability.name} request contains a port this Provider cannot map`);
+  const unsupported = unsupportedRequestField(mapping, request);
+  assert(unsupported === undefined,
+    `${mapping.capability.name} request contains ${unsupported} this Provider cannot map`);
   const present = new Set(presentPorts(request));
   for (const port of pendingPorts) {
     assert(mapping.fields[port] !== undefined,
@@ -149,19 +150,38 @@ export async function compileWireRequest(
   return { model, input: canonicalize(input) };
 }
 
-/** Does this request only use ports this mapping can write? Needs no model package. */
-export function mappingSupportsRequest(mapping: GenerationWireMapping, value: unknown): boolean {
+/** Describe only a supplied value the mapping cannot carry; no model table or saved verdict. */
+function unsupportedRequestField(mapping: GenerationWireMapping, value: unknown): string | undefined {
   const request = value as GenerationRequest | undefined;
-  if (request === undefined || request.ports === null || typeof request.ports !== "object") return false;
-  return Object.keys(request.ports).every((port) => mapping.fields[port] !== undefined);
+  if (request === undefined || request === null || request.ports === null || typeof request.ports !== "object") {
+    return "invalid ports";
+  }
+  for (const [port, supplied] of Object.entries(request.ports)) {
+    const field = mapping.fields[port];
+    if (field === undefined) return `port ${port}`;
+    if (field.as !== "url" && field.as !== "urlArray" && field.as !== "itemObject") continue;
+    for (const item of supplied as readonly GenerationMediaValue[]) {
+      for (const name of Object.keys(item.fields ?? {})) {
+        if (!field.resourceFields?.includes(name)
+          && !(field.as === "itemObject" && Object.hasOwn(field.fieldKeys, name))) {
+          return `field ${port}.${name}`;
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+/** Optional fields may be omitted by authors, but supplied fields must reach the service. */
+export function mappingSupportsRequest(mapping: GenerationWireMapping, value: unknown): boolean {
+  return unsupportedRequestField(mapping, value) === undefined;
 }
 
 /**
- * Prove one service mapping covers every port the model declares.
+ * Check structural port coverage and required item fields against the model declaration.
  *
- * This is the check the old hand-written per-model translators could not have:
- * a forgotten reference role or item field used to surface only after a paid
- * generation returned the wrong result.
+ * A service may omit optional item capabilities. mappingSupportsRequest and final compilation
+ * additionally refuse requests that actually supply such an unmapped field.
  */
 export function assertMappingCoversPorts(
   table: GenerationPortTable,

@@ -1,4 +1,4 @@
-import { toNamespacedPath } from "node:path";
+import { resolve, toNamespacedPath } from "node:path";
 import koffi from "koffi";
 
 const kernel = koffi.load("kernel32.dll");
@@ -35,7 +35,7 @@ function failure(syscall: string, from: string, to: string): Error {
  * https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/4217551b-d2c0-42cb-9dc1-69a716cf6d0c
  */
 export function replaceWindowsFile(from: string, to: string): void {
-  const filename = Buffer.from(toNamespacedPath(to), "utf16le");
+  const filename = Buffer.from(toNamespacedPath(resolve(to)), "utf16le");
   const nameOffset = koffi.offsetof(renameInfo, "FileName");
   // Win32 requires a NUL-terminated FileName even though FileNameLength excludes
   // that terminator. Buffer.alloc leaves the final WCHAR zero-initialized.
@@ -45,7 +45,7 @@ export function replaceWindowsFile(from: string, to: string): void {
   info.writeUInt32LE(filename.length, koffi.offsetof(renameInfo, "FileNameLength"));
   filename.copy(info, nameOffset);
 
-  const handle = createFile(toNamespacedPath(from), DELETE, SHARE_READ_WRITE_DELETE,
+  const handle = createFile(toNamespacedPath(resolve(from)), DELETE, SHARE_READ_WRITE_DELETE,
     null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0) as number | bigint;
   if (handle === -1 || handle === -1n) throw failure("CreateFileW", from, to);
   try {

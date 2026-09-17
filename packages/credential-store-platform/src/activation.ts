@@ -1,10 +1,10 @@
+import { join, resolve } from "node:path";
 import {
   createRuntimeCredentialStoreAdapterFacet,
   runtimeConfigExact,
   runtimeConfigObject,
   runtimeConfigString,
 } from "@qflow/runtime-kit";
-import { resolveCredentialDirectory } from "@qflow/credential-store-file";
 import { PlatformCredentialStore } from "./store.js";
 
 const platformCredentialStoreAdapter = createRuntimeCredentialStoreAdapterFacet({
@@ -23,7 +23,7 @@ const platformCredentialStoreAdapter = createRuntimeCredentialStoreAdapterFacet(
       value: new PlatformCredentialStore({
         // Linux uses the same directory the file Store uses by default, so a Profile
         // that switches between them on Linux finds the credential it stored.
-        directory: resolveCredentialDirectory(context.hostStateRoot, path, "platform CredentialStore"),
+        directory: path === undefined ? join(context.hostStateRoot, "credentials") : resolve(context.hostStateRoot, path),
         ...(service === undefined ? {} : { service }),
       }),
     };

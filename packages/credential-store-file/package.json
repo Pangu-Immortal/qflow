@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@qflow/runtime": "workspace:*",
-    "@qflow/runtime-kit": "workspace:*"
+    "@qflow/runtime-kit": "workspace:*",
+    "@qflow/file-io-node": "workspace:*"
   }
 }

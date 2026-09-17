@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "@qflow/protocol": "workspace:*",
-    "koffi": "3.2.1"
+    "@qflow/file-io-node": "workspace:*"
   }
 }

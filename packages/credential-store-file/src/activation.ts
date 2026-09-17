@@ -1,10 +1,10 @@
+import { join, resolve } from "node:path";
 import {
   createRuntimeCredentialStoreAdapterFacet,
   runtimeConfigExact,
   runtimeConfigObject,
   runtimeConfigString,
 } from "@qflow/runtime-kit";
-import { resolveCredentialDirectory } from "./paths.js";
 import { FileCredentialStore } from "./store.js";
 
 const fileCredentialStoreAdapter = createRuntimeCredentialStoreAdapterFacet({
@@ -18,7 +18,7 @@ const fileCredentialStoreAdapter = createRuntimeCredentialStoreAdapterFacet({
     const config = runtimeConfigObject(context.config, "file CredentialStore");
     const path = runtimeConfigString(config.path, "file credential path");
     return { value: new FileCredentialStore(
-      resolveCredentialDirectory(context.hostStateRoot, path, "file CredentialStore"),
+      path === undefined ? join(context.hostStateRoot, "credentials") : resolve(context.hostStateRoot, path),
     ) };
   },
 });

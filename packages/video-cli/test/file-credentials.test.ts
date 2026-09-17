@@ -21,7 +21,8 @@ test("an explicitly selected file Store supports CLI login, repair and logout wi
   const profilePath = join(root, "qflow.runtime.json");
   const profile = JSON.parse(await readFile(profilePath, "utf8"));
   assert.equal(profile.credentials.platform.use, "@qflow/credential-store-platform", "initialization preserves the existing starter choice");
-  profile.credentials = { file: { use: "@qflow/credential-store-file" } };
+  const directory = join(root, "chosen-credentials");
+  profile.credentials = { file: { use: "@qflow/credential-store-file", config: { path: directory } } };
   profile.endpoints = { "qflowhub.default": { ...profile.endpoints["qflowhub.default"], config: {
     ...profile.endpoints["qflowhub.default"].config,
     apiKey: { store: "file", key: "test.oauth" },
@@ -35,7 +36,6 @@ test("an explicitly selected file Store supports CLI login, repair and logout wi
   const status = (await auth("status")).stdout;
   assert.equal(JSON.parse(status).credentials[0].configured, true);
   assert.doesNotMatch(status, /test-secret-never-display/u);
-  const directory = join(state, "credentials");
   const path = join(directory, (await readdir(directory))[0]!);
   await writeFile(path, "corrupt-secret-never-display");
   await assert.rejects(auth("status"), error => {

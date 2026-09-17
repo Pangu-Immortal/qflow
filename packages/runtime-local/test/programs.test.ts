@@ -133,7 +133,7 @@ test("Provider-owned preparation reconciles a cold installation and leaves a rea
   }));
   try {
     assert.equal((await bringManagedProgramsUp(configured.path, configured.options)).programs[0]?.action, "installed");
-    assert.equal((await bringManagedProgramsUp(configured.path, configured.options)).programs[0]?.action, "already-running");
+    assert.equal((await bringManagedProgramsUp(configured.path, configured.options)).programs[0]?.action, "unchanged");
     assert.equal(await readFile(join(configured.root, "prepared"), "utf8"), "prepared\n");
   } finally { await rm(configured.root, { recursive: true, force: true }); }
 });
@@ -219,16 +219,40 @@ test("down leaves a running program without a Qflow process record", async () =>
   assert.match(result.programs[0]!.detail ?? "", /without a Qflow process record/u);
 });
 
-test("down treats a ready probe-only Program as having nothing to stop", async () => {
-  const { path, options } = await project(() => ({
+test("a ready probe-only Program is unchanged on up and has nothing to stop", async (t) => {
+  const { root, path, options } = await project(() => ({
     id: "toolchain",
     probe: async () => ({ state: "ready" }),
   }));
-  const result = await takeManagedProgramsDown(path, options);
-  assert.equal(result.programs[0]!.action, "nothing-to-stop");
-  assert.deepEqual(result.programs[0]!.state, { state: "ready" });
-  assert.equal(result.programs[0]!.detail, undefined);
-  assert.equal(result.programs[0]!.pid, undefined);
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const up = await bringManagedProgramsUp(path, options);
+  assert.equal(up.programs[0]!.action, "unchanged");
+  assert.equal(up.programs[0]!.pid, undefined);
+  const down = await takeManagedProgramsDown(path, options);
+  assert.equal(down.programs[0]!.action, "nothing-to-stop");
+  assert.deepEqual(down.programs[0]!.state, { state: "ready" });
+  assert.equal(down.programs[0]!.detail, undefined);
+  assert.equal(down.programs[0]!.pid, undefined);
+});
+
+test("up reports resources installed even when a probe-only tool was already usable", async (t) => {
+  const { root, path, options } = await project(root => ({
+    id: "toolchain",
+    probe: async () => ({ state: "ready" }),
+    installation: {
+      probe: async () => {
+        try { await readFile(join(root, "resource")); return { state: "ready" }; }
+        catch { return { state: "down", detail: "resource is not prepared" }; }
+      },
+      commands: [nodeProgram("require('node:fs').writeFileSync(process.argv[1], 'ready')", join(root, "resource"))],
+    },
+  }));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const up = await bringManagedProgramsUp(path, options);
+  assert.equal(up.programs[0]!.action, "installed");
+  assert.equal(up.programs[0]!.state.state, "ready");
+  assert.equal(up.programs[0]!.pid, undefined);
+  assert.ok(up.programs[0]!.installationLogPath);
 });
 
 test("a program with nothing to start is installed once, and installation is the whole job", async () => {

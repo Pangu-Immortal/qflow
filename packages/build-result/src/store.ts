@@ -43,7 +43,7 @@ import {
   encodeBuildResultManifest,
 } from "./decode.js";
 import { syncBuildResultOutputs } from "./writer.js";
-import { replaceFile } from "./replace-file.js";
+import { replaceFile } from "@qflow/file-io-node";
 
 const manifestName = "result.json";
 const writerStateName = ".writer.json";

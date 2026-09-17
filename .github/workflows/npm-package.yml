@@ -22,7 +22,11 @@ concurrency:
 
 jobs:
   package:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     timeout-minutes: 25
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -36,20 +40,23 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Prepare the local media toolchain
+      - name: Prepare the local media toolchain on Linux
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
+      - name: Prepare the local media toolchain on Windows
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg --yes --no-progress
       - name: Read the package version
         id: version
         run: node --input-type=module -e 'import { readFileSync, appendFileSync } from "node:fs"; const { version } = JSON.parse(readFileSync("package.json", "utf8")); appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);'
       - name: Build the npm package and README
         run: npm run pack:distribution
       - name: Install, render and export outside the checkout
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: npm run check:distribution -- "$PWD/dist/release/qflow-qflow-$VERSION.tgz"
+        run: npm run check:distribution -- "dist/release/qflow-qflow-${{ steps.version.outputs.version }}.tgz"
       - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
         with:
           name: npm-package
           path: |

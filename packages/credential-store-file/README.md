@@ -47,7 +47,8 @@ report the read error rather than treating corruption as a missing credential.
 ## Storage
 
 The default directory is `credentials` under the Host state root printed by `qflow paths`.
-`config.path` explicitly selects a directory, resolving relative paths against that Host root.
+`config.path` explicitly selects a directory, including an absolute directory outside that root;
+relative paths resolve against the Host root.
 Opening the adapter and reading an absent key do not create files. Keep this directory outside Git.
 
 Each key has its own JSON file containing only `secret` and optional `expiresAt`, as defined by
@@ -56,7 +57,11 @@ CredentialValue. Filenames use reversible lower-case hex encoding of the key's U
 case-insensitive filesystems and keeps slashes and reserved names out of filesystem path syntax.
 Filesystem path-length limits still apply; an overlong key fails rather than selecting another name.
 
-Writes create an owner-only temporary file and replace the single destination with rename. Different
-keys do not overwrite each other's updates; concurrent writes to the same key keep the last completed
-replacement. The Store does not enumerate credentials, maintain an index, or record write history.
+Writes create an owner-only temporary file and replace the single destination through `@qflow/file-io-node`.
+On Windows this uses native POSIX replacement semantics, so an open reader keeps the old file
+while a new open sees the replacement; it does not use Node’s `MoveFileExW` path. Different
+keys do not overwrite each other's updates. Reads see a complete document, and the last completed
+replacement of the same key supplies its value. There is no process-local queue or cross-process
+coordination; filesystem errors propagate to the caller rather than being retried or hidden.
+The Store does not enumerate credentials, maintain an index, or record write history.
 Permission and I/O errors propagate. Existing directory permissions are not silently changed.

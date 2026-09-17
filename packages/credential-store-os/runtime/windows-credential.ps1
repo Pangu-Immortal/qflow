@@ -35,8 +35,7 @@ switch ($Operation) {
     @{ found = $true; secret = [Convert]::ToBase64String($bytes) } | ConvertTo-Json -Compress
   }
   "write" {
-    $existing = Find-Credential
-    if ($null -ne $existing) { $vault.Remove($existing) }
+    # Add replaces the same resource/account; do not destroy the old value before it succeeds.
     $bytes = [Convert]::FromBase64String([string]$request.secret)
     $secret = [System.Text.Encoding]::UTF8.GetString($bytes)
     $credential = New-Object Windows.Security.Credentials.PasswordCredential(

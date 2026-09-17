@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdtemp, open, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,15 +21,28 @@ type Exit = { code: number; stderr: string };
  * would let that layout pass, which is why the barrier is the assertion.
  */
 async function placeSimultaneously(directory: string, entries: { key: string; secret: string }[]): Promise<Exit[]> {
-  const startAt = Date.now() + 3_000;
-  return Promise.all(entries.map(({ key, secret }) => new Promise<Exit>((settle) => {
-    const writer = spawn(process.execPath, ["--import", "tsx", fixture, directory, key, secret, String(startAt)], {
-      cwd: distribution, stdio: ["ignore", "ignore", "pipe"], windowsHide: true,
+  const children = entries.map(({ key, secret }) => {
+    const writer = spawn(process.execPath, ["--import", "tsx", fixture, directory, key, secret], {
+      cwd: distribution, stdio: ["ignore", "ignore", "pipe", "ipc"], windowsHide: true,
     });
     let stderr = "";
-    writer.stderr.on("data", (chunk) => { stderr += String(chunk); });
-    writer.on("close", (code) => settle({ code: code ?? 1, stderr }));
-  })));
+    writer.stderr!.on("data", chunk => { stderr += String(chunk); });
+    const ready = new Promise<void>((resolve, reject) => {
+      writer.once("message", () => resolve());
+      writer.once("error", reject);
+      writer.once("close", () => reject(new Error(`writer exited before release: ${stderr}`)));
+    });
+    const exit = new Promise<Exit>((resolve, reject) => {
+      writer.once("error", reject);
+      writer.once("close", code => resolve({ code: code ?? 1, stderr }));
+    });
+    return { writer, ready, exit };
+  });
+  try {
+    await Promise.all(children.map(child => child.ready));
+    for (const child of children) child.writer.send("write");
+    return await Promise.all(children.map(child => child.exit));
+  } finally { for (const child of children) child.writer.kill(); }
 }
 
 test("processes placing different keys at one instant keep every credential", { timeout: 120_000 }, async () => {
@@ -60,18 +73,31 @@ test("two processes placing the same key leave one complete value", { timeout: 1
     const directory = join(root, "private");
     const entries = [{ key: "shared", secret: "first" }, { key: "shared", secret: "second" }];
     const exits = await placeSimultaneously(directory, entries);
-    // Separate processes share no order, and Windows refuses to replace a document while another
-    // replacement of it is in flight. A writer that loses that contest reports why, and one of them
-    // places the credential. Within one process this Store orders the work and both writers place.
-    assert.ok(exits.some((exit) => exit.code === 0),
-      `no writer placed the credential: ${exits.map((exit) => exit.stderr).join(" ")}`);
     for (const [index, exit] of exits.entries()) {
-      if (exit.code !== 0) assert.notEqual(exit.stderr.trim(), "", `writer ${index} failed without saying why`);
+      assert.equal(exit.code, 0, `writer ${index} failed: ${exit.stderr}`);
     }
     // Which replacement lands last is the filesystem's business; that the value is one writer's
     // whole value, and never a mixture of the two, is this Store's.
     const resolved = await new FileCredentialStore(directory).resolve(credentialRef("file", "shared"));
-    assert.ok(["first", "second"].includes(resolved?.secret ?? ""), `expected one complete value, got ${JSON.stringify(resolved)}`);
+    assert.ok(entries.some(entry => entry.secret === resolved?.secret), `expected one complete value, got ${JSON.stringify(resolved)}`);
     assert.equal((await readdir(directory)).length, 1);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+
+test("a separate process replaces a credential while its previous document is open", { timeout: 120_000 }, async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qflow-file-credentials-reader-"));
+  try {
+    const store = new FileCredentialStore(directory);
+    const ref = credentialRef("file", "shared");
+    await store.put(ref, { secret: "old" });
+    const [name] = await readdir(directory);
+    const reader = await open(join(directory, name!), "r");
+    try {
+      const [exit] = await placeSimultaneously(directory, [{ key: "shared", secret: "new" }]);
+      assert.equal(exit!.code, 0, exit!.stderr);
+      assert.deepEqual(await store.resolve(ref), { secret: "new" });
+      assert.deepEqual(JSON.parse(await reader.readFile("utf8")), { secret: "old" });
+    } finally { await reader.close(); }
+  } finally { await rm(directory, { recursive: true, force: true }); }
 });
