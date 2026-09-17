@@ -360,6 +360,5 @@ test("Worker stop suggests Program control in the same project and Profile", asy
 test("programs prepare provisions resources through the controller without starting a worker", async () => {
   const calls: string[] = [];
   await runCli(["programs", "prepare", "/p/qflow.runtime.json", "--endpoint", "speech"], io, distribution(calls));
-  assert.ok(calls.some((call) => call.startsWith("prepare /p/qflow.runtime.json")));
-  assert.ok(!calls.some((call) => call.startsWith("up ")));
+  assert.deepEqual(calls, [`prepare ${resolve("/p/qflow.runtime.json")} {"endpoints":["speech"]}`]);
 });
