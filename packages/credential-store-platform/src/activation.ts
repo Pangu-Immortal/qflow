@@ -21,8 +21,8 @@ const platformCredentialStoreAdapter = createRuntimeCredentialStoreAdapterFacet(
     const service = runtimeConfigString(config.service, "platform credential service");
     return {
       value: new PlatformCredentialStore({
-        // The file fallback lands in the same directory the file Store uses by default, so a Profile
-        // that switches between them on a host without a locker finds the credential it stored.
+        // Linux uses the same directory the file Store uses by default, so a Profile
+        // that switches between them on Linux finds the credential it stored.
         directory: path === undefined
           ? join(context.hostStateRoot, "credentials")
           : resolve(context.hostStateRoot, path),

@@ -11,14 +11,14 @@ const exec = promisify(execFile);
 const launcher = fileURLToPath(new URL("../../../bin/qflow.mjs", import.meta.url));
 
 /**
- * The examples select the `platform` Store so one committed Profile works on every host. On a
- * platform that has a locker, that Store would use the real keychain or Credential Locker of
- * whoever runs the suite, so this test covers the hosts it is about and skips the others.
+ * The examples select the `platform` Store so one committed Profile works on Linux, macOS and Windows.
+ * On macOS and Windows it would use the real keychain or Credential Locker of whoever runs the
+ * suite, so this test covers Linux and skips other platforms.
  */
-const hasLocker = process.platform === "darwin" || process.platform === "win32";
+const isLinux = process.platform === "linux";
 
-test("the interview example authenticates on a host with no OS locker, without editing its Profile",
-  { skip: hasLocker, timeout: 120_000 }, async (t) => {
+test("the interview example authenticates on Linux, without editing its Profile",
+  { skip: !isLinux, timeout: 120_000 }, async (t) => {
     const root = await mkdtemp(join(tmpdir(), "qflow-platform-example-"));
     t.after(() => rm(root, { recursive: true, force: true }));
     const project = join(root, "project");
@@ -33,14 +33,14 @@ test("the interview example authenticates on a host with no OS locker, without e
 
     const before = JSON.parse((await auth("status")).stdout).credentials[0];
     assert.equal(before.configured, false, "the committed Profile opens, so nothing here rewrites it");
-    assert.equal(before.writable, true, "a host with no locker still accepts a credential");
+    assert.equal(before.writable, true, "the Linux policy accepts a credential");
     const input = join(root, "secret.txt");
     await writeFile(input, "example-secret-never-displayed");
     const login = await auth("login", "--from", input);
     assert.doesNotMatch(login.stdout, /example-secret-never-displayed/u);
     assert.equal(JSON.parse((await auth("status")).stdout).credentials[0].configured, true);
 
-    // The fallback is the file Store's own directory, so switching Stores on such a host finds it.
+    // Linux uses the file Store's own directory, so switching Stores there finds it.
     assert.equal((await readdir(join(state, "credentials"))).length, 1);
 
     await auth("logout");

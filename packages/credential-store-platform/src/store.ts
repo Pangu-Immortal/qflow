@@ -15,11 +15,8 @@ import type {
   OsCredentialWriter,
 } from "@qflow/credential-store-os";
 
-/** The platforms whose user keychain or credential locker this Store prefers. */
-const LOCKER_PLATFORMS: readonly NodeJS.Platform[] = ["darwin", "win32"];
-
 export type PlatformCredentialStoreOptions = {
-  /** Directory holding the documents used where the platform has no locker. */
+  /** Directory holding the documents this Store selects on Linux. */
   readonly directory: string;
   /** Service the locker's entries are filed under; the OS Store's own default applies where absent. */
   readonly service?: string;
@@ -37,26 +34,26 @@ export type PlatformCredentialStoreOptions = {
 };
 
 /**
- * One Store that answers to the name `platform` everywhere and keeps each credential where its
- * platform keeps credentials: the user's keychain or credential locker where one exists, and an
- * owner-private file where none does. A Profile written once therefore behaves the same on Linux,
- * macOS and Windows without an author editing it, while `file`, `os` and `env` stay selectable by
- * name for anyone who wants one specific locker or file.
+ * An explicitly selected storage policy: OS credentials on macOS/Windows, files on Linux.
+ * The selected backend's errors propagate; other platforms are unsupported by this package.
  */
 export class PlatformCredentialStore implements WritableCredentialStore {
   readonly #delegate: WritableCredentialStore;
   readonly #backing: "os" | "file";
 
   constructor(options: PlatformCredentialStoreOptions) {
-    if (LOCKER_PLATFORMS.includes(options.platform ?? process.platform)) {
+    const platform = options.platform ?? process.platform;
+    if (platform === "darwin" || platform === "win32") {
       this.#backing = "os";
       this.#delegate = new OsCredentialStore({
         ...(options.service === undefined ? {} : { service: options.service }),
         ...options.locker,
       });
-    } else {
+    } else if (platform === "linux") {
       this.#backing = "file";
       this.#delegate = new FileCredentialStore(options.directory);
+    } else {
+      throw new Error(`Platform CredentialStore does not support ${platform}; select an explicit CredentialStore supported by this host`);
     }
   }
 

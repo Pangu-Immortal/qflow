@@ -23,7 +23,7 @@ async function scratch(prefix: string): Promise<string> {
   return await mkdtemp(join(tmpdir(), prefix));
 }
 
-test("a platform with a locker stores there and never creates a file", async () => {
+test("macOS stores credentials in its locker and never creates a file", async () => {
   const root = await scratch("qflow-platform-credentials-");
   try {
     const directory = join(root, "credentials");
@@ -36,7 +36,7 @@ test("a platform with a locker stores there and never creates a file", async () 
     assert.equal(locker.entries.get("qflowhub.oauth"), "locker-secret");
     assert.equal(await store.delete(ref), true);
     assert.equal(await store.resolve(ref), undefined);
-    assert.deepEqual(await readdir(root), [], "the file fallback stays untouched where a locker exists");
+    assert.deepEqual(await readdir(root), [], "file storage stays untouched by the OS policy");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -49,11 +49,11 @@ test("Windows selects the locker as well", async () => {
     });
     await store.put(credentialRef("platform", "qflowhub.oauth"), { secret: "locker-secret" });
     assert.equal(locker.entries.get("qflowhub.oauth"), "locker-secret");
-    assert.deepEqual(await readdir(root), [], "the file fallback stays untouched where a locker exists");
+    assert.deepEqual(await readdir(root), [], "file storage stays untouched by the OS policy");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("a platform without a locker stores owner-private documents in the file Store's directory", async () => {
+test("Linux stores owner-private documents in the file Store's directory", async () => {
   const root = await scratch("qflow-platform-credentials-");
   try {
     const directory = join(root, "credentials");
@@ -96,5 +96,33 @@ test("only this Store owns the name platform, and it owns no other name", async 
     await assert.rejects(platform.delete(credentialRef("os", "qflowhub.oauth")), /does not own os/u);
     assert.equal(new FileCredentialStore(directory).owns(ref), false);
     assert.equal(new OsCredentialStore(memoryLocker()).owns(ref), false);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+
+test("unsupported platforms fail before creating credential files", async () => {
+  const root = await scratch("qflow-platform-credentials-");
+  try {
+    assert.throws(() => new PlatformCredentialStore({
+      directory: join(root, "credentials"), platform: "freebsd",
+    }), /Platform CredentialStore does not support freebsd/u);
+    assert.deepEqual(await readdir(root), []);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("locker failures propagate without switching to file storage", async () => {
+  const root = await scratch("qflow-platform-credentials-");
+  try {
+    const failure = new Error("locker unavailable");
+    const fail = async () => { throw failure; };
+    const store = new PlatformCredentialStore({
+      directory: join(root, "credentials"), platform: "darwin",
+      locker: { read: fail, write: fail, remove: fail },
+    });
+    const ref = credentialRef("platform", "qflowhub.oauth");
+    await assert.rejects(store.resolve(ref), (error) => error === failure);
+    await assert.rejects(store.put(ref, { secret: "not-written" }), (error) => error === failure);
+    await assert.rejects(store.delete(ref), (error) => error === failure);
+    assert.deepEqual(await readdir(root), []);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
