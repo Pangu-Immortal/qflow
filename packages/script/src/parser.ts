@@ -2,11 +2,10 @@
 import { ScriptSyntaxError } from "./error.js";
 import {
   cleanProjection,
-  displayWordSurfaces,
   joinProjection,
   lexicalUnits,
-  lexicalEditRanges,
-  splitLeadingClosingPunctuation,
+  analyzeProse,
+  splitDisplayPrefix,
 } from "./lexical.js";
 import type {
   CaptionWordAttribute,
@@ -37,8 +36,6 @@ type MutableSegment = {
   readonly tokenStart: number;
   readonly sourceStart: number;
   readonly contentStart: number;
-  lexicalRun: string;
-  readonly lexicalMarkers: Array<{ readonly position: number; readonly offset: number }>;
 };
 
 const SEGMENT_ID = /^[a-z][a-z0-9_-]{0,63}$/u;
@@ -49,7 +46,7 @@ const ATTRIBUTE_NAME = /^[a-z][a-z0-9_-]{0,63}$/u;
 const ATTRIBUTE_VALUE = /^[A-Za-z0-9_.:-]+$/u;
 
 /** A marker's structural position before its affinity picks one anchor. */
-type RawMarkerBoundary = Omit<MarkerBoundary, "anchorId">;
+type RawMarkerBoundary = { -readonly [K in keyof Omit<MarkerBoundary, "anchorId">]: Omit<MarkerBoundary, "anchorId">[K] };
 type RawEdge<T> = Omit<T, "boundary"> & { readonly boundary: RawMarkerBoundary };
 type RawSelection = Omit<ParsedSelection, "startAnchorId" | "endAnchorId" | "open" | "close"> & {
   readonly open: RawEdge<ParsedSelection["open"]>;
@@ -65,33 +62,15 @@ function normalizeWord(value: string): string {
 }
 
 function parseMarker(source: string, offset: number): Marker | undefined {
-  const markerName = String.raw`[a-z][a-z0-9_-]{0,63}`;
-  const rest = source.slice(offset);
-  const closeRight = new RegExp(String.raw`^@\/(${markerName})~`, "u").exec(rest);
-  if (closeRight) {
-    return { id: closeRight[1]!, kind: "close", affinity: "right", length: closeRight[0].length };
+  const match = /^@\{(~)?(\/)?([a-z][a-z0-9_-]{0,63})([!~])?\}/u.exec(source.slice(offset));
+  if (!match) return undefined;
+  const [, left, close, id, suffix] = match;
+  if (close) {
+    if (left || suffix === "!") return undefined;
+    return { id: id!, kind: "close", affinity: suffix === "~" ? "right" : "left", length: match[0].length };
   }
-  const closeLeft = new RegExp(String.raw`^@\/(${markerName})(?![A-Za-z0-9_-])`, "u").exec(rest);
-  if (closeLeft) {
-    return { id: closeLeft[1]!, kind: "close", affinity: "left", length: closeLeft[0].length };
-  }
-  const moment = new RegExp(String.raw`^(~)?@(${markerName})!`, "u").exec(rest);
-  if (moment) {
-    return {
-      id: moment[2]!,
-      kind: "moment",
-      affinity: moment[1] === "~" ? "left" : "right",
-      length: moment[0].length,
-    };
-  }
-  const open = new RegExp(String.raw`^(~)?@(${markerName})(?![A-Za-z0-9_-])`, "u").exec(rest);
-  if (!open) return undefined;
-  return {
-    id: open[2]!,
-    kind: "open",
-    affinity: open[1] === "~" ? "left" : "right",
-    length: open[0].length,
-  };
+  if (suffix === "~") return undefined;
+  return { id: id!, kind: suffix === "!" ? "moment" : "open", affinity: left ? "left" : "right", length: match[0].length };
 }
 
 function segmentAnchorId(segmentId: string, edge: "start" | "end"): string {
@@ -142,8 +121,9 @@ export function parseScript(
 
   const segments: ParsedSegment[] = [];
   const tokens: ParsedToken[] = [];
-  const proseRanges: Array<{ start: number; end: number }> = [];
   const captionRegions: ParsedCaptionRegion[] = [];
+  let precedingCaptionRegion: number | undefined;
+  let pendingCaptionText = "";
   const selections = new Map<string, RawSelection>();
   const moments = new Map<string, RawMoment>();
   const captionBreaks: Array<{ readonly tokenIndex: number; readonly range: { readonly start: number; readonly end: number } }> = [];
@@ -157,33 +137,64 @@ export function parseScript(
   let offset = 0;
   let structuralPosition = 0;
 
-  const boundary = (): RawMarkerBoundary => ({
-    tokenIndex: tokens.length,
-    structuralPosition,
-    ...(current ? { segmentId: current.id } : {}),
-  });
+  // One prose run crosses annotations and comments. Only an explicit correspondence,
+  // speaker change or Segment edge ends it. Source positions stay local to parsing.
+  let runText = "";
+  let runCaption = "";
+  let runCapture = true;
+  let runStarts: number[] = [];
+  let runEnds: number[] = [];
+  let runBoundaries: Array<{ position: number; offset: number; kind: "marker" | "cue"; value: { tokenIndex: number } }> = [];
+  let runAttributes: Array<{ position: number; offset: number; end: number; attributes: readonly CaptionWordAttribute[] }> = [];
 
-  const finishLexicalRun = (): void => {
-    if (!current) return;
-    for (const match of lexicalUnits(current.lexicalRun)) {
-      const start = match.index;
-      const end = start + match.text.length;
-      const split = current.lexicalMarkers.find((marker) => start < marker.position && marker.position < end);
-      if (split) {
-        fail(
-          "SCRIPT_MARKER_TOKEN_BOUNDARY",
-          "A Selection or Moment marker cannot split a speech token.",
-          split.offset,
-        );
+  const boundary = (start: number): RawMarkerBoundary => {
+    const value = { tokenIndex: tokens.length, structuralPosition,
+      ...(current ? { segmentId: current.id } : {}) };
+    if (current) runBoundaries.push({ position: runText.length, offset: start, kind: "marker", value });
+    return value;
+  };
+
+  const finishLexicalRun = (): ParsedCaptionRegion["marks"] => {
+    if (!current) return [];
+    const { units, editRanges: ranges } = analyzeProse(runText, runCapture && precedingCaptionRegion !== undefined);
+    const tokenStart = tokens.length;
+    for (const event of runBoundaries) {
+      if (ranges.some(range => range.start < event.position && event.position < range.end)) {
+        fail(event.kind === "marker" ? "SCRIPT_MARKER_TOKEN_BOUNDARY" : "SCRIPT_CAPTION_BREAK_TOKEN_BOUNDARY",
+          "A semantic marker or Cue break cannot split a word and its attached punctuation.", event.offset);
+      }
+      event.value.tokenIndex = tokenStart + units.filter(unit => unit.index + unit.text.length <= event.position).length;
+      if (event.kind === "cue" && event.value.tokenIndex === current.tokenStart) {
+        fail("SCRIPT_CAPTION_BREAK_EMPTY", "Caption Cue break must follow visible Script text.", event.offset);
       }
     }
-    current.lexicalRun = "";
-    current.lexicalMarkers.length = 0;
+    if (units.length === 0 && runAttributes.length > 0) fail("SCRIPT_ATTRIBUTE_TARGET", "A spoken display attribute needs a complete word.", runAttributes[0]!.offset);
+    const marks = bindDisplayAttributes(runText, runAttributes, units);
+    for (const [ordinal, unit] of units.entries()) {
+      const index = tokens.length;
+      const segmentTokenIndex = index - current.tokenStart;
+      const range = ranges[ordinal]!;
+      const attachedAttributes = runAttributes.filter(attribute =>
+        attribute.position >= unit.index + unit.text.length && attribute.position <= range.end);
+      tokens.push({ id: tokenId(current.id, segmentTokenIndex), index, segmentId: current.id, segmentTokenIndex,
+        startAnchorId: tokenAnchorId(current.id, segmentTokenIndex, "start"),
+        endAnchorId: tokenAnchorId(current.id, segmentTokenIndex, "end"),
+        text: unit.text, normalized: normalizeWord(unit.text),
+        range: { start: runStarts[unit.index]!, end: runEnds[unit.index + unit.text.length - 1]! },
+        editRange: { start: runStarts[range.start]!, end: Math.max(runEnds[range.end - 1]!, ...attachedAttributes.map(attribute => sourceOffset + attribute.end)) },
+      });
+    }
+    if (runText || runCaption) {
+      const range = { start: runStarts[0]!, end: runEnds.at(-1)! };
+      current.atoms.push({ kind: "text", speech: runText, caption: runCaption, tokenStart, tokenEndExclusive: tokens.length, range });
+      if (runCapture) addCaptionRegion(runCaption, current.id, tokenStart, tokens.length, "identity", range, marks);
+    }
+    runText = ""; runCaption = ""; runStarts = []; runEnds = []; runBoundaries = []; runAttributes = [];
+    return marks;
   };
 
   const addMarker = (marker: Marker, start: number): void => {
     if (!TEMPORAL_ID.test(marker.id)) fail("SCRIPT_TEMPORAL_ID", `Invalid temporal id "${marker.id}".`, start);
-    if (current) current.lexicalMarkers.push({ position: current.lexicalRun.length, offset: start });
     if (marker.kind === "moment") {
       if (openSelections.has(marker.id) || selections.has(marker.id)) {
         fail("SCRIPT_TEMPORAL_TYPE", `Temporal name "${marker.id}" cannot be both Selection and Moment.`, start);
@@ -194,7 +205,7 @@ export function parseScript(
       moments.set(marker.id, {
         id: marker.id,
         affinity: marker.affinity,
-        boundary: boundary(),
+        boundary: boundary(start),
         range: { start: sourceOffset + start, end: sourceOffset + start + marker.length },
       });
       return;
@@ -211,7 +222,7 @@ export function parseScript(
       }
       openSelections.set(marker.id, {
         affinity: marker.affinity,
-        boundary: boundary(),
+        boundary: boundary(start),
         start: sourceOffset + start,
         end: sourceOffset + start + marker.length,
       });
@@ -229,7 +240,7 @@ export function parseScript(
       },
       close: {
         affinity: marker.affinity,
-        boundary: boundary(),
+        boundary: boundary(start),
         range: { start: sourceOffset + start, end: sourceOffset + start + marker.length },
       },
     });
@@ -261,6 +272,7 @@ export function parseScript(
         positions.push(absoluteStart + index);
         continue;
       }
+      if (dual && raw[index] === "<") fail("SCRIPT_DUAL_NESTED", "Dual Text cannot nest; escape a literal < as \\<.", absoluteStart + index);
       buffer += raw[index];
       index += 1;
       positions.push(absoluteStart + index);
@@ -301,13 +313,32 @@ export function parseScript(
     return { attributes, length: close + 1 };
   };
 
+  const bindDisplayAttributes = (
+    display: string,
+    annotations: readonly { position: number; offset: number; attributes: readonly CaptionWordAttribute[] }[],
+    units = lexicalUnits(display),
+  ): ParsedCaptionRegion["marks"] => {
+    const marks: Array<ParsedCaptionRegion["marks"][number]> = [];
+    for (const annotation of annotations) {
+      const displayIndex = units.length === 0
+        ? (display.trim() && annotation.position === display.trimEnd().length ? 0 : -1)
+        : units.findLastIndex(unit => unit.index + unit.text.length <= annotation.position);
+      if (displayIndex < 0 || units.some(unit => unit.index < annotation.position && annotation.position < unit.index + unit.text.length)) {
+        fail("SCRIPT_ATTRIBUTE_TARGET", "A display attribute must follow a complete word.", annotation.offset);
+      }
+      if (marks.some(mark => mark.displayIndex === displayIndex)) fail("SCRIPT_ATTRIBUTE_OVERLAP", "A display word cannot receive two separate attribute blocks.", annotation.offset);
+      marks.push({ displayIndex, attributes: annotation.attributes });
+    }
+    return marks;
+  };
+
   const parseMarkedDisplay = (
     raw: string,
     absoluteStart: number,
   ): { readonly display: string; readonly marks: readonly ParsedCaptionRegion["marks"][number][] } => {
     const parts: string[] = [];
-    const marks: ParsedCaptionRegion["marks"][number][] = [];
     let cursor = 0;
+    const attributePositions: Array<{ position: number; offset: number; attributes: readonly CaptionWordAttribute[] }> = [];
     for (let index = 0; index < raw.length; index += 1) {
       if (raw[index] === "\\") {
         index += 1;
@@ -319,21 +350,15 @@ export function parseScript(
       if (!before || /\s$/u.test(before)) {
         fail("SCRIPT_ATTRIBUTE_TARGET", "A token attribute must immediately follow a display token.", absoluteStart + index);
       }
-      const cleanBefore = literalString(before, absoluteStart, true);
-      const displayIndex = displayWordSurfaces(cleanBefore).length - 1;
-      if (displayIndex < 0) {
-        fail("SCRIPT_ATTRIBUTE_TARGET", "A token attribute must follow a visible display token.", absoluteStart + index);
-      }
-      if (marks.some((mark) => mark.displayIndex === displayIndex)) {
-        fail("SCRIPT_ATTRIBUTE_OVERLAP", "A display token cannot receive two separate attribute blocks.", absoluteStart + index);
-      }
+      const cleanBefore = parts.join("") + literalString(raw.slice(cursor, index), absoluteStart + cursor, true);
       parts.push(literalString(raw.slice(cursor, index), absoluteStart + cursor, true));
-      marks.push({ displayIndex, attributes: block.attributes });
+      attributePositions.push({ position: cleanBefore.length, offset: absoluteStart + index, attributes: block.attributes });
       cursor = index + block.length;
       index += block.length - 1;
     }
     parts.push(literalString(raw.slice(cursor), absoluteStart + cursor, true));
-    return { display: parts.join(""), marks };
+    const display = parts.join("");
+    return { display, marks: bindDisplayAttributes(display, attributePositions) };
   };
 
   const assertDualDisplayLiteral = (raw: string, absoluteStart: number): void => {
@@ -365,6 +390,7 @@ export function parseScript(
         captionRegions.push({
           id: `caption-region:${captionRegions.length + 1}`,
           display: "",
+          separatorBefore: "",
           segmentId,
           startToken: tokenStart,
           endTokenExclusive: tokenEndExclusive,
@@ -375,21 +401,30 @@ export function parseScript(
       }
       return;
     }
-    const split = splitLeadingClosingPunctuation(displayValue);
-    const previous = captionRegions.at(-1);
-    const canAttachPrevious = previous !== undefined && previous.segmentId === segmentId;
-    if (split.previous && canAttachPrevious) {
-      captionRegions[captionRegions.length - 1] = {
+    // Dual Text edge whitespace is syntax padding; ordinary prose whitespace is content.
+    const raw = kind === "alias" ? cleanProjection(displayValue) : displayValue;
+    const value = (pendingCaptionText + raw).replace(/\s+/gu, " ");
+    const split = splitDisplayPrefix(value, precedingCaptionRegion !== undefined);
+    const previous = precedingCaptionRegion === undefined ? undefined : captionRegions[precedingCaptionRegion];
+    if (previous && split.previous.trim()) {
+      captionRegions[precedingCaptionRegion!] = {
         ...previous,
-        display: cleanProjection(`${previous.display}${split.previous}`),
-        range: { start: previous.range.start, end: range.end },
+        display: previous.display + split.previous.trimEnd(),
       };
     }
-    const display = canAttachPrevious ? split.current : `${split.previous}${split.current}`;
-    if (!display || tokenEndExclusive <= tokenStart) return;
+    pendingCaptionText = /\s$/u.test(value) ? " " : "";
+    const display = (previous ? split.current : split.previous + split.current).trim();
+    if (tokenEndExclusive <= tokenStart) {
+      // A literal opener outside an explicit correspondence awaits that display,
+      // while closing punctuation has already been attached to the preceding one.
+      pendingCaptionText = previous ? split.current || pendingCaptionText : value;
+      return;
+    }
+    if (!display) return;
     captionRegions.push({
       id: `caption-region:${captionRegions.length + 1}`,
       display,
+      separatorBefore: previous && /\s$/u.test(split.previous) ? " " : "",
       segmentId,
       startToken: tokenStart,
       endTokenExclusive: tokenEndExclusive,
@@ -397,102 +432,27 @@ export function parseScript(
       marks,
       range,
     });
-  };
-
-  const markLastCaptionSurface = (
-    attributes: readonly CaptionWordAttribute[],
-    offset: number,
-  ): void => {
-    const previous = captionRegions.at(-1);
-    if (previous === undefined || previous.kind === "hidden") {
-      fail("SCRIPT_ATTRIBUTE_TARGET", "A token attribute must follow a visible display token.", offset);
-    }
-    const target = previous!;
-    if (target.kind === "alias") {
-      fail("SCRIPT_ATTRIBUTE_DUAL", "Annotate a Dual display word before the pipe; a mark cannot wrap a Dual Text.", offset);
-    }
-    const displayIndex = displayWordSurfaces(target.display).length - 1;
-    if (displayIndex < 0) fail("SCRIPT_ATTRIBUTE_TARGET", "A token attribute must follow a visible display token.", offset);
-    const existing = target.marks.find((mark) => mark.displayIndex === displayIndex);
-    if (existing !== undefined) {
-      fail("SCRIPT_ATTRIBUTE_OVERLAP", "A display token cannot receive two separate attribute blocks.", offset);
-    }
-    captionRegions[captionRegions.length - 1] = {
-      ...target,
-      marks: [...target.marks, { displayIndex, attributes }],
-    };
+    precedingCaptionRegion = captionRegions.length - 1;
   };
 
   const addText = (
     speech: string,
     caption: string,
     start: number,
-    end: number,
+    _end: number,
     captureCaptionRegion = true,
     sourcePositions?: readonly number[],
   ): void => {
     if (!current) {
-      if (speech.trim() || caption.trim()) {
-        fail("SCRIPT_TEXT_OUTSIDE_SEGMENT", "Natural-language text is only allowed inside a named Segment.", start);
-      }
+      if (speech.trim() || caption.trim()) fail("SCRIPT_TEXT_OUTSIDE_SEGMENT", "Natural-language text is only allowed inside a named Segment.", start);
       return;
     }
-    current.lexicalRun += speech;
-    const tokenStart = tokens.length;
-    const editRanges = lexicalEditRanges(speech);
-    const units = lexicalUnits(speech);
-    // Decoded characters may occupy more than one source character (for example \@).
-    const position = (index: number): number => sourceOffset + (sourcePositions?.[index] ?? start + index);
-    // A punctuation-only piece can follow a display attribute or escaped source piece.
-    const preceding = tokens.at(-1);
-    const closing = splitLeadingClosingPunctuation(speech).previous;
-    if (preceding?.segmentId === current.id && preceding.editRange.end === sourceOffset + start && closing && speech.startsWith(closing)) {
-      tokens[tokens.length - 1] = { ...preceding, editRange: {
-        start: preceding.editRange.start, end: position(closing.length),
-      } };
-    }
-    for (const [unitIndex, match] of units.entries()) {
-      const normalized = normalizeWord(match.text);
-      if (!normalized) continue;
-      const index = tokens.length;
-      const segmentTokenIndex = index - current.tokenStart;
-      const id = tokenId(current.id, segmentTokenIndex);
-      tokens.push({
-        id,
-        index,
-        segmentId: current.id,
-        segmentTokenIndex,
-        startAnchorId: tokenAnchorId(current.id, segmentTokenIndex, "start"),
-        endAnchorId: tokenAnchorId(current.id, segmentTokenIndex, "end"),
-        text: match.text,
-        normalized,
-        range: {
-          start: position(match.index),
-          end: position(match.index + match.text.length),
-        },
-        editRange: {
-          start: position(editRanges[unitIndex]!.start),
-          end: position(editRanges[unitIndex]!.end),
-        },
-      });
-    }
-    current.atoms.push({
-      kind: "text",
-      speech,
-      caption,
-      tokenStart,
-      tokenEndExclusive: tokens.length,
-      range: { start: sourceOffset + start, end: sourceOffset + end },
-    });
-    if (captureCaptionRegion && cleanProjection(caption)) {
-      addCaptionRegion(
-        caption,
-        current.id,
-        tokenStart,
-        tokens.length,
-        "identity",
-        { start: sourceOffset + start, end: sourceOffset + end },
-      );
+    runCapture = captureCaptionRegion;
+    runText += speech;
+    runCaption += caption;
+    for (let index = 0; index < speech.length; index++) {
+      runStarts.push(sourceOffset + (sourcePositions?.[index] ?? start + index));
+      runEnds.push(sourceOffset + (sourcePositions?.[index + 1] ?? start + index + 1));
     }
   };
 
@@ -502,12 +462,15 @@ export function parseScript(
     caption: string | undefined,
     marks: ParsedCaptionRegion["marks"] = [],
   ): void => {
+    const leading = /^\s*/u.exec(raw)![0].length;
+    raw = raw.trim();
+    absoluteStart += leading;
+    if (caption !== undefined) caption = caption.trim();
     const startToken = tokens.length;
     // An omitted speech side shares the written display source. Keep its original offsets:
     // marker edits target these words, not a synthetic copy beyond the pipe.
     const shared = caption === undefined;
     const spokenParts: string[] = [];
-    const sharedMarks: Array<ParsedCaptionRegion["marks"][number]> = [];
     let partStart = 0;
     let index = 0;
     let emittedCaption = false;
@@ -526,6 +489,7 @@ export function parseScript(
       if (raw.startsWith("||", index)) {
         fail("SCRIPT_CAPTION_BREAK_DUAL", "Caption Cue break cannot occur inside Dual Text; split the Dual Text into separate units.", absoluteStart + index);
       }
+      if (!shared && raw[index] === "{") fail("SCRIPT_DUAL_SPEECH_ATTRIBUTE", "Display attributes belong to the display side; escape literal braces in speech.", absoluteStart + index);
       if (shared && raw[index] === "{") {
         const before = raw.slice(partStart, index);
         if (!before || /\s$/u.test(before)) {
@@ -533,25 +497,15 @@ export function parseScript(
         }
         addLiteral(before, absoluteStart + partStart);
         const block = parseAttributeBlock(raw.slice(index), absoluteStart + index);
-        const displayIndex = displayWordSurfaces(spokenParts.join("")).length - 1;
-        if (displayIndex < 0 || tokens.length === startToken) {
-          fail("SCRIPT_ATTRIBUTE_TARGET", "A token attribute must follow a visible display token.", absoluteStart + index);
-        }
-        if (sharedMarks.some(mark => mark.displayIndex === displayIndex)) {
-          fail("SCRIPT_ATTRIBUTE_OVERLAP", "A display token cannot receive two separate attribute blocks.", absoluteStart + index);
-        }
-        sharedMarks.push({ displayIndex, attributes: block.attributes });
-        const token = tokens.at(-1)!;
-        tokens[tokens.length - 1] = { ...token, editRange: {
-          start: token.editRange.start, end: sourceOffset + absoluteStart + index + block.length,
-        } };
+        runAttributes.push({ position: runText.length, offset: absoluteStart + index,
+          end: absoluteStart + index + block.length, attributes: block.attributes });
         index += block.length;
         partStart = index;
         continue;
       }
       const marker = parseMarker(raw, index);
       if (!marker) {
-        if (raw[index] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a valid marker.", absoluteStart + index);
+        if (raw[index] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a delimited @{...} marker; migrate bare markers from 0.1 explicitly.", absoluteStart + index);
         index += 1;
         continue;
       }
@@ -562,6 +516,7 @@ export function parseScript(
     }
     addLiteral(raw.slice(partStart), absoluteStart + partStart);
     const display = caption ?? spokenParts.join("");
+    const sharedMarks = finishLexicalRun();
     if (shared && tokens.length === startToken) {
       fail("SCRIPT_DUAL_EMPTY", "Dual Text with omitted speech must contain spoken text on its display side.", absoluteStart);
     }
@@ -600,7 +555,6 @@ export function parseScript(
 
   while (offset < source.length) {
     if (source.startsWith("<!--", offset)) {
-      finishLexicalRun();
       const end = source.indexOf("-->", offset + 4);
       if (end < 0) fail("SCRIPT_COMMENT", "Unclosed Script comment.", offset);
       offset = end + 3;
@@ -619,6 +573,8 @@ export function parseScript(
           fail("SCRIPT_SEGMENT_DUPLICATE", `Duplicate Segment id "${id}".`, offset);
         }
         const contentStart = offset + open[0].length;
+        precedingCaptionRegion = undefined;
+        pendingCaptionText = "";
         current = {
           id,
           index: segments.length,
@@ -626,8 +582,6 @@ export function parseScript(
           tokenStart: tokens.length,
           sourceStart: sourceOffset + offset,
           contentStart: sourceOffset + contentStart,
-          lexicalRun: "",
-          lexicalMarkers: [],
         };
         offset = contentStart;
         if (self) closeCurrent(offset, true);
@@ -660,7 +614,7 @@ export function parseScript(
       offset += marker.length;
       continue;
     }
-    if (source[offset] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a valid marker.", offset);
+    if (source[offset] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a delimited @{...} marker; migrate bare markers from 0.1 explicitly.", offset);
 
     if (source[offset] === "<" && current) {
       const end = findUnescaped(source, ">", offset + 1);
@@ -679,7 +633,7 @@ export function parseScript(
         assertDualDisplayLiteral(inside.slice(0, pipe), offset + 1);
         const markedDisplay = parseMarkedDisplay(inside.slice(0, pipe), offset + 1);
         const display = markedDisplay.display;
-        if (!speech.replace(/~?@\/?[A-Za-z_][A-Za-z0-9_.-]*!?~?/gu, "").trim()) {
+        if (!speech.replace(/@\{[^{}]*\}/gu, "").trim()) {
           fail("SCRIPT_DUAL_EMPTY", "Dual Text speech side must not be empty.", offset);
         }
         consumeSpeechSide(speech, offset + pipe + 2, display, markedDisplay.marks);
@@ -689,6 +643,8 @@ export function parseScript(
       }
       if (!ROLE_LABEL.test(inside)) fail("SCRIPT_ANGLE", `Unknown Script construct <${inside}>.`, offset);
       finishLexicalRun();
+      precedingCaptionRegion = undefined;
+      pendingCaptionText = "";
       current.atoms.push({
         kind: "role",
         label: inside,
@@ -715,29 +671,21 @@ export function parseScript(
       offset += 1;
     }
     const raw = source.slice(textStart, offset);
-    if (raw) proseRanges.push({ start: sourceOffset + textStart, end: sourceOffset + offset });
     for (const piece of literalPieces(raw, textStart)) addText(piece.value, piece.value, piece.start, piece.end, true, piece.positions);
     if (source[offset] === "{") {
       const block = parseAttributeBlock(source.slice(offset), offset);
       if (!raw || /\s$/u.test(raw)) {
         fail("SCRIPT_ATTRIBUTE_TARGET", "A token attribute must immediately follow a display token.", offset);
       }
-      markLastCaptionSurface(block.attributes, offset);
-      const token = tokens.at(-1)!;
-      tokens[tokens.length - 1] = { ...token, editRange: {
-        start: token.editRange.start, end: sourceOffset + offset + block.length,
-      } };
+      runAttributes.push({ position: runText.length, offset, end: offset + block.length, attributes: block.attributes });
       offset += block.length;
       continue;
     }
     if (source.startsWith("||", offset)) {
-      if (!current || tokens.length === current.tokenStart) {
-        fail("SCRIPT_CAPTION_BREAK_EMPTY", "Caption Cue break must follow visible Script text.", offset);
-      }
-      captionBreaks.push({
-        tokenIndex: tokens.length,
-        range: { start: sourceOffset + offset, end: sourceOffset + offset + 2 },
-      });
+      if (!current) fail("SCRIPT_CAPTION_BREAK_EMPTY", "Caption Cue break belongs inside a Segment.", offset);
+      const value = { tokenIndex: tokens.length, range: { start: sourceOffset + offset, end: sourceOffset + offset + 2 } };
+      captionBreaks.push(value);
+      runBoundaries.push({ position: runText.length, offset, kind: "cue", value });
       offset += 2;
     }
   }
@@ -881,7 +829,6 @@ export function parseScript(
   return {
 
     sourceRange: { start: sourceOffset, end: sourceOffset + source.length },
-    proseRanges,
     segments,
     tokens,
     turns,

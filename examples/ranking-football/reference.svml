@@ -31,10 +31,10 @@
        TierBoard consumes windows without finding frames. Cue breaks are author intent. -->
   <script id="story">
     <ronaldo>
-      <HOST>Ronaldo is <D | Dee> tier. || Bro has @hair-gel more || hair gel than @trophy trophies || at this point@/trophy@/hair-gel. || Built like || @greek-god a Greek god, || plays like || @greek-tragedy a Greek tragedy@/greek-tragedy@/greek-god. || But hey, || at least @penaldo-social he's got || the most followers || on Instagram@/penaldo-social.
+      <HOST>Ronaldo is <D | Dee> tier. || Bro has @{hair-gel} more || hair gel than @{trophy} trophies || at this point.@{/trophy}@{/hair-gel} || Built like || @{greek-god} a Greek god, || plays like || @{greek-tragedy} a Greek tragedy.@{/greek-tragedy}@{/greek-god} || But hey, || at least @{penaldo-social} he's got || the most followers || on Instagram.@{/penaldo-social}
     </ronaldo>
     <messi>
-      <HOST>Messi? Man won || a World Cup || @tired-dad looking like || somebody's tired dad@/tired-dad. || Walks around || @walks-around for 89 minutes, || touches the ball || three times, || and somehow || @hat-trick you just watched || a hat trick@/hat-trick@/walks-around. || Definitely <S | Ess> tier.
+      <HOST>Messi? Man won || a World Cup || @{tired-dad} looking like || somebody's tired dad.@{/tired-dad} || Walks around || @{walks-around} for 89 minutes, || touches the ball || three times, || and somehow || @{hat-trick} you just watched || a hat trick.@{/hat-trick}@{/walks-around} || Definitely <S | Ess> tier.
     </messi>
   </script>
 

@@ -354,7 +354,7 @@ export function createCodePane(): CodePane {
           else {
             const span = document.createElement("span");
             // A marker pair shares a tone with the clip it binds, so the two
-            // ends of `@claim … @/claim` read as one thing.
+            // ends of `@{claim} … @{/claim}` read as one thing.
             const tone = token.id === undefined ? undefined : tones.get(token.id);
             span.className = `tok tok-${token.kind}${tone === undefined ? "" : ` tone-${tone}`}`;
             if (token.id !== undefined) span.dataset.marker = token.id;

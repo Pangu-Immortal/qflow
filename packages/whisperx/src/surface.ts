@@ -13,7 +13,7 @@ import { mediaTypes } from "@qflow/media";
 
 import { whisperXBoundarySemanticTakeFragment, whisperXSemanticTakeFragment } from "./fragment.js";
 import { whisperXTypes } from "./manifest.js";
-import type { WhisperXLanguage } from "./types.js";
+import { parseWhisperXLanguage } from "./types.js";
 
 function reference(
   element: StructuredElement,
@@ -61,16 +61,13 @@ export const decodeWhisperXSemanticTakeSurface: StructuredSurfaceHandler = ({ el
       fragments: [whisperXBoundarySemanticTakeFragment],
     };
   }
-  const language = stringAttribute(element, "language");
-  if (language !== "en" && language !== "zh" && language !== "es") {
-    throw new Error(`${element.name}.language must be en, zh, or es`);
-  }
+  const language = parseWhisperXLanguage(stringAttribute(element, "language"), `${element.name}.language`);
   const languageId = `${id}.language`;
   return {
     records: [{
       id: languageId,
       type: whisperXTypes.language,
-      value: { kind: "inline", value: language as WhisperXLanguage },
+      value: { kind: "inline", value: language },
       range: element.range,
     }],
     components: [{

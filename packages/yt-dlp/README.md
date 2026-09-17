@@ -3,6 +3,7 @@
 `@qflow/yt-dlp` owns video download for the Qflow Distribution. Video CLI exposes it as:
 
 ```bash
+qflow media prepare-fetch
 qflow media fetch "https://example.com/watch?v=VIDEO_ID" --to references/source.mp4
 ```
 
@@ -18,9 +19,14 @@ Runtime Profile and creates no Build.
   preparation and overwrite policy. The target extension must be `.mp4`, `.mkv`, `.webm` or `.mov`.
 
 The downloader locates its declared `@qflow/yt-dlp-service-runtime` package through the active
-Distribution/package resolver and invokes that package's locked Python project through `uv`.
-Ship its `pyproject.toml` and `uv.lock`; the caller's location and a `services/` ancestor are irrelevant.
-`uv` and `ffmpeg` must be available on PATH; the CLI also uses `ffprobe` to report the saved media.
+Distribution/package resolver. `prepareVideoDownload()` (`media prepare-fetch`) explicitly runs
+`uv sync --frozen` into `<hostState>/programs/yt-dlp/<version>/.venv`. `downloadVideo()` only invokes
+that prepared executable and refuses a missing environment. Ship `pyproject.toml` and `uv.lock`;
+the caller's location and a `services/` ancestor are irrelevant. `uv` is needed for preparation;
+`ffmpeg` must be on PATH for fetching, and the CLI uses `ffprobe` to report the saved media.
+The default upstream extras include the EJS solver in that locked environment. Fetch explicitly
+selects the calling Node executable, ignores user yt-dlp configuration/plugins, and disables updates
+and remote component acquisition. Fetching source media remains a network operation.
 
 The request selects `bv*+ba/b`, with `res:1080,vcodec:h264` format preferences and `--no-playlist`.
 Available source streams determine the result. It stages the download in the OS temporary directory,

@@ -9,159 +9,88 @@ const WORD_CHARACTER = String.raw`(?:(?!${CHARACTER_UNIT})[\p{L}\p{M}\p{N}])`;
 const LEXICAL_UNIT = new RegExp([
   String.raw`(?:\p{N}{1,3}(?:[,，]\p{N}{3})+|\p{N}+)(?:[.．]\p{N}+)?(?:-\p{N}+(?:[.．]\p{N}+)?)*(?!\p{N}|-[\p{L}\p{M}])`,
   String.raw`${CHARACTER_UNIT}\p{M}*`,
-  String.raw`${WORD_CHARACTER}+(?:['’.-]${WORD_CHARACTER}+)*`,
+  String.raw`(?:(?!${CHARACTER_UNIT})[\p{L}\p{N}])${WORD_CHARACTER}*(?:['’.-]${WORD_CHARACTER}+)*`,
 ].join("|"), "gu");
 
-const OPENING_PUNCTUATION = new Set([
-  "(", "[", "{", "（", "【", "《", "「", "『", "〔", "〈", "“", "‘",
-  "$", "¥", "￥", "€", "£",
-]);
-
-const QUOTE_PUNCTUATION = new Set(["\"", "'", "`", "’", "ʼ"]);
-const UNICODE_OPENING_PUNCTUATION = /[\p{Ps}\p{Pi}]/u;
-
-/**
- * ASCII quotation marks have no Unicode opening/closing category. In a gap between
- * lexical units, whitespace before the mark is the useful authoring signal:
- * `said "hello` opens a quote, while `hello" world` closes one. A quote before the
- * first unit is opening by definition; contractions stay inside one lexical unit.
- */
-function isOpeningPunctuation(
-  character: string,
-  gap: string,
-  position: number,
-  hasPreviousSurface: boolean,
-): boolean {
-  if (OPENING_PUNCTUATION.has(character) || UNICODE_OPENING_PUNCTUATION.test(character)) return true;
-  if (!QUOTE_PUNCTUATION.has(character)) return false;
-  if (!hasPreviousSurface) return true;
-  const before = [...gap.slice(0, position)].at(-1);
-  return before !== undefined && /\s/u.test(before);
+// Unicode owns bracket/quote categories. ASCII symmetric quotes need local context;
+// they have no opening/closing category. This is prose analysis, not marker syntax.
+function openingAt(gap: string, hasPrevious: boolean, beforeWord = true): number {
+  for (const match of gap.matchAll(/./gu)) {
+    const character = match[0];
+    if (/[\p{Ps}\p{Pi}\p{Sc}]/u.test(character)
+      || ((/["'`]/u.test(character) || (beforeWord && /\p{Pf}/u.test(character))) && (!hasPrevious || /\s$/u.test(gap.slice(0, match.index))))) return match.index;
+  }
+  return gap.length;
 }
 
 export function lexicalUnits(value: string): readonly LexicalUnit[] {
-  return [...value.matchAll(LEXICAL_UNIT)].map((match) => ({
-    text: match[0],
-    index: match.index,
-  }));
+  return [...value.matchAll(LEXICAL_UNIT)].map(match => ({ text: match[0], index: match.index }));
 }
 
 export function lexicalCount(value: string): number {
   return lexicalUnits(value).length;
 }
 
-/** Source positions for markers; unlike timing units, these include attached punctuation. */
-export function lexicalEditRanges(value: string): readonly { start: number; end: number }[] {
-  const units = lexicalUnits(value);
-  return units.map((unit, index) => {
-    const previousEnd = index === 0 ? 0 : units[index - 1]!.index + units[index - 1]!.text.length;
-    const nextStart = units[index + 1]?.index ?? value.length;
-    const leading = value.slice(previousEnd, unit.index);
-    let start = unit.index;
-    for (const [position, character] of [...leading.matchAll(/./gu)].map((match) => [match.index, match[0]] as const)) {
-      if (isOpeningPunctuation(character, leading, position, index > 0)) { start = previousEnd + position; break; }
-    }
-    let end = unit.index + unit.text.length;
-    const trailing = value.slice(end, nextStart);
-    for (const match of trailing.matchAll(/./gu)) {
-      if (/\s/u.test(match[0]) || isOpeningPunctuation(match[0], trailing, match.index, true)) break;
-      end += match[0].length;
-    }
-    return { start, end };
-  });
-}
-
-/** Canonical prose spacing; punctuation remains display/speech information, never a timing token. */
-function attachProseSpacing(value: string): string {
-  return value
-    .replace(/ +([,.;:!?%…，。！？；：、％‰）】》」』〕〉}\]])/gu, "$1")
-    .replace(/([([{（【《「『〔〈“‘]) +/gu, "$1")
-    // Do not erase a cross-script space: `here 你好` must remain two semantic regions.
-    // Only collapse explicit spaces inside one CJK run; the lexical tokenizer already keeps
-    // adjacent Latin and CJK runs separate when no space was authored.
-    .replace(/([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]) +(?=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])/gu, "$1");
-}
-
+/** Normalize source formatting without inventing language-specific separators. */
 export function cleanProjection(value: string): string {
-  return attachProseSpacing(value.replace(/\s+/gu, " ")).trim();
+  return value.replace(/\s+/gu, " ").trim();
 }
 
-/** Source formatting keeps line breaks and lexical boundaries, including spaced decimal-like prose. */
-export function cleanHorizontalProse(value: string): string {
-  const collapsed = value.replace(/[ \t]+/gu, " ");
-  const attached = attachProseSpacing(collapsed);
-  const words = (text: string) => lexicalUnits(text).map(unit => unit.text);
-  // A separator in `3 .14` cannot be erased into the different token `3.14`.
-  const before = words(collapsed);
-  const after = words(attached);
-  return before.length === after.length && before.every((word, index) => word === after[index]) ? attached : collapsed;
-}
-
-/** Structural markers split atoms but must not invent prose whitespace when those atoms rejoin. */
 export function joinProjection(parts: readonly string[]): string {
   return cleanProjection(parts.join(""));
 }
 
-/**
- * Display units follow the same lexical boundaries as semantic speech tokens. Punctuation is kept
- * for rendering: opening punctuation belongs to the next unit; all other inter-token punctuation
- * belongs to the previous unit. Whitespace is layout, not a display word of its own.
- */
-export function displayWordSurfaces(value: string): readonly string[] {
-  const prose = cleanProjection(value);
-  const units = lexicalUnits(prose);
-  if (units.length === 0) return [];
+export type DisplaySurface = { readonly text: string; readonly separatorBefore: "" | " " };
+type ProseWord = { start: number; end: number; separatorBefore: "" | " " };
 
-  const surfaces: string[] = [];
+/** Analyze complete prose once. Speech cores and their written surfaces are distinct:
+ * punctuation has spelling and source extent, but does not acquire speech timing.
+ * A display-only literal (for example an emoji in Dual Text) needs no speech core.
+ */
+export function analyzeProse(value: string, followsDisplay = false): {
+  readonly units: readonly LexicalUnit[];
+  readonly surfaces: readonly DisplaySurface[];
+  readonly editRanges: readonly { start: number; end: number }[];
+} {
+  const units = lexicalUnits(value);
+  const words: ProseWord[] = [];
   let cursor = 0;
-  let prefix = "";
   for (const unit of units) {
-    const gap = prose.slice(cursor, unit.index);
-    const punctuation = [...gap]
-      .map((character, position) => ({ character, position }))
-      .filter(({ character }) => !/\s/u.test(character));
-    if (surfaces.length === 0) {
-      prefix += punctuation.map(({ character }) => character).join("");
-    } else {
-      const suffix = punctuation
-        .filter(({ character, position }) => !isOpeningPunctuation(character, gap, position, true))
-        .map(({ character }) => character)
-        .join("");
-      const opening = punctuation
-        .filter(({ character, position }) => isOpeningPunctuation(character, gap, position, true))
-        .map(({ character }) => character)
-        .join("");
-      if (suffix) surfaces[surfaces.length - 1] += suffix;
-      prefix += opening;
-    }
-    surfaces.push(`${prefix}${unit.text}`);
-    prefix = "";
+    const gap = value.slice(cursor, unit.index);
+    const opening = openingAt(gap, words.length > 0 || followsDisplay);
+    const closing = gap.slice(0, opening);
+    const previous = words.at(-1);
+    if (previous) previous.end = cursor + closing.trimEnd().length;
+    const start = previous || followsDisplay ? cursor + opening : value.slice(0, unit.index).search(/\S/u);
+    words.push({ start: start < 0 ? unit.index : start, end: unit.index + unit.text.length,
+      separatorBefore: previous && /\s$/u.test(closing) ? " " : "" });
     cursor = unit.index + unit.text.length;
   }
-  const trailing = prose.slice(cursor).replace(/\s+/gu, "");
-  if (trailing) surfaces[surfaces.length - 1] += trailing;
-  return surfaces;
+  const last = words.at(-1);
+  if (last) last.end = value.trimEnd().length;
+  const surfaces = words.map(word => ({ text: value.slice(word.start, word.end).replace(/\s+/gu, " "), separatorBefore: word.separatorBefore }));
+  const editRanges = words.map((word, index) => {
+    const unit = units[index]!;
+    let end = unit.index + unit.text.length;
+    // Whitespace is a legal insertion boundary. Only adjacent trailing punctuation
+    // belongs to the indivisible edit surface ("word," versus "word ,").
+    const trailing = value.slice(end, word.end);
+    const whitespace = trailing.search(/\s/u);
+    end += whitespace < 0 ? trailing.length : whitespace;
+    return { start: word.start, end };
+  });
+  if (surfaces.length === 0 && value.trim()) surfaces.push({ text: cleanProjection(value), separatorBefore: "" });
+  return { units, surfaces, editRanges };
 }
 
-/** Closing punctuation before a lexical unit belongs to the previous display unit when one exists. */
-export function splitLeadingClosingPunctuation(value: string): {
-  readonly previous: string;
-  readonly current: string;
-} {
-  const prose = cleanProjection(value);
-  const first = lexicalUnits(prose)[0];
-  if (first === undefined) return { previous: prose.replace(/\s+/gu, ""), current: "" };
-  const leading = prose.slice(0, first.index);
-  const punctuation = [...leading]
-    .map((character, position) => ({ character, position }))
-    .filter(({ character }) => !/\s/u.test(character));
-  const previous = punctuation
-    .filter(({ character, position }) => !isOpeningPunctuation(character, leading, position, false))
-    .map(({ character }) => character)
-    .join("");
-  const opening = punctuation
-    .filter(({ character, position }) => isOpeningPunctuation(character, leading, position, false))
-    .map(({ character }) => character)
-    .join("");
-  return { previous, current: `${opening}${prose.slice(first.index)}` };
+export function displaySurfaces(value: string): readonly DisplaySurface[] {
+  return analyzeProse(value).surfaces;
+}
+
+/** Correspondence boundaries retain punctuation on either side of an explicit Dual. */
+export function splitDisplayPrefix(value: string, hasPrevious: boolean): { previous: string; current: string } {
+  const first = lexicalUnits(value)[0];
+  const end = first?.index ?? value.length;
+  const split = openingAt(value.slice(0, end), hasPrevious, first !== undefined);
+  return { previous: value.slice(0, split), current: value.slice(split) };
 }

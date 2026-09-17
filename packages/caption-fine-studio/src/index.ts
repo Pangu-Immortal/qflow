@@ -114,10 +114,8 @@ function cueText(document: CaptionDocument | undefined, unitIds: readonly string
   const selected = new Set(unitIds);
   return document.words
     .filter((word) => selected.has(word.unitId))
-    .map((word) => word.text)
-    .join(" ")
-    .replace(/([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])\s+(?=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])/gu, "$1")
-    .trim();
+    .map((word, index) => (index === 0 ? "" : word.separatorBefore) + word.text)
+    .join("");
 }
 
 export function projectCaptionContents(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {

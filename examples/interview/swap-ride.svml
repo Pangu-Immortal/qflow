@@ -31,7 +31,7 @@
       <LEON>Hey yo! || Is this <F1 | F One> car || yours?
       <ADA>Mmm hmm.
       <LEON>Give me three rules || to make your || first million.
-      <ADA>OK || the || first one || is || @uber! Uber.
+      <ADA>OK || the || first one || is || @{uber!} Uber.
       <LEON>You drove || Uber?
       <ADA>Two || years. || Five || stars || for || every || single || ride.
     </uber-rule>
@@ -40,7 +40,7 @@
       <LEON>Did that || make you || a million?
       <ADA>No. || But || rule two || did.
       <LEON>Say it.
-      <ADA>@shortcuts! Shortcuts. || Take || every || single || one.
+      <ADA>@{shortcuts!} Shortcuts. || Take || every || single || one.
       <LEON>Like on the track?
       <ADA>Like on || Google || Maps. || I || missed || my || exit || and || ended up || on a || racetrack.
       <LEON>Wait like || during a race?
@@ -49,7 +49,7 @@
 
     <first-place-rule>
       <LEON>What?!
-      <ADA>I won || the || @first-place! First || place || so || they || gave me || the car.
+      <ADA>I won || the || @{first-place!} First || place || so || they || gave me || the car.
       <LEON>So you won an || <F1 | F One> race || by accident?!
       <ADA>Five star || driver, || baby.
     </first-place-rule>

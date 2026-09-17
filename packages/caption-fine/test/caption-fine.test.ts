@@ -467,7 +467,7 @@ test("Caption Surface wires one Timeline to both ordinary and tracked-region ren
 });
 
 test("a Use beginning inside a Cue changes presentation without changing words or animation time", () => {
-  const { document, program } = fixture("<line>test1 || test2 @select test3 || test4 @/select</line>");
+  const { document, program } = fixture("<line>test1 || test2 @{select} test3 || test4 @{/select}</line>");
   const timeline = sealTimeline({ id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 }, items: [] });
   const unit = (index: number) => ({ unitId: document.units[index]!.id, startFrame: 10 + index * 10, endFrameExclusive: 20 + index * 10 });
   const projection: TimedCaptionProjection = { spaceId: timeline.id, narrativeId: "story", documentId: document.id, cues: [
@@ -542,4 +542,38 @@ test("Caption Track Uses share the temporal author language and reject the remov
   }
   await assert.rejects(()=>decode('', 'program={old}'),/requires id, document, timeline/);
   await assert.rejects(()=>decode('<fine:Use style={style} selection={selection}/>'),/requires exactly one/);
+});
+
+test("Fine uses author separators in ordinary text, shared groups, active copies and joined boxes", () => {
+  const { program, projection } = fixture();
+  const { "max-lines": _lines, "max-words-per-line": _words, ...flow } = recipe.properties;
+  const style = fineCaptionStyle("plain", { ...recipe, properties: { ...flow,
+    karaoke: "trail", "active-underline": "trail", "active-box": "trail", "active-box-continuity": "joined",
+  } }, [font]);
+  const styled = { ...program, styles: [style] };
+  const render = (source: string) => {
+    const document = captionDocument(parseScript("spacing", `<line>${source}</line>`), "story.caption", "story");
+    const timed: TimedCaptionProjection = { ...projection, cues: [{ ...projection.cues[0]!,
+      startFrame: 10, endFrameExclusive: 70,
+      units: document.units.map((unit, index) => ({ unitId: unit.id, startFrame: 10 + index * 5, endFrameExclusive: 15 + index * 5 })),
+    }] };
+    return renderFineCaption(scheduleFineCaption(timed, styled, document), styled, document,
+      sealTimeline({ items: [], id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } })).presents[0]!.elements;
+  };
+  const grouped = render("<3개월 만에|> 완료했습니다");
+  for (const id of ["atom-1-base-2", "atom-1-active-2", "atom-1-underline-2"]) {
+    assert.equal(grouped.find(element => element.id === id)!.style.some(style => style.name === "margin-left"), false);
+  }
+  for (const id of ["atom-1-base-3", "atom-1-active-3", "atom-1-underline-3"]) {
+    assert.equal(grouped.find(element => element.id === id)!.style.find(style => style.name === "margin-left")?.value, "14px");
+  }
+  const backgroundWords = grouped.filter(element => element.id.startsWith("joined-group-") && element.kind === "text");
+  assert.deepEqual(backgroundWords.map(element => element.kind === "text" && element.text), ["3", "개월", "만에", "완료했습니다"]);
+  assert.equal(grouped.find(element => element.id === "joined-group-0-word-2")!.style.find(style => style.name === "margin-left")?.value, "14px");
+  assert.equal(grouped.find(element => element.id === "joined-gap-1")!.kind, "text");
+  const chinese = render("是的 就是这样");
+  assert.equal(chinese.find(element => element.id === "gap-2")!.style.find(style => style.name === "letter-spacing")?.value, "14px");
+  assert.equal(chinese.find(element => element.id === "atom-2-entry")!.style.some(style => style.name === "margin-left"), false);
+  const joined = render("3D");
+  assert.equal(joined.some(element => element.style.some(style => (style.name === "column-gap" || style.name === "margin-left") && style.value !== "0px")), false);
 });

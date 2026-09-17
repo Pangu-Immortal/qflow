@@ -27,6 +27,7 @@ function controller(
       down: async () => worker,
     },
     programs: {
+      prepare: async (options) => { calls.push(`prepare ${path} ${JSON.stringify(options)}`); return { dataRoot: "/tmp", programs: reports }; },
       up: async (options) => {
         calls.push(`up ${path} ${JSON.stringify(options)}`);
         return { dataRoot: "/tmp", programs: reports };
@@ -64,10 +65,10 @@ test("programs dispatches lifecycle through the selected Runtime Controller", as
   ]);
 });
 
-test("programs accepts only up, down and status", async () => {
+test("programs accepts prepare, up, down and status", async () => {
   await assert.rejects(
     runCli(["programs", "restart", "/p/qflow.runtime.json"], io, distribution([])),
-    /programs takes up, down or status/u,
+    /programs takes prepare, up, down or status/u,
   );
 });
 
@@ -353,4 +354,11 @@ test("Worker stop suggests Program control in the same project and Profile", asy
     write(text) { output += text; },
   }, distribution([]));
   assert.ok(output.includes(commandHint(["programs", "down"], { projectRoot, runtimeProfile })));
+});
+
+
+test("programs prepare provisions resources through the controller without starting a worker", async () => {
+  const calls: string[] = [];
+  await runCli(["programs", "prepare", "/p/qflow.runtime.json", "--endpoint", "speech"], io, distribution(calls));
+  assert.deepEqual(calls, [`prepare ${resolve("/p/qflow.runtime.json")} {"endpoints":["speech"]}`]);
 });

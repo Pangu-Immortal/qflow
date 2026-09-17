@@ -38,8 +38,8 @@ test("Caption Companion projects Cue text and Style from public domain values", 
     narrativeId: "story",
     units: [{ id: "unit-1", segmentId: "segment-1", turnId: "turn-1", wordIds: ["word-1", "word-2"], sourceTokenIds: ["token-1"] }],
     words: [
-      { id: "word-1", unitId: "unit-1", segmentId: "segment-1", turnId: "turn-1", text: "真实", attributes: [] },
-      { id: "word-2", unitId: "unit-1", segmentId: "segment-1", turnId: "turn-1", text: "字幕", attributes: [] },
+      { id: "word-1", unitId: "unit-1", segmentId: "segment-1", turnId: "turn-1", text: "真实", separatorBefore: "", attributes: [] },
+      { id: "word-2", unitId: "unit-1", segmentId: "segment-1", turnId: "turn-1", text: "字幕", separatorBefore: "", attributes: [] },
     ],
     cueBreaks: [],
   };
@@ -73,6 +73,21 @@ test("Caption Companion projects Cue text and Style from public domain values", 
     title: "#1",
     layers: [{ kind: "text", role: "content", text: "真实字幕" }],
   });
+  for (const [texts, separators, expected] of [
+    [["3", "D"], ["", ""], "3D"],
+    [["3", "개월"], ["", ""], "3개월"],
+    [["是的", "就是这样"], ["", " "], "是的 就是这样"],
+    [["hello", "world"], [" ", " "], "hello world"],
+  ] as const) {
+    const variant = { ...document, words: document.words.map((word, index) => ({ ...word,
+      text: texts[index]!, separatorBefore: separators[index]!,
+    })) };
+    const values = new Map(context.values);
+    values.set("story.caption", variant);
+    assert.equal(projectCaptionContents({ ...context, values })[0]!.display.layers[0]!.kind, "text");
+    assert.deepEqual(projectCaptionContents({ ...context, values })[0]!.display.layers,
+      [{ kind: "text", role: "content", text: expected }]);
+  }
   assert.equal(cue?.presentation?.chrome, "standard");
   assert.equal(cue?.parameterReferences, undefined);
   assert.deepEqual([cue?.startFrame, cue?.endFrameExclusive], [10, 20]);

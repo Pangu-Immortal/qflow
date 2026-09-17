@@ -242,7 +242,12 @@ controller returned by `await host.controller()`, and calls `build(...)` on the 
 `await host.createRuntime()`. There is one production process-lifecycle path.
 
 Managed Programs have independent lifetimes. A healthy WhisperX service keeps its model loaded;
-`prepareBeforeStart` reconciles a cold installation through uv's source-aware synchronization.
+`programs prepare --endpoint <instance>` prepares selected resources without starting or stopping
+that service. Its installation probe is independent of process health, so an online service does not
+hide a newly requested language model. `programs up` prepares missing resources and starts the service
+if needed. `prepareBeforeStart` additionally reconciles a cold installation through the package
+manager's source-aware synchronization. The Provider owns the resource choices and commands;
+Runtime only invokes them under the existing lifecycle lock.
 `runtime down` stops the coordinator and asks its executors to stop; Programs are stopped separately.
 Distribution changes and shell environment changes still concern the coordinator's bootstrap process.
 Inspect active work before restarting it. Environment-backed credentials use that inherited process

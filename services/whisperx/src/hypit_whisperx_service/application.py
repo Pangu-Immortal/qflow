@@ -8,6 +8,7 @@ from . import PROTOCOL, SERVICE_VERSION
 from .audio import AudioInputError, CanonicalAudio, read_canonical_audio
 from .config import ServiceConfig
 from .engine import InferenceBusyError, InferenceInputError, normalize_language
+from .resources import UnpreparedResourceError
 
 
 class AlignmentEngine(Protocol):
@@ -82,6 +83,8 @@ class WhisperXApplication:
             raise RequestError(400, "INVALID_INPUT", str(error)) from error
         except InferenceBusyError as error:
             raise RequestError(503, "BUSY", str(error)) from error
+        except UnpreparedResourceError as error:
+            raise RequestError(503, "RESOURCE_NOT_PREPARED", str(error)) from error
         return _json_response(200, result)
 
     def error(self, error: RequestError) -> ApplicationResponse:

@@ -30,7 +30,7 @@ With prepared Takes, a Canvas and an exact FontStack already available:
 ```
 
 `during` also accepts a Script Selection or Segment; the shared Window syntax supports other authored
-intervals. `reveal` selects a Script Moment, such as `@demonstrate!` before the relevant word. Rewriting
+intervals. `reveal` selects a Script Moment, such as `@{demonstrate!}` before the relevant word. Rewriting
 the Script or using another delivery changes the projected frame while retaining the layout behavior.
 `transition-frames` is the duration of that change, separate from the scene's lifetime. `stack-order`
 places this scene among other contributions. The caller supplies its title and exact fonts.

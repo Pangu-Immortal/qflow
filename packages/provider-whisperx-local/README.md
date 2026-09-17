@@ -43,7 +43,8 @@ For multilingual transcription with quality as the priority and suitable hardwar
     "expectedModel": "large-v3",
     "expectedDevice": "cuda",
     "expectedCompute": "float16",
-    "expectedBatchSize": 4
+    "expectedBatchSize": 4,
+    "alignmentLanguages": ["zh", "en"]
   }
 }
 ```
@@ -57,7 +58,11 @@ or hosted service for the actual language, material and time available rather th
 successively larger models as a routine sequence.
 
 `expectedModel` selects speech recognition. WhisperX separately loads the language-specific
-alignment model when that language is first requested. A larger ASR model can improve the words
+alignment model from prepared local resources when that language is first requested. Set
+`alignmentLanguages` to the language codes needed by this production before preparation. This is a
+preparation demand, not a central language whitelist; already cached supported languages remain usable.
+Omission prepares only ASR and sentence data, and does not imply every alignment model is installed.
+A larger ASR model can improve the words
 fed into alignment, but does not select a larger aligner or guarantee better timing by itself.
 The health response identifies the loaded ASR configuration; it does not establish that every
 language's alignment weights are cached. See [WhisperX usage](https://github.com/m-bain/whisperX#usage-)
@@ -65,8 +70,9 @@ and [faster-whisper deployment](https://github.com/SYSTRAN/faster-whisper#usage)
 
 ## Preparation and downloads
 
-The Runtime installs and starts the packaged service in the machine Program Home when this Endpoint
-is selected. The environment is reused across projects and sessions. The current local package and
+An explicit `programs up` or `runtime up` prepares and starts the selected packaged service in the
+machine Program Home. Selecting an Endpoint alone does not install it. The environment is reused
+across projects and sessions. The current local package and
 service are trusted code; this is not a community-plugin sandbox.
 
 `qflow paths` reports the machine `hostState`. The managed installation lives below
@@ -75,21 +81,31 @@ service are trusted code; this is not a community-plugin sandbox.
 the service host includes its port. The default service is `http://127.0.0.1:8765` and exposes
 its configuration through `/health`. Inspect an existing Profile's address and expected settings
 when locating that service. A custom `serviceCommand` supplies its own installation and start command.
-`qflow programs status` checks the Programs selected by the supplied Profile; `programs up` prepares
-and starts them. The managed installation does not require a global `whisperx` shell command.
+`qflow programs prepare --endpoint <instance>` prepares the configured ASR model, requested alignment
+models and sentence data without starting a process. It also works when the service is already online.
+`programs up` prepares and starts the selected Programs; `programs status` reports process readiness.
+Adding a language requires preparation, not a service restart, when its cache location is unchanged.
+`modelCacheDirectory` optionally selects a root with `huggingface/` and `torch/` subdirectories;
+relative paths resolve against the Runtime data root. Omission retains the upstream Hugging Face and
+torch caches and their environment settings. Changing a running service's cache selection requires
+an explicit restart when idle, just like changing its model or hardware. The managed installation
+does not require a global `whisperx` shell command.
 
 Preparation and service processes inherit the environment of the command starting them. Set
 network and cache variables there before `programs up` or `runtime up`. A service already running
 retains its earlier environment. Inspect its reported log before deciding whether a selected
 Program needs restarting, and account for active work using it.
 
+If NLTK refuses a proxied fetch during preparation, follow the service’s
+[explicit proxy preparation](../../services/whisperx/README.md#preparing-sentence-data-through-a-proxy).
+
 Preparation commands write `install.log`; the running service writes `program.log`, with stderr in
 `program.err.log` on Windows. Inspect the stderr file for Python model-loading and download messages.
 `programs status` reports these files as `installationLogPath`, `logPath` and `errorLogPath` when they
-exist, even before installation finishes. Preparation notices name the Python environment and NLTK
-commands separately. The service logs the start and completion of ASR loading, transcription,
-language-alignment model loading and alignment, with elapsed times. Loading may include a download;
-transfer details come from the underlying client, not an estimated percentage from the Provider.
+exist, even before installation finishes. Preparation notices name the Python environment and selected model/language resources separately. The service logs the start and completion of ASR loading, transcription,
+language-alignment model loading and alignment, with elapsed times. Downloads happen only in
+preparation; startup and inference only load local resources. A missing resource fails with a
+preparation instruction. Transfer details come from the underlying client during preparation.
 The service health endpoint becomes available after ASR loading. A startup readiness wait expiring
 can leave that process still loading. Its PID is recorded when spawned; repeated `up` observes it,
 and `programs down` can stop it during loading. PID liveness and service readiness are separate facts.

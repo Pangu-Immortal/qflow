@@ -61,13 +61,14 @@ export type ParsedMoment = Omit<NarrativeMoment, "narrativeId"> & {
 };
 
 export type ParsedCaptionRegion = {
+  readonly separatorBefore: "" | " ";
   readonly id: string;
   readonly display: string;
   readonly segmentId: string;
   readonly startToken: number;
   readonly endTokenExclusive: number;
   readonly kind: "identity" | "alias" | "hidden";
-  /** Flat word attributes authored on the display side; indices address displayWordSurfaces(display). */
+  /** Flat word attributes authored on the display side; indices address displaySurfaces(display). */
   readonly marks: readonly {
     readonly displayIndex: number;
     readonly attributes: readonly CaptionWordAttribute[];
@@ -81,8 +82,6 @@ export type ParsedNarrative = Omit<
 > & {
   /** Exact Script body range, used only for source-preserving Program-boundary edits. */
   readonly sourceRange: SourceRange;
-  /** Ordinary source prose/whitespace; excludes tags, Dual Text, attributes and comments. */
-  readonly proseRanges: readonly SourceRange[];
   readonly segments: readonly ParsedSegment[];
   readonly tokens: readonly ParsedToken[];
   readonly turns: readonly ParsedTurn[];

@@ -57,8 +57,10 @@ authored Segment:
   segment={story.segment.answer} media={answer-media.media} language="en"/>
 ```
 
-`language` is required on every alignment call and currently accepts `en` or `zh`. It is passed
-unchanged to WhisperX; Qflow does not detect or route languages from Script text or audio.
+For a Segment with spoken words, `language` explicitly names its spoken language, such as `en`,
+`zh` or `ko`. Use a lowercase two- or three-letter code supported by the selected WhisperX service.
+It is passed unchanged; Qflow does not detect or route languages from Script text or audio.
+An empty Segment omits `language` and uses the normalized media boundaries directly.
 
 Each output contains the normalized media, the Segment identity, every authored word's local frame
 window, and all of that Segment's structural anchors. There are two anchors for the Segment and two

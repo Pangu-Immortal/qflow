@@ -28,10 +28,10 @@
        Ronaldo Segments are also the two disjoint Column reveal windows. -->
   <script id="story">
     <messi>
-      <HOST>Messi is the bottom. || Five foot seven, || no muscles, || no speed, || just vibes. || @pitch-pov Man walks around || the pitch like || @ikea-sign he's lost in <IKEA | eye KEE uh>@/ikea-sign@/pitch-pov. || @retirement-room Went to Miami || and turned the league || into a retirement home@/retirement-room.
+      <HOST>Messi is the bottom. || Five foot seven, || no muscles, || no speed, || just vibes. || @{pitch-pov} Man walks around || the pitch like || @{ikea-sign} he's lost in <IKEA | eye KEE uh>.@{/ikea-sign}@{/pitch-pov} || @{retirement-room} Went to Miami || and turned the league || into a retirement home.@{/retirement-room}
     </messi>
     <ronaldo>
-      <HOST>Ronaldo? Bro is || 39 years old || @rent-jump and still jumps || higher than your rent@/rent-jump. || @nine-hundred-goals Nine hundred goals, || @laboratory-body a body built || in a laboratory, || @museum-jawline and a jawline || that belongs || in a museum@/museum-jawline@/laboratory-body@/nine-hundred-goals. || Absolutely the top one.
+      <HOST>Ronaldo? Bro is || 39 years old || @{rent-jump} and still jumps || higher than your rent.@{/rent-jump} || @{nine-hundred-goals} Nine hundred goals, || @{laboratory-body} a body built || in a laboratory, || @{museum-jawline} and a jawline || that belongs || in a museum.@{/museum-jawline}@{/laboratory-body}@{/nine-hundred-goals} || Absolutely the top one.
     </ronaldo>
   </script>
 

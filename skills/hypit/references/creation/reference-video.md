@@ -74,7 +74,9 @@ surrounding argument, visible names and supplied context. Small transcription er
 with a clear understanding of what the passage means.
 
 Pass the reference's spoken language explicitly: `--language zh` for Chinese, `en` for English,
-or `es` for Spanish. A Chinese passage can contain English brands and names while still using `zh`.
+`es` for Spanish, or `ko` for Korean. Actual alignment support belongs to the selected service;
+for local execution, prepare that language's resources as described in
+[local tools](../environment/local-tools.md). A Chinese passage can contain English brands and names while still using `zh`.
 Its timed Chinese characters help locate a phrase precisely; group those characters into meaningful
 phrases when describing the reference and writing the new Script.
 

@@ -32,7 +32,7 @@
       <BOY>Hey yo! || Is this || Lamborghini || yours?
       <WIFE>Mmm hmm.
       <BOY>Give me || three rules || to make your || first million.
-      <WIFE>OK || the || first one || is || @manifest! Manifest.
+      <WIFE>OK || the || first one || is || @{manifest!} Manifest.
       <BOY>You manifested || a Lamborghini?
       <WIFE>I || said it || to || myself || every || morning.
     </manifest-rule>
@@ -41,14 +41,14 @@
       <BOY>Did it really || work?
       <WIFE>No. || But || rule two || did.
       <BOY>Say it.
-      <WIFE>@real-estate! Real estate. || Buy || the || building, || and || charge || everyone || rent.
+      <WIFE>@{real-estate!} Real estate. || Buy || the || building, || and || charge || everyone || rent.
       <BOY>But how did you || buy the building?
       <WIFE>That's || rule three.
     </real-estate-rule>
 
     <bitcoin-rule>
       <BOY>Wait what?
-      <WIFE>@bitcoin! Bitcoin. || I || pressed || the || wrong || button || in <2012 | twenty twelve> || and || made || six figures.
+      <WIFE>@{bitcoin!} Bitcoin. || I || pressed || the || wrong || button || in <2012 | twenty twelve> || and || made || six figures.
       <BOY>So you || accidentally || bought Bitcoin?!
       <WIFE>That's || manifesting, || baby.
     </bitcoin-rule>

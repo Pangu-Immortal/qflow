@@ -10,7 +10,10 @@ import sharp from "sharp";
 import { captureBrowserExecutablePath } from "./browser.js";
 export { captureBrowserExecutablePath, installCaptureBrowser } from "./browser.js";
 
+export type { CaptureBrowserOptions } from "./browser.js";
+
 export type CaptureOptions = {
+  readonly browser?: import("./browser.js").CaptureBrowserOptions;
   /** Ordinary Puppeteer launch options, including channel, executablePath and defaultViewport. */
   readonly launch?: LaunchOptions;
   /** Page operation and navigation timeout; Puppeteer's default applies when omitted. */
@@ -99,10 +102,13 @@ export async function withCapture(
   onOutput?: (output: CaptureOutput) => void,
 ): Promise<readonly CaptureOutput[]> {
   const launch = { ...options.launch };
+  if ((launch.channel || launch.executablePath) && options.browser !== undefined) {
+    throw new Error("Choose a managed capture browser or an explicit launch browser, not both");
+  }
   if (!launch.channel && !launch.executablePath) {
-    launch.executablePath = await captureBrowserExecutablePath();
+    launch.executablePath = await captureBrowserExecutablePath(options.browser);
     if (!existsSync(launch.executablePath)) throw new Error(
-      `Capture browser is not installed at ${launch.executablePath}. Run qflow capture install-browser, or select an installed compatible browser.`);
+      `Capture browser is not installed at ${launch.executablePath}. Run qflow capture install-browser with the same version and cache selection, or select an installed compatible browser.`);
   }
   const browser = await puppeteer.launch({
     defaultViewport: { width: 1280, height: 720, deviceScaleFactor: 1 },

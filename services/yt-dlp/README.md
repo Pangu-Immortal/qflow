@@ -1,19 +1,18 @@
 # Pinned yt-dlp
 
-This project holds the locked Python downloader used by `qflow media fetch`. `uv` installs the
-selected version and its dependencies when invoked. Site support follows that version's extractors;
-the downloaded file preserves the source used by the production.
+This project owns the locked downloader and its EJS solver dependencies. Prepare it explicitly with
+`qflow media prepare-fetch`; `qflow media fetch` only uses the resulting executable and never runs uv.
+The preparation command reports the executable path under the machine Host state. Use that exact
+path for `--version`, `--help` or deliberately chosen site-specific options. On Windows it is an
+`.exe` inside the virtual environment's `Scripts` directory.
 
-It is invoked one command at a time rather than run as a service:
+For a contributor-managed environment, run `uv sync --project services/yt-dlp --frozen` explicitly,
+then invoke `.venv/bin/yt-dlp` (Windows: `.venv\Scripts\yt-dlp.exe`) from that project.
+Direct invocation accepts upstream options and config; the Qflow fetch wrapper instead ignores
+user config/plugins, disables updates and remote components, and uses its calling Node executable
+for JavaScript challenges. The locked extras supply the solver before fetching begins.
 
-```bash
-uv run --project "/path/to/qflow/services/yt-dlp" --frozen yt-dlp --version
-uv run --project "/path/to/qflow/services/yt-dlp" --frozen yt-dlp --help
-```
-
-Replace the project path with this directory in the installed Qflow Distribution. Direct invocation
-accepts yt-dlp's own options, including source-specific format or authentication settings. Choose
-those for the actual download. `ffmpeg` on PATH merges separate video and audio streams.
-
-`packages/yt-dlp` is the Node wrapper used by Video CLI. It stages a download and saves the requested
-project file; later commands read that file.
+`ffmpeg` on PATH merges separate video and audio streams; the CLI also requires `ffprobe` for the
+saved-file report. These tools are supplied by the operator's package manager, never installed by
+fetch. Site support follows the selected yt-dlp extractors. A source requiring authentication or
+additional options can use an explicit direct invocation and then supply the local file to Qflow.

@@ -43,8 +43,12 @@ video package by name.
 
 `ManagedProgram.installation.prepareBeforeStart` lets a Provider reconcile its installed environment
 before a cold start, even when the installation probe already passes. The declared commands use the
-Provider's ordinary package manager. A healthy running Program is reused before this preparation is
-considered; Runtime does not inspect source files or infer implementation versions.
+Provider's ordinary package manager. `programs prepare` runs the declared installation independently
+of process startup; `programs up` also checks its resources when the process is already healthy.
+The installation probe covers the owner's selected execution resources, while the process probe
+reports service readiness. Cold reconciliation still applies only before starting a new process.
+Runtime does not name models, inspect source files or infer implementation versions. Preparation
+may acquire resources; execution must consume already prepared resources and report what is missing.
 `ManagedProgramCommand.label` optionally names a command's purpose for progress and log headings.
 It is display text supplied by the Program owner, not a phase to persist or interpret. Runtime
 reports generic process/probe facts; the service itself owns domain-specific progress in its logs.

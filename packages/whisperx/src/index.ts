@@ -12,3 +12,4 @@ export { decodeWhisperXSemanticTakeSurface } from "./surface.js";
 export { interpretWhisperXTranscript } from "./transcript.js";
 export type { WhisperXTranscriptResponse } from "./transcript.js";
 export type * from "./types.js";
+export { parseWhisperXLanguage } from "./types.js";

@@ -42,7 +42,8 @@ in [file CredentialStore](../credential-store-file/README.md#select-it-before-lo
 `qflow doctor --endpoint <name>` checks a selected Endpoint;
 `qflow runtime up --endpoint <name>` prepares that Endpoint and starts the Worker. Repeat the flag
 for several chosen Endpoints; omitting it prepares the whole Profile. `qflow programs up --endpoint
-<name>` prepares a local helper independently of the Worker.
+<name>` prepares and starts a local helper independently of the Worker. `qflow programs prepare
+--endpoint <name>` only prepares its selected resources, including for a service already running.
 
 With the selected execution environment:
 
@@ -67,9 +68,11 @@ qflow transcribe reference.mp4 --to notes/reference.transcript.json --language e
 qflow measure main.svml --segment hook --language en --pace normal --rounding round
 ```
 
-For `transcribe`, set `--language` to the spoken language: `en`, `zh` or `es`. Chinese speech uses `zh`, including
-Chinese speech containing English names; the requested language selects the recognition/alignment
-model, independently of the eventual caption font or script's simplified/traditional characters.
+For `transcribe`, set `--language` to an explicit lowercase two- or three-letter spoken language code,
+such as `en`, `zh` or `ko`. The selected service owns which languages it can align. Chinese speech uses `zh`, including
+Chinese speech containing English names. The request selects the recognition language and
+language-specific aligner; ASR size remains a deployment choice. Caption font and Script's
+simplified/traditional characters are independent authoring choices.
 
 `transcribe` uses the Profile's `whisperx-alignment` Endpoint (after
 extracting 16 kHz mono speech audio with ffmpeg). Direct invocation forwards the Provider's progress
@@ -142,7 +145,8 @@ Grid `samples` retain the requested times; `frames` contain the actual extracted
 It also reports every page path for `tiles`. The media layer reads existing timed text; transcription
 and its Endpoint remain separate. `boundaries` reports adjacent-frame
 change candidates and their measured scores; it does not suppress short changes or call them shots.
-`fetch` turns a link into a file with the pinned yt-dlp; [the downloader package](../yt-dlp/README.md)
+`prepare-fetch` explicitly prepares the locked downloader environment; `fetch` requires it and
+turns a link into a file with the pinned yt-dlp; [the downloader package](../yt-dlp/README.md)
 owns its dependencies, download choices and file handling. Commands that create evidence write only
 what `--to` names and refuse to overwrite. `vocabulary` reads the installed
 manifests: every package with its tags and models, or one package's Surfaces with their attributes,

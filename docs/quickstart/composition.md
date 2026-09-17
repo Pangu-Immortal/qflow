@@ -162,7 +162,7 @@ illustration. The complete runnable project is `examples/podcast/`; the commands
 
   <!-- 1. Script: the semantic truth -->
   <script id="story">
-    <opening><HOST>Meaning @demo becomes the source @/demo.</opening>
+    <opening><HOST>Meaning @{demo} becomes the source @{/demo}.</opening>
   </script>
 
   <!-- 2. Generation: Seedance talking head + standalone video -->

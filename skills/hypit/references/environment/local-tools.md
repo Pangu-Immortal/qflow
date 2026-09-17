@@ -88,6 +88,7 @@ Program commands leave the Worker lifecycle alone:
 
 | Intention | Command |
 | --- | --- |
+| Prepare resources without starting helpers | `qflow programs prepare --endpoint <instance>` |
 | Prepare and start the selected helpers | `qflow programs up --endpoint <instance>` |
 | Inspect their current state | `qflow programs status --endpoint <instance>` |
 | Stop helpers managed by Qflow | `qflow programs down --endpoint <instance>` |
@@ -148,7 +149,8 @@ merge this fragment into the Profile, retaining the other services the productio
 {
   "endpoints": {
     "whisperx.local": {
-      "use": "@qflow/provider-whisperx-local"
+      "use": "@qflow/provider-whisperx-local",
+      "config": { "alignmentLanguages": ["zh", "en"] }
     }
   },
   "bindings": {
@@ -170,10 +172,17 @@ download. Weigh accuracy needs against setup and inference time, including the h
 The Provider README owns exact settings, compute choices and the distinction between transcription
 and language-specific alignment. Configure the chosen model before preparing it.
 
-With the Endpoint and model selected, run `qflow runtime up --endpoint whisperx.local`. The first preparation may install Python
-and download model weights, while later projects reuse the machine Program. Success means the configured
-service identity answers its health probe; `qflow doctor --endpoint whisperx.local` then checks that
-selected service.
+Set `alignmentLanguages` to this production's actual languages; the example above chooses Chinese
+and English. Run `qflow programs prepare --endpoint whisperx.local` to prepare the selected model,
+language weights and sentence data without starting the service. Then `qflow runtime up --endpoint
+whisperx.local` starts the helper and Worker; it can also perform preparation when needed. Preparation
+may install Python and download weights. Startup and inference only read prepared resources.
+
+A healthy service does not imply every language is prepared. Add a newly needed language to the
+Profile and run `programs prepare` even if the service is online. Keep its cache selection unchanged
+when adding resources to that running service. A missing language resource fails with an explicit
+preparation instruction; do not retry inference hoping it will download weights. The Provider README
+owns optional model cache selection. Native upstream caches remain reusable by default.
 
 ## Make network preparation practical
 
@@ -216,6 +225,7 @@ Mirrors address particular download clients and hosts:
 | Python packages | pip uses `--index-url` / `PIP_INDEX_URL`; uv uses `--default-index` / `UV_DEFAULT_INDEX`. They are different clients. Qflow's managed service uses frozen uv dependencies; consult its Provider README before expecting an index change to redirect locked artifact URLs. |
 | Python runtime | uv's `UV_PYTHON_INSTALL_MIRROR` selects a compatible Python-distribution mirror. A PyPI mirror does not supply Python itself. An already compatible installed Python may avoid this download. |
 | Hugging Face weights | `HF_ENDPOINT` selects a compatible Hub endpoint; `HF_HOME` / `HF_HUB_CACHE` select reusable cache locations. A model's redirected weight host and its language-alignment download must also be reachable. |
+| NLTK sentence data | If preparation reports `NLTK_ALLOW_PROXIED_URLOPEN`, the downloader needs an explicit trust decision for the configured proxy. For a trusted proxy, set that native variable to `1` only on the preparation command; do not switch it on automatically or change inference. |
 | HyperFrames browser | The selected Provider owns the archive source; follow [browser preparation](#prepare-the-local-rendering-browser) and its installed README. |
 | FFmpeg and other binaries | Use the selected package manager's binary-download settings or a compatible official prebuilt installation. An npm/PyPI mirror does not generally redirect these downloads. Homebrew bottles and GitHub release assets have their own sources. |
 

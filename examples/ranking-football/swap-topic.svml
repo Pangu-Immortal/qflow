@@ -28,10 +28,10 @@
        Every B-roll insert consumes an authored semantic Selection. -->
   <script id="story">
     <elon>
-      <HOST>Elon is <D | Dee> tier. || @money-rain Man bought Twitter || for 44 billion dollars || @twitter-x just to change || the name@/twitter-x@/money-rain. || @mars-rocket Sends rockets || to Mars, || but @market-crash can't send a tweet || without crashing || the stock market@/market-crash@/mars-rocket. || @richest-chair Richest guy || on Earth, || but somehow || @haircut-x still can't buy || a good haircut@/haircut-x@/richest-chair.
+      <HOST>Elon is <D | Dee> tier. || @{money-rain} Man bought Twitter || for 44 billion dollars || @{twitter-x} just to change || the name.@{/twitter-x}@{/money-rain} || @{mars-rocket} Sends rockets || to Mars, || but @{market-crash} can't send a tweet || without crashing || the stock market.@{/market-crash}@{/mars-rocket} || @{richest-chair} Richest guy || on Earth, || but somehow || @{haircut-x} still can't buy || a good haircut.@{/haircut-x}@{/richest-chair}
     </elon>
     <sam>
-      <HOST>Sam Altman? || @fired-friday Guy got fired || on a Friday, || @company-quit the entire company || threatened to quit, || and @back-monday he was back || in the chair || by Monday@/back-monday@/company-quit@/fired-friday. || @elon-lawsuit Elon sued him, || @google-fears Google fears him, || @congress-grilled Congress grilled him, || @still-here and he's still here@/still-here@/congress-grilled@/google-fears@/elon-lawsuit. || I have to || put him in || <S | Ess> tier.
+      <HOST>Sam Altman? || @{fired-friday} Guy got fired || on a Friday, || @{company-quit} the entire company || threatened to quit, || and @{back-monday} he was back || in the chair || by Monday.@{/back-monday}@{/company-quit}@{/fired-friday} || @{elon-lawsuit} Elon sued him, || @{google-fears} Google fears him, || @{congress-grilled} Congress grilled him, || @{still-here} and he's still here.@{/still-here}@{/congress-grilled}@{/google-fears}@{/elon-lawsuit} || I have to || put him in || <S | Ess> tier.
     </sam>
   </script>
 

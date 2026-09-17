@@ -3,7 +3,6 @@ import type { SourceRange } from "@qflow/protocol";
 import { canonicalStringify } from "@qflow/protocol";
 import { captionDocument, narrativeValue } from "./narrative.js";
 import { parseScript } from "./parser.js";
-import { cleanHorizontalProse } from "./lexical.js";
 import type { Affinity, ParsedNarrative, SemanticAnchor } from "./types.js";
 
 export type ScriptAnchorEditSite = {
@@ -75,8 +74,8 @@ export function scriptAnchorEditSites(parsed: ParsedNarrative): readonly ScriptA
 }
 
 function marker(id: string, edge: "open" | "close", affinity: Affinity): string {
-  if (edge === "open") return affinity === "left" ? `~@${id}` : `@${id}`;
-  return affinity === "left" ? `@/${id}` : `@/${id}~`;
+  if (edge === "open") return `@{${affinity === "left" ? "~" : ""}${id}}`;
+  return `@{/${id}${affinity === "right" ? "~" : ""}}`;
 }
 
 function applyEdits(source: string, edits: readonly Edit[]): string {
@@ -100,61 +99,32 @@ type AdjustmentInput = {
 
 type NamedAnchor = { readonly id: string; readonly edge: "open" | "close" | "moment"; readonly anchorId: string };
 
-/** Normalize only parser-owned prose. Indentation is read from this edit's input, never stored. */
-function normalizedProse(source: string, parsed: ParsedNarrative, original: string): string {
-  const bodyStarts = new Set(parsed.segments.flatMap(segment => [segment.contentRange.start,
-    ...segment.atoms.filter(atom => atom.kind === "role").map(atom => atom.range.end)]));
-  const bodyEnds = new Set(parsed.segments.map(segment => segment.contentRange.end));
-  const indentation = original.split(/\r\n|\r|\n/u).map(line => /^[ \t]*/u.exec(line)![0].length);
-  const lines: Array<{ start: number; end: number; indentEnd: number }> = [];
-  let offset = 0;
-  const parts = source.split(/(\r\n|\r|\n)/u);
-  for (let index = 0; index < parts.length; index += 2) {
-    const text = parts[index]!;
-    lines.push({ start: offset, end: offset + text.length, indentEnd: offset + indentation[index / 2]! });
-    offset += text.length + (parts[index + 1]?.length ?? 0);
-  }
-  const edits: Edit[] = [];
-  for (const range of parsed.proseRanges) for (const line of lines) {
-    const start = Math.max(range.start, line.indentEnd);
-    const end = Math.min(range.end, line.end);
-    if (start >= end) continue;
-    let text = cleanHorizontalProse(source.slice(start, end));
-    const outside = !parsed.segments.some(segment => range.start >= segment.contentRange.start && range.end <= segment.contentRange.end);
-    if (start === line.indentEnd || bodyStarts.has(start) || outside) text = text.replace(/^[ \t]+/u, "");
-    if (end === line.end || bodyEnds.has(end) || outside) text = text.replace(/[ \t]+$/u, "");
-    edits.push({ range: { start, end }, replacement: text });
-  }
-  return applyEdits(source, edits);
-}
-
-/** One canonical boundary spelling, independent of the order of previous gestures. */
+/** Move only the requested markers. Delimited names never require editing prose separators. */
 function rewrite(input: AdjustmentInput, markers: readonly NamedAnchor[]): string {
-  const ranges = [
-    ...input.parsed.moments.map((item) => item.range),
-    ...input.parsed.selections.flatMap((item) => [item.open.range, item.close.range]),
-  ].map((range) => ({ start: range.start - input.parsed.sourceRange.start, end: range.end - input.parsed.sourceRange.start }))
-    .sort((a, b) => a.start - b.start);
-  const edits: Edit[] = ranges.map(range => ({ range, replacement: "" }));
+  const original = namedAnchors(input.parsed);
+  const changedNames = new Set(markers.filter(value => original.find(item => item.id === value.id && item.edge === value.edge)?.anchorId !== value.anchorId).map(value => value.id));
+  const moved = markers.filter(value => changedNames.has(value.id));
+  if (moved.length === 0) return input.source;
+  const origin = input.parsed.sourceRange.start;
+  const edits: Edit[] = moved.map(value => {
+    const range = value.edge === "moment"
+      ? input.parsed.moments.find(item => item.id === value.id)!.range
+      : input.parsed.selections.find(item => item.id === value.id)![value.edge].range;
+    return { range: { start: range.start - origin, end: range.end - origin }, replacement: "" };
+  });
   for (const segment of input.parsed.segments) {
-    if (segment.selfClosing) edits.push({ range: { start: segment.range.start - input.parsed.sourceRange.start, end: segment.range.end - input.parsed.sourceRange.start }, replacement: `<${segment.id}></${segment.id}>` });
+    if (segment.selfClosing && moved.some(value => value.anchorId === segment.startAnchorId || value.anchorId === segment.endAnchorId)) {
+      edits.push({ range: { start: segment.range.start - origin, end: segment.range.end - origin }, replacement: `<${segment.id}></${segment.id}>` });
+    }
   }
-  const unmarked = applyEdits(input.source, edits);
-  const base = normalizedProse(unmarked, parseScript(input.sourceName, unmarked), input.source);
-  const parsed = parseScript(input.sourceName, base);
+  const base = applyEdits(input.source, edits);
+  const parsed = parseScript(input.sourceName, base, origin);
   const sites = new Map(scriptAnchorEditSites(parsed).map((site, order) => [site.anchorId, { ...site, order }]));
   const groups = new Map<number, Array<NamedAnchor & { affinity: Affinity; order: number }>>();
-  for (const value of markers) {
+  for (const value of moved) {
     const site = sites.get(value.anchorId);
     if (!site) throw new Error(`Semantic Anchor ${value.anchorId} does not exist.`);
-    let offset = site.offset;
-    const lineStart = Math.max(base.lastIndexOf("\n", offset - 1), base.lastIndexOf("\r", offset - 1)) + 1;
-    const indentEnd = lineStart + /^[ \t]*/u.exec(base.slice(lineStart))![0].length;
-    if (offset < indentEnd) offset = indentEnd;
-    // Reuse horizontal separators without moving a word marker ahead of line indentation.
-    let gapStart = offset;
-    while (gapStart > 0 && /[ \t]/u.test(base[gapStart - 1]!)) gapStart -= 1;
-    if (gapStart > 0 && !/[\r\n]/u.test(base[gapStart - 1]!)) offset = gapStart;
+    const offset = site.offset - origin;
     const group = groups.get(offset) ?? [];
     group.push({ ...value, affinity: site.affinity, order: site.order });
     groups.set(offset, group);
@@ -163,18 +133,13 @@ function rewrite(input: AdjustmentInput, markers: readonly NamedAnchor[]): strin
     group.sort((a, b) => a.order - b.order
       || (a.edge === "open" ? 0 : a.edge === "moment" ? 1 : 2) - (b.edge === "open" ? 0 : b.edge === "moment" ? 1 : 2)
       || a.id.localeCompare(b.id));
-    let replacement = group.map((item) => item.edge === "moment"
-      ? `${item.affinity === "left" ? "~" : ""}@${item.id}!`
+    const replacement = group.map(item => item.edge === "moment"
+      ? `@{${item.affinity === "left" ? "~" : ""}${item.id}!}`
       : marker(item.id, item.edge, item.affinity)).join("");
-    let end = offset;
-    while (end < base.length && /[ \t]/u.test(base[end]!)) end += 1;
-    if (end > offset) replacement += " ";
-    // Only undelimited names followed by an ASCII name character need a separator.
-    if (/[a-z0-9_-]$/u.test(replacement) && /[A-Za-z0-9_-]/u.test(base[offset] ?? "")) replacement += " ";
-    return { range: { start: offset, end }, replacement };
+    return { range: { start: offset, end: offset }, replacement };
   });
   const next = applyEdits(base, insertions);
-  const reparsed = parseScript(input.sourceName, next);
+  const reparsed = parseScript(input.sourceName, next, origin);
   const actual = namedAnchors(reparsed);
   if (canonicalStringify(actual) !== canonicalStringify(markers)) {
     throw new Error("Script marker adjustment did not preserve the requested semantic bindings.");
@@ -183,6 +148,9 @@ function rewrite(input: AdjustmentInput, markers: readonly NamedAnchor[]): strin
   const content = (value: ParsedNarrative) => ({
     ...narrativeValue(value, "comparison") as Record<string, unknown>, selections: [], moments: [],
     caption: captionDocument(value, "caption", "comparison"),
+    speech: value.serializations.speech,
+    dialogue: value.serializations.dialogue,
+    display: value.captionProjection.text,
   });
   if (canonicalStringify(content(input.parsed)) !== canonicalStringify(content(reparsed))) {
     throw new Error("Script marker adjustment changed authored content.");

@@ -3,6 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 
 
+class UnpreparedResourceError(RuntimeError):
+    """A selected local execution resource needs explicit preparation."""
+
+
 def default_nltk_data_root() -> Path:
     return Path.home() / ".cache" / "qflow" / "whisperx" / "nltk_data"
 
@@ -11,12 +15,11 @@ def assert_punkt_tab(root: Path) -> None:
     import nltk
 
     location = str(root.expanduser().resolve())
-    if location not in nltk.data.path:
-        nltk.data.path.insert(0, location)
+    nltk.data.path[:] = [location]
     try:
         nltk.data.find("tokenizers/punkt_tab", paths=[location])
     except LookupError as error:
-        raise RuntimeError(
+        raise UnpreparedResourceError(
             "NLTK punkt_tab data is unavailable; run `qflow-whisperx-prepare`"
         ) from error
 
@@ -39,3 +42,16 @@ def prepare_punkt_tab(root: Path) -> Path:
         raise RuntimeError("NLTK could not install punkt_tab")
     assert_punkt_tab(root)
     return target
+
+
+def assert_sentence_data(root: Path, language: str) -> None:
+    from whisperx.utils import PUNKT_LANGUAGES
+    from nltk.tokenize.punkt import load_punkt_params
+    from nltk.data import FileSystemPathPointer
+    # Use the same sentence tokenizer selection as the pinned WhisperX version.
+    name = PUNKT_LANGUAGES.get(language, "english")
+    try:
+        assert_punkt_tab(root)
+        load_punkt_params(FileSystemPathPointer(str(root / "tokenizers" / "punkt_tab" / name)))
+    except (OSError, ValueError) as error:
+        raise UnpreparedResourceError(f"NLTK sentence data for {language} ({name}) is unavailable; run qflow-whisperx-prepare") from error

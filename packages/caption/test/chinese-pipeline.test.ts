@@ -10,7 +10,7 @@ import { temporalizeCaptionDocument } from "../src/index.js";
 import { fixtureResource } from "../../../test/fixture-resource.js";
 
 for (const grouped of [false, true]) test(`Chinese Script through WhisperX and Timeline preserves caption timing (shared groups: ${grouped})`, () => {
-  const parsed = parseScript("mixed-zh.svml", `<opening><HOST>用@brand ElevenLabs @/brand做${grouped ? '<视频|>' : '视频'}，|| 真方便。</opening>
+  const parsed = parseScript("mixed-zh.svml", `<opening><HOST>用@{brand} ElevenLabs @{/brand}做${grouped ? '<视频|>' : '视频'}，|| 真方便。</opening>
 <answer><GUEST>今年<2026|二零二六>年，這個很好。</answer>`);
   const narrative = narrativeValue(parsed, "story") as unknown as Narrative;
   const document = captionDocument(parsed, "story.caption", "story");
