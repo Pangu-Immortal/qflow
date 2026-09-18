@@ -38,6 +38,9 @@ switch ($Operation) {
     # Add replaces the same resource/account; do not destroy the old value before it succeeds.
     $bytes = [Convert]::FromBase64String([string]$request.secret)
     $secret = [System.Text.Encoding]::UTF8.GetString($bytes)
+    if ($secret.Length -gt 512) {
+      throw "PasswordVault cannot store a $($secret.Length)-character secret (limit 512). Select @qflow/credential-store-file for OAuth tokens."
+    }
     $credential = New-Object Windows.Security.Credentials.PasswordCredential(
       [string]$request.service,
       [string]$request.account,
