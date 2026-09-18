@@ -9,12 +9,10 @@ function run(
   args: readonly string[],
   input: ProcessInput | undefined,
   timeoutMs: number,
-  maxStdoutBytes = 100 * 1024 * 1024,
 ): Promise<ProcessOutput> {
   return new Promise((resolveRun, reject) => {
     const child = spawn(executable, [...args], { stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"], windowsHide: true });
     const out: Buffer[] = [];
-    let stdoutBytes = 0;
     let err = "";
     let settled = false;
     const finish = (error?: Error): void => {
@@ -25,15 +23,7 @@ function run(
       else reject(error);
     };
     const timer = setTimeout(() => { child.kill("SIGKILL"); finish(new Error(`${executable} timed out after ${timeoutMs} ms`)); }, timeoutMs);
-    child.stdout?.on("data", (chunk: Buffer) => {
-      stdoutBytes += chunk.byteLength;
-      if (stdoutBytes > maxStdoutBytes) {
-        child.kill("SIGKILL");
-        finish(new Error(`${executable} stdout exceeded the limit of ${maxStdoutBytes} bytes`));
-        return;
-      }
-      out.push(chunk);
-    });
+    child.stdout?.on("data", (chunk: Buffer) => out.push(chunk));
     child.stderr?.on("data", (chunk: Buffer) => { err = `${err}${chunk.toString("utf8")}`.slice(-100_000); });
     child.on("error", (error) => finish(new Error(`${executable} could not start: ${error.message}`)));
     child.on("close", (code) => {

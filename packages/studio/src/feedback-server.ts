@@ -3,6 +3,7 @@ import { relative } from "node:path";
 import type { Plugin } from "vite";
 import { createFeedbackStore, FeedbackConflict } from "./feedback-store.js";
 import { readFeedbackMutation } from "./feedback.js";
+import { allowsStudioMutation } from "./mutation-origin.js";
 import type { FeedbackDocument, FeedbackView } from "./feedback.js";
 
 /** Review storage is separate from compilation, Results and Agent delivery. */
@@ -23,28 +24,10 @@ export function studioFeedbackPlugin(workspaceRoot: string, runPath: string): Pl
       server.httpServer?.once("close", () => watcher.close());
       server.middlewares.use((request, response, next) => {
         if (new URL(request.url ?? "/", "http://studio.qflow.local").pathname !== "/__studio/feedback") return next();
-        const origin = request.headers.origin;
-        if (origin !== undefined) {
-          try {
-            const { hostname } = new URL(origin);
-            const isLoopback = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
-            if (!isLoopback) {
-              response.statusCode = 403;
-              response.setHeader("content-type", "application/json; charset=utf-8");
-              response.end(JSON.stringify({ error: "Cross-origin feedback mutations are prohibited." }));
-              return;
-            }
-          } catch {
-            response.statusCode = 403;
-            response.setHeader("content-type", "application/json; charset=utf-8");
-            response.end(JSON.stringify({ error: "Invalid request origin." }));
-            return;
-          }
-        }
-        if (request.headers["sec-fetch-site"] === "cross-site") {
+        if (request.method === "POST" && !allowsStudioMutation(request.headers)) {
           response.statusCode = 403;
           response.setHeader("content-type", "application/json; charset=utf-8");
-          response.end(JSON.stringify({ error: "Cross-site feedback mutations are prohibited." }));
+          response.end(JSON.stringify({ error: "Studio mutation must come from this local Studio session." }));
           return;
         }
         response.setHeader("content-type", "application/json; charset=utf-8");

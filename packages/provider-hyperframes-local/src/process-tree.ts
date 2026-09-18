@@ -35,7 +35,7 @@ export async function killRenderTree(pid: number): Promise<void> {
       try { process.kill(target, "SIGKILL"); }
       catch (error) {
         const code = (error as NodeJS.ErrnoException).code;
-        if (code !== "ESRCH" && code !== "EPERM") throw error;
+        if (code !== "ESRCH" && !(target < 0 && code === "EPERM")) throw error;
       }
     }
   }
@@ -81,7 +81,7 @@ export function killRenderDescendantsSync(pid: number): void {
       try { process.kill(target, "SIGKILL"); }
       catch (error) {
         const code = (error as NodeJS.ErrnoException).code;
-        if (code !== "ESRCH" && code !== "EPERM") throw error;
+        if (code !== "ESRCH" && !(target < 0 && code === "EPERM")) throw error;
       }
     }
   }
