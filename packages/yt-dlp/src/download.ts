@@ -10,12 +10,21 @@
  * keep changing, so an unpinned copy makes the same link fetch differently on two machines. This is
  * the same shape WhisperX and OpenCV already use for their Python programs.
  */
-import { spawnSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { copyFile, mkdtemp, readdir, rename, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { extname, join } from "node:path";
 
 import { requireVideoDownload } from "./environment.js";
+
+function runExec(file: string, args: readonly string[], options: { readonly timeout?: number; readonly maxBuffer?: number; readonly signal?: AbortSignal | undefined } = {}): Promise<{ readonly stdout: string; readonly stderr: string }> {
+  return new Promise((resolve, reject) => {
+    execFile(file, [...args], { encoding: "utf8", windowsHide: true, ...options }, (error, stdout, stderr) => {
+      if (error !== null) reject(Object.assign(error, { stdout, stderr }));
+      else resolve({ stdout: String(stdout), stderr: String(stderr) });
+    });
+  });
+}
 
 /**
  * Whether this is a link to fetch rather than a path to open.
@@ -42,30 +51,35 @@ export function isVideoUrl(value: string): boolean {
  * nothing under the bound. `--no-playlist` keeps a link inside a playlist from fetching the playlist.
  * The container follows the target's extension.
  */
-export async function downloadVideo(url: string, target: string): Promise<void> {
+export async function downloadVideo(url: string, target: string, options: { readonly signal?: AbortSignal } = {}): Promise<void> {
   const container = extname(target).slice(1).toLowerCase();
   if (!["mp4", "mkv", "webm", "mov"].includes(container)) {
     throw new Error(`${target} must end in .mp4, .mkv, .webm or .mov`);
   }
   const executable = requireVideoDownload();
-  const media = spawnSync("ffmpeg", ["-version"], { encoding: "utf8", windowsHide: true, timeout: 15_000 });
-  if (media.status !== 0) throw new Error("FFmpeg is unavailable on PATH; install your selected media toolchain before fetching video");
+  try {
+    await runExec("ffmpeg", ["-version"], { timeout: 15_000, signal: options.signal });
+  } catch (error) {
+    if (options.signal?.aborted) throw error;
+    throw new Error("FFmpeg is unavailable on PATH; install your selected media toolchain before fetching video");
+  }
   const work = await mkdtemp(join(tmpdir(), "qflow-fetch-"));
   try {
-    const result = spawnSync(executable, [
-      "--ignore-config", "--no-update", "--no-remote-components", "--no-plugin-dirs",
-      "--no-js-runtimes", "--js-runtimes", `node:${process.execPath}`,
-      "--no-playlist", "--no-progress", "--quiet",
-      "--format", "bv*+ba/b",
-      "--merge-output-format", container,
-      "--format-sort", "res:1080,vcodec:h264",
-      "--output", join(work, "video.%(ext)s"),
-      url,
-    ], { encoding: "utf8", windowsHide: true, timeout: 900_000 });
-
-    if (result.error !== undefined) throw result.error;
-    if (result.status !== 0) {
-      throw new Error(`yt-dlp could not fetch ${url}: ${(result.stderr ?? "").trim().slice(-2000)}`);
+    try {
+      await runExec(executable, [
+        "--ignore-config", "--no-update", "--no-remote-components", "--no-plugin-dirs",
+        "--no-js-runtimes", "--js-runtimes", `node:${process.execPath}`,
+        "--no-playlist", "--no-progress", "--quiet",
+        "--format", "bv*+ba/b",
+        "--merge-output-format", container,
+        "--format-sort", "res:1080,vcodec:h264",
+        "--output", join(work, "video.%(ext)s"),
+        url,
+      ], { timeout: 900_000, maxBuffer: 10 * 1024 * 1024, signal: options.signal });
+    } catch (cause) {
+      if (options.signal?.aborted) throw cause;
+      const error = cause as { stderr?: string; message?: string };
+      throw new Error(`yt-dlp could not fetch ${url}: ${(error.stderr ?? error.message ?? "").trim().slice(-2000)}`);
     }
     const finished = (await readdir(work)).filter((name) => !name.endsWith(".part"));
     const [file] = finished.sort();

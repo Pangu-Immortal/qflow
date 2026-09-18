@@ -62,14 +62,23 @@ test("download resolves its declared service from an installed package outside t
     calls++;
     assert.notEqual(command, "uv", "fetch must not run the environment installer");
     if (args.includes("--version")) return { status: 0, stderr: "", stdout: "2026.08.19\n" };
-    if (command === "ffmpeg") return { status: 0, stderr: "", stdout: "ffmpeg" };
+    return { status: 0, stderr: "", stdout: "" };
+  });
+  t.mock.method(childProcess, "execFile", (command: string, ...rest: unknown[]) => {
+    calls++;
+    const callback = (typeof rest.at(-1) === "function" ? rest.at(-1) : undefined) as ((err: Error | null, stdout: string, stderr: string) => void) | undefined;
+    const args = (Array.isArray(rest[0]) ? rest[0] : []) as string[];
+    if (command === "ffmpeg") {
+      callback?.(null, "ffmpeg", "");
+      return;
+    }
     assert.match(command, /yt-dlp/u);
     assert.ok(args.includes("--no-remote-components"));
     assert.ok(args.includes("--ignore-config"));
     assert.equal(args.at(-1), "https://example.test/video");
     const output = args[args.indexOf("--output") + 1]!.replace("%(ext)s", "mp4");
     writeFileSync(output, "downloaded bytes");
-    return { status: 0, stderr: "", stdout: "" };
+    callback?.(null, "", "");
   });
   syncBuiltinESMExports();
   t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports(); });

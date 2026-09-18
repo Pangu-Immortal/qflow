@@ -76,6 +76,22 @@ function conflict(error: unknown): boolean {
   return error instanceof Error && /changed outside Studio|Source changed outside Studio|mutation is already in progress/u.test(error.message);
 }
 
+function isSafeStudioOrigin(request: import("node:http").IncomingMessage): boolean {
+  const origin = request.headers.origin;
+  if (origin !== undefined) {
+    try {
+      const { hostname } = new URL(origin);
+      const isLoopback = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
+      if (!isLoopback) return false;
+    } catch {
+      return false;
+    }
+  }
+  const secFetchSite = request.headers["sec-fetch-site"];
+  if (secFetchSite === "cross-site") return false;
+  return true;
+}
+
 class StudioMutationRejected extends Error {}
 
 export function studioPlugin(options: StudioPluginOptions): Plugin {
@@ -473,6 +489,10 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       value.middlewares.use((request, response, next) => {
         const url = new URL(request.url ?? "/", "http://studio.qflow.local");
         if (request.method === "PUT" && url.pathname === "/__studio/source") {
+          if (!isSafeStudioOrigin(request)) {
+            json(response, 403, { error: "Cross-origin Studio mutations are prohibited." });
+            return;
+          }
           void (async () => {
             let acquired = false;
             try {
@@ -524,6 +544,10 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
           return;
         }
         if (request.method === "PUT" && url.pathname === "/__studio/artifact-name") {
+          if (!isSafeStudioOrigin(request)) {
+            json(response, 403, { error: "Cross-origin Studio mutations are prohibited." });
+            return;
+          }
           void (async () => {
             try {
               const chunks: Buffer[] = [];
@@ -546,6 +570,10 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
           return;
         }
         if (request.method === "POST" && url.pathname === "/__studio/mutation") {
+          if (!isSafeStudioOrigin(request)) {
+            json(response, 403, { error: "Cross-origin Studio mutations are prohibited." });
+            return;
+          }
           void (async () => {
             try {
               const chunks: Buffer[] = [];

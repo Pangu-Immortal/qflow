@@ -18,16 +18,17 @@ export function processAlive(pid: number): boolean {
 function signal(pid: number, force: boolean): ProcessStopResult {
   if (!processAlive(pid)) return "gone";
   const name = force ? "SIGKILL" : "SIGTERM";
+  let sent = false;
   for (const target of [-pid, pid]) {
     try {
       process.kill(target, name);
-      return "sent";
+      sent = true;
     } catch (error) {
-      if (errorCode(error) === "EPERM") return "denied";
-      if (errorCode(error) !== "ESRCH") throw error;
+      if (errorCode(error) === "EPERM" && target === pid) return "denied";
+      if (errorCode(error) !== "ESRCH" && errorCode(error) !== "EPERM") throw error;
     }
   }
-  return "gone";
+  return sent ? "sent" : "gone";
 }
 
 /**
