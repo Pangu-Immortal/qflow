@@ -50,6 +50,10 @@ The default directory is `credentials` under the Host state root printed by `qfl
 `config.path` explicitly selects a directory, including an absolute directory outside that root;
 relative paths resolve against the Host root.
 Opening the adapter and reading an absent key do not create files. Keep this directory outside Git.
+On WSL, the default under the Linux home uses normal Linux permissions. If the Host state root is
+on a Windows-mounted drive, set this Store's `config.path` to a private directory in the WSL Linux
+filesystem before login. A Windows mount's reported mode does not establish that its Windows ACL
+protects the secret, so the Store does not waive its owner-private check for that path.
 
 Each key has its own JSON file containing only `secret` and optional `expiresAt`, as defined by
 CredentialValue. Filenames use reversible lower-case hex encoding of the key's UTF-16 bytes, with a

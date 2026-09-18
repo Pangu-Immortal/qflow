@@ -119,7 +119,14 @@ export async function superviseBuilds(options: {
         if (options.signal.aborted) break;
         accepting ??= launch();
         const carrier = accepting;
-        await carrier.ready;
+        try {
+          await carrier.ready;
+        } catch (error) {
+          if (accepting === carrier) accepting = undefined;
+          if (options.signal.aborted) break;
+          await finishInterrupted(build, `Build executor startup failed: ${error instanceof Error ? error.message : String(error)}; create a new Build to continue`);
+          continue;
+        }
         if (carrier.exited) break;
         if (accepting !== carrier) continue;
         await state.execution.start(build);

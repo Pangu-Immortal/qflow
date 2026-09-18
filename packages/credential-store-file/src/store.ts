@@ -38,7 +38,7 @@ export class FileCredentialStore implements WritableCredentialStore {
     const info = await stat(this.directory);
     if (!info.isDirectory()) throw new Error(`Credential path is not a directory: ${this.directory}`);
     if (process.platform !== "win32" && (info.mode & 0o077) !== 0) {
-      throw new Error(`Credential directory must be owner-private: ${this.directory}`);
+      throw new Error(`Credential directory must be owner-private: ${this.directory}. On WSL, keep credentials in the Linux filesystem rather than a Windows-mounted drive.`);
     }
   }
 
@@ -57,7 +57,7 @@ export class FileCredentialStore implements WritableCredentialStore {
     try {
       const info = await file.stat();
       if (process.platform !== "win32" && (info.mode & 0o077) !== 0) {
-        throw new Error(`Credential file must be owner-private: ${path}`);
+        throw new Error(`Credential file must be owner-private: ${path}. On WSL, keep credentials in the Linux filesystem rather than a Windows-mounted drive.`);
       }
       const text = await file.readFile("utf8");
       // JSON parser messages may include secret bytes. Report the file, never its contents.
