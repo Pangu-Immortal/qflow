@@ -210,7 +210,7 @@ commands and the repository layout.
   </tr>
 </table>
 
-## Launch Partner
+## Launch Partners
 
 <table>
   <tr>
