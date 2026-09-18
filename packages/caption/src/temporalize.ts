@@ -17,6 +17,7 @@ export function temporalizeCaptionDocument(
   }
   const breaks = new Set(document.cueBreaks.map((cueBreak) => cueBreak.afterUnitId));
   const timed: Array<{ unit: CaptionDocument["units"][number]; timing: TimedCaptionUnit }> = [];
+  const previousByRole = new Map<string | undefined, { timing: TimedCaptionUnit }>();
   for (const unit of document.units) {
     const window = tokenFrameSpan(semantic, unit.sourceTokenIds);
     if (window === undefined) continue;
@@ -25,7 +26,16 @@ export function temporalizeCaptionDocument(
     }
     const startFrame = window.startFrame;
     const endFrameExclusive = Math.max(startFrame + 1, window.endFrameExclusive);
-    timed.push({ unit, timing: { unitId: unit.id, startFrame, endFrameExclusive } });
+    // Acoustic Word windows may overlap. The Timeline keeps those measurements; an authored unit
+    // gets one owner: as soon as the next unit of the same Role starts, this one stops. A Cue
+    // envelope ends at its last unit, so Cue boundaries are exclusive by the same rule.
+    const previous = previousByRole.get(unit.role);
+    if (previous !== undefined && startFrame > previous.timing.startFrame && startFrame < previous.timing.endFrameExclusive) {
+      previous.timing = { ...previous.timing, endFrameExclusive: startFrame };
+    }
+    const entry = { unit, timing: { unitId: unit.id, startFrame, endFrameExclusive } };
+    previousByRole.set(unit.role, entry);
+    timed.push(entry);
   }
   const cues: TimedCaptionCue[] = [];
   let current: { units: TimedCaptionUnit[]; segmentId: string; turnId: string } | undefined;
