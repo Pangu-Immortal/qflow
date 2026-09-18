@@ -6,6 +6,7 @@ import { isMediaCommand, mediaCommands, writeMediaHelp } from "./media.js";
 import { writeVocabularyHelp } from "./vocabulary.js";
 import { writeCaptureHelp } from "./capture.js";
 import { runVersionCli, writeVersionHelp } from "./version.js";
+import { acceptSecretBytes } from "./secret-input.js";
 
 const argv = process.argv.slice(2);
 const json = argv.includes("--json");
@@ -26,28 +27,19 @@ async function readSecret(prompt: string): Promise<string> {
   }
   process.stderr.write(prompt);
   return await new Promise<string>((resolve, reject) => {
-    const rawBytes: number[] = [];
+    const raw: number[] = [];
     const finish = (error?: Error): void => {
       process.stdin.off("data", input);
       process.stdin.setRawMode(false);
       process.stdin.pause();
       process.stderr.write("\n");
-      if (error === undefined) resolve(Buffer.from(rawBytes).toString("utf8"));
+      if (error === undefined) resolve(Buffer.from(raw).toString("utf8"));
       else reject(error);
     };
     const input = (chunk: Buffer): void => {
-      for (const byte of chunk) {
-        if (byte === 3) { finish(new Error("credential input cancelled")); return; }
-        if (byte === 10 || byte === 13) { finish(); return; }
-        if (byte === 8 || byte === 127) {
-          while (rawBytes.length > 0 && (rawBytes.at(-1)! & 0xc0) === 0x80) {
-            rawBytes.pop();
-          }
-          rawBytes.pop();
-          continue;
-        }
-        rawBytes.push(byte);
-      }
+      const result = acceptSecretBytes(raw, chunk);
+      if (result === "cancelled") finish(new Error("credential input cancelled"));
+      if (result === "done") finish();
     };
     process.stdin.setRawMode(true);
     process.stdin.resume();

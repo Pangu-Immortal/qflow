@@ -1,16 +1,9 @@
 import { replaceFile } from "@qflow/file-io-node";
 import { randomUUID } from "node:crypto";
 import { mkdir, open, rm, stat, unlink } from "node:fs/promises";
-import { release } from "node:os";
 import { join } from "node:path";
 import { verifyCredentialRef } from "@qflow/runtime";
 import type { CredentialRef, CredentialValue, WritableCredentialStore } from "@qflow/runtime";
-
-function isWslOrPermissiveMount(targetPath: string): boolean {
-  if (process.platform === "win32") return true;
-  const isWsl = process.env.WSL_DISTRO_NAME !== undefined || release().toLowerCase().includes("microsoft");
-  return isWsl && (targetPath.startsWith("/mnt/") || targetPath.startsWith("/media/"));
-}
 
 function missing(error: unknown): boolean {
   return error instanceof Error && "code" in error && error.code === "ENOENT";
@@ -44,8 +37,8 @@ export class FileCredentialStore implements WritableCredentialStore {
     if (create) await mkdir(this.directory, { recursive: true, mode: 0o700 });
     const info = await stat(this.directory);
     if (!info.isDirectory()) throw new Error(`Credential path is not a directory: ${this.directory}`);
-    if (process.platform !== "win32" && !isWslOrPermissiveMount(this.directory) && (info.mode & 0o077) !== 0) {
-      throw new Error(`Credential directory must be owner-private: ${this.directory}`);
+    if (process.platform !== "win32" && (info.mode & 0o077) !== 0) {
+      throw new Error(`Credential directory must be owner-private: ${this.directory}. On WSL, keep credentials in the Linux filesystem rather than a Windows-mounted drive.`);
     }
   }
 
@@ -63,8 +56,8 @@ export class FileCredentialStore implements WritableCredentialStore {
     }
     try {
       const info = await file.stat();
-      if (process.platform !== "win32" && !isWslOrPermissiveMount(path) && (info.mode & 0o077) !== 0) {
-        throw new Error(`Credential file must be owner-private: ${path}`);
+      if (process.platform !== "win32" && (info.mode & 0o077) !== 0) {
+        throw new Error(`Credential file must be owner-private: ${path}. On WSL, keep credentials in the Linux filesystem rather than a Windows-mounted drive.`);
       }
       const text = await file.readFile("utf8");
       // JSON parser messages may include secret bytes. Report the file, never its contents.
