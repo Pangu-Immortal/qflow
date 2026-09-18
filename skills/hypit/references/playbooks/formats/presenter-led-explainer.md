@@ -34,16 +34,42 @@ One scene may also develop across several Takes. Spoken segment boundaries do no
 boundaries or camera cuts.
 
 Use [Performance](../../production/performance.md) for presentation of the Timeline's existing visual
-material and [Media](../../production/media.md) for independent supplied material. A full-frame view,
-a circular crop and a moving viewport can share the same playing source. Its playback clock continues
-while the frame moves; foreground and enlarged background views of that source need the same sample.
-Let the visual emphasis follow who or what currently carries the idea, including returning to the
-presenter for an expressive reaction or direct address.
+material and [Media](../../production/media-presentation.md) for independently supplied material.
+Treat the accepted footage as available material for the changing picture: it can fill a view,
+appear in several views, join a comparison or disappear while the argument continues. A project
+scene can consume its Timeline mapping alongside other inputs when their layout or action belongs
+together. Let visual emphasis follow who or what currently carries the idea, including returning
+to the presenter for a reaction or direct address.
+
+For example, one work may move its full-frame presenter into a small window while a diagram takes
+over; another may cut straight from the original camera view to an isolated presenter beside evidence.
+Both preserve the accepted performance while changing how the viewer encounters it. The semantic
+event motivates the change. Whether it cuts, moves, holds or fades follows this work's expressive
+rhythm. Full-frame, inset and cutout describe appearances, not separate production pipelines.
 
 Speech sound remains an independently connected contribution when MG covers the presenter. Genuinely
 independent narration uses the [narration-led relationship](narration-led-demo.md). A montage or silent
 ending can occupy ordinary time outside any Take: the complete Timeline has room for both semantic
 anchors and independently authored events. No invented performance is needed to create that room.
+
+## Direct material for its intended uses
+
+For footage expected to fill the picture much of the time, the final aspect ratio is a useful
+starting point for generation. Anticipate the body, gestures, setting and detail the work will need
+when the picture changes. A later small or differently shaped viewport can sample that same source;
+its destination shape alone does not determine the source ratio. A tight source crop cannot later
+supply missing hands or setting. Choose the source view from the actual visual needs across the work.
+
+Recurring graphics and the source framing can support each other. Translate that plan into concrete
+camera requirements for image generation: a person positioned to one side, sufficient body extent,
+space around gestures, or a particular camera distance. Keep future MG, editorial writing and the
+explanation's metaphors with their components. The image request describes only the image being
+made. [Graphic composition](../craft/graphic-compositions.md#give-material-and-graphics-room-together)
+and [image direction](../craft/image-direction.md#frame-the-image-for-what-it-will-become) own that translation.
+
+Transparency is useful when the design needs the subject's silhouette. Preserve opaque footage
+when its real setting also matters. [Media preparation](../../production/media.md#keep-original-and-processed-material-explicit)
+owns those explicit outputs; their visual uses can change while the chosen performance continues.
 
 ## Give events meaning and transitions duration
 
@@ -52,10 +78,11 @@ component. That establishes why the event happens there. Local durations and eas
 the change unfolds. A phrase can start a movement that continues into the next phrase; the settled
 state can remain useful long after the entrance finishes.
 
-Design handoffs from the states on both sides: what remains present, which geometry should meet,
-and where attention should land. A brief presentation Use can connect two longer treatments without
-changing the underlying footage. Read the actual contribution's interval and override semantics;
-shared timing does not make independent Tracks mutually exclusive.
+Design handoffs from the states on both sides: what remains present and where attention should land.
+A direct cut selects the new state at the event. When following a continuous transformation is useful,
+a brief presentation Use can connect two longer treatments without changing the underlying footage.
+Meet both the viewport geometry and its source crop at the endpoints. Read the actual contribution's
+interval and override semantics; shared timing does not make independent Tracks mutually exclusive.
 [Temporal projection](../../production/track-authoring.md#keep-selection-projection-and-consumption-distinct)
 and the owning component documentation supply exact syntax.
 
@@ -74,7 +101,8 @@ The reference supplies the appearance and behavior to understand, not a compulso
 Preserve the detail that makes the scene convincing when simplifying it. Removing a redundant title
 changes the remaining layout; a folder still needs readable contents, and a working terminal needs
 visible activity while the narration describes it. A demonstration has a designed hold as well as
-an entrance. [Graphic composition](../craft/graphic-compositions.md) owns this visual judgment.
+an entrance. [Motion graphics](../craft/motion-graphics.md) owns how that change reads over time;
+[graphic composition](../craft/graphic-compositions.md) owns its hierarchy in the picture.
 
 ## Organize the behavior at its useful scale
 
@@ -96,11 +124,9 @@ Derive connected motion from shared layout so moving a target also moves its poi
 
 ## Develop the work with visible feedback
 
-Use generated material for the photographed or illustrated content it should actually contain.
-Use recorded interfaces when their literal state and actions are evidence; keep a recording as
-reusable material whose crop and timing can be revised. Authored MG can demonstrate a relationship
-without pretending to be a measured product recording. Material direction and reference relationships
-belong to their [Craft pages](../index.md#craft).
+A screen passage can carry actual interface evidence, an authored explanation, or both.
+[Screen demonstrations](../craft/screen-demonstrations.md) owns that choice; generated material
+direction and reference relationships belong to their [Craft pages](../index.md#craft).
 
 Review a useful passage in its surrounding composition as the design develops. Explain what it
 demonstrates and what is still being built. Comments can carry a change of visual idea that no
