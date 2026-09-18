@@ -1307,9 +1307,27 @@ export async function executeMuxProgramMedia(
       && compareTimestamp(finalVideo[0]!.startPts, finalAudio[0]!.startPts) === 0,
     "Final mux audio and video do not share one presentation origin");
     const finalAudioSpan = duration(finalAudio[0]!);
-    assert(roundPositive(finalAudioSpan.numerator * 48_000n, finalAudioSpan.denominator)
-      === need.audio.sampleFrames,
-    "Final mux audio presentation span differs from TimelineAudio");
+    /*
+     * The staged WAV is asserted sample-exact above; this checks what survived AAC.
+     *
+     * AAC cannot carry an arbitrary sample count: the encoder emits 1024-sample frames and
+     * reports a priming delay that the MP4 muxer compensates with an edit list, so the
+     * presented span lands a few samples away from the input. Measured here with ffmpeg 6.1
+     * on synthetic tone (i.e. independent of any project's material): a 4 249 600-sample input
+     * presents as 4 249 584 (-16), and 4 236 800 presents as 4 236 768 (-32). Padding the
+     * timeline to a whole number of AAC frames does not remove it — the delay is not a
+     * frame-alignment artifact.
+     *
+     * Demanding exact equality therefore rejects every correct mux whose length is not a
+     * fixed point of that round trip. The real invariant AAC can hold is that no whole frame
+     * of audio went missing, so the tolerance is one AAC frame rather than an arbitrary epsilon;
+     * anything larger still means genuine desync and still fails.
+     */
+    const AAC_FRAME_SAMPLES = 1_024;
+    const finalAudioSamples = roundPositive(finalAudioSpan.numerator * 48_000n, finalAudioSpan.denominator);
+    assert(Math.abs(finalAudioSamples - need.audio.sampleFrames) < AAC_FRAME_SAMPLES,
+      `Final mux audio presentation span differs from TimelineAudio by ${
+        String(finalAudioSamples - need.audio.sampleFrames)} samples`);
     const artifact = await env.artifacts.putFile(output, "video/mp4");
     const value: MuxedMedia = sealMuxedMedia({
       frameRate: need.visual.frameRate,
