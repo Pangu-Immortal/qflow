@@ -26,21 +26,27 @@ async function readSecret(prompt: string): Promise<string> {
   }
   process.stderr.write(prompt);
   return await new Promise<string>((resolve, reject) => {
-    let value = "";
+    const rawBytes: number[] = [];
     const finish = (error?: Error): void => {
       process.stdin.off("data", input);
       process.stdin.setRawMode(false);
       process.stdin.pause();
       process.stderr.write("\n");
-      if (error === undefined) resolve(value);
+      if (error === undefined) resolve(Buffer.from(rawBytes).toString("utf8"));
       else reject(error);
     };
     const input = (chunk: Buffer): void => {
       for (const byte of chunk) {
         if (byte === 3) { finish(new Error("credential input cancelled")); return; }
         if (byte === 10 || byte === 13) { finish(); return; }
-        if (byte === 8 || byte === 127) { value = value.slice(0, -1); continue; }
-        value += String.fromCharCode(byte);
+        if (byte === 8 || byte === 127) {
+          while (rawBytes.length > 0 && (rawBytes.at(-1)! & 0xc0) === 0x80) {
+            rawBytes.pop();
+          }
+          rawBytes.pop();
+          continue;
+        }
+        rawBytes.push(byte);
       }
     };
     process.stdin.setRawMode(true);
