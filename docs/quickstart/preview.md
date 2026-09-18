@@ -93,7 +93,7 @@ The exported video's audio is assembled by the render's media pipeline. When the
 ready for delivery, run its export Build to create the encoded video. Studio and Comments remain
 available to explore the editable work and discuss further changes.
 
-For component authors, [Studio Temporal Lineage](../guide/studio-temporal-windows.md) explains semantic
+For component authors, [Timing edits in Studio](../guide/studio-temporal-windows.md) explains semantic
 editing, and the [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-adapter/README.md)
 explains how to expose component entities and controls.
 

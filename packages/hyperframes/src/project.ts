@@ -6,6 +6,8 @@ import type { BlobRef } from "@qflow/protocol";
 
 import { assertHyperframesDocument, materializeHyperframesHtml } from "./document.js";
 import type { HyperframesDocument } from "./types.js";
+import { assertHyperframesHtmlProject, mapHyperframesHtmlUrls } from "./html-project.js";
+import type { HyperframesHtmlProject } from "./html-project.js";
 
 /** Reads one execution resource. Whose store it comes from is the caller's business. */
 export type HyperframesArtifactReader = (
@@ -35,6 +37,32 @@ function extension(mediaType: string): string {
   const found = EXTENSIONS[mediaType];
   if (found === undefined) throw new Error(`HyperFrames does not support Artifact media type ${mediaType}`);
   return found;
+}
+
+/** Stage an existing HTML programme; no reverse compilation or inferred Surface declarations. */
+export async function stageHyperframesHtmlProject(options: {
+  readonly project: HyperframesHtmlProject;
+  readonly directory: string;
+  readonly read: HyperframesArtifactReader;
+  readonly signal?: AbortSignal;
+}): Promise<void> {
+  assertHyperframesHtmlProject(options.project);
+  await mkdir(join(options.directory, "artifacts"), { recursive: true });
+  const paths = new Map<string, string>();
+  for (const [index, asset] of options.project.assets.entries()) {
+    options.signal?.throwIfAborted();
+    const path = `artifacts/asset-${index}${extension(asset.artifact.mediaType)}`;
+    const bytes = await options.read(asset.artifact, options.signal);
+    const file = await open(join(options.directory, path), "w");
+    try {
+      if (bytes instanceof Uint8Array) await file.writeFile(bytes);
+      else for await (const chunk of bytes) { options.signal?.throwIfAborted(); await file.writeFile(chunk); }
+    } finally { await file.close(); }
+    paths.set(asset.url, `./${path}`);
+  }
+  await writeFile(join(options.directory, "index.html"), mapHyperframesHtmlUrls(options.project.html, url => paths.get(url) ?? url), {
+    encoding: "utf8", ...(options.signal === undefined ? {} : { signal: options.signal }),
+  });
 }
 
 /**

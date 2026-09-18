@@ -1,9 +1,8 @@
 /**
  * A tokenizer for SVML's own surface syntax.
  *
- * SVML has a small, closed grammar — tags, quoted strings, whole-value
- * references, and Script prose with markers — so it is tokenized directly rather
- * than through a general highlighter that has no grammar for it. The Script
+ * Recognize the common Markup shell and Script prose for highlighting, without
+ * validating package-owned Surfaces. The Script
  * markers are the point: `@{claim} … @{/claim}` is what a Media Item binds to, so it
  * has to read as a distinct thing from an ordinary attribute.
  *
@@ -105,8 +104,7 @@ export function tokenizeSvml(source: string): readonly Token[] {
       cursor = nameStart + name[0].length;
       cursor = tokenizeAttributes(source, cursor, push);
 
-      // Script is the language's one Raw Surface: its body is prose with
-      // markers, not markup, and must be scanned by different rules.
+      // Script's Raw Surface has its own prose grammar.
       if (!closing && localName(name[0]) === "script" && source[cursor - 2] !== "/") {
         cursor = tokenizeScriptBody(source, cursor, name[0], push);
       }
@@ -167,6 +165,7 @@ function tokenizeAttributes(source: string, from: number, push: Push): number {
 function tokenizeScriptBody(source: string, from: number, tag: string, push: Push): number {
   const close = `</${tag}>`;
   let cursor = from;
+  let inSegment = false;
   while (cursor < source.length) {
     if (source[cursor] === "\\") { cursor += 2; continue; }
     if (source.startsWith(close, cursor)) {
@@ -199,14 +198,16 @@ function tokenizeScriptBody(source: string, from: number, tag: string, push: Pus
       }
       const closing = source[cursor + 1] === "/";
       const nameStart = cursor + (closing ? 2 : 1);
-      const name = NAME.exec(source.slice(nameStart));
-      if (name === null) { cursor += 1; continue; }
       const end = source.indexOf(">", nameStart);
       const stop = end < 0 ? source.length : end + 1;
+      const selfClosing = end >= 0 && source[end - 1] === "/";
+      const nameEnd = end < 0 ? stop : end - (selfClosing ? 1 : 0);
       push(cursor, nameStart, "punct");
-      // An upper-case tag inside Script is a Role Cue, not a Segment.
-      push(nameStart, nameStart + name[0].length, /^[A-Z]/u.test(name[0]) ? "role" : "tag");
-      push(nameStart + name[0].length, stop, "punct");
+      // Context distinguishes Segments from Role Cues, regardless of language or case.
+      push(nameStart, nameEnd, inSegment && !closing ? "role" : "tag");
+      push(nameEnd, stop, "punct");
+      if (closing) inSegment = false;
+      else if (!inSegment && !selfClosing) inSegment = true;
       cursor = stop;
       continue;
     }

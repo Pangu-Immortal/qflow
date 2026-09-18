@@ -1,5 +1,13 @@
 # Qflow Studio
 
+For direct picture inspection, `qflow snapshot --studio <studio-url>` reads the current compiled
+`HyperframesDocument` from `GET /__studio/document` and its existing `/__studio/material/<resource>`
+resources. `GET /__studio/visual.html` exposes the same materialized picture without the interactive
+Studio playback shim or audio. Both representations come from the same compilation as the displayed
+preview. The snapshot invocation uses the selected Runtime Profile's frame Provider and creates no
+Build. During a pending Source compilation the export route reports that state; a failed update
+reports its error instead of returning the previous picture as current.
+
 The single official Web Studio for SVML. It opens an explicit Run Source,
 traces its Film or Render target back to the semantic and visual projections
 Studio can edit, runs deterministic Producers and explicitly permitted transient Needs, and composites the
@@ -158,6 +166,11 @@ shows project facts when no entity is selected and declared facts and author fie
 the selected entity. A reference can resolve to a shared Frame or Recipe, so one edit
 may affect several consumers. Structured fields save together when editing ends and the value is complete; missing required values stay in the editor with a completion hint.
 Check save status; source conflicts reject stale edits rather than overwrite newer files.
+
+Script source ranges come from its raw Surface and Companion. Marker edits use Script's parsed
+anchors and preserve unrelated prose, whitespace and word attributes; the displayed timeline words
+are not a replacement text source. Recipe parameter reads use the same Source Header preparation
+as compilation, preserving UTF-16 offsets for the exact property being edited.
 
 The Timeline owns the editor's complete range; displayed objects do not extend it. Take placement
 and complete extent are reference information in Studio.

@@ -27,6 +27,29 @@ test("comments do not divide words, and source edits retain the comment", () => 
   assert.equal(changed, '<line>@{beat!}hel<!-- note -->lo 한<!-- 설명 -->글. </line>');
 });
 
+test("display attributes follow the complete prose across zero-width annotations", () => {
+  for (const body of [
+    'hello<!-- note -->{emphasis} world.',
+    'hello@{beat!}{emphasis} world.',
+    '<hello@{beat!}{emphasis} world.|>',
+  ]) {
+    const parsed = parse(body);
+    const document = captionDocument(parsed, "caption", "story");
+    assert.equal(document.words.map(word => word.separatorBefore + word.text).join(""), "hello world.");
+    assert.deepEqual(document.words[0]!.attributes, [{ name: "emphasis", value: true }]);
+  }
+  for (const body of ['hello <!-- note -->{emphasis}', 'hello @{beat!}{emphasis}', '<hello @{beat!}{emphasis}|>']) {
+    assert.throws(() => parse(body), /SCRIPT_ATTRIBUTE_TARGET/u);
+  }
+});
+
+test("a Dual's explicit speech must supply correspondence for its display", () => {
+  for (const body of ['<API|...>', '<hello|@{beat!}!!!>', '<|!!!>', '<API|@{beat!}>']) {
+    assert.throws(() => parse(body), /SCRIPT_DUAL_EMPTY/u);
+  }
+  assert.equal(caption('<😀|smile> <API|A P I>'), '😀 API');
+});
+
 test("Dual display spelling does not require speech characters", () => {
   for (const [body, expected] of [
     ['<😀|smile>', '😀'], ['<❤️|love>', '❤️'], ['<.|dot>', '.'],

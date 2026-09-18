@@ -3,12 +3,12 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { EndpointInvocationContext } from "@qflow/endpoint-kit";
-import { stageHyperframesProject } from "@qflow/hyperframes/project";
+import { stageHyperframesProject, stageHyperframesHtmlProject } from "@qflow/hyperframes/project";
 import { sealRenderedVisual } from "@qflow/media";
 import type { MediaFrameRange, RenderedVisual } from "@qflow/media";
 import { verifyCompositableSurfaceFile } from "@qflow/media-execution";
-import { verifyHyperframesVisualRequest } from "@qflow/render-hyperframes";
-import type { HyperframesVisualRequest } from "@qflow/render-hyperframes";
+import { verifyHyperframesVisualRequest, verifyHyperframesFramesRequest, hyperframesFramesDomain } from "@qflow/render-hyperframes";
+import type { HyperframesVisualRequest, HyperframesFramesRequest, HyperframesFrames } from "@qflow/render-hyperframes";
 import { isStreamingResourceStore } from "@qflow/runtime";
 import type { HyperframesExecutionOptions } from "./options.js";
 import { assert, positiveInteger } from "./process.js";
@@ -75,10 +75,22 @@ export async function renderHyperframesVisual(
   options: RenderHyperframesVisualOptions,
 ): Promise<RenderedVisual> {
   verifyHyperframesVisualRequest(request);
+  return capture(request, options) as Promise<RenderedVisual>;
+}
+
+export async function renderHyperframesFrames(request: HyperframesFramesRequest, options: RenderHyperframesVisualOptions): Promise<HyperframesFrames> {
+  verifyHyperframesFramesRequest(request);
+  return capture(request, options) as Promise<HyperframesFrames>;
+}
+
+async function capture(request: HyperframesVisualRequest | HyperframesFramesRequest, options: RenderHyperframesVisualOptions): Promise<RenderedVisual | HyperframesFrames> {
   const config = { ...resolveExecutionOptions(options), chromePath: browserExecutablePath(options) };
-  const { document } = request;
-  const range = request.range ?? { startFrame: 0, endFrameExclusive: document.frameCount };
-  const frameCount = range.endFrameExclusive - range.startFrame;
+  const frames = "frames" in request ? request.frames : undefined;
+  const document = "frames" in request ? hyperframesFramesDomain(request) : request.document;
+  const range = frames === undefined
+    ? (request as HyperframesVisualRequest).range ?? { startFrame: 0, endFrameExclusive: document.frameCount }
+    : { startFrame: frames[0]!, endFrameExclusive: frames.at(-1)! + 1 };
+  const frameCount = frames?.length ?? range.endFrameExclusive - range.startFrame;
   const controller = new AbortController();
   const signal = options.signal === undefined ? controller.signal : AbortSignal.any([controller.signal, options.signal]);
   const started = performance.now();
@@ -103,23 +115,25 @@ export async function renderHyperframesVisual(
     signal.throwIfAborted();
     await requireBrowserExecutable(config.chromePath, config.browserVersion);
     await options.onDiagnostic?.({ level: "info", message:
-      `Render ${frameCount} frames; workers ${config.workers} (limit ${renderWorkerLimit(config, frameCount, document.frameRate.numerator / document.frameRate.denominator)}); opaque fast PNG; quality ${config.quality}; GPU ${config.browserGpu}; browser ${config.chromePath}; encoder ${config.ffmpegPath}` });
+      `Capture ${frameCount} frames; workers ${config.workers} (limit ${renderWorkerLimit(config, frameCount, document.frameRate.numerator / document.frameRate.denominator)}); opaque fast PNG; GPU ${config.browserGpu}; browser ${config.chromePath}`
+      + (frames === undefined ? `; quality ${config.quality}; encoder ${config.ffmpegPath}` : "; PNG output") });
     options.onProgress?.({ phase: "staging", elapsedMs: 0 });
     work = await mkdtemp(join(tmpdir(), "qflow-hyperframes-local-"));
-    await stageHyperframesProject({ document, directory: work, signal,
-      read: async (artifact, readSignal) => {
+    const read: import("@qflow/hyperframes/project").HyperframesArtifactReader = async (artifact, readSignal) => {
         const io = { signal: readSignal! };
         const bytes = isStreamingResourceStore(options.resources)
           ? await options.resources.open(artifact.resource, io) : await options.resources.get(artifact.resource, io);
         assert(bytes !== undefined, `HyperFrames Artifact ${artifact.resource} is unavailable`);
         return bytes;
-      },
+      };
+    if ("project" in request) await stageHyperframesHtmlProject({ project: request.project, directory: work, signal, read });
+    else await stageHyperframesProject({ document: request.document, directory: work, signal, read,
       validateSurface: (surface, path, probeSignal) => verifyCompositableSurfaceFile({ surface, path,
         ffprobePath: config.ffprobePath, processTimeoutMs: config.processTimeoutMs,
         maxProbeOutputBytes: config.maxProcessOutputBytes, signal: probeSignal! }),
     });
     changePhase("decoding source frames");
-    await runCaptureProcess({ document, range, config, directory: work,
+    await runCaptureProcess({ document, range, ...(frames === undefined ? {} : { frames }), config, directory: work,
       engineModule: import.meta.resolve("@hyperframes/engine"),
       producerModule: import.meta.resolve("@hyperframes/producer"),
     }, signal, (event) => {
@@ -132,22 +146,33 @@ export async function renderHyperframesVisual(
     signal.throwIfAborted();
     changePhase("storing output");
     options.onProgress?.({ phase: "storing", elapsedMs: Math.round(performance.now() - started) });
-    const output = join(work, "visual.mp4");
-    let artifact;
-    if (isStreamingResourceStore(options.resources)) {
-      const stream = createReadStream(output, { signal });
-      const closed = finished(stream).catch(() => {});
-      try { artifact = await options.resources.putStream(stream, "video/mp4", { signal }); }
-      finally { stream.destroy(); await closed; }
+    const store = async (output: string, mediaType: string) => {
+      if (isStreamingResourceStore(options.resources)) {
+        const stream = createReadStream(output, { signal });
+        const closed = finished(stream).catch(() => {});
+        try { return await options.resources.putStream(stream, mediaType, { signal }); }
+        finally { stream.destroy(); await closed; }
+      }
+      return options.resources.put(await readFile(output, { signal }), mediaType, { signal });
+    };
+    let result: RenderedVisual | HyperframesFrames;
+    if (frames === undefined) {
+      result = sealRenderedVisual({ frameRate: document.frameRate, frameCount, canvas: document.canvas,
+        artifact: await store(join(work, "visual.mp4"), "video/mp4") });
     } else {
-      artifact = await options.resources.put(await readFile(output, { signal }), "video/mp4", { signal });
+      const artifacts = [];
+      for (let index = 0; index < frames.length; index++) {
+        signal.throwIfAborted();
+        artifacts.push(await store(join(work, "frames", `${String(index).padStart(9, "0")}.png`), "image/png"));
+      }
+      result = artifacts;
     }
     signal.throwIfAborted();
 
     changePhase("complete");
     await Promise.all(diagnostics);
     options.onProgress?.({ phase: "complete", frames: frameCount, elapsedMs: Math.round(performance.now() - started) });
-    return sealRenderedVisual({ frameRate: document.frameRate, frameCount, canvas: document.canvas, artifact });
+    return result;
   } catch (error) {
     if (signal.aborted) throw signal.reason;
     controller.abort(error);

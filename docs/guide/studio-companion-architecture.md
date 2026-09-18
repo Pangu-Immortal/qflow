@@ -42,5 +42,5 @@ uses, so the property represents that shared decision. Studio applies the edit t
 Source, recompiles the same Run, and reports an error with the previous files restored if the edit
 cannot be published.
 
-[Studio Temporal Lineage](./studio-temporal-windows.md) explains how these relationships retain their
+[Timing edits in Studio](./studio-temporal-windows.md) explains how these relationships retain their
 author meaning through projection. [Studio](../quickstart/preview.md) introduces the editing interface.

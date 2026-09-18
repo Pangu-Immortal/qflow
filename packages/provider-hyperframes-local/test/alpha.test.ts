@@ -16,7 +16,8 @@ import { appendMediaItem, appendTimedMediaLayer, createMediaLayerSet, createMedi
   finalizeMediaTrack, projectMediaVisualTrack, sealMediaItemSpec, sealMediaSampleLayerSpec, sealMediaTrackHeader } from "@qflow/media-track";
 import { projectProgramWindow } from "../../../test/temporal-fixture.js";
 import { MemoryResourceStore, ffmpegBytes, normalizeTestVideo, transparentVideoFixture, writeTestArtifact } from "../../../test/alpha-video-fixture.js";
-import { renderHyperframesVisual } from "../src/index.js";
+import sharp from "sharp";
+import { renderHyperframesVisual, renderHyperframesFrames } from "../src/index.js";
 
 test("transparent normalized media composites through both SemanticTake/Timeline and Media Track in Chrome", {
   skip: process.env.QFLOW_BROWSER_TESTS !== "1",
@@ -85,6 +86,16 @@ test("transparent normalized media composites through both SemanticTake/Timeline
       close(pixel(f, left + 4, 4), [20, 60, 220]);
       close(pixel(f, left + 32, 32), [240, 20, 20]);
       close(pixel(f, left + 60, 32), [130, 40, 120]);
+    }
+    const snapshots = await renderHyperframesFrames({ document, frames: [0, 11] }, { resources, workers: 2 });
+    for (const snapshot of snapshots) {
+      const pixels = await sharp((await resources.get(snapshot.resource))!).removeAlpha().raw().toBuffer();
+      const at = (x: number, y: number) => [...pixels.subarray((y * 192 + x) * 3, (y * 192 + x) * 3 + 3)];
+      for (const left of [0, 96]) {
+        close(at(left + 4, 4), [20, 60, 220]);
+        close(at(left + 32, 32), [240, 20, 20]);
+        close(at(left + 60, 32), [130, 40, 120]);
+      }
     }
     close(pixel(0, 18, 32), [240, 20, 20]);
     close(pixel(11, 18, 32), [20, 60, 220]);

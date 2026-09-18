@@ -1,11 +1,21 @@
 # @qflow/provider-hyperframes-local
 
-Trusted local Provider for the `@qflow/render-hyperframes#render-visual` capability. It stages the
+Trusted local Provider for `@qflow/render-hyperframes@1#render-visual` and `#render-frames`. It stages the
 Resource dependencies declared by a `HyperframesDocument`, renders a silent MP4 with the
 HyperFrames engine, probes the bytes, and returns a verified `RenderedVisual`. Before capturing a typed
 Surface it decodes the exact bytes and checks declared dimensions, still/frame timing, SDR/sRGB and
 opaque/straight-alpha facts. These checks validate the typed rendering input; they do not create
 content identity or hidden output metadata.
+
+`render-frames` uses the same staging, source-frame mapping, readiness and opaque PNG capture as
+video export, returning the PNGs before encoding. It accepts a compiled document or a materialized
+HTML project. For selected frames it merges only their required source-frame windows; continuous
+windows decode sequentially. A complete batch shares one staged project and browser lifetime.
+The existing browser selection, explicit preparation, worker settings and cancellation apply.
+`maxRenderedBytes` bounds the total returned PNG bytes, or the encoded MP4 for a video request.
+`render-frames` has its own capability binding; it does not inherit a `render-visual` binding.
+For immediate CLI invocation, the host calls the handler directly: Build admission reservations do
+not coordinate separate CLI processes. Worker limits still bound browsers inside each invocation.
 
 Normalized transparent videos displayed by Media or project components use the ordinary video path.
 The engine decodes them to PNG frames with alpha, then Chrome blends them with lower layers and
@@ -73,8 +83,7 @@ an opaque session and chooses PNG separately at capture. It does not patch engin
 The Runtime Adapter declares one managed browser program. Prepare it explicitly:
 
 ```sh
-qflow programs up --runtime ./qflow.runtime.json --endpoint hyperframes.local
-qflow doctor --runtime ./qflow.runtime.json
+qflow programs prepare --runtime ./qflow.runtime.json --endpoint hyperframes.local
 ```
 
 Use the instance name from the Profile. `runtime up` also prepares it and starts the Runtime Worker.
@@ -110,17 +119,20 @@ receipt is stored. To install into an empty location, explicitly choose `browser
 
 `config.chromePath` selects a user-managed Chrome/Chromium executable. It cannot be combined with
 `browserVersion` or `browserDownloadBaseUrl`; invalid combinations fail instead of assigning precedence. Relative paths resolve
-from the Runtime Profile root. This mode never downloads or repairs a browser. Its version remains
+from the Runtime data root, as does `browserCacheDirectory`. The Profile's `dataRoot` itself resolves
+relative to the Profile file. This mode never downloads or repairs a browser. Its version remains
 under the user's control, including system-browser auto-updates. `HYPERFRAMES_BROWSER_PATH` and
 `PRODUCER_HEADLESS_SHELL_PATH` do not select browsers in this Provider; configure `chromePath`.
 On platforms without a supported managed download, explicitly select an installed browser.
 
 `doctor` displays the selected path and its source, and only inspects it. Build preflight, rendering
-and previews never install a browser. `programs up` / `runtime up` display the selected managed
+and previews never install a browser. `programs prepare`, `programs up` and `runtime up` display the selected managed
 version, installation location and download URL before running preparation. The probe runs `--version` and checks
 FFmpeg/FFprobe; it does not promise GPU or page compatibility. Capture receives that same selected
-path as the engine's `chromePath`, including its GPU probe. Active Workers keep their loaded package
-recommendation; restart them explicitly after changing Profile or package dependencies.
+path as the engine's `chromePath`, including its GPU probe. New Builds read current Endpoint
+configuration and project implementation; active Builds keep their selected configuration. A
+Distribution update or change to the Worker's inherited environment requires an explicit Worker
+restart when active work permits. Ordinary Profile edits do not require restarting every process.
 
 The Provider's `qflow.dependencyInstallEnv` disables Puppeteer's browser download while preparing its
 engine/producer npm dependencies. The repository `.puppeteerrc.cjs` does the same for checkout installs.

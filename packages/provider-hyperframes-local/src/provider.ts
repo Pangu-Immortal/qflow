@@ -1,8 +1,8 @@
 import { defineEndpointPackage } from "@qflow/endpoint-kit";
 import { mediaTypes } from "@qflow/media";
-import { renderHyperframesCapabilities, verifyHyperframesVisualRequest } from "@qflow/render-hyperframes";
+import { renderHyperframesCapabilities, renderHyperframesTypes, verifyHyperframesFramesRequest, hyperframesFramesDomain, verifyHyperframesVisualRequest } from "@qflow/render-hyperframes";
 import { canonicalize } from "@qflow/protocol";
-import { renderHyperframesVisual, resolveExecutionOptions, renderWorkerLimit } from "./render.js";
+import { renderHyperframesVisual, renderHyperframesFrames, resolveExecutionOptions, renderWorkerLimit } from "./render.js";
 import type { HyperframesExecutionOptions } from "./options.js";
 import { renderProgressReporter } from "./progress.js";
 
@@ -66,6 +66,33 @@ export function createLocalHyperframesProvider(config: CreateLocalHyperframesPro
         } finally {
           await progress.flush();
         }
+      },
+    }, {
+      lifecycle: "immediate" as const,
+      capability: renderHyperframesCapabilities.renderFrames,
+      returns: renderHyperframesTypes.frames,
+      ...(config.browserCapacity === undefined ? {} : {
+        resources: [{ id: browsers, limit: config.browserCapacity }],
+        unitsForRequest: (request: import("@qflow/endpoint-kit").EndpointRequest) => {
+          verifyHyperframesFramesRequest(request.constraints);
+          const document = hyperframesFramesDomain(request.constraints);
+          return { [browsers]: renderWorkerLimit(reserved, request.constraints.frames.length,
+            document.frameRate.numerator / document.frameRate.denominator) };
+        },
+      }),
+      handler: async context => {
+        const request = context.need.constraints;
+        verifyHyperframesFramesRequest(request);
+        const progress = renderProgressReporter(context.reportProgress, request.frames.length);
+        try {
+          const frames = await renderHyperframesFrames(request, { ...config,
+            ...(execution.chromePath === undefined ? { browserVersion: execution.browserVersion! } : { chromePath: execution.chromePath }),
+            browserCacheDirectory: execution.browserCacheDirectory,
+            workers: execution.workers, maxWorkers,
+            resources: context.resources, onProgress: progress.onProgress,
+            ...(context.reportDiagnostic === undefined ? {} : { onDiagnostic: context.reportDiagnostic }) });
+          return { value: { kind: "inline", value: canonicalize(frames) } };
+        } finally { await progress.flush(); }
       },
     }],
   });

@@ -4,6 +4,7 @@ import type { CliIo } from "@qflow/cli";
 import { creationCommands, isCreationCommand, writeCreationHelp } from "./creation.js";
 import { isMediaCommand, mediaCommands, writeMediaHelp } from "./media.js";
 import { writeVocabularyHelp } from "./vocabulary.js";
+import { writeSnapshotHelp } from "./snapshot.js";
 import { writeCaptureHelp } from "./capture.js";
 import { runVersionCli, writeVersionHelp } from "./version.js";
 import { acceptSecretBytes } from "./secret-input.js";
@@ -66,6 +67,7 @@ async function main(): Promise<void> {
     const topic = argv[0] === "help" ? argv[1]
       : argv[0] === "--help" ? undefined
       : argv.includes("--help") ? argv[0] : undefined;
+    if (topic === "snapshot") { writeSnapshotHelp(io); return; }
     if (topic === "version") { writeVersionHelp(io); return; }
     if (isCreationCommand(topic)) {
       writeCreationHelp(io, topic);
@@ -87,7 +89,7 @@ async function main(): Promise<void> {
     writeCliHelp(io, topic);
     if (topic === undefined) {
       io.write(`\nInstallation\n  version [--check] [--registry <url>] [--json]\n\nCreation tools (one request through the selected Runtime Profile, no Build)\n${
-        creationCommands.map((item) => `  ${item}`).join("\n")}\n  qflow help <tool> for each\n`
+        [...creationCommands, "snapshot"].map((item) => `  ${item}`).join("\n")}\n  qflow help <tool> for each\n`
         + `\nStudio\n  studio --run <build.svrun>\n  qflow studio --help for session options\n\nPreparation (local tools and project files)\n  media ${mediaCommands.join(" | ")}\n  capture screenshot | run | install-browser\n  vocabulary\n  qflow help media, qflow help capture, qflow help vocabulary\n`);
     }
     return;

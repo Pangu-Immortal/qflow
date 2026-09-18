@@ -41,7 +41,7 @@ Segment 是按顺序排列的语音内容块。标签名**即**其 id——在�
 
 - Segment 可以是自闭合标签（`<pause/>`）。空的 Segment 拥有结构但没有语音词元；它并不意味着静音或任何默认时长。
 - Segment 不能嵌套——每个 Segment 都是 `<script>` 的顶层子元素。
-- Segment 名称遵循 XML 命名规则：字母、数字、连字符、下划线。
+- Segment 名称符合 `[a-z][a-z0-9_-]{0,63}`；`script` 是保留名称。
 
 其他组件通过 `{story.segment.opening}` 引用单个 Segment，通过 `{story.segment.opening.dialogue}` 或 `{story.segment.opening.speech}` 引用其文本投影。
 
@@ -114,7 +114,7 @@ Cue 的切换。这同样适用于其他语言的短语或名字，例如 `<Git 
 
 这时左侧同时提供口播，因此标记也可以放在左侧，Studio 会回写到实际文字上：
 `<组@{beat!}件化|>`。标记和显示属性不会成为口播内容。若明确写了右侧口播，标记仍然属于
-右侧。两侧都没有口播文字时无效。
+右侧。明确或共享的口播都必须包含可说出的词；`<API|...>` 只有标点，无法建立时间对应，因此无效。
 
 `||` 是 **Caption Cue Break** 语法，只能位于完整对齐单元之间，不能写进 Dual Text 或切开
 N:M 单元。字幕稍后才把 CaptionDocument 与 Timeline 汇合得到帧时间。
@@ -137,9 +137,9 @@ N:M 单元。字幕稍后才把 CaptionDocument 与 Timeline 汇合得到帧时�
 <line><HOST>This is really{emphasis,keyword} important{brand}.</line>
 ```
 
-不写 `=` 的属性值默认为 `true`，也可以写成 `name=value`。Caption 包负责把属性名映射为
-局部词样式；Selection 仍然负责整段 Alignment Unit 的基础样式。属性不能切开或包住 Dual
-对齐单元。
+不写 `=` 的属性值默认为 `true`，也可以写成 `name=value`。Caption 家族决定这些显示词属性
+如何影响表现。带时间范围的 Use 选择字幕 Style；属性不会切开、包裹或改变 Dual
+对齐单元的时间。
 
 ### CaptionDocument 的组成
 
@@ -201,7 +201,7 @@ Selection 不要求像 XML 标签那样嵌套，它们可以互相交叉：
 
 ```svml
 <demo>
-  <HOST> @{a} One @{b} two @{/a} three @{/b}.
+  <HOST> @{a}One @{b}two@{/a} three.@{/b}
 </demo>
 ```
 
@@ -274,7 +274,7 @@ Moment 是具名的时间**点**（不是范围）：
   </meeting>
 
   <evidence>
-    <HOST> That gave me @{emphasis} the courage I was missing @{/emphasis}.
+    <HOST> That gave me @{emphasis}the courage I was missing.@{/emphasis}
   </evidence>
 
   <payoff>

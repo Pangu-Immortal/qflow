@@ -59,6 +59,6 @@ Source 编辑修改所选 `.svml`、`.svs` 或 `.svrun` 文件。支持的 Inspe
 
 预览播放包含 Film 选中的 AudioTrack，例如口播、音乐与音效。导出视频的音频由渲染的媒体管线装配。作品准备好交付后，运行导出 Build 得到编码后的成片；Studio 与 Comments 仍可用于查看可编辑作品、沟通后续修改。
 
-组件作者可以阅读 [Studio 时间谱系](../guide/studio-temporal-windows.md) 了解语义编辑，以及 [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-adapter/README.md) 了解如何公开组件实体和控件。
+组件作者可以阅读 [Studio 中的时间编辑](../guide/studio-temporal-windows.md) 了解语义编辑，以及 [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-adapter/README.md) 了解如何公开组件实体和控件。
 
 需要其他界面语言时，可以通过 `--locale-pack ./language.json` 加载本地 JSON 译文。[本地化指南](https://github.com/qflow-ai/qflow/blob/main/packages/studio/LOCALIZATION.md) 介绍译文格式、缺项检查和语言包分享方法。

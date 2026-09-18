@@ -12,6 +12,7 @@ import { videoCliDistribution } from "./distribution.js";
 import { runMediaCli } from "./media.js";
 import { runVocabularyCli } from "./vocabulary.js";
 import { runCaptureCli } from "./capture.js";
+import { runSnapshotCli } from "./snapshot.js";
 import { runVersionCli } from "./version.js";
 
 export {
@@ -42,6 +43,7 @@ export function runVideoCli(
     : [videoCliDistribution.packageRoot]);
   installExternalPackageResolution([qflowHostPackageRoot()]);
   if (isCreationCommand(argv[0])) return runCreationCli(argv, io);
+  if (argv[0] === "snapshot") return runSnapshotCli(argv, io);
   if (argv[0] === "media") return runMediaCli(argv, io);
   if (argv[0] === "capture") return runCaptureCli(argv, io);
   if (argv[0] === "vocabulary") return runVocabularyCli(argv, io);
@@ -50,3 +52,5 @@ export function runVideoCli(
     bootstrapPackages: packages,
   });
 }
+
+export { runSnapshotCli, writeSnapshotHelp } from "./snapshot.js";

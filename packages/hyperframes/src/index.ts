@@ -11,3 +11,5 @@ export {
 export type * from "./types.js";
 export { browserProgram, BROWSER_PROGRAM_FORMAT } from "./browser-program.js";
 export type { BrowserProgram } from "./browser-program.js";
+export { assertHyperframesHtmlProject, hyperframesHtmlDomain, hyperframesHtmlAssetUrls, mapHyperframesHtmlUrls } from "./html-project.js";
+export type { HyperframesHtmlProject } from "./html-project.js";

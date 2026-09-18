@@ -51,9 +51,10 @@ export function sourceFrameAt(slot: VideoSlot, frame: number): number {
   return value;
 }
 
-export function sourceWindows(slots: readonly VideoSlot[], range: MediaFrameRange) {
+export function sourceWindows(slots: readonly VideoSlot[], selection: MediaFrameRange | readonly MediaFrameRange[]) {
+  const ranges: readonly MediaFrameRange[] = Array.isArray(selection) ? selection : [selection as MediaFrameRange];
   const sources = new Map<string, { fps: VideoSlot["sourceFps"]; windows: MediaFrameRange[] }>();
-  for (const slot of slots) {
+  for (const range of ranges) for (const slot of slots) {
     const first = Math.max(range.startFrame, slot.startFrame);
     const last = Math.min(range.endFrameExclusive, slot.endFrameExclusive) - 1;
     if (last < first) continue;

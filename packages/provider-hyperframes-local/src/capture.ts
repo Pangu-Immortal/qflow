@@ -11,7 +11,8 @@ import { CaptureConcurrency } from "./concurrency.js";
 import { createOpaqueFrameCapture } from "./opaque-capture.js";
 
 export type CaptureInput = {
-  readonly document: HyperframesDocument;
+  readonly document: Pick<HyperframesDocument, "frameRate" | "frameCount" | "canvas">;
+  readonly frames?: readonly number[];
   readonly range: MediaFrameRange;
   readonly config: ReturnType<typeof resolveExecutionOptions> & { readonly chromePath: string };
   readonly directory: string;
@@ -24,14 +25,16 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
   onProgress: (event: HyperframesRenderProgress) => void): Promise<string> {
   const { document, range, config, directory: work } = input;
   const signal = controller.signal;
-  const frameCount = range.endFrameExclusive - range.startFrame;
+  const frameCount = input.frames?.length ?? range.endFrameExclusive - range.startFrame;
+  const selected = input.frames === undefined ? undefined : new Set(input.frames);
+  const at = (index: number) => input.frames?.[index] ?? range.startFrame + index;
   const fps = { num: document.frameRate.numerator, den: document.frameRate.denominator };
   const limit = renderWorkerLimit(config, frameCount, fps.num / fps.den);
   const concurrency = new CaptureConcurrency(limit, config.workers === "auto");
   // Short contiguous batches retain sequential capture while allowing free browsers
   // to help with expensive passages. This queue exists only inside this render.
   const batchCount = Math.max(limit, Math.ceil(frameCount / Math.max(1, Math.round(fps.num / fps.den))));
-  const batches = distributeFrameRange(range, batchCount);
+  const batches = distributeFrameRange({ startFrame: 0, endFrameExclusive: frameCount }, batchCount);
   let nextBatch = 0;
   const started = performance.now();
   const elapsedMs = () => Math.round(performance.now() - started);
@@ -81,7 +84,8 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
     const sources = new Map<string, { frames: Map<number, string>; width: number; height: number }>();
     let sourceFrames = 0;
     // One source at a time bounds decoder pressure independently of browser concurrency.
-    const windows = sourceWindows(slots, range);
+    const windows = sourceWindows(slots, input.frames === undefined ? [range]
+      : input.frames.map(frame => ({ startFrame: frame, endFrameExclusive: frame + 1 })));
     const sourceTotal = windows.reduce((sum, source) => sum + source.windows.reduce((count, window) =>
       count + window.endFrameExclusive - window.startFrame, 0), 0);
     if (sourceTotal > 0) onProgress({ phase: "decoding", completed: 0, total: sourceTotal, elapsedMs: elapsedMs() });
@@ -119,7 +123,7 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
           const frameIndex = sourceFrameAt(slot, frame);
           const framePath = sources.get(slot.src)?.frames.get(frameIndex);
           // Browser initialization may seek outside the requested interval.
-          if (frame < range.startFrame || frame >= range.endFrameExclusive) continue;
+          if (selected === undefined ? frame < range.startFrame || frame >= range.endFrameExclusive : !selected.has(frame)) continue;
           assert(framePath !== undefined, `HyperFrames has no decoded frame ${frameIndex} for ${slot.id}`);
           payloads.set(slot.id, { framePath, frameIndex });
         }
@@ -132,7 +136,7 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
     await mkdir(outputFrames);
     onProgress?.({ phase: "prepared", workers: concurrency.target, sourceFrames, elapsedMs: elapsedMs() });
     const jobs: Promise<void>[] = [];
-    let active = 0, open = 0, initializing = 0, capturedFrames = 0;
+    let active = 0, open = 0, initializing = 0, capturedFrames = 0, capturedBytes = 0;
     let startupMs = 0;
     const launch = (): void => {
       const worker = jobs.length;
@@ -187,13 +191,18 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
           if (active > concurrency.target) break;
           const batch = batches[nextBatch++];
           if (batch === undefined) break;
-          for (let frame = batch.startFrame; frame < batch.endFrameExclusive; frame++) {
+          for (let index = batch.startFrame; index < batch.endFrameExclusive; index++) {
+            const frame = at(index);
             signal.throwIfAborted();
             const captured = await stage(`worker ${worker} frame ${frame}`, config.frameTimeoutMs, () => captureFrame(frame));
+            if (input.frames !== undefined) {
+              capturedBytes += captured.buffer.byteLength;
+              assert(capturedBytes <= config.maxRenderedBytes, "HyperFrames PNG output exceeds its byte limit");
+            }
             timing.seekMs += captured.seekMs;
             timing.prepareMs += captured.prepareMs;
             timing.screenshotMs += captured.screenshotMs;
-            await writeFile(join(outputFrames, `${String(frame - range.startFrame).padStart(9, "0")}.png`), captured.buffer);
+            await writeFile(join(outputFrames, `${String(index).padStart(9, "0")}.png`), captured.buffer);
             completed++;
             capturedFrames++;
             if (performance.now() - lastProgressAt >= 1_000) {
@@ -239,6 +248,7 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
     if (failure !== undefined) throw failure;
     signal.throwIfAborted();
     await Promise.all(closing.values());
+    if (input.frames !== undefined) return outputFrames;
     const output = join(work, "visual.mp4");
     onProgress({ phase: "encoding", elapsedMs: elapsedMs() });
     const crf = { draft: 28, standard: 23, high: 18 }[config.quality];

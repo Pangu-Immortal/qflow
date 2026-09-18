@@ -12,6 +12,7 @@ import type {
   CapabilityRef,
   ModuleManifest,
   ProducerRef,
+  TypeRef,
 } from "@qflow/protocol";
 import {
   mediaPipelineModuleRef,
@@ -20,7 +21,11 @@ import {
 export const renderHyperframesModuleRef = { name: "@qflow/render-hyperframes", version: "1" } as const;
 export const renderHyperframesCapabilities = {
   renderVisual: { module: renderHyperframesModuleRef, name: "render-visual" },
+  renderFrames: { module: renderHyperframesModuleRef, name: "render-frames" },
 } satisfies Record<string, CapabilityRef>;
+export const renderHyperframesTypes = {
+  frames: { module: renderHyperframesModuleRef, name: "Frames" },
+} satisfies Record<string, TypeRef>;
 export const renderHyperframesProducers = {
   requestVisualRange: { module: renderHyperframesModuleRef, name: "request-visual-range" },
   requestVisual: { module: renderHyperframesModuleRef, name: "request-visual-render" },
@@ -70,11 +75,11 @@ export const renderHyperframesManifest: ModuleManifest = {
     { module: hyperframesModuleRef },
     { module: mediaPipelineModuleRef },
   ],
-  types: [],
+  types: [{ name: renderHyperframesTypes.frames.name }],
   capabilities: [{
     name: renderHyperframesCapabilities.renderVisual.name,
     returns: mediaTypes.renderedVisual,
-  }],
+  }, { name: renderHyperframesCapabilities.renderFrames.name, returns: renderHyperframesTypes.frames }],
   producers: [
     {
       name: renderHyperframesProducers.requestVisual.name,

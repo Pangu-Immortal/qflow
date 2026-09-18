@@ -12,6 +12,7 @@ import {
   scriptManifest,
   scriptMarkupSurfaces,
   scriptModuleRef,
+  parseScript,
 } from "@qflow/script";
 import {
   MarkupFrontendError,
@@ -34,6 +35,14 @@ function scriptContext() {
     resolveModule: () => scriptModuleRef,
   } as const;
 }
+
+test("Script's raw boundary scanner respects escapes before comments and closing tags", async () => {
+  const body = String.raw`<line>Show \<!-- and \</script> literally. \\<!-- </script> is a comment --> Done.</line>`;
+  const source = `<svml><import from="@qflow/script@1"/><script id="story">${body}</script></svml>`;
+  const result = await decodeMarkup({ name: "escapes.svml", text: source }, scriptContext());
+  const speech = result.records.find(record => record.id === "story.segment.line.speech")!;
+  assert.deepEqual(speech.value, { kind: "inline", value: { value: parseScript("body", body).serializations.speech } });
+});
 
 test("Script teaches Markup <script> only through its imported Manifest", async () => {
   const result = await decodeMarkup(

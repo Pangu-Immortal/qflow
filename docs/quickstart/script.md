@@ -46,7 +46,7 @@ a Script.
 - A Segment can be self-closing (`<pause/>`). An empty Segment has structure but no speech tokens; it
   does not imply silence or any default duration.
 - Segments cannot nest — every Segment is a top-level child of `<script>`.
-- Segment names follow XML naming rules: letters, digits, hyphens, underscores.
+- Segment names match `[a-z][a-z0-9_-]{0,63}`; `script` is reserved.
 
 Other components reference individual Segments via `{story.segment.opening}` and their text
 projections via `{story.segment.opening.dialogue}` or `{story.segment.opening.speech}`.
@@ -123,7 +123,8 @@ in other languages too, such as `<Git Hub|>`.
 
 Here the left side also supplies speech, so markers can be written and moved there:
 `<组@{beat!}件化|>`. Markers and display attributes never become spoken text. An explicit spoken side
-still owns its own markers. Both sides empty is invalid.
+still owns its own markers. The explicit or shared speech must contain a spoken word; a form such
+as `<API|...>` supplies no timed correspondence and is invalid.
 
 `||` is the **Caption Cue Break** syntax. It records a boundary between complete Alignment Units;
 it cannot appear inside Dual Text or split an N:M unit. Cue timing is still obtained later by
@@ -150,8 +151,8 @@ timing meaning:
 ```
 
 An entry without `=` has the value `true`; scalar values may be written as `name=value`. Caption
-maps attribute names to local word Styles, while a Selection still supplies the surrounding Unit
-Style. Attributes cannot split or wrap a Dual Alignment Unit.
+families interpret these attributes as roles for displayed words. Timed Uses select the surrounding
+Caption Style; attributes do not split, wrap or retime a Dual Alignment Unit.
 
 ### CaptionDocument vocabulary
 
@@ -216,7 +217,7 @@ Selections are not required to nest like XML tags. They can cross each other:
 
 ```svml
 <demo>
-  <HOST> @{a} One @{b} two @{/a} three @{/b}.
+  <HOST> @{a}One @{b}two@{/a} three.@{/b}
 </demo>
 ```
 
@@ -289,7 +290,7 @@ A complete Script using all constructs together:
   </meeting>
 
   <evidence>
-    <HOST> That gave me @{emphasis} the courage I was missing @{/emphasis}.
+    <HOST> That gave me @{emphasis}the courage I was missing.@{/emphasis}
   </evidence>
 
   <payoff>

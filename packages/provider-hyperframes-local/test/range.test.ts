@@ -12,7 +12,8 @@ import { EndpointRegistry, MemoryResourceStore } from "@qflow/driver-node";
 import { compileHyperframesDocument } from "@qflow/hyperframes";
 import { sealProgramSpace } from "@qflow/program-space";
 import type { BlobRef } from "@qflow/protocol";
-import { renderHyperframesVisual } from "../src/index.js";
+import sharp from "sharp";
+import { renderHyperframesVisual, renderHyperframesFrames } from "../src/index.js";
 import { resolveExecutionOptions } from "../src/render.js";
 import { qflowPackage } from "../src/activation.js";
 import type { RuntimeEndpointAdapterImplementation } from "@qflow/runtime-kit";
@@ -141,6 +142,11 @@ test("real selected renders sample video correctly across loop, hold and stretch
       }
     }
     for (let channel = 0; channel < 3; channel++) assert.ok(Math.abs(one[center + channel]! - colors[3]![channel]!) < 12);
+    const snapshots = await renderHyperframesFrames({ document, frames: [3, 7, 8, 11] }, { resources, workers: 2 });
+    for (const [index, source] of [1, 3, 0, 1].entries()) {
+      const pixels = await sharp((await resources.get(snapshots[index]!.resource))!).removeAlpha().raw().toBuffer();
+      for (let channel = 0; channel < 3; channel++) assert.ok(Math.abs(pixels[center + channel]! - colors[source]![channel]!) < 12);
+    }
     await assert.rejects(renderHyperframesVisual({ document, range: { startFrame: 7, endFrameExclusive: 8 } },
       { resources, workers: 2, initializationTimeoutMs: 1, processTimeoutMs: 30_000 }), /worker 0 initialization timed out/);
     assert.equal((await render("after-timeout", { startFrame: 7, endFrameExclusive: 8 }, 1)).length, stride);

@@ -9,7 +9,7 @@ import type { ServedFile } from "./compile.js";
 import type { StudioDomain } from "./domain.js";
 import type { Observations } from "./observe.js";
 import { preview } from "./programme.js";
-import { renderPreview } from "./preview/render.js";
+import { renderStudioProgramme } from "./preview/render.js";
 import type { RunPlan } from "./run.js";
 import type { StudioSnapshot } from "./shared.js";
 import type { StudioCompanionRegistry } from "./studio-registry.js";
@@ -47,6 +47,8 @@ function sourceFiles(run: RunPlan): readonly StudioSourceFile[] {
 
 export type StudioSession = {
   readonly snapshot: StudioSnapshot;
+  readonly document: import("@qflow/hyperframes").HyperframesDocument;
+  readonly visualHtml: string;
   readonly material: ReadonlyMap<string, ServedFile>;
   readonly observations: Observations;
   readonly projections: readonly StudioViewRequirement[];
@@ -77,7 +79,7 @@ export async function readStudioSession(input: {
     projections: inspection.projections,
     ...(input.transientExecution === undefined ? {} : { transientExecution: input.transientExecution }),
   });
-  const rendered = renderPreview({
+  const rendered = renderStudioProgramme({
     composition: built.composition,
     space: built.space as never,
     served: new Set(built.served.keys()),
@@ -85,6 +87,8 @@ export async function readStudioSession(input: {
   const text = readFileSync(input.run.authorSource, "utf8");
   const files = sourceFiles(input.run);
   return {
+    document: rendered.document,
+    visualHtml: rendered.html,
     snapshot: snapshot(input.registry, built, {
       revision: input.revision,
       path: input.sourcePath ?? input.run.authorSource,
@@ -99,7 +103,7 @@ export async function readStudioSession(input: {
       },
       canvas: built.canvas,
       frameRate: built.frameRate,
-      preview: { kind: "hyperframes", srcdoc: rendered },
+      preview: { kind: "hyperframes", srcdoc: rendered.preview },
       workspaceRoot: input.workspaceRoot,
       sourceFiles: files,
       surfaces: input.domain.surfaces,

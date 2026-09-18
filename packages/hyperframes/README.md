@@ -25,6 +25,13 @@ a Provider can verify and name staged bytes without guessing from the hash. A lo
 render Runtime calls `materializeHyperframesHtml()` with its own Artifact URL resolver before
 handing the HTML to HyperFrames. That environment-specific materialization is not a new compiled
 Record and does not change the compiled document.
+
+For observation of already materialized HTML, `HyperframesHtmlProject` carries the HTML and the
+BlobRefs addressed by its media/font URLs. `hyperframesHtmlDomain` reads the compiler's exact root
+frame clock and canvas; `stageHyperframesHtmlProject` stages those resources. This input does not
+reconstruct a Composition or invent typed Surface facts from HTML. A caller with the original
+`HyperframesDocument`, such as Studio, should pass that document to preserve all declared dependencies,
+including resources embedded in browser-program data. The document remains the complete typed input.
 Staging assigns short local filenames; opaque Resource IDs are never interpreted as filesystem
 paths or filenames, so their length and punctuation do not restrict the host filesystem.
 `stageHyperframesProject` streams each asset into its staged file. Its `validateSurface(surface, path,

@@ -8,7 +8,7 @@ import sharp from "sharp";
 
 import type { CliIo } from "@qflow/cli";
 
-import { probeMedia, runMediaCli, tileFrameCount, tileSampleTimes, visualBoundaries } from "../src/media.js";
+import { cutFrame, probeMedia, runMediaCli, tileFrameCount, tileSampleTimes, visualBoundaries } from "../src/media.js";
 
 const ffmpeg = spawnSync("ffmpeg", ["-version"], { stdio: "ignore" }).status === 0
   && spawnSync("ffprobe", ["-version"], { stdio: "ignore" }).status === 0;
@@ -49,11 +49,12 @@ test("tile frame counts follow the measured bounds", () => {
   assert.deepEqual(tileSampleTimes(1, 2, 4), [1.125, 1.375, 1.625, 1.875]);
 });
 
-test("media help names every command and no state", () => {
+test("media help names the available commands and both cut forms", () => {
   const out = io();
   runMediaCli(["media"], out.io);
   for (const name of ["probe", "cut", "frames", "tile", "tiles", "boundaries", "fetch"]) assert.match(out.text(), new RegExp(`qflow media ${name}`));
-  assert.match(out.text(), /no state/);
+  assert.match(out.text(), /--start <s> --end <s> \| --keep <start:end>/);
+  assert.match(out.text(), /--label-time/);
 });
 
 test("media evidence keeps source times and sub-second visual changes", { skip: !ffmpeg && "ffmpeg is not installed" }, async () => {
@@ -61,6 +62,8 @@ test("media evidence keeps source times and sub-second visual changes", { skip: 
   try {
     const source = await sample(work);
     const info = await probeMedia(source);
+    assert.equal(info.hasVideo, true);
+    if (!info.hasVideo) throw new Error("sample has no video stream");
     assert.equal(info.width, 320);
     assert.equal(info.height, 240);
     assert.equal(info.hasAudio, false);
@@ -130,6 +133,69 @@ test("media evidence keeps source times and sub-second visual changes", { skip: 
 test("fetch refuses anything but an http link and an explicit video destination", async () => {
   await assert.rejects(runMediaCli(["media", "fetch", "./local.mp4", "--to", "x.mp4"], io().io), /http or https link/);
   await assert.rejects(runMediaCli(["media", "fetch", "https://example.com/v", "--to", "x.txt"], io().io, tmpdir()), /must end in/);
+});
+
+test("cut prepares recorded audio and joined video without changing the existing evidence cut", { skip: !ffmpeg && "ffmpeg is not installed" }, async () => {
+  const work = await mkdtemp(join(tmpdir(), "qflow-recorded-cut-"));
+  try {
+    const silentVideo = await sample(work);
+    const audio = join(work, "source.wav");
+    const tone = spawnSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=4", "-c:a", "pcm_s16le", audio], { encoding: "utf8" });
+    assert.equal(tone.status, 0, tone.stderr);
+    const audioProbe = await probeMedia(audio);
+    assert.equal(audioProbe.hasVideo, false);
+    assert.equal(audioProbe.hasAudio, true);
+    const probe = io();
+    await runMediaCli(["media", "probe", audio], probe.io, work);
+    assert.match(probe.text(), /audio only/);
+
+    const audioCut = io();
+    await runMediaCli(["media", "cut", audio, "--keep", "0.25:1", "--keep", "2.5:3", "--to", "spoken.wav", "--json"], audioCut.io, work);
+    const audioResult = JSON.parse(audioCut.text()) as { spans: { start: number; end: number }[];
+      mapping: { nominalOutputStart: number; nominalOutputEnd: number }[]; actualSeconds: number; hasVideo: boolean; hasAudio: boolean };
+    assert.deepEqual(audioResult.spans, [{ start: 0.25, end: 1 }, { start: 2.5, end: 3 }]);
+    assert.deepEqual(audioResult.mapping.map((item) => [item.nominalOutputStart, item.nominalOutputEnd]), [[0, 0.75], [0.75, 1.25]]);
+    assert.ok(Math.abs(audioResult.actualSeconds - 1.25) < 0.03, `audio duration ${audioResult.actualSeconds}`);
+    assert.equal(audioResult.hasVideo, false);
+    assert.equal(audioResult.hasAudio, true);
+    await runMediaCli(["media", "cut", audio, "--start", "2.5", "--end", "3", "--to", "late.wav"], io().io, work);
+    assert.ok(Math.abs((await probeMedia(join(work, "late.wav"))).duration - 0.5) < 0.03,
+      "a late single interval lands on the requested audio time");
+    await assert.rejects(runMediaCli(["media", "cut", audio, "--start", "0", "--end", "1", "--to", "spoken.wav"], io().io, work), /already exists/);
+    await assert.rejects(runMediaCli(["media", "cut", audio, "--start", "0", "--end", "1", "--label-time", "--to", "labeled.wav"], io().io, work), /needs one video interval/);
+
+    const withAudio = join(work, "source-av.mp4");
+    const mux = spawnSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-i", silentVideo, "-i", audio,
+      "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-shortest", withAudio], { encoding: "utf8" });
+    assert.equal(mux.status, 0, mux.stderr);
+    const videoCut = io();
+    await runMediaCli(["media", "cut", withAudio, "--keep", "0:0.5", "--keep", "1:1.5", "--to", "joined.mp4", "--json"], videoCut.io, work);
+    const joined = await probeMedia(join(work, "joined.mp4"));
+    assert.equal(joined.hasVideo, true);
+    assert.equal(joined.hasAudio, true);
+    assert.ok(Math.abs(joined.duration - 1) < 0.08, `joined duration ${joined.duration}`);
+    const first = join(work, "first.jpg");
+    const second = join(work, "second.jpg");
+    await cutFrame(join(work, "joined.mp4"), 0.2, first);
+    await cutFrame(join(work, "joined.mp4"), 0.7, second);
+    const firstPixel = await sharp(first).extract({ left: 160, top: 120, width: 1, height: 1 }).raw().toBuffer();
+    const secondPixel = await sharp(second).extract({ left: 160, top: 120, width: 1, height: 1 }).raw().toBuffer();
+    assert.ok(firstPixel[0]! > firstPixel[1]! * 2, `first frame should be red: ${firstPixel}`);
+    assert.ok(secondPixel[1]! > secondPixel[0]! * 2, `second frame should be green: ${secondPixel}`);
+
+    await runMediaCli(["media", "cut", withAudio, "--start", "2.1", "--end", "2.8", "--to", "late.mp4"], io().io, work);
+    const lateVideo = await probeMedia(join(work, "late.mp4"));
+    assert.equal(lateVideo.hasAudio, true);
+    assert.ok(Math.abs(lateVideo.duration - 0.7) < 0.08, `late video duration ${lateVideo.duration}`);
+    await runMediaCli(["media", "cut", withAudio, "--start", "0", "--end", "0.5", "--to", "clip.mov"], io().io, work);
+    assert.equal((await probeMedia(join(work, "clip.mov"))).hasAudio, true);
+
+    const silentCut = join(work, "silent-cut.mp4");
+    await runMediaCli(["media", "cut", silentVideo, "--keep", "0:0.5", "--keep", "1:1.5", "--to", silentCut], io().io, work);
+    assert.equal((await probeMedia(silentCut)).hasAudio, false);
+  } finally {
+    await rm(work, { recursive: true, force: true });
+  }
 });
 
 test("word-located grids paginate dense samples without covering the source picture", { skip: !ffmpeg && "ffmpeg is not installed" }, async () => {

@@ -17,6 +17,7 @@ import type {
 } from "@qflow/studio-adapter";
 import { parseSvs } from "@qflow/svs";
 import { parseOpeningTag } from "@qflow/markup";
+import { prepareAuthorSource } from "@qflow/elaborator";
 import { parameterControlForSchema, parameterRecordSchema } from "./parameter-values.js";
 import type { CanonicalValue } from "@qflow/protocol";
 
@@ -132,12 +133,6 @@ function sourceAbsolute(root: string, path: string, base?: string): string {
   return resolve(directory, path);
 }
 
-function svsText(source: string): string {
-  const header = /^\s*<\?svml[\s\S]*?\?>/u.exec(source);
-  if (header === null) return source;
-  return `${header[0].replace(/[^\r\n]/gu, " ")}${source.slice(header[0].length)}`;
-}
-
 function recipeParameters(input: {
   readonly root: string;
   readonly files: readonly StudioSourceFile[];
@@ -176,7 +171,8 @@ function recipeParameters(input: {
   const source = sourceFor(input.root, imported.source, input.files, input.current.path);
   if (source === undefined || source.language !== "svs") return [];
   const recipePath = parts.join(".");
-  const parsed = parseSvs(source.path, svsText(source.text));
+  const prepared = prepareAuthorSource({ id: source.path, name: source.path, text: source.text });
+  const parsed = parseSvs(source.path, prepared.text);
   const recipe = parsed.recipes.find((item) => item.value.path === recipePath);
   if (recipe === undefined) return [];
   return input.recipe.bindings.flatMap((declaration): readonly StudioSourceBinding[] => {

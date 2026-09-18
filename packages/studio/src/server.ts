@@ -81,6 +81,8 @@ class StudioMutationRejected extends Error {}
 
 export function studioPlugin(options: StudioPluginOptions): Plugin {
   let snapshot: StudioSnapshot | undefined;
+  let visualHtml: string | undefined;
+  let visualDocument: import("@qflow/hyperframes").HyperframesDocument | undefined;
   let failure: StudioFailure | undefined;
   let material: ReadonlyMap<string, ServedFile> = new Map();
   let revision = 0;
@@ -159,6 +161,8 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       if (attempt !== requestedRevision) return;
       revision = attempt;
       snapshot = result.snapshot;
+      visualHtml = result.visualHtml;
+      visualDocument = result.document;
       material = result.material;
       failure = undefined;
       if (notify) server?.ws.send({ type: "custom", event: "studio:snapshot", data: snapshot });
@@ -591,6 +595,28 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
         }
         if (request.method !== "GET" && request.method !== "HEAD") {
           next();
+          return;
+        }
+        if (url.pathname === "/__studio/visual.html" || url.pathname === "/__studio/document") {
+          void (async () => {
+            if (timer !== undefined || publishing > 0) {
+              json(response, 409, { error: "Studio is compiling a Source change; capture after the updated preview is ready." });
+              return;
+            }
+            if (snapshot === undefined && failure === undefined) await publish(++requestedRevision);
+            if (failure !== undefined || visualHtml === undefined) {
+              json(response, 500, failure ?? { error: "Studio has no compiled picture." });
+              return;
+            }
+            if (url.pathname === "/__studio/document") {
+              json(response, 200, visualDocument);
+              return;
+            }
+            response.statusCode = 200;
+            response.setHeader("content-type", "text/html; charset=utf-8");
+            response.setHeader("cache-control", "no-store");
+            response.end(request.method === "HEAD" ? undefined : visualHtml);
+          })();
           return;
         }
         if (url.pathname === "/__studio/session") {

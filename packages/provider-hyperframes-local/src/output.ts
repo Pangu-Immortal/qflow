@@ -38,7 +38,7 @@ function outputFrameCount(stream: ProbeStream): number {
 
 export async function verifyOutput(args: {
   readonly path: string;
-  readonly document: HyperframesDocument;
+  readonly document: Pick<HyperframesDocument, "frameRate" | "frameCount" | "canvas">;
   readonly ffprobePath: string;
   readonly timeoutMs: number;
   readonly maxOutputBytes: number;

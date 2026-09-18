@@ -3584,6 +3584,9 @@ importers:
       '@qflow/generation':
         specifier: workspace:*
         version: link:../generation
+      '@qflow/hyperframes':
+        specifier: workspace:*
+        version: link:../hyperframes
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
@@ -3614,6 +3617,12 @@ importers:
       '@qflow/provider-tokendance':
         specifier: workspace:*
         version: link:../provider-tokendance
+      '@qflow/render-hyperframes':
+        specifier: workspace:*
+        version: link:../render-hyperframes
+      '@qflow/resource-store-fs':
+        specifier: workspace:*
+        version: link:../resource-store-fs
       '@qflow/runtime':
         specifier: workspace:*
         version: link:../runtime
