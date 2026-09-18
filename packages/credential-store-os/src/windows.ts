@@ -9,6 +9,19 @@ type WindowsCredentialResult = {
 
 const windowsScript = fileURLToPath(new URL("../runtime/windows-credential.ps1", import.meta.url));
 
+/** PasswordVault password field; OAuth JSON routinely exceeds this. */
+export const windowsLockerPasswordLimit = 512;
+
+export function assertWindowsLockerSecret(secret: string, account: string): void {
+  if (secret.length > windowsLockerPasswordLimit) {
+    throw new Error(
+      `Windows Credential Locker cannot store the ${secret.length}-character secret for ${account}`
+      + ` (PasswordVault limit is ${windowsLockerPasswordLimit} characters).`
+      + " Select @qflow/credential-store-file for OAuth tokens.",
+    );
+  }
+}
+
 /** The OS adapter owns this one child; Node owns its timeout, bounded output and termination. */
 export function windowsCredential(
   operation: "read" | "write" | "delete",
@@ -16,6 +29,7 @@ export function windowsCredential(
   account: string,
   secret?: string,
 ): Promise<WindowsCredentialResult> {
+  if (secret !== undefined) assertWindowsLockerSecret(secret, account);
   return new Promise((resolve, reject) => {
     const child = execFile("powershell.exe", [
       "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
