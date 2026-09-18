@@ -232,6 +232,7 @@
     "@qflow/narrative": "workspace:*",
     "@qflow/performance": "workspace:*",
     "@qflow/performance-studio": "workspace:*",
+    "@qflow/pixverse": "workspace:*",
     "@qflow/program-space": "workspace:*",
     "@qflow/project-context-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
