@@ -196,13 +196,25 @@ function powershellLiteral(value: string): string {
  * as `-e` followed by the first word of the script, and node exits on the syntax error. Given one
  * string it passes that string through as the command line, which is what this builds.
  */
-function windowsCommandLine(args: readonly string[]): string {
+export function windowsCommandLine(args: readonly string[]): string {
   return args.map((value) => {
     if (value !== "" && !/[\s"]/u.test(value)) return value;
     // A quote is escaped by the backslashes before it, so those double; a trailing run doubles too,
     // because the closing quote would otherwise escape itself against them.
-    const escaped = value.replace(/(\\*)"/gu, '$1$1\\"').replace(/(\\*)$/u, "$1$1");
-    return `"${escaped}"`;
+    let escaped = '"';
+    let backslashes = 0;
+    for (const character of value) {
+      if (character === "\\") {
+        backslashes++;
+      } else if (character === '"') {
+        escaped += "\\".repeat(backslashes * 2 + 1) + '"';
+        backslashes = 0;
+      } else {
+        escaped += "\\".repeat(backslashes) + character;
+        backslashes = 0;
+      }
+    }
+    return escaped + "\\".repeat(backslashes * 2) + '"';
   }).join(" ");
 }
 

@@ -91,16 +91,19 @@ torch caches and their environment settings. Changing a running service's cache 
 an explicit restart when idle, just like changing its model or hardware. The managed installation
 does not require a global `whisperx` shell command.
 
-Preparation and service processes inherit the environment of the command starting them. Set
-network and cache variables there before `programs up` or `runtime up`. A service already running
-retains its earlier environment. Inspect its reported log before deciding whether a selected
-Program needs restarting, and account for active work using it.
+Preparation and service processes inherit the environment of the command starting them. Set download
+route variables on `programs prepare` (or the preparation performed by `programs up` / `runtime up`).
+Changing only a download source does not require restarting a running service using the same cache.
+Cache settings must select the same resource location for preparation and the service. A running
+service retains its earlier environment; arrange an idle restart when changing that location or its
+inference settings. Inspect its reported configuration and logs, and account for active work.
 
 If NLTK refuses a proxied fetch during preparation, follow the service’s
 [explicit proxy preparation](../../services/whisperx/README.md#preparing-sentence-data-through-a-proxy).
 
 Preparation commands write `install.log`; the running service writes `program.log`, with stderr in
-`program.err.log` on Windows. Inspect the stderr file for Python model-loading and download messages.
+`program.err.log` on Windows. Inspect service logs for Python model-loading and inference messages;
+download messages belong to preparation's `install.log`.
 `programs status` reports these files as `installationLogPath`, `logPath` and `errorLogPath` when they
 exist, even before installation finishes. Preparation notices name the Python environment and selected model/language resources separately. The service logs the start and completion of ASR loading, transcription,
 language-alignment model loading and alignment, with elapsed times. Downloads happen only in

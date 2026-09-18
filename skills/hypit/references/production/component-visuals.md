@@ -40,7 +40,9 @@ visual relationships rather than the nesting of tags in Source.
 [visuals.ts](examples/visuals.ts) contains `renderCard`, a complete pure drawing function using
 `sealVisualTrack` from `@qflow/qflow/composition`. It receives a projected span and a resolved Frame,
 draws a colored box with exact-font text, and optionally fades in relative to the Present's start.
-Its colors, size, padding, layer and entrance duration are supplied by the caller.
+Its colors, size, padding, layer and entrance duration are supplied by the caller. These drawing-function
+arguments need not all become Surface parameters: the owning component can supply its fixed design
+and expose only the inputs the production needs.
 
 The root uses Canvas coordinates. The text child uses the root's local coordinates, so padding is
 added once. When a component computes child geometry in Canvas space, subtract the parent's origin
@@ -126,11 +128,18 @@ video sampling and font handling while participating in the program's HTML layou
 used by the program belong in its `artifacts` list; `hyperframesResourceUri` supplies their resource
 URLs. The rendering environment materializes those references.
 
-For a semantic performance, `projectTimelineMedia(semantic, window.span)` from
+For a placed performance, `projectTimelineMedia(timeline, window.span)` from
 `@qflow/qflow/timeline` returns each intersecting Take's prepared media, program span and source
-span. Subtract the outer Window's start to obtain Present-local video sampling intervals. Preserve
+span. Subtract the containing Present's start to obtain Present-local video sampling intervals
+(when that Present uses the outer Window as its span, subtract the Window start). Preserve
 the returned source offset: moving or reframing a video changes its presentation while playback
 continues from the same place. A separate Sound presentation can continue the existing audio in Film.
+
+Project each independently meaningful event before rendering. Convert its program frame to the
+containing Present's local frame once, then animate relative to that event. Keep source sampling
+based on the returned source span; neither the event's local offset nor the viewport's movement
+replaces it. [Component design](component-design.md#let-meaning-drive-the-behavior) distinguishes these
+inputs from internal motion details.
 
 A reusable scene might expose `during={story.selection.explanation}` for its lifetime and
 `reveal={story.moment.demonstrate}` for its layout change. The Surface projects these independently;

@@ -17,6 +17,15 @@ test("Source Header explicitly selects one Frontend and masking preserves offset
   assert.equal(masked.slice(0, header.end).trim(), "");
 });
 
+test("Header masking preserves UTF-16 offsets for a non-BMP Frontend request", () => {
+  const text = '<?svml using="project.𠮷@1"?>\r\n<body/>\r\n';
+  const header = parseSourceHeader("project.svml", text);
+  const masked = maskSourceHeader(text, header);
+  assert.equal(masked.length, text.length);
+  assert.equal(masked.slice(header.end), '\r\n<body/>\r\n');
+  assert.equal(masked.indexOf('<body/>'), text.indexOf('<body/>'));
+});
+
 test("Source Header accepts a UTF-8 BOM but no implicit or duplicate Frontend", () => {
   assert.equal(
     parseSourceHeader("bom.svs", '\ufeff<?svml using="@qflow/svs@1"?>\n<sheet/>').using,

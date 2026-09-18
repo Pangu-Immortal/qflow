@@ -56,10 +56,11 @@ and README for its exact inputs and limits.
 
 ## Keep the narrator one person across the work
 
-Use `../craft/voice-and-performance.md` to establish the narrator's accepted Voice Reference and
-generate independent speech from it. If the same person also appears in visible A-roll elsewhere,
-the same Voice Reference can condition both the visible performance and independent narration. The
-work then changes sound-picture relationship without changing who is speaking.
+The passage can use already recorded final narration or generated speech from an accepted Voice
+Reference; [Voice and performance](../craft/voice-and-performance.md) distinguishes these uses.
+When new performances are generated for someone who also appears in visible A-roll, the same Voice
+Reference can condition both the visible performance and independent narration. The work then
+changes sound-picture relationship without changing who is speaking.
 
 `../../creation/script-and-time.md` owns measurement and alignment. One accepted narration
 performance can carry many picture changes; their semantic relations follow that performance without

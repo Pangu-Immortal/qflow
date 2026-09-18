@@ -150,7 +150,7 @@ function capabilityName(capability: CapabilityRef): string {
 }
 
 /** Which Endpoint will serve this call and where its Provider publishes prices, before spending. */
-async function selectedProvider(host: CreationHost, need: Need, profile: string): Promise<RuntimeHostCapabilityProvider> {
+export async function selectedProvider(host: CreationHost, need: Need, profile: string): Promise<RuntimeHostCapabilityProvider> {
   const [provider] = await host.providers([{
     request: need.id,
     capability: need.capability,
@@ -176,7 +176,7 @@ function priceLine(provider: RuntimeHostCapabilityProvider): string {
     : provider.pricing.kind === "local" ? "local, no Provider charge" : provider.pricing.url;
 }
 
-function providerView(provider: RuntimeHostCapabilityProvider) {
+export function providerView(provider: RuntimeHostCapabilityProvider) {
   return {
     endpoint: provider.endpoint ?? null,
     use: provider.use ?? null,
@@ -184,7 +184,7 @@ function providerView(provider: RuntimeHostCapabilityProvider) {
   };
 }
 
-function providerLine(provider: RuntimeHostCapabilityProvider): string {
+export function providerLine(provider: RuntimeHostCapabilityProvider): string {
   return `${provider.endpoint} (${provider.use})  ·  ${priceLine(provider)}`;
 }
 

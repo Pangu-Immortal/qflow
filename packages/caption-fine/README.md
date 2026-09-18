@@ -14,10 +14,10 @@ does not carry a private visual role.
   </caption-fine:Track>
 ```
 
-An optional Spatial Region Timeline replaces only the moving placement point. The timeline is authored
-numeric input, measured from the actual footage before the composition pass that consumes it;
-it is not a face-tracking request. A prior Build may produce that footage with ordinary fixed Caption,
-and a later Run can reuse the same media and alignment while changing placement:
+An optional Spatial Region Timeline supplies a moving placement point when the user's reference
+visibly uses head-following Caption or the user asks for that treatment. Ordinary Caption uses the
+Style's placement without regions. The Region Timeline is authored numeric input mapped from available picture
+evidence to the composition that consumes it; it is not a face-tracking request:
 
 ```xml
 <space:RegionTimeline id="heads" within={vertical} recipe={tracking.heads.default}/>

@@ -27,8 +27,10 @@ parser is inside a Segment, a valid bare tag such as `<ALICE>` is a Role Cue. Th
 not indentation: the compact spelling
 `<opening><ALICE>I speak first.<BOB>I answer.</opening>` has the same semantic value.
 
-A Role Cue is optional. Text before the first Role Cue is a roleless Turn, and Role state is reset
-when every Segment closes; a Role can never leak into the following Segment.
+A Role Cue is optional. A Segment without Role Cues contains a roleless Turn. If Roles are used,
+the first Cue must precede that Segment's spoken text. Role state resets when the Segment closes;
+a Role can never leak into the following Segment. Role labels may use Unicode letters, marks and
+numbers; capitalization does not distinguish Roles from Segments.
 
 An empty Segment such as `<empty></empty>` (or `<empty/>`) is valid. `empty` is an ordinary
 author-chosen name, not a reserved keyword. It retains the Segment identity and both boundary anchors
@@ -101,7 +103,7 @@ Units; it does not split the Segment, cut the picture or end a Selection.
 <script id="story">
   <exchange>
     <HOST> I use it || every day, || since <2012 | twenty twelve>.
-    <GUEST> Even @{proof} on holiday @{/proof}?
+    <GUEST> Even @{proof}on holiday?@{/proof}
     <HOST> @{answer!} Especially then.
   </exchange>
 </script>
@@ -118,13 +120,18 @@ These units support precise timing and highlighting. A Caption Cue can hold a wh
 `||` chooses its handoff independently of character counts or visual line wrapping.
 
 Annotations do not create speech boundaries. Comments are transparent (`hel<!--note-->lo`
-remains `hello`); a postfix attribute or `||` inside a word is invalid. Script analyzes a complete
+remains `hello`), including when an attribute follows a comment or zero-width marker:
+`hello<!--note-->{emphasis}` and `hello@{beat!}{emphasis}` still annotate `hello`.
+An authored space before the attribute remains invalid. A postfix attribute or `||` inside a word
+is invalid. Script analyzes a complete
 prose run before binding these constructs. An explicit Dual correspondence and a speaker/Segment
 boundary remain authored structure. Shared Dual groups still expose their internal speech anchors.
 
 A Dual display side is literal authored text, including symbols and emoji: `<😀|smile>` and
 `<.|dot>` have explicit speech correspondence and require no invented speech token for the symbol.
 A literal-only display is one display surface within that correspondence.
+Every Dual needs at least one spoken word on its explicit or shared speech side. `<API|...>` cannot
+provide timed correspondence for `API` and is rejected; punctuation and markers are not spoken words.
 
 ## Display spelling and separators
 

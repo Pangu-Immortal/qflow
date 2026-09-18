@@ -9,6 +9,7 @@ function run(
   args: readonly string[],
   input: ProcessInput | undefined,
   timeoutMs: number,
+  onStderrLine?: (line: string) => void,
 ): Promise<ProcessOutput> {
   return new Promise((resolveRun, reject) => {
     const child = spawn(executable, [...args], { stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"], windowsHide: true });
@@ -24,7 +25,16 @@ function run(
     };
     const timer = setTimeout(() => { child.kill("SIGKILL"); finish(new Error(`${executable} timed out after ${timeoutMs} ms`)); }, timeoutMs);
     child.stdout?.on("data", (chunk: Buffer) => out.push(chunk));
-    child.stderr?.on("data", (chunk: Buffer) => { err = `${err}${chunk.toString("utf8")}`.slice(-100_000); });
+    let pendingLine = "";
+    child.stderr?.on("data", (chunk: Buffer) => {
+      const text = chunk.toString("utf8");
+      err = `${err}${text}`.slice(-100_000);
+      if (onStderrLine !== undefined) {
+        const lines = `${pendingLine}${text}`.split(/\r?\n/u);
+        pendingLine = lines.pop()!;
+        for (const line of lines) onStderrLine(line);
+      }
+    });
     child.on("error", (error) => finish(new Error(`${executable} could not start: ${error.message}`)));
     child.on("close", (code) => {
       if (code === 0) finish();
@@ -56,8 +66,8 @@ export async function runProcess(executable: string, args: readonly string[], ti
 }
 
 /** Successful stderr can carry tool metadata, such as the timestamp of an extracted frame. */
-export function runProcessOutput(executable: string, args: readonly string[], timeoutMs = 300_000): Promise<ProcessOutput> {
-  return run(executable, args, undefined, timeoutMs);
+export function runProcessOutput(executable: string, args: readonly string[], timeoutMs = 300_000, onStderrLine?: (line: string) => void): Promise<ProcessOutput> {
+  return run(executable, args, undefined, timeoutMs, onStderrLine);
 }
 
 /** The same process boundary when a deterministic byte stream is one of the program's inputs. */

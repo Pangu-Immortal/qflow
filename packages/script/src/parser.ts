@@ -492,10 +492,10 @@ export function parseScript(
       if (!shared && raw[index] === "{") fail("SCRIPT_DUAL_SPEECH_ATTRIBUTE", "Display attributes belong to the display side; escape literal braces in speech.", absoluteStart + index);
       if (shared && raw[index] === "{") {
         const before = raw.slice(partStart, index);
-        if (!before || /\s$/u.test(before)) {
+        addLiteral(before, absoluteStart + partStart);
+        if (!runText || /\s$/u.test(runText)) {
           fail("SCRIPT_ATTRIBUTE_TARGET", "A token attribute must immediately follow a display token.", absoluteStart + index);
         }
-        addLiteral(before, absoluteStart + partStart);
         const block = parseAttributeBlock(raw.slice(index), absoluteStart + index);
         runAttributes.push({ position: runText.length, offset: absoluteStart + index,
           end: absoluteStart + index + block.length, attributes: block.attributes });
@@ -517,20 +517,20 @@ export function parseScript(
     addLiteral(raw.slice(partStart), absoluteStart + partStart);
     const display = caption ?? spokenParts.join("");
     const sharedMarks = finishLexicalRun();
-    if (shared && tokens.length === startToken) {
-      fail("SCRIPT_DUAL_EMPTY", "Dual Text with omitted speech must contain spoken text on its display side.", absoluteStart);
+    if (tokens.length === startToken) {
+      fail("SCRIPT_DUAL_EMPTY", shared
+        ? "Dual Text with omitted speech must contain spoken text on its display side."
+        : "Dual Text speech side must contain a spoken word, not only markers or punctuation.", absoluteStart);
     }
-    if (tokens.length > startToken) {
-      addCaptionRegion(
-        display,
-        current!.id,
-        startToken,
-        tokens.length,
-        cleanProjection(display) ? "alias" : "hidden",
-        { start: sourceOffset + absoluteStart, end: sourceOffset + absoluteStart + raw.length },
-        shared ? sharedMarks : marks,
-      );
-    }
+    addCaptionRegion(
+      display,
+      current!.id,
+      startToken,
+      tokens.length,
+      cleanProjection(display) ? "alias" : "hidden",
+      { start: sourceOffset + absoluteStart, end: sourceOffset + absoluteStart + raw.length },
+      shared ? sharedMarks : marks,
+    );
   };
 
   const closeCurrent = (end: number, selfClosing: boolean, contentEnd = end): void => {
@@ -626,18 +626,13 @@ export function parseScript(
         const speech = inside.slice(pipe + 1);
         if (!speech.trim()) {
           consumeSpeechSide(inside.slice(0, pipe), offset + 1, undefined);
-          finishLexicalRun();
           offset = end + 1;
           continue;
         }
         assertDualDisplayLiteral(inside.slice(0, pipe), offset + 1);
         const markedDisplay = parseMarkedDisplay(inside.slice(0, pipe), offset + 1);
         const display = markedDisplay.display;
-        if (!speech.replace(/@\{[^{}]*\}/gu, "").trim()) {
-          fail("SCRIPT_DUAL_EMPTY", "Dual Text speech side must not be empty.", offset);
-        }
         consumeSpeechSide(speech, offset + pipe + 2, display, markedDisplay.marks);
-        finishLexicalRun();
         offset = end + 1;
         continue;
       }
@@ -674,7 +669,7 @@ export function parseScript(
     for (const piece of literalPieces(raw, textStart)) addText(piece.value, piece.value, piece.start, piece.end, true, piece.positions);
     if (source[offset] === "{") {
       const block = parseAttributeBlock(source.slice(offset), offset);
-      if (!raw || /\s$/u.test(raw)) {
+      if (!runText || /\s$/u.test(runText)) {
         fail("SCRIPT_ATTRIBUTE_TARGET", "A token attribute must immediately follow a display token.", offset);
       }
       runAttributes.push({ position: runText.length, offset, end: offset + block.length, attributes: block.attributes });

@@ -12,7 +12,7 @@ import { MemoryResourceStore, EndpointRegistry } from "@qflow/driver-node";
 import type { EndpointRegistration } from "@qflow/driver-node";
 import type { ImmediateEndpointHandler } from "@qflow/endpoint-kit";
 import { compileHyperframesDocument } from "@qflow/hyperframes";
-import { renderHyperframesCapabilities, hyperframesVisualRequest } from "@qflow/render-hyperframes";
+import { renderHyperframesCapabilities, renderHyperframesTypes, hyperframesVisualRequest } from "@qflow/render-hyperframes";
 import { canonicalize } from "@qflow/protocol";
 import type { CanonicalValue, Need } from "@qflow/protocol";
 
@@ -125,14 +125,14 @@ async function handlerFor(request: Need): Promise<{
   return { handler: resolution.registration.handler, registration: resolution.registration };
 }
 
-test("local HyperFrames Provider exposes one exact visual capability and two separate concurrency levels", async () => {
+test("local HyperFrames Provider exposes visual and frame capabilities and two separate concurrency levels", async () => {
   const provider = createLocalHyperframesProvider({ workers: 4, defaultConcurrency: 2 });
   assert.equal(provider.instance.id, "hyperframes.local");
   assert.deepEqual(provider.offers, [{
     capability: renderHyperframesCapabilities.renderVisual,
     returns: mediaTypes.renderedVisual,
     endpoint: "hyperframes.local",
-  }]);
+  }, { capability: renderHyperframesCapabilities.renderFrames, returns: renderHyperframesTypes.frames, endpoint: "hyperframes.local" }]);
   const resolved = await handlerFor(requestNeed());
   assert.equal(resolved.registration.scheduling?.resources.find((item) =>
     item.id.startsWith("pool:"))?.limit, 1,

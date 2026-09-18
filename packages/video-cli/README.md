@@ -1,8 +1,8 @@
 # `@qflow/video-cli`
 
 Official video command application. It selects the Markup compiler Host and supplies one editable
-starter Runtime Profile. The CLI still imports no Provider or Store implementation; installed packages
-are activated only by explicit Source imports or Profile `use` entries.
+starter Runtime Profile. Execution Endpoints are selected by Profile `use` entries; Source imports
+activate author packages. Immediate tools own their temporary input/output resource storage.
 
 Every Frontend, Surface, deterministic Producer and Validator is activated from Source imports.
 Installing a new author package therefore does not require a video CLI or Core release. Source
@@ -67,8 +67,34 @@ to the chosen file. `measure` estimates a passage locally:
 
 ```bash
 qflow transcribe reference.mp4 --to notes/reference.transcript.json --language en
+qflow transcribe assets/recorded-voice.wav --to notes/voice.transcript.json --language en
 qflow measure main.svml --segment hook --language en --pace normal --rounding round
 ```
+
+`snapshot` follows the same immediate invocation model for picture inspection. Prefer it for
+existing production states and motion sequences, keeping Studio for playback with sound and Builds
+for encoded delivery:
+
+```bash
+qflow snapshot --studio http://localhost:5191 --at-frame 240,255,269 --to evidence/states
+qflow snapshot --studio http://localhost:5191 --start-frame 240 --end-frame-exclusive 270 \
+  --grid 4x3 --cell 480 --to evidence/motion
+qflow snapshot ./picture/index.html --at-frame 240 --to evidence/detail
+```
+
+`--studio` reads Studio's current compiled document and its declared resources; a path or HTML URL
+reads materialized HTML with inline scripts/styles and directly addressed media/fonts. The Profile's
+`@qflow/render-hyperframes@1#render-frames` Endpoint returns PNGs in selected-frame order.
+`--runtime` and `--workspace` select the environment just as for `transcribe`. The call streams
+resources through a temporary `FileResourceStore`, writes full-size PNGs and optional grid pages,
+then releases that temporary storage. `--to` names a new directory. `--json` reports paths and original
+frame positions. Grid labels remain outside the picture. No Build, Worker receipt or video encoding
+is created. Provider-owned browser preparation is unchanged.
+
+`media frames --every-frame` and `media tiles --every-frame` decode every source frame in a selected
+half-open seconds interval once. Native timestamps, including variable frame rate, are read from
+decoder PTS and time base. `tiles --ranges <json> --every-frame` decodes each listed interval and
+paginates its images. `--transcript` adds word context. This native path uses no FPS resampling.
 
 For `transcribe`, set `--language` to an explicit lowercase two- or three-letter spoken language code,
 such as `en`, `zh` or `ko`. The selected service owns which languages it can align. Chinese speech uses `zh`, including
@@ -106,6 +132,9 @@ prints what a Source may write:
 ```bash
 qflow media probe reference.mp4
 qflow media cut reference.mp4 --start 12 --end 19.5 --label-time --to notes/hook.mp4
+qflow media cut assets/talk.mp4 --start 12 --end 19.5 --to assets/opening.mp4
+qflow media cut assets/talk.mp4 --keep 12:15.5 --keep 16:19.5 --to assets/opening-edited.mp4
+qflow media cut assets/narration.wav --keep 0.3:4.1 --keep 4.6:9.2 --to assets/narration-edited.wav
 qflow media frames reference.mp4 --at 12.4,13.1 --label-time --to notes/hook-frames
 qflow media tile reference.mp4 --start 12 --end 19.5 --to notes/hook-grid.jpg
 qflow media tile reference.mp4 --at 12.4,13.1,14.8 --columns 3 --to notes/exact-grid.jpg
@@ -119,7 +148,21 @@ qflow vocabulary @qflow/media-pipeline --tag StillVideo
 qflow vocabulary --visual text
 ```
 
-`cut` isolates the requested interval and can visibly overlay source time on the evidence copy.
+`probe` accepts audio-only files as well as video. `cut` keeps one interval using `--start` and
+`--end`, or joins explicitly retained, ordered, non-overlapping intervals using repeated
+`--keep start:end` in source seconds. The latter is useful for removing gaps inside one recorded
+performance; it does not decide where Script Segments belong. Video retains its available picture
+and sound together (MP4 is a useful output container); audio-only outputs PCM WAV. A silent source
+video stays silent. The
+`--json` reports the source intervals, their nominal positions on the new local clock, and the
+measured output duration; actual frame and sample boundaries can differ slightly from the nominal
+positions. It writes a new file and refuses to
+overwrite an existing one. `--label-time` retains its single-video-interval role: it visibly
+overlays source time on an inspection copy, not on the clean production media.
+
+`transcribe` also accepts audio or video. Its transcript refers to the *input file's* clock. A
+cut or joined file has a new clock; use the final recorded performance and its Script in the
+Build's semantic preparation rather than treating source transcript timestamps as final timing.
 `frames` writes one JPEG per requested time, selecting the first decoded frame at or after it.
 Visible frame labels use that frame's actual timestamp, as do the labels below each `tile` cell.
 Sampling is shared by `frames`, `tile` and `tiles`:
@@ -149,7 +192,7 @@ and its Endpoint remain separate. `boundaries` reports adjacent-frame
 change candidates and their measured scores; it does not suppress short changes or call them shots.
 `prepare-fetch` explicitly prepares the locked downloader environment; `fetch` requires it and
 turns a link into a file with the pinned yt-dlp; [the downloader package](../yt-dlp/README.md)
-owns its dependencies, download choices and file handling. Commands that create evidence write only
+owns its dependencies, download choices and file handling. Commands that create files write only
 what `--to` names and refuse to overwrite. `vocabulary` reads the installed
 manifests: every package with its tags and models, or one package's Surfaces with their attributes,
 children and example, or the value shapes a drawing Producer must emit.

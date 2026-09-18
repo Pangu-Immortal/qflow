@@ -303,10 +303,12 @@ Keep credentials, generated media, Runtime data and logs out of commits.
 
 ### 0. Prepare dependencies on demand
 
-Users do not run `pnpm install`. `runtime up` reads the selected Runtime Profile, installs the
-upstream npm packages its Adapters declare into a machine-shared directory, and prepares external
-programs. [`uv`](https://docs.astral.sh/uv/) is only needed first when the Profile selects local
-Python programs such as WhisperX or OpenCV.
+Using the published Qflow executable does not require installing this repository with `pnpm`.
+`runtime up` reads the selected Runtime Profile, installs the upstream npm packages its Adapters
+declare into a machine-shared directory, and prepares external programs. Project-owned components
+and Providers remain ordinary project dependencies, installed with that project's package manager.
+[`uv`](https://docs.astral.sh/uv/) is only needed first when the Profile selects local Python
+programs such as WhisperX or OpenCV.
 
 When an author package such as Fontsource is missing, `check`/`plan` report the precise command, for
 example:

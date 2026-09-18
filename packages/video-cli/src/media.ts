@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rename, rm, stat } from "node:fs/promises";
+import { copyFile, link, mkdir, mkdtemp, readFile, rename, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 
@@ -6,6 +6,8 @@ import type { CliIo } from "@qflow/cli";
 import { downloadVideo, isVideoUrl, prepareVideoDownload } from "@qflow/yt-dlp";
 import sharp from "sharp";
 
+import { decodeMediaFrames } from "./media-frames.js";
+import { writeFrameGrid } from "./frame-grid.js";
 import { runProcess, runProcessOutput, runProcessWithInput } from "./process.js";
 import { phraseRanges, readTranscript, wordsAt } from "./transcript.js";
 import type { FrameWords, TranscriptWord } from "./transcript.js";
@@ -35,13 +37,17 @@ function clamp(value: number, low: number, high: number): number { return Math.m
 type Parsed = {
   readonly positionals: readonly string[];
   readonly options: ReadonlyMap<string, string>;
+  readonly repeated: ReadonlyMap<string, readonly string[]>;
   readonly flags: ReadonlySet<string>;
   readonly json: boolean;
 };
 
-function parseArguments(argv: readonly string[], allowed: readonly string[], allowedFlags: readonly string[] = []): Parsed {
+function parseArguments(
+  argv: readonly string[], allowed: readonly string[], allowedFlags: readonly string[] = [], repeatable: readonly string[] = [],
+): Parsed {
   const positionals: string[] = [];
   const options = new Map<string, string>();
+  const repeated = new Map<string, string[]>();
   const flags = new Set<string>();
   let json = false;
   for (let index = 0; index < argv.length; index += 1) {
@@ -56,13 +62,14 @@ function parseArguments(argv: readonly string[], allowed: readonly string[], all
       continue;
     }
     if (!allowed.includes(item)) throw new Error(`unknown option ${item}`);
-    if (options.has(item)) throw new Error(`${item} cannot be repeated`);
+    if (!repeatable.includes(item) && options.has(item)) throw new Error(`${item} cannot be repeated`);
     const value = argv[index + 1];
     if (value === undefined || (value.startsWith("--") && value.length > 2)) throw new Error(`${item} requires a value`);
-    options.set(item, value);
+    if (repeatable.includes(item)) repeated.set(item, [...(repeated.get(item) ?? []), value]);
+    else options.set(item, value);
     index += 1;
   }
-  return { positionals, options, flags, json };
+  return { positionals, options, repeated, flags, json };
 }
 
 function required(parsed: Parsed, option: string, hint: string): string {
@@ -132,13 +139,21 @@ async function destinationDirectory(parsed: Parsed, cwd: string, hint: string): 
 // ---------------------------------------------------------------------------------------------------
 // ffmpeg
 
-export type MediaProbe = {
-  readonly duration: number;
+type VideoProbe = {
+  readonly hasVideo: true;
   readonly width: number;
   readonly height: number;
   readonly frameRate: number;
-  readonly hasAudio: boolean;
 };
+
+export type MediaProbe = {
+  readonly duration: number;
+  readonly hasAudio: boolean;
+} & (VideoProbe | { readonly hasVideo: false });
+
+function requireVideo(info: MediaProbe, path: string): asserts info is MediaProbe & VideoProbe {
+  assert(info.hasVideo, `${path}: no video stream`);
+}
 
 export async function probeMedia(path: string): Promise<MediaProbe> {
   const raw = await runProcess("ffprobe", [
@@ -151,16 +166,20 @@ export async function probeMedia(path: string): Promise<MediaProbe> {
   const video = parsed.streams?.find((item) => item.codec_type === "video");
   const duration = Number(parsed.format?.duration);
   assert(Number.isFinite(duration) && duration > 0, `${path}: duration is unavailable`);
-  assert(video?.width !== undefined && video.height !== undefined, `${path}: no video stream`);
+  const hasAudio = parsed.streams?.some((item) => item.codec_type === "audio") ?? false;
+  assert(video !== undefined || hasAudio, `${path}: no audio or video stream`);
+  if (video === undefined) return { duration: round(duration), hasVideo: false, hasAudio };
+  assert(video.width !== undefined && video.height !== undefined, `${path}: video dimensions are unavailable`);
   // ffprobe reports the rate as a ratio; a still image reports none.
   const ratio = (video.r_frame_rate ?? "").split("/");
   const rate = Number(ratio[0]) / Number(ratio[1] ?? 1);
   return {
     duration: round(duration),
+    hasVideo: true,
     width: video.width,
     height: video.height,
     frameRate: Number.isFinite(rate) && rate > 0 ? round(rate) : 0,
-    hasAudio: parsed.streams?.some((item) => item.codec_type === "audio") ?? false,
+    hasAudio,
   };
 }
 
@@ -257,7 +276,7 @@ export async function cutClip(
   start: number,
   end: number,
   target: string,
-  labelInfo?: Pick<MediaProbe, "frameRate">,
+  labelInfo?: Pick<VideoProbe, "frameRate">,
 ): Promise<void> {
   assert(end > start, `the clip must end after it starts (${start} to ${end})`);
   const seconds = round(end - start);
@@ -286,6 +305,64 @@ export async function cutClip(
     ], labels());
   } finally {
     await rm(temporary, { recursive: true, force: true });
+  }
+}
+
+type CutSpan = { readonly start: number; readonly end: number };
+
+function keptSpan(raw: string, duration: number): CutSpan {
+  const parts = raw.split(":");
+  assert(parts.length === 2 && parts.every((part) => part.trim().length > 0), `--keep needs start:end in seconds, got ${raw}`);
+  const [start, end] = parts.map(Number);
+  assert(Number.isFinite(start) && Number.isFinite(end) && start! >= 0 && end! > start! && end! <= duration + 0.001,
+    `--keep ${raw} must satisfy 0 <= start < end <= ${duration} s`);
+  return { start: start!, end: end! };
+}
+
+/** Decode the selected parts once, join them on a new local clock, and preserve only existing streams. */
+async function cutProduction(source: string, spans: readonly CutSpan[], target: string, info: MediaProbe): Promise<void> {
+  const seek = Math.max(0, spans[0]!.start - SEEK_RUN_UP);
+  const labels: string[] = [];
+  const filters: string[] = [];
+  const videoInputs = spans.map((_, index) => `vsrc${index}`);
+  const audioInputs = spans.map((_, index) => `asrc${index}`);
+  if (info.hasVideo && spans.length > 1) filters.push(`[0:v:0]split=${spans.length}${videoInputs.map((item) => `[${item}]`).join("")}`);
+  if (info.hasAudio && spans.length > 1) filters.push(`[0:a:0]asplit=${spans.length}${audioInputs.map((item) => `[${item}]`).join("")}`);
+  for (const [index, span] of spans.entries()) {
+    const start = round(span.start - seek);
+    const end = round(span.end - seek);
+    if (info.hasVideo) filters.push(`[${spans.length === 1 ? "0:v:0" : videoInputs[index]}]trim=start=${start}:end=${end},setpts=PTS-STARTPTS[v${index}]`);
+    if (info.hasAudio) filters.push(`[${spans.length === 1 ? "0:a:0" : audioInputs[index]}]atrim=start=${start}:end=${end},asetpts=PTS-STARTPTS[a${index}]`);
+    labels.push(`${info.hasVideo ? `[v${index}]` : ""}${info.hasAudio ? `[a${index}]` : ""}`);
+  }
+  if (spans.length > 1) filters.push(`${labels.join("")}concat=n=${spans.length}:v=${info.hasVideo ? 1 : 0}:a=${info.hasAudio ? 1 : 0}${info.hasVideo ? "[v]" : ""}${info.hasAudio ? "[a]" : ""}`);
+  const videoLabel = spans.length === 1 ? "[v0]" : "[v]";
+  const audioLabel = spans.length === 1 ? "[a0]" : "[a]";
+  await runProcess("ffmpeg", [
+    "-hide_banner", "-loglevel", "error", "-y",
+    ...(seek > 0 ? ["-ss", String(round(seek))] : []), "-i", source,
+    "-filter_complex", filters.join(";"),
+    ...(info.hasVideo ? ["-map", videoLabel, "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p", "-fps_mode", "vfr",
+      ...([".mp4", ".mov"].includes(extname(target).toLowerCase()) ? ["-movflags", "+faststart"] : [])] : []),
+    ...(info.hasAudio ? ["-map", audioLabel, "-c:a", ...(info.hasVideo ? ["aac", "-b:a", "192k"] : ["pcm_s24le"])] : []),
+    target,
+  ]);
+}
+
+/** Publish a completed cut without overwriting a file another process may have created meanwhile. */
+async function writeCut(
+  source: string, spans: readonly CutSpan[], target: string, info: MediaProbe, labeled: boolean,
+): Promise<void> {
+  const work = await mkdtemp(join(dirname(target), ".qflow-cut-"));
+  const staged = join(work, `cut${extname(target)}`);
+  try {
+    if (labeled) {
+      requireVideo(info, source);
+      await cutClip(source, spans[0]!.start, spans[0]!.end, staged, info);
+    } else await cutProduction(source, spans, staged, info);
+    await link(staged, target);
+  } finally {
+    await rm(work, { recursive: true, force: true });
   }
 }
 
@@ -362,29 +439,16 @@ export async function tileFrames(
   const temporary = await mkdtemp(join(tmpdir(), "qflow-tile-"));
   try {
     const frames: SampledFrame[] = [];
-    const cells: { picture: Buffer; label: Buffer; height: number; labelHeight: number }[] = [];
+    const cells: { path: string; label: Buffer }[] = [];
     for (let index = 0; index < times.length; index += 1) {
       const at = times[index]!;
       const path = join(temporary, `${index}.jpg`);
       const actual = await cutFrame(source, at, path);
       const frameWords = words === undefined ? undefined : wordsAt(words, actual);
       frames.push({ requestedAt: at, at: actual, ...(frameWords === undefined ? {} : { words: frameWords }) });
-      const picture = await sharp(path).resize({ width: cellWidth }).png().toBuffer({ resolveWithObject: true });
-      const label = await frameLabel(actual, cellWidth, frameWords);
-      const labelHeight = (await sharp(label).metadata()).height!;
-      cells.push({ picture: picture.data, height: picture.info.height, label, labelHeight });
+      cells.push({ path, label: await frameLabel(actual, cellWidth, frameWords) });
     }
-    const rows = Math.ceil(times.length / columns);
-    const pictureHeight = Math.max(...cells.map((cell) => cell.height));
-    const rowHeight = pictureHeight + Math.max(...cells.map((cell) => cell.labelHeight));
-    await sharp({ create: {
-      width: columns * (cellWidth + 8) + 8, height: rows * (rowHeight + 8) + 8,
-      channels: 3, background: "#0c0c0c",
-    } }).composite(cells.flatMap((cell, index) => {
-      const left = 8 + (index % columns) * (cellWidth + 8);
-      const top = 8 + Math.floor(index / columns) * (rowHeight + 8);
-      return [{ input: cell.picture, left, top }, { input: cell.label, left, top: top + pictureHeight }];
-    })).jpeg({ quality: 90 }).toFile(target);
+    await writeFrameGrid(cells, target, cellWidth, columns);
     return frames;
   } finally {
     await rm(temporary, { recursive: true, force: true });
@@ -490,27 +554,54 @@ async function probe(argv: readonly string[], io: CliIo, cwd: string): Promise<v
   const source = await sourceFile(parsed, cwd);
   const info = await probeMedia(source);
   if (parsed.json) { io.write(`${JSON.stringify({ path: source, ...info }, null, 2)}\n`); return; }
-  io.write(`${source}\n  ${info.duration} s  ${info.width}×${info.height}  ${info.frameRate > 0 ? `${info.frameRate} fps` : "still"}  ${info.hasAudio ? "with audio" : "no audio"}\n`);
+  io.write(`${source}\n  ${info.duration} s  ${info.hasVideo
+    ? `${info.width}×${info.height}  ${info.frameRate > 0 ? `${info.frameRate} fps` : "still"}  ${info.hasAudio ? "with audio" : "no audio"}`
+    : "audio only"}\n`);
 }
 
 async function cut(argv: readonly string[], io: CliIo, cwd: string): Promise<void> {
-  const parsed = parseArguments(argv, ["--start", "--end", "--to"], ["--label-time"]);
+  const parsed = parseArguments(argv, ["--start", "--end", "--keep", "--to"], ["--label-time"], ["--keep"]);
   const source = await sourceFile(parsed, cwd);
-  const start = secondsOption(parsed, "--start", 0);
   const info = await probeMedia(source);
-  const end = secondsOption(parsed, "--end", info.duration);
-  assert(end <= info.duration + 0.001, `--end ${end} is past the end of the file (${info.duration} s)`);
-  const target = await destination(parsed, cwd, "the clip to write, for example notes/hook.mp4");
+  const kept = parsed.repeated.get("--keep") ?? [];
+  assert(kept.length === 0 || (!parsed.options.has("--start") && !parsed.options.has("--end")),
+    "choose --keep intervals or --start/--end");
+  const spans = kept.length > 0 ? kept.map((item) => keptSpan(item, info.duration)) : [{
+    start: secondsOption(parsed, "--start", 0), end: secondsOption(parsed, "--end", info.duration),
+  }];
+  for (const [index, span] of spans.entries()) {
+    assert(span.end > span.start && span.end <= info.duration + 0.001,
+      `range must satisfy 0 <= start < end <= ${info.duration} s`);
+    if (index > 0) assert(span.start >= spans[index - 1]!.end, "--keep intervals must be ordered and non-overlapping");
+  }
   const labeled = parsed.flags.has("--label-time");
-  await cutClip(source, start, end, target, labeled ? info : undefined);
-  if (parsed.json) { io.write(`${JSON.stringify({ path: target, start, end, seconds: round(end - start), labeled }, null, 2)}\n`); return; }
-  io.write(`${target}\n  ${start} s to ${end} s (${round(end - start)} s)${labeled ? ", source time visible" : ""}\n`);
+  assert(!labeled || (info.hasVideo && spans.length === 1), "--label-time needs one video interval");
+  const target = await destination(parsed, cwd, "the clip to write, for example notes/hook.mp4");
+  if (!info.hasVideo) assert(extname(target).toLowerCase() === ".wav", "--to must end in .wav for audio-only media");
+  await writeCut(source, spans, target, info, labeled);
+  const output = await probeMedia(target);
+  const requestedSeconds = round(spans.reduce((total, span) => total + span.end - span.start, 0));
+  if (parsed.json) {
+    let outputAt = 0;
+    const mapping = spans.map((span) => {
+      const item = { sourceStart: span.start, sourceEnd: span.end,
+        nominalOutputStart: round(outputAt), nominalOutputEnd: round(outputAt + span.end - span.start) };
+      outputAt += span.end - span.start;
+      return item;
+    });
+    io.write(`${JSON.stringify({ path: target, ...(spans.length === 1 ? { start: spans[0]!.start, end: spans[0]!.end } : {}),
+      spans, mapping, seconds: requestedSeconds, actualSeconds: output.duration, hasVideo: output.hasVideo, hasAudio: output.hasAudio, labeled }, null, 2)}\n`);
+    return;
+  }
+  io.write(`${target}\n  ${spans.map((span) => `${span.start}–${span.end} s`).join(" + ")} (${output.duration} s output)${labeled ? ", source time visible" : ""}\n`);
 }
 
 async function frames(argv: readonly string[], io: CliIo, cwd: string): Promise<void> {
-  const parsed = parseArguments(argv, [...SAMPLE_OPTIONS, "--to"], ["--label-time"]);
+  const parsed = parseArguments(argv, [...SAMPLE_OPTIONS, "--to"], ["--label-time", "--every-frame"]);
+  if (parsed.flags.has("--every-frame")) { await nativeFrames(parsed, io, cwd, false); return; }
   const source = await sourceFile(parsed, cwd);
   const info = await probeMedia(source);
+  requireVideo(info, source);
   const words = await transcriptOption(parsed, cwd);
   const times = sampleTimes(parsed, info.duration, words, true);
   const to = await destinationDirectory(parsed, cwd, "the new directory to write the frames into");
@@ -538,6 +629,7 @@ async function tile(argv: readonly string[], io: CliIo, cwd: string): Promise<vo
   const parsed = parseArguments(argv, [...SAMPLE_OPTIONS, "--frames", "--cell", "--columns", "--to"]);
   const source = await sourceFile(parsed, cwd);
   const info = await probeMedia(source);
+  requireVideo(info, source);
   const words = await transcriptOption(parsed, cwd);
   const times = sampleTimes(parsed, info.duration, words);
   // Preserve source width unless an exceptionally tiny input needs room for a legible timecode.
@@ -573,9 +665,11 @@ function tileRange(value: unknown, index: number, duration: number): TileRange {
 }
 
 async function tiles(argv: readonly string[], io: CliIo, cwd: string): Promise<void> {
-  const parsed = parseArguments(argv, [...SAMPLE_OPTIONS, "--ranges", "--frames", "--cell", "--columns", "--rows", "--to"]);
+  const parsed = parseArguments(argv, [...SAMPLE_OPTIONS, "--ranges", "--frames", "--cell", "--columns", "--rows", "--to"], ["--every-frame"]);
+  if (parsed.flags.has("--every-frame")) { await nativeFrames(parsed, io, cwd, true); return; }
   const source = await sourceFile(parsed, cwd);
   const info = await probeMedia(source);
+  requireVideo(info, source);
   const words = await transcriptOption(parsed, cwd);
   const rangesPath = parsed.options.get("--ranges");
   let ranges: { id?: string; start: number; end: number; times: readonly number[] }[];
@@ -631,9 +725,65 @@ async function tiles(argv: readonly string[], io: CliIo, cwd: string): Promise<v
   io.write(`${to}\n  ${written.length} time-labeled ${written.length === 1 ? "grid" : "grids"}\n`);
 }
 
+/** Native-frame observation: each requested interval is decoded once, then paginated. */
+async function nativeFrames(parsed: Parsed, io: CliIo, cwd: string, grid: boolean): Promise<void> {
+  for (const key of ["--at", "--every", "--frames"]) assert(!parsed.options.has(key), `--every-frame cannot be combined with ${key}`);
+  const source = await sourceFile(parsed, cwd);
+  const info = await probeMedia(source);
+  requireVideo(info, source);
+  const words = await transcriptOption(parsed, cwd);
+  let ranges: TileRange[];
+  const rangeFile = parsed.options.get("--ranges");
+  if (rangeFile === undefined) ranges = [sampleRange(parsed, info.duration, words)];
+  else {
+    for (const key of ["--start", "--end", "--around", "--padding", "--occurrence"]) assert(!parsed.options.has(key), `--ranges cannot be combined with ${key}`);
+    const raw = JSON.parse(await readFile(resolve(cwd, rangeFile), "utf8"));
+    assert(Array.isArray(raw) && raw.length > 0, "--ranges needs a non-empty JSON array");
+    ranges = raw.map((value, index) => tileRange(value, index, info.duration));
+    assert(ranges.every(range => range.frames === undefined && range.every === undefined), "Native ranges cannot specify frames or every");
+  }
+  const cell = integerOption(parsed, "--cell", Math.max(80, Math.min(TILE_CELL_WIDTH, info.width)), 80);
+  const columns = integerOption(parsed, "--columns", TILE_COLUMNS, 1);
+  const rows = integerOption(parsed, "--rows", 3, 1);
+  const to = await destinationDirectory(parsed, cwd, "the new directory for native frame evidence");
+  const staging = await mkdtemp(join(dirname(to), ".qflow-native-"));
+  const written: { at: number; path: string }[] = [];
+  const grids: { path: string; frames: readonly { at: number }[] }[] = [];
+  try {
+    for (const [rangeIndex, range] of ranges.entries()) {
+      const decodedDirectory = join(staging, "decoded");
+      const decoded = await decodeMediaFrames(source, range.start, range.end, decodedDirectory);
+      if (grid) {
+        const perPage = columns * rows;
+        for (let offset = 0; offset < decoded.length; offset += perPage) {
+          const page = decoded.slice(offset, offset + perPage);
+          const cells = [];
+          for (const frame of page) cells.push({ path: frame.path, label: await frameLabel(frame.at, cell,
+            words === undefined ? undefined : wordsAt(words, frame.at)) });
+          const name = `${String(rangeIndex + 1).padStart(3, "0")}-${range.id ?? "frames"}-p${String(offset / perPage + 1).padStart(3, "0")}.jpg`;
+          await writeFrameGrid(cells, join(staging, name), cell, columns);
+          grids.push({ path: join(to, name), frames: page.map(frame => ({ at: frame.at })) });
+        }
+      } else for (const [index, frame] of decoded.entries()) {
+        const name = `frame-${String(index).padStart(9, "0")}.jpg`;
+        const target = join(staging, name);
+        if (parsed.flags.has("--label-time") || words !== undefined) await writeFrameGrid([{ path: frame.path,
+          label: await frameLabel(frame.at, info.width, words === undefined ? undefined : wordsAt(words, frame.at)) }], target, info.width, 1);
+        else await copyFile(frame.path, target);
+        written.push({ at: frame.at, path: join(to, name) });
+      }
+      await rm(decodedDirectory, { recursive: true, force: true });
+    }
+    await rename(staging, to);
+  } catch (error) { await rm(staging, { recursive: true, force: true }); throw error; }
+  if (parsed.json) io.write(`${JSON.stringify({ directory: to, ...(grid ? { grids } : { frames: written }) }, null, 2)}\n`);
+  else io.write(`${to}\n  ${grid ? `${grids.length} grids` : `${written.length} frames`} from continuous source decoding\n`);
+}
+
 async function boundaries(argv: readonly string[], io: CliIo, cwd: string): Promise<void> {
   const parsed = parseArguments(argv, ["--rate", "--threshold"]);
   const source = await sourceFile(parsed, cwd);
+  requireVideo(await probeMedia(source), source);
   const rate = numberOption(parsed, "--rate", DEFAULT_BOUNDARY_RATE, 1, 120);
   const threshold = numberOption(parsed, "--threshold", DEFAULT_BOUNDARY_THRESHOLD, 0, 1);
   const candidates = await visualBoundaries(source, rate, threshold);
@@ -653,6 +803,7 @@ async function fetch(argv: readonly string[], io: CliIo, cwd: string): Promise<v
   assert([".mp4", ".mkv", ".webm", ".mov"].includes(extname(target).toLowerCase()), "--to must end in .mp4, .mkv, .webm or .mov");
   await downloadVideo(url, target);
   const info = await probeMedia(target);
+  requireVideo(info, target);
   if (parsed.json) { io.write(`${JSON.stringify({ path: target, url, ...info }, null, 2)}\n`); return; }
   io.write(`${target}\n  ${info.duration} s  ${info.width}×${info.height}  ${info.hasAudio ? "with audio" : "no audio"}\n`);
 }
@@ -662,26 +813,27 @@ async function fetch(argv: readonly string[], io: CliIo, cwd: string): Promise<v
 
 export function writeMediaHelp(io: CliIo, topic?: MediaCommand): void {
   const sections: Record<MediaCommand, readonly string[]> = {
-    probe: ["  qflow media probe <file>", "    Duration, size, frame rate and whether there is audio."],
-    cut: ["  qflow media cut <file> --start <s> --end <s> [--label-time] --to <clip.mp4>",
-      "    One exact stretch. --label-time visibly overlays absolute source time on the evidence copy."],
-    frames: ["  qflow media frames <file> (--at <s,s,…> | --every <s>) [--start <s> --end <s>] [--label-time] [--transcript <json>] --to <dir>",
+    probe: ["  qflow media probe <file>", "    Duration and available audio/video streams; video adds size and frame rate."],
+    cut: ["  qflow media cut <file> [--start <s> --end <s> | --keep <start:end> ...] [--label-time] --to <clip.mp4|clip.wav>",
+      "    Keep one stretch or join ordered stretches from one source. Audio-only outputs WAV; MP4 is a useful video target.",
+      "    --label-time overlays source time on a single video evidence copy."],
+    frames: ["  qflow media frames <file> (--at <s,s,…> | --every <s> | --every-frame) [--start <s> --end <s>] [--label-time] [--transcript <json>] --to <dir>",
       "    Individual frames named by source time; --transcript adds word times and context below each picture."],
     tile: ["  qflow media tile <file> [--start <s> --end <s> | --at <s,s,…>] [--every <s> | --frames <n>] [--transcript <json>] [--cell <px>] [--columns <n>] --to <grid.jpg>",
       "    One grid. --every samples from start, excluding end; --frames chooses evenly spaced midpoints."],
-    tiles: ["  qflow media tiles <file> [--start <s> --end <s> | --at <s,s,…> | --ranges <json>] [--every <s> | --frames <n>] [--transcript <json>] [--cell <px>] [--columns <n>] [--rows <n>] --to <dir>",
-      "    Paginated grids (3 rows by default). Range files contain { start, end, id?, frames?, every? }."],
+    tiles: ["  qflow media tiles <file> [--start <s> --end <s> | --at <s,s,…> | --ranges <json>] [--every <s> | --frames <n> | --every-frame] [--transcript <json>] [--cell <px>] [--columns <n>] [--rows <n>] --to <dir>",
+      "    Paginated grids (3 rows by default). --every-frame decodes every original frame once per interval, preserving actual timestamps. Range files contain { start, end, id?, frames?, every? }."],
     boundaries: ["  qflow media boundaries <file> [--rate <samples/s>] [--threshold <0..1>]",
       "    Mechanical adjacent-frame change candidates with scores; never editorial shot labels."],
     "prepare-fetch": ["  qflow media prepare-fetch", "    Explicitly prepare the pinned yt-dlp environment; does not fetch media."],
     fetch: ["  qflow media fetch <url> --to <video.mp4>", "    A link turned into a file with the pinned yt-dlp, video and audio together."],
   };
   const chosen = topic === undefined ? mediaCommands : [topic];
-  io.write(`qflow media\nInspect media at chosen times and scales. Local work; no Runtime Profile, no request, no state.\n\n${
+  io.write(`qflow media\nInspect and prepare media locally. No Runtime Profile, network request or project state.\n\n${
     chosen.map((item) => sections[item].join("\n")).join("\n\n")}\n\nFrames and grids accept --around <phrase> with --transcript instead of --start/--end.\n`
     + "Use --occurrence <n> for a repeated phrase; --padding <s> adds time on each side (default 0.3).\n"
     + "Transcript times must share the input media's clock. An untimed gap is labeled as such, without inferring silence.\n"
-    + "Commands that create evidence write only what --to names and refuse to overwrite. Add --json for the complete machine view.\n");
+    + "Commands write only what --to names and refuse to overwrite. Add --json for the complete machine view.\n");
 }
 
 export async function runMediaCli(argv: readonly string[], io: CliIo, cwd = process.cwd()): Promise<void> {

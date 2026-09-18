@@ -75,6 +75,7 @@ export function parseSourceHeader(sourceName: string, text: string): SourceHeade
 
 /** Preserve every original offset while making the Header ordinary whitespace to body Frontends. */
 export function maskSourceHeader(text: string, header: SourceHeader): string {
-  const prefix = text.slice(0, header.end).replace(/[^\r\n]/gu, " ");
+  // Source ranges use UTF-16 offsets: replace each code unit, not each code point.
+  const prefix = text.slice(0, header.end).replace(/[^\r\n]/g, " ");
   return `${prefix}${text.slice(header.end)}`;
 }

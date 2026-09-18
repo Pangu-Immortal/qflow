@@ -1,106 +1,61 @@
 ---
-title: Studio 时间谱系
-description: 作者选择如何成为 Instant 或 Window，并准确回到真正的作者源。
+title: Studio 中的时间编辑
+description: 区分跟随语义、使用时钟，以及时间编辑实际改变的对象。
 ---
 
-时间只有三层：
+时间表达记录作者的选择。讲解画面可以跟随一句话，闪光可以响应答案，独立动画可以使用影片时钟。
+Studio 修改的是该写法所表达的选择。
 
-```text
-选择层（Selection / Segment / Moment / 编排时间）
-  -> 投影层（TemporalInstant / TemporalWindow）
-  -> 消费层（Programme / Schedule / Track）
-```
+[Script](../quickstart/script.md) 用 Selection 和 Moment 为语义范围与事件命名。
+Timeline 放置准备好的表演；组件通过这些身份或时钟位置获得 Instant、Window。
+无声动画使用同一种 Timeline，由作者声明完整时长。
 
-Script 的语义标尺包含 `2M + 2N + 2` 个点：Token 与 Segment 的首尾，再加彼此
-独立的 Program start/end。Program 锚点由 Timeline 在 `0` 和 `frameCount` 解析，不需要
-伪造进某个 SemanticTake。Take 交叠或重排时，Script 顺序不一定等于实际时间顺序。它们是 Selection/Moment 可选择的作者语义点；这不会让
-`during="program"` 变成可写，后者依然是结构固定的投影。
+## 选择需要编辑的关系
 
-`@qflow/temporal-markup` 统一拥有 SVML 时间语法，并在领域组件运行前把它降低成普通的投影
-组件和运行图边。编译器只会组合 Record、Component 和 Fragment，不认识 `during`、`at`，
-各 Track 也不再各写一套找帧算法。同一个 Timeline 提供全篇范围和其中已有的语义证据，
-领域组件接收同一个 Timeline 与时间投影结果，
-与选择层和 Studio 都解耦。
+| 作者写法 | 移动时改变什么 | 裁剪时改变什么 |
+| --- | --- | --- |
+| `during={story.selection.proof}` | 两个共享 Script 锚点移动相同数量的语义停靠点；时长可能变化 | 对应的 Selection 边界 |
+| 事件的 `at={story.moment.reveal}` | 共享 Moment 锚点 | 该写法没有声明持续时间 |
+| 事件的 `at={story.selection.proof} boundary="start"` | 仅 Selection 的起点锚点 | 该写法没有声明持续时间 |
+| `at={story.moment.reveal} for="8f"` | Moment；持续时间保持八帧 | 从尾端改变持续时间；Moment 保持不变 |
+| `until={story.moment.reveal} for="8f"` | Moment；持续时间保持八帧 | 从首端改变持续时间；Moment 保持不变 |
+| `at="2s" for="8f"` | 作者指定的时钟位置 | 从尾端改变持续时间 |
+| `instant="moment.cue + 2f" moment={story.moment.reveal}` | 局部偏移；Moment 保持不变 | 该写法没有声明持续时间 |
+| `start="…" end="…"` | 两个端点表达式移动相同帧数 | 仅对应端点的表达式 |
+| `during={story.segment.opening}` 或 `during="program"` | 跟随结构范围，不提供时间线拖动 | 不提供时间线裁剪 |
 
-## 运行时对象
+消费组件决定需要 Instant 还是 Window，以及支持哪些写法。事件跟随 Selection 终点时使用
+`boundary="end"`，同样只修改选定边界。
 
-`TemporalInstant` 保存运行时求值来源、精确点表达式、解析后的帧，以及一个作者 authority：
+## 分清共享语义与局部偏移
 
-- `semantic`：作者权威在 Selection 或 Moment；
-- `parameter`：作者权威在组件表面的某个作者时间参数；
-- `fixed`：Program 或 Segment 结构决定，不开放轻量反写。
+移动 `at={story.moment.reveal}` 会在 Script 中移动 Moment，所有使用它的组件随后一起跟随。
+使用相同 Moment 的 `instant="moment.cue"` 则暴露一个初始为零的局部偏移；移动它不会改写共享事件。
 
-身份链全部来自作者声明，不由 Studio 临时生成：
+需要有意提前或延后时，写 `instant="moment.cue + 2f"` 并绑定 `moment={story.moment.reveal}`。
+计算表达式不写进 `{story.moment.reveal}` 这样的图值引用中。
 
-- `<script id="story">` 产生 `Narrative.id = story`，它派生出的 Selection、Moment、Segment
-  excerpt 与 CaptionDocument 全部携带 `narrativeId = story`；
-- 所有终端 Track 的 `programSpaceId` 指向 Film 选定的 Timeline。`ProgramSpace` 是 Timeline
-  内含的公共时钟与范围结构，不是另一种需要单独声明的时间线；
-- 每个 Instant 保留 Space 身份，来自语义的来源额外保留 Narrative 身份；消费者的公开领域
-  身份（通常就是 SVML `id`）作为 `subjectId`。
+事件与持续时间是两个独立决定。`at/for` 只在尾端提供时长裁剪，`until/for` 只在首端提供时长裁剪。
+另一端不会提供一个同时移动共享事件、再补偿时长的隐藏操作。
 
-投影 record 的 `id` 可以为了展开后的图内唯一性带父级前缀，但它不是作者身份；`subjectId`
-独立保留组件公共 Program 发布的 board、card、item 或 sequence 身份，Companion 只沿这一
-身份接回实体。
+## 保留原文与所选边界
 
-这些是公开运行 provenance，不是随机哈希，也不是 Studio metadata。于是同名 Selection 来自
-另一份 Script、或 Track 属于另一条时间轴时，会在边界处明确拒绝，不再靠“当前第一个”碰运气。
-因此 Script id 在当前 Source closure 中必须唯一；两份不同 Script 声明同一个 id 时，Studio
-不会等到逆写时再挑一份。Script Surface 把 `Narrative TypeRef + id` 声明为领域公开身份，
-Elaborator 在整个 Source closure 编译期通用去重。编译器不认识 Script 或 Narrative，也不禁止
-不同领域、不同父对象中的同名子项。
+词首、词尾和结构边界是不同的语义锚点。停顿可以属于前一句，也可以属于后一句。
+拖动沿不同帧位置上的语义停靠点进行；多个锚点重合时，支持该编辑的 Inspector 可以选择精确身份。
+Take 交叠或重排时，Script 顺序可以与实际时间顺序不同。
 
-`TemporalWindow` 由两个完整 Instant 组合而成。两个端点可以有不同来源、不同 authority，
-所以 Window 不再伪造一个“共同 source”。`program.end` 是合法 Instant，不再伪装成一帧窗口。
-越出 ProgramSpace 的 Instant、反向窗口和零宽窗口直接拒绝，不裁切、不修复。
+移动标记保留无关原文、空格、标点、发音和词属性。字幕 Cue 保留来自 Script 的内容及实测词时间。
+在 Script 中修改文案或 Cue 边界，通过 Caption Style 与带时间范围的 Use 修改呈现。
 
-## 作者模式
+未编辑的表达式保留原单位：`2s` 在帧率变化后仍是两秒，`60f` 则保持六十帧。
+拖动改变的时钟位置或偏移以当前帧率下的整数帧写回。
 
-| 写法 | 起点 authority | 终点 authority | 时间线写回 |
-|---|---|---|---|
-| `during={Selection}` | Selection start | Selection end | Script markers |
-| `during={Segment}` / `during="program"` | fixed | fixed | 只读 |
-| `at={Moment} for="…"` | Moment cue | parameter `for` | Script 与 SVML 可原子组合写回 |
-| `until={Moment} for="…"` | parameter `for` | Moment cue | Script 与 SVML 可原子组合写回 |
-| `start="…" end="…"` | `start` | `end` | 组件表面的 SVML 时间参数 |
+## 编辑项目组件
 
-点消费用 `at={Moment}` 或 Selection 的明确边界表达语义 authority；没有语义意图时用
-`instant="…"` 兜底。`at="moment.cue+3f"` 会被拒绝，因为这种写法没有说清作者想移动
-Moment 还是偏移量。
+组件的 Companion 把画面实体连接到实际作者输入和已投影的时间。时间形式决定编辑对象，
+组件名称或偶然相同的帧位置不能代替该关系。Script Companion 拥有源码观察和标记移动；
+增加新组件不需要让 Studio 再学习一种 Script 解释方式。
 
-## Studio 如何反写
-
-Studio 从本次 Run 的实际执行闭包读取 `TemporalInstant` / `TemporalWindow` 记录和直接消费边，
-再逐端点读取 authority：
-
-- `semantic` 写回共享 Script 身份；
-- `parameter` 点名作者输入，再由编译来源定位它的精确 Source 端点；
-- `fixed` 禁止会改变该端点的手势。
-
-因此 `at/for`、`until/for` 可以出现一次手势同时修改 Script 与 SVML。例如拖动 `at/for`
-的起点时，Moment 会移动，同时 `for` 会改变以保持终点不动。两处修改属于同一个 revision
-事务；重新编译失败时一起回退。
-
-Companion 仍负责实体外观和 Inspector 展示，但不再声明通用时间逆函数。新组件只要消费公共
-Instant/Window，并由 Companion 把真实执行谱系连到实体，就自动获得同一套时间行为。
-
-消费端也不是只读取 `frame`：每个官方组件在接收 Instant/Window 时核对 `subjectId`、
-`ProgramSpace.id`。Script 与 Timeline 的对应关系在语义投影时核对。Timeline 是运行图上的显式输入边；不通过全局状态、
-当前 Film 或 renderer 上下文补猜。
-
-字幕 Cue 保持独立：`CaptionDocument -> TimedCaptionProjection -> FineCaptionSchedule` 直接从
-Semantic token evidence 得到只读 Cue 时间，不伪装成可拖动的 TemporalWindow。两种投影共享
-`spaceId / narrativeId / documentId` 的来源校验，但只有 Fine 的 lead、tail、handoff 作为普通
-参数允许修改。
-
-Film 与 Script 的解释也不留在 Studio 核心：`film-studio` 声明 Film 的时间来源和终端 Track
-引用规则；`script-studio` 拥有 Script Source map 与 marker 移动。Studio 只选择
-`narrativeId` 与当前 Timeline 一致的 Script，再把语义修改委托回该 Companion。
-零 Take 的 Timeline 提供同样的物理时间范围，不需要 Script 轨道。`at="2s"` 表示作者编排的事件时刻，
-可以单独用于 Instant，也可以与 `for` 配合形成 Window；其时间修改回写 SVML。
-
-这里的 binding 名不是全局地址。Markup 在降低语法时保留作者元素和输入范围，Elaborator
-把端点与 Record、Component、Output 一起按 Source unit hygienize；编译结果中的
-`AuthorProvenance` 再把运行 authority 精确接回这个端点。Studio 不会在多份 import 中选择
-第一个同名的 `start`、output 或本地 id。这份 provenance 每次编译重新产生，不落盘，也不是
-lock、哈希清单或项目索引。
+[Studio](../quickstart/preview.md) 介绍编辑界面，[Companion 指南](./studio-companion-architecture.md)
+介绍如何公开实体和控件；包内的[时间编辑参考](https://github.com/qflow-ai/qflow/blob/main/packages/temporal-markup/EDITING.md)
+维护精确实现接口和支持的操作。

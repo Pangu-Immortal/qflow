@@ -1,5 +1,6 @@
 import type { AudioTrack, Composition } from "@qflow/composition";
 import { compileHyperframesDocument, materializeHyperframesHtml } from "@qflow/hyperframes";
+import type { HyperframesDocument } from "@qflow/hyperframes";
 import type { ProgramSpace } from "@qflow/program-space";
 
 import { injectRuntimeShim } from "./runtime-shim.js";
@@ -19,6 +20,11 @@ export type RenderInput = {
  * material all come from the projection selected by the Run.
  */
 export function renderPreview(input: RenderInput): string {
+  return renderStudioProgramme(input).preview;
+}
+
+/** The same compiled picture serves immediate frame capture and interactive playback. */
+export function renderStudioProgramme(input: RenderInput): { readonly document: HyperframesDocument; readonly html: string; readonly preview: string } {
   const document = compileHyperframesDocument(input.composition, input.space);
   const html = materializeHyperframesHtml(document, (artifact) => {
     // The only Artifacts a preview can reference are files the author already
@@ -51,5 +57,5 @@ export function renderPreview(input: RenderInput): string {
         fadeInSamples: clip.fadeInSamples, fadeOutSamples: clip.fadeOutSamples,
       }))}"></audio>`;
     }).join("");
-  return injectRuntimeShim(html, audio);
+  return { document, html, preview: injectRuntimeShim(html, audio) };
 }

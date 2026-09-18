@@ -1,98 +1,69 @@
 ---
-title: Studio Temporal Lineage
-description: How author choice becomes an Instant or Window and returns to its real source.
+title: Timing edits in Studio
+description: Choose what follows speech, what uses the clock, and what a timing edit changes.
 ---
 
-Time has three layers:
+A timing expression records an authoring decision. An explanation can follow a spoken phrase;
+a flash can follow its answer; an independently paced animation can use the film clock. Studio
+edits the decision expressed by that form.
 
-```text
-author choice (Selection / Segment / Moment / program time)
-  -> projection (TemporalInstant / TemporalWindow)
-  -> domain consumption (Program / Schedule / Track)
-```
+[Script](../quickstart/script.md) gives phrases and events their Selection and Moment identities.
+The Timeline places the prepared performances; components use those identities or clock positions
+to receive an Instant or Window. A silent animation uses the same Timeline with an authored extent.
 
-Script's semantic ruler contains `2M + 2N + 2` author points: Token and Segment boundaries plus
-distinct Program start/end anchors. Program anchors resolve at frame `0` and `frameCount` in the
-Timeline; they are author points and therefore never have to be forged inside a SemanticTake.
-Their Script order need not match physical time when Takes overlap or are reordered.
-This does not make `during="program"` writable: that projection remains structurally fixed.
+## Choose the relationship to edit
 
-`@qflow/temporal-markup` owns the SVML author forms and lowers them before a domain component runs.
-The compiler only composes records, components and fragments; it does not recognize `during`, `at`
-or any time grammar. One Timeline supplies the complete range and any placed semantic evidence.
-Domain components receive that same Timeline and projected time values, remaining independent from
-both semantic lookup and Studio.
+| Author form | Moving it changes | Trimming it changes |
+| --- | --- | --- |
+| `during={story.selection.proof}` | Both shared Script anchors by the same number of semantic stops; duration may change | The chosen Selection boundary |
+| `at={story.moment.reveal}` for an event | The shared Moment anchor | No duration is declared |
+| `at={story.selection.proof} boundary="start"` for an event | Only the Selection's start anchor | No duration is declared |
+| `at={story.moment.reveal} for="8f"` | The Moment; duration stays eight frames | The trailing duration; the Moment stays fixed |
+| `until={story.moment.reveal} for="8f"` | The Moment; duration stays eight frames | The leading duration; the Moment stays fixed |
+| `at="2s" for="8f"` | The authored clock position | The trailing duration |
+| `instant="moment.cue + 2f" moment={story.moment.reveal}` | The local offset; the Moment stays fixed | No duration is declared |
+| `start="…" end="…"` | Both endpoint expressions by the same frame delta | Only the chosen endpoint expression |
+| `during={story.segment.opening}` or `during="program"` | Follows the structural span; no timeline drag | No timeline trim |
 
-## Runtime values
+The consuming Surface decides whether it needs an Instant or a Window and which forms it exposes.
+For an event bound to a Selection's end, use `boundary="end"` with the same boundary-only behavior.
 
-A `TemporalInstant` contains the runtime source used to evaluate it, the exact point expression and
-resolved frame, and one author authority: `semantic`, `parameter` or `fixed`.
+## Keep shared meaning and local offsets distinct
 
-The identity chain is author-visible rather than synthesized by Studio:
+Moving `at={story.moment.reveal}` relocates the Moment in Script. Every consumer of that Moment
+then follows the changed relationship. Moving `instant="moment.cue"` with the same bound Moment
+instead changes a local offset, initially zero. It leaves the shared Script event in place.
 
-- `<script id="story">` becomes `Narrative.id = story`; every Selection, Moment, Segment excerpt
-  and CaptionDocument from that Script carries `narrativeId = story`;
-- every terminal Track's `programSpaceId` names the selected Timeline. `ProgramSpace` is the shared
-  clock/range shape contained in Timeline, not a second author-declared time axis;
-- every projected Instant carries the space identity; semantic sources also carry the Narrative
-  identity. Each includes the consumer's public domain identity (normally its SVML `id`) as `subjectId`.
+Use `instant="moment.cue + 2f"` with `moment={story.moment.reveal}` for a deliberate lead or lag.
+Arithmetic does not go inside a graph reference such as `{story.moment.reveal}`.
 
-The projection record `id` may be qualified to stay unique inside an expanded graph; it is not the
-author identity. `subjectId` is kept separate and remains the exact board, card, item or sequence
-identity published by the component's public Program.
+An event and its duration are independent choices. `at/for` offers a duration handle on the trailing
+edge; `until/for` offers it on the leading edge. There is no opposite trim handle that secretly moves
+a shared event and compensates by changing its duration.
 
-These values are ordinary runtime provenance, not random hashes or Studio metadata. They let a
-consumer and its inverse reject a same-named Selection from another Script or a Track projected on
-another timeline. A Script id therefore names one Narrative across the active Source closure.
-The Script Surface declares that identity, and compilation rejects duplicates before Studio needs
-to choose a source.
+## Preserve the chosen words and boundaries
 
-A `TemporalWindow` contains two complete Instants and a non-empty half-open span. Its endpoints may
-have different sources and different authorities, so a Window never pretends to have one source.
-ProgramSpace boundaries are legal Instants; `program.end` is not disguised as a one-frame Window.
-Out-of-range Instants and reversed or empty Windows are rejected, not clipped or repaired.
+Word starts, word ends and structural boundaries are distinct semantic anchors. A pause can belong
+to the preceding or following phrase. Dragging uses semantic stops at distinct frame positions;
+where supported, the Inspector lets you choose the exact anchor when several share one frame.
+Script order and physical time can differ when Takes overlap or are reordered.
 
-## Author forms
+Marker edits preserve unrelated prose, spaces, punctuation, pronunciation and word attributes.
+Caption Cues keep their Script-derived content and measured word times. Change their wording or
+Cue boundaries in Script, and their appearance through the Caption Style and timed Uses.
 
-| Form | Start authority | End authority | Timeline writeback |
-|---|---|---|---|
-| `during={Selection}` | semantic Selection start | semantic Selection end | Script markers |
-| `during={Segment}` / `during="program"` | fixed | fixed | read-only |
-| `at={Moment} for="…"` | semantic Moment cue | parameter `for` | Script and/or SVML atomically |
-| `until={Moment} for="…"` | parameter `for` | semantic Moment cue | Script and/or SVML atomically |
-| `at="2s" for="…"` | parameter `at` | parameter `for` | SVML timing attributes |
-| `start="…" end="…"` | parameter `start` | parameter `end` | SVML timing attributes |
+Unedited expressions retain their units: `2s` keeps its duration across frame rates, while `60f`
+keeps its frame count. A clock position or offset changed by a drag is written in whole frames
+at the current frame rate.
 
-A point consumer uses `at={Moment}` (or a chosen Selection boundary) for semantic authority, or
-`at="2s"` for authored time. `instant="…"` accepts a projected expression. Text such as `at="moment.cue+3f"` is rejected because it hides
-whether the author intended to move the Moment or the offset.
+## Editing a project component
 
-## Studio inverse
+A component's Companion connects its entities to their actual authored inputs and projected time.
+The time form determines the edit target; the component name or a coincident frame does not.
+Source observation and marker relocation belong to the Script Companion. Adding a new component
+therefore does not require teaching Studio another interpretation of Script.
 
-Studio indexes the actual executed `TemporalInstant` and `TemporalWindow` records plus their direct
-consumer edges. Endpoint authority, not a component name or Companion declaration, determines the
-inverse:
-
-- semantic authority writes the shared Script identity;
-- parameter authority names the author input selected by the runtime record;
-- fixed authority disables a gesture that would change it.
-
-For `at/for` and `until/for`, one gesture may touch both layers. For example, trimming the start of
-an `at/for` Window moves the Moment and changes `for` so the end stays fixed. Studio applies both
-source ranges as one revisioned transaction, recompiles, and rolls both back on failure.
-
-Companion packages still decide how an entity looks and which Inspector fields are visible. They do
-not declare common timeline inverse functions. A new component becomes time-editable by consuming
-the same public Instant/Window protocol and carrying its executed lineage to its Studio entity.
-
-Film and Script interpretation also remain outside Studio core. `film-studio` declares which Film
-reference supplies the time axis and which child references are terminal Tracks; `script-studio` owns
-Script source observation and marker relocation. Studio selects the Script source map whose
-`narrativeId` exactly matches the active Timeline and delegates the edit back to that companion.
-A zero-Take Timeline supplies the same physical time range without requiring a Script lane.
-
-The binding name is not used as a global address. Markup retains the exact author element and input
-range while decoding, Elaborator hygienizes that endpoint with its Source unit, and the compiled
-`AuthorProvenance` joins the executed authority to one author endpoint. Studio therefore never
-chooses the first same-named `start`, output or local id across imported Sources. The provenance is
-recomputed with the compilation and is not persisted as metadata, a lock or an index file.
+[Studio](../quickstart/preview.md) explains the editing interface. The
+[Companion guide](./studio-companion-architecture.md) explains exposing entities and controls;
+the package-owned [temporal editing reference](https://github.com/qflow-ai/qflow/blob/main/packages/temporal-markup/EDITING.md)
+contains the exact implementation interfaces and supported operations.

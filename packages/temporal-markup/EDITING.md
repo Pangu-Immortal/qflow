@@ -164,7 +164,7 @@ write target. The `fixed` case means no temporal gesture writes that endpoint, n
 parameter editing is forbidden.
 
 - `@qflow/script` owns tokenization, anchor identities, legal marker sites, and structural writeback.
-  It normalizes equivalent marker whitespace, retains punctuation and attributes, writes coincident
+  It relocates markers without rewriting unrelated prose whitespace, retains punctuation and attributes, writes coincident
   markers together, and preserves all unrelated relationships and caption information.
 - `@qflow/temporal-markup` owns the interpretation of each time form and declares its write targets.
   Direct semantic references expose semantic targets; quoted time expressions expose parameter

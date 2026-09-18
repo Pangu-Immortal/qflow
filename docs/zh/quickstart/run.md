@@ -251,9 +251,10 @@ qflow pricing reference.svrun --json
 
 ### 0. 准备按需依赖
 
-普通用户不运行 `pnpm install`。`runtime up` 会读取所选 Runtime Profile，把其 Adapter
-声明的上游 npm 包安装到机器共享目录，并准备外部程序。只有 Profile 选择 WhisperX、OpenCV
-等本地 Python 程序时，才需要先安装 [`uv`](https://docs.astral.sh/uv/)。
+使用已发布的 Qflow 命令，无需在 Qflow 源码仓库运行 `pnpm install`。`runtime up` 会读取所选
+Runtime Profile，把其 Adapter 声明的上游 npm 包安装到机器共享目录，并准备外部程序。项目
+自己的组件和 Provider 仍是普通项目依赖，由项目的包管理器安装。只有 Profile 选择 WhisperX、
+OpenCV 等本地 Python 程序时，才需要先安装 [`uv`](https://docs.astral.sh/uv/)。
 
 作者侧缺少 Fontsource 等上游包时，`check`/`plan` 会给出精确命令，例如：
 

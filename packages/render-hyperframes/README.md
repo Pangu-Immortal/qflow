@@ -6,6 +6,15 @@ semantic coverage through the same frame and audio pipeline.
 
 Explicit author and capability boundary for final HyperFrames video rendering.
 
+`@qflow/render-hyperframes@1#render-frames` captures an existing programme's selected frames.
+`hyperframesFramesRequest({ document, frames })` accepts a `HyperframesDocument` and strictly
+increasing original-frame indices. `{ project: { html, assets }, frames }` accepts already
+materialized HTML with its URL-addressed assets. The `Frames` result is a PNG `BlobRef[]` in request
+order; the request already owns the frame identities. Canvas and clock stay in the input.
+This capability requests picture capture only. File names, contact sheets and pagination belong to
+the caller. `qflow snapshot` invokes it immediately through a selected Profile; there is no Build
+or video encoding in that observation path.
+
 The package owns `<render:Video composition={...}/>` and lowers it to ordinary Operations that:
 
 1. obtain the `ProgramSpace` from the Timeline input and compile the referenced `Composition` into a `HyperframesDocument`;

@@ -20,6 +20,20 @@ function authored() {
   return narrativeValue(parseScript("views.svml", body), "story") as unknown as Narrative;
 }
 
+test("formatting takes Role Cue boundaries from parsed source, including Unicode roles", () => {
+  const cases = [
+    [String.raw`<one>Show \<HOST> literally.</one>`, String.raw`  Show \<HOST> literally.`],
+    ['<one>hello<!-- <HOST> -->world.</one>', '  hello<!-- <HOST> -->world.'],
+    ['<one><host>Then speak. <진행자>안녕하세요.</one>', '  <host>Then speak.\n  <진행자>안녕하세요.'],
+  ] as const;
+  for (const [source, content] of cases) {
+    const formatted = formatScript("format", source);
+    assert.equal(formatted, `<one>\n${content}\n</one>\n`);
+    assert.deepEqual(narrativeValue(parseScript("format", formatted), "story"),
+      narrativeValue(parseScript("format", source), "story"));
+  }
+});
+
 test("omitted speech shares display prose while retaining ordinary Narrative and caption exports", () => {
   for (const [short, expanded] of [
     ['把<动效|><组件化|>。|| <直接复用|>。', '把<动效|动效><组件化|组件化>。|| <直接复用|直接复用>。'],

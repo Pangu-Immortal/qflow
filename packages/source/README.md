@@ -9,5 +9,5 @@ It recognizes exactly one mandatory bounded Header:
 ```
 
 The Header selects an exact trusted Frontend. There is no suffix dispatch and no default parser.
-The package masks the Header while preserving character offsets, but does not recognize imports,
+The package masks the Header while preserving UTF-16 source offsets and line breaks, but does not recognize imports,
 XML, Script, Recipes, Run syntax or domain Types. Those belong to the selected Frontend.

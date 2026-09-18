@@ -279,7 +279,8 @@ test("nested declared references reach the font attribute, not the referring Sty
 
 test("a derived entity follows its actual Style and Companion-owned Recipe presentation", () => {
   const main = "<scene:Track id=\"captions\" layout={baseline-layout}/>";
-  const sheet = `<sheet version="1">
+  const sheet = `<?svml using="@qflow/svs@1"?>
+<sheet version="1">
   caption.alt { x: 0.4; handoff: overlap; colors: ["#FF3F56", "#FFA72D"]; }
 </sheet>`;
   const colors = { kind: "array", minItems: 1, items: { kind: "string", format: "color" } } as const;

@@ -174,8 +174,9 @@ Result label; it does not replace the Build id or alter Source identity.
 Build performs a cheap preflight and submits only when the selected deployment slice is ready. It
 does not install packages or start a missing Managed Program. When the environment has already been
 prepared and only the Worker is stopped, Build ensures that Worker becomes available. When
-preparation is missing, use `qflow runtime up` as described in `../environment/profile.md` and submit
-again after it succeeds.
+preparation is missing, prepare the selected Endpoint with `qflow programs prepare --endpoint <instance>`;
+use `programs up` if its helper also needs starting. [Local preparation](../environment/local-tools.md#let-the-selected-endpoint-own-its-program)
+explains their scope and the combined `runtime up` command. Submit again after the required preparation succeeds.
 
 The Worker owns execution after durable submission. `--follow` only observes it; closing or
 interrupting that terminal detaches the observer and leaves the Build running. Reattach with:
@@ -205,10 +206,10 @@ ends the attempt and preserves available remote receipts; it does not resubmit t
 When an action fails, the attempt ends and local reservations are released. Any last-observed remote
 status remains evidence, rather than a condition the old Build must resolve before the next attempt.
 
-Providers that expose `actionLimits` can separately limit asynchronous `submit`, `poll` and `collect`
-actions through `concurrency` and `rate: { limit, periodMs }`. These budgets share the Profile's pool.
-Task occupancy, overlapping network actions and starts permitted per time period are different quantities;
-`activity --verbose --json` exposes the actual resource claims. Provider-local documentation owns available settings.
+`activity --verbose --json` exposes actual resource claims when capacity explains a wait.
+Task occupancy, overlapping network actions and starts permitted per time period are different
+quantities. [Runtime profiles](../environment/profile.md) owns their configuration and selection;
+the selected Provider's documentation owns its available settings.
 
 ## Separate active work from Result outcome
 

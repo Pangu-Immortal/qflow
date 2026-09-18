@@ -3,38 +3,25 @@ import { canonicalStringify } from "@qflow/protocol";
 import { ScriptSyntaxError } from "./error.js";
 import { narrativeValue } from "./narrative.js";
 import { parseScript } from "./parser.js";
-
-const ROLE = /^[\p{L}\p{M}\p{N}_](?:[\p{L}\p{M}\p{N}_. -]{0,30}[\p{L}\p{M}\p{N}_.-])?$/u;
+import type { ParsedSegment } from "./types.js";
 
 function compact(value: string): string {
   return value.replace(/\s+/gu, " ").trim();
 }
 
-function formatSegment(raw: string, id: string, selfClosing: boolean): string[] {
+function formatSegment(source: string, segment: ParsedSegment): string[] {
+  const { id, selfClosing, contentRange, atoms } = segment;
   if (selfClosing) return [`<${id}/>`];
-  const openEnd = raw.indexOf(">") + 1;
-  const closeStart = raw.lastIndexOf(`</${id}>`);
-  const body = raw.slice(openEnd, closeStart);
   const lines: string[] = [`<${id}>`];
   const turns: string[] = [];
-  let chunkStart = 0;
-  let cursor = 0;
-  while (cursor < body.length) {
-    if (body[cursor] !== "<" || body.startsWith("<!--", cursor)) {
-      cursor += 1;
-      continue;
-    }
-    const end = body.indexOf(">", cursor + 1);
-    if (end < 0) break;
-    const inside = body.slice(cursor + 1, end);
-    if (!inside.includes("|") && ROLE.test(inside)) {
-      const before = compact(body.slice(chunkStart, cursor));
-      if (before) turns.push(before);
-      chunkStart = cursor;
-    }
-    cursor = end + 1;
+  let chunkStart = contentRange.start;
+  for (const atom of atoms) {
+    if (atom.kind !== "role") continue;
+    const before = compact(source.slice(chunkStart, atom.range.start));
+    if (before) turns.push(before);
+    chunkStart = atom.range.start;
   }
-  const tail = compact(body.slice(chunkStart));
+  const tail = compact(source.slice(chunkStart, contentRange.end));
   if (tail) turns.push(tail);
   lines.push(...turns.map((turn) => `  ${turn}`));
   lines.push(`</${id}>`);
@@ -64,7 +51,7 @@ export function formatScript(sourceName: string, source: string): string {
     } else if (output.length) {
       output.push("");
     }
-    output.push(...formatSegment(source.slice(start, end), segment.id, segment.selfClosing));
+    output.push(...formatSegment(source, segment));
     cursor = end;
   }
   const tail = formatOutside(source.slice(cursor));

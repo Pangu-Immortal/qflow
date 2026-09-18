@@ -24,6 +24,10 @@ function findClose(input: ScriptSurfaceInput): { readonly start: number; readonl
   const close = `</${input.tag}>`;
   let cursor = input.contentStart;
   while (cursor < input.source.length) {
+    if (input.source[cursor] === "\\") {
+      cursor += 2;
+      continue;
+    }
     if (input.source.startsWith("<!--", cursor)) {
       const commentEnd = input.source.indexOf("-->", cursor + 4);
       if (commentEnd < 0) {
@@ -33,9 +37,7 @@ function findClose(input: ScriptSurfaceInput): { readonly start: number; readonl
       continue;
     }
     if (input.source.startsWith(close, cursor)) {
-      let slashes = 0;
-      for (let before = cursor - 1; before >= 0 && input.source[before] === "\\"; before -= 1) slashes += 1;
-      if (slashes % 2 === 0) return { start: cursor, end: cursor + close.length };
+      return { start: cursor, end: cursor + close.length };
     }
     cursor += 1;
   }
