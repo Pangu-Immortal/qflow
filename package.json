@@ -279,6 +279,7 @@
     "@qflow/typography-track-studio": "workspace:*",
     "@qflow/visual-ir": "workspace:*",
     "@qflow/volcengine-matting": "workspace:*",
+    "@qflow/wan": "workspace:*",
     "@qflow/whisperx": "workspace:*",
     "@types/node": "24.10.1",
     "rollup": "4.62.4",

@@ -315,6 +315,9 @@ importers:
       '@qflow/volcengine-matting':
         specifier: workspace:*
         version: link:packages/volcengine-matting
+      '@qflow/wan':
+        specifier: workspace:*
+        version: link:packages/wan
       '@qflow/whisperx':
         specifier: workspace:*
         version: link:packages/whisperx
@@ -2447,6 +2450,9 @@ importers:
       '@qflow/runtime-kit':
         specifier: workspace:*
         version: link:../runtime-kit
+      '@qflow/wan':
+        specifier: workspace:*
+        version: link:../wan
     devDependencies:
       '@qflow/seedance':
         specifier: workspace:*
@@ -3644,6 +3650,27 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+
+  packages/wan:
+    dependencies:
+      '@qflow/artifact':
+        specifier: workspace:*
+        version: link:../artifact
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/model-kit':
+        specifier: workspace:*
+        version: link:../model-kit
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
 
   packages/whisperx:
     dependencies:

@@ -4,6 +4,7 @@ import { assertMappingCoversPorts } from "@qflow/generation";
 import type { BlobRef, CanonicalValue } from "@qflow/protocol";
 import { minimaxH3Ports, sealMinimaxH3Request } from "@qflow/minimax-h3";
 import { seedancePorts, sealSeedanceRequest } from "@qflow/seedance";
+import { wanPorts } from "@qflow/wan";
 
 import { monidMappings } from "../src/mapping.js";
 import { monidRouteForCapability } from "../src/routes.js";
@@ -15,7 +16,9 @@ test("every Monid mapping covers its model's ports", () => {
   for (const mapping of monidMappings) {
     const ports = mapping.capability.module.name === "@qflow/minimax-h3"
       ? minimaxH3Ports
-      : seedancePorts[mapping.capability.name as keyof typeof seedancePorts];
+      : mapping.capability.module.name === "@qflow/wan"
+        ? wanPorts[mapping.capability.name as keyof typeof wanPorts]
+        : seedancePorts[mapping.capability.name as keyof typeof seedancePorts];
     assertMappingCoversPorts(ports, mapping);
   }
 });

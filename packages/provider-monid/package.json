@@ -12,7 +12,8 @@
     "@qflow/minimax-h3": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/runtime": "workspace:*",
-    "@qflow/runtime-kit": "workspace:*"
+    "@qflow/runtime-kit": "workspace:*",
+    "@qflow/wan": "workspace:*"
   },
   "devDependencies": {
     "@qflow/seedance": "workspace:*"
