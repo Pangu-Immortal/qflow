@@ -3,6 +3,7 @@ import { relative } from "node:path";
 import type { Plugin } from "vite";
 import { createFeedbackStore, FeedbackConflict } from "./feedback-store.js";
 import { readFeedbackMutation } from "./feedback.js";
+import { allowsStudioMutation } from "./mutation-origin.js";
 import type { FeedbackDocument, FeedbackView } from "./feedback.js";
 
 /** Review storage is separate from compilation, Results and Agent delivery. */
@@ -23,6 +24,12 @@ export function studioFeedbackPlugin(workspaceRoot: string, runPath: string): Pl
       server.httpServer?.once("close", () => watcher.close());
       server.middlewares.use((request, response, next) => {
         if (new URL(request.url ?? "/", "http://studio.qflow.local").pathname !== "/__studio/feedback") return next();
+        if (request.method === "POST" && !allowsStudioMutation(request.headers)) {
+          response.statusCode = 403;
+          response.setHeader("content-type", "application/json; charset=utf-8");
+          response.end(JSON.stringify({ error: "Studio mutation must come from this local Studio session." }));
+          return;
+        }
         response.setHeader("content-type", "application/json; charset=utf-8");
         response.setHeader("cache-control", "no-store");
         void (async () => {

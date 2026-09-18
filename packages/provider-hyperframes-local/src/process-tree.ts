@@ -33,7 +33,10 @@ export async function killRenderTree(pid: number): Promise<void> {
   for (const child of descendants.reverse()) {
     for (const target of [-child, child]) {
       try { process.kill(target, "SIGKILL"); }
-      catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error; }
+      catch (error) {
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code !== "ESRCH" && !(target < 0 && code === "EPERM")) throw error;
+      }
     }
   }
   const deadline = Date.now() + cleanupMs;
@@ -76,7 +79,10 @@ export function killRenderDescendantsSync(pid: number): void {
   for (const child of descendants.slice(1).reverse()) {
     for (const target of [-child, child]) {
       try { process.kill(target, "SIGKILL"); }
-      catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error; }
+      catch (error) {
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code !== "ESRCH" && !(target < 0 && code === "EPERM")) throw error;
+      }
     }
   }
 }

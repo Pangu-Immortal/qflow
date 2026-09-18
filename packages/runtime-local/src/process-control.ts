@@ -23,7 +23,10 @@ function signal(pid: number, force: boolean): ProcessStopResult {
       process.kill(target, name);
       return "sent";
     } catch (error) {
-      if (errorCode(error) === "EPERM") return "denied";
+      if (errorCode(error) === "EPERM") {
+        if (target < 0) continue;
+        return "denied";
+      }
       if (errorCode(error) !== "ESRCH") throw error;
     }
   }

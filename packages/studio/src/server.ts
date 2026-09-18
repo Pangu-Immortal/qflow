@@ -15,6 +15,7 @@ import type { ServedFile } from "./compile.js";
 import type { StudioDomain } from "./domain.js";
 import type { StudioCompanionRegistry } from "./studio-registry.js";
 import { loadStudioRun } from "./run.js";
+import { allowsStudioMutation } from "./mutation-origin.js";
 import { parameterAuthorValue, parameterOption, serializeParameterValue, serializeAttributeGroup, validateParameterValue } from "./parameter-values.js";
 import { readStudioSession } from "./session.js";
 import type { Range, StudioFailure, StudioLibraryRequest, StudioLibraryView, StudioMutation, StudioSnapshot } from "./shared.js";
@@ -473,6 +474,10 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       value.middlewares.use((request, response, next) => {
         const url = new URL(request.url ?? "/", "http://studio.qflow.local");
         if (request.method === "PUT" && url.pathname === "/__studio/source") {
+          if (!allowsStudioMutation(request.headers)) {
+            json(response, 403, { error: "Cross-origin Studio mutations are prohibited." });
+            return;
+          }
           void (async () => {
             let acquired = false;
             try {
@@ -524,6 +529,10 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
           return;
         }
         if (request.method === "PUT" && url.pathname === "/__studio/artifact-name") {
+          if (!allowsStudioMutation(request.headers)) {
+            json(response, 403, { error: "Cross-origin Studio mutations are prohibited." });
+            return;
+          }
           void (async () => {
             try {
               const chunks: Buffer[] = [];
@@ -546,6 +555,10 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
           return;
         }
         if (request.method === "POST" && url.pathname === "/__studio/mutation") {
+          if (!allowsStudioMutation(request.headers)) {
+            json(response, 403, { error: "Cross-origin Studio mutations are prohibited." });
+            return;
+          }
           void (async () => {
             try {
               const chunks: Buffer[] = [];
