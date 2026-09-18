@@ -10,10 +10,30 @@ export type HyperframesHtmlProject = {
 
 /** Read the exact clock emitted by this package. Seconds never reconstruct frame identity. */
 export function hyperframesHtmlDomain(html: string): HyperframesFrameDomain & { readonly canvas: HyperframesCanvas } {
-  const roots = [...html.matchAll(/<[^!][^>]*\sdata-composition-id="[^"]*"[^>]*>/gu)];
-  if (roots.length !== 1) throw new Error("Snapshot HTML needs exactly one compiled HyperFrames composition root");
+  const attributeValue = (tag: string, name: string): string | undefined => {
+    const marker = `${name}="`;
+    for (let at = tag.indexOf(marker); at !== -1; at = tag.indexOf(marker, at + marker.length)) {
+      const previous = tag[at - 1];
+      if (previous === undefined || !" \t\r\n\f".includes(previous)) continue;
+      const start = at + marker.length;
+      const end = tag.indexOf('"', start);
+      return end === -1 ? undefined : tag.slice(start, end);
+    }
+    return undefined;
+  };
+  let root: string | undefined;
+  for (let at = html.indexOf("<div"); at !== -1; at = html.indexOf("<div", at)) {
+    const end = html.indexOf(">", at + 4);
+    if (end === -1) break;
+    const tag = html.slice(at, end + 1);
+    at = end + 1;
+    if (attributeValue(tag, "data-composition-id") === undefined) continue;
+    if (root !== undefined) throw new Error("Snapshot HTML needs exactly one compiled HyperFrames composition root");
+    root = tag;
+  }
+  if (root === undefined) throw new Error("Snapshot HTML needs exactly one compiled HyperFrames composition root");
   const attribute = (name: string) => {
-    const value = new RegExp(`\\s${name}="([^"]*)"`, "u").exec(roots[0]![0])?.[1];
+    const value = attributeValue(root, name);
     if (value === undefined) throw new Error(`Snapshot HTML lacks ${name}; use the compiled HyperFrames HTML`);
     return value;
   };
