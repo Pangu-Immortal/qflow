@@ -52,6 +52,13 @@ Runtime Profile example:
 
 ```json
 {
+  "format": "qflow.runtime-local@1",
+  "dataRoot": ".qflow/runtimes/local",
+  "credentials": {
+    "platform": {
+      "use": "@qflow/credential-store-platform"
+    }
+  },
   "endpoints": {
     "monid.default": {
       "use": "@qflow/provider-monid",
@@ -62,7 +69,8 @@ Runtime Profile example:
         "pollIntervalMs": 10000
       }
     }
-  }
+  },
+  "bindings": {}
 }
 ```
 
