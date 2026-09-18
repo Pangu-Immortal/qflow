@@ -84,18 +84,26 @@ Runtime Profile example:
 
 ```json
 {
+  "format": "qflow.runtime-local@1",
+  "dataRoot": ".qflow/runtimes/local",
+  "credentials": {
+    "platform": {
+      "use": "@qflow/credential-store-platform"
+    }
+  },
   "endpoints": {
     "qflowhub.default": {
       "use": "@qflow/provider-qflowhub",
       "pool": "qflowhub.default",
       "config": {
         "baseUrl": "https://qflow.ai",
-        "apiKey": { "store": "os", "key": "qflowhub.oauth" },
+        "apiKey": { "store": "platform", "key": "qflowhub.oauth" },
         "defaultConcurrency": 3,
         "pollIntervalMs": 10000
       }
     }
-  }
+  },
+  "bindings": {}
 }
 ```
 
