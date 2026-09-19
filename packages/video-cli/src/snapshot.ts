@@ -23,7 +23,7 @@ const MEDIA_TYPES: Readonly<Record<string, string>> = {
 
 async function readProject(source: string, html: string, resources: FileResourceStore): Promise<HyperframesHtmlProject> {
   const assets = [];
-  const base = /^https?:/u.test(source) ? new URL(source) : pathToFileURL(source);
+  const base = isSnapshotHtmlUrl(source) ? new URL(source) : pathToFileURL(source);
   for (const url of hyperframesHtmlAssetUrls(html)) {
     const address = new URL(url, base);
     let mediaType: string | undefined;
@@ -51,6 +51,20 @@ async function readProject(source: string, html: string, resources: FileResource
 }
 
 const OPTIONS = ["--studio", "--to", "--at-frame", "--start-frame", "--end-frame-exclusive", "--step-frames", "--grid", "--cell", "--runtime", "--workspace"];
+
+/** Capture already treats HTTP(S) case-insensitively; snapshot must not turn HTTPS:// into a local path. */
+export function isSnapshotHtmlUrl(value: string): boolean {
+  return /^https?:\/\//iu.test(value);
+}
+
+/** `--studio` is a base URL, not a host:port token. `new URL` otherwise throws TypeError. */
+export function studioDocumentUrl(studio: string): string {
+  try {
+    return new URL("/__studio/document", studio).href;
+  } catch {
+    throw new Error(`--studio needs an http(s) Studio URL, got ${studio}`);
+  }
+}
 
 export function writeSnapshotHelp(io: CliIo): void {
   io.write(`qflow snapshot\nCapture exact frames from an existing compiled HyperFrames HTML programme through the selected Runtime Profile.\n\n`
@@ -87,8 +101,8 @@ export async function runSnapshotCli(argv: readonly string[], io: CliIo, environ
     return Number(raw);
   };
   const source = studio === undefined
-    ? /^https?:\/\//u.test(positionals[0]!) ? positionals[0]! : resolve(environment.cwd, positionals[0]!)
-    : new URL("/__studio/document", studio).href;
+    ? isSnapshotHtmlUrl(positionals[0]!) ? positionals[0]! : resolve(environment.cwd, positionals[0]!)
+    : studioDocumentUrl(studio);
   let document: HyperframesDocument | undefined;
   let html: string;
   if (studio !== undefined) {
@@ -97,7 +111,7 @@ export async function runSnapshotCli(argv: readonly string[], io: CliIo, environ
     document = await response.json() as HyperframesDocument;
     assertHyperframesDocument(document);
     html = document.html;
-  } else if (/^https?:/u.test(source)) {
+  } else if (isSnapshotHtmlUrl(source)) {
     const response = await fetch(source);
     if (!response.ok) throw new Error(`Snapshot HTML: HTTP ${response.status} ${await response.text()}`);
     html = await response.text();

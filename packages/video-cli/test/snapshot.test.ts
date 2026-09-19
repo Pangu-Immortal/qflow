@@ -6,7 +6,7 @@ import { join } from "node:path";
 import sharp from "sharp";
 import { canonicalize } from "@qflow/protocol";
 import { verifyHyperframesFramesRequest } from "@qflow/render-hyperframes";
-import { runSnapshotCli } from "../src/snapshot.js";
+import { isSnapshotHtmlUrl, runSnapshotCli, studioDocumentUrl } from "../src/snapshot.js";
 import type { CreationEnvironment } from "../src/creation.js";
 
 const html = '<!doctype html><div data-composition-id="test" data-fps="30000/1001" data-qflow-frame-count="12" data-width="96" data-height="64"><img src="still.png"></div>';
@@ -52,6 +52,40 @@ test("snapshot invokes the selected Profile once and writes original-frame PNGs 
     await assert.rejects(runSnapshotCli(["snapshot", "index.html", "--at-frame", "12", "--to", "bad"], { write() {} }, environment), /\[0, 12\)/u);
     await assert.rejects(runSnapshotCli(["snapshot", "index.html", "--at-frame", "3,3", "--to", "bad"], { write() {} }, environment), /strictly increasing/u);
     assert.equal(calls, 1);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test("snapshot --studio without a URL scheme is a usage error, not TypeError", async () => {
+  assert.equal(studioDocumentUrl("http://localhost:5191"), "http://localhost:5191/__studio/document");
+  assert.throws(() => studioDocumentUrl("localhost:5191"), /--studio needs an http\(s\) Studio URL/u);
+  const environment: CreationEnvironment = { cwd: "/tmp", openHost: async () => ({ profile: "empty.json", host: {
+    providers: async () => [], invoke: async () => { throw new Error("must not run"); },
+  } }) };
+  await assert.rejects(
+    runSnapshotCli(["snapshot", "--studio", "localhost:5191", "--at-frame", "0", "--to", "out"], { write() {} }, environment),
+    (error: unknown) => error instanceof Error && error.name === "Error" && /--studio needs an http\(s\) Studio URL/u.test(error.message),
+  );
+});
+
+test("snapshot treats HTTPS HTML URLs as network inputs, matching capture", async (t) => {
+  assert.equal(isSnapshotHtmlUrl("HTTPS://example.test/picture/index.html"), true);
+  assert.equal(isSnapshotHtmlUrl("https://example.test/picture/index.html"), true);
+  assert.equal(isSnapshotHtmlUrl("index.html"), false);
+  const directory = await mkdtemp(join(tmpdir(), "qflow-snapshot-https-"));
+  const fetched: string[] = [];
+  t.mock.method(globalThis, "fetch", async (input: string | URL) => {
+    fetched.push(String(input));
+    return new Response(html.replace('<img src="still.png">', ""));
+  });
+  try {
+    const environment: CreationEnvironment = { cwd: directory, openHost: async () => ({ profile: "empty.json", host: {
+      providers: async () => [], invoke: async () => { throw new Error("must not run"); },
+    } }) };
+    await assert.rejects(runSnapshotCli(
+      ["snapshot", "HTTPS://example.test/picture/index.html", "--at-frame", "0", "--to", "out"],
+      { write() {} }, environment,
+    ), /No Endpoint/u);
+    assert.deepEqual(fetched, ["HTTPS://example.test/picture/index.html"]);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
 
