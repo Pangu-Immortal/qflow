@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { artifactTypes } from "@qflow/artifact";
-import { mediaTypes, sealRenderedVisual, synchronizedMediaSampleFrames, verifyMediaInspection, verifyMuxedMedia, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/media";
+import { mediaTypes, sealRenderedVisual, sealTimelineAudio, synchronizedMediaSampleFrames, verifyMediaInspection, verifyMuxedMedia, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/media";
 import type { MediaAudioStream, MediaInspection, MuxedMedia, SynchronizedMedia, TimelineAudio } from "@qflow/media";
 import { assertSpeechEvidenceAudioIdentity, speechTypes } from "@qflow/speech";
 import type { SpeechEvidenceAudio } from "@qflow/speech";
@@ -806,6 +806,58 @@ test("local media Provider renders one frame-domain audio plan and muxes exactly
       "AAC packet duration/padding metadata must preserve the authoritative presentation span");
     assert.ok(audios[0]?.kind === "audio" && audios[0].decodedSampleFrames >= 48_000,
       "AAC coding frames may include padding, but must cover the complete presentation span");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("local media Provider preserves the audio tail for a 30000/1001 frame domain", {
+  skip: !hasMediaBinaries,
+}, async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-provider-media-ntsc-mux-"));
+  try {
+    const visualPath = join(root, "visual.mp4");
+    const audioPath = join(root, "audio.wav");
+    const frameRate = { numerator: 30_000, denominator: 1_001 };
+    const frameCount = 913;
+    const sampleFrames = 1_462_261;
+    await run("ffmpeg", [
+      "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=s=160x96:r=30000/1001",
+      "-frames:v", String(frameCount), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", visualPath,
+    ]);
+    await run("ffmpeg", [
+      "-v", "error", "-y", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000",
+      "-af", `atrim=end_sample=${sampleFrames}`, "-ac", "2", "-c:a", "pcm_s16le", audioPath,
+    ]);
+
+    const resources = new MemoryResourceStore();
+    const [audioArtifact, visualArtifact] = await Promise.all([
+      resources.put(await readFile(audioPath), "audio/wav"),
+      resources.put(await readFile(visualPath), "video/mp4"),
+    ]);
+    const audio = sealTimelineAudio({ artifact: audioArtifact, sampleFrames });
+    const visual = sealRenderedVisual({
+      frameRate,
+      frameCount,
+      canvas: { width: 160, height: 96 },
+      artifact: visualArtifact,
+    });
+    const muxValue = await fulfillInline(resources, need(
+      "need:mux-ntsc-program-media",
+      mediaPipelineCapabilities.mux,
+      mediaTypes.muxed,
+      canonicalize({ visual, audio }),
+    ));
+    verifyMuxedMedia(muxValue);
+    const muxed = muxValue as unknown as MuxedMedia;
+    const inspection = await inspectArtifact(resources, muxed.artifact);
+    const audioStream = inspection.streams.find((stream): stream is MediaAudioStream => stream.kind === "audio");
+    assert.ok(audioStream);
+    const presentedSamples = presentationSampleFrames(audioStream);
+    assert.ok(Math.abs(presentedSamples - sampleFrames) < 64,
+      `AAC presentation span must retain the complete NTSC timeline audio (delta ${presentedSamples - sampleFrames})`);
+    assert.ok(audioStream.decodedSampleFrames >= sampleFrames,
+      "AAC coding frames must cover the complete NTSC timeline audio");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

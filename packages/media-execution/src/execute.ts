@@ -1278,7 +1278,6 @@ export async function executeMuxProgramMedia(
         "-y", "-i", visualPath, "-i", audioPath,
         "-map", `0:${visual.index}`, "-map", "1:0",
         "-c:v", "copy", "-c:a", "aac", "-ar", "48000", "-ac", "2",
-        "-frames:v", String(need.visual.frameCount),
         "-movflags", "+faststart", output,
       ],
       timeoutMs: env.processTimeoutMs,
