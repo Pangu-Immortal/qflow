@@ -671,6 +671,26 @@ test("local media Provider transforms A/V and extracts ordinary audio and frame 
     const spreadInspection = await inspectArtifact(resources, spread);
     assert.equal(spreadInspection.streams.length, 1);
     assert.equal(spreadInspection.streams[0]?.decodedUnitCount, 15, "two pictures spread over the same frame count");
+    const twentyFourSpread = await executeArtifact(need(
+      "need:render-still-24fps-spread",
+      mediaPipelineCapabilities.renderStill,
+      artifactTypes.blob,
+      canonicalize({
+        request: {
+          frameRate: { numerator: 24, denominator: 1 },
+          frameCount: 144,
+          output: { container: "mp4", codec: "h264", pixelFormat: "yuv420p" },
+          segments: [
+            { startFrame: 0, endFrameExclusive: 24, source: extractedFrame },
+            { startFrame: 24, endFrameExclusive: 96, source: extractedFrame },
+            { startFrame: 96, endFrameExclusive: 144, source: extractedFrame },
+          ],
+        },
+      }),
+    ));
+    const twentyFourInspection = await inspectArtifact(resources, twentyFourSpread);
+    assert.equal(twentyFourInspection.streams[0]?.decodedUnitCount, 144,
+      "three Still segments at 24 fps must preserve the complete frame domain");
     const stillSelection = selectMediaStreams(stillInspection, sealMediaSelectionRequest({
       video: { mode: "primary-moving" },
       audio: { mode: "none" },

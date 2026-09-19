@@ -802,6 +802,7 @@ export async function executeRenderStillVideo(
       "select=eq(n\\,0)",
       "loop=loop=-1:size=1:start=0",
       `trim=start_frame=0:end_frame=${frames}`,
+      `settb=expr=${denominator}/${numerator}`,
       `setpts=N*${denominator}/(${numerator}*TB)`,
     ].join(",");
     let argv: string[];
