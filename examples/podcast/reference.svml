@@ -308,9 +308,9 @@
   <seedance:ReferenceVideo id="lifestyle-montage" model="mini"
     prompt={lifestyle-montage-prompt} duration="5"
     resolution="720p" aspect-ratio="9:16" generate-audio="false">
-    <seedance:Reference image={coffee.image}/>
-    <seedance:Reference image={smoothie.image}/>
-    <seedance:Reference image={pasta.image}/>
+    <seedance:Reference image={coffee.image} person-reference="true"/>
+    <seedance:Reference image={smoothie.image} person-reference="true"/>
+    <seedance:Reference image={pasta.image} person-reference="true"/>
   </seedance:ReferenceVideo>
 
   <text:Render id="daily-creatine-take-prompt"
@@ -328,15 +328,15 @@
   <seedance:ReferenceVideo id="opening-take" model="mini"
     prompt={opening-take-prompt} duration="5"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={split.image}/>
+    <seedance:Reference image={split.image} person-reference="true"/>
     <seedance:Reference audio={guy-voice.reference}/>
   </seedance:ReferenceVideo>
 
   <seedance:ReferenceVideo id="daily-creatine-take" model="mini"
     prompt={daily-creatine-take-prompt} duration="8"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={girl-hold.image}/>
-    <seedance:Reference image={guy.image}/>
+    <seedance:Reference image={girl-hold.image} person-reference="true"/>
+    <seedance:Reference image={guy.image} person-reference="true"/>
     <seedance:Reference audio={girl-voice.reference}/>
     <seedance:Reference audio={guy-voice.reference}/>
   </seedance:ReferenceVideo>
@@ -344,8 +344,8 @@
   <seedance:ReferenceVideo id="arms-are-asking-take" model="mini"
     prompt={arms-are-asking-take-prompt} duration="6"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={girl-hold.image}/>
-    <seedance:Reference image={guy-hold.image}/>
+    <seedance:Reference image={girl-hold.image} person-reference="true"/>
+    <seedance:Reference image={guy-hold.image} person-reference="true"/>
     <seedance:Reference audio={girl-voice.reference}/>
     <seedance:Reference audio={guy-voice.reference}/>
   </seedance:ReferenceVideo>

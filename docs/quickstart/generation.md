@@ -130,7 +130,8 @@ First-frame generation with an optional last frame:
 ```svml
 <seedance:FrameVideo id="transition" model="fast"
   prompt={transition-direction} duration="5"
-  first-frame={opening-image} last-frame={closing-image}/>
+  first-frame={opening-image} first-frame-person-reference="false"
+  last-frame={closing-image} last-frame-person-reference="false"/>
 ```
 
 ### seedance:ReferenceVideo
@@ -148,10 +149,10 @@ video and audio references within the model's declared limits.
 </seedance:ReferenceVideo>
 ```
 
-On an image or video reference, `person-reference="true"` declares a person/avatar in the supplied
-material, including a generated human likeness. Use false for a reference without that content;
-omission leaves the classification unspecified. Audio references do not use this visual flag.
-Frame mode provides `first-frame-person-reference` and `last-frame-person-reference`. The selected
+Every image/video reference requires `person-reference="true|false"`: true if the supplied material
+contains a person, false otherwise. Omission is an error;
+audio must omit the field. Frame mode requires `first-frame-person-reference` and, when a last frame
+is supplied, `last-frame-person-reference`. The selected
 Provider carries this fact through the service's media preparation; a service without such a field
 accepts the declaration without transmitting it.
 
@@ -221,8 +222,8 @@ language for the selected model, keeping dialogue in the language it should be s
   resolution="720p"
   aspect-ratio="9:16"
   generate-audio="false">
-  <seedance:Reference image={scene}/>
-  <seedance:Reference image={product}/>
+  <seedance:Reference image={scene} person-reference="false"/>
+  <seedance:Reference image={product} person-reference="false"/>
 </seedance:ReferenceVideo>
 ```
 

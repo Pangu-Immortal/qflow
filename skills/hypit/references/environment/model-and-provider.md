@@ -232,7 +232,7 @@ Follow one actual request:
 
 Locate the complete `examples/provider-package/README.md` through `qflow paths`. Use its
 `provider-images` or `provider-videos` package according to the request shape. The video example
-covers image/video/audio references, first/last frames, optional person classification and separate
+covers image/video/audio references, first/last frames, required visual-reference person classification and separate
 result collection. Its mappings, limits and transport are examples to adapt, not a new shared API.
 Implement only the service capabilities this work needs.
 

@@ -197,9 +197,9 @@
     model="mini" prompt={manifest-rule-prompt}
     duration="11"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={interviewer-view.image}/>
-    <seedance:Reference image={guest-view.image}/>
-    <seedance:Reference image={shared-view.image}/>
+    <seedance:Reference image={interviewer-view.image} person-reference="true"/>
+    <seedance:Reference image={guest-view.image} person-reference="true"/>
+    <seedance:Reference image={shared-view.image} person-reference="true"/>
     <seedance:Reference audio={boy-voice.reference}/>
     <seedance:Reference audio={wife-voice.reference}/>
   </seedance:ReferenceVideo>
@@ -208,9 +208,9 @@
     model="mini" prompt={real-estate-rule-prompt}
     duration="8"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={interviewer-view.image}/>
-    <seedance:Reference image={guest-view.image}/>
-    <seedance:Reference image={shared-view.image}/>
+    <seedance:Reference image={interviewer-view.image} person-reference="true"/>
+    <seedance:Reference image={guest-view.image} person-reference="true"/>
+    <seedance:Reference image={shared-view.image} person-reference="true"/>
     <seedance:Reference audio={boy-voice.reference}/>
     <seedance:Reference audio={wife-voice.reference}/>
   </seedance:ReferenceVideo>
@@ -219,9 +219,9 @@
     model="mini" prompt={bitcoin-rule-prompt}
     duration="8"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={interviewer-view.image}/>
-    <seedance:Reference image={guest-view.image}/>
-    <seedance:Reference image={shared-view.image}/>
+    <seedance:Reference image={interviewer-view.image} person-reference="true"/>
+    <seedance:Reference image={guest-view.image} person-reference="true"/>
+    <seedance:Reference image={shared-view.image} person-reference="true"/>
     <seedance:Reference audio={boy-voice.reference}/>
     <seedance:Reference audio={wife-voice.reference}/>
   </seedance:ReferenceVideo>

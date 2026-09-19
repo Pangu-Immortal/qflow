@@ -133,9 +133,9 @@
     model="mini" prompt={uber-rule-prompt}
     duration="9"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={interviewer-view.image}/>
-    <seedance:Reference image={guest-view.image}/>
-    <seedance:Reference image={shared-view.image}/>
+    <seedance:Reference image={interviewer-view.image} person-reference="true"/>
+    <seedance:Reference image={guest-view.image} person-reference="true"/>
+    <seedance:Reference image={shared-view.image} person-reference="true"/>
     <seedance:Reference audio={leon-voice}/>
     <seedance:Reference audio={ada-voice}/>
   </seedance:ReferenceVideo>
@@ -144,9 +144,9 @@
     model="mini" prompt={shortcuts-rule-prompt}
     duration="11"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={interviewer-view.image}/>
-    <seedance:Reference image={guest-view.image}/>
-    <seedance:Reference image={shared-view.image}/>
+    <seedance:Reference image={interviewer-view.image} person-reference="true"/>
+    <seedance:Reference image={guest-view.image} person-reference="true"/>
+    <seedance:Reference image={shared-view.image} person-reference="true"/>
     <seedance:Reference audio={leon-voice}/>
     <seedance:Reference audio={ada-voice}/>
   </seedance:ReferenceVideo>
@@ -155,9 +155,9 @@
     model="mini" prompt={first-place-rule-prompt}
     duration="6"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={interviewer-view.image}/>
-    <seedance:Reference image={guest-view.image}/>
-    <seedance:Reference image={shared-view.image}/>
+    <seedance:Reference image={interviewer-view.image} person-reference="true"/>
+    <seedance:Reference image={guest-view.image} person-reference="true"/>
+    <seedance:Reference image={shared-view.image} person-reference="true"/>
     <seedance:Reference audio={leon-voice}/>
     <seedance:Reference audio={ada-voice}/>
   </seedance:ReferenceVideo>

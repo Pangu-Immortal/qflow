@@ -42,11 +42,11 @@ test("Seedance 2.5 selects the HiAPI model from the request shape", async () => 
     input: { prompt: "go", resolution: "720p", duration: 5, generate_audio: true, web_search: false, aspect_ratio: "adaptive", first_frame_url: "https://example.test/reference" },
   });
   const references = sealSeedanceRequest("seedance-2.5", {
-    ...base, aspectRatio: ["16:9"], referenceVideo: [{ role: "video", artifact: video }],
+    ...base, aspectRatio: ["16:9"], referenceVideo: [{ role: "video", artifact: video, fields: { personReference: false } }],
   });
   assert.equal(seedance.prepare(constraints(references)).model, "seedance-2.5/reference-to-video");
   const framed = seedance.supports({ capability: seedance.capability, returns: seedance.returns,
-    constraints: constraints(sealSeedanceRequest("seedance-2.5", { ...base, aspectRatio: ["16:9"], firstFrame: [{ role: "image", artifact: image }] })) });
+    constraints: constraints(sealSeedanceRequest("seedance-2.5", { ...base, aspectRatio: ["16:9"], firstFrame: [{ role: "image", artifact: image, fields: { personReference: true } }] })) });
   assert.equal(framed.status, "unsupported");
 });
 

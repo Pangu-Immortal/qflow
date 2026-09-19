@@ -164,13 +164,13 @@
   <seedance:ReferenceVideo id="ronaldo-take" model="mini"
     prompt={ronaldo-prompt} duration="10"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={presenter.image}/>
+    <seedance:Reference image={presenter.image} person-reference="true"/>
     <seedance:Reference audio={presenter-voice.reference}/>
   </seedance:ReferenceVideo>
   <seedance:ReferenceVideo id="messi-take" model="mini"
     prompt={messi-prompt} duration="10"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={presenter.image}/>
+    <seedance:Reference image={presenter.image} person-reference="true"/>
     <seedance:Reference audio={presenter-voice.reference}/>
   </seedance:ReferenceVideo>
 

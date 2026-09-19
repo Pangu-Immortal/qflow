@@ -17,7 +17,7 @@ const audio = (mediaType: string): BlobRef => ({
 const settings = {
   prompt: ["A presenter explains the scene"], resolution: ["720p"], aspectRatio: ["9:16"],
   duration: [5], generateAudio: [true], webSearch: [false],
-  referenceImage: [{ role: "image" as const, artifact: {
+  referenceImage: [{ role: "image" as const, fields: { personReference: true }, artifact: {
     kind: "blob" as const, resource: fixtureResource("reference-image"), size: 4, mediaType: "image/png",
   } }],
 };
@@ -57,8 +57,16 @@ for (const [model, endpoint] of Object.entries(seedanceEndpointsByModel)) {
       const role = port === "referenceVideo" ? "video" : "image";
       const artifact = { ...referenceImage[0]!.artifact, mediaType: role === "video" ? "video/mp4" : "image/png" };
       const initial = { ...scalars, ...(port === "lastFrame" ? { firstFrame: referenceImage } : {}) };
-      for (const flag of [true, false, undefined]) {
-        const binding = { role, ...(flag === undefined ? {} : { fields: { personReference: flag } }) };
+      for (const fields of [undefined, {}, { personReference: "true" }]) {
+        const binding = { role, ...(fields === undefined ? {} : { fields }) };
+        assert.throws(() => endpoint.sealRequest({ ...initial, [port]: [{ ...binding, artifact }] }), /personReference/);
+        await assert.rejects(produce(endpoint.mediaBindings[port]!.producer, {
+          draft: input(inline(sealGenerationRequestDraft(endpoint.ports, initial))),
+          binding: input(inline(binding)), artifact: input(artifact),
+        }), /personReference/);
+      }
+      for (const flag of [true, false]) {
+        const binding = { role, fields: { personReference: flag } };
         const bound = await produce(endpoint.mediaBindings[port]!.producer, {
           draft: input(inline(sealGenerationRequestDraft(endpoint.ports, initial))),
           binding: input(inline(binding)), artifact: input(artifact),

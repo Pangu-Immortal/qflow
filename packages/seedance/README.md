@@ -34,22 +34,20 @@ responsible for any additional service-specific input limits.
 
 ## Visual reference metadata
 
-Declare whether each image or video contains a person/avatar reference, including an AI-generated
-human likeness. This describes the supplied material, independently of the prompt's requested action:
+Every supplied image or video must explicitly declare `person-reference`: `true` if it contains
+a person, `false` otherwise. Classify the supplied material, not the requested result.
 
 ```xml
-<seedance:ReferenceVideo id="dance" model="mini" prompt={direction} duration="8">
+<seedance:ReferenceVideo id="take" model="mini" prompt={direction} duration="8">
   <seedance:Reference image={presenter.image} person-reference="true"/>
-  <seedance:Reference video={motion.video} person-reference="true"/>
+  <seedance:Reference video={presenter.video} person-reference="true"/>
   <seedance:Reference image={room.image} person-reference="false"/>
 </seedance:ReferenceVideo>
 ```
 
-`person-reference` is optional, accepts literal `true` or `false`, and applies to image/video, not
-voice audio. Omission carries no classification; it is distinct from explicitly declaring false.
-Inspect the actual reference when deciding the value. For `FrameVideo`, use
-`first-frame-person-reference` and `last-frame-person-reference` beside their respective frame
-inputs. A last-frame classification requires a last-frame input.
+Missing or non-boolean declarations are rejected; there is no default or automatic face detection.
+Audio must omit this field. `FrameVideo` requires `first-frame-person-reference` and, when a last
+frame is supplied, `last-frame-person-reference`. A last-frame classification requires a last frame.
 
 | Supplied visual input | Authored attribute | Request port |
 | --- | --- | --- |
@@ -66,23 +64,18 @@ These forms apply to `standard`, `fast`, `mini` and `2.5`. For example:
   last-frame={empty-room.image} last-frame-person-reference="false"/>
 ```
 
-Classify the material supplied to this request, not the intended result. A dance video with a person
-still needs `true` when used only for motion, even if the prompt asks for a different performer.
-An empty room stays `false` when the prompt asks to add a person. Inspect video across the selected
-excerpt, not only its opening frame. This flag neither detects faces nor locks or names an identity.
-Identity and action direction remain in the prompt and references.
+Inspect the selected video excerpt, not only its opening frame. An empty room stays `false` when
+the prompt asks to add a person. The flag does not lock identity; direction and references own that.
 
 The SVML author declares this parameter on each reference input. Admitted files, generated
 images/videos and reused Results use the same attributes. For a future output, declare the intended
 reference classification explicitly; if its contents are uncertain, generate and inspect that
 material before using it downstream.
 
-The model's media ports carry this as `fields.personReference`. Providers interpret it through their
-service's media handling; it is not a prompt sentence or a Core-level identity. QflowHub sends it as
+Direct requests require the same boolean in `fields.personReference`. Providers interpret it through
+their service's media handling; it is not a prompt sentence or a Core-level identity. QflowHub sends it as
 `is_person_reference` when uploading the file, then uses the returned URL in the ordinary video
 request. A project Provider maps it according to its own API.
-Omission does not request automatic face detection. QflowHub currently treats omitted upload flags
-as unmarked (`false`); declare `true` explicitly for a person reference that needs its preparation.
 
 Video references can carry motion or camera behavior while image references carry the target
 appearance. Request duration and reference-clip duration are different limits. Check the selected

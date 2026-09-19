@@ -136,23 +136,23 @@
   <seedance:ReferenceVideo id="opening-take" model="mini"
     prompt={opening-take-prompt} duration="4"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={jocknerd.image}/>
+    <seedance:Reference image={jocknerd.image} person-reference="true"/>
     <seedance:Reference audio={nerd-voice}/>
   </seedance:ReferenceVideo>
 
   <seedance:ReferenceVideo id="lifestyle-montage" model="mini"
     prompt={lifestyle-montage-prompt} duration="4"
     resolution="720p" aspect-ratio="9:16" generate-audio="false">
-    <seedance:Reference image={classroom-selfie.image}/>
-    <seedance:Reference image={library-study.image}/>
-    <seedance:Reference image={wedding-vows.image}/>
+    <seedance:Reference image={classroom-selfie.image} person-reference="true"/>
+    <seedance:Reference image={library-study.image} person-reference="true"/>
+    <seedance:Reference image={wedding-vows.image} person-reference="true"/>
   </seedance:ReferenceVideo>
 
   <seedance:ReferenceVideo id="daily-cheatgpt-take" model="mini"
     prompt={daily-cheatgpt-take-prompt} duration="7"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={jock-hold.image}/>
-    <seedance:Reference image={nerd.image}/>
+    <seedance:Reference image={jock-hold.image} person-reference="true"/>
+    <seedance:Reference image={nerd.image} person-reference="true"/>
     <seedance:Reference audio={jock-voice}/>
     <seedance:Reference audio={nerd-voice}/>
   </seedance:ReferenceVideo>
@@ -160,8 +160,8 @@
   <seedance:ReferenceVideo id="brain-is-asking-take" model="mini"
     prompt={brain-is-asking-take-prompt} duration="7"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={jock-hold.image}/>
-    <seedance:Reference image={nerd.image}/>
+    <seedance:Reference image={jock-hold.image} person-reference="true"/>
+    <seedance:Reference image={nerd.image} person-reference="true"/>
     <seedance:Reference audio={jock-voice}/>
     <seedance:Reference audio={nerd-voice}/>
   </seedance:ReferenceVideo>

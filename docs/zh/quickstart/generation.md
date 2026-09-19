@@ -116,7 +116,8 @@ Seedance 2.5 复用同样的 Surface，而不是由 Runtime 把别的模型偷�
 ```svml
 <seedance:FrameVideo id="transition" model="fast"
   prompt={transition-direction} duration="5"
-  first-frame={opening-image} last-frame={closing-image}/>
+  first-frame={opening-image} first-frame-person-reference="false"
+  last-frame={closing-image} last-frame-person-reference="false"/>
 ```
 
 ### seedance:ReferenceVideo
@@ -133,9 +134,8 @@ Seedance 2.5 复用同样的 Surface，而不是由 Runtime 把别的模型偷�
 </seedance:ReferenceVideo>
 ```
 
-图片或视频参考上的 `person-reference="true"` 声明素材中含有人物／数字人形象，AI 生成的人像也适用。
-没有这类内容时可写 false；省略表示没有提供分类。音频参考不使用这个视觉标记。
-首尾帧模式提供 `first-frame-person-reference` 和 `last-frame-person-reference`。
+每个参考图片／视频必须填写 `person-reference="true|false"`：参考素材含人物填 true，不含填 false。
+漏填会报错，音频不得填写。首帧必须填写 `first-frame-person-reference`，提供尾帧时还须填写 `last-frame-person-reference`。
 选定的 Provider 负责把这项事实交给服务的素材准备流程；服务 API 没有对应字段时，Provider 接受这项声明但不传输。
 
 舞蹈、身体动作或运镜可以由参考视频提供运动依据，再用参考图指定新的形象与场景。
@@ -189,8 +189,8 @@ Source Closure 沿着这个显式包导入读取内容。如果共享措辞不�
 <seedance:ReferenceVideo id="demo" model="mini"
   prompt={demo-prompt} duration="5"
   resolution="720p" aspect-ratio="9:16" generate-audio="false">
-  <seedance:Reference image={scene}/>
-  <seedance:Reference image={product}/>
+  <seedance:Reference image={scene} person-reference="false"/>
+  <seedance:Reference image={product} person-reference="false"/>
 </seedance:ReferenceVideo>
 ```
 

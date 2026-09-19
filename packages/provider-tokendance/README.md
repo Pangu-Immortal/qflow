@@ -19,7 +19,7 @@ the models the Distribution already describes.
 Video requests write the prompt and each media input as one item of the protocol's `content`
 array with its `role` (`first_frame`, `last_frame`, `reference_image`, `reference_video`,
 `reference_audio`), then `resolution`, `ratio`, `duration` and, for Seedance, `generate_audio`;
-`web-search="true"` adds `tools: [{ "type": "web_search" }]`. Seedance visual references may carry
+`web-search="true"` adds `tools: [{ "type": "web_search" }]`. Seedance visual references require
 `person-reference`; the Provider accepts the declaration and transmits nothing for it, since the Ark
 protocol has no such field. Seedance 2.0 and 2.5 reject reference images and videos that contain a
 real human face; TokenDance offers no way to register authorized portrait material, so such a request

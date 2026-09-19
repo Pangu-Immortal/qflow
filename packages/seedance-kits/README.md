@@ -23,8 +23,8 @@ ordinary explicit graph edges:
 
 <seedance:ReferenceVideo id="broll" model="mini" prompt={broll-prompt}
   duration="5" resolution="720p" aspect-ratio="9:16">
-  <seedance:Reference image={scene}/>
-  <seedance:Reference image={product}/>
+  <seedance:Reference image={scene} person-reference="false"/>
+  <seedance:Reference image={product} person-reference="false"/>
 </seedance:ReferenceVideo>
 ```
 
@@ -154,7 +154,8 @@ For a multi-scene B-roll montage, `story` can name the references in scene order
 action. Choose an edit language compatible with cuts. “Continuous within each scene” and “one
 continuous shot for the whole montage” ask for different results.
 
-Visual input classification belongs to the Seedance Reference, separately from Kit text. The
+Every Seedance image/video Reference requires `person-reference="true|false"`: true if the supplied
+material contains a person, false otherwise. Audio must omit it. The
 [Seedance author package](../seedance/README.md#visual-reference-metadata) explains `person-reference`
 and its frame variants. The Kit supplies direction; the actual reference edges supply media and
 metadata. For movement-led work, a reference video can carry the motion while the text explains what

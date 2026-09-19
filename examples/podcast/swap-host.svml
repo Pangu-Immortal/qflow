@@ -131,9 +131,9 @@
   <seedance:ReferenceVideo id="lifestyle-montage" model="mini"
     prompt={lifestyle-montage-prompt} duration="4"
     resolution="720p" aspect-ratio="9:16" generate-audio="false">
-    <seedance:Reference image={before.image}/>
-    <seedance:Reference image={after.image}/>
-    <seedance:Reference image={during.image}/>
+    <seedance:Reference image={before.image} person-reference="false"/>
+    <seedance:Reference image={after.image} person-reference="false"/>
+    <seedance:Reference image={during.image} person-reference="false"/>
   </seedance:ReferenceVideo>
 
   <text:Render id="daily-creatine-take-prompt"
@@ -151,15 +151,15 @@
   <seedance:ReferenceVideo id="opening-take" model="mini"
     prompt={opening-take-prompt} duration="4"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={pepedoge.image}/>
+    <seedance:Reference image={pepedoge.image} person-reference="false"/>
     <seedance:Reference audio={doge-voice}/>
   </seedance:ReferenceVideo>
 
   <seedance:ReferenceVideo id="daily-creatine-take" model="mini"
     prompt={daily-creatine-take-prompt} duration="7"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={pepe-hold.image}/>
-    <seedance:Reference image={doge.image}/>
+    <seedance:Reference image={pepe-hold.image} person-reference="false"/>
+    <seedance:Reference image={doge.image} person-reference="false"/>
     <seedance:Reference audio={pepe-voice}/>
     <seedance:Reference audio={doge-voice}/>
   </seedance:ReferenceVideo>
@@ -167,8 +167,8 @@
   <seedance:ReferenceVideo id="arms-are-asking-take" model="mini"
     prompt={arms-are-asking-take-prompt} duration="7"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={pepe-hold.image}/>
-    <seedance:Reference image={doge-hold.image}/>
+    <seedance:Reference image={pepe-hold.image} person-reference="false"/>
+    <seedance:Reference image={doge-hold.image} person-reference="false"/>
     <seedance:Reference audio={pepe-voice}/>
     <seedance:Reference audio={doge-voice}/>
   </seedance:ReferenceVideo>

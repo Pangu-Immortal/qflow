@@ -17,7 +17,7 @@ export type SeedanceModel = typeof seedanceModels[number];
 
 const ASPECT_RATIOS = ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9", "adaptive"] as const;
 
-const PERSON_REFERENCE_FIELDS = [{ name: "personReference", value: { kind: "boolean" }, optional: true }] as const;
+const PERSON_REFERENCE_FIELDS = [{ name: "personReference", value: { kind: "boolean" } }] as const;
 
 const SEEDANCE_25_DURATIONS = [-1, ...Array.from({ length: 27 }, (_item, index) => index + 4)] as const;
 
@@ -175,9 +175,9 @@ const seedanceCommonAttributes: readonly SurfaceAttributeVocabulary[] = [
   },
 ];
 
-const personReferenceAttribute = (name: string): SurfaceAttributeVocabulary => ({
-  name, kind: "literal", required: false, values: ["true", "false"],
-  summary: "Declares whether this visual input contains a person/avatar reference, including an AI-generated human likeness. Omission leaves it unclassified.",
+const personReferenceAttribute = (name: string, required = false): SurfaceAttributeVocabulary => ({
+  name, kind: "literal", required, values: ["true", "false"],
+  summary: "Required for each supplied image/video, including first/last frames: true if it contains a person, false otherwise. Audio must omit it.",
 });
 
 const seedanceVideoPort: readonly SurfacePortVocabulary[] = [{
@@ -235,7 +235,7 @@ export const seedanceMarkupSurfaces = [
       summary: "Generates one video with an exact Seedance model from a Text prompt and the images the video opens and closes on.",
       attributes: [
         ...seedanceCommonAttributes,
-        personReferenceAttribute("first-frame-person-reference"),
+        personReferenceAttribute("first-frame-person-reference", true),
         personReferenceAttribute("last-frame-person-reference"),
         {
           name: "first-frame",
@@ -253,7 +253,7 @@ export const seedanceMarkupSurfaces = [
         },
       ],
       ports: seedanceVideoPort,
-      example: '<seedance:FrameVideo id="bridge" model="fast" prompt={direction} duration="5" first-frame={first.image} last-frame={last.image}/>',
+      example: '<seedance:FrameVideo id="bridge" model="fast" prompt={direction} duration="5" first-frame={first.image} first-frame-person-reference="true" last-frame={last.image} last-frame-person-reference="false"/>',
       notes: [
         ...seedanceSettingNotes,
         "Both frames are ordinary image Artifact edges; the Surface copies no runtime media into request metadata.",
@@ -316,7 +316,7 @@ export const seedanceMarkupSurfaces = [
       notes: [
         ...seedanceSettingNotes,
         "The element requires at least one `Reference` child, and the model's port limits cap how many of each role it accepts.",
-        "`person-reference` applies to image/video references; voice audio carries no visual classification. The Provider transports the declared fact according to its API.",
+        "Every image/video Reference requires `person-reference=\"true|false\"`. Classify the supplied material; audio must omit the field. The Provider transports it according to its API.",
         "A `Reference` carries exactly one of `image`, `video` or `audio`, and is empty.",
       ],
     },

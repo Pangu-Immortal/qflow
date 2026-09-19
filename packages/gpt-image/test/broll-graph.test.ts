@@ -121,7 +121,7 @@ function fixture() {
   });
   for (const name of ["holding", "walking", "interview"]) add(`montage.${name}.binding`, seedance.mediaBindings.referenceImage!.type, {
     kind: "inline",
-    value: sealGenerationMediaBinding(seedanceBindingPort as never, { role: "image" }) as unknown as CanonicalValue,
+    value: sealGenerationMediaBinding(seedanceBindingPort as never, { role: "image", fields: { personReference: true } }) as unknown as CanonicalValue,
   });
 
   const componentInputs = (

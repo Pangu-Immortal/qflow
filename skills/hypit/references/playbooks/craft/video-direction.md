@@ -35,7 +35,10 @@ Its range follows the relationship to preserve, the intended new duration and th
 reference limits. Connect the actual footage in Source; describing it in prose does not supply
 its temporal behavior to the model. The selected model and Provider determine supported combinations
 and media requirements; read their installed vocabulary and package documentation for the exact
-request, including any person-reference metadata.
+request. Seedance requires `person-reference="true|false"` on each image/video reference: true if
+the supplied material contains a person, false otherwise.
+Inspect the selected excerpt, not just its first frame. Audio must omit the field; the installed
+Seedance README owns the corresponding required first/last-frame attributes.
 
 For a longer action, distinguish the duration of source footage the model can accept from the
 duration it can produce in one request. Use one request when the model's capability and the work's

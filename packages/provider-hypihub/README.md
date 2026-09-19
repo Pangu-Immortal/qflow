@@ -123,12 +123,11 @@ size and part concurrency, retries a failed part with a fresh signed URL, comple
 one upload, and then passes the returned HTTPS URL to generation or transcription. Signing requests
 contain at most the service's 128-part limit; all batches belong to the same upload. One
 Resource identity with the same declared person-reference classification is uploaded once within one Runtime operation. Qflow keeps no upload catalog or
-cross-Build cache. Seedance visual references can carry `personReference` in their media fields;
+cross-Build cache. Seedance visual references require boolean `personReference` in their media fields;
 the mapping declares it as a resource-transport field and the upload session receives
-`is_person_reference`, preserving true, false and omission. It stays out of the generation body.
+`is_person_reference`, preserving true and false. It stays out of the generation body.
 This covers reference images, reference videos, and first/last frames for every declared Seedance
-variant. Omission remains absent on the wire; QflowHub's upload API currently defaults it to false,
-so omission does not enable detection or person-reference preparation.
+variant. Seedance rejects omission before upload; no automatic face detection is requested.
 QflowHub stores the authored classification and prepares the applicable upstream person reference;
 this Provider does not detect faces or select an upstream private-avatar group.
 

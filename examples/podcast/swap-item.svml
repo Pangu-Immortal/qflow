@@ -143,23 +143,23 @@
   <seedance:ReferenceVideo id="opening-take" model="mini"
     prompt={opening-take-prompt} duration="4"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={idoltboy.image}/>
+    <seedance:Reference image={idoltboy.image} person-reference="true"/>
     <seedance:Reference audio={tboy-voice}/>
   </seedance:ReferenceVideo>
 
   <seedance:ReferenceVideo id="lifestyle-montage" model="mini"
     prompt={lifestyle-montage-prompt} duration="4"
     resolution="720p" aspect-ratio="9:16" generate-audio="false">
-    <seedance:Reference image={cleanser.image}/>
-    <seedance:Reference image={mask-selfie.image}/>
-    <seedance:Reference image={alarm-phone.image}/>
+    <seedance:Reference image={cleanser.image} person-reference="true"/>
+    <seedance:Reference image={mask-selfie.image} person-reference="true"/>
+    <seedance:Reference image={alarm-phone.image} person-reference="true"/>
   </seedance:ReferenceVideo>
 
   <seedance:ReferenceVideo id="daily-retinol-take" model="mini"
     prompt={daily-retinol-take-prompt} duration="8"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={idol-hold.image}/>
-    <seedance:Reference image={tboy.image}/>
+    <seedance:Reference image={idol-hold.image} person-reference="true"/>
+    <seedance:Reference image={tboy.image} person-reference="true"/>
     <seedance:Reference audio={idol-voice}/>
     <seedance:Reference audio={tboy-voice}/>
   </seedance:ReferenceVideo>
@@ -167,8 +167,8 @@
   <seedance:ReferenceVideo id="skin-is-asking-take" model="mini"
     prompt={skin-is-asking-take-prompt} duration="6"
     resolution="720p" aspect-ratio="9:16" generate-audio="true">
-    <seedance:Reference image={idol-hold.image}/>
-    <seedance:Reference image={tboy-hold.image}/>
+    <seedance:Reference image={idol-hold.image} person-reference="true"/>
+    <seedance:Reference image={tboy-hold.image} person-reference="true"/>
     <seedance:Reference audio={idol-voice}/>
     <seedance:Reference audio={tboy-voice}/>
   </seedance:ReferenceVideo>

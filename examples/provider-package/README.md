@@ -68,7 +68,7 @@ differ from the image example, and each is the reason the video example exists.
 **The reference vocabulary is wider, and each role maps to its own field.** The Model declares
 `referenceImage`, `referenceVideo` and `referenceAudio` as separate ports precisely so each can map
 to one wire field — a service that mixes them into one array cannot tell the roles apart. An image
-reference also carries an optional `personReference` classification, which is why those ports use
+reference also requires a boolean `personReference` classification, which is why those ports use
 `itemObject` rather than `urlArray`: the item field travels with the URL it belongs to.
 
 ```json
@@ -76,7 +76,7 @@ reference also carries an optional `personReference` classification, which is wh
 ```
 
 `firstFrame` and `lastFrame` accept at most one item each, so their body fields are URLs.
-This illustrative service accepts their optional person classification on `POST /uploads` through
+This illustrative service accepts their required visual-reference person classification on `POST /uploads` through
 `x-person-reference: true` or `false`. Their mappings declare `resourceFields: ["personReference"]`,
 and the URL resolver sends that header when supplied. Replace this with the real service’s
 documented transport; a field that the service cannot carry must be refused, never discarded.

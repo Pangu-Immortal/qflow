@@ -604,7 +604,7 @@ test("QflowHub stops before paid submission when a reference upload fails", asyn
   const reference = await resources.put(new Uint8Array([1, 2, 3]), "image/png");
   const request = need(sealSeedanceRequest("seedance-2-mini", {
     prompt: ["A presenter turns toward camera."],
-    referenceImage: [{ role: "image", artifact: reference }],
+    referenceImage: [{ role: "image", artifact: reference, fields: { personReference: true } }],
     resolution: ["720p"], aspectRatio: ["16:9"], duration: [5],
     generateAudio: [false], webSearch: [false],
   }) as unknown as CanonicalValue);
@@ -815,12 +815,12 @@ test("QflowHub polling errors and operation deadlines fail without settlement po
 test("reference URL reuse includes its authored classification and forwards it to custom transport", async () => {
   const resources = new MemoryResourceStore();
   const reference = await resources.put(new Uint8Array([1, 2, 3]), "image/png");
-  const flags = [true, false, undefined, true];
+  const flags = [true, false, true];
   const request = need(sealSeedanceRequest("seedance-2-mini", {
     prompt: ["A person waves."], resolution: ["720p"], aspectRatio: ["9:16"],
     duration: [5], generateAudio: [false], webSearch: [false],
     referenceImage: flags.map((flag) => ({ role: "image", artifact: reference,
-      ...(flag === undefined ? {} : { fields: { personReference: flag } }) })),
+      fields: { personReference: flag } })),
   }) as unknown as CanonicalValue);
   const seen: unknown[] = [];
   const provider = createQflowHubProvider({
@@ -842,7 +842,7 @@ test("reference URL reuse includes its authored classification and forwards it t
   const started = await resolved.registration.endpoint.start({ command: { kind: "fulfill-need", id: "classified", need: request }, need: request, resources,
     credentials: { apiKey: { secret: "test-key" } }, operation: "classified" });
   assert.equal(started.status, "pending");
-  assert.deepEqual(seen, [{ personReference: true }, { personReference: false }, {}]);
+  assert.deepEqual(seen, [{ personReference: true }, { personReference: false }]);
 });
 
 test("generation and voice cloning check their exact catalogue operation before resolving references", async () => {
@@ -853,7 +853,7 @@ test("generation and voice cloning check their exact catalogue operation before 
     {
       endpoint: seedanceEndpoints.mini!, model: "seedance-2-mini", operation: "videos", path: "/videos",
       constraints: sealSeedanceRequest("seedance-2-mini", {
-        prompt: ["A presenter speaks."], referenceImage: [{ role: "image", artifact: image }],
+        prompt: ["A presenter speaks."], referenceImage: [{ role: "image", artifact: image, fields: { personReference: true } }],
         resolution: ["720p"], aspectRatio: ["9:16"], duration: [5], generateAudio: [true], webSearch: [false],
       }),
       references: true,

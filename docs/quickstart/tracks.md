@@ -157,7 +157,7 @@ Placement is an explicit Spatial Frame edge; appearance and motion remain reusab
 
 <seedance:ReferenceVideo id="product-motion" model="mini"
   prompt={product-direction} duration="5">
-  <seedance:Reference image={product-reference}/>
+  <seedance:Reference image={product-reference} person-reference="false"/>
 </seedance:ReferenceVideo>
 
 <space:Frame id="product-frame" within={vertical}

@@ -111,7 +111,7 @@ B-roll 是通用 Media Track 的一种剪辑用途，不是独立 Track 家族�
 
 <seedance:ReferenceVideo id="product-motion" model="mini"
   prompt={product-direction} duration="5">
-  <seedance:Reference image={product-reference}/>
+  <seedance:Reference image={product-reference} person-reference="false"/>
 </seedance:ReferenceVideo>
 
 <space:Frame id="product-frame" within={vertical}
