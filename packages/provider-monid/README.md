@@ -27,8 +27,6 @@ The Seedance endpoints add `generate_audio`. Monid documents no web search field
 `web-search="true"` is unsupported, and Seedance 2.5 frame mode (`first-frame` present) requires
 `aspect-ratio="adaptive"`. Seedance visual references require `person-reference`; the Provider
 accepts the declaration and transmits nothing for it, since the endpoint has no field for it.
-Seedance rejects reference images and videos that contain a real human face; Monid offers no way to
-register authorized portrait material, so such a request fails with the upstream moderation error.
 
 MiniMax H3 names its model in the body and takes neither of those two fields. The endpoint requires
 a resolution, so a request that states none is sent at `2K`, the resolution the QflowHub Provider
