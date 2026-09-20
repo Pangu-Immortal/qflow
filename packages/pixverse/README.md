@@ -4,7 +4,7 @@ Exact author/compute contracts and package-owned author Surfaces for PixVerse. T
 two exact models, `pixverse-v6` and `pixverse-c1`, and selects no Provider, API key or network
 execution. The selected Provider implements the exact capability.
 
-Both models render 1 to 15 seconds at `360p`, `540p`, `720p` or `1080p` from a prompt of up to
+Both models render 1 to 15 seconds at `540p` or `720p` from a prompt of up to
 5,000 characters. `<pix:Video>` generates from the prompt, from a first frame, or from a first and
 last frame; `<pix:ReferenceVideo>` generates from the image and video subjects its `Reference`
 children carry.

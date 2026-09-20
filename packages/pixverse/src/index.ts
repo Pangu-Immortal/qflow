@@ -17,7 +17,7 @@ export const pixverseModuleRef = { name: "@qflow/pixverse", version: "1" } as co
 export const pixverseModels = ["pixverse-v6", "pixverse-c1"] as const;
 export type PixverseModel = typeof pixverseModels[number];
 
-const PIXVERSE_QUALITIES = ["360p", "540p", "720p", "1080p"] as const;
+const PIXVERSE_QUALITIES = ["540p", "720p"] as const;
 const PIXVERSE_ASPECT_RATIOS = ["16:9", "4:3", "1:1", "3:4", "9:16", "2:3", "3:2", "21:9"] as const;
 /** V6 reads `auto` as the shape of the reference videos it generates from. */
 const PIXVERSE_V6_ASPECT_RATIOS = [...PIXVERSE_ASPECT_RATIOS, "auto"] as const;
@@ -142,7 +142,7 @@ const pixverseVideoPort: readonly SurfacePortVocabulary[] = [{
   summary: "The generated video, addressed as `<id>.video`.",
 }];
 
-const pixverseQualityNote = "`quality` is `360p`, `540p`, `720p` or `1080p`, and `duration` is 1 to 15 seconds.";
+const pixverseQualityNote = "`quality` is `540p` or `720p`, and `duration` is 1 to 15 seconds.";
 const pixversePromptNote = "A spoken line belongs in the prompt; the model exposes no separate voice, language or dialogue field.";
 const pixverseModelNote = "V6 accepts `seed` and up to ten references; C1 accepts up to seven references.";
 
