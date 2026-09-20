@@ -211,14 +211,14 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
 <table>
   <tr>
     <td width="220" align="center">
-      <a href="https://watcha.cn">
+      <a href="https://watcha.cn/r/geIiJJ">
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="./docs/public/watcha-dark.png">
           <img alt="观猹" src="./docs/public/watcha-light.png" width="170">
         </picture>
       </a>
     </td>
-    <td><a href="https://watcha.cn">观猹</a>是一个专为 AI 开发者打造的创新产品生态与社区，致力于连接优秀产品与高质量用户，助力每一个想法从 Demo 走向真实落地。从产品发现与真实反馈起步，观猹提供发布、分发与声誉追踪等支持，全方位陪伴开发者完成从产品上线到首批用户获取的全过程。</td>
+    <td><a href="https://watcha.cn/r/geIiJJ">观猹</a>是一个专为 AI 开发者打造的创新产品生态与社区，致力于连接优秀产品与高质量用户，助力每一个想法从 Demo 走向真实落地。从产品发现与真实反馈起步，观猹提供发布、分发与声誉追踪等支持，全方位陪伴开发者完成从产品上线到首批用户获取的全过程。</td>
   </tr>
   <tr>
     <td width="220" align="center">

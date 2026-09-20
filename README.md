@@ -215,14 +215,14 @@ commands and the repository layout.
 <table>
   <tr>
     <td width="220" align="center">
-      <a href="https://watcha.cn">
+      <a href="https://watcha.cn/r/geIiJJ">
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="./docs/public/watcha-dark.png">
           <img alt="Watcha" src="./docs/public/watcha-light.png" width="170">
         </picture>
       </a>
     </td>
-    <td><a href="https://watcha.cn">Watcha</a> is an innovative ecosystem and community built for AI builders, connecting great products with high-quality users to turn every Demo into reality. Starting from AI product discovery and genuine feedback, Watcha provides product publishing, distribution, and reputation tracking to support builders from launch to early adoption.</td>
+    <td><a href="https://watcha.cn/r/geIiJJ">Watcha</a> is an innovative ecosystem and community built for AI builders, connecting great products with high-quality users to turn every Demo into reality. Starting from AI product discovery and genuine feedback, Watcha provides product publishing, distribution, and reputation tracking to support builders from launch to early adoption.</td>
   </tr>
   <tr>
     <td width="220" align="center">
