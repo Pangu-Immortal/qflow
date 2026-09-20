@@ -186,6 +186,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:packages/protocol
+      '@qflow/provider-beatapi':
+        specifier: workspace:*
+        version: link:packages/provider-beatapi
       '@qflow/provider-hiapi':
         specifier: workspace:*
         version: link:packages/provider-hiapi
@@ -2244,6 +2247,40 @@ importers:
   packages/project-context-node: {}
 
   packages/protocol: {}
+
+  packages/provider-beatapi:
+    dependencies:
+      '@qflow/endpoint-kit':
+        specifier: workspace:*
+        version: link:../endpoint-kit
+      '@qflow/generation':
+        specifier: workspace:*
+        version: link:../generation
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@qflow/runtime-kit':
+        specifier: workspace:*
+        version: link:../runtime-kit
+    devDependencies:
+      '@qflow/gpt-image':
+        specifier: workspace:*
+        version: link:../gpt-image
+      '@qflow/grok-imagine':
+        specifier: workspace:*
+        version: link:../grok-imagine
+      '@qflow/minimax-h3':
+        specifier: workspace:*
+        version: link:../minimax-h3
+      '@qflow/nano-banana':
+        specifier: workspace:*
+        version: link:../nano-banana
+      '@qflow/seedance':
+        specifier: workspace:*
+        version: link:../seedance
 
   packages/provider-hiapi:
     dependencies:
