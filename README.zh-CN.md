@@ -266,6 +266,12 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
     </td>
     <td><a href="https://api.pollo.ai/?utm_source=qflow">Pollo API</a> 通过单个 API 为开发者提供 300 多个 AI 图片与视频模型，价格具备竞争力。一个 API key 即可接入多家模型服务商，请求规模从 10 次到 10000 次以上均可承载。</td>
   </tr>
+  <tr>
+    <td width="220" align="center">
+      <a href="https://beatapi.io"><img alt="BeatAPI" src="./docs/public/beatapi.png" width="165"></a>
+    </td>
+    <td><a href="https://beatapi.io">BeatAPI</a> 是面向各类 Agent 的专业能力层，提供 AI 模型、真实世界数据、可直接调用的任务能力和专业工作空间，帮助 Agent 完成真实世界的任务。</td>
+  </tr>
 </table>
 
 ## ⭐ Star History

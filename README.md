@@ -270,6 +270,12 @@ commands and the repository layout.
     </td>
     <td><a href="https://api.pollo.ai/?utm_source=qflow">Pollo API</a> gives developers access to 300+ AI image and video models through a single API, with competitive rates. One API key connects you to multiple model providers and scales from 10 to 10,000+ requests.</td>
   </tr>
+  <tr>
+    <td width="220" align="center">
+      <a href="https://beatapi.io"><img alt="BeatAPI" src="./docs/public/beatapi.png" width="165"></a>
+    </td>
+    <td><a href="https://beatapi.io">BeatAPI</a> is the professional capability layer for any agent. We provide AI models, real-world data, task-ready capabilities, and professional workspaces that help agents complete real-world tasks.</td>
+  </tr>
 </table>
 
 ## ⭐ Star History
