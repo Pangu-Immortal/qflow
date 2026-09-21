@@ -20,7 +20,11 @@
 
 <p align="center">
   <a href="https://trendshift.io/repositories/229030"><img alt="Trendshift 全语言当日第一" src="https://trendshift.io/api/badge/trendshift/repositories/229030/daily"></a>
+</p>
+
+<p align="center">
   <a href="https://trendshift.io/repositories/229030"><img alt="Trendshift TypeScript 当日第一" src="https://trendshift.io/api/badge/trendshift/repositories/229030/daily?language=TypeScript"></a>
+  <a href="https://trendshift.io/repositories/229030?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-229030" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/229030/weekly?language=TypeScript" alt="qflow-ai/qflow | Trendshift TypeScript 周榜" width="250" height="55"></a>
 </p>
 
 <p align="center">
