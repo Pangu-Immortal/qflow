@@ -786,7 +786,7 @@ test("QflowHub exposes model groups beneath its own total capacity", async () =>
   assert.throws(() => createQflowHubProvider({ capabilityConcurrency: { invented: 1 } }), /unknown QflowHub capacity/);
 });
 
-test("QflowHub polling errors and operation deadlines fail without settlement polling", async () => {
+test("QflowHub operation deadlines fail while polling transport errors keep the job pending", async () => {
   const request = need({});
   let requests = 0;
   const registry = new EndpointRegistry();
@@ -807,8 +807,8 @@ test("QflowHub polling errors and operation deadlines fail without settlement po
   assert.equal(timedOut.status === "failed" && timedOut.failure.code, "QFLOWHUB_OPERATION_TIMEOUT");
   assert.equal(requests, 0);
   const offline = await endpoint.poll({ ...common, handle: { ...common.handle, startedAt: Date.now() } });
-  assert.equal(offline.status, "failed");
-  assert.match(offline.status === "failed" ? offline.failure.message : "", /offline/);
+  assert.equal(offline.status, "pending");
+  assert.equal(offline.status === "pending" && offline.progress?.phase, "retrying");
   assert.equal(requests, 1);
 });
 
