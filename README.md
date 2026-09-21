@@ -276,9 +276,9 @@ commands and the repository layout.
   </tr>
   <tr>
     <td width="220" align="center">
-      <a href="https://beatapi.io"><img alt="BeatAPI" src="./docs/public/beatapi.png" width="165"></a>
+      <a href="https://beatapi.io/sign-up?aff=qflow"><img alt="BeatAPI" src="./docs/public/beatapi.png" width="165"></a>
     </td>
-    <td><a href="https://beatapi.io">BeatAPI</a> is the professional capability layer for any agent. We provide AI models, real-world data, task-ready capabilities, and professional workspaces that help agents complete real-world tasks.</td>
+    <td><a href="https://beatapi.io/sign-up?aff=qflow">BeatAPI</a> is the professional capability layer for any agent. We provide AI models, real-world data, task-ready capabilities, and professional workspaces that help agents complete real-world tasks.</td>
   </tr>
 </table>
 

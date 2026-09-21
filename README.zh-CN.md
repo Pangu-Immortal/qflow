@@ -272,9 +272,9 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
   </tr>
   <tr>
     <td width="220" align="center">
-      <a href="https://beatapi.io"><img alt="BeatAPI" src="./docs/public/beatapi.png" width="165"></a>
+      <a href="https://beatapi.io/sign-up?aff=qflow"><img alt="BeatAPI" src="./docs/public/beatapi.png" width="165"></a>
     </td>
-    <td><a href="https://beatapi.io">BeatAPI</a> 是面向各类 Agent 的专业能力层，提供 AI 模型、真实世界数据、可直接调用的任务能力和专业工作空间，帮助 Agent 完成真实世界的任务。</td>
+    <td><a href="https://beatapi.io/sign-up?aff=qflow">BeatAPI</a> 是面向各类 Agent 的专业能力层，提供 AI 模型、真实世界数据、可直接调用的任务能力和专业工作空间，帮助 Agent 完成真实世界的任务。</td>
   </tr>
 </table>
 
