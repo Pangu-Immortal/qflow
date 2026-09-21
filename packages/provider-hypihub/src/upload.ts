@@ -1,8 +1,9 @@
+import { EndpointServiceError } from "@qflow/endpoint-kit";
 import { requestDeadline } from "@qflow/runtime-kit";
 import { createHash } from "node:crypto";
 
 import type { QflowHubAuth } from "./oauth.js";
-import { QflowHubHttpError, QflowHubServiceError, safeQflowHubReason } from "./errors.js";
+import { QflowHubHttpError, safeQflowHubReason } from "./errors.js";
 
 type UploadAuth = QflowHubAuth | string;
 
@@ -360,7 +361,7 @@ export class QflowHubUploader {
           this.log(`upload cancellation still pending upload=${uploadId} reason=${this.safeReason(cancelError)}`);
         }
       }
-      throw error instanceof QflowHubServiceError ? error : new Error(this.safeReason(error));
+      throw error instanceof EndpointServiceError ? error : new Error(this.safeReason(error));
     }
   }
 

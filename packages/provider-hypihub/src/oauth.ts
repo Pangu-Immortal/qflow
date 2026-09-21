@@ -1,4 +1,5 @@
 import type { EndpointCredential } from "@qflow/endpoint-kit";
+import { EndpointTransportError, transport } from "@qflow/endpoint-kit";
 import { decodeOAuth2Credential, encodeOAuth2Credential } from "@qflow/runtime";
 import { requestDeadline } from "@qflow/runtime-kit";
 import { QflowHubHttpError } from "./errors.js";
@@ -66,9 +67,9 @@ export function createQflowHubAuth(options: {
       throw new Error("QflowHub OAuth credential is read-only; run qflow auth login with a writable Credential Store");
     }
     refreshing = (async () => {
-      const deadline = requestDeadline(options.requestTimeoutMs, () => new Error("QflowHub OAuth refresh timed out"));
+      const deadline = requestDeadline(options.requestTimeoutMs, () => new EndpointTransportError("QflowHub OAuth refresh timed out"));
       try {
-        const response = await deadline.wait(options.fetch(tokenEndpoint, {
+        const response = await transport(deadline.wait(options.fetch(tokenEndpoint, {
           method: "POST",
           headers: { "content-type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({
@@ -77,8 +78,8 @@ export function createQflowHubAuth(options: {
             client_id: OAUTH_CLIENT_ID,
           }),
           signal: deadline.signal,
-        }));
-        const text = await deadline.wait(response.text());
+        })));
+        const text = await transport(deadline.wait(response.text()));
         if (!response.ok) throw new QflowHubHttpError(response.status, response, text, {
           method: "POST", url: tokenEndpoint,
         });
