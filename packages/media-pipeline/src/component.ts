@@ -1,4 +1,4 @@
-import { verifyMediaFrameRange } from "@qflow/media";
+import { mediaFrameRangeSamples, verifyMediaFrameRange } from "@qflow/media";
 import { mediaComponent } from "@qflow/media";
 import { plannedNeedInputs } from "@qflow/component-kit";
 import type { ComponentPackage, PlannedNeedFacet } from "@qflow/component-kit";
@@ -344,8 +344,10 @@ export const mediaPipelineComponent = {
         const audio = inline(inputs.audio!.value, "TimelineAudio");
         verifyRenderedVisual(visual);
         verifyTimelineAudio(audio);
-        if (visual.frameCount * visual.frameRate.denominator * 48_000
-          !== audio.sampleFrames * visual.frameRate.numerator) {
+        const { sampleFrames } = mediaFrameRangeSamples(
+          { startFrame: 0, endFrameExclusive: visual.frameCount }, visual.frameRate,
+        );
+        if (audio.sampleFrames !== sampleFrames) {
           throw new Error("Rendered visual and TimelineAudio have different presentation durations");
         }
         const need: MuxMediaNeed = { visual, audio };
