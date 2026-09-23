@@ -87,6 +87,7 @@ export async function acquireOAuthCredential(
   const verifier = base64url(randomBytes(32));
   // S256 is part of OAuth PKCE. It authenticates this browser exchange; it is not content identity.
   const challenge = base64url(createHash("sha256").update(verifier).digest());
+  const callbackOrigin = new URL(acquisition.redirectUri).origin;
   const nonce = base64url(randomBytes(24));
   let state = nonce;
   const server = createServer();
@@ -97,6 +98,19 @@ export async function acquireOAuthCredential(
       server.unref();
     };
     server.on("request", (request, response) => {
+      // The hosted callback page fetches this loopback from a public page; Chrome's Private
+      // Network Access check preflights with OPTIONS and expects these headers back.
+      if (request.method === "OPTIONS") {
+        response.writeHead(204, {
+          "access-control-allow-origin": callbackOrigin,
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-private-network": "true",
+          "cache-control": "no-store",
+          connection: "close",
+        });
+        response.end();
+        return;
+      }
       if (settled) {
         response.writeHead(204, { "cache-control": "no-store", connection: "close" });
         response.end();
@@ -111,6 +125,7 @@ export async function acquireOAuthCredential(
         const code = url.searchParams.get("code");
         if (code === null || code.length === 0) throw new Error("OAuth callback contained no code");
         response.writeHead(200, {
+          "access-control-allow-origin": callbackOrigin,
           "cache-control": "no-store",
           connection: "close",
           "content-type": "text/html; charset=utf-8",
@@ -120,6 +135,7 @@ export async function acquireOAuthCredential(
         resolveCode(code);
       } catch (error) {
         response.writeHead(400, {
+          "access-control-allow-origin": callbackOrigin,
           "cache-control": "no-store",
           connection: "close",
           "content-type": "text/html; charset=utf-8",
