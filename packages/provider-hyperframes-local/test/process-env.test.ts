@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { processEnvironment, runProcess } from "../src/process.js";
+import { openProcessInput, processEnvironment, runProcess } from "../src/process.js";
 
 test("Windows HyperFrames children receive TEMP and process-creation variables, not Host secrets", () => {
   const previous = process.env.QFLOW_HF_ENV_PROBE;
@@ -44,4 +44,27 @@ test("POSIX HyperFrames children receive TMPDIR without Host secrets", async () 
     if (previous === undefined) delete process.env.QFLOW_HF_ENV_PROBE;
     else process.env.QFLOW_HF_ENV_PROBE = previous;
   }
+});
+
+test("an input process consumes bounded incremental writes and settles after EOF", async () => {
+  const child = openProcessInput({
+    executable: process.execPath,
+    argv: ["-e", "const chunks=[]; process.stdin.on('data', chunk => chunks.push(chunk)); process.stdin.on('end', () => process.stdout.write(Buffer.concat(chunks)))"],
+    timeoutMs: 5_000,
+    maxOutputBytes: 4_096,
+  });
+  await child.write(Buffer.from("ordered "));
+  await child.write(Buffer.from("input"));
+  const result = await child.close();
+  assert.equal(Buffer.from(result.stdout).toString(), "ordered input");
+});
+
+test("an input process reports encoder exit instead of leaving writers pending", async () => {
+  const child = openProcessInput({
+    executable: process.execPath,
+    argv: ["-e", "process.stderr.write('encoder failure'); process.exit(7)"],
+    timeoutMs: 5_000,
+    maxOutputBytes: 4_096,
+  });
+  await assert.rejects(child.completed, /exited 7: encoder failure/u);
 });

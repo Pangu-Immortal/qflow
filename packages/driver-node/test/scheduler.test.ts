@@ -8,10 +8,14 @@ import {
 } from "@qflow/driver-node";
 import type { AsyncEndpoint } from "@qflow/endpoint-kit";
 import {
+  materializeBuild,
+} from "@qflow/core";
+import {
   LocalBuildScheduler,
 } from "@qflow/runtime";
-import type { OperationSnapshot, OperationStore, OperationUpdate, RuntimeExecutionContext } from "@qflow/runtime";
+import type { BuildStore, OperationSnapshot, OperationStore, OperationUpdate, RuntimeCommandExecutor, RuntimeExecutionContext } from "@qflow/runtime";
 import { capabilities, createGreetingBuild, createParallelGreetingBuild, producers as greetingProducers, types } from "../../core/test/greeting-fixture.js";
+import { completeChainStep, createChainDefinition } from "../../core/test/chain-fixture.js";
 
 function memoryOperations(): OperationStore {
   const values = new Map<string, OperationSnapshot>();
@@ -48,6 +52,48 @@ function memoryOperations(): OperationStore {
     },
   };
 }
+
+test("a durable Scheduler keeps preparation and Record lookup on the indexed Build execution path", async () => {
+  const definition = createChainDefinition(1);
+  const state = materializeBuild(definition, []);
+  let appends = 0;
+  const builds: BuildStore = {
+    async create() { throw new Error("unused"); },
+    async read() { throw new Error("unused"); },
+    async append(_build, fact) {
+      appends++;
+      assert.equal(fact.kind, "producer-applied");
+    },
+  };
+  let preparations = 0;
+  let executions = 0;
+  const executor: RuntimeCommandExecutor = {
+    prepare() { throw new Error("durable scheduling rebuilt a detached BuildState"); },
+    executeCommand() { throw new Error("durable execution rebuilt a detached Record index"); },
+    prepareExecution(execution) {
+      preparations++;
+      return {
+        state: execution.view(),
+        runnable: execution.commands().map((command) => ({ command, resources: [] })),
+        blocked: [],
+      };
+    },
+    async executeExecutionCommand(execution, descriptor) {
+      executions++;
+      assert.equal(execution.record("record:0")?.value.kind, "inline");
+      assert.equal(descriptor.command.kind, "invoke-producer");
+      return { status: "completed", event: completeChainStep(descriptor.command) };
+    },
+  };
+  const [result] = await new LocalBuildScheduler(executor, { buildStore: builds }).run([{
+    id: "indexed-chain",
+    snapshot: { build: "indexed-chain", definition, facts: [], state },
+  }]);
+  assert.equal(result?.status, "complete");
+  assert.equal(preparations, 1);
+  assert.equal(executions, 1);
+  assert.equal(appends, 1);
+});
 
 
 function configuredExecutor(options: {

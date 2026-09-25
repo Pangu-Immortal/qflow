@@ -37,10 +37,22 @@ export const hyperframesDocumentSchema: ValueSchema = {
     artifacts: { schema: { kind: "array", items: {
       kind: "object",
       fields: {
-        kind: { schema: { kind: "literal", value: "blob" } },
-        resource: { schema: resource },
-        size: { schema: nonNegativeInteger },
-        mediaType: { schema: { kind: "string", minLength: 1 } },
+        artifact: { schema: { kind: "object", fields: {
+          kind: { schema: { kind: "literal", value: "blob" } },
+          resource: { schema: resource },
+          size: { schema: nonNegativeInteger },
+          mediaType: { schema: { kind: "string", minLength: 1 } },
+        } } },
+        usage: { schema: { kind: "oneOf", variants: [
+          { kind: "object", fields: { kind: { schema: { kind: "literal", value: "always" } } } },
+          { kind: "object", fields: {
+            kind: { schema: { kind: "literal", value: "frames" } },
+            spans: { schema: { kind: "array", minItems: 1, items: { kind: "object", fields: {
+              startFrame: { schema: nonNegativeInteger },
+              endFrameExclusive: { schema: positiveInteger },
+            } } } },
+          } },
+        ] } },
       },
     } } },
     surfaces: { schema: { kind: "array", items: compositableSurfaceSchema } },

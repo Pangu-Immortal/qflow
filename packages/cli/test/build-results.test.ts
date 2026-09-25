@@ -6,7 +6,12 @@ import { pathToFileURL } from "node:url";
 import { commandHint } from "../src/command-hint.js";
 import test from "node:test";
 
-import { FileBuildResult, FileBuildResultRepository } from "@qflow/build-result";
+import {
+  fileReferenceIdentity,
+  FileBuildResult,
+  FileBuildResultRepository,
+  ownedFileReference,
+} from "@qflow/build-result";
 import { ModulePackageRegistry, NodeCompiler } from "@qflow/compiler-node";
 import { AuthorFrontendRegistry, sealGraphFragment } from "@qflow/elaborator";
 import { createMarkupAuthorFrontend, MarkupSurfaceRegistry } from "@qflow/markup";
@@ -17,7 +22,7 @@ import { NodeFilesystemWorkspace } from "@qflow/workspace-fs-node";
 import type { CliDistribution } from "../src/distribution.js";
 import { createCatalogDescriptor } from "../src/build-planning.js";
 import { runCli } from "../src/main.js";
-import { loadRunFile } from "../src/run-file.js";
+import { loadRunFile, resolveBuildResultValue } from "../src/run-file.js";
 
 const valueType: TypeRef = {
   module: { name: "example.result", version: "1" },
@@ -462,7 +467,12 @@ test("build-record selects one exact Result Output without leaking its storage a
     const workspace = await authorCompiler.openFile(runFile);
     const repository = new FileBuildResultRepository(resultsRoot);
     let opens = 0;
+    let resolves = 0;
     const countedRepository: FileBuildResultRepository = Object.create(repository) as FileBuildResultRepository;
+    countedRepository.resolve = async (build, output) => {
+      resolves += 1;
+      return await repository.resolve(build, output);
+    };
     countedRepository.openFile = async (build, file) => {
       opens += 1;
       return await repository.openFile(build, file);
@@ -485,31 +495,61 @@ test("build-record selects one exact Result Output without leaking its storage a
     assert.equal(candidate?.root.kind, "value");
     const value = candidate?.root.kind === "value" ? candidate.root.value.value : undefined;
     assert.equal(value?.kind, "inline");
-    assert.equal(value?.kind === "inline"
-      ? (value.value as { readonly artifact?: { readonly kind?: string } }).artifact?.kind
-      : undefined, "blob");
+    assert.equal(value?.kind === "inline" ? value.value : undefined, null,
+      "a forward-only Candidate remains structural and is never materialized into Core");
     const logicalOutput = loaded.author.exports.find((item) => item.name === "shot.video")?.ref;
     assert.equal(logicalOutput?.kind, "logical-output");
     assert.deepEqual(loaded.compiler.planCompilation(loaded).resultForwards, [{
       output: logicalOutput!.id,
       build: "bld_20260902T110000001Z_0000000001",
       sourceOutput: "shot.video",
+      type: videoType,
     }]);
-    assert.equal(loaded.attachments.length, 1);
-    assert.deepEqual(Object.values(loaded.resultResourceReferences), [{
-      kind: "build-file", build: "bld_20260902T110000001Z_0000000001",
-      path: "files/file-0001.mp4", size: bytes.byteLength, mediaType: "video/mp4",
-    }]);
-    assert.equal(opens, 0, "compilation does not read or summarize historical bytes");
-    const reused: number[] = [];
-    for await (const chunk of await loaded.attachments[0]!.open()) reused.push(...chunk);
-    assert.deepEqual(Uint8Array.from(reused), bytes);
-    assert.equal(opens, 1, "Runtime staging opens the historical Result exactly once");
-    assert.equal(loaded.compiler.planCompilation(loaded).state.plan.steps.length, 0);
+    assert.equal(resolves, 0, "forward-only compilation never opens the historical value document");
+    assert.equal(loaded.attachments.length, 0);
+    assert.deepEqual(loaded.resultResourceReferences, {});
+    const forwardedPlan = loaded.compiler.planCompilation(loaded);
+    assert.equal(forwardedPlan.state.plan.steps.length, 0);
+    assert.equal(forwardedPlan.state.status, "complete");
+    assert.deepEqual(forwardedPlan.state.targets, []);
+    assert.equal(opens, 0);
+
+    const materializeImport = async (base: typeof loaded, build: string): Promise<typeof loaded> => {
+      const [resolved, stored] = await Promise.all([
+        resolveBuildResultValue(repository, build, "shot.video"),
+        repository.resolve(build, "shot.video"),
+      ]);
+      assert(resolved !== undefined && resolved.value.kind === "inline");
+      assert(stored?.value.kind === "value");
+      if (stored?.value.kind !== "value") throw new Error("expected composite");
+      const files = new Map<string, typeof stored.value.document.resources[number]["file"]>();
+      for (const binding of stored.value.document.resources) {
+        files.set(fileReferenceIdentity(stored.build, binding.file), binding.file);
+      }
+      const references = Object.fromEntries((resolved.attachments ?? []).map((attachment, index) => {
+        const file = [...files.values()][index];
+        if (file === undefined) throw new Error("resolved attachment has no Result file");
+        return [attachment.artifact.resource, ownedFileReference(stored.build, file)];
+      }));
+      return {
+        ...base,
+        run: {
+          ...base.run,
+          graph: {
+            ...base.run.graph,
+            candidates: base.run.graph.candidates.map((item, index) => index === 0 && item.root.kind === "value"
+              ? { ...item, root: { ...item.root, value: { ...item.root.value, value: resolved.value } } }
+              : item),
+          },
+        },
+        attachments: resolved.attachments ?? [],
+        resultResourceReferences: references,
+      };
+    };
 
     // New Composite records may wrap imported values at arbitrary depth. Their Resource ownership
     // must survive multiple Builds, including a mix of old media and newly produced bytes.
-    let imported = loaded;
+    let imported = await materializeImport(loaded, "bld_20260902T110000001Z_0000000001");
     const owner = "bld_20260902T110000001Z_0000000001";
     for (const id of ["bld_20260902T110000002Z_0000000001", "bld_20260902T110000003Z_0000000001"]) {
       const rootValue = imported.run.graph.candidates[0]!.root;
@@ -542,8 +582,8 @@ test("build-record selects one exact Result Output without leaking its storage a
       for await (const chunk of (await repository.openFile(id, original.file))!) received.push(...chunk);
       assert.deepEqual(Uint8Array.from(received), bytes);
       await writeFile(runFile, (await readFile(runFile, "utf8")).replace(/build="[^"]+"/, `build="${id}"`));
-      imported = await loadRunFile({ workspace: await authorCompiler.openFile(runFile), authorCompiler,
-        frontends: [runMarkupFrontend], packageContributions: [], results: repository });
+      imported = await materializeImport(await loadRunFile({ workspace: await authorCompiler.openFile(runFile), authorCompiler,
+        frontends: [runMarkupFrontend], packageContributions: [], results: repository }), id);
     }
 
     // Explicit export collects a standalone bundle, including same-named files with different owners.
@@ -597,6 +637,37 @@ test("build-record selects one exact Result Output without leaking its storage a
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("Composite Result resources rebuild each shared container once", async () => {
+  const count = 400;
+  let visited = 0;
+  class CountedArray extends Array<null> {
+    override map<U>(callback: (value: null, index: number, array: null[]) => U, thisArg?: unknown): U[] {
+      visited += this.length;
+      return super.map(callback, thisArg);
+    }
+  }
+  const value = new CountedArray(count).fill(null);
+  const file = { kind: "build-file" as const, path: "files/one.mp4", size: 1, mediaType: "video/mp4" };
+  const repository = {
+    read: async () => ({ outcome: "complete" as const }),
+    resolve: async () => ({ build: "owner", output: "composite", type: valueType, value: {
+      kind: "value" as const,
+      path: "values/value-0001.json",
+      document: {
+        format: "qflow.result-value@1" as const,
+        value,
+        resources: Array.from({ length: count }, (_, index) => ({ at: [index], file })),
+      },
+    } }),
+    describeFile: async () => file,
+    openFile: async () => undefined,
+  } as unknown as import("@qflow/build-result").BuildResultRepository;
+  const resolved = await resolveBuildResultValue(repository, "owner", "composite");
+  assert.equal(resolved?.value.kind, "inline");
+  assert.equal(visited, count, "the root array is rebuilt once rather than once per Resource binding");
+  assert.equal(resolved?.attachments?.length, 1, "one historical file identity remains one lazy attachment");
 });
 
 test("a failed Result exposes task receipts and credential references without a Runtime", async () => {

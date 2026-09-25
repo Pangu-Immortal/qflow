@@ -26,14 +26,24 @@ function commandId(kind: "producer" | "need", subject: string): string {
   return `${kind}:${subject}`;
 }
 
-function needCommand(need: Need): FulfillNeedCommand {
+export function buildNeedCommand(need: Need): FulfillNeedCommand {
   return { kind: "fulfill-need", id: commandId("need", need.id), need };
+}
+
+export function buildProducerCommand(step: BuildState["plan"]["steps"][number]): InvokeProducerCommand {
+  return {
+    kind: "invoke-producer",
+    id: commandId("producer", step.id),
+    step: step.id,
+    producer: step.producer,
+    inputs: step.inputs,
+  };
 }
 
 /** Resolve an issued Need's Command even after the Build has stopped scheduling work. */
 export function resolveNeedCommand(state: BuildState, id: CommandId): FulfillNeedCommand | undefined {
-  const need = state.needs.find((item) => needCommand(item).id === id);
-  return need === undefined ? undefined : needCommand(need);
+  const need = state.needs.find((item) => buildNeedCommand(item).id === id);
+  return need === undefined ? undefined : buildNeedCommand(need);
 }
 
 function withoutCommand(state: BuildState, id: string): readonly CoreCommand[] {
@@ -209,7 +219,7 @@ function schedule(state: BuildState): BuildState {
   const commands: CoreCommand[] = [...state.outstanding];
   for (const need of state.needs) {
     if (records.has(need.result)) continue;
-    const command = needCommand(need);
+    const command = buildNeedCommand(need);
     if (issued.has(command.id)) continue;
     commands.push(command);
   }
@@ -220,15 +230,9 @@ function schedule(state: BuildState): BuildState {
     if (!Object.values(step.inputs).every((id) => records.has(id))) {
       continue;
     }
-    const id = commandId("producer", step.id);
-    if (issued.has(id)) continue;
-    commands.push({
-      kind: "invoke-producer",
-      id,
-      step: step.id,
-      producer: step.producer,
-      inputs: step.inputs,
-    });
+    const command = buildProducerCommand(step);
+    if (issued.has(command.id)) continue;
+    commands.push(command);
   }
 
   commands.sort((left, right) => left.id.localeCompare(right.id));
@@ -264,12 +268,12 @@ export function start(
     satisfactions: [],
     targets: request.targets,
   });
-  return initialBuildView(defineBuild({
+  return schedule(initialBuildView(defineBuild({
     program,
     initialRecords: planned.initialRecords,
     plan: planned.plan,
     targets: request.targets,
-  }));
+  })));
 }
 
 export function reduce(state: BuildState, event?: CommandResult): BuildState {
@@ -282,7 +286,6 @@ export function defineBuild(
   input: Omit<BuildDefinition, "format">,
 ): BuildDefinition {
   verifyBuildPlan(input.program, input.initialRecords, input.plan);
-  invariant(input.targets.length > 0, "EMPTY_BUILD_TARGETS", "Build has no Targets");
   const bindings = new Set(input.plan.outputBindings.map((binding) => binding.output));
   const targets = new Set<string>();
   for (const target of input.targets) {
@@ -310,6 +313,106 @@ function initialBuildView(definition: BuildDefinition): BuildState {
   };
 }
 
+export type BuildAdmissionLookup = {
+  readonly command: (id: CommandId) => CoreCommand | undefined;
+  readonly stepStatus: (id: string) => "pending" | "complete" | undefined;
+  readonly need: (id: string) => Need | undefined;
+  readonly record: (id: string) => TypedRecord | undefined;
+};
+
+/**
+ * Validate one result and derive its durable Fact without advancing scheduling.
+ * BuildMachine supplies its private indexes; the pure reducer uses array lookups.
+ */
+export function factForBuildResult(
+  state: Pick<BuildState, "program" | "plan" | "steps" | "needs" | "records" | "outstanding">,
+  event: CommandResult,
+  indexed?: BuildAdmissionLookup,
+): BuildFact {
+  const lookup: BuildAdmissionLookup = indexed ?? {
+    command: (id) => state.outstanding.find((item) => item.id === id),
+    stepStatus: (id) => state.steps.find((item) => item.id === id)?.status,
+    need: (id) => state.needs.find((item) => item.id === id),
+    record: (id) => state.records.find((item) => item.id === id),
+  };
+  const command = lookup.command(event.command);
+  invariant(command !== undefined, "UNKNOWN_COMMAND", `event references ${event.command}`, event.command);
+
+  if (event.kind === "command-failed") {
+    return {
+      format: "qflow.build-fact@1",
+      kind: "command-failed",
+      command: event.command,
+      diagnostic: { code: event.code, message: event.message, subject: event.command },
+    };
+  }
+  if (command.kind === "invoke-producer" && event.kind === "producer-completed") {
+    const step = producerStep(state.plan, command.step);
+    invariant(lookup.stepStatus(step.id) === "pending", "STEP_ALREADY_COMPLETE",
+      `${step.id} is already complete`, step.id);
+    const producer = resolveProducer(state.program.closure, step.producer);
+    exactPortKeys(event.outputs, producer.outputs.map((port) => port.name), `${step.id}.outputs`);
+    exactPortKeys(event.needs, producer.needs.map((port) => port.name), `${step.id}.needs`);
+    const records: TypedRecord[] = producer.outputs
+      .filter((port) => step.outputs[port.name] !== undefined)
+      .map((port) => {
+        const id = step.outputs[port.name];
+        const rawValue = event.outputs[port.name];
+        invariant(id !== undefined, "MISSING_OUTPUT_BINDING", `${step.id}.${port.name} is not bound`);
+        invariant(rawValue !== undefined, "MISSING_OUTPUT_VALUE", `${step.id}.${port.name} returned no value`);
+        return { id, type: port.type, value: normalizeStoredValue(rawValue) };
+      });
+    const needs: Need[] = producer.needs
+      .filter((port) => step.needs[port.name] !== undefined)
+      .map((port) => {
+        const binding = step.needs[port.name];
+        const constraints = event.needs[port.name];
+        invariant(binding !== undefined, "MISSING_NEED_BINDING", `${step.id}.${port.name} is not bound`);
+        invariant(constraints !== undefined, "MISSING_NEED_VALUE", `${step.id}.${port.name} returned no constraints`);
+        return {
+          id: binding.id,
+          capability: port.capability,
+          returns: port.returns,
+          constraints: canonicalize(constraints),
+          result: binding.result,
+        };
+      });
+    records.forEach((record) => verifyRecordStructure(state.program.closure, record));
+    return {
+      format: "qflow.build-fact@1",
+      kind: "producer-applied",
+      command: event.command,
+      step: command.step,
+      records,
+      needs,
+    };
+  }
+  if (command.kind === "fulfill-need" && event.kind === "need-fulfilled") {
+    const need = lookup.need(command.need.id);
+    invariant(need !== undefined, "UNKNOWN_NEED", `unknown need ${command.need.id}`, command.need.id);
+    invariant(lookup.record(need.result) === undefined, "NEED_ALREADY_FULFILLED",
+      `${need.id} is already fulfilled`, need.id);
+    const record: TypedRecord = {
+      id: need.result,
+      type: need.returns,
+      value: normalizeStoredValue(event.value),
+    };
+    verifyRecordStructure(state.program.closure, record);
+    return {
+      format: "qflow.build-fact@1",
+      kind: "need-applied",
+      command: event.command,
+      need: need.id,
+      record,
+    };
+  }
+  throw new SvmlError(
+    "EVENT_COMMAND_MISMATCH",
+    `${event.kind} cannot complete ${command.kind}`,
+    command.id,
+  );
+}
+
 /**
  * Admit one untrusted Command result and return the fixed Core Fact it establishes.
  * The returned next view is provisional until the Store durably appends `fact`.
@@ -318,44 +421,9 @@ export function admitBuildResult(
   state: BuildState,
   event: CommandResult,
 ): { readonly fact: BuildFact; readonly state: BuildState } {
+  const fact = factForBuildResult(state, event);
   const next = reduce(state, event);
-
-  if (event.kind === "producer-completed") {
-    const command = state.outstanding.find((item) => item.id === event.command);
-    invariant(command?.kind === "invoke-producer", "EVENT_COMMAND_MISMATCH", event.command, event.command);
-    const content = {
-      format: "qflow.build-fact@1",
-      kind: "producer-applied",
-      command: event.command,
-      step: command.step,
-      records: next.records.slice(state.records.length),
-      needs: next.needs.slice(state.needs.length),
-    } as const;
-    return { fact: content, state: next };
-  }
-  if (event.kind === "need-fulfilled") {
-    const command = state.outstanding.find((item) => item.id === event.command);
-    invariant(command?.kind === "fulfill-need", "EVENT_COMMAND_MISMATCH", event.command, event.command);
-    const record = next.records.at(-1);
-    invariant(record?.id === command.need.result, "NEED_RECORD_MISSING", command.need.id, command.need.id);
-    const content = {
-      format: "qflow.build-fact@1",
-      kind: "need-applied",
-      command: event.command,
-      need: command.need.id,
-      record,
-    } as const;
-    return { fact: content, state: next };
-  }
-  const diagnostic = next.diagnostics.at(-1);
-  invariant(diagnostic?.subject === event.command, "FAILURE_DIAGNOSTIC_MISSING", event.command, event.command);
-  const content = {
-    format: "qflow.build-fact@1",
-    kind: "command-failed",
-    command: event.command,
-    diagnostic,
-  } as const;
-  return { fact: content, state: next };
+  return { fact, state: next };
 }
 
 function verifyFactShape(fact: BuildFact): void {

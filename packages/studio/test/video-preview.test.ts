@@ -34,3 +34,37 @@ test("preview scrubs to the same source frame as rendering at fractional sample 
     assert.equal(video.currentTime, (sourceFrame + 0.5) / 30, `preview frame ${frame}`);
   }
 });
+
+test("preview keeps a compact zero-rate sampling interval paused on its source frame", async () => {
+  const attrs: Record<string, string> = {
+    "data-start": "2", "data-duration": "10", "data-media-start": "0.1", "data-playback-rate": "1",
+    "data-qflow-start-frame": "60", "data-qflow-end-frame": "360", "data-qflow-source-frame": "3/1",
+    "data-qflow-source-rate": "0/1", "data-qflow-source-fps": "30/1",
+  };
+  const listeners = new Map<string, () => void>();
+  let currentTime = 0;
+  let pauses = 0;
+  let plays = 0;
+  const video = { style: {}, readyState: 4, duration: 10, paused: true,
+    getAttribute: (name: string) => attrs[name] ?? null, closest: () => null,
+    get currentTime() { return currentTime; },
+    set currentTime(value: number) { currentTime = value; queueMicrotask(() => listeners.get("seeked")?.()); },
+    pause() { pauses += 1; }, play() { plays += 1; return Promise.resolve(); },
+    addEventListener(name: string, listener: () => void) { listeners.set(name, listener); },
+    removeEventListener(name: string) { listeners.delete(name); },
+  };
+  const root = { style: {}, getAttribute: (name: string) => ({ "data-fps": "30", "data-composition-id": "test" })[name] ?? null };
+  const window: Record<string, any> = { addEventListener() {}, dispatchEvent() {} };
+  const html = injectRuntimeShim("").trim();
+  vm.runInNewContext(html.slice("<script>".length, -"</script>".length), {
+    window, document: { querySelector: () => root,
+      querySelectorAll: (selector: string) => selector === ".qflow-visual-present video" ? [video] : [] },
+    CustomEvent: class {},
+  });
+  await window.__qflowSeekFrame(60);
+  await window.__qflowPlayFrame(211);
+  await window.__qflowSeekFrame(359);
+  assert.equal(currentTime, 3.5 / 30);
+  assert.equal(plays, 0, "a held interval never hands its clock to native video playback");
+  assert.ok(pauses >= 3);
+});

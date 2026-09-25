@@ -30,11 +30,15 @@ function buildView(input: {
     ? "submitting"
     : runtimeActivity!;
   const names = new Map(input.catalog?.publishedOutputs.map((item) => [item.ref.id, item.name]) ?? []);
-  const targets = input.snapshot?.state.targets.map((target) => {
-    const name = names.get(target.output);
-    if (name === undefined) throw new Error(`Build ${input.build} target ${target.output} has no published Output name`);
+  const targetRefs = input.catalog?.targets ?? input.snapshot?.state.targets.map((target) => ({
+    kind: "logical-output" as const,
+    id: target.output,
+  })) ?? [];
+  const targets = targetRefs.map((target) => {
+    const name = names.get(target.id);
+    if (name === undefined) throw new Error(`Build ${input.build} target ${target.id} has no published Output name`);
     return name;
-  }) ?? [];
+  });
   const requests = input.snapshot === undefined ? undefined : {
     total: input.snapshot.definition.plan.steps.reduce(
       (total, step) => total + Object.keys(step.needs).length,

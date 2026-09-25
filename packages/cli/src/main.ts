@@ -380,6 +380,7 @@ export async function runCli(
         run: {
           path: loadedRun.path,
         },
+        targets: loadedRun.run.graph.targets,
       });
       const request = {
         // One CLI invocation is one execution instance. Source and Plan identity
@@ -472,10 +473,13 @@ export async function runCli(
       const finishedResult = finished
         ? await buildResults.repository.read(built.id)
         : undefined;
-      const targetOutputs = new Set(built.state.targets.map((target) => target.output));
       const presentation = catalog;
-      const targetPublishedOutputs = presentation.publishedOutputs.filter((published) =>
-        targetOutputs.has(published.ref.id));
+      const targetNames = new Set(finishedResult?.targets ?? []);
+      const targetOutputs = new Set(presentation.targets?.map((target) => target.id)
+        ?? built.state.targets.map((target) => target.output));
+      const targetPublishedOutputs = presentation.publishedOutputs.filter((published) => finishedResult === undefined
+        ? targetOutputs.has(published.ref.id)
+        : targetNames.has(published.name));
       const targetPresentations = targetPublishedOutputs.flatMap((published) => {
         const selection = built.state.plan.outputBindings.find((item) => item.output === published.ref.id);
         const record = selection === undefined

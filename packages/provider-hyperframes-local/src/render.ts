@@ -15,6 +15,7 @@ import { assert, positiveInteger } from "./process.js";
 import { runCaptureProcess } from "./capture-process.js";
 import { finished } from "node:stream/promises";
 import { autoWorkerLimit } from "./concurrency.js";
+import { requestedFrameRanges } from "./sampling.js";
 import { browserCacheDirectory, browserExecutablePath, configuredBrowserPath, requireBrowserExecutable, selectedBrowserVersion } from "./browser.js";
 
 export type HyperframesRenderProgress =
@@ -60,6 +61,9 @@ export function resolveExecutionOptions(options: HyperframesExecutionOptions) {
       : positiveInteger(options.frameTimeoutMs, "frameTimeoutMs"),
     processTimeoutMs: positiveInteger(options.processTimeoutMs ?? 30 * 60_000, "processTimeoutMs"),
     maxProcessOutputBytes: positiveInteger(options.maxProcessOutputBytes ?? 4 * 1024 * 1024, "maxProcessOutputBytes"),
+    artifactStagingConcurrency: positiveInteger(options.artifactStagingConcurrency ?? 4, "artifactStagingConcurrency"),
+    maxPendingFrameBytes: positiveInteger(options.maxPendingFrameBytes ?? 256 * 1024 * 1024, "maxPendingFrameBytes"),
+    maxDecodedSourceBytes: positiveInteger(options.maxDecodedSourceBytes ?? 1024 * 1024 * 1024, "maxDecodedSourceBytes"),
     maxRenderedBytes: positiveInteger(options.maxRenderedBytes ?? 16 * 1024 * 1024 * 1024, "maxRenderedBytes"),
   };
 }
@@ -116,7 +120,9 @@ async function capture(request: HyperframesVisualRequest | HyperframesFramesRequ
     await requireBrowserExecutable(config.chromePath, config.browserVersion);
     await options.onDiagnostic?.({ level: "info", message:
       `Capture ${frameCount} frames; workers ${config.workers} (limit ${renderWorkerLimit(config, frameCount, document.frameRate.numerator / document.frameRate.denominator)}); opaque fast PNG; GPU ${config.browserGpu}; browser ${config.chromePath}`
-      + (frames === undefined ? `; quality ${config.quality}; encoder ${config.ffmpegPath}` : "; PNG output") });
+      + `; artifact staging concurrency ${config.artifactStagingConcurrency}`
+      + `; decoded source budget ${config.maxDecodedSourceBytes} bytes`
+      + (frames === undefined ? `; quality ${config.quality}; ordered FFmpeg pipe; pending PNG budget ${config.maxPendingFrameBytes} bytes; encoder ${config.ffmpegPath}` : "; PNG output") });
     options.onProgress?.({ phase: "staging", elapsedMs: 0 });
     work = await mkdtemp(join(tmpdir(), "qflow-hyperframes-local-"));
     const read: import("@qflow/hyperframes/project").HyperframesArtifactReader = async (artifact, readSignal) => {
@@ -128,11 +134,13 @@ async function capture(request: HyperframesVisualRequest | HyperframesFramesRequ
       };
     if ("project" in request) await stageHyperframesHtmlProject({ project: request.project, directory: work, signal, read });
     else await stageHyperframesProject({ document: request.document, directory: work, signal, read,
+      frameSelection: requestedFrameRanges(range, frames),
+      maxConcurrentArtifacts: config.artifactStagingConcurrency,
       validateSurface: (surface, path, probeSignal) => verifyCompositableSurfaceFile({ surface, path,
         ffprobePath: config.ffprobePath, processTimeoutMs: config.processTimeoutMs,
         maxProbeOutputBytes: config.maxProcessOutputBytes, signal: probeSignal! }),
     });
-    changePhase("decoding source frames");
+    changePhase("preparing source media");
     await runCaptureProcess({ document, range, ...(frames === undefined ? {} : { frames }), config, directory: work,
       engineModule: import.meta.resolve("@hyperframes/engine"),
       producerModule: import.meta.resolve("@hyperframes/producer"),

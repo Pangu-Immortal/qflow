@@ -15,8 +15,8 @@ import {
 import { createReadStream } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
-import { assertOrderedBuildId, buildIdCreatedAt } from "@qflow/protocol";
-import type { BlobRef } from "@qflow/protocol";
+import { assertOrderedBuildId, buildIdCreatedAt, sameType } from "@qflow/protocol";
+import type { BlobRef, TypeRef } from "@qflow/protocol";
 
 import type {
   BuildResultResourceSource,
@@ -32,6 +32,7 @@ import type {
   BuildResultRepository,
   RepositoryBuildResultOutput,
   RepositoryBuildResultOutputDescription,
+  RepositoryBuildResultOutputLocation,
   FinishedBuildResultManifest,
 } from "./types.js";
 import { assertBuildResultSeed } from "./types.js";
@@ -131,11 +132,46 @@ async function copyArtifactAtomic(
   artifact: BlobRef,
   destination: string,
 ): Promise<void> {
-  if (await exists(destination)) return;
   await mkdir(dirname(destination), { recursive: true });
   const input = await source.open(artifact);
   if (input === undefined) throw new Error(`Build resource ${artifact.resource} is unavailable`);
   await writeStreamAtomic(destination, input);
+}
+
+export async function locateRepositoryBuildResultOutput(
+  repository: Pick<BuildResultRepository, "read">,
+  build: string,
+  output: string,
+): Promise<RepositoryBuildResultOutputLocation | undefined> {
+  const seen = new Set<string>();
+  let currentBuild = build;
+  let currentOutput = output;
+  while (true) {
+    const address = `${currentBuild}\u0000${currentOutput}`;
+    assert(!seen.has(address), `Build Output forwarding repeats ${currentBuild} / ${currentOutput}`);
+    seen.add(address);
+    const manifest = await repository.read(currentBuild);
+    if (manifest === undefined) return undefined;
+    assert(manifest.outcome !== undefined, `Build ${currentBuild} is not a finished Result`);
+    const entry = manifest.outputs[currentOutput];
+    if (entry === undefined) return undefined;
+    if (entry.value.kind === "build-output") {
+      currentBuild = entry.value.build;
+      currentOutput = entry.value.output;
+      continue;
+    }
+    return { build: currentBuild, output: currentOutput, type: entry.type };
+  }
+}
+
+export async function locateBuildResultOutput(
+  root: string,
+  build: string,
+  output: string,
+): Promise<RepositoryBuildResultOutputLocation | undefined> {
+  return await locateRepositoryBuildResultOutput({
+    read: async (currentBuild) => await readBuildResult(buildResultDirectory(root, currentBuild)),
+  }, build, output);
 }
 
 async function writeStreamAtomic(destination: string, input: AsyncIterable<Uint8Array>): Promise<void> {
@@ -334,27 +370,26 @@ export async function describeBuildResultOutput(
 export async function normalizeBuildResultForwards(
   repository: {
     read(build: string): Promise<BuildResultManifest | undefined>;
-    resolve(build: string, output: string): Promise<{
-      readonly build: string;
-      readonly output: string;
-    } | undefined>;
   },
   forwards: readonly BuildResultForward[],
-): Promise<readonly BuildResultForward[]> {
+): Promise<readonly (BuildResultForward & { readonly type: TypeRef })[]> {
   return await Promise.all(forwards.map(async (forward) => {
     const source = await repository.read(forward.build);
     assert(source?.outcome !== undefined,
       `Build ${forward.build} is not a finished Result`);
-    const resolved = await repository.resolve(forward.build, forward.sourceOutput);
+    const resolved = await locateRepositoryBuildResultOutput(repository, forward.build, forward.sourceOutput);
     assert(resolved !== undefined,
       `Build ${forward.build} has no Output ${forward.sourceOutput}`);
     const owner = resolved.build === source.id ? source : await repository.read(resolved.build);
     assert(owner?.outcome !== undefined,
       `Build ${resolved.build} is not a finished Result`);
+    assert(forward.type === undefined || sameType(forward.type, resolved.type),
+      `Build ${forward.build} Output ${forward.sourceOutput} has the wrong type for its forwarded Logical Output`);
     return {
       output: forward.output,
       build: resolved.build,
       sourceOutput: resolved.output,
+      type: resolved.type,
     };
   }));
 }
@@ -371,7 +406,6 @@ export class FileBuildResult {
     assertBuildResultSeed(seed);
     const forwards = await normalizeBuildResultForwards({
       read: async (build) => await readBuildResult(buildResultDirectory(root, build)),
-      resolve: async (build, output) => await resolveBuildResultOutput(root, build, output, externalFiles),
     }, seed.forwards ?? []);
     const directory = buildResultDirectory(root, seed.id);
     await mkdir(dirname(directory), { recursive: true });

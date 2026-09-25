@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { reduce } from "@qflow/core";
 import {
   ProducerRegistry,
   MemoryResourceStore,
@@ -259,7 +258,7 @@ test("Core still owns scheduling when Driver has every implementation", async ()
     value: { kind: "inline", value: "Hello, Ada!" },
   }));
   const start = createGreetingBuild();
-  assert.equal(reduce(start).outstanding[0]?.kind, "invoke-producer");
+  assert.equal(start.outstanding[0]?.kind, "invoke-producer");
   const result = await new NodeDriver({ producers, endpoints }).run(start);
   assert.equal(result.status, "complete");
 });

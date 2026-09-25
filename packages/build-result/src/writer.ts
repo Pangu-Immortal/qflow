@@ -1,4 +1,4 @@
-import type { BlobRef, CanonicalValue, TypedRecord } from "@qflow/protocol";
+import type { BlobRef, CanonicalValue, TypeRef, TypedRecord } from "@qflow/protocol";
 
 import type {
   BuildResultFileRef,
@@ -16,7 +16,12 @@ export type BuildResultWriterState = {
   readonly resourceReferences?: Readonly<Record<string, BuildResultFileRef>>;
   readonly values: Readonly<Record<string, string>>;
   readonly publishedOutputs: readonly { readonly name: string; readonly output: string; readonly displayName?: string }[];
-  readonly forwards: readonly { readonly output: string; readonly build: string; readonly sourceOutput: string }[];
+  readonly forwards: readonly {
+    readonly output: string;
+    readonly build: string;
+    readonly sourceOutput: string;
+    readonly type: TypeRef;
+  }[];
 };
 
 export type BuildResultWriteTarget = {
@@ -39,18 +44,72 @@ function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
+type NumberedPathAllocator = {
+  next: number;
+  readonly occupied: Set<string>;
+};
+
+function numberedPathAllocator(
+  directory: "files" | "values",
+  stem: "file" | "value",
+  paths: Iterable<string>,
+): NumberedPathAllocator {
+  const occupied = new Set(paths);
+  const prefix = `${directory}/${stem}-`;
+  let highest = 0;
+  for (const path of occupied) {
+    if (!path.startsWith(prefix)) continue;
+    const match = /^(\d+)\.[^/]+$/u.exec(path.slice(prefix.length));
+    if (match === null) continue;
+    const index = Number(match[1]);
+    assert(Number.isSafeInteger(index), `Build Result path ${path} has an unsafe generated index`);
+    highest = Math.max(highest, index);
+  }
+  assert(highest < Number.MAX_SAFE_INTEGER, `Build Result ${directory} path index is exhausted`);
+  return { next: highest + 1, occupied };
+}
+
 function numberedPath(
   directory: "files" | "values",
   stem: "file" | "value",
   extension: string,
-  occupied: ReadonlySet<string>,
+  allocator: NumberedPathAllocator,
 ): string {
-  let index = 1;
   while (true) {
-    const candidate = `${directory}/${stem}-${String(index).padStart(4, "0")}${extension}`;
-    if (!occupied.has(candidate)) return candidate;
-    index += 1;
+    assert(Number.isSafeInteger(allocator.next), `Build Result ${directory} path index is exhausted`);
+    const candidate = `${directory}/${stem}-${String(allocator.next).padStart(4, "0")}${extension}`;
+    allocator.next += 1;
+    if (allocator.occupied.has(candidate)) continue;
+    allocator.occupied.add(candidate);
+    return candidate;
   }
+}
+
+async function runBounded<T>(
+  values: readonly T[],
+  concurrency: number,
+  perform: (value: T) => Promise<void>,
+): Promise<void> {
+  let next = 0;
+  let failed = false;
+  let failure: unknown;
+  const worker = async (): Promise<void> => {
+    while (!failed) {
+      const index = next;
+      next += 1;
+      if (index >= values.length) return;
+      try {
+        await perform(values[index]!);
+      } catch (error) {
+        if (!failed) {
+          failed = true;
+          failure = error;
+        }
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, values.length) }, worker));
+  if (failed) throw failure;
 }
 
 function mediaExtension(mediaType: string): string {
@@ -85,6 +144,13 @@ function outputRecord(input: BuildResultSync, output: string): TypedRecord | und
   return binding === undefined ? undefined : input.state.records.find((item) => item.id === binding.record);
 }
 
+type ReadyOutput = {
+  readonly published: BuildResultWriterState["publishedOutputs"][number];
+  readonly type: TypeRef;
+  readonly record?: TypedRecord;
+  readonly forward?: HistoricalBuildOutputRef;
+};
+
 /**
  * Encode accepted public Outputs exactly once, independently of the physical repository adapter.
  * The adapter only writes bytes/documents at the paths chosen here.
@@ -97,77 +163,82 @@ export async function syncBuildResultOutputs(input: {
 }): Promise<BuildResultSyncResult> {
   const resources = new Map(Object.entries(input.writer.resources));
   const values = new Map(Object.entries(input.writer.values));
+  const filePaths = numberedPathAllocator("files", "file", resources.values());
+  const valuePaths = numberedPathAllocator("values", "value", values.values());
   const outputs: Record<string, BuildResultOutput> = { ...input.manifest.outputs };
 
-  const materialize = async (artifact: BlobRef): Promise<BuildResultFileRef> => {
-    const reference = input.writer.resourceReferences?.[artifact.resource];
-    if (reference !== undefined) return { ...reference, mediaType: artifact.mediaType };
-    const identity = artifact.resource;
-    assert(identity.length > 0, "Build resource has no instance identity");
-    let path = resources.get(identity);
-    if (path === undefined) {
-      path = numberedPath("files", "file", mediaExtension(artifact.mediaType), new Set(resources.values()));
-      resources.set(identity, path);
+  const materialize = async (artifacts: readonly BlobRef[]): Promise<readonly BuildResultFileRef[]> => {
+    const writes: Array<{ readonly path: string; readonly artifact: BlobRef }> = [];
+    const result = artifacts.map((artifact): BuildResultFileRef => {
+      const reference = input.writer.resourceReferences?.[artifact.resource];
+      if (reference !== undefined) return { ...reference, mediaType: artifact.mediaType };
+      const identity = artifact.resource;
+      assert(identity.length > 0, "Build resource has no instance identity");
+      let path = resources.get(identity);
+      if (path === undefined) {
+        path = numberedPath("files", "file", mediaExtension(artifact.mediaType), filePaths);
+        resources.set(identity, path);
+        writes.push({ path, artifact });
+      }
+      return { kind: "build-file", path, size: artifact.size, mediaType: artifact.mediaType };
+    });
+    await runBounded(writes, 4, async ({ path, artifact }) => {
       await input.target.writeResource(path, artifact, input.sync.resources);
-    }
-    return { kind: "build-file", path, size: artifact.size, mediaType: artifact.mediaType };
+    });
+    return result;
   };
 
-  const encodeComposite = async (
+  const encodeComposite = (
     value: unknown,
-    path: BuildResultValuePath = [],
-  ): Promise<{ readonly value: CanonicalValue; readonly resources: BuildResultValueDocument["resources"] }> => {
+    path: BuildResultValuePath,
+    artifacts: Array<{ readonly at: BuildResultValuePath; readonly artifact: BlobRef }>,
+  ): CanonicalValue => {
     if (isBlobRef(value)) {
-      return { value: null, resources: [{ at: path, file: await materialize(value) }] };
+      artifacts.push({ at: path, artifact: value });
+      return null;
     }
-    if (scalar(value)) return { value, resources: [] };
+    if (scalar(value)) return value;
     if (Array.isArray(value)) {
-      const children = await Promise.all(value.map(async (item, index) => await encodeComposite(item, [...path, index])));
-      return {
-        value: children.map((child) => child.value),
-        resources: children.flatMap((child) => child.resources),
-      };
+      return value.map((item, index) => encodeComposite(item, [...path, index], artifacts));
     }
     assert(value !== null && typeof value === "object", "Build Output contains a non-canonical value");
-    const entries = await Promise.all(Object.entries(value as Readonly<Record<string, unknown>>).map(async ([key, item]) => {
-      return [key, await encodeComposite(item, [...path, key])] as const;
-    }));
-    return {
-      value: Object.fromEntries(entries.map(([key, child]) => [key, child.value])),
-      resources: entries.flatMap(([, child]) => child.resources),
-    };
+    return Object.fromEntries(Object.entries(value as Readonly<Record<string, unknown>>)
+      .map(([key, item]) => [key, encodeComposite(item, [...path, key], artifacts)]));
   };
 
   const outputValue = async (record: TypedRecord): Promise<BuildResultOutput["value"]> => {
-    if (record.value.kind === "blob") return await materialize(record.value);
+    if (record.value.kind === "blob") return (await materialize([record.value]))[0]!;
     if (scalar(record.value.value)) return { kind: "inline", value: record.value.value };
     const existingPath = values.get(record.id);
     if (existingPath !== undefined) return { kind: "value", path: existingPath };
-    const path = numberedPath("values", "value", ".json", new Set(values.values()));
+    const path = numberedPath("values", "value", ".json", valuePaths);
     values.set(record.id, path);
+    const artifacts: Array<{ readonly at: BuildResultValuePath; readonly artifact: BlobRef }> = [];
+    const value = encodeComposite(record.value.value, [], artifacts);
+    const files = await materialize(artifacts.map((item) => item.artifact));
     const document: BuildResultValueDocument = {
       format: "qflow.result-value@1",
-      ...await encodeComposite(record.value.value),
+      value,
+      resources: artifacts.map((item, index) => ({ at: item.at, file: files[index]! })),
     };
     await input.target.writeValue(path, document);
     return { kind: "value", path };
   };
 
   const forwards = new Map(input.writer.forwards.map((item) => [item.output, item]));
-  const outputRank = (record: TypedRecord, forward: HistoricalBuildOutputRef | undefined): number => forward !== undefined
+  const outputRank = (record: TypedRecord | undefined, forward: HistoricalBuildOutputRef | undefined): number => forward !== undefined
     ? 0
-    : record.value.kind === "blob" ? 1 : scalar(record.value.value) ? 2 : 3;
-  const ready = input.writer.publishedOutputs.flatMap((published) => {
+    : record?.value.kind === "blob" ? 1 : record !== undefined && scalar(record.value.value) ? 2 : 3;
+  const ready: ReadyOutput[] = input.writer.publishedOutputs.flatMap((published): ReadyOutput[] => {
     if (outputs[published.name] !== undefined) return [];
-    const record = outputRecord(input.sync, published.output);
-    if (record === undefined) return [];
     const source = forwards.get(published.output);
-    const forward = source === undefined ? undefined : {
+    if (source !== undefined) return [{ published, type: source.type, forward: {
       kind: "build-output" as const,
       build: source.build,
       output: source.sourceOutput,
-    };
-    return [{ published, record, forward }];
+    } }];
+    const record = outputRecord(input.sync, published.output);
+    return record === undefined ? [] : [{ published, type: record.type, record }];
   }).sort((left, right) => outputRank(left.record, left.forward) - outputRank(right.record, right.forward)
     || left.published.name.localeCompare(right.published.name));
 
@@ -175,11 +246,11 @@ export async function syncBuildResultOutputs(input: {
     return { changed: false, manifest: input.manifest, writer: input.writer };
   }
 
-  for (const { published, record, forward } of ready) {
+  for (const { published, type, record, forward } of ready) {
     outputs[published.name] = {
       ...(published.displayName === undefined ? {} : { displayName: published.displayName }),
-      type: record.type,
-      value: forward ?? await outputValue(record),
+      type,
+      value: forward ?? await outputValue(record!),
     };
   }
 

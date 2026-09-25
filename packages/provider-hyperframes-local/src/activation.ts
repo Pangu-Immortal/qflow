@@ -23,7 +23,7 @@ const localHyperframesRuntimeAdapter = createRuntimeEndpointAdapterFacet({
     const config = runtimeConfigObject(context.config, "local HyperFrames");
     runtimeConfigExact(config, [
       "nodePath", "chromePath", "browserVersion", "browserCacheDirectory", "browserDownloadBaseUrl", "ffprobePath", "ffmpegPath", "workers", "maxWorkers", "quality", "browserGpu",
-      "defaultConcurrency", "browserCapacity", "initializationTimeoutMs", "frameTimeoutMs", "processTimeoutMs", "maxProcessOutputBytes", "maxRenderedBytes",
+      "defaultConcurrency", "browserCapacity", "initializationTimeoutMs", "frameTimeoutMs", "processTimeoutMs", "maxProcessOutputBytes", "artifactStagingConcurrency", "maxPendingFrameBytes", "maxDecodedSourceBytes", "maxRenderedBytes",
     ], "local HyperFrames");
     runtimeConfigString(config.nodePath, "HyperFrames nodePath");
     runtimeConfigString(config.ffprobePath, "HyperFrames ffprobePath");
@@ -65,6 +65,9 @@ const localHyperframesRuntimeAdapter = createRuntimeEndpointAdapterFacet({
     const frameTimeoutMs = runtimeConfigPositiveInteger(config.frameTimeoutMs, "HyperFrames frameTimeoutMs");
     const processTimeoutMs = runtimeConfigPositiveInteger(config.processTimeoutMs, "HyperFrames processTimeoutMs");
     const maxProcessOutputBytes = runtimeConfigPositiveInteger(config.maxProcessOutputBytes, "HyperFrames maxProcessOutputBytes");
+    const artifactStagingConcurrency = runtimeConfigPositiveInteger(config.artifactStagingConcurrency, "HyperFrames artifactStagingConcurrency");
+    const maxPendingFrameBytes = runtimeConfigPositiveInteger(config.maxPendingFrameBytes, "HyperFrames maxPendingFrameBytes");
+    const maxDecodedSourceBytes = runtimeConfigPositiveInteger(config.maxDecodedSourceBytes, "HyperFrames maxDecodedSourceBytes");
     const maxRenderedBytes = runtimeConfigPositiveInteger(config.maxRenderedBytes, "HyperFrames maxRenderedBytes");
     return {
       endpoint: createLocalHyperframesProvider({
@@ -84,6 +87,9 @@ const localHyperframesRuntimeAdapter = createRuntimeEndpointAdapterFacet({
         ...(frameTimeoutMs === undefined ? {} : { frameTimeoutMs }),
         ...(processTimeoutMs === undefined ? {} : { processTimeoutMs }),
         ...(maxProcessOutputBytes === undefined ? {} : { maxProcessOutputBytes }),
+        ...(artifactStagingConcurrency === undefined ? {} : { artifactStagingConcurrency }),
+        ...(maxPendingFrameBytes === undefined ? {} : { maxPendingFrameBytes }),
+        ...(maxDecodedSourceBytes === undefined ? {} : { maxDecodedSourceBytes }),
         ...(maxRenderedBytes === undefined ? {} : { maxRenderedBytes }),
       }),
       program: localHyperframesBrowserProgram({

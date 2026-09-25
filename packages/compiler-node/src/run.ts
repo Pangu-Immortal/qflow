@@ -37,6 +37,20 @@ export type NodeRunCompilerOptions = {
   readonly authorCompiler: NodeCompiler;
   readonly frontends: RunFrontendRegistryLike;
   readonly fragments: RunFragmentRegistryLike;
+  readonly locateHistoricalOutput?: (
+    build: string,
+    output: string,
+  ) => Promise<{
+    readonly build: string;
+    readonly output: string;
+    readonly type: TypeRef;
+  } | undefined>
+    | {
+      readonly build: string;
+      readonly output: string;
+      readonly type: TypeRef;
+    }
+    | undefined;
   readonly resolveHistoricalOutput?: (
     build: string,
     output: string,
@@ -60,6 +74,12 @@ export type NodeCompiledRun = {
   /** Author program rebound to the union closure required by Author and selected Run code. */
   readonly program: LinkedProgram;
   readonly run: RunCompilation;
+  /** Terminal historical addresses selected during structural planning, keyed by Candidate id. */
+  readonly historicalOutputs: Readonly<Record<string, {
+    readonly build: string;
+    readonly output: string;
+    readonly type: TypeRef;
+  }>>;
   readonly attachments: readonly ArtifactAttachment[];
 };
 
@@ -86,6 +106,7 @@ export type PlannedBuild = {
     readonly output: string;
     readonly build: string;
     readonly sourceOutput: string;
+    readonly type: TypeRef;
   }[];
   /** Immutable authority persisted once for every fresh Runtime Build. */
   readonly definition: BuildDefinition;
@@ -252,6 +273,7 @@ export class NodeRunCompiler {
       collectRunModuleRequests(decoded.document, this.#options.fragments),
     );
     const executionCompilation = program === author.program ? author : { ...author, program };
+    const locateHistoricalOutput = this.#options.locateHistoricalOutput;
     const resolveHistoricalOutput = this.#options.resolveHistoricalOutput;
     const buildAttachments: ArtifactAttachment[] = [];
     const structuralRun = await resolveRunDocument(decoded.document, {
@@ -262,6 +284,12 @@ export class NodeRunCompiler {
     const selectedSources = new Set(structuralPlan.selections
       .filter((selection) => structuralRun.candidateSources[selection.candidate] !== undefined)
       .map((selection) => selection.candidate));
+    const consumedRecords = new Set(structuralPlan.plan.steps.flatMap((step) => Object.values(step.inputs)));
+    const historicalOutputs = new Map<string, {
+      readonly build: string;
+      readonly output: string;
+      readonly type: TypeRef;
+    }>();
     const resolvedValues = new Map<string, StoredValue>();
     for (const candidate of selectedSources) {
       const candidateSource = structuralRun.candidateSources[candidate]!;
@@ -278,6 +306,21 @@ export class NodeRunCompiler {
         ));
         continue;
       }
+      if (locateHistoricalOutput === undefined) {
+        throw new Error(`Historical Build Candidate ${candidateSource.build}/${candidateSource.output} requires a project Result Store`);
+      }
+      const located = await locateHistoricalOutput(candidateSource.build, candidateSource.output);
+      if (located === undefined) {
+        throw new Error(`Build ${candidateSource.build} has no Output ${candidateSource.output}`);
+      }
+      const declaration = structuralRun.graph.candidates.find((item) => item.id === candidate)!;
+      if (!sameType(located.type, declaration.type)) {
+        throw new Error(`Build ${candidateSource.build} Output ${candidateSource.output} has the wrong type for its satisfied Logical Output`);
+      }
+      historicalOutputs.set(candidate, located);
+      const consumed = structuralPlan.selections.some((selection) =>
+        selection.candidate === candidate && consumedRecords.has(selection.record));
+      if (!consumed) continue;
       if (resolveHistoricalOutput === undefined) {
         throw new Error(`Historical Build Candidate ${candidateSource.build}/${candidateSource.output} requires a project Result Store`);
       }
@@ -285,7 +328,6 @@ export class NodeRunCompiler {
       if (resolved === undefined) {
         throw new Error(`Build ${candidateSource.build} has no Output ${candidateSource.output}`);
       }
-      const declaration = structuralRun.graph.candidates.find((item) => item.id === candidate)!;
       if (!sameType(resolved.type, declaration.type)) {
         throw new Error(`Build ${candidateSource.build} Output ${candidateSource.output} has the wrong type for its satisfied Logical Output`);
       }
@@ -310,7 +352,14 @@ export class NodeRunCompiler {
         }),
       }),
     };
-    const admitted = planBuild(program, author.graph, run.graph);
+    const forwardOnlyOutputs = new Set(structuralPlan.selections.flatMap((selection) => {
+      const source = structuralRun.candidateSources[selection.candidate];
+      return source?.kind === "build-output" && !consumedRecords.has(selection.record) ? [selection.output] : [];
+    }));
+    const admitted = planBuild(program, author.graph, {
+      ...run.graph,
+      targets: run.graph.targets.filter((target) => !forwardOnlyOutputs.has(target.output)),
+    });
     const admitRecord = (this.#options.authorCompiler as NodeCompiler & {
       readonly admitRecord?: NodeCompiler["admitRecord"];
     }).admitRecord;
@@ -325,12 +374,23 @@ export class NodeRunCompiler {
       author,
       program,
       run,
+      historicalOutputs: Object.fromEntries(historicalOutputs),
       attachments: mergeAttachments([author.attachments, await workspace.attachments(), buildAttachments]),
     };
   }
 
   planCompilation(compilation: NodeCompiledRun): PlannedBuild {
-    const sliced = sliceExecution(compilation.program, compilation.author.graph, compilation.run.graph);
+    const preliminary = planBuild(compilation.program, compilation.author.graph, compilation.run.graph);
+    const consumedRecords = new Set(preliminary.plan.steps.flatMap((step) => Object.values(step.inputs)));
+    const forwardOnlyOutputs = new Set(preliminary.selections.flatMap((selection) => {
+      const source = compilation.run.candidateSources[selection.candidate];
+      return source?.kind === "build-output" && !consumedRecords.has(selection.record) ? [selection.output] : [];
+    }));
+    const executionRun = {
+      ...compilation.run.graph,
+      targets: compilation.run.graph.targets.filter((target) => !forwardOnlyOutputs.has(target.output)),
+    };
+    const sliced = sliceExecution(compilation.program, compilation.author.graph, executionRun);
     const definition = defineBuild({
       program: sliced.program,
       initialRecords: sliced.initialRecords,
@@ -338,12 +398,18 @@ export class NodeRunCompiler {
       targets: sliced.targets,
     });
     const state = materializeBuild(definition, []);
-    const resultForwards = sliced.selections.flatMap((selection) => {
+    const resultForwards = preliminary.selections.flatMap((selection) => {
       const source = compilation.run.candidateSources[selection.candidate];
-      return source?.kind !== "build-output" ? [] : [{
+      if (source?.kind !== "build-output") return [];
+      const located = compilation.historicalOutputs[selection.candidate];
+      if (located === undefined) {
+        throw new Error(`Historical Candidate ${selection.candidate} was not located during Run compilation`);
+      }
+      return [{
         output: selection.output,
-        build: source.build,
-        sourceOutput: source.output,
+        build: located.build,
+        sourceOutput: located.output,
+        type: located.type,
       }];
     });
     return { compilation, selections: sliced.selections, resultForwards, definition, state };

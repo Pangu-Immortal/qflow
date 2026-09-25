@@ -16,6 +16,8 @@ export type BuildCatalogDescriptor = {
   readonly run?: {
     readonly path: string;
   };
+  /** Author-facing targets requested by the Run, including Outputs forwarded outside Core execution. */
+  readonly targets?: readonly LogicalOutputRef[];
   readonly publishedOutputs: readonly BuildPublishedOutput[];
 };
 

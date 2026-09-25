@@ -8,6 +8,14 @@ type ProcessResult = {
   readonly stderr: string;
 };
 
+type ProcessArguments = {
+  readonly executable: string;
+  readonly argv: readonly string[];
+  readonly timeoutMs: number;
+  readonly maxOutputBytes: number;
+  readonly signal?: AbortSignal;
+};
+
 export function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
@@ -46,21 +54,56 @@ export function processEnvironment(platform: NodeJS.Platform = process.platform)
     : [[name, process.env[name]]])) as NodeJS.ProcessEnv;
 }
 
-export async function runProcess(args: {
-  readonly executable: string;
-  readonly argv: readonly string[];
-  readonly timeoutMs: number;
-  readonly maxOutputBytes: number;
-  readonly signal?: AbortSignal;
-}): Promise<ProcessResult> {
+export async function runProcess(args: ProcessArguments): Promise<ProcessResult> {
   args.signal?.throwIfAborted();
-  return await new Promise((resolve, reject) => {
+  return await startProcess(args, false).completed;
+}
+
+/** Start one process whose stdin is written incrementally by a single caller. */
+export function openProcessInput(args: ProcessArguments): {
+  readonly write: (bytes: Uint8Array) => Promise<void>;
+  readonly close: () => Promise<ProcessResult>;
+  readonly completed: Promise<ProcessResult>;
+} {
+  args.signal?.throwIfAborted();
+  const process = startProcess(args, true);
+  const input = process.input!;
+  let ended = false;
+  let closing: Promise<ProcessResult> | undefined;
+  return {
+    completed: process.completed,
+    write: async (bytes) => {
+      assert(!ended, `${args.executable} input is already closed`);
+      args.signal?.throwIfAborted();
+      await new Promise<void>((resolve, reject) => {
+        input.write(bytes, (error) => error === null || error === undefined ? resolve() : reject(error));
+      });
+      args.signal?.throwIfAborted();
+    },
+    close: () => {
+      closing ??= (() => {
+        ended = true;
+        input.end();
+        return process.completed;
+      })();
+      return closing;
+    },
+  };
+}
+
+function startProcess(args: ProcessArguments, pipeInput: boolean): {
+  readonly input: import("node:stream").Writable | undefined;
+  readonly completed: Promise<ProcessResult>;
+} {
+  let input: import("node:stream").Writable | undefined;
+  const completed = new Promise<ProcessResult>((resolve, reject) => {
     const child = spawn(args.executable, [...args.argv], {
       shell: false,
       windowsHide: true,
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio: [pipeInput ? "pipe" : "ignore", "pipe", "pipe"],
       env: processEnvironment(),
     });
+    input = child.stdin ?? undefined;
     const stdout: Buffer[] = [];
     let outputBytes = 0;
     let stderr = "";
@@ -83,7 +126,7 @@ export async function runProcess(args: {
     const timer = setTimeout(() => {
       stop(new Error(`${args.executable} timed out`));
     }, args.timeoutMs);
-    child.stdout.on("data", (chunk: Buffer) => {
+    child.stdout!.on("data", (chunk: Buffer) => {
       outputBytes += chunk.byteLength;
       if (outputBytes > args.maxOutputBytes) {
         stop(new Error(`${args.executable} output exceeded the configured limit`));
@@ -91,7 +134,7 @@ export async function runProcess(args: {
       }
       stdout.push(chunk);
     });
-    child.stderr.on("data", (chunk: Buffer) => {
+    child.stderr!.on("data", (chunk: Buffer) => {
       outputBytes += chunk.byteLength;
       stderr = `${stderr}${chunk.toString()}`.slice(-32_000);
       if (outputBytes > args.maxOutputBytes) {
@@ -99,6 +142,9 @@ export async function runProcess(args: {
       }
     });
     child.on("error", (error) => finish(error));
+    // Writes receive their own EPIPE error. Keep the process result focused on
+    // its exit code and stderr, which carry the useful encoder failure.
+    child.stdin?.on("error", () => {});
     if (args.signal?.aborted) abort();
     child.on("close", (code) => {
       if (failure !== undefined) finish(failure);
@@ -106,4 +152,6 @@ export async function runProcess(args: {
       else finish(new Error(`${args.executable} exited ${String(code)}: ${stderr}`));
     });
   });
+  assert(!pipeInput || input !== undefined, `${args.executable} input pipe is unavailable`);
+  return { input, completed };
 }

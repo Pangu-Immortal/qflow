@@ -79,7 +79,7 @@ export function createLocalResultWriter(
   const acceptStoredResults = async (build: string): Promise<BuildSnapshot> => {
     const snapshot = await options.buildStore.read(build);
     assert(snapshot !== undefined, `Build ${build} has no durable execution state`);
-    const machine = new BuildMachine(snapshot.definition, snapshot.facts);
+    const machine = BuildMachine.fromMaterialized(snapshot.definition, snapshot.state);
     const accept = async (event: CommandResult): Promise<void> => {
       if (!machine.view().outstanding.some((command) => command.id === event.command)) return;
       const fact = machine.evaluate(event);

@@ -10,9 +10,40 @@ content identity or hidden output metadata.
 `render-frames` uses the same staging, source-frame mapping, readiness and opaque PNG capture as
 video export, returning the PNGs before encoding. It accepts a compiled document or a materialized
 HTML project. For selected frames it merges only their required source-frame windows; continuous
-windows decode sequentially. A complete batch shares one staged project and browser lifetime.
+windows decode sequentially inside a render-local working set. A complete batch shares one staged
+project and browser lifetime.
 The existing browser selection, explicit preparation, worker settings and cancellation apply.
+Document staging runs at most `artifactStagingConcurrency` complete Artifact lifecycles at once
+(4 by default). A lifecycle includes Resource Store reading, local-file writing and typed Surface
+inspection. The limit is local to one render and is independent of Chrome workers and Runtime request
+capacity. The first failure stops new Artifact claims; already-started lifecycles settle before the
+temporary directory can be removed. Existing HTML-project staging is already sequential.
+For a compiled Document, the Provider intersects the whole continuous range or sparse frame list
+with each Artifact's compiler-owned usage proof before claiming bytes. Direct image, video and typed
+Surface dependencies outside the selection are not opened or written. `always` dependencies—such as
+document fonts and opaque Browser Program resources—remain conservative. This selection happens once
+per render; every Chrome worker shares the same staged project and may still evaluate any requested
+frame in any order. Materialized HTML-project input has no such structural proof and remains complete.
 `maxRenderedBytes` bounds the total returned PNG bytes, or the encoded MP4 for a video request.
+For MP4 requests, completed PNGs are submitted individually to one ordered FFmpeg pipe instead of
+being retained as a complete frame directory. `maxPendingFrameBytes` (256 MiB by default) bounds
+completed out-of-order PNGs waiting for an earlier frame. When that budget is full, the affected
+worker stops claiming work. The exact next frame may always pass, and one otherwise-empty waiting
+set accepts a single oversized PNG, so the byte budget cannot deadlock ordered progress. This limit
+does not change quality, drop frames, reduce an explicit worker count, or bound the encoded artifact.
+`maxDecodedSourceBytes` (1 GiB by default) separately bounds decoded source PNGs retained for browser
+injection. A screenshot leases only the exact source frames it is currently reading and releases
+them before its output PNG can wait on the ordered encoder. Missing contiguous frames are grouped into
+FFmpeg `image2pipe` jobs of at most 16 frames; each PNG is parsed and admitted as soon as it is complete instead of
+waiting for the whole extraction. Remaining, not-yet-consumed frames in each live Worker's short batch
+are soft preferences: they are reused when space permits, never displace another live soft preference,
+and remain evictable for an exact screenshot requirement. Admission uses each completed PNG's actual
+byte size. One exact screenshot requirement may occupy the set alone when it exceeds the budget. The
+reported peak covers resident decoded PNG files; one bounded PNG may additionally be in the decoder
+pipe/parser. It does not cover source assets, Chrome memory or FFmpeg's internal buffers.
+Resident accounting is an attempt-local weighted-capacity lease that knows only integer units; source
+identity, frame choice, eviction and prefetch remain in the SourceFrameStore. It is not Runtime capacity
+and is never shared across renders.
 `render-frames` has its own capability binding; it does not inherit a `render-visual` binding.
 For immediate CLI invocation, the host calls the handler directly: Build admission reservations do
 not coordinate separate CLI processes. Worker limits still bound browsers inside each invocation.
@@ -77,6 +108,11 @@ It waits for seek completion, dynamic images/fonts and the page compositor befor
 Image readiness includes CSS class and pseudo-element images, CSS masks and SVG images. A failed
 image decode reports its URL instead of producing a successful frame with missing media. Failed
 declared fonts also fail capture instead of silently leaving fallback glyphs in the output.
+When a page publishes capture roots, initial computed-style and image discovery is limited to those
+roots. Descendant changes stay local, while an ancestor class/id change is routed back to the roots
+it can affect. A real CSSOM stylesheet edit remains an explicit whole-document fallback because an
+opaque rule can select anything. Pages that publish no roots, including arbitrary materialized HTML,
+retain whole-document discovery.
 The pinned engine couples its PNG session setup to transparent export, so this adapter initializes
 an opaque session and chooses PNG separately at capture. It does not patch engine methods or files.
 
@@ -199,16 +235,45 @@ cleanup. A completed worker closes its Chrome immediately.
 One call stages the HTML and every declared asset once. Typed Surface inspection reads the completed
 staged file directly, without retaining its chunks, assembling another whole-file buffer, or writing
 a second temporary copy. The caller keeps that file until inspection and capture have settled.
-Typed Surface validation includes a complete
-decoded-frame count, even for a short render interval. The renderer then finds source-frame windows
-needed by that interval, merges overlapping windows, and extracts them one source/window at a time.
-Decoded PNGs are shared by all workers in this call. Each worker initializes its own page, then takes
-short contiguous frame batches from the render's in-memory queue. A free worker can continue with
-another batch instead of waiting for a worker assigned a more expensive passage. Batches span at
+Typed Surface validation includes a complete decoded-frame count, even for a short render interval.
+Capture probes the dimensions of source media needed by the requested range, but does not decode
+the range before launching browsers. Each Worker initializes its own page, then takes short
+contiguous output-frame batches from the render's in-memory queue. Before one screenshot it leases that frame's exact source inputs;
+missing inputs and live unconsumed batch preferences are merged into bounded continuous decode windows.
+One FFmpeg process streams multiple PNGs for such a window, while the render-local store applies
+backpressure and actual-byte admission between frames.
+Decoded source PNGs are shared by all workers in this call. A free worker can continue with another
+batch instead of waiting for a worker assigned a more expensive passage. Batches span at
 most about one second and preserve the original absolute frame times. Output numbering starts at
-zero; final H.264 encoding runs once after all workers finish. This division is internal to one
+zero. Every completed output PNG is submitted immediately; a render-local ordered sink writes each
+consecutive frame to FFmpeg and releases it, while later frames wait within the configured byte
+budget. H.264 encoding overlaps capture before final verification. This division is internal to one
 render call; it does not create or resume Builds. Extra workers help only while aggregate throughput
-improves. Staging, validation, source extraction and final encoding still contribute their own cost.
+improves. Staging, validation, source extraction and final verification still contribute their own cost.
+
+The requested continuous range or sparse frame list is compacted into ordered half-open spans and
+injected into every page before compiled scripts run. HyperFrames uses this render-local selection
+to skip Browser Program setup, browser Animation materialization, Terminal Text static layout and
+visibility-span indexing for Presents that cannot contribute. All Workers receive the same absolute
+selection because batches may move between them; no Worker order or previous-frame cursor is part
+of the result. Compiler-owned direct media URLs stay inert during parsing and are activated only
+inside intersecting Present roots. The compiled page makes other Present roots non-painting, removes
+any remaining direct media URL attributes, detaches them from the live DOM and publishes only
+selected roots plus shared document definitions to opaque readiness. In a 200-unrelated-node browser
+probe, this reduced initial computed-style reads
+from at least 600 for an unscoped document to at most 6 for one selected root. These counts describe
+the exercised DOM shape, not a machine-wide timing promise.
+
+The complete staged HTML is still prepared, while declared Artifacts with a compiler-proven disjoint
+frame usage are omitted from byte staging. Selection-gated URL activation also avoids browser requests
+for that unselected compiler-owned media; arbitrary HTML/CSS, Browser Program resources and
+document-level fonts remain conservative. The pinned engine's
+document-level animation discovery now sees only selected live Present roots and document-level
+definitions. Font readiness remains a browser-wide settlement
+boundary, although fonts used only by hidden unselected Presents are no longer demanded in the
+compiled-page path. Arbitrary HTML without the page-owned root protocol retains safe full-document
+resource discovery. This is therefore execution-local loading/readiness projection rather than a
+partial-document rewrite or a claim that every browser startup cost is proportional to the selection.
 
 Each call has its own temporary directory, local server port and Chrome processes. Separate renders
 do not share staged files or decoded PNGs. Exact compiler sampling markers retain loops, holds and

@@ -56,6 +56,7 @@ export async function loadStudioRun(input: {
     fragments,
     frontends,
     ...(input.buildLibrary === undefined ? {} : {
+      locateHistoricalOutput: input.buildLibrary.locateHistoricalOutput,
       resolveHistoricalOutput: input.buildLibrary.resolveHistoricalOutput,
     }),
   });

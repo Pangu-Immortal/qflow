@@ -83,7 +83,7 @@ export class LocalBuildScheduler {
           throw new Error(`scheduled Build snapshot ${snapshot.build} does not belong to ${request.id}`);
         }
         state = snapshot.state;
-        machine = new BuildMachine(snapshot.definition, snapshot.facts);
+        machine = BuildMachine.fromMaterialized(snapshot.definition, snapshot.state);
       }
       builds.push({
         id: request.id,
@@ -134,7 +134,9 @@ export class LocalBuildScheduler {
           ready.set(build.id, []);
           continue;
         }
-        const prepared = this.#executor.prepare(build.state);
+        const prepared = build.machine !== undefined && this.#executor.prepareExecution !== undefined
+          ? this.#executor.prepareExecution(build.machine)
+          : this.#executor.prepare(build.state);
         build.state = prepared.state;
         build.blocked = prepared.blocked;
         ready.set(build.id, prepared.runnable.filter((item) =>
@@ -156,7 +158,10 @@ export class LocalBuildScheduler {
     const launch = (build: MutableBuild, command: RuntimeRunnableCommand): void => {
       const key = buildCommandKey(build.id, command.command.id);
       const startedFrom = build.state;
-      const promise = this.#executor.executeCommand(startedFrom, command, { build: build.id }).then(
+      const execution = build.machine !== undefined && this.#executor.executeExecutionCommand !== undefined
+        ? this.#executor.executeExecutionCommand(build.machine, command, { build: build.id })
+        : this.#executor.executeCommand(startedFrom, command, { build: build.id });
+      const promise = execution.then(
         (execution) => ({ key, build, command, execution }),
         (error: unknown) => ({ key, build, command, error }),
       );

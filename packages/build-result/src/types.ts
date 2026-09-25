@@ -226,6 +226,15 @@ export type BuildResultForward = {
   readonly output: string;
   readonly build: string;
   readonly sourceOutput: string;
+  /** Expected source type when the compiler has already inspected the historical Output. */
+  readonly type?: TypeRef;
+};
+
+/** One terminal historical Output address found without opening its value document or files. */
+export type RepositoryBuildResultOutputLocation = {
+  readonly build: string;
+  readonly output: string;
+  readonly type: TypeRef;
 };
 
 export type BuildResultSeed = {

@@ -22,7 +22,7 @@ import { renderHyperframesCapabilities } from "@qflow/render-hyperframes";
 import { mediaTypes } from "@qflow/media";
 import { canonicalize } from "@qflow/protocol";
 import type { HyperframesRenderProgress } from "../src/index.js";
-import { distributeFrameRange, sourceFrameAt, sourceWindows, videoSlots } from "../src/sampling.js";
+import { distributeFrameRange, requestedFrameRanges, sourceFrameAt, sourceWindows, videoSlots } from "../src/sampling.js";
 
 function documentFor(artifact: BlobRef) {
   const space = sealProgramSpace({ id: "range-space", durationSec: 12 / 30, frameRate: { numerator: 30, denominator: 1 } });
@@ -67,15 +67,31 @@ test("the render deadline is global while stage deadlines are explicit deploymen
   assert.equal(defaults.processTimeoutMs, 30 * 60_000);
   assert.equal(defaults.initializationTimeoutMs, undefined);
   assert.equal(defaults.frameTimeoutMs, undefined);
+  assert.equal(defaults.artifactStagingConcurrency, 4);
+  assert.equal(defaults.maxPendingFrameBytes, 256 * 1024 * 1024);
+  assert.equal(defaults.maxDecodedSourceBytes, 1024 * 1024 * 1024);
 
-  const explicit = resolveExecutionOptions({ initializationTimeoutMs: 31_000, frameTimeoutMs: 16_000 });
+  const explicit = resolveExecutionOptions({ initializationTimeoutMs: 31_000, frameTimeoutMs: 16_000,
+    artifactStagingConcurrency: 3, maxPendingFrameBytes: 12_345, maxDecodedSourceBytes: 54_321 });
   assert.equal(explicit.initializationTimeoutMs, 31_000);
   assert.equal(explicit.frameTimeoutMs, 16_000);
+  assert.equal(explicit.artifactStagingConcurrency, 3);
+  assert.equal(explicit.maxPendingFrameBytes, 12_345);
+  assert.equal(explicit.maxDecodedSourceBytes, 54_321);
 });
 
 test("source selection retains loop, hold and fractional-speed sampling and shares decoded frames", () => {
   const document = documentFor({ kind: "blob", resource: "res_range_source", size: 1, mediaType: "video/mp4" });
   const slots = videoSlots(document.html);
+  assert.ok(slots.every(slot => slot.src === "qflow-resource://res_range_source"));
+  assert.equal(slots.length, 4, "the two-frame hold remains one slot instead of one slot per target frame");
+  const hold = slots.find((slot) => slot.sourceRate.numerator === 0n);
+  assert.ok(hold !== undefined);
+  assert.deepEqual({ startFrame: hold.startFrame, endFrameExclusive: hold.endFrameExclusive,
+    sourceFrame: hold.sourceFrame, sourceRate: hold.sourceRate }, {
+    startFrame: 6, endFrameExclusive: 8,
+    sourceFrame: { numerator: 3n, denominator: 1n }, sourceRate: { numerator: 0n, denominator: 1n },
+  });
   const range = { startFrame: 3, endFrameExclusive: 11 };
   const sampled = Array.from({ length: 8 }, (_, i) => {
     const frame = range.startFrame + i;
@@ -86,6 +102,30 @@ test("source selection retains loop, hold and fractional-speed sampling and shar
   assert.deepEqual(distributeFrameRange(range, 3), [
     { startFrame: 3, endFrameExclusive: 5 }, { startFrame: 5, endFrameExclusive: 8 },
     { startFrame: 8, endFrameExclusive: 11 },
+  ]);
+});
+
+test("video slot inspection accepts direct HTML sources without requiring compiler-owned activation", () => {
+  const [slot] = videoSlots('<video id="direct" src="direct.mp4" data-qflow-start-frame="2" data-qflow-end-frame="4" data-qflow-source-frame="1/1" data-qflow-source-rate="1/1" data-qflow-source-fps="30/1"></video>');
+  assert.deepEqual(slot, {
+    id: "direct",
+    src: "direct.mp4",
+    startFrame: 2,
+    endFrameExclusive: 4,
+    sourceFrame: { numerator: 1n, denominator: 1n },
+    sourceRate: { numerator: 1n, denominator: 1n },
+    sourceFps: { num: 30, den: 1 },
+  });
+});
+
+test("page selection compacts arbitrary requested frames without inventing coverage across gaps", () => {
+  assert.deepEqual(requestedFrameRanges({ startFrame: 3, endFrameExclusive: 12 }), [
+    { startFrame: 3, endFrameExclusive: 12 },
+  ]);
+  assert.deepEqual(requestedFrameRanges({ startFrame: 3, endFrameExclusive: 12 }, [3, 4, 7, 8, 9, 11]), [
+    { startFrame: 3, endFrameExclusive: 5 },
+    { startFrame: 7, endFrameExclusive: 10 },
+    { startFrame: 11, endFrameExclusive: 12 },
   ]);
 });
 
@@ -115,7 +155,9 @@ test("real selected renders sample video correctly across loop, hold and stretch
       workers: number) => {
       const warnings: string[] = [];
       const visual = await renderHyperframesVisual({ document, ...(range === undefined ? {} : { range }) },
-        { resources, workers, quality: "high", processTimeoutMs: 120000, onProgress: (e) => events.push(e),
+        { resources, workers, quality: "high", processTimeoutMs: 120000,
+          maxPendingFrameBytes: 1, maxDecodedSourceBytes: 1,
+          onProgress: (e) => events.push(e),
           onDiagnostic: async (event) => { if (event.level === "warning") warnings.push(event.message); } });
       assert.deepEqual(warnings, [], "a completed render should close its resources and exit without forced cleanup");
       const file = join(root, `${name}.mp4`);

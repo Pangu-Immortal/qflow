@@ -19,9 +19,13 @@ import { canonicalStringify, isResourceId } from "@qflow/protocol";
 import type { BlobRef, ResourceId } from "@qflow/protocol";
 import { VISUAL_IR_V1 } from "@qflow/visual-ir";
 import { readBrowserProgram, browserProgramHtml, browserProgramScript } from "./browser-program.js";
+import { presentationCaptureScopeRuntime } from "./capture-scope.js";
+import { presentationVisibilityScript } from "./visibility.js";
+import { frameSelectionRuntime, frameWorkIndexRuntime } from "./frame-work.js";
 
 import type {
   ResourceUrlResolver,
+  HyperframesArtifact,
   HyperframesDocument,
   HyperframesFrameSpan,
 } from "./types.js";
@@ -115,20 +119,16 @@ function samplingRuns(segment: VisualSamplingSegment): Array<{
 }> {
   const length = segment.target.endFrameExclusive - segment.target.startFrame;
   const runs: Array<{ startFrame: number; endFrameExclusive: number; sourceFrame: VisualSamplingRational }> = [];
-  // HyperFrames and HTMLMediaElement require a positive playback rate. A held
-  // visual frame is therefore represented as one independently addressed
-  // target-frame clip per Program frame. Every clip starts at the same exact
-  // source position; no browser-specific zero-rate behavior is assumed.
+  // Keep a hold as the interval it is. HTMLMediaElement cannot accept a zero
+  // playbackRate, but that browser limitation belongs to the render/preview
+  // adapters; expanding the shared sampling description here would turn one
+  // authored relation into O(target frames) DOM and Provider work.
   if (segment.rate.numerator === 0) {
-    const source = sourcePosition(segment, 0).position;
-    for (let offset = 0; offset < length; offset += 1) {
-      runs.push({
-        startFrame: segment.target.startFrame + offset,
-        endFrameExclusive: segment.target.startFrame + offset + 1,
-        sourceFrame: source,
-      });
-    }
-    return runs;
+    return [{
+      startFrame: segment.target.startFrame,
+      endFrameExclusive: segment.target.endFrameExclusive,
+      sourceFrame: sourcePosition(segment, 0).position,
+    }];
   }
   let runStart = 0;
   let runSource = sourcePosition(segment, 0);
@@ -158,9 +158,9 @@ function sampledPlaybackRate(
   programNumerator: number,
   programDenominator: number,
 ): string {
-  // Zero-rate segments have already been split into one-frame clips above.
-  // Their media clock may advance inside that single frame, while every
-  // independently rendered target frame still starts at the exact held source.
+  // The exact zero rate remains in data-qflow-source-rate for adapters that
+  // place discrete frames. This positive fallback is only the legal native
+  // HTMLMediaElement value; preview adapters pause and seek held elements.
   if (rate.numerator === 0) return "1";
   return rationalDecimal(
     BigInt(rate.numerator) * BigInt(programNumerator) * BigInt(sourceFrameRate.denominator),
@@ -180,6 +180,11 @@ function percentage(frame: number, totalFrames: number): string {
 export function hyperframesResourceUri(resource: ResourceId): string {
   if (!isResourceId(resource)) throw new Error("HyperFrames Resource id is invalid.");
   return `qflow-resource://${resource}`;
+}
+
+/** Keep compiler-owned media inert until the page has applied its render selection. */
+function deferredResource(attribute: "src" | "href", resource: ResourceId): string {
+  return `data-qflow-resource-${attribute}="${escapeHtml(hyperframesResourceUri(resource))}"`;
 }
 
 function css(style: readonly VisualStyleDeclaration[]): string {
@@ -240,6 +245,7 @@ type ElementContext = {
   readonly programDenominator: number;
   readonly stackIndex: number;
   readonly emittedFilterIds: Set<string>;
+  readonly sharedGlyphFilterDefinitions: string[];
   readonly stableId: StableDomId;
 };
 
@@ -249,9 +255,6 @@ function elementPresentation(element: VisualElement, context: ElementContext) {
   const animationName = element.animation === undefined
     ? undefined
     : context.stableId(["animation", context.trackId, context.presentId, element.id]);
-  const animationProperties = element.animation === undefined
-    ? []
-    : [...new Set(element.animation.keyframes.flatMap((keyframe) => keyframe.style.map((declaration) => declaration.name)))].sort();
   const animationDurationFrames = element.animation === undefined
     ? context.presentDurationFrames
     : Math.max(context.presentDurationFrames, element.animation.keyframes.at(-1)?.atFrame ?? 0);
@@ -274,7 +277,7 @@ function elementPresentation(element: VisualElement, context: ElementContext) {
   const commonAttributes = `id="${id}" data-qflow-element-id="${escapeHtml(element.id)}"${attributes(element.attributes)}`;
   const animationAttributes = animationName === undefined
     ? ""
-    : ` data-qflow-frame-animation data-qflow-animation-start-frame="${context.presentStartFrame}" data-qflow-animation-duration-frames="${animationDurationFrames}" data-qflow-animation-sample-frames="${context.presentDurationFrames}" data-qflow-animation-properties="${animationProperties.join(",")}"`;
+    : ` data-qflow-frame-animation data-qflow-animation-start-frame="${context.presentStartFrame}" data-qflow-animation-sample-frames="${context.presentDurationFrames}"`;
   const common = `${commonAttributes}${animationAttributes} style="${escapeHtml(inlineStyle)}"`;
   return { inlineStyle, commonAttributes: `${commonAttributes}${animationAttributes}`, common };
 }
@@ -327,10 +330,10 @@ function renderElement(
         return `<foreignObject x="0" y="0" width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:100%;height:100%">${renderOwned(maskRoot)}</div></foreignObject>`;
       }
       if (maskRoot.kind === "image") {
-        return `<image ${sourcePresentation.common} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" href="${escapeHtml(hyperframesResourceUri(maskRoot.artifact.resource))}"/>`;
+        return `<image ${sourcePresentation.common} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" ${deferredResource("href", maskRoot.artifact.resource)}/>`;
       }
       if (maskRoot.kind === "surface" && maskRoot.surface.timing.kind === "still") {
-        return `<image ${sourcePresentation.common} data-qflow-surface-resource="${maskRoot.surface.artifact.resource}" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" href="${escapeHtml(hyperframesResourceUri(maskRoot.surface.artifact.resource))}"/>`;
+        return `<image ${sourcePresentation.common} data-qflow-surface-resource="${maskRoot.surface.artifact.resource}" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" ${deferredResource("href", maskRoot.surface.artifact.resource)}/>`;
       }
       throw new Error(`Local mask ${element.id} requires a terminal owned text, image or still Surface mask source.`);
     })();
@@ -359,6 +362,7 @@ function renderElement(
     baseStyle: inlineStyle,
     commonAttributes,
     emittedFilterIds: context.emittedFilterIds,
+    sharedGlyphFilterDefinitions: context.sharedGlyphFilterDefinitions,
   };
   if (element.kind === "text") {
     const body = element.paints === undefined
@@ -371,7 +375,6 @@ function renderElement(
   }
   if ((element.kind === "video" || element.kind === "surface") && element.sampling !== undefined) {
     const artifact = element.kind === "surface" ? element.surface.artifact : element.artifact;
-    const source = escapeHtml(hyperframesResourceUri(artifact.resource));
     let part = 0;
     return element.sampling.segments.flatMap((segment) => samplingRuns(segment).map((run) => {
       part += 1;
@@ -404,11 +407,10 @@ function renderElement(
           `height="${element.surface.height}"`,
         ] : []),
       ].filter(Boolean).join(" ");
-      return `<video ${media} src="${source}"></video>`;
+      return `<video ${media} ${deferredResource("src", artifact.resource)}></video>`;
     })).join("");
   }
   if (element.kind === "surface") {
-    const source = escapeHtml(hyperframesResourceUri(element.surface.artifact.resource));
     const surface = [
       `data-qflow-surface-resource="${element.surface.artifact.resource}"`,
       `data-start="${context.presentStart}"`,
@@ -419,10 +421,10 @@ function renderElement(
       `width="${element.surface.width}"`,
       `height="${element.surface.height}"`,
     ].join(" ");
-    if (element.surface.timing.kind === "still") return `<img ${common} ${surface} src="${source}"/>`;
+    if (element.surface.timing.kind === "still") return `<img ${common} ${surface} ${deferredResource("src", element.surface.artifact.resource)}/>`;
     const timing = element.surface.timing;
     const exact = `data-qflow-start-frame="${context.presentStartFrame}" data-qflow-end-frame="${context.presentStartFrame + timing.frameCount}" data-qflow-source-frame="0/1" data-qflow-source-rate="1/1" data-qflow-source-fps="${timing.frameRate.numerator}/${timing.frameRate.denominator}"`;
-    return `<video ${common} ${surface} ${exact} muted playsinline src="${source}"></video>`;
+    return `<video ${common} ${surface} ${exact} muted playsinline ${deferredResource("src", element.surface.artifact.resource)}></video>`;
   }
 
   const media = [
@@ -432,10 +434,9 @@ function renderElement(
     element.kind === "video" && element.muted !== false ? "muted" : "",
     element.kind === "video" ? "playsinline" : "",
   ].filter(Boolean).join(" ");
-  const source = escapeHtml(hyperframesResourceUri(element.artifact.resource));
-  if (element.kind === "image") return `<img ${common} ${media} src="${source}"/>`;
+  if (element.kind === "image") return `<img ${common} ${media} ${deferredResource("src", element.artifact.resource)}/>`;
   const exact = `data-qflow-start-frame="${context.presentStartFrame}" data-qflow-end-frame="${context.presentStartFrame + context.presentDurationFrames}" data-qflow-source-frame="0/1" data-qflow-source-rate="1/1" data-qflow-source-fps="${context.programNumerator}/${context.programDenominator}"`;
-  return `<video ${common} ${media} ${exact} src="${source}">${descendants}</video>`;
+  return `<video ${common} ${media} ${exact} ${deferredResource("src", element.artifact.resource)}>${descendants}</video>`;
 }
 
 function renderVisualPresent(
@@ -445,6 +446,7 @@ function renderVisualPresent(
   numerator: number,
   denominator: number,
   emittedFilterIds: Set<string>,
+  sharedGlyphFilterDefinitions: string[],
   stableId: StableDomId,
 ): string {
   const start = frameSeconds(present.span.startFrame, numerator, denominator);
@@ -469,9 +471,10 @@ function renderVisualPresent(
     programDenominator: denominator,
     stackIndex,
     emittedFilterIds,
+    sharedGlyphFilterDefinitions,
     stableId,
   });
-  return `<div class="clip qflow-visual-present" data-qflow-track-id="${escapeHtml(track.id)}" data-qflow-present-id="${escapeHtml(present.id)}" data-qflow-stack-order="${present.stacking.order}" data-qflow-stack-tie="${escapeHtml(present.stacking.tieBreak)}" data-track-index="${stackIndex}" data-start="${start}" data-duration="${duration}" style="position:absolute;inset:0;z-index:${stackIndex};overflow:hidden;pointer-events:none">${present.visibility === undefined ? contents : `<div data-qflow-visibility="${escapeHtml(JSON.stringify(present.visibility))}" style="position:absolute;inset:0">${contents}</div>`}</div>`;
+  return `<div class="clip qflow-visual-present" data-qflow-track-id="${escapeHtml(track.id)}" data-qflow-present-id="${escapeHtml(present.id)}" data-qflow-present-start-frame="${present.span.startFrame}" data-qflow-present-end-frame="${present.span.endFrameExclusive}" data-qflow-stack-order="${present.stacking.order}" data-qflow-stack-tie="${escapeHtml(present.stacking.tieBreak)}" data-track-index="${stackIndex}" data-start="${start}" data-duration="${duration}" style="position:absolute;inset:0;z-index:${stackIndex};overflow:hidden;pointer-events:none">${present.visibility === undefined ? contents : `<div data-qflow-visibility="${escapeHtml(JSON.stringify(present.visibility))}" style="position:absolute;inset:0">${contents}</div>`}</div>`;
 }
 
 function renderAnimationRules(track: VisualTrack, present: VisualPresent, stableId: StableDomId): string[] {
@@ -505,9 +508,25 @@ function orderedVisualPresents(tracks: readonly Track[]): Array<{ readonly track
       || left.present.id.localeCompare(right.present.id));
 }
 
-function collectArtifacts(composition: Composition): BlobRef[] {
-  const artifacts = new Map<ResourceId, BlobRef>();
-  const add = (artifact: Pick<BlobRef, "resource" | "size" | "mediaType">): void => {
+function mergeFrameSpans(spans: readonly HyperframesFrameSpan[]): HyperframesFrameSpan[] {
+  const result: HyperframesFrameSpan[] = [];
+  for (const span of [...spans].sort((left, right) => left.startFrame - right.startFrame
+    || left.endFrameExclusive - right.endFrameExclusive)) {
+    const previous = result.at(-1);
+    if (previous !== undefined && span.startFrame <= previous.endFrameExclusive) {
+      result[result.length - 1] = {
+        startFrame: previous.startFrame,
+        endFrameExclusive: Math.max(previous.endFrameExclusive, span.endFrameExclusive),
+      };
+    } else result.push({ ...span });
+  }
+  return result;
+}
+
+function collectArtifacts(composition: Composition): HyperframesArtifact[] {
+  const artifacts = new Map<ResourceId, { artifact: BlobRef; always: boolean; spans: HyperframesFrameSpan[] }>();
+  const add = (artifact: Pick<BlobRef, "resource" | "size" | "mediaType">,
+    usage: "always" | HyperframesFrameSpan): void => {
     const next: BlobRef = {
       kind: "blob",
       resource: artifact.resource,
@@ -515,32 +534,43 @@ function collectArtifacts(composition: Composition): BlobRef[] {
       mediaType: artifact.mediaType,
     };
     const existing = artifacts.get(artifact.resource);
-    if (existing !== undefined && (existing.size !== next.size || existing.mediaType !== next.mediaType)) {
+    if (existing !== undefined && (existing.artifact.size !== next.size || existing.artifact.mediaType !== next.mediaType)) {
       throw new Error(`HyperFrames Artifact ${artifact.resource} has conflicting metadata.`);
     }
-    artifacts.set(artifact.resource, next);
+    const entry = existing ?? { artifact: next, always: false, spans: [] };
+    if (usage === "always") entry.always = true;
+    else if (!entry.always) entry.spans.push({ ...usage });
+    artifacts.set(artifact.resource, entry);
   };
   for (const track of composition.tracks) {
     if (track.kind === "audio") continue;
     for (const present of track.presents) {
       for (const element of present.elements) {
-        if (element.kind === "image" || element.kind === "video") add(element.artifact);
-        if (element.kind === "surface") add(element.surface.artifact);
-        if (element.kind === "program") for (const artifact of element.program.artifacts) add(artifact);
+        if (element.kind === "image" || element.kind === "video") add(element.artifact, present.span);
+        if (element.kind === "surface") add(element.surface.artifact, present.span);
+        // Browser Program HTML, CSS and setup are intentionally opaque. Their
+        // declared dependencies stay conservative even though the Program root
+        // itself has a Present span.
+        if (element.kind === "program") for (const artifact of element.program.artifacts) add(artifact, "always");
         if (element.kind === "text") {
           for (const font of element.fonts ?? []) {
-            for (const source of font.sources) add(source.artifact);
+            // @font-face declarations live at document scope. Keep them whole
+            // rather than infer browser font demand from text structure.
+            for (const source of font.sources) add(source.artifact, "always");
           }
         }
         if (element.kind === "text-flow" || element.kind === "path-text") {
           for (const font of collectTerminalTextFonts(element)) {
-            for (const source of font.sources) add(source.artifact);
+            for (const source of font.sources) add(source.artifact, "always");
           }
         }
       }
     }
   }
-  return [...artifacts.values()].sort((left, right) => left.resource.localeCompare(right.resource));
+  return [...artifacts.values()].map(({ artifact, always, spans }) => ({
+    artifact,
+    usage: always ? { kind: "always" as const } : { kind: "frames" as const, spans: mergeFrameSpans(spans) },
+  })).sort((left, right) => left.artifact.resource.localeCompare(right.artifact.resource));
 }
 
 function collectSurfaces(composition: Composition): CompositableSurfaceRef[] {
@@ -623,38 +653,54 @@ function frameAnimationRuntime(numerator: number, denominator: number): string {
   const numerator = ${numerator};
   const denominator = ${denominator};
   const millisecondsPerFrame = denominator * 1000 / numerator;
-  const timelines = [];
+  const groupsBySpan = new Map();
   for (const element of document.querySelectorAll("[data-qflow-frame-animation]")) {
+    const start = Number(element.getAttribute("data-qflow-animation-start-frame"));
+    const duration = Number(element.getAttribute("data-qflow-animation-sample-frames"));
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(duration) || start < 0 || duration <= 0) {
+      throw new Error("Visual IR frame animation has an invalid Present span.");
+    }
+    const end = start + duration;
+    if (!Number.isSafeInteger(end)) throw new Error("Visual IR frame animation Present span exceeds safe arithmetic.");
+    // CSS already keeps every authored animation paused. Only materialize the
+    // browser Animation objects which this render can actually sample.
+    if (!hyperframesSelectionOverlaps(start, end)) continue;
     void element.getBoundingClientRect();
     const animation = element.getAnimations()[0];
     if (animation === undefined) throw new Error("Visual IR frame animation did not materialize.");
-    const start = Number(element.getAttribute("data-qflow-animation-start-frame"));
-    const duration = Number(element.getAttribute("data-qflow-animation-duration-frames"));
-    const sampleDuration = Number(element.getAttribute("data-qflow-animation-sample-frames"));
-    const properties = String(element.getAttribute("data-qflow-animation-properties") || "")
-      .split(",").filter(Boolean);
-    const frames = [];
-    for (let frame = 0; frame <= sampleDuration; frame += 1) {
-      animation.currentTime = frame * millisecondsPerFrame;
-      animation.pause();
-      const style = getComputedStyle(element);
-      frames.push(properties.map((property) => [property, style.getPropertyValue(property)]));
+    animation.pause();
+    animation.currentTime = 0;
+    // The authored keyframes are already the compact state function. Keep the
+    // browser's paused evaluator instead of expanding every Present frame into
+    // a second table of computed-style strings in every render Worker.
+    const key = start + ":" + end;
+    let work = groupsBySpan.get(key);
+    if (work === undefined) {
+      work = {
+        startFrame: start,
+        endFrameExclusive: end,
+        order: groupsBySpan.size,
+        payload: { animations: [] },
+      };
+      groupsBySpan.set(key, work);
     }
-    animation.cancel();
-    element.style.animationName = "none";
-    timelines.push({ element, start, duration: sampleDuration, frames });
+    work.payload.animations.push(animation);
   }
+  // The shared index owns only frame-span lookup. Animation materialization and
+  // absolute currentTime evaluation remain private to this adapter.
+  const workIndex = hyperframesCreateFrameWorkIndex([...groupsBySpan.values()]);
   const applyFrame = (time) => {
     const programFrame = Math.max(0, Math.round(Number(time || 0) * numerator / denominator));
-    for (const timeline of timelines) {
-      const localFrame = Math.max(0, Math.min(timeline.duration, programFrame - timeline.start));
-      for (const [property, value] of timeline.frames[localFrame]) {
-        timeline.element.style.setProperty(property, value);
-      }
+    for (const work of workIndex.at(programFrame)) {
+      const localTime = (programFrame - work.startFrame) * millisecondsPerFrame;
+      // Always derive the pose from the absolute requested frame. Worker
+      // partitioning, seek order and the previously rendered frame are not
+      // inputs to animation state.
+      for (const animation of work.payload.animations) animation.currentTime = localTime;
     }
     void document.documentElement.getBoundingClientRect();
   };
-  applyFrame(0);
+  void document.documentElement.getBoundingClientRect();
   window.addEventListener("hf-seek", (event) => applyFrame(event.detail?.time));
 })();`;
 }
@@ -662,11 +708,16 @@ function frameAnimationRuntime(numerator: number, denominator: number): string {
 function emitHtml(composition: Composition, programSpace: ProgramSpace): string {
   const { numerator, denominator } = programSpace.frameRate;
   const visuals = orderedVisualPresents(composition.tracks);
-  // One document, one set of glyph filter definitions: every Present writes only what is not
-  // already there, and references resolve across the document regardless of where they landed.
+  // One document, one set of glyph filter definitions. Keep definitions outside
+  // temporal Present roots so a render can make an unrelated Present inert
+  // without invalidating a selected Present's document-wide url(#id) reference.
   const emittedFilterIds = new Set<string>();
+  const sharedGlyphFilterDefinitions: string[] = [];
   const stableId = createStableDomId();
-  const visualHtml = visuals.map(({ track, present }, index) => renderVisualPresent(track, present, index, numerator, denominator, emittedFilterIds, stableId)).join("\n    ");
+  const visualHtml = visuals.map(({ track, present }, index) => renderVisualPresent(track, present, index,
+    numerator, denominator, emittedFilterIds, sharedGlyphFilterDefinitions, stableId)).join("\n    ");
+  const sharedDefinitionsHtml = sharedGlyphFilterDefinitions.length === 0 ? ""
+    : `<svg data-qflow-document-definitions aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden"><defs>${sharedGlyphFilterDefinitions.join("")}</defs></svg>`;
   const animationCss = visuals.flatMap(({ track, present }) => renderAnimationRules(track, present, stableId)).join("\n    ");
   const fontCss = renderFontFaces(composition, stableId);
   const programs = visuals.flatMap(({ track, present }) => present.elements.flatMap(element => element.kind !== "program" ? [] : [{
@@ -676,28 +727,17 @@ function emitHtml(composition: Composition, programSpace: ProgramSpace): string 
     program: readBrowserProgram(element.program),
   }]));
   const programCss = programs.map(entry => `@scope (#${entry.id}) { ${entry.program.css ?? ""} }`).join("\n");
+  const hasVisibility = visuals.some(({ present }) => present.visibility !== undefined);
   const programRuntime = programs.length === 0 ? "" : `<script>${browserProgramScript(programs, numerator, denominator)}</script>`;
-  const visibilityRuntime = visuals.some(({ present }) => present.visibility !== undefined) ? `<script>
-(() => {
-  const entries = [...document.querySelectorAll('[data-qflow-visibility]')].map(element => ({ element, spans: JSON.parse(element.dataset.qflowVisibility) }));
-  const apply = time => {
-    const frame = Math.round(Number(time || 0) * ${numerator} / ${denominator});
-    // A presentation mask controls painting, not layout or animation existence.
-    // display:none removes CSS animations and prevents hidden text from being measured.
-    for (const { element, spans } of entries) element.style.opacity = spans.some(s => frame >= s.startFrame && frame < s.endFrameExclusive) ? '' : '0';
-  };
-  apply(0);
-  window.addEventListener('hf-seek', event => apply(event.detail?.time));
-})();</script>` : "";
+  const visibilityRuntime = hasVisibility ? `<script>${presentationVisibilityScript(numerator, denominator)}</script>` : "";
   const duration = frameSeconds(programSpaceFrameCount(programSpace), numerator, denominator);
   const fps = fpsRational(numerator, denominator);
   const frameCount = programSpaceFrameCount(programSpace);
-  const textRuntime = hasTerminalText(composition)
-    ? `\n  <script>\n    ${terminalTextLayoutScript}\n  </script>`
-    : "";
-  const animationRuntime = hasFrameAnimations(composition)
-    ? `\n  <script>\n    ${frameAnimationRuntime(numerator, denominator)}\n  </script>`
-    : "";
+  const needsFrameWork = hasFrameAnimations(composition) || hasTerminalText(composition) || programs.length > 0 || hasVisibility;
+  const frameRuntime = `\n  <script>\n    ${needsFrameWork ? frameWorkIndexRuntime : frameSelectionRuntime}\n  </script>
+  <script>${presentationCaptureScopeRuntime}</script>${hasFrameAnimations(composition) || hasTerminalText(composition)
+      ? `\n  <script>${hasFrameAnimations(composition) ? `\n    ${frameAnimationRuntime(numerator, denominator)}` : ""}${hasTerminalText(composition) ? `\n    ${terminalTextLayoutScript}` : ""}\n  </script>`
+      : ""}`;
   return `<!doctype html>
 <html>
 <head>
@@ -714,9 +754,9 @@ function emitHtml(composition: Composition, programSpace: ProgramSpace): string 
 </head>
 <body>
   <div data-composition-id="${escapeHtml(composition.id)}" data-start="0" data-no-timeline data-width="${composition.canvas.width}" data-height="${composition.canvas.height}" data-duration="${duration}" data-fps="${fps}" data-qflow-frame-count="${frameCount}">
-    ${visualHtml}
-  </div>${programRuntime}
-  ${visibilityRuntime}${animationRuntime}${textRuntime}
+    ${sharedDefinitionsHtml}${sharedDefinitionsHtml.length === 0 ? "" : "\n    "}${visualHtml}
+  </div>${frameRuntime}${programRuntime}
+  ${visibilityRuntime}
 </body>
 </html>
 `;
@@ -729,8 +769,10 @@ function normalizedDocument(value: HyperframesDocument): HyperframesDocument {
     frameCount: value.frameCount,
     canvas: { ...value.canvas },
     artifacts: [...value.artifacts]
-      .map((artifact) => ({ ...artifact }))
-      .sort((left, right) => left.resource.localeCompare(right.resource)),
+      .map((entry) => ({ artifact: { ...entry.artifact }, usage: entry.usage.kind === "always"
+        ? { kind: "always" as const }
+        : { kind: "frames" as const, spans: entry.usage.spans.map((span) => ({ ...span })) } }))
+      .sort((left, right) => left.artifact.resource.localeCompare(right.artifact.resource)),
     surfaces: [...value.surfaces]
       .map((surface) => structuredClone(surface))
       .sort((left, right) => left.artifact.resource.localeCompare(right.artifact.resource)),
@@ -773,14 +815,23 @@ export function assertHyperframesDocument(document: HyperframesDocument): void {
   }
   if (!document.html.startsWith("<!doctype html>")) throw new Error("HyperframesDocument HTML is invalid.");
   const declared = [...document.artifacts];
-  if (declared.some((item) => item.kind !== "blob" || !isResourceId(item.resource)
-    || !Number.isSafeInteger(item.size) || item.size < 0 || item.mediaType.length === 0)
-    || new Set(declared.map((item) => item.resource)).size !== declared.length) {
+  if (declared.some((entry) => {
+    const item = entry?.artifact;
+    if (item?.kind !== "blob" || !isResourceId(item.resource)
+      || !Number.isSafeInteger(item.size) || item.size < 0 || item.mediaType.length === 0) return true;
+    if (entry.usage?.kind === "always") return Object.keys(entry.usage).length !== 1;
+    if (entry.usage?.kind !== "frames" || !Array.isArray(entry.usage.spans) || entry.usage.spans.length === 0) return true;
+    if (entry.usage.spans.some((span) => span === null || typeof span !== "object"
+      || !Number.isSafeInteger(span.startFrame) || !Number.isSafeInteger(span.endFrameExclusive)
+      || span.startFrame < 0 || span.endFrameExclusive <= span.startFrame
+      || span.endFrameExclusive > document.frameCount)) return true;
+    return JSON.stringify(mergeFrameSpans(entry.usage.spans)) !== JSON.stringify(entry.usage.spans);
+  }) || new Set(declared.map((entry) => entry.artifact.resource)).size !== declared.length) {
     throw new Error("HyperframesDocument Artifact set is invalid.");
   }
   const referenced = [...document.html.matchAll(RESOURCE_URI)].map((match) => match[1] as ResourceId);
   const actual = [...new Set(referenced)].sort();
-  if (JSON.stringify(actual) !== JSON.stringify(declared.map((item) => item.resource).sort())) {
+  if (JSON.stringify(actual) !== JSON.stringify(declared.map((entry) => entry.artifact.resource).sort())) {
     throw new Error("HyperframesDocument Artifact placeholders do not match its declared dependencies.");
   }
   if (!Array.isArray(document.surfaces)) throw new Error("HyperframesDocument Surface set is invalid.");
@@ -791,7 +842,7 @@ export function assertHyperframesDocument(document: HyperframesDocument): void {
       throw new Error("HyperframesDocument Surface set repeats an Artifact.");
     }
     surfaceArtifacts.add(surface.artifact.resource);
-    const artifact = declared.find((item) => item.resource === surface.artifact.resource);
+    const artifact = declared.find((entry) => entry.artifact.resource === surface.artifact.resource)?.artifact;
     if (artifact === undefined
       || artifact.size !== surface.artifact.size
       || artifact.mediaType !== surface.artifact.mediaType) {
@@ -833,13 +884,62 @@ export function assertHyperframesFrameSpan(
   }
 }
 
+function assertHyperframesFrameSelection(
+  document: HyperframesDocument,
+  selection: readonly HyperframesFrameSpan[],
+): void {
+  if (selection.length === 0) throw new Error("HyperFrames Artifact selection must not be empty");
+  let previousEnd = 0;
+  for (const [index, span] of selection.entries()) {
+    if (span === null || typeof span !== "object"
+      || !Number.isSafeInteger(span.startFrame) || !Number.isSafeInteger(span.endFrameExclusive)
+      || span.startFrame < 0 || span.endFrameExclusive <= span.startFrame
+      || span.endFrameExclusive > document.frameCount
+      || (index > 0 && span.startFrame < previousEnd)) {
+      throw new Error("HyperFrames Artifact selection must contain ordered, disjoint spans inside the document frame domain");
+    }
+    previousEnd = span.endFrameExclusive;
+  }
+}
+
+function artifactUsageOverlaps(
+  usage: readonly HyperframesFrameSpan[],
+  selection: readonly HyperframesFrameSpan[],
+): boolean {
+  return usage.some((span) => {
+    let low = 0;
+    let high = selection.length;
+    while (low < high) {
+      const middle = low + Math.floor((high - low) / 2);
+      if (selection[middle]!.endFrameExclusive <= span.startFrame) low = middle + 1;
+      else high = middle;
+    }
+    return low < selection.length && selection[low]!.startFrame < span.endFrameExclusive;
+  });
+}
+
+/**
+ * Project one whole render selection onto the compiler's conservative byte dependencies.
+ * The result is shared by every worker; no worker or traversal state enters the proof.
+ */
+export function selectHyperframesArtifacts(
+  document: HyperframesDocument,
+  frameSelection?: readonly HyperframesFrameSpan[],
+): readonly HyperframesArtifact[] {
+  assertHyperframesDocument(document);
+  if (frameSelection === undefined) return document.artifacts;
+  assertHyperframesFrameSelection(document, frameSelection);
+  return document.artifacts.filter((entry) => entry.usage.kind === "always"
+    || artifactUsageOverlaps(entry.usage.spans, frameSelection));
+}
+
 /** Runtime-only URL materialization. The returned HTML is intentionally not a new compiled Record. */
 export function materializeHyperframesHtml(
   document: HyperframesDocument,
   resolve: ResourceUrlResolver,
 ): string {
   assertHyperframesDocument(document);
-  const artifacts = new Map(document.artifacts.map((artifact) => [artifact.resource, artifact]));
+  const artifacts = new Map(document.artifacts.map((entry) => [entry.artifact.resource, entry.artifact]));
   return document.html.replace(RESOURCE_URI, (_uri, resource: ResourceId) => {
     const artifact = artifacts.get(resource);
     if (artifact === undefined) throw new Error(`HyperFrames Resource ${resource} is undeclared.`);

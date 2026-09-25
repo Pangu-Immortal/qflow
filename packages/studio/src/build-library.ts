@@ -1,4 +1,4 @@
-import { fileReferenceIdentity } from "@qflow/build-result";
+import { fileReferenceIdentity, locateRepositoryBuildResultOutput } from "@qflow/build-result";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 
 import { buildIdCreatedAt } from "@qflow/protocol";
@@ -26,6 +26,10 @@ export type StudioBuildLibrary = {
   readonly transientExecution?: RuntimeHostTransientExecution;
   readonly library: (request: StudioLibraryRequest) => Promise<StudioLibraryView>;
   readonly renameArtifact: (build: string, output: string, displayName: string | null) => Promise<string | undefined>;
+  readonly locateHistoricalOutput: (
+    build: string,
+    output: string,
+  ) => Promise<import("@qflow/build-result").RepositoryBuildResultOutputLocation | undefined>;
   readonly resolveHistoricalOutput: (
     build: string,
     output: string,
@@ -272,6 +276,9 @@ export async function openStudioBuildLibrary(
       });
       presentationWrite = saved.catch(() => undefined);
       return await saved;
+    },
+    async locateHistoricalOutput(build, output) {
+      return await locateRepositoryBuildResultOutput(results, build, output);
     },
     async resolveHistoricalOutput(build, output) {
       return await resolveBuildResultValue(results, build, output);

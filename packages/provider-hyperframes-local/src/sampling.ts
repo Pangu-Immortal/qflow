@@ -1,4 +1,5 @@
 import type { MediaFrameRange } from "@qflow/media";
+import { FrameSpanIndex } from "./frame-span-index.js";
 import { assert } from "./process.js";
 
 type Rational = { readonly numerator: bigint; readonly denominator: bigint };
@@ -10,6 +11,25 @@ export type VideoSlot = MediaFrameRange & {
   readonly sourceFps: { readonly num: number; readonly den: number };
 };
 
+/** Compact an ordered frame selection into the half-open spans shared with the page runtime. */
+export function requestedFrameRanges(range: MediaFrameRange, frames?: readonly number[]): MediaFrameRange[] {
+  if (frames === undefined) return [{ ...range }];
+  const result: MediaFrameRange[] = [];
+  for (const frame of frames) {
+    assert(Number.isSafeInteger(frame) && frame >= 0, "HyperFrames requested frame is invalid");
+    const previous = result.at(-1);
+    if (previous !== undefined && previous.endFrameExclusive === frame) {
+      result[result.length - 1] = { startFrame: previous.startFrame, endFrameExclusive: frame + 1 };
+    } else {
+      assert(previous === undefined || previous.endFrameExclusive < frame,
+        "HyperFrames requested frames must be strictly increasing");
+      result.push({ startFrame: frame, endFrameExclusive: frame + 1 });
+    }
+  }
+  assert(result.length > 0, "HyperFrames requested frames must not be empty");
+  return result;
+}
+
 function rational(value: string, label: string): Rational {
   assert(/^\d+\/[1-9]\d*$/u.test(value), `HyperFrames ${label} must be a non-negative rational`);
   const [a, b] = value.split("/");
@@ -19,14 +39,18 @@ function rational(value: string, label: string): Rational {
 /** Read the compiler's exact frame markers, without reconstructing author intent from seconds. */
 export function videoSlots(html: string): VideoSlot[] {
   return [...html.matchAll(/<video\b[^>]*>/gu)].map(([tag]) => {
-    const attribute = (name: string): string => {
+    const optionalAttribute = (name: string): string | undefined => {
       const value = new RegExp(`(?:\\s)${name}="([^"]*)"`, "u").exec(tag)?.[1];
+      return value?.replaceAll("&amp;", "&").replaceAll("&quot;", '"').replaceAll("&lt;", "<").replaceAll("&gt;", ">");
+    };
+    const attribute = (name: string): string => {
+      const value = optionalAttribute(name);
       assert(value !== undefined, `HyperFrames video lacks ${name}; compile its frame sampling before rendering`);
-      return value.replaceAll("&amp;", "&").replaceAll("&quot;", '"').replaceAll("&lt;", "<").replaceAll("&gt;", ">");
+      return value;
     };
     const sourceFps = rational(attribute("data-qflow-source-fps"), "source frame rate");
     const slot = {
-      id: attribute("id"), src: attribute("src"),
+      id: attribute("id"), src: optionalAttribute("data-qflow-resource-src") ?? attribute("src"),
       startFrame: Number(attribute("data-qflow-start-frame")),
       endFrameExclusive: Number(attribute("data-qflow-end-frame")),
       sourceFrame: rational(attribute("data-qflow-source-frame"), "source frame"),
@@ -51,10 +75,11 @@ export function sourceFrameAt(slot: VideoSlot, frame: number): number {
   return value;
 }
 
-export function sourceWindows(slots: readonly VideoSlot[], selection: MediaFrameRange | readonly MediaFrameRange[]) {
+export function sourceWindows(slots: readonly VideoSlot[], selection: MediaFrameRange | readonly MediaFrameRange[],
+  index = new FrameSpanIndex(slots)) {
   const ranges: readonly MediaFrameRange[] = Array.isArray(selection) ? selection : [selection as MediaFrameRange];
   const sources = new Map<string, { fps: VideoSlot["sourceFps"]; windows: MediaFrameRange[] }>();
-  for (const range of ranges) for (const slot of slots) {
+  for (const range of ranges) for (const slot of index.overlapping(range)) {
     const first = Math.max(range.startFrame, slot.startFrame);
     const last = Math.min(range.endFrameExclusive, slot.endFrameExclusive) - 1;
     if (last < first) continue;

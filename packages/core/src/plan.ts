@@ -331,7 +331,6 @@ export function verifyBuildPlan(
   plan: BuildPlan,
 ): void {
   invariant(plan.format === "qflow.plan@1", "UNSUPPORTED_PLAN", "unsupported build plan format");
-  invariant(plan.goals.length > 0, "EMPTY_PLAN_GOALS", "build plan has no goals");
 
   const records = new Map<RecordId, ProducedRecord>();
   for (const record of program.records) records.set(record.id, { type: record.type });

@@ -265,6 +265,7 @@ export function decodeBuildResultWriterState(
       output,
       build: buildId(forward.build, `${subject}.forwards[${index}].build`),
       sourceOutput: text(forward.sourceOutput, `${subject}.forwards[${index}].sourceOutput`),
+      type: typeRef(forward.type, `${subject}.forwards[${index}].type`),
     };
   });
   return {

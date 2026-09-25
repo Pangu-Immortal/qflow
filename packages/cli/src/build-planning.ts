@@ -19,6 +19,7 @@ export function createCatalogDescriptor(options: {
   readonly source: string;
   readonly compilation: NodeCompiledSourceClosure;
   readonly run?: { readonly path: string };
+  readonly targets?: readonly { readonly output: string }[];
 }): BuildCatalogDescriptor {
   const publishedOutputs = options.compilation.exports.flatMap((item) => {
     if (item.ref.kind === "operation-result") {
@@ -44,6 +45,9 @@ export function createCatalogDescriptor(options: {
   return {
     source: { path: resolve(options.source) },
     ...(options.run === undefined ? {} : { run: { path: resolve(options.run.path) } }),
+    ...(options.targets === undefined ? {} : {
+      targets: options.targets.map((target) => ({ kind: "logical-output" as const, id: target.output })),
+    }),
     publishedOutputs,
   };
 }

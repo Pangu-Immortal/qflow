@@ -57,11 +57,26 @@ export type RuntimeExecutionResult =
   | { readonly status: "pending"; readonly operation: string; readonly wakeAt?: number }
   | { readonly status: "deferred"; readonly wakeAt?: number; readonly reason: string };
 
-/** Minimal execution port used by a Scheduler. `prepare` is the sole command-generation boundary. */
+/** Build-local indexed execution view. Definition + Facts remain the only durable representation. */
+export type RuntimeBuildExecution = {
+  view(): BuildState;
+  commands(): readonly CoreCommand[];
+  record(id: string): import("@qflow/protocol").TypedRecord | undefined;
+};
+
+/** Minimal execution port used by a Scheduler. Core has already generated `state.outstanding`; prepare classifies it for this Host. */
 export type RuntimeCommandExecutor = {
   prepare(state: BuildState): RuntimePreparation;
+  /** Optional indexed path used while one BuildMachine is alive. */
+  prepareExecution?(execution: RuntimeBuildExecution): RuntimePreparation;
   executeCommand(
     state: BuildState,
+    command: RuntimeRunnableCommand,
+    context: RuntimeExecutionContext,
+  ): Promise<RuntimeExecutionResult>;
+  /** Optional indexed counterpart to executeCommand; it avoids rebuilding Record lookup tables. */
+  executeExecutionCommand?(
+    execution: RuntimeBuildExecution,
     command: RuntimeRunnableCommand,
     context: RuntimeExecutionContext,
   ): Promise<RuntimeExecutionResult>;

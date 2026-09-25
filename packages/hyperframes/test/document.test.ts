@@ -99,8 +99,15 @@ test("HyperFrames flattens generic peer visual Track Presents without absorbing 
   const document = compileHyperframesDocument(composition, programSpace);
   assert.doesNotThrow(() => assertHyperframesDocument(document));
   assert.equal(document.visualIr, VISUAL_IR_V1);
-  assert.deepEqual(new Set(document.artifacts.map((artifact) => artifact.resource)),
+  assert.deepEqual(new Set(document.artifacts.map(({ artifact }) => artifact.resource)),
     new Set([picture.resource, fixtureFont.sources[0]!.artifact.resource]));
+  assert.deepEqual(document.artifacts.find(({ artifact }) => artifact.resource === picture.resource)?.usage,
+    { kind: "frames", spans: [{ startFrame: 0, endFrameExclusive: 30 }] });
+  assert.deepEqual(document.artifacts.find(({ artifact }) => artifact.resource === fixtureFont.sources[0]!.artifact.resource)?.usage,
+    { kind: "always" });
+  assert.ok(document.html.includes(`data-qflow-resource-src="qflow-resource://${picture.resource}"`));
+  assert.doesNotMatch(document.html, /<img\b[^>]*\ssrc=/u,
+    "compiler-owned images stay inert until the page applies its render selection");
   assert.ok(document.html.indexOf('data-qflow-track-id="lower"') < document.html.indexOf('data-qflow-track-id="upper"'));
   assert.equal((document.html.match(/class="clip qflow-visual-present"/gu) ?? []).length, 2);
   assert.doesNotMatch(document.html, /<audio/u);
@@ -112,6 +119,25 @@ test("HyperFrames flattens generic peer visual Track Presents without absorbing 
   assert.match(document.html, /-webkit-text-stroke:4px #000000/u);
   assert.doesNotMatch(document.html, /<feMorphology/u);
   assert.doesNotMatch(document.html, /speech-visual-track|caption-track/u);
+});
+
+test("shared glyph filter definitions live outside temporal Present capture roots", () => {
+  const { composition, programSpace } = fixture();
+  const changed = structuredClone(composition);
+  const upper = changed.tracks.find(track => track.kind === "visual" && track.id === "upper");
+  assert.ok(upper?.kind === "visual");
+  const text = upper.presents[0]!.elements.find(element => element.kind === "text");
+  assert.ok(text?.kind === "text");
+  Object.assign(text, { paints: [
+    { kind: "glow", paint: { kind: "solid", color: "#ff00ff" }, blurPx: 4, spreadPx: 1 },
+    { kind: "fill", paint: { kind: "solid", color: "#ffffff" } },
+  ] });
+  const html = compileHyperframesDocument(changed, programSpace).html;
+  const definitions = html.indexOf("data-qflow-document-definitions");
+  const present = html.indexOf('class="clip qflow-visual-present"');
+  assert.ok(definitions >= 0 && definitions < present);
+  assert.equal((html.match(/<filter id="qflow-/gu) ?? []).length, 1);
+  assert.equal((html.match(/filter:url\(#qflow-/gu) ?? []).length, 1);
 });
 
 test("Text shrink preserves authored hug sizing and trims metrics inside the content box", () => {
@@ -269,7 +295,7 @@ test("any legal frame and Provider-owned chunk can be addressed without traversi
   );
 });
 
-test("HyperFrames emits frame-bound local animation without creating a Track stacking context", () => {
+test("HyperFrames emits compact absolute-frame animation without creating a Track stacking context", async () => {
   const { composition, programSpace } = fixture();
   const lower = composition.tracks.find((track) => track.id === "lower");
   assert(lower?.kind === "visual");
@@ -298,7 +324,68 @@ test("HyperFrames emits frame-bound local animation without creating a Track sta
   assert.match(document.html, /33\.333333333%\{opacity:1;transform:translateY\(0%\)/u);
   assert.match(document.html, /animation-duration:1\.001s/u);
   assert.match(document.html, /100%\{opacity:1;transform:translateY\(0%\)\}/u);
+  assert.match(document.html, /hyperframesCreateFrameWorkIndex/u);
+  assert.match(document.html, /for \(const animation of work\.payload\.animations\) animation\.currentTime = localTime/u);
+  assert.doesNotMatch(document.html, /const frames = \[\]|getComputedStyle\(element\)|animation\.cancel\(\)/u);
   assert.doesNotMatch(document.html, /isolation:isolate/u);
+
+  const marker = document.html.indexOf("const millisecondsPerFrame");
+  assert.ok(marker >= 0);
+  const scriptStart = document.html.lastIndexOf("<script>", marker) + "<script>".length;
+  const scriptEnd = document.html.indexOf("</script>", marker);
+  const { frameWorkIndexRuntime, hyperframesFrameSelectionPrelude } = await import("../src/frame-work.js");
+  const runtime = `${frameWorkIndexRuntime}\n${document.html.slice(scriptStart, scriptEnd)}`;
+  const evaluate = async (
+    spans: readonly { readonly start: number; readonly duration: number }[],
+    frames: readonly number[],
+    selection?: readonly { readonly startFrame: number; readonly endFrameExclusive: number }[],
+  ) => {
+    const { runInNewContext } = await import("node:vm");
+    const positions = spans.map((): number[] => []);
+    let pauses = 0;
+    let seek: (event: { detail: { time: number } }) => void = () => {};
+    const elements = spans.map((span, index) => ({
+      getBoundingClientRect() {},
+      getAnimations: () => [{
+        set currentTime(value: number) { positions[index]!.push(Math.round(value * 30 / 1_001)); },
+        pause() { pauses += 1; },
+      }],
+      getAttribute: (name: string) => String(name.endsWith("start-frame") ? span.start : span.duration),
+    }));
+    runInNewContext(`${selection === undefined ? "" : hyperframesFrameSelectionPrelude(selection)}\n${runtime}`, {
+      document: { querySelectorAll: () => elements, documentElement: { getBoundingClientRect() {} } },
+      window: { addEventListener(_name: string, callback: typeof seek) { seek = callback; } },
+    });
+    for (const frame of frames) seek({ detail: { time: frame * 1_001 / 30_000 } });
+    return { pauses, positions };
+  };
+  assert.deepEqual(await evaluate([{ start: 15, duration: 30 }], [30, 44, 15, 45, 60]), {
+    pauses: 1,
+    positions: [[0, 15, 29, 0]],
+  });
+  assert.deepEqual(await evaluate([{ start: 15, duration: 30 }], [30]), { pauses: 1, positions: [[0, 15]] },
+    "a fresh worker derives the same middle pose without visiting preceding frames");
+  assert.deepEqual(await evaluate([
+    { start: 0, duration: 30 },
+    { start: 90, duration: 30 },
+  ], [100], [{ startFrame: 100, endFrameExclusive: 101 }]), {
+    pauses: 1,
+    positions: [[], [0, 10]],
+  }, "a selected render does not materialize animations from unrelated Presents");
+  assert.deepEqual(await evaluate([
+    { start: 0, duration: 5 },
+    { start: 5, duration: 5 },
+    { start: 3, duration: 5 },
+    { start: 100, duration: 2 },
+  ], [0, 3, 4, 5, 7, 8, 100, 101, 102, 6]), {
+    pauses: 4,
+    positions: [
+      [0, 0, 3, 4],
+      [0, 0, 2, 3, 1],
+      [0, 0, 1, 2, 4, 3],
+      [0, 0, 1],
+    ],
+  }, "the point index preserves overlap, half-open boundaries, distant spans and reverse seeks");
 });
 
 test("HyperFrames clips a long animation by Present visibility instead of rejecting it", () => {
@@ -318,7 +405,8 @@ test("HyperFrames clips a long animation by Present visibility instead of reject
     tracks: composition.tracks.map((track) => track.id === "lower" ? animated : track),
   }), programSpace);
   assert.match(document.html, /animation-duration:1\.5015s/u);
-  assert.match(document.html, /data-qflow-animation-duration-frames="45" data-qflow-animation-sample-frames="30"/u);
+  assert.match(document.html, /data-qflow-animation-sample-frames="30"/u);
+  assert.doesNotMatch(document.html, /data-qflow-animation-properties|data-qflow-animation-duration-frames/u);
   assert.match(document.html, /100%\{opacity:1\}/u);
 });
 
@@ -383,7 +471,11 @@ test("content-bound fonts and typed compositable Surfaces cross the same Artifac
     tracks: [track],
   }), space);
   assert.doesNotThrow(() => assertHyperframesDocument(document));
-  assert.deepEqual(document.artifacts.map((artifact) => artifact.resource), [font.sources[0]!.artifact.resource, surfaceDigest].sort());
+  assert.deepEqual(document.artifacts.map(({ artifact }) => artifact.resource), [font.sources[0]!.artifact.resource, surfaceDigest].sort());
+  assert.deepEqual(document.artifacts.find(({ artifact }) => artifact.resource === font.sources[0]!.artifact.resource)?.usage,
+    { kind: "always" });
+  assert.deepEqual(document.artifacts.find(({ artifact }) => artifact.resource === surfaceDigest)?.usage,
+    { kind: "frames", spans: [{ startFrame: 0, endFrameExclusive: 30 }] });
   assert.match(document.html, /@font-face\{/u);
   assert.match(document.html, /format\("woff2"\)/u);
   assert.match(document.html, /font-synthesis:none/u);
@@ -396,7 +488,7 @@ test("content-bound fonts and typed compositable Surfaces cross the same Artifac
   assert.match(materialized, new RegExp(surfaceDigest, "u"));
 });
 
-test("exact timed sampling lowers loop boundaries and held frames without zero-rate browser media", () => {
+test("exact timed sampling keeps a held frame as one compact interval without zero-rate browser media", () => {
   const programSpace = sealProgramSpace({ id: "test-space", durationSec: 8 / 30,
     frameRate: { numerator: 30, denominator: 1 },
   });
@@ -445,11 +537,15 @@ test("exact timed sampling lowers loop boundaries and held frames without zero-r
     canvas: { width: 100, height: 100, clearColor: "#000000" },
     tracks: [track],
   }), programSpace);
-  assert.equal((document.html.match(/data-qflow-sampling-part=/gu) ?? []).length, 4);
+  assert.equal((document.html.match(/data-qflow-sampling-part=/gu) ?? []).length, 3);
   assert.match(document.html, /data-media-start="0\.066666666666"/u);
   assert.match(document.html, /data-media-start="0"/u);
-  assert.equal((document.html.match(/data-playback-rate="1"/gu) ?? []).length, 4);
+  assert.equal((document.html.match(/data-playback-rate="1"/gu) ?? []).length, 3);
   assert.doesNotMatch(document.html, /data-playback-rate="0"/u);
+  assert.equal((document.html.match(/data-qflow-resource-src="qflow-resource:\/\//gu) ?? []).length, 3);
+  assert.doesNotMatch(document.html, /<video\b[^>]*\ssrc=/u,
+    "compiler-owned video stays inert while its exact slots remain statically readable");
+  assert.match(document.html, /data-qflow-source-rate="0\/1"[^>]*data-qflow-start-frame="6"[^>]*data-qflow-end-frame="8"/u);
 });
 
 test("a Track naming five takes still lowers to DOM identities a Windows path can hold", () => {
@@ -522,17 +618,27 @@ test("a Track naming five takes still lowers to DOM identities a Windows path ca
 test("browser programs own local HTML while retaining typed child resources and format boundaries", async () => {
   const { browserProgram } = await import("../src/browser-program.js");
   const { programSpace, picture } = fixture();
+  const opaqueArtifact = { kind: "blob" as const, resource: fixtureResource("hyperframes:opaque-program"),
+    size: 12, mediaType: "image/png" };
   const visual = sealVisualTrack({ id: "scene", programSpaceId: programSpace.id, visualIr: VISUAL_IR_V1,
     presents: [{ id: "scene", span: { startFrame: 0, endFrameExclusive: 30 }, stacking: { order: 0, tieBreak: "scene" },
       elements: [{ id: "root", kind: "program", order: 0, style: [], program: browserProgram({
-        html: '<section class="viewport">{{photo}}<svg><path d="M0 0H20"/></svg></section>',
+        html: `<section class="viewport">{{photo}}<img class="opaque" src="qflow-resource://${opaqueArtifact.resource}"><svg><path d="M0 0H20"/></svg></section>`,
         css: '.viewport { backdrop-filter:blur(4px); display:grid; }',
         setup: 'return frame => { root.dataset.frame = String(frame); };',
-      }) }, { id: "photo", parent: "root", kind: "image", order: 1, artifact: picture, style: [] }] }] });
+      }, [opaqueArtifact]) }, { id: "photo", parent: "root", kind: "image", order: 1, artifact: picture, style: [] }] }] });
   const composition = sealComposition({ id: "scene", canvas: { width: 200, height: 200, clearColor: "#000000" }, tracks: [visual] });
   const document = compileHyperframesDocument(composition, programSpace);
-  assert.equal(document.artifacts.length, 1);
+  assert.equal(document.artifacts.length, 2);
+  assert.deepEqual(document.artifacts.find(({ artifact }) => artifact.resource === opaqueArtifact.resource)?.usage,
+    { kind: "always" }, "opaque Browser Program dependencies remain conservative");
+  assert.deepEqual(document.artifacts.find(({ artifact }) => artifact.resource === picture.resource)?.usage,
+    { kind: "frames", spans: [{ startFrame: 0, endFrameExclusive: 30 }] });
   assert.ok(document.html.includes('<section class="viewport">'));
+  assert.ok(document.html.includes(`class="opaque" src="qflow-resource://${opaqueArtifact.resource}"`),
+    "opaque Browser Program markup is not rewritten by the structural compiler");
+  assert.ok(document.html.includes(`data-qflow-resource-src="qflow-resource://${picture.resource}"`),
+    "a typed child keeps the structural compiler's selection-gated resource behavior");
   assert.ok(document.html.includes('@scope'));
   const missing = structuredClone(composition);
   const root = missing.tracks[0]!;
@@ -545,14 +651,15 @@ test("browser programs own local HTML while retaining typed child resources and 
 test("browser program state follows direct seeks and reports authored evaluation failures", async () => {
   const { runInNewContext } = await import("node:vm");
   const { browserProgramScript } = await import("../src/browser-program.js");
+  const { frameWorkIndexRuntime } = await import("../src/frame-work.js");
   const root = { frame: -1 };
   let seek: (event: { detail: { time: number } }) => void = () => {};
   const window: { addEventListener: (name: string, callback: typeof seek) => void; __qflowBrowserProgramError?: string } = {
     addEventListener: (_name, callback) => { seek = callback; },
   };
-  runInNewContext(browserProgramScript([{ id: "scene", startFrame: 30, durationFrames: 90,
+  runInNewContext(`${frameWorkIndexRuntime}\n${browserProgramScript([{ id: "scene", startFrame: 30, durationFrames: 90,
     program: { html: "", setup: 'return frame => { if(frame===60) throw new Error("bad pose"); root.frame=frame; };' },
-  }], 30, 1), { window, document: { getElementById: () => root } });
+  }], 30, 1)}`, { window, document: { getElementById: () => root } });
   seek({ detail: { time: 2.5 } });
   assert.equal(root.frame, 45);
   seek({ detail: { time: 1.2 } });
@@ -564,11 +671,12 @@ test("browser program state follows direct seeks and reports authored evaluation
 test("inactive programs settle once, while re-entry and repeated active seeks still redraw ready assets", async () => {
   const { runInNewContext } = await import("node:vm");
   const { browserProgramScript } = await import("../src/browser-program.js");
+  const { frameWorkIndexRuntime } = await import("../src/frame-work.js");
   const root = { frames: [] as number[], ready: false, painted: false };
   let seek: (event: { detail: { time: number } }) => void = () => {};
-  runInNewContext(browserProgramScript([{ id: "scene", startFrame: 30, durationFrames: 30,
+  runInNewContext(`${frameWorkIndexRuntime}\n${browserProgramScript([{ id: "scene", startFrame: 30, durationFrames: 30,
     program: { html: "", setup: 'return frame => { root.frames.push(frame); root.painted=root.ready; };' },
-  }], 30, 1), { window: { addEventListener: (_: string, callback: typeof seek) => { seek = callback; } },
+  }], 30, 1)}`, { window: { addEventListener: (_: string, callback: typeof seek) => { seek = callback; } },
     document: { getElementById: () => root } });
   seek({ detail: { time: 0.5 } });
   assert.deepEqual(root.frames, [0]);
@@ -584,13 +692,58 @@ test("inactive programs settle once, while re-entry and repeated active seeks st
   assert.deepEqual(root.frames, [0, 0, 0, 30, 15, 0]);
 });
 
+test("sequential Browser Program work follows active and crossed spans instead of all Programs", async () => {
+  const { runInNewContext } = await import("node:vm");
+  const { browserProgramScript } = await import("../src/browser-program.js");
+  const { frameWorkIndexRuntime } = await import("../src/frame-work.js");
+  const entries = Array.from({ length: 100 }, (_, index) => ({
+    id: `scene-${index}`,
+    startFrame: index * 10,
+    durationFrames: 10,
+    program: { html: "", setup: "return () => { root.calls += 1; };" },
+  }));
+  const roots = new Map(entries.map(entry => [entry.id, { calls: 0 }]));
+  let seek: (event: { detail: { time: number } }) => void = () => {};
+  runInNewContext(`${frameWorkIndexRuntime}\n${browserProgramScript(entries, 30, 1)}`, {
+    window: { addEventListener: (_: string, callback: typeof seek) => { seek = callback; } },
+    document: { getElementById: (id: string) => roots.get(id) },
+  });
+  for (const root of roots.values()) root.calls = 0;
+  for (let frame = 0; frame < 1_000; frame++) seek({ detail: { time: frame / 30 } });
+  assert.equal([...roots.values()].reduce((sum, root) => sum + root.calls, 0), 1_099);
+});
+
+test("browser program setup is limited to Presents overlapping the render selection", async () => {
+  const { runInNewContext } = await import("node:vm");
+  const { browserProgramScript } = await import("../src/browser-program.js");
+  const { frameWorkIndexRuntime, hyperframesFrameSelectionPrelude } = await import("../src/frame-work.js");
+  const roots = new Map([
+    ["early", { setups: 0, renders: 0 }],
+    ["selected", { setups: 0, renders: 0 }],
+  ]);
+  const entries = [
+    { id: "early", startFrame: 0, durationFrames: 30,
+      program: { html: "", setup: "root.setups += 1; return () => { root.renders += 1; };" } },
+    { id: "selected", startFrame: 90, durationFrames: 30,
+      program: { html: "", setup: "root.setups += 1; return () => { root.renders += 1; };" } },
+  ];
+  runInNewContext(`${hyperframesFrameSelectionPrelude([{ startFrame: 100, endFrameExclusive: 101 }])}
+    ${frameWorkIndexRuntime}\n${browserProgramScript(entries, 30, 1)}`, {
+    window: { addEventListener() {} },
+    document: { getElementById: (id: string) => roots.get(id) },
+  });
+  assert.deepEqual(roots.get("early"), { setups: 0, renders: 0 });
+  assert.deepEqual(roots.get("selected"), { setups: 1, renders: 1 });
+});
+
 test("an asynchronous browser program reports its unsupported frame behavior instead of racing capture", async () => {
   const { runInNewContext } = await import("node:vm");
   const { browserProgramScript } = await import("../src/browser-program.js");
+  const { frameWorkIndexRuntime } = await import("../src/frame-work.js");
   const window = { addEventListener() {}, __qflowBrowserProgramError: undefined as string | undefined };
-  runInNewContext(browserProgramScript([{ id: "scene", startFrame: 0, durationFrames: 30,
+  runInNewContext(`${frameWorkIndexRuntime}\n${browserProgramScript([{ id: "scene", startFrame: 0, durationFrames: 30,
     program: { html: "", setup: 'return async frame => { await Promise.resolve(); throw new Error("late drawing failure"); };' },
-  }], 30, 1), { window, document: { getElementById: () => ({}) } });
+  }], 30, 1)}`, { window, document: { getElementById: () => ({}) } });
   assert.match(window.__qflowBrowserProgramError!, /must be synchronous/u);
   await new Promise(resolve => setImmediate(resolve));
   assert.match(window.__qflowBrowserProgramError!, /late drawing failure/u);

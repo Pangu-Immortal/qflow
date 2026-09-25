@@ -5,7 +5,8 @@ import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
 import { compileHyperframesDocument } from "../src/document.js";
-import { stageHyperframesProject } from "../src/project.js";
+import { browserProgram } from "../src/browser-program.js";
+import { stageHyperframesHtmlProject, stageHyperframesProject } from "../src/project.js";
 import { sealComposition, sealVisualTrack } from "@qflow/composition";
 import { sealProgramSpace } from "@qflow/program-space";
 
@@ -48,22 +49,141 @@ test("staging cancels and joins sibling reads before exposing a failure", async 
   const space = sealProgramSpace({ id: "space", durationSec: 1,
     frameRate: { numerator: 30, denominator: 1 } });
   const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
-    presents: ["a", "b"].map((id, order) => ({ id, span: { startFrame: 0, endFrameExclusive: 30 }, stacking: { order, tieBreak: id },
+    presents: ["a", "b", "c", "d"].map((id, order) => ({ id, span: { startFrame: 0, endFrameExclusive: 30 }, stacking: { order, tieBreak: id },
       elements: [{ id, order: 0, kind: "image" as const, style: [],
         artifact: { kind: "blob" as const, resource: `res_${id}` as const, size: 1, mediaType: "image/png" } }],
     })) });
   const document = compileHyperframesDocument(sealComposition({ id: "main", canvas: { width: 64, height: 64, clearColor: "#000000" }, tracks: [track] }), space);
   const directory = await mkdtemp(join(tmpdir(), "qflow-stage-cancel-"));
   let active = 0;
+  let started = 0;
   try {
     await assert.rejects(stageHyperframesProject({ document, directory, read: async (artifact, signal) => {
       active++;
+      started++;
       try {
         if (artifact.resource === "res_a") { await delay(10); throw new Error("source unavailable"); }
         await delay(60_000, undefined, { signal });
         return new Uint8Array([0]);
       } finally { active--; }
-    } }), /source unavailable/u);
+    }, maxConcurrentArtifacts: 2 }), /source unavailable/u);
+    assert.equal(active, 0);
+    assert.equal(started, 2, "a failure must stop unclaimed Artifact work");
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test("document staging bounds complete Artifact lifecycles without changing deterministic paths", async () => {
+  const space = sealProgramSpace({ id: "space", durationSec: 1,
+    frameRate: { numerator: 30, denominator: 1 } });
+  const ids = Array.from({ length: 12 }, (_, index) => String(index).padStart(2, "0"));
+  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
+    presents: ids.map((id, order) => ({ id, span: { startFrame: 0, endFrameExclusive: 30 },
+      stacking: { order, tieBreak: id }, elements: [{ id, order: 0, kind: "image" as const, style: [],
+        artifact: { kind: "blob" as const, resource: `res_${id}` as const, size: 1, mediaType: "image/png" } }],
+    })) });
+  const document = compileHyperframesDocument(sealComposition({ id: "main",
+    canvas: { width: 64, height: 64, clearColor: "#000000" }, tracks: [track] }), space);
+  const directory = await mkdtemp(join(tmpdir(), "qflow-stage-bounded-"));
+  let active = 0;
+  let peak = 0;
+  let reads = 0;
+  try {
+    await stageHyperframesProject({ document, directory, maxConcurrentArtifacts: 3, read: async () => {
+      active++;
+      reads++;
+      peak = Math.max(peak, active);
+      try {
+        await delay(5);
+        return new Uint8Array([1]);
+      } finally { active--; }
+    } });
+    assert.equal(reads, ids.length);
+    assert.equal(peak, 3);
+    assert.deepEqual(await readdir(join(directory, "artifacts")),
+      ids.map((_, index) => `asset-${index}.png`).sort());
+    const html = await readFile(join(directory, "index.html"), "utf8");
+    for (let index = 0; index < ids.length; index++) assert.ok(html.includes(`./artifacts/asset-${index}.png`));
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test("document staging reads only Artifacts whose compiler usage overlaps the whole render selection", async () => {
+  const space = sealProgramSpace({ id: "space", durationSec: 1, frameRate: { numerator: 30, denominator: 1 } });
+  const first = { kind: "blob" as const, resource: "res_first-selection" as const, size: 1, mediaType: "image/png" };
+  const late = { kind: "blob" as const, resource: "res_late-selection" as const, size: 1, mediaType: "image/png" };
+  const always = { kind: "blob" as const, resource: "res_always-selection" as const, size: 1, mediaType: "image/png" };
+  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
+    presents: [
+      { id: "first-a", span: { startFrame: 0, endFrameExclusive: 5 }, stacking: { order: 0, tieBreak: "a" },
+        elements: [{ id: "first-a", order: 0, kind: "image" as const, style: [], artifact: first }] },
+      { id: "first-b", span: { startFrame: 5, endFrameExclusive: 10 }, stacking: { order: 1, tieBreak: "b" },
+        elements: [{ id: "first-b", order: 0, kind: "image" as const, style: [], artifact: first }] },
+      { id: "late", span: { startFrame: 20, endFrameExclusive: 30 }, stacking: { order: 2, tieBreak: "late" },
+        elements: [{ id: "late", order: 0, kind: "image" as const, style: [], artifact: late }] },
+      { id: "opaque", span: { startFrame: 20, endFrameExclusive: 30 }, stacking: { order: 3, tieBreak: "opaque" },
+        elements: [{ id: "opaque", order: 0, kind: "program" as const, style: [],
+          program: browserProgram({ html: `<img src="qflow-resource://${always.resource}">` }, [always]) }] },
+    ] });
+  const document = compileHyperframesDocument(sealComposition({ id: "main",
+    canvas: { width: 64, height: 64, clearColor: "#000000" }, tracks: [track] }), space);
+  assert.deepEqual(document.artifacts.find(({ artifact }) => artifact.resource === first.resource)?.usage,
+    { kind: "frames", spans: [{ startFrame: 0, endFrameExclusive: 10 }] }, "adjacent uses merge canonically");
+  const directory = await mkdtemp(join(tmpdir(), "qflow-stage-selection-"));
+  const reads: string[] = [];
+  try {
+    await stageHyperframesProject({ document, directory,
+      frameSelection: [{ startFrame: 2, endFrameExclusive: 3 }],
+      read: async artifact => { reads.push(artifact.resource); return new Uint8Array([1]); } });
+    assert.deepEqual(reads, [always.resource, first.resource], "opaque dependencies remain conservative");
+    assert.deepEqual(await readdir(join(directory, "artifacts")), ["asset-0.png", "asset-1.png"]);
+    const html = await readFile(join(directory, "index.html"), "utf8");
+    assert.match(html, /data-qflow-resource-src="\.\/artifacts\/asset-1\.png"/u);
+    assert.match(html, /data-qflow-resource-src="\.\/artifacts\/asset-2\.png"/u,
+      "unselected compiler media keep an inert deterministic path without reading bytes");
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test("document staging rejects an invalid concurrency bound", async () => {
+  const { composition, programSpace } = (() => {
+    const programSpace = sealProgramSpace({ id: "space", durationSec: 1, frameRate: { numerator: 30, denominator: 1 } });
+    return { programSpace, composition: sealComposition({ id: "empty",
+      canvas: { width: 64, height: 64, clearColor: "#000000" }, tracks: [] }) };
+  })();
+  const directory = await mkdtemp(join(tmpdir(), "qflow-stage-invalid-bound-"));
+  try {
+    await assert.rejects(stageHyperframesProject({
+      document: compileHyperframesDocument(composition, programSpace), directory,
+      maxConcurrentArtifacts: 0, read: async () => new Uint8Array(),
+    }), /concurrency must be a positive safe integer/u);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test("document staging drains readers and preserves an external cancellation reason", async () => {
+  const space = sealProgramSpace({ id: "space", durationSec: 1, frameRate: { numerator: 30, denominator: 1 } });
+  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
+    presents: ["a", "b"].map((id, order) => ({ id, span: { startFrame: 0, endFrameExclusive: 30 },
+      stacking: { order, tieBreak: id }, elements: [{ id, order: 0, kind: "image" as const, style: [],
+        artifact: { kind: "blob" as const, resource: `res_${id}` as const, size: 1, mediaType: "image/png" } }],
+    })) });
+  const document = compileHyperframesDocument(sealComposition({ id: "main",
+    canvas: { width: 64, height: 64, clearColor: "#000000" }, tracks: [track] }), space);
+  const directory = await mkdtemp(join(tmpdir(), "qflow-stage-external-cancel-"));
+  const controller = new AbortController();
+  const reason = new Error("caller stopped staging");
+  let active = 0;
+  let started = 0;
+  try {
+    const staging = stageHyperframesProject({ document, directory, maxConcurrentArtifacts: 2,
+      signal: controller.signal, read: async (_artifact, signal) => {
+        active++;
+        started++;
+        try {
+          await delay(60_000, undefined, { signal });
+          return new Uint8Array([1]);
+        } finally { active--; }
+      } });
+    while (started < 2) await delay(1);
+    controller.abort(reason);
+    await assert.rejects(staging, error => error === reason);
     assert.equal(active, 0);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
@@ -89,5 +209,76 @@ test("staging gives opaque Resource identities portable local names and writes c
     const html = await readFile(join(directory, "index.html"), "utf8");
     assert.ok(html.includes(`./artifacts/${files[0]}`));
     assert.ok(document.html.includes(resource), "materialization does not rewrite the portable document");
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test("HTML staging writes one file when several URLs name the same Resource", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qflow-stage-html-alias-"));
+  const artifact = {
+    kind: "blob" as const,
+    resource: "res_shared-html-image" as const,
+    size: 3,
+    mediaType: "image/png",
+  };
+  let reads = 0;
+  try {
+    await stageHyperframesHtmlProject({
+      directory,
+      project: {
+        html: '<div data-composition-id="main" data-fps="30/1" data-qflow-frame-count="30" data-width="64" data-height="64"><img src="first.png"><img src="second.png"></div>',
+        assets: [
+          { url: "first.png", artifact },
+          { url: "second.png", artifact: { ...artifact } },
+        ],
+      },
+      read: async () => {
+        reads += 1;
+        return new Uint8Array([1, 2, 3]);
+      },
+    });
+    assert.equal(reads, 1);
+    assert.deepEqual(await readdir(join(directory, "artifacts")), ["asset-0.png"]);
+    const html = await readFile(join(directory, "index.html"), "utf8");
+    assert.equal(html.match(/\.\/artifacts\/asset-0\.png/gu)?.length, 2);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test("HTML staging relocates compiler-deferred media URLs without activating them", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qflow-stage-html-deferred-"));
+  const artifact = {
+    kind: "blob" as const,
+    resource: "res_deferred-html-image" as const,
+    size: 3,
+    mediaType: "image/png",
+  };
+  try {
+    await stageHyperframesHtmlProject({
+      directory,
+      project: {
+        html: '<div data-composition-id="main" data-fps="30/1" data-qflow-frame-count="30" data-width="64" data-height="64"><img data-qflow-resource-src="picture.png"></div>',
+        assets: [{ url: "picture.png", artifact }],
+      },
+      read: async () => new Uint8Array([1, 2, 3]),
+    });
+    const html = await readFile(join(directory, "index.html"), "utf8");
+    assert.match(html, /data-qflow-resource-src="\.\/artifacts\/asset-0\.png"/u);
+    assert.doesNotMatch(html, /<img\b[^>]*\ssrc=/u);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test("HTML staging rejects conflicting metadata for one Resource identity", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qflow-stage-html-conflict-"));
+  try {
+    await assert.rejects(stageHyperframesHtmlProject({
+      directory,
+      project: {
+        html: '<div data-composition-id="main" data-fps="30" data-qflow-frame-count="30" data-width="64" data-height="64"><img src="first.png"><img src="second.png"></div>',
+        assets: [
+          { url: "first.png", artifact: { kind: "blob", resource: "res_conflicting-html-image", size: 3, mediaType: "image/png" } },
+          { url: "second.png", artifact: { kind: "blob", resource: "res_conflicting-html-image", size: 4, mediaType: "image/png" } },
+        ],
+      },
+      read: async () => new Uint8Array([1, 2, 3]),
+    }), /conflicting metadata/u);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

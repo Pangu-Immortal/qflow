@@ -136,6 +136,72 @@ test("a project directory alias admits its Source and stores a project-relative 
   } finally { await rm(parent, { recursive: true, force: true }); }
 });
 
+test("a forward-only Build completes with no Core records or Producer work", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "qflow-local-forward-only-"));
+  const priorId = "bld_20260924T120000000Z_0000000001";
+  const buildId = "bld_20260924T120000001Z_0000000001";
+  try {
+    await writeFile(join(directory, "main.svml"), "source");
+    const repository = new FileBuildResultRepository(join(directory, "results"));
+    const prior = await repository.create({
+      id: priorId,
+      source: { path: "main.svml" },
+      targets: ["document"],
+      publishedOutputs: [{ name: "document", output: "document" }],
+    });
+    await prior.sync({
+      state: {
+        status: "complete",
+        records: [{ id: "record:document", type: types.document, value: { kind: "inline", value: { text: "ready" } } }],
+        plan: { outputBindings: [{ output: "document", record: "record:document", type: types.document }] },
+      } as unknown as import("@qflow/protocol").BuildState,
+      resources: { async open() { throw new Error("fixture has no files"); } },
+    });
+    await prior.finish({ outcome: "complete" });
+
+    const template = createGreetingBuild();
+    const empty = defineBuild({
+      program: template.program,
+      initialRecords: [],
+      plan: { format: "qflow.plan@1", steps: [], goals: [], outputBindings: [] },
+      targets: [],
+    });
+    const runtime = await createLocalRuntime(projectRuntimeFixture(directory));
+    try {
+      await runtime.build({
+        id: buildId,
+        definition: empty,
+        catalog: {
+          source: { path: join(directory, "main.svml") },
+          targets: [{ kind: "logical-output", id: "forwarded-document" }],
+          publishedOutputs: [{ name: "document", ref: { kind: "logical-output", id: "forwarded-document" } }],
+        },
+        result: {
+          ...resultDestination(directory),
+          forwards: [{
+            output: "forwarded-document",
+            build: priorId,
+            sourceOutput: "document",
+            type: types.document,
+          }],
+        },
+      });
+      const completion = await finishClaimedBuild(runtime);
+      assert.equal(completion.outcome, "complete");
+      const result = await repository.read(buildId);
+      assert.deepEqual(result?.targets, ["document"]);
+      assert.deepEqual(result?.outputs.document, {
+        type: types.document,
+        value: { kind: "build-output", build: priorId, output: "document" },
+      });
+    } finally {
+      await runtime.close();
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 async function finishClaimedBuild(
   runtime: Awaited<ReturnType<typeof createLocalRuntime>>,
 ): Promise<BuildCompletion> {

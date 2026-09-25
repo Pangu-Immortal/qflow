@@ -19,9 +19,12 @@ It deliberately ignores `AudioTrack`. HyperFrames produces a silent visual fact;
 compiles and renders program audio separately, then an explicit mux Provider joins the two. Changing
 audio can therefore never be implemented by secretly changing HyperFrames HTML or its renderer.
 
-Media remains resource-referenced in compiled HTML as `qflow-resource://` placeholders. The
-document separately carries each dependency's complete `BlobRef` (Resource id, byte count and MIME), so
-a Provider can verify and name staged bytes without guessing from the hash. A local or hosted
+Media remains resource-referenced in compiled HTML as `qflow-resource://` placeholders. Each
+document Artifact declaration carries its complete `BlobRef` (Resource id, byte count and MIME) and
+the compiler's conservative usage proof: `always`, or ordered absolute half-open frame spans. Direct
+image, video and typed Surface uses inherit their Present spans; repeated spans merge. Document-level
+fonts and opaque Browser Program dependencies remain `always`. This fact belongs to the compiled
+HyperFrames document, not Core, a worker partition or a cross-render registry. A local or hosted
 render Runtime calls `materializeHyperframesHtml()` with its own Artifact URL resolver before
 handing the HTML to HyperFrames. That environment-specific materialization is not a new compiled
 Record and does not change the compiled document.
@@ -37,7 +40,18 @@ paths or filenames, so their length and punctuation do not restrict the host fil
 `stageHyperframesProject` streams each asset into its staged file. Its `validateSurface(surface, path,
 signal)` callback borrows that completed file during inspection; it receives neither a whole-file
 byte copy nor ownership of the file. The staging caller keeps the directory alive until all work
-has settled, including cancellation.
+has settled, including cancellation. `maxConcurrentArtifacts` bounds complete read/write/inspection
+lifecycles and defaults to one; a deployment Provider may supply its own local policy. Failure stops
+new claims and drains the already-started lifecycles before cleanup.
+When `frameSelection` is supplied, staging reads only `always` Artifacts and frame-scoped Artifacts
+whose usage intersects the whole render selection. All workers share that one staged project. Stable
+local names still derive from the complete document order, so selection does not renumber resources.
+Unselected structural media remain inert and are removed by the compiled page before their missing
+local paths could be activated. Unknown or opaque usage is never guessed into a narrower scope.
+`selectHyperframesArtifacts(document, selection)` exposes the same pure projection to callers that
+must transport bytes before staging; the Studio snapshot CLI uses it rather than eagerly fetching
+every Document resource. Selection validation is one ordered pass, and each Artifact's canonical
+usage spans query a sparse selection by binary search instead of scanning every requested frame.
 
 The document exposes its render domain directly rather than asking an Endpoint to scrape HTML:
 exact rational `frameRate`, integer `frameCount`, and canvas dimensions are explicit document
@@ -46,6 +60,27 @@ document as lineage metadata. Legal frame addresses are exactly `[0, frameCount)
 hosted renderer may independently evaluate any legal frame or half-open chunk; partition size and
 worker count are Runtime policy, not author intent and not Core graph nodes. The emitted root also
 uses the rational HyperFrames `data-fps` form, so NTSC rates do not drift through a decimal guess.
+
+A renderer may install `hyperframesFrameSelectionPrelude()` before the compiled page scripts to
+describe this render's ordered union of absolute half-open frame spans. The page-private animation,
+Terminal Text, visibility and Browser Program adapters use that hint to avoid initializing work
+whose Present cannot be sampled. Absence of the hint means the whole document, so ordinary browser
+preview remains unchanged. The hint contains no Worker identity or batch cursor: every Worker can
+start at any selected frame, and correctness still comes from absolute-frame evaluation.
+
+The compiled page also derives a capture scope from the same selection. Compiler-owned image,
+video, Surface and SVG-image URLs remain inert while HTML is parsed. After the page has classified
+Presents, only resources inside selected roots receive live `src`/`href` attributes; unselected
+roots are made non-painting, stripped of any remaining direct media URL attributes and detached
+from the live document before DOMContentLoaded. Opaque Browser Program HTML/CSS is not rewritten.
+Selected Present roots and document-level shared definitions are exposed to a capture adapter as
+generic DOM roots; the adapter does not need
+to understand Present or frame semantics. Shared glyph filter definitions live outside temporal
+Present roots so detaching one Present cannot break another Present's `url(#id)` reference. Local
+masks, paths and Browser Program structure remain within their owning Present. This is an
+execution-local projection of the complete compiled document, not a partial Composition, a Worker
+partition or a Core protocol. Without an injected selection, every Present remains live and every
+compiler-owned media URL is activated, preserving ordinary browser preview.
 
 Exact `FontArtifactRef` dependencies lower to generated `@font-face` declarations with font
 synthesis disabled; a Unicode-range-sharded logical face emits one rule per exact source. Terminal
@@ -74,10 +109,11 @@ SVG needs an ID for `url(#...)` or `href`, derive it from the unique `root.id` i
 the definition and its references there. Reusable instances must not repeat hard-coded SVG IDs.
 
 The optional `setup` string is a JavaScript function body with `root` and `data` arguments. It returns a synchronous
-`render(localFrame)` function, evaluated on initial load and active `hf-seek` events. Outside the
-Present's lifetime, the dispatcher settles the boundary pose once instead of repeatedly updating
-an invisible program. Active seeks always redraw, including the same frame after resources become
-ready, and seeking back into the Present computes its requested pose directly. Prepare stable
+`render(localFrame)` function. Initial load establishes every selected root's boundary pose; later `hf-seek`
+events use the page-private absolute-frame index to visit only active Programs and Present spans
+crossed by that seek. Outside the Present's lifetime, the dispatcher settles the boundary pose once
+instead of repeatedly scanning and updating every invisible Program. Active seeks always redraw,
+including the same frame after resources become ready, and seeking back into the Present computes its requested pose directly. Prepare stable
 objects in `setup`; express animation state as a function of frame and inputs so any worker can
 begin at any frame. Async work belongs to
 material preparation before rendering; browser resources belong in the program's declared artifacts.

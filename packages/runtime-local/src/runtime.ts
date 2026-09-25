@@ -282,9 +282,12 @@ export async function createLocalRuntime(
             `Logical Output ${published.output} has more than one public name`);
           names.set(published.output, published.name);
         }
-        const targets = request.definition.targets.map((target) => {
-          const name = names.get(target.output);
-          assert(name !== undefined, `Target ${target.output} is not a published Author Output`);
+        const targets = (request.catalog.targets ?? request.definition.targets.map((target) => ({
+          kind: "logical-output" as const,
+          id: target.output,
+        }))).map((target) => {
+          const name = names.get(target.id);
+          assert(name !== undefined, `Target ${target.id} is not a published Author Output`);
           return name;
         });
         await opened.repository.create({

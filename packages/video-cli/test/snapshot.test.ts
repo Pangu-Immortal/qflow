@@ -106,9 +106,13 @@ test("Studio snapshots carry declared resources used only inside JavaScript data
   const directory = await mkdtemp(join(tmpdir(), "qflow-studio-snapshot-"));
   const bytes = await sharp({ create: { width: 96, height: 64, channels: 3, background: "red" } }).png().toBuffer();
   const artifact = { kind: "blob" as const, resource: "res_program_image" as const, size: bytes.length, mediaType: "image/png" };
+  const late = { kind: "blob" as const, resource: "res_late_image" as const, size: 123, mediaType: "image/png" };
   const document = { visualIr: "qflow.visual-ir@1", frameRate: { numerator: 30000, denominator: 1001 }, frameCount: 12,
-    canvas: { width: 96, height: 64 }, artifacts: [artifact], surfaces: [],
-    html: html.replace('<img src="still.png">', '<script>const input="qflow-resource://res_program_image";</script>') };
+    canvas: { width: 96, height: 64 }, artifacts: [
+      { artifact: late, usage: { kind: "frames" as const, spans: [{ startFrame: 10, endFrameExclusive: 12 }] } },
+      { artifact, usage: { kind: "always" as const } },
+    ], surfaces: [],
+    html: html.replace('<img src="still.png">', '<script>const input="qflow-resource://res_program_image";</script><img data-qflow-resource-src="qflow-resource://res_late_image">') };
   const fetched: string[] = [];
   t.mock.method(globalThis, "fetch", async (input: string | URL) => {
     const url = String(input);

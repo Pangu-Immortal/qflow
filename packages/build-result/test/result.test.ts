@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { mkdir, mkdtemp, open, readFile, readdir, rm, stat, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
 
-import { buildResultDirectory, FileBuildResult, FileBuildResultRepository } from "@qflow/build-result";
+import { buildResultDirectory, FileBuildResult, FileBuildResultRepository, syncBuildResultOutputs } from "@qflow/build-result";
 import type { BlobRef, BuildState, TypeRef } from "@qflow/protocol";
 
 const videoType: TypeRef = {
@@ -412,6 +413,187 @@ test("an explicitly reused public output is a forward reference and copies no by
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("a forward-only Composite is published from manifests without opening its missing value document", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-result-manifest-forward-"));
+  const priorId = "bld_20260902T100000030Z_0000000001";
+  const nextId = "bld_20260902T100000031Z_0000000001";
+  try {
+    const prior = await FileBuildResult.create(root, {
+      id: priorId,
+      source: { path: "/project/main.svml" },
+      targets: ["layout"],
+      publishedOutputs: [{ name: "layout", output: "logical:layout" }],
+    });
+    await prior.sync({
+      state: state({
+        records: [{ id: "record:layout", type: videoType, value: { kind: "inline", value: { title: "ready" } } }],
+        bindings: [{ output: "logical:layout", record: "record:layout" }],
+      }),
+      resources: { async open() { throw new Error("fixture has no files"); } },
+    });
+    await prior.finish({ outcome: "complete" });
+    await rm(join(prior.directory, "values", "value-0001.json"));
+
+    const forwarded = await FileBuildResult.create(root, {
+      id: nextId,
+      source: { path: "/project/main.svml" },
+      targets: ["layout"],
+      publishedOutputs: [{ name: "layout", output: "logical:layout" }],
+      forwards: [{ output: "logical:layout", build: priorId, sourceOutput: "layout", type: videoType }],
+    });
+    const manifest = await forwarded.sync({
+      state: state({ records: [], bindings: [], status: "complete" }),
+      resources: { async open() { throw new Error("a forward-only Result has no bytes to open"); } },
+    });
+    assert.deepEqual(manifest.outputs.layout, {
+      type: videoType,
+      value: { kind: "build-output", build: priorId, output: "layout" },
+    });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a failed filesystem sync cannot make a later resource inherit stale bytes", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-result-retry-path-"));
+  try {
+    const result = await FileBuildResult.create(root, {
+      id: "bld_20260924T100000000Z_0000000001",
+      source: { path: "/project/main.svml" },
+      targets: ["a", "b", "z"],
+      publishedOutputs: ["a", "b", "z"].map((name) => ({ name, output: name })),
+    });
+    const snapshot = (names: readonly string[]) => state({
+      records: names.map((name) => ({ id: name, type: videoType, value: {
+        kind: "blob", resource: `res_${name}`, size: 1, mediaType: "video/mp4",
+      } })),
+      bindings: names.map((name) => ({ output: name, record: name })),
+    });
+    let fail = true;
+    const resources = { async open(artifact: BlobRef) {
+      if (fail && artifact.resource === "res_z") throw new Error("intentional source failure");
+      return (async function* () { yield Buffer.from(artifact.resource.slice(-1).toUpperCase()); })();
+    } };
+    await assert.rejects(result.sync({ state: snapshot(["b", "z"]), resources }), /intentional source failure/u);
+    assert.deepEqual((await result.read()).outputs, {});
+    fail = false;
+    await result.sync({ state: snapshot(["a", "b", "z"]), resources });
+    const outputs = (await result.read()).outputs;
+    for (const name of ["a", "b", "z"]) {
+      const value = outputs[name]?.value;
+      assert.equal(value?.kind, "build-file");
+      if (value?.kind !== "build-file") throw new Error("expected file Output");
+      assert.equal(await readFile(join(result.directory, value.path), "utf8"), name.toUpperCase());
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("Result writer recovers one numeric cursor across file extensions and the 9999 boundary", async () => {
+  const artifact: BlobRef = {
+    kind: "blob", resource: "res_new-image", size: 1, mediaType: "image/png",
+  };
+  const resourcePaths: string[] = [];
+  const valuePaths: string[] = [];
+  const updated = await syncBuildResultOutputs({
+    manifest: {
+      format: "qflow.build-result@1",
+      id: "bld_20260924T110000000Z_0000000001",
+      source: { path: "main.svml" },
+      targets: ["image"],
+      outputs: {},
+    },
+    writer: {
+      resources: { old: "files/file-9999.mp4" },
+      values: { old: "values/value-9999.json" },
+      publishedOutputs: [{ name: "image", output: "logical:image" }],
+      forwards: [],
+    },
+    sync: {
+      state: state({
+        records: [{ id: "record:image", type: videoType, value: { kind: "inline", value: { artifact } } }],
+        bindings: [{ output: "logical:image", record: "record:image" }],
+      }),
+      resources: { async open() { throw new Error("target owns this test write"); } },
+    },
+    target: {
+      async writeResource(path) { resourcePaths.push(path); },
+      async writeValue(path) { valuePaths.push(path); },
+    },
+  });
+  assert.deepEqual(resourcePaths, ["files/file-10000.png"]);
+  assert.deepEqual(valuePaths, ["values/value-10000.json"]);
+  assert.equal(updated.manifest.outputs.image?.value.kind, "value");
+});
+
+test("Result writer bounds resource writes and drains started work before a failure escapes", async () => {
+  const artifacts = Array.from({ length: 12 }, (_, index): BlobRef => ({
+    kind: "blob", resource: `res_${String(index).padStart(2, "0")}`,
+    size: 1, mediaType: "image/png",
+  }));
+  const input = (target: import("@qflow/build-result").BuildResultWriteTarget) => syncBuildResultOutputs({
+    manifest: {
+      format: "qflow.build-result@1" as const,
+      id: "bld_20260924T110000001Z_0000000001",
+      source: { path: "main.svml" },
+      targets: ["images"],
+      outputs: {},
+    },
+    writer: {
+      resources: {}, values: {},
+      publishedOutputs: [{ name: "images", output: "logical:images" }],
+      forwards: [],
+    },
+    sync: {
+      state: state({
+        records: [{ id: "record:images", type: videoType, value: { kind: "inline", value: artifacts } }],
+        bindings: [{ output: "logical:images", record: "record:images" }],
+      }),
+      resources: { async open() { throw new Error("target owns this test write"); } },
+    },
+    target,
+  });
+
+  let active = 0;
+  let maximum = 0;
+  let completed = 0;
+  await input({
+    async writeResource() {
+      active += 1;
+      maximum = Math.max(maximum, active);
+      try { await delay(2); completed += 1; } finally { active -= 1; }
+    },
+    async writeValue() {},
+  });
+  assert.equal(maximum, 4);
+  assert.equal(completed, artifacts.length);
+
+  active = 0;
+  maximum = 0;
+  let started = 0;
+  let valueWrites = 0;
+  await assert.rejects(input({
+    async writeResource(_path, artifact) {
+      started += 1;
+      active += 1;
+      maximum = Math.max(maximum, active);
+      try {
+        if (artifact.resource === artifacts[0]!.resource) {
+          await delay(2);
+          throw new Error("intentional resource failure");
+        }
+        await delay(20);
+      } finally { active -= 1; }
+    },
+    async writeValue() { valueWrites += 1; },
+  }), /intentional resource failure/u);
+  assert.equal(maximum, 4);
+  assert.equal(started, 4, "no queued write starts after the first failure");
+  assert.equal(active, 0, "all already-started writes settle before sync rejects");
+  assert.equal(valueWrites, 0, "a value document cannot publish before all of its files exist");
 });
 
 test("filesystem Results have one public name per Output and browse newest first", async () => {

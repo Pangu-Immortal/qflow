@@ -64,7 +64,7 @@ export function mapHyperframesHtmlUrls(html: string, map: (url: string) => strin
     (_all, attributes: string, css: string) => `<style${attributes}>${cssUrls(css)}</style>`)
     .replace(/<[a-z][^>]*>/gu, tag => {
       const attributes = /^(?:<(?:img|video|source|image|use|script|link)\b)/u.test(tag)
-        ? tag.replace(/\s(src|poster|href)="([^"]*)"/gu,
+        ? tag.replace(/\s(src|poster|href|data-qflow-resource-src|data-qflow-resource-href)="([^"]*)"/gu,
           (_all, key: string, url: string) => ` ${key}="${escape(map(unescape(url)))}"`) : tag;
       return attributes.replace(/\sstyle="([^"]*)"/gu,
         (_all, css: string) => ` style="${escape(cssUrls(unescape(css)))}"`);

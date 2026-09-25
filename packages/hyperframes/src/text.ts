@@ -34,6 +34,8 @@ export type TextRenderContext = {
    * to remember that, each word writes the whole set again.
    */
   readonly emittedFilterIds?: Set<string>;
+  /** Document-owned destination for definitions shared by otherwise independent Presents. */
+  readonly sharedGlyphFilterDefinitions?: string[];
 };
 
 function number(value: number): string {
@@ -335,7 +337,10 @@ export function renderGlyphPaintedString(
       return true;
     })
     .map((paint) => glyphFilterDefinition(paint, context)).join("");
-  const defs = definitions.length === 0
+  if (definitions.length > 0 && context.sharedGlyphFilterDefinitions !== undefined) {
+    context.sharedGlyphFilterDefinitions.push(definitions);
+  }
+  const defs = definitions.length === 0 || context.sharedGlyphFilterDefinitions !== undefined
     ? ""
     : `<svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden"><defs>${definitions}</defs></svg>`;
   // Paint layers share one grid cell. The wrapper stacks them but does not absorb their ink into
@@ -754,8 +759,8 @@ function renderPathDocument(element: VisualPathTextElement, context: TextRenderC
 
 export function renderTerminalTextElement(element: TerminalTextElement, context: TextRenderContext): string {
   assertTextUnitRanges(element);
-  const clockAttributes = `data-qflow-text-clock data-qflow-text-start-frame="${context.presentStartFrame}" data-qflow-text-frame-numerator="${context.programNumerator}" data-qflow-text-frame-denominator="${context.programDenominator}"`;
-  const sequenceAttributes = element.sequences.length === 0 ? "" : ` data-qflow-text-sequences="${context.escape(JSON.stringify(element.sequences))}" data-qflow-text-duration-frames="${context.durationFrames}"`;
+  const clockAttributes = `data-qflow-text-clock data-qflow-text-start-frame="${context.presentStartFrame}" data-qflow-text-duration-frames="${context.durationFrames}" data-qflow-text-frame-numerator="${context.programNumerator}" data-qflow-text-frame-denominator="${context.programDenominator}"`;
+  const sequenceAttributes = element.sequences.length === 0 ? "" : ` data-qflow-text-sequences="${context.escape(JSON.stringify(element.sequences))}"`;
   if (element.kind === "path-text") {
     const pathId = context.stableId([context.trackId, context.presentId, element.id, "path"]);
     const anchor = element.align === "start" ? "start" : element.align === "end" ? "end" : "middle";
@@ -824,6 +829,20 @@ export function collectTerminalTextFonts(element: TerminalTextElement): FontArti
 
 /** Renderer-owned deterministic post-layout step for physical-line selectors. */
 export const terminalTextLayoutScript = String.raw`
+const svmlTextRootSelected = (root) => {
+  const startFrame = Number(root.getAttribute('data-qflow-text-start-frame'));
+  const durationFrames = Number(root.getAttribute('data-qflow-text-duration-frames'));
+  if (!Number.isSafeInteger(startFrame) || !Number.isSafeInteger(durationFrames)
+    || startFrame < 0 || durationFrames <= 0 || !Number.isSafeInteger(startFrame + durationFrames)) {
+    throw new Error('Invalid terminal Text Present span.');
+  }
+  return hyperframesSelectionOverlaps(startFrame, startFrame + durationFrames);
+};
+const svmlSelectedTextElements = (selector) => [...document.querySelectorAll(selector)].filter((element) => {
+  const root = element.closest('[data-qflow-text-clock]');
+  if (!root) throw new Error('Terminal Text layout work is outside its frame clock root.');
+  return svmlTextRootSelected(root);
+});
 const svmlTextEase = (name, value) => {
   if (name === 'ease-in') return value * value;
   if (name === 'ease-out') return 1 - (1 - value) * (1 - value);
@@ -831,7 +850,7 @@ const svmlTextEase = (name, value) => {
   return value;
 };
 const svmlUpdateUprightTextPaths = () => {
-  for (const path of document.querySelectorAll('[data-qflow-text-path-upright]')) {
+  for (const path of svmlSelectedTextElements('[data-qflow-text-path-upright]')) {
     for (const glyph of path.querySelectorAll('[data-qflow-text-unit-grapheme]')) {
       try {
         glyph.removeAttribute('rotate');
@@ -844,7 +863,7 @@ const svmlUpdateUprightTextPaths = () => {
   }
 };
 const svmlUpdateStaticTextPathPlacements = () => {
-  for (const textPath of document.querySelectorAll('[data-qflow-text-path-placement]')) {
+  for (const textPath of svmlSelectedTextElements('[data-qflow-text-path-placement]')) {
     const data = JSON.parse(textPath.getAttribute('data-qflow-text-path-placement'));
     const href = textPath.getAttribute('href');
     const path = href && document.getElementById(href.slice(1));
@@ -857,7 +876,7 @@ const svmlUpdateStaticTextPathPlacements = () => {
   }
 };
 const svmlUpdateTextPathMargins = (time) => {
-  for (const path of document.querySelectorAll('[data-qflow-text-path-margin]')) {
+  for (const path of svmlSelectedTextElements('[data-qflow-text-path-margin]')) {
     const data = JSON.parse(path.getAttribute('data-qflow-text-path-margin'));
     const frames = data.keyframes;
     // HyperFrames may reach the same source frame through an incremental seek
@@ -886,8 +905,6 @@ const svmlUpdateTextPathMargins = (time) => {
   }
   svmlUpdateUprightTextPaths();
 };
-const svmlTextUnitBaseStyles = new WeakMap();
-const svmlTextAnimatedStyleNames = ['-webkit-text-fill-color', '-webkit-text-stroke-color', 'background-color', 'color', 'filter', 'opacity', 'transform'];
 const svmlTextPropertyName = (name) => {
   if (name === '-webkit-text-fill-color') return 'webkitTextFillColor';
   if (name === '-webkit-text-stroke-color') return 'webkitTextStrokeColor';
@@ -904,13 +921,29 @@ const svmlTextSeededOrder = (length, seed) => {
   }
   return result;
 };
+const svmlTextPrepareSequence = (sequence) => {
+  const length = sequence.range.endExclusive - sequence.range.start;
+  let rankByLocalIndex;
+  if (sequence.order !== 'forward' && sequence.order !== 'reverse') {
+    rankByLocalIndex = new Array(length);
+    for (const [rank, local] of svmlTextSeededOrder(length, sequence.seed || 0).entries()) {
+      rankByLocalIndex[local] = rank;
+    }
+  }
+  const keyframes = sequence.keyframes.map((point) => {
+    const frame = { offset: point.atProgress, ...(point.easing ? { easing: point.easing } : {}) };
+    for (const declaration of point.style) frame[svmlTextPropertyName(declaration.name)] = declaration.value;
+    return frame;
+  });
+  return { ...sequence, rankByLocalIndex, nativeKeyframes: keyframes };
+};
 const svmlTextSequenceRank = (sequence, index) => {
   if (index < sequence.range.start || index >= sequence.range.endExclusive) return null;
   const length = sequence.range.endExclusive - sequence.range.start;
   const local = index - sequence.range.start;
   if (sequence.order === 'forward') return local;
   if (sequence.order === 'reverse') return length - 1 - local;
-  return svmlTextSeededOrder(length, sequence.seed || 0).indexOf(local);
+  return sequence.rankByLocalIndex[local];
 };
 const svmlTextSequenceClock = (sequence, rank, frame) => {
   const start = sequence.startFrame + rank * sequence.staggerFrames;
@@ -924,26 +957,35 @@ const svmlTextSequenceClock = (sequence, rank, frame) => {
   // across fresh and incrementally-seeked browser animation instances.
   return (frame - start) % sequence.unitDurationFrames;
 };
-const svmlTextSequenceProgress = (sequence, clock) => {
-  const progress = clock / sequence.unitDurationFrames;
-  let left = sequence.keyframes[0];
-  let right = sequence.keyframes[sequence.keyframes.length - 1];
-  for (let index = 0; index < sequence.keyframes.length - 1; index += 1) {
-    if (progress < sequence.keyframes[index].atProgress || progress > sequence.keyframes[index + 1].atProgress) continue;
-    left = sequence.keyframes[index];
-    right = sequence.keyframes[index + 1];
-    break;
-  }
-  const width = right.atProgress - left.atProgress;
-  return {
-    left,
-    right,
-    progress: svmlTextEase(left.easing || 'linear', width <= 0 ? 1 : (progress - left.atProgress) / width),
-  };
+const svmlTextUnitSelector = '[data-qflow-text-unit-paragraph],[data-qflow-text-unit-run],[data-qflow-text-unit-word],[data-qflow-text-unit-grapheme]';
+let svmlTextAnimationIndex = hyperframesCreateFrameWorkIndex([]);
+let svmlTextAnimationFrameRate;
+const svmlPrepareTextRootApplications = (prepared) => {
+  if (prepared.units !== undefined) return prepared.units;
+  const sequences = JSON.parse(prepared.encodedSequences || '[]').map(svmlTextPrepareSequence);
+  const nativeAnimate = Element.prototype.__hfOriginalAnimate;
+  prepared.units = [...prepared.root.querySelectorAll(svmlTextUnitSelector)].map((unit) => {
+    const applications = [];
+    for (const sequence of sequences) {
+      const attribute = sequence.unit === 'line' ? 'data-qflow-text-physical-line' : 'data-qflow-text-unit-' + sequence.unit;
+      if (!unit.hasAttribute(attribute)) continue;
+      const index = Number(unit.getAttribute(attribute));
+      const rank = Number.isSafeInteger(index) ? svmlTextSequenceRank(sequence, index) : null;
+      if (rank === null) continue;
+      const animation = typeof nativeAnimate === 'function'
+        ? nativeAnimate.call(unit, sequence.nativeKeyframes, { duration: sequence.unitDurationFrames, fill: 'both', iterations: 1 })
+        : unit.animate(sequence.nativeKeyframes, { duration: sequence.unitDurationFrames, fill: 'both', iterations: 1 });
+      animation.pause();
+      animation.currentTime = 0;
+      applications.push({ sequence, rank, animation });
+    }
+    return { applications };
+  }).filter((unit) => unit.applications.length > 0);
+  return prepared.units;
 };
-const svmlSeekTextUnitAnimations = (time) => {
-  const unitSelector = '[data-qflow-text-unit-paragraph],[data-qflow-text-unit-run],[data-qflow-text-unit-word],[data-qflow-text-unit-grapheme]';
-  for (const root of document.querySelectorAll('[data-qflow-text-clock][data-qflow-text-sequences]')) {
+const svmlPrepareTextUnitAnimations = () => {
+  const work = [...document.querySelectorAll('[data-qflow-text-clock][data-qflow-text-sequences]')]
+    .filter(svmlTextRootSelected).map((root, order) => {
     const startFrame = Number(root.getAttribute('data-qflow-text-start-frame'));
     const numerator = Number(root.getAttribute('data-qflow-text-frame-numerator'));
     const denominator = Number(root.getAttribute('data-qflow-text-frame-denominator'));
@@ -952,47 +994,34 @@ const svmlSeekTextUnitAnimations = (time) => {
       || !Number.isSafeInteger(durationFrames) || numerator <= 0 || denominator <= 0 || durationFrames <= 0) {
       throw new Error('Invalid terminal Text animation clock.');
     }
-    const sequences = JSON.parse(root.getAttribute('data-qflow-text-sequences') || '[]');
-    const localFrame = Math.max(0, Math.min(durationFrames, Math.round(time * numerator / denominator - startFrame)));
-    for (const unit of root.querySelectorAll(unitSelector)) {
-      let base = svmlTextUnitBaseStyles.get(unit);
-      if (!base) {
-        base = Object.fromEntries(svmlTextAnimatedStyleNames.map((name) => [name, unit.style.getPropertyValue(name)]));
-        svmlTextUnitBaseStyles.set(unit, base);
-      }
-      for (const name of svmlTextAnimatedStyleNames) {
-        if (base[name]) unit.style.setProperty(name, base[name]);
-        else unit.style.removeProperty(name);
-      }
-      for (const sequence of sequences) {
-        const attribute = sequence.unit === 'line' ? 'data-qflow-text-physical-line' : 'data-qflow-text-unit-' + sequence.unit;
-        if (!unit.hasAttribute(attribute)) continue;
-        const index = Number(unit.getAttribute(attribute));
-        const rank = Number.isSafeInteger(index) ? svmlTextSequenceRank(sequence, index) : null;
-        if (rank === null) continue;
+    if (svmlTextAnimationFrameRate === undefined) svmlTextAnimationFrameRate = { numerator, denominator };
+    else if (svmlTextAnimationFrameRate.numerator !== numerator || svmlTextAnimationFrameRate.denominator !== denominator) {
+      throw new Error('Terminal Text roots disagree on the Program frame rate.');
+    }
+    return {
+      startFrame,
+      endFrameExclusive: startFrame + durationFrames,
+      order,
+      payload: {
+        root,
+        encodedSequences: root.getAttribute('data-qflow-text-sequences') || '[]',
+        units: undefined,
+      },
+    };
+  });
+  svmlTextAnimationIndex = hyperframesCreateFrameWorkIndex(work);
+};
+const svmlSeekTextUnitAnimations = (time) => {
+  if (svmlTextAnimationFrameRate === undefined) return;
+  const programFrame = Math.max(0, Math.round(time * svmlTextAnimationFrameRate.numerator / svmlTextAnimationFrameRate.denominator));
+  for (const work of svmlTextAnimationIndex.at(programFrame)) {
+    const units = svmlPrepareTextRootApplications(work.payload);
+    const localFrame = programFrame - work.startFrame;
+    for (const preparedUnit of units) {
+      for (const application of preparedUnit.applications) {
+        const { sequence, rank, animation } = application;
         const clock = svmlTextSequenceClock(sequence, rank, localFrame);
-        const keyframes = sequence.keyframes.map((point) => {
-          const frame = { offset: point.atProgress, ...(point.easing ? { easing: point.easing } : {}) };
-          for (const declaration of point.style) frame[svmlTextPropertyName(declaration.name)] = declaration.value;
-          return frame;
-        });
-        const nativeAnimate = Element.prototype.__hfOriginalAnimate;
-        const animation = typeof nativeAnimate === 'function'
-          ? nativeAnimate.call(unit, keyframes, { duration: sequence.unitDurationFrames, fill: 'both', iterations: 1 })
-          : unit.animate(keyframes, { duration: sequence.unitDurationFrames, fill: 'both', iterations: 1 });
-        animation.pause();
         animation.currentTime = clock;
-        const animatedNames = [...new Set(sequence.keyframes.flatMap((keyframe) => keyframe.style.map((declaration) => declaration.name)))];
-        const computed = getComputedStyle(unit);
-        const sampled = Object.fromEntries(animatedNames.map((name) => [name, computed.getPropertyValue(name)]));
-        animation.cancel();
-        if (animatedNames.includes('opacity')) {
-          const { left, right, progress } = svmlTextSequenceProgress(sequence, clock);
-          const leftValue = left.style.find((declaration) => declaration.name === 'opacity')?.value;
-          const rightValue = right.style.find((declaration) => declaration.name === 'opacity')?.value;
-          if (typeof leftValue === 'number' && typeof rightValue === 'number') sampled.opacity = String(leftValue + (rightValue - leftValue) * progress);
-        }
-        for (const name of animatedNames) unit.style.setProperty(name, sampled[name]);
       }
     }
   }
@@ -1040,7 +1069,7 @@ const svmlTextLayoutReady = document.fonts.ready.then(() => {
     }
     return values;
   };
-  for (const flow of document.querySelectorAll('[data-qflow-text-flow][data-qflow-text-overflow="ellipsis"]')) {
+  for (const flow of svmlSelectedTextElements('[data-qflow-text-flow][data-qflow-text-overflow="ellipsis"]')) {
     if (flow.getAttribute('data-qflow-text-max-lines') || getComputedStyle(flow).whiteSpace === 'pre') continue;
     const parent = flow.parentElement;
     if (!parent) throw new Error('Ellipsis Text has no placement frame.');
@@ -1059,7 +1088,7 @@ const svmlTextLayoutReady = document.fonts.ready.then(() => {
       : rect.top >= boundary.top - 0.5 && rect.bottom <= boundary.bottom + 0.5)).length;
     flow.style.webkitLineClamp = String(Math.max(1, visible));
   }
-  for (const flow of document.querySelectorAll('[data-qflow-text-flow][data-qflow-text-overflow="shrink"]')) {
+  for (const flow of svmlSelectedTextElements('[data-qflow-text-flow][data-qflow-text-overflow="shrink"]')) {
     const minimum = Number(flow.getAttribute('data-qflow-text-minimum-scale'));
     const maximumLines = Number(flow.getAttribute('data-qflow-text-max-lines') || '0');
     const inlineSize = flow.getAttribute('data-qflow-text-inline-size');
@@ -1133,7 +1162,7 @@ const svmlTextLayoutReady = document.fonts.ready.then(() => {
     apply(low);
     flow.setAttribute('data-qflow-text-shrink-scale', low.toFixed(8));
   }
-  for (const flow of document.querySelectorAll('[data-qflow-text-flow][data-qflow-text-line-sequences]')) {
+  for (const flow of svmlSelectedTextElements('[data-qflow-text-flow][data-qflow-text-line-sequences]')) {
     const sequences = JSON.parse(flow.getAttribute('data-qflow-text-line-sequences') || '[]');
     const glyphs = [...flow.querySelectorAll('[data-qflow-text-unit-grapheme]')];
     const vertical = flow.getAttribute('data-qflow-text-writing-mode') !== 'horizontal-tb';
@@ -1163,6 +1192,7 @@ const svmlTextLayoutReady = document.fonts.ready.then(() => {
       }
     }
   }
+  svmlPrepareTextUnitAnimations();
   svmlTextReady = true;
   svmlTextTimeline.totalTime(svmlTextAbsoluteTime);
 });

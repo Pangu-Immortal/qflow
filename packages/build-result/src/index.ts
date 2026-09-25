@@ -17,6 +17,8 @@ export {
   browseBuildResults,
   buildResultDirectory,
   describeBuildResultOutput,
+  locateBuildResultOutput,
+  locateRepositoryBuildResultOutput,
   normalizeBuildResultForwards,
   readBuildResult,
   resolveBuildResultOutput,

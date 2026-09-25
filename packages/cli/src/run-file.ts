@@ -1,4 +1,4 @@
-import { fileReferenceIdentity, ownedFileReference } from "@qflow/build-result";
+import { fileReferenceIdentity, locateRepositoryBuildResultOutput, ownedFileReference } from "@qflow/build-result";
 import { randomUUID } from "node:crypto";
 import type {
   BuildResultRepository,
@@ -48,33 +48,64 @@ export async function checkRunFile(options: {
   return await compiler.checkSource(options.workspace.entry, options.workspace);
 }
 
-function replaceValueAtPath(
+type ResultValueBindingTree = {
+  replacement?: BlobRef;
+  readonly children: Map<string | number, ResultValueBindingTree>;
+};
+
+function bindResultResources(
   value: CanonicalValue,
-  path: BuildResultValuePath,
-  replacement: BlobRef,
+  bindings: readonly { readonly at: BuildResultValuePath; readonly replacement: BlobRef }[],
 ): CanonicalValue {
-  if (path.length === 0) return replacement;
-  const segment = path[0]!;
-  const rest = path.slice(1);
-  if (typeof segment === "number") {
-    if (!Array.isArray(value) || segment < 0 || segment >= value.length) {
-      throw new Error(`Result Resource path ${JSON.stringify(path)} does not address an array item`);
+  const root: ResultValueBindingTree = { children: new Map() };
+  for (const binding of bindings) {
+    let node = root;
+    for (const segment of binding.at) {
+      let child = node.children.get(segment);
+      if (child === undefined) {
+        child = { children: new Map() };
+        node.children.set(segment, child);
+      }
+      node = child;
     }
-    return value.map((item, index) => index === segment
-      ? replaceValueAtPath(item, rest, replacement)
-      : item);
+    if (node.replacement !== undefined) {
+      throw new Error(`Result Resource path ${JSON.stringify(binding.at)} is bound more than once`);
+    }
+    node.replacement = binding.replacement;
   }
-  if (value === null || Array.isArray(value) || typeof value !== "object" || !Object.hasOwn(value, segment)) {
-    throw new Error(`Result Resource path ${JSON.stringify(path)} does not address an object property`);
-  }
-  return {
-    ...value,
-    [segment]: replaceValueAtPath(
-      (value as Readonly<Record<string, CanonicalValue>>)[segment]!,
-      rest,
-      replacement,
-    ),
+  const rebuild = (current: CanonicalValue, node: ResultValueBindingTree, path: BuildResultValuePath): CanonicalValue => {
+    if (node.replacement !== undefined) {
+      if (node.children.size > 0 || current !== null) {
+        throw new Error(`Result Resource path ${JSON.stringify(path)} does not address a null Resource slot`);
+      }
+      return node.replacement;
+    }
+    if (node.children.size === 0) return current;
+    if (Array.isArray(current)) {
+      for (const segment of node.children.keys()) {
+        if (typeof segment !== "number" || segment < 0 || segment >= current.length) {
+          throw new Error(`Result Resource path ${JSON.stringify([...path, segment])} does not address an array item`);
+        }
+      }
+      return current.map((item, index) => {
+        const child = node.children.get(index);
+        return child === undefined ? item : rebuild(item, child, [...path, index]);
+      });
+    }
+    if (current === null || typeof current !== "object") {
+      throw new Error(`Result Resource path ${JSON.stringify(path)} does not address a container`);
+    }
+    const record = current as Readonly<Record<string, CanonicalValue>>;
+    const result: Record<string, CanonicalValue> = { ...record };
+    for (const [segment, child] of node.children) {
+      if (typeof segment !== "string" || !Object.hasOwn(record, segment)) {
+        throw new Error(`Result Resource path ${JSON.stringify([...path, segment])} does not address an object property`);
+      }
+      result[segment] = rebuild(record[segment]!, child, [...path, segment]);
+    }
+    return result;
   };
+  return rebuild(value, root, []);
 }
 
 /** Resolve one historical public Output into an ordinary Run value plus lazy file attachments. */
@@ -132,12 +163,13 @@ export async function resolveBuildResultValue(
   } else if (resolved.value.kind === "inline") {
     value = { kind: "inline", value: resolved.value.value };
   } else {
-    let composite = resolved.value.document.value;
+    const bindings: Array<{ readonly at: BuildResultValuePath; readonly replacement: BlobRef }> = [];
     for (const binding of resolved.value.document.resources) {
       const attachment = await resultAttachment(resolved.build, binding.file);
       attachments.set(attachment.artifact.resource, attachment);
-      composite = replaceValueAtPath(composite, binding.at, attachment.artifact);
+      bindings.push({ at: binding.at, replacement: attachment.artifact });
     }
+    const composite = bindResultResources(resolved.value.document.value, bindings);
     value = { kind: "inline", value: composite };
   }
   return {
@@ -164,6 +196,9 @@ function createRunCompiler(options: {
     frontends,
     fragments,
     ...(options.results === undefined ? {} : {
+      async locateHistoricalOutput(id: string, output: string) {
+        return await locateRepositoryBuildResultOutput(options.results!, id, output);
+      },
       async resolveHistoricalOutput(id: string, output: string) {
         return await resolveBuildResultValue(options.results!, id, output, resultSession);
       },

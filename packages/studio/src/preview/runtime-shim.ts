@@ -162,6 +162,19 @@ function shim(): string {
       // comes from the exact AudioTrack below rather than from a video sidecar.
       element.muted = true;
       if (!inside) { element.pause(); continue; }
+      // A hold remains one compact target interval. Its exact zero source rate
+      // cannot be assigned to HTMLMediaElement.playbackRate, so keep the native
+      // decoder paused at the authored source frame instead.
+      if (record.sourceRate[0] === 0n) {
+        var heldFrame = Number(record.sourceFrame[0] / record.sourceFrame[1]);
+        var heldTarget = (heldFrame + 0.5) * record.sourceFps[1] / record.sourceFps[0];
+        if (Number.isFinite(element.duration) && element.duration > 0) {
+          heldTarget = Math.min(heldTarget, Math.max(0, element.duration - 0.001));
+        }
+        element.pause();
+        waits.push(seekDecoded(element, heldTarget));
+        continue;
+      }
       var target = record.mediaStart + (local + frameSeconds / 2) * record.rate;
       var discrete = scrubbing || programFrame === record.endFrame - 1;
       if (discrete) {

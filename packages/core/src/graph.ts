@@ -329,8 +329,6 @@ export function verifyBuildRequest(
     "UNSUPPORTED_BUILD_REQUEST",
     "unsupported BuildRequest format",
   );
-  invariant(request.targets.length > 0, "EMPTY_BUILD_TARGETS", "BuildRequest has no Targets");
-
   const targets = new Set<string>();
   for (const target of request.targets) {
     resolveLogicalOutput(graph, target.output);

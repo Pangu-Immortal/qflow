@@ -17,5 +17,11 @@ export type HyperframesExecutionOptions = import("./browser.js").BrowserOptions 
   readonly initializationTimeoutMs?: number;
   readonly frameTimeoutMs?: number;
   readonly maxProcessOutputBytes?: number;
+  /** Artifact staging lifecycles in flight inside one render. */
+  readonly artifactStagingConcurrency?: number;
+  /** Bytes of completed, out-of-order PNGs retained while an MP4 waits for its next frame. */
+  readonly maxPendingFrameBytes?: number;
+  /** Bytes of decoded source PNGs resident in one render's reusable working set. */
+  readonly maxDecodedSourceBytes?: number;
   readonly maxRenderedBytes?: number;
 };

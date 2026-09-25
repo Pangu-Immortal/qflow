@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   BuildMachine,
+  admitBuildResult,
   defineBuild,
+  materializeBuild,
   reduce,
   resolveNeedCommand,
 } from "@qflow/core";
@@ -126,6 +128,50 @@ test("Build Definition plus admitted Facts restores the same next Command", () =
   );
   assert.deepEqual(restored.commands(), machine.commands());
   assert.equal(restored.commands()[0]?.kind, "fulfill-need");
+  const materialized = materializeBuild(definition, facts);
+  const adopted = BuildMachine.fromMaterialized(definition, materialized);
+  assert.equal(adopted.view(), materialized);
+  assert.deepEqual(adopted.commands(), restored.commands());
+});
+
+test("BuildMachine incremental indexes stay identical to the pure reducer after every Fact", () => {
+  const initial = createGreetingBuild({ includeSideTarget: true });
+  const authored = new Set(initial.program.records.map((record) => record.id));
+  const definition = defineBuild({
+    program: initial.program,
+    initialRecords: initial.records.filter((record) => !authored.has(record.id)),
+    plan: initial.plan,
+    targets: initial.targets,
+  });
+  const machine = new BuildMachine(definition);
+  let reference = materializeBuild(definition, []);
+  const apply = (event: CommandResult): void => {
+    const before = machine.view();
+    const expected = admitBuildResult(reference, event);
+    assert.deepEqual(machine.evaluate(event), expected.fact);
+    assert.equal(machine.view(), before, "evaluation must not advance memory before durable commit");
+    machine.commit();
+    reference = expected.state;
+    assert.deepEqual(machine.view(), reference);
+  };
+  const producer = (step: string): InvokeProducerCommand => {
+    const command = machine.commands().find((item): item is InvokeProducerCommand =>
+      item.kind === "invoke-producer" && item.step === step);
+    assert.ok(command, `missing ${step}`);
+    return command;
+  };
+
+  apply(producerEvent(producer("make-prompt"), { prompt: { kind: "inline", value: "Greet Ada" } }));
+  apply(producerEvent(producer("request-text"), {}, { generation: { prompt: "Greet Ada" } }));
+  apply(producerEvent(producer("side-placeholder"), { generated: { kind: "inline", value: "Hi, Ada" } }));
+  apply(producerEvent(producer("side-assemble"), { document: { kind: "inline", value: { text: "Hi, Ada" } } }));
+  const need = machine.commands().find((item): item is FulfillNeedCommand => item.kind === "fulfill-need");
+  assert.ok(need);
+  apply({ kind: "need-fulfilled", command: need.id, value: { kind: "inline", value: "Hello, Ada!" } });
+  apply(producerEvent(producer("assemble"), {
+    document: { kind: "inline", value: { text: "Hello, Ada!" } },
+  }));
+  assert.equal(machine.status, "complete");
 });
 
 test("scheduling is incremental: a ready Producer runs while an unrelated Need is still outstanding", () => {

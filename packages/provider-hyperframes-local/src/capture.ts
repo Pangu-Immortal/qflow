@@ -1,14 +1,21 @@
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join, relative, resolve, sep } from "node:path";
+import { hyperframesFrameSelectionPrelude } from "@qflow/hyperframes";
 import type { HyperframesDocument } from "@qflow/hyperframes";
 import type { MediaFrameRange } from "@qflow/media";
 import type { HyperframesRenderProgress, resolveExecutionOptions } from "./render.js";
-import { assert, mediaExecutablePath, runProcess } from "./process.js";
+import { assert, mediaExecutablePath, openProcessInput } from "./process.js";
 import { verifyOutput } from "./output.js";
-import { distributeFrameRange, sourceFrameAt, sourceWindows, videoSlots } from "./sampling.js";
+import { distributeFrameRange, requestedFrameRanges, sourceFrameAt, sourceWindows, videoSlots } from "./sampling.js";
+import type { VideoSlot } from "./sampling.js";
 import { renderWorkerLimit } from "./render.js";
 import { CaptureConcurrency } from "./concurrency.js";
 import { createOpaqueFrameCapture } from "./opaque-capture.js";
+import { FrameSpanIndex } from "./frame-span-index.js";
+import { OrderedFrameSink } from "./ordered-frame-sink.js";
+import { decodeSourceFrameWindow } from "./source-frame-decoder.js";
+import { SourceFrameStore } from "./source-frame-store.js";
+import type { SourceFrameWindow } from "./source-frame-store.js";
 
 export type CaptureInput = {
   readonly document: Pick<HyperframesDocument, "frameRate" | "frameCount" | "canvas">;
@@ -75,68 +82,94 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
     }
   };
   let server: Awaited<ReturnType<typeof createFileServer>> | undefined;
+  let encoderCompletion: Promise<unknown> | undefined;
+  let sourceFrameStore: SourceFrameStore | undefined;
   // Closing pages interrupts an in-flight capture as well as the next loop iteration.
   const abort = () => { for (const session of sessions) void close(session).catch(() => {}); };
   signal.addEventListener("abort", abort, { once: true });
   try {
     signal.throwIfAborted();
     const slots = videoSlots(await readFile(join(work, "index.html"), "utf8"));
-    const sources = new Map<string, { frames: Map<number, string>; width: number; height: number }>();
-    let sourceFrames = 0;
-    // One source at a time bounds decoder pressure independently of browser concurrency.
-    const windows = sourceWindows(slots, input.frames === undefined ? [range]
-      : input.frames.map(frame => ({ startFrame: frame, endFrameExclusive: frame + 1 })));
-    const sourceTotal = windows.reduce((sum, source) => sum + source.windows.reduce((count, window) =>
+    const slotIndex = new FrameSpanIndex(slots);
+    const requestedRanges = requestedFrameRanges(range, input.frames);
+    const plannedSources = sourceWindows(slots, requestedRanges);
+    const sourceTotal = plannedSources.reduce((sum, source) => sum + source.windows.reduce((count, window) =>
       count + window.endFrameExclusive - window.startFrame, 0), 0);
-    if (sourceTotal > 0) onProgress({ phase: "decoding", completed: 0, total: sourceTotal, elapsedMs: elapsedMs() });
-    for (const source of windows) {
+    const sources = new Map<string, { path: string; fps: VideoSlot["sourceFps"];
+      metadata: Awaited<ReturnType<typeof engine.extractMediaMetadata>> }>();
+    // Chrome needs dimensions before initialization. Pixel frames themselves
+    // are decoded lazily for the screenshots that lease them.
+    for (const source of plannedSources) {
       const path = resolve(work, source.src);
       assert(path.startsWith(`${work}${sep}`), "HyperFrames source is outside the staged project");
-      const frames = new Map<number, string>();
-      let width = 0, height = 0;
-      for (const window of source.windows) {
-        signal.throwIfAborted();
-        const count = window.endFrameExclusive - window.startFrame;
-        const extracted = await engine.extractVideoFramesRange(path, `source-${sources.size}-${window.startFrame}`,
-          window.startFrame * source.fps.den / source.fps.num, count * source.fps.den / source.fps.num,
-          { fps: source.fps, outputDir: join(work, "decoded"), format: "png", ...(count === 1 ? { finalFrameOnly: true } : {}) },
-          signal, { ffmpegProcessTimeout: config.processTimeoutMs });
-        assert(extracted.totalFrames === count, `HyperFrames expected ${count} source frames, decoded ${extracted.totalFrames}`);
-        for (let index = 0; index < count; index++) {
-          const framePath = extracted.framePaths.get(index);
-          assert(framePath !== undefined, "HyperFrames extraction omitted a requested source frame");
-          frames.set(window.startFrame + index, framePath);
-        }
-        width = extracted.metadata.width;
-        height = extracted.metadata.height;
-        sourceFrames += count;
-        onProgress({ phase: "decoding", completed: sourceFrames, total: sourceTotal, elapsedMs: elapsedMs() });
-      }
-      sources.set(source.src, { frames, width, height });
+      const metadata = await engine.extractMediaMetadata(path);
+      signal.throwIfAborted();
+      sources.set(source.src, { path, fps: source.fps, metadata });
     }
+    let extraction = 0;
+    sourceFrameStore = new SourceFrameStore({ maxBytes: config.maxDecodedSourceBytes, signal,
+      decode: (src, window) => {
+        const source = sources.get(src);
+        assert(source !== undefined, `HyperFrames source ${src} is outside the requested render`);
+        return decodeSourceFrameWindow({ executable: ffmpegPath, path: source.path, outputDir: join(work, "decoded"),
+          outputPrefix: `source-${extraction++}`, window, fps: source.fps, metadata: source.metadata,
+          timeoutMs: config.processTimeoutMs, maxProcessOutputBytes: config.maxProcessOutputBytes, signal });
+      },
+      remove: async path => { await rm(path, { force: true }); },
+    });
+    const sourceDemand = (ranges: readonly MediaFrameRange[]): SourceFrameWindow[] => sourceWindows(slots, ranges, slotIndex)
+      .flatMap(source => source.windows.map(window => ({ source: source.src, ...window })));
+    const frameRanges = (startIndex: number, endIndex: number): MediaFrameRange[] => input.frames === undefined
+      ? [{ startFrame: at(startIndex), endFrameExclusive: at(endIndex - 1) + 1 }]
+      : input.frames.slice(startIndex, endIndex).map(frame => ({ startFrame: frame, endFrameExclusive: frame + 1 }));
     class SelectedFrameLookup extends engine.FrameLookupTable {
+      constructor(readonly strict: () => boolean) { super(); }
       override getActiveFramePayloads(time: number) {
         const frame = Math.round(time * fps.num / fps.den);
         const payloads = new Map<string, { framePath: string; frameIndex: number }>();
-        for (const slot of slots) {
-          if (frame < slot.startFrame || frame >= slot.endFrameExclusive) continue;
+        for (const slot of slotIndex.at(frame)) {
           const frameIndex = sourceFrameAt(slot, frame);
-          const framePath = sources.get(slot.src)?.frames.get(frameIndex);
           // Browser initialization may seek outside the requested interval.
           if (selected === undefined ? frame < range.startFrame || frame >= range.endFrameExclusive : !selected.has(frame)) continue;
+          const framePath = sourceFrameStore!.path(slot.src, frameIndex);
+          if (framePath === undefined && !this.strict()) continue;
           assert(framePath !== undefined, `HyperFrames has no decoded frame ${frameIndex} for ${slot.id}`);
           payloads.set(slot.id, { framePath, frameIndex });
         }
         return payloads;
       }
     }
-    server = await createFileServer({ projectDir: work, port: 0, fps });
+    server = await createFileServer({ projectDir: work, port: 0, fps,
+      preHeadScripts: [hyperframesFrameSelectionPrelude(requestedRanges)] });
     const serverUrl = server.url;
     const outputFrames = join(work, "frames");
-    await mkdir(outputFrames);
-    onProgress?.({ phase: "prepared", workers: concurrency.target, sourceFrames, elapsedMs: elapsedMs() });
+    const output = join(work, "visual.mp4");
+    const crf = { draft: 28, standard: 23, high: 18 }[config.quality];
+    const encoder = input.frames === undefined ? openProcessInput({ executable: ffmpegPath,
+      argv: ["-v", "error", "-y", "-f", "image2pipe", "-framerate", `${fps.num}/${fps.den}`, "-vcodec", "png", "-i", "pipe:0",
+        "-frames:v", String(frameCount), "-an", "-c:v", "libx264", "-crf", String(crf),
+        "-preset", config.quality === "draft" ? "veryfast" : "medium",
+        // Chromium composites in sRGB: convert with the BT.709 matrix and tag the stream so players decode it the same way.
+        "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p,setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv",
+        "-movflags", "+faststart", output],
+      timeoutMs: config.processTimeoutMs, maxOutputBytes: config.maxProcessOutputBytes, signal,
+    }) : undefined;
+    const orderedFrames = encoder === undefined ? undefined : new OrderedFrameSink({
+      frameCount, maxPendingBytes: config.maxPendingFrameBytes, signal,
+      writer: { write: encoder.write, close: async () => { await encoder.close(); } },
+    });
+    if (encoder === undefined) await mkdir(outputFrames);
+    else {
+      encoderCompletion = encoder.completed;
+      void encoder.completed.catch((error) => {
+        orderedFrames!.fail(error);
+        controller.abort(error);
+      });
+    }
+    onProgress?.({ phase: "prepared", workers: concurrency.target, sourceFrames: sourceTotal, elapsedMs: elapsedMs() });
     const jobs: Promise<void>[] = [];
     let active = 0, open = 0, initializing = 0, capturedFrames = 0, capturedBytes = 0;
+    let sourceAcquireWorkerMs = 0, outputSubmitWorkerMs = 0;
     let startupMs = 0;
     const launch = (): void => {
       const worker = jobs.length;
@@ -147,6 +180,7 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
     const runWorker = async (worker: number): Promise<void> => {
       let session: Session | undefined;
       let ready = false;
+      let capturing = false;
       active++;
       open++;
       initializing++;
@@ -156,7 +190,7 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
         signal.throwIfAborted();
         const directory = join(work, `worker-${worker}`);
         await mkdir(directory);
-        const injector = engine.createVideoFrameInjector(slots.length === 0 ? null : new SelectedFrameLookup(), {
+        const injector = engine.createVideoFrameInjector(slots.length === 0 ? null : new SelectedFrameLookup(() => capturing), {
           frameSrcResolver: (path) => new URL(relative(work, path).split(sep).map(encodeURIComponent).join("/"), `${serverUrl}/`).href,
         });
         session = await engine.createCaptureSession(serverUrl, directory, {
@@ -167,7 +201,7 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
           skipReadinessVideoIds: slots.map((slot) => slot.id),
           videoMetadataHints: slots.flatMap((slot) => {
             const source = sources.get(slot.src);
-            return source === undefined ? [] : [{ id: slot.id, width: source.width, height: source.height }];
+            return source === undefined ? [] : [{ id: slot.id, width: source.metadata.width, height: source.metadata.height }];
           }),
         }, injector, { chromePath: config.chromePath, browserGpuMode: config.browserGpu, enableBrowserPool: false, forceScreenshot: true, useDrawElement: false });
         sessions.add(session);
@@ -186,6 +220,7 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
         let completed = 0;
         let lastProgressAt = performance.now();
         const timing = { seekMs: 0, prepareMs: 0, screenshotMs: 0 };
+        capturing = true;
         while (true) {
           // Retire only between complete batches, before claiming more work.
           if (active > concurrency.target) break;
@@ -194,7 +229,21 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
           for (let index = batch.startFrame; index < batch.endFrameExclusive; index++) {
             const frame = at(index);
             signal.throwIfAborted();
-            const captured = await stage(`worker ${worker} frame ${frame}`, config.frameTimeoutMs, () => captureFrame(frame));
+            const required = sourceDemand(frameRanges(index, index + 1));
+            // A preference is the unconsumed suffix, not the whole batch: frames
+            // behind this Worker must become ordinary eviction candidates.
+            const preferred = sourceDemand(frameRanges(index, batch.endFrameExclusive));
+            const sourceAcquireStarted = performance.now();
+            const sourceLease = await sourceFrameStore!.acquire(required, preferred);
+            sourceAcquireWorkerMs += performance.now() - sourceAcquireStarted;
+            let captured: Awaited<ReturnType<typeof captureFrame>>;
+            try {
+              captured = await stage(`worker ${worker} frame ${frame}`, config.frameTimeoutMs, () => captureFrame(frame));
+            } finally {
+              // Output submission may block behind an earlier frame. Never
+              // retain source leases across that independent backpressure.
+              sourceLease.release();
+            }
             if (input.frames !== undefined) {
               capturedBytes += captured.buffer.byteLength;
               assert(capturedBytes <= config.maxRenderedBytes, "HyperFrames PNG output exceeds its byte limit");
@@ -202,7 +251,13 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
             timing.seekMs += captured.seekMs;
             timing.prepareMs += captured.prepareMs;
             timing.screenshotMs += captured.screenshotMs;
-            await writeFile(join(outputFrames, `${String(index).padStart(9, "0")}.png`), captured.buffer);
+            if (orderedFrames === undefined) {
+              await writeFile(join(outputFrames, `${String(index).padStart(9, "0")}.png`), captured.buffer);
+            } else {
+              const outputSubmitStarted = performance.now();
+              await orderedFrames.submit(index, captured.buffer);
+              outputSubmitWorkerMs += performance.now() - outputSubmitStarted;
+            }
             completed++;
             capturedFrames++;
             if (performance.now() - lastProgressAt >= 1_000) {
@@ -248,27 +303,28 @@ export async function captureStagedVisual(input: CaptureInput, controller: Abort
     if (failure !== undefined) throw failure;
     signal.throwIfAborted();
     await Promise.all(closing.values());
+    console.log(`Capture source working set: ${sourceTotal} unique frames demanded; decoded ${sourceFrameStore.decodedFrames} frames; `
+      + `redecoded ${Math.max(0, sourceFrameStore.decodedFrames - sourceTotal)}; decoder runs ${extraction}; `
+      + `decoded bytes ${sourceFrameStore.decodedBytes}; largest frame ${sourceFrameStore.largestDecodedFrameBytes} bytes; `
+      + `peak ${sourceFrameStore.peakResidentBytes} bytes; budget ${config.maxDecodedSourceBytes} bytes; `
+      + `source acquire ${Math.round(sourceAcquireWorkerMs)} worker-ms; output submit ${Math.round(outputSubmitWorkerMs)} worker-ms`);
     if (input.frames !== undefined) return outputFrames;
-    const output = join(work, "visual.mp4");
     onProgress({ phase: "encoding", elapsedMs: elapsedMs() });
-    const crf = { draft: 28, standard: 23, high: 18 }[config.quality];
-    await runProcess({ executable: ffmpegPath,
-      argv: ["-v", "error", "-y", "-framerate", `${fps.num}/${fps.den}`, "-i", join(outputFrames, "%09d.png"),
-        "-frames:v", String(frameCount), "-an", "-c:v", "libx264", "-crf", String(crf),
-        "-preset", config.quality === "draft" ? "veryfast" : "medium",
-        // Chromium composites in sRGB: convert with the BT.709 matrix and tag the stream so players decode it the same way.
-        "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p,setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv",
-        "-movflags", "+faststart", output],
-      timeoutMs: config.processTimeoutMs, maxOutputBytes: config.maxProcessOutputBytes, signal });
+    await orderedFrames!.close();
     const outputStat = await stat(output);
     assert(outputStat.size > 0 && outputStat.size <= config.maxRenderedBytes, "HyperFrames output is empty or exceeds its byte limit");
     await verifyOutput({ path: output, document: { ...document, frameCount }, ffprobePath,
       timeoutMs: config.processTimeoutMs, maxOutputBytes: config.maxProcessOutputBytes, signal });
     signal.throwIfAborted();
     return output;
+  } catch (error) {
+    controller.abort(error);
+    throw error;
   } finally {
     signal.removeEventListener("abort", abort);
     await Promise.allSettled([...sessions].map(close));
+    if (sourceFrameStore !== undefined) await sourceFrameStore.close();
+    if (encoderCompletion !== undefined) await Promise.allSettled([encoderCompletion]);
     if (server !== undefined) await server.close();
   }
 }

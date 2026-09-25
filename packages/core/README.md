@@ -10,6 +10,16 @@ graph.
 Execution is one immutable `BuildDefinition` followed by accepted `BuildFact` values. `BuildMachine`
 reconstructs the current view, emits the next commands and accepts their results. The materialized
 `BuildState` is a disposable view rather than durable authority.
+Within one live Build, the machine keeps disposable Record/Need/Command indexes, missing-input
+counts, reverse Record dependencies and the remaining Goals. A committed Fact therefore wakes only
+the steps whose inputs changed. These indexes are neither serialized nor shared across Builds and
+can always be reconstructed from the Definition and Facts. `evaluate` still derives the exact Fact
+before mutation; `commit` advances the indexes only after the caller has durably appended it.
+
+The pure `reduce(BuildState)` path remains the standalone reference transition for detached or
+deserialized views. Runtime execution can use the machine's indexed Record lookup directly; a Store
+snapshot whose state was already materialized is adopted once instead of replaying the same Facts a
+second time.
 `BuildDefinition` contains only the selected Program, initial Records, Producer steps,
 `Output -> Record` bindings and Targets. Graphs, satisfactions and Candidate identities end at the
 planning boundary.

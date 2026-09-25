@@ -184,6 +184,7 @@ function compiler(
 
 const previewModule = { name: "example.compiler-preview", version: "1" } as const;
 const previewProducer = { module: previewModule, name: "preview" } satisfies ProducerRef;
+const consumeProducer = { module: previewModule, name: "consume" } satisfies ProducerRef;
 const previewManifest: ModuleManifest = {
   ...emptyManifest(previewModule.name),
   dependencies: [{
@@ -192,6 +193,11 @@ const previewManifest: ModuleManifest = {
   producers: [{
     name: previewProducer.name,
     inputs: [],
+    outputs: [{ name: "result", type: resultType }],
+    needs: [],
+  }, {
+    name: consumeProducer.name,
+    inputs: [{ name: "source", type: resultType }],
     outputs: [{ name: "result", type: resultType }],
     needs: [],
   }],
@@ -208,6 +214,20 @@ const previewFragment = sealGraphFragment({
     name: "result",
     type: resultType,
     root: { kind: "fragment-operation", operation: "preview" },
+  }],
+});
+const consumeFragment = sealGraphFragment({
+  inputs: [{ name: "source", type: resultType }],
+  operations: [{
+    id: "consume",
+    producer: consumeProducer,
+    inputs: { source: { kind: "fragment-input", name: "source" } },
+    result: { kind: "output", name: "result" },
+  }],
+  exports: [{
+    name: "result",
+    type: resultType,
+    root: { kind: "fragment-operation", operation: "consume" },
   }],
 });
 
@@ -481,6 +501,72 @@ test("static Run checking accepts a future BuildRecord without opening project R
   const selectedWorkspace = await new NodeFilesystemWorkspace({ root }).open(runFile);
   const selected = runCompiler.planCompilation(await runCompiler.compileSource(selectedWorkspace.entry, selectedWorkspace));
   assert.deepEqual(selected.definition.initialRecords.map((record) => record.value.kind).sort(), ["blob", "inline"]);
+});
+
+test("a historical Output is materialized only when a selected Producer consumes it", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qflow-consumed-build-record-"));
+  const authorFile = join(root, "main.svml");
+  const runFile = join(root, "reuse.svrun");
+  await writeFile(authorFile, `<?svml using="@qflow/markup@1"?>
+  <svml>
+    <import as="lab" from="example.compiler-lab@1"/>
+    <lab:Result id="source"/><lab:Result id="final"/>
+  </svml>`, "utf8");
+  await writeFile(runFile, `<?svml using="@qflow/run-markup@1"?>
+  <svrun version="1">
+    <author source="./main.svml"/>
+    <import from="@example/preview" as="preview"/>
+    <target output="final.result"/>
+    <build-record id="prior" build="old-build" output="source.result"/>
+    <fragment id="consumer" using="preview:consume"><input name="source" from="source.result"/></fragment>
+    <satisfy output="source.result" candidate="prior"/>
+    <satisfy output="final.result" candidate="consumer.result"/>
+  </svrun>`, "utf8");
+
+  const frontends = new RunFrontendRegistry();
+  frontends.register(runMarkupFrontend);
+  const fragments = new RunFragmentRegistry();
+  fragments.register({
+    name: "@example/preview",
+    fragments: { result: previewFragment, consume: consumeFragment },
+  });
+  let located = 0;
+  let resolved = 0;
+  const runCompiler = new NodeRunCompiler({
+    authorCompiler: compiler(root, [previewManifest]),
+    frontends,
+    fragments,
+    locateHistoricalOutput(build, output) {
+      located += 1;
+      assert.equal(build, "old-build");
+      assert.equal(output, "source.result");
+      return { build: "value-owner", output: "original.result", type: resultType };
+    },
+    resolveHistoricalOutput(build, output) {
+      resolved += 1;
+      assert.equal(build, "old-build");
+      assert.equal(output, "source.result");
+      return { type: resultType, value: { kind: "inline", value: "historical" } };
+    },
+  });
+
+  const planned = await runCompiler.planFile(runFile);
+  assert.equal(located, 1, "the selected historical address is validated from its manifest");
+  assert.equal(resolved, 1, "a Producer dependency materializes the historical value exactly once");
+  assert.equal(planned.state.plan.steps.length, 1);
+  assert.equal(planned.state.plan.steps[0]?.producer.name, consumeProducer.name);
+  assert.deepEqual(planned.definition.initialRecords.map((record) => record.value), [{
+    kind: "inline",
+    value: "historical",
+  }]);
+  assert.equal(planned.resultForwards.length, 1);
+  assert.match(planned.resultForwards[0]!.output, /::output::source\.result$/u);
+  assert.deepEqual({ ...planned.resultForwards[0], output: "source.result" }, {
+    output: "source.result",
+    build: "value-owner",
+    sourceOutput: "original.result",
+    type: resultType,
+  });
 });
 
 test("source assets become graph values and a Host transfer bundle without closure metadata", async () => {

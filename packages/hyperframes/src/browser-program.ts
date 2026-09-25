@@ -56,36 +56,60 @@ export function browserProgramScript(entries: readonly {
 }[], numerator: number, denominator: number): string {
   return `(() => {
     const fail = error => { window.__qflowBrowserProgramError = String(error?.stack || error); };
-    const entries = ${scriptJson(entries)};
-    const renders = entries.map(entry => {
+    const entries = ${scriptJson(entries)}.filter(entry =>
+      hyperframesSelectionOverlaps(entry.startFrame, entry.startFrame + entry.durationFrames));
+    const renders = entries.map((entry, order) => {
       const root = document.getElementById(entry.id);
       try {
         const render = entry.program.setup === undefined ? () => {} :
           new Function('root', 'data', entry.program.setup)(root, entry.program.data);
         if (typeof render !== 'function') throw new Error('Browser program setup must return render(localFrame).');
-        return { ...entry, render, region: undefined };
-      } catch (error) { fail(error); return { ...entry, render: () => {} }; }
+        return { ...entry, order, render, region: undefined };
+      } catch (error) { fail(error); return { ...entry, order, render: () => {}, region: undefined }; }
     });
-    const apply = time => {
-      const frame = Math.round(Number(time || 0) * ${numerator} / ${denominator});
-      for (const entry of renders) {
-        const local = frame - entry.startFrame;
-        const region = local < 0 ? 'before' : local >= entry.durationFrames ? 'after' : 'active';
-        // Preserve the initial/boundary pose, but stop updating an invisible
-        // program at the same clamped endpoint. Active seeks always render,
-        // including repeated frame 0 after images/fonts finish loading.
-        if (region !== 'active' && entry.region === region) continue;
-        try {
-          const result = entry.render(Math.max(0, Math.min(entry.durationFrames, local)));
-          if (result != null && typeof result.then === 'function') {
-            // Observe a later rejection, but never let asynchronous drawing race frame capture.
-            Promise.resolve(result).catch(fail);
-            throw new Error('Browser program render(localFrame) must be synchronous; prepare asynchronous resources before rendering.');
-          }
-          entry.region = region;
+    const workIndex = hyperframesCreateFrameWorkIndex(renders.map(entry => ({
+      startFrame: entry.startFrame,
+      endFrameExclusive: entry.startFrame + entry.durationFrames,
+      order: entry.order,
+      payload: entry,
+    })));
+    let previousFrame;
+    const renderAt = (entry, frame) => {
+      const local = frame - entry.startFrame;
+      const region = local < 0 ? 'before' : local >= entry.durationFrames ? 'after' : 'active';
+      // Preserve initial and crossed boundary poses. Active seeks always redraw,
+      // including repeated frames after an asynchronously prepared image became ready.
+      if (region !== 'active' && entry.region === region) return;
+      try {
+        const result = entry.render(Math.max(0, Math.min(entry.durationFrames, local)));
+        if (result != null && typeof result.then === 'function') {
+          // Observe a later rejection, but never let asynchronous drawing race frame capture.
+          Promise.resolve(result).catch(fail);
+          throw new Error('Browser program render(localFrame) must be synchronous; prepare asynchronous resources before rendering.');
         }
-        catch (error) { fail(error); }
+        entry.region = region;
       }
+      catch (error) { fail(error); }
+    };
+    const apply = time => {
+      const frame = Math.max(0, Math.round(Number(time || 0) * ${numerator} / ${denominator}));
+      if (previousFrame === undefined) {
+        // Establish every compiler-owned root's boundary pose once. Later work
+        // is limited to active programs and spans crossed by an arbitrary seek.
+        for (const entry of renders) renderAt(entry, frame);
+      } else {
+        const work = new Map();
+        for (const item of workIndex.at(frame)) work.set(item.serial, item);
+        if (frame !== previousFrame) {
+          const startFrame = Math.min(previousFrame, frame);
+          const endFrameExclusive = Math.max(previousFrame, frame) + 1;
+          for (const item of workIndex.overlapping({ startFrame, endFrameExclusive })) work.set(item.serial, item);
+        }
+        for (const item of [...work.values()].sort((left, right) => left.order - right.order || left.serial - right.serial)) {
+          renderAt(item.payload, frame);
+        }
+      }
+      previousFrame = frame;
     };
     apply(0);
     window.addEventListener('hf-seek', event => apply(event.detail?.time));

@@ -16,12 +16,26 @@ export type HyperframesCanvas = {
   readonly height: number;
 };
 
+export type HyperframesArtifactUsage =
+  | { readonly kind: "always" }
+  | {
+      readonly kind: "frames";
+      /** Ordered, disjoint absolute half-open spans where this Artifact can be observed. */
+      readonly spans: readonly HyperframesFrameSpan[];
+    };
+
+/** One byte dependency and the compiler's conservative proof of when it can be observed. */
+export type HyperframesArtifact = {
+  readonly artifact: BlobRef;
+  readonly usage: HyperframesArtifactUsage;
+};
+
 /** Portable input to a local or remote HyperFrames renderer. */
 export type HyperframesDocument = HyperframesFrameDomain & {
   readonly visualIr: typeof VISUAL_IR_V1;
   readonly canvas: HyperframesCanvas;
-  /** Every byte resource referenced by the HTML template. */
-  readonly artifacts: readonly BlobRef[];
+  /** Every byte resource referenced by the HTML template, with its conservative temporal usage. */
+  readonly artifacts: readonly HyperframesArtifact[];
   /** Typed Surface dependencies that a Runtime must verify before rendering. */
   readonly surfaces: readonly CompositableSurfaceRef[];
   /** Media URLs remain qflow-resource:// placeholders until a Runtime materializes them. */
