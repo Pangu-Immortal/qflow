@@ -15,12 +15,12 @@ facts can fully serve a one-off scene; useful Caption controls can coexist with 
 ## Choose useful entities and lanes
 
 Match the component's actual Module ABI, Surface and terminal output Type. Generic VisualTrack or
-AudioTrack entities are enough for simple occupancy. Use `project(context)` when the author needs
+AudioTrack entities are enough for ordinary Clip occurrences. Use `project(context)` when the author needs
 domain meaning that the terminal drawing no longer contains. A Surface preview supplies a useful
 static recognition image; live entities and editable bindings come from the Companion.
 
 Generic presentation recognizes the terminal Type, not the component's creative role. A custom
-Caption Track can therefore render correct subtitles yet appear as a generic blue visual lane with
+Caption can therefore render correct subtitles yet appear as a generic blue visual lane with
 opaque ids when its package has no matching Companion. Inspect the selected Companion and its
 Module/Surface match before treating this as misplaced content or moving visuals between Tracks.
 The package declares its role; Studio does not infer one from a tag name or the text in a picture.
@@ -44,7 +44,7 @@ published output. `requiredReferencedValue` reads an exact typed author referenc
 | `stackOrder` | Order overlapping editor entities; this is separate from changing the Film's paint order. |
 | Companion `attachments` and entity `lane` | Expose a meaningful child lane, such as reveals under a board, with its own fields. |
 
-Each declared lane is one row. Overlapping items remain selectable; selection raises the selected
+Each declared lane is one row. Overlapping entities remain selectable; selection raises the selected
 rectangle within that row. Parent and attached lanes use the same behavior. Add a child lane when
 it explains another authoring relationship, such as activation within a persistent board.
 
@@ -55,7 +55,7 @@ this with the board and its independent reveals.
 ## Put related rules in a Band
 
 A Track's `bands` are internal strips sharing its label. For example, Caption shows Cue content
-with a bottom band for Style Uses; Performance and Sound show placed Takes with their Uses below.
+with a bottom band for Style Uses. Plain Visual and Audio Clips need no second authoring band.
 The rule is a selectable entity with its own Window, even when overridden or currently empty.
 It remains one Use across gaps and content boundaries.
 
@@ -140,8 +140,8 @@ facts and controls share Where, When and How; unpaged fields remain visible besi
 
 Related scalar attributes can share one `record` draft through a binding's `attributes` list and
 schema. Use object alternatives with a literal mode field when each choice needs different inputs;
-Once its required fields are complete, editing writes the chosen group together and removes unused members. Audio playback demonstrates
-this for its mode and stretch bounds. The package owns those alternatives; see
+once its required fields are complete, editing writes the chosen group together and removes unused
+members. The package owns those alternatives; see
 the installed Studio adapter README, “Edit related attributes together,” for the exact declaration.
 
 Select options may be plain strings or `{ value, label, description, preview }` entries. Color and
@@ -177,8 +177,8 @@ or activation. Ordinary Source and Recipe edits recompile within the current ses
 Use the installed `packages/studio-adapter/README.md` for the complete minimal Companion and
 activation example, `packages/studio/INSPECTOR.md` for field declarations, and
 `packages/temporal-markup/EDITING.md` for exact time-form behavior. These are package references
-inside the installed Distribution. Ranking, Caption Fine and Media Track Companions demonstrate
-persistent events, Cue content with Style Uses, and material occupancy respectively.
+inside the installed Distribution. Ranking, Caption Fine and Visual Track Companions demonstrate
+persistent events, Cue content with Style Uses, and ordinary visual Clip occurrences respectively.
 
 Try the component in its actual Run: select a meaningful picture part, inspect the corresponding
 timeline entity, change an exposed value and inspect the owning Source and resulting picture.

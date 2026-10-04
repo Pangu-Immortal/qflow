@@ -48,10 +48,12 @@ what draws attention, and what each change accomplishes. Give those relationship
 components can complete their local layout and motion. Qflow supplies shared authoring and execution
 interfaces for both existing and project-defined components.
 
-The work has one Timeline and a canvas. Placed Takes add semantic anchors where they belong;
-components give the picture useful structure. Time can contain speech, gaps, overlaps or wholly
-authored animation. Space can contain independent contributions or a coordinated scene with its own
-internal tree. [System relationships](references/production/system.md) explains this adaptive
+The work has one finite Timeline and one Canvas. Prepared media has local domains and Extents;
+domain projectors can translate local evidence through equal-length absolute Windows without becoming
+Timeline contents. Semantic alignment, musical beats and authored events are peer sources of absolute
+time. Visual and Audio Clips consume ordinary media occurrences with explicit Windows. Time can contain speech, gaps, overlaps or
+wholly authored animation. Space can contain independent contributions or a coordinated scene with
+its own internal tree. [System relationships](references/production/system.md) explains this adaptive
 organization and connects it to materials and execution.
 
 Choose component boundaries through shared behavior: coordinated layout and motion can share a
@@ -72,14 +74,14 @@ presentation with its meaning. Preserve what each event responds to. In an autho
 give messages, reveals and state changes their own reading rhythm. Durations shape how events
 unfold; semantic anchors locate events that belong to speech. A piece can use both relationships.
 
-A-roll names the performance carrying a passage. Its placed material and semantic timing remain
-available while the picture changes size, position, visibility or visual company. Present the current
-Timeline footage through Performance or a project scene; supply independent media explicitly when
-the work needs a different playback relationship. Choose what leads the picture from the current
-idea. A direct cut or a continuous movement can each express that change. Spatial grouping and timing
-are independent choices, so a whole scene can respond to a Moment and separate components can share
-that Moment. [Voice and performance](references/playbooks/craft/voice-and-performance.md) explains
-the role; [Performance](references/production/performance.md) explains its visual use.
+A-roll names the performance carrying a passage. Its normalized Extent may construct Timeline and its
+local domain may project meaning; after those contributions, picture and sound use the same ordinary
+media as any other material. Place its picture through a Visual Clip or project scene, and its sound
+through an Audio Clip, each with an explicit absolute Window and sampling choice. Choose what leads the picture
+from the current idea. A direct cut or continuous movement can each express that change. Spatial
+grouping and timing are independent choices, so a whole scene can respond to a Moment and separate
+components can share that Moment. [Voice and performance](references/playbooks/craft/voice-and-performance.md)
+explains the role; [Visual Clips](references/production/visual-clips.md) explains its use.
 
 ## Direct the material
 
@@ -285,14 +287,14 @@ practical, revisit that choice and carry the improvement into the work and its n
 | directing visual effects or MG in motion: states, actions, handoffs, persistent objects and visual rhythm | `references/playbooks/craft/motion-graphics.md` |
 | deciding which generated images or videos should depend on which references, including people, places, views and continuing props | `references/playbooks/craft/generated-dependencies.md` |
 | mixing performed or B-roll source sound with chosen music and effects, including balance, ducking and continuity | `references/playbooks/craft/sound-mix.md` |
-| presenting existing Timeline sound, local gain, silence, fades or explicit source blending | `references/production/sound.md` |
+| presenting existing Timeline sound, local gain, silence, fades or explicit source blending | `references/production/audio-clips.md` |
 | writing Sources, Recipes, and Runs, reusing produced work, adding a component | `references/production/authoring.md` |
 | imports, output references, literal values or Recipe rules | `references/production/source-syntax.md` |
 | choosing an existing Prompt Kit, assembling its wording or authoring a new one | `references/production/prompt-kits.md` |
 | Run syntax, material Targets, Candidates, Run Fragments or reusing produced media | `references/production/runs.md` |
-| admitting or reusing images/video/audio for the role this work gives them, model references, normalization, SemanticTakes, trims or processed variants | `references/production/media.md` |
-| presenting independent images, prepared video or surfaces, playback and replacement sequences | `references/production/media-presentation.md` |
-| placing independent music, narration, ambience or effects and selecting source playback | `references/production/audio-presentation.md` |
+| admitting or reusing images/video/audio, model references, normalization, local domains, NarrativeAlignment, trims or processed variants | `references/production/media.md` |
+| placing independent images, prepared video or surfaces and choosing source playback | `references/production/visual-clips.md` |
+| placing independent music, narration, ambience or effects and selecting source playback | `references/production/audio-clips.md` |
 | downloading a reference or source video from a link with yt-dlp | `references/production/video-downloads.md` |
 | capturing a website, recording a page interaction or exporting a local HTML graphic | `references/production/browser-capture.md` |
 | composing, correcting, resizing, cropping or cutting out an image | `references/production/image-operations.md` |
@@ -301,9 +303,9 @@ practical, revisit that choice and carry the improvement into the work and its n
 | choosing or finding fonts, using local font files, multilingual text, Emoji or Typography | `references/production/fonts-and-text.md` |
 | which installed Surface to use, or whether to write a project component | `references/production/vocabulary.md` |
 | sharing a component, Prompt Kit, Model, or Provider across projects | `references/production/component-sharing.md` |
-| placing Takes, gaps, overlap, complete duration or a pure MG work on one Timeline | `references/production/timeline.md` |
+| constructing Timeline end, Instants, Windows, Extents, Placements, gaps, overlap or a pure MG work | `references/production/timeline.md` |
 | choosing content ownership and composing visual/audio contributions | `references/production/tracks.md` |
-| presenting existing Timeline footage with broad or local Uses, a moving viewport or a custom Performance Style | `references/production/performance.md` |
+| placing footage or independent pictures through Visual Clips, or deciding when coordinated behavior needs a component | `references/production/visual-clips.md` |
 | writing a project Track with new layout, semantic events or persistent state | `references/production/track-authoring.md` |
 | drawing a component's elements, animation, resources or prepared surfaces | `references/production/component-visuals.md` |
 | writing a Caption family with new word relationships, scheduling or layout | `references/production/caption-authoring.md` |

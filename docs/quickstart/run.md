@@ -199,10 +199,11 @@ Connects a Candidate to a Logical Output:
 The Planner reads the complete Author Graph and Run Graph together. It prunes default Operations
 that selected Candidates replace while retaining any Author Outputs the selected Candidate itself
 still consumes. This is a
-new Build, not a continuation of the old one. Reusing generated video leaves normalization and semantic
-preparation downstream; reusing a prepared SemanticTake retains those results too. Caption, MG and
-rendering recompute where they remain on the selected route. Choose the Output whose meaning matches
-what should stay unchanged.
+new Build, not a continuation of the old one. Reusing generated video leaves normalization and
+alignment downstream. Reusing normalized media, its local domain and NarrativeAlignment retains those
+facts independently without freezing Timeline placement or presentation. Caption, MG and rendering
+recompute where they remain on the selected route. Choose the Outputs whose meanings match what should
+stay unchanged.
 
 Core does not label a Candidate as “exact” or “substitute”. Choosing a Candidate is the Run
 author's explicit implementation decision for that Build. Type compatibility is checked; creative

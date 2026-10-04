@@ -25,7 +25,7 @@ to a Script Moment.
 
 ## Own the visual relationship
 
-Performance presents placed footage; Media supplies independent pictures. A scene component can
+Visual Clip presents placed footage; Visual Clips supply independent pictures. A scene component can
 coordinate either with diagrams or other graphics. Fine and custom Caption families have the same relationship. Their shared input is the
 authored speech and its semantic timing; the implementation owns the spatial structure and motion.
 
@@ -48,7 +48,8 @@ and evaluate its state at the requested frame. Keep separately useful overlays a
 
 ```text
 Script → CaptionDocument (displayed words, Cue breaks and word attributes)
-CaptionDocument + Timeline → complete timed Cues and original word times
+NarrativeCaptionBinding + NarrativeProjection → CaptionTiming
+CaptionDocument + CaptionTiming → complete timed Cues and original word times
 Track Uses → resolved time windows, Styles and optional speaker filters
 complete Cues + Uses + family parameters → family schedule → VisualTrack
 ```
@@ -65,12 +66,12 @@ Script document types. A family Track accepts `document`, `timeline` and ordered
 <keyword:Track id="captions" document={story.caption} timeline={program.timeline}>
   <keyword:Use style={base-style}/>
   <keyword:Use role="GUEST" style={guest-style}/>
-  <keyword:Use during={story.selection.punchline} style={punchline-style}/>
+  <keyword:Use during={story-time.punchline} style={punchline-style}/>
 </keyword:Track>
 ```
 
-These names assume the project family and its Styles have been declared. Reuse the common time
-projection helpers for `during`, `at`/`for`, `until`/`for` and `start`/`end`. A Use has the same
+These names assume the project family and its Styles have been declared. Reuse the common absolute
+time helpers for `during`, or exactly two of `from`, `until` and `for`. A Use has the same
 meaning regardless of the family. `role` filters whose content it presents within that window.
 
 For a keyword layout, Script can mark `useful{emphasis}`. The family reads that attribute from the
@@ -117,7 +118,7 @@ retains all Cues regardless of Style. Empty or uncovered time naturally produces
 ## Give Style, layout and rendering clear owners
 
 The Style Surface validates a Recipe and exact font references, then emits the common Caption Style
-shape with the new family's name and parameters. The Track Surface accepts the document,
+shape with the new family's name and parameters. The Caption Surface accepts the document,
 Timeline and timed Use children; its Fragment assembles the Uses, performs the common timing join,
 and runs its own schedule and render operations. Register the new family's Producers and any new schedule Type in its own package.
 
@@ -134,7 +135,7 @@ family handles its own layouts. Each Track is independent, so multiple Tracks ca
 show captions together or use complementary coverage. Mixed-family rendering, if useful, belongs
 to the component that implements it.
 
-If this family supports spatial tracking, take an explicit RegionTimeline and map it into the actual
+If this family supports spatial tracking, take an explicit Region Track and map it into the actual
 composition. Define subject matching and absent-region behavior. Detection belongs to the measurement
 step described in [Caption tracking](../playbooks/craft/caption-tracking.md), not to this renderer.
 

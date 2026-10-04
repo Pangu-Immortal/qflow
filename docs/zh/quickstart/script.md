@@ -117,7 +117,7 @@ Cue 的切换。这同样适用于其他语言的短语或名字，例如 `<Git 
 右侧。明确或共享的口播都必须包含可说出的词；`<API|...>` 只有标点，无法建立时间对应，因此无效。
 
 `||` 是 **Caption Cue Break** 语法，只能位于完整对齐单元之间，不能写进 Dual Text 或切开
-N:M 单元。字幕稍后才把 CaptionDocument 与 Timeline 汇合得到帧时间。
+N:M 单元。字幕稍后通过独立 NarrativeCaptionBinding 与 NarrativeProjection 得到绝对帧时间。
 
 ### 空格与拼写
 
@@ -143,7 +143,7 @@ N:M 单元。字幕稍后才把 CaptionDocument 与 Timeline 汇合得到帧时�
 
 ### CaptionDocument 的组成
 
-`CaptionDocument` 是 Script 拥有的字幕真相，包含三种明确的语法对象：
+`CaptionDocument` 是 Caption 拥有、Script 可由同一源码生成的显示值，包含三种明确的语法对象：
 
 - **Display Word（显示词）**：一个用于渲染的词面，包含应该显示的标点；
 - **Alignment Unit（对齐单元）**：最小的显示-口播对应关系，Dual Text 的 N:M 映射也保持为一个单元；

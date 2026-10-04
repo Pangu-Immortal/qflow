@@ -60,9 +60,9 @@ the agreed commission. [Service selection](../environment/model-and-provider.md#
 
 Read missing behavior through its material and presentation together. For intended speech, listen to
 the selected Film: an available audio file establishes material, while admission and the chosen
-Sound or Audio contribution establish whether that material reaches the Film. For intended physical
+Audio contribution establish whether that material reaches the Film. For intended physical
 action, examine the footage itself as well as the viewport animation. Use
-[media admission](media.md), [sound presentation](sound.md) and [Film assembly](rendering.md)
+[media admission](media.md), [sound presentation](audio-clips.md) and [Film assembly](rendering.md)
 to complete those relationships. Silence or stillness can equally be intentional when they serve the Brief.
 
 Look at the complete Film at its intended delivery size as well as the components inside it. A component that looks

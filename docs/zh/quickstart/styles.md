@@ -56,7 +56,7 @@ film.vertical {
 
 ```svml
 <space:Canvas id="vertical" width="1080" height="1920"/>
-<film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
+<film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline} appearance={recipes.film.vertical}>
 ```
 
 ## Caption Fine
@@ -136,23 +136,22 @@ caption.bob {
 <caption-fine:Style id="default-caption" recipe={recipes.caption.dialogue} font={caption-font}/>
 <caption-fine:Style id="alice-caption" recipe={recipes.caption.alice} font={caption-font}/>
 <caption-fine:Style id="bob-caption" recipe={recipes.caption.bob} font={caption-font}/>
-<caption-fine:Track id="captions" document={story.caption} timeline={speech.timeline}>
+<caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
+  timeline={speech.timeline} within={vertical.bounds}>
   <caption-fine:Use style={default-caption}/>
   <caption-fine:Use role="ALICE" style={alice-caption}/>
   <caption-fine:Use role="BOB" style={bob-caption}/>
-</caption-fine:Track>
+</caption-fine:Caption>
 ```
 
-## Media Track
+## Visual Track Clip
 
-Media 将空间位置、框呈现与生命周期运动分开。`SpatialFrame` 负责位置和尺寸；外观 Recipe
-负责素材适配与框材质；可选的 motion Recipe 负责入场、持续和退场。
+Visual Clip 将空间、源时间、像素处理与局部运动分开。`SpatialFrame` 负责位置和尺寸；
+`z`、fit 与可选的源时间偏映射是这次出现的直接事实。处理 Recipe 只复用图像与 Frame 的
+绘制，而类型化 Motion 是仿射/透明度关键帧，不是封闭的效果名。
 
 ```svs
-media.product {
-  stack-order: 40;
-  fit: contain;
-  playback: hold-start;
+visual.product {
   frame-paint: #111116;
   clip: rounded;
   radius: 28;
@@ -162,51 +161,50 @@ media.product {
   border-color: #FFFFFF20;
   shadows: 0 10 24 0 #00000066;
 }
-
-motion.product {
-  enter: slide;
-  enter-frames: 8;
-  enter-direction: up;
-  enter-easing: ease-out;
-  exit: fade;
-  exit-frames: 6;
-  exit-easing: ease-in;
-}
 ```
 
 | 属性 | 描述 |
 |---|---|
-| `stack-order` | Z 轴层叠顺序 |
+| `z` | 直接的 Z 轴层叠顺序；重叠 Clip 不可静默共用 |
 | `fit` | `contain`、`cover`、`fit-width`、`fit-height`、`native`、`scale-down` 或 `stretch` |
 | `frame-x`、`frame-y` | 放置 Frame 内的对齐点 |
 | `content-x`、`content-y` | 素材内部独立选择的焦点 |
-| `playback` | `once-start`、`hold-start`、`loop-end`、`stretch` 等有时长素材占用方式 |
+| `source-time` / `Map` | 含时素材坐标的可复用或内联偏映射 |
 | `frame-paint` | 采样素材背后的纯色或渐变 Paint |
 | `clip`、`radius`、`padding` | 框裁切与内缩 |
 | `border-*`、`shadows` | 框自有的边框与有序阴影 |
-| `enter`、`exit` | 生命周期算子；帧数、缓动和方向使用独立属性 |
-| `sustain` | 零个或多个确定性局部运动，例如 `float 12 2 up` |
+| `motion` / `Pose` | Clip 局部时钟上的可选仿射与透明度状态 |
 
 位置始终是一条显式图边：
 
 ```svml
-<space:Frame id="product-frame" within={vertical}
+<space:Frame id="product-frame" within={vertical.bounds}
   left="8%" top="20%" right="92%" bottom="68%"/>
-<media-track:Item media={product-media.media}
-  during={story.selection.demo} frame={product-frame}
-  appearance={recipes.media.product} motion={recipes.motion.product}/>
+<visual:Motion id="product-in">
+  <visual:Pose at="start" y="80" opacity="0" easing="ease-out"/>
+  <visual:Pose at="8f" y="0" opacity="1"/>
+  <visual:Pose at="end" y="0" opacity="1"/>
+</visual:Motion>
+<visual:Clip media={product-media.media}
+  during={story-time.demo} frame={product-frame}
+  z="40" fit="contain"
+  treatment={recipes.visual.product} motion={product-in}>
+  <visual:Map/>
+</visual:Clip>
 ```
+
+如果行为要协调多个对象、改变结构或赋予素材新的视觉角色，就编写组件。Motion 是共享的
+数学底座，不是试图枚举未来所有效果的目录。
 
 ## 文本
 
-文本叠加层外观——排版与 Paint。位置由另一条 `SpatialFrame` 图边提供。
+细粒度文字 Style 只拥有可复用的排版与 Paint。几何、具体形式的布局和绝对 `z`
+由每次 occurrence 直接拥有，因为这些事实会随同一 Style 的不同使用而改变。
 
 ```svs
 text.title {
-  stack-order: 90;
   weight: 900;
   size: 64;
-  align: center;
   fill: #FFFFFF;
   tracking: -1;
 }
@@ -214,10 +212,8 @@ text.title {
 
 | 属性 | 描述 |
 |---|---|
-| `stack-order` | Z 轴层叠顺序 |
 | `weight` | 字体粗细 |
 | `size` | 字体大小（像素） |
-| `align` | 文本对齐方式 |
 | `fill` | 文本颜色 |
 | `tracking` | 字间距调整 |
 
@@ -226,9 +222,10 @@ text.title {
 ```svml
 <fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
-<text:Area id="meaning" placement={title-frame} style={title-style} during="program">
+<text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
+  style={title-style} z="90" align="center" during="timeline">
   MEANING
-</text:Area>
+</text:Flow>
 ```
 
 ## Speaker Text Template
@@ -380,5 +377,5 @@ Caption Recipe 不再重复家族、字重或字形。CJK 与 Emoji 即使由多
 <caption-fine:Style id="primary-caption" recipe={recipes.caption.primary} font={caption-font}/>
 
 <space:Canvas id="vertical" width="720" height="1280"/>
-<film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
+<film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline} appearance={recipes.film.vertical}>
 ```

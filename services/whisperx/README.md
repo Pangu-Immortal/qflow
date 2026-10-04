@@ -13,7 +13,7 @@ canonical 16 kHz mono PCM s16 WAV
 ```
 
 It does not run FFmpeg, modify the authored script, split caption cues, infer SVML Segments, cache
-Build results or create a SemanticTake. Missing WhisperX word timing stays missing; the author-side
+Build results or create a media-semantic bundle. Missing WhisperX word timing stays missing; the author-side
 semantic projection combines this evidence with one explicit Script Segment later.
 
 ## Install

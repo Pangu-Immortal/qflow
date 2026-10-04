@@ -3,7 +3,7 @@ title: 图片操作
 description: 在图片流向生成器或 Track 之前，对它做合成、校正与抠图。
 ---
 
-有三个包接收一张图片、交还一张图片。它们都不产出 Track：每个输出都是一张可供下游引用的图片——作为 Seedance 的参考帧、作为 Media Item，或作为下一次操作的来源。
+有三个包接收一张图片、交还一张图片。它们都不产出 Track：每个输出都是一张可供下游引用的图片——作为 Seedance 的参考帧、作为 Visual Clip，或作为下一次操作的来源。
 
 它们都需要 Endpoint。`image-compose` 与 `image-transform` 索取 raster 能力，由 `@qflow/provider-image-opencv-local` 在本机运行 OpenCV 来满足；`background-removal` 索取的是它自己声明的能力，由所选项目 Provider 实现。使用这些操作时，在 [Runtime Profile](../guide/runtime.md) 中选择支持它们的 Endpoint。
 
@@ -26,7 +26,7 @@ description: 在图片流向生成器或 Track 之前，对它做合成、校正
 | `opacity` | 可选——0 到 1，默认 1 |
 
 ```svml
-<compose:Image id="card" canvas={portrait} background="#00000000">
+<compose:Image id="card" canvas={portrait.canvas} background="#00000000">
   <compose:Layer source={background.image} frame={full} fit="cover"/>
   <compose:Layer source={product.image} frame={product-frame} fit="contain"/>
 </compose:Image>
@@ -84,7 +84,7 @@ description: 在图片流向生成器或 Track 之前，对它做合成、校正
 <remove:Background id="cutout" source={portrait.image}/>
 ```
 
-**输出：** `{cutout.image}`——通常喂给一个 Media Item，好让出镜者叠在画面上，而不是待在一个方框里。
+**输出：** `{cutout.image}`——通常喂给一个 Visual Clip，好让出镜者叠在画面上，而不是待在一个方框里。
 
 ## 移动人物抠像
 
@@ -95,4 +95,4 @@ description: 在图片流向生成器或 Track 之前，对它做合成、校正
 <matte:Portrait id="cutout" source={performance.video}/>
 ```
 
-将 `cutout.video` 归一化，准备进入时间线。如果它建立说话节目的语义骨架，再把准备好的媒体与 Script Segment 对齐，通过 Timeline assembly 装配。画面由 Media Track 或项目场景按选择的位置、绘制顺序呈现。作为 B-roll 时，归一化后的抠像可以直接进入 Media Track。抠像改变画面背景，具体角色由编排决定。
+将 `cutout.video` 归一化，得到同步媒体及其局部时间域。如果它承载说话语义，就在该局部时间域上与 Script Segment 对齐，再通过等长的 Timeline Window 投影对齐证据。然后把规范化后的抠像作为普通 Visual Clip 放置。抠像改变画面背景，具体角色由编排决定。

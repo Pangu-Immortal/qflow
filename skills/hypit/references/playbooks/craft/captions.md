@@ -43,7 +43,7 @@ performed speech. The following sections connect these decisions to the actual p
 ## Keep wording and timing in their owners
 
 Script owns display words, speaking Roles, Dual Text units, attributes and `||` Cue Breaks. Its
-CaptionDocument contains no seconds or frames. Caption joins that truth to the actual Timeline;
+CaptionDocument contains no seconds or frames. A source-domain adapter produces CaptionTiming on the actual Timeline;
 a visual family then presents the timed units. Reuse those units rather than retyping spoken words
 into independent Typography merely because it can draw the desired shape.
 
@@ -200,7 +200,7 @@ project `.svs`; a set that has earned reuse across works can become an ordinary 
 under its owner's scope. Such a collection preserves the family, Recipe and intended use together
 rather than turning isolated parameter values into universal defaults.
 
-Caption Track Uses choose when those Styles apply, optionally filtered by speaker. Cue content
+Caption Uses choose when those Styles apply, optionally filtered by speaker. Cue content
 stays complete when presentation changes midway through a phrase. [Caption styling and coverage](../../production/caption-presentation.md) explains
 overrides, Segment-wide selections, word attributes and hiding selected captions with a Hidden Style.
 
@@ -212,11 +212,11 @@ explicit Style Recipes. Role overrides can distinguish podcast hosts; a tracked 
 moving placement point without changing the verbal pipeline.
 
 ```svml
-<caption-fine:Track id="captions" document={story.caption}
-  timeline={speech.timeline}>
+<caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
+  timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={primary-caption}/>
     <caption-fine:Use role="GUEST" style={guest-caption}/>
-  </caption-fine:Track>
+  </caption-fine:Caption>
 ```
 
 This excerpt assumes the imported Surfaces, fonts and Styles already declared in the Source.

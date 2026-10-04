@@ -60,7 +60,7 @@ Referenced by `film:Film` via the `appearance` attribute:
 
 ```svml
 <space:Canvas id="vertical" width="1080" height="1920"/>
-<film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
+<film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline} appearance={recipes.film.vertical}>
 ```
 
 ## Caption Fine
@@ -140,24 +140,24 @@ Then select them with timed Uses in the Track:
 <caption-fine:Style id="default-caption" recipe={recipes.caption.dialogue} font={caption-font}/>
 <caption-fine:Style id="alice-caption" recipe={recipes.caption.alice} font={caption-font}/>
 <caption-fine:Style id="bob-caption" recipe={recipes.caption.bob} font={caption-font}/>
-<caption-fine:Track id="captions" document={story.caption} timeline={speech.timeline}>
+<caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
+  timeline={speech.timeline} within={vertical.bounds}>
   <caption-fine:Use style={default-caption}/>
   <caption-fine:Use role="ALICE" style={alice-caption}/>
   <caption-fine:Use role="BOB" style={bob-caption}/>
-</caption-fine:Track>
+</caption-fine:Caption>
 ```
 
-## Media Track
+## Visual Track Clips
 
-Media keeps spatial placement, frame presentation and lifecycle motion separate. A `SpatialFrame`
-owns position and size; the appearance Recipe owns fitting and the frame material; an optional
-motion Recipe owns enter, sustain and exit behavior.
+Visual Clips keep space, source-time, pixel treatment and local motion separate. A `SpatialFrame`
+owns position and size. `z`, fitting and the optional partial source-time relation are direct facts
+of this occurrence. A
+treatment Recipe may reuse image and Frame paint, while a typed Motion is reusable affine/opacity
+keyframes rather than a closed effect name.
 
 ```svs
-media.product {
-  stack-order: 40;
-  fit: contain;
-  playback: hold-start;
+visual.product {
   frame-paint: #111116;
   clip: rounded;
   radius: 28;
@@ -167,51 +167,51 @@ media.product {
   border-color: #FFFFFF20;
   shadows: 0 10 24 0 #00000066;
 }
-
-motion.product {
-  enter: slide;
-  enter-frames: 8;
-  enter-direction: up;
-  enter-easing: ease-out;
-  exit: fade;
-  exit-frames: 6;
-  exit-easing: ease-in;
-}
 ```
 
 | Property | Description |
 |---|---|
-| `stack-order` | Z-stacking order |
-| `fit` | `contain`, `cover`, `fit-width`, `fit-height`, `native`, `scale-down`, or `stretch` |
+| `z` | Direct Z-stacking order; equal values use stable declaration and identity order |
+| `fit` | Direct `contain`, `cover`, `fit-width`, `fit-height`, `native`, `scale-down`, or `stretch` |
 | `frame-x`, `frame-y` | Alignment point inside the placement Frame |
 | `content-x`, `content-y` | Independently selected focal point inside the source |
-| `playback` | Timed-source occupancy such as `once-start`, `hold-start`, `loop-end`, or `stretch` |
+| `source-time` / `Map` | Reusable or inline partial mapping for timed-source coordinates |
 | `frame-paint` | Solid or gradient Paint behind the sampled source |
 | `clip`, `radius`, `padding` | Frame clipping and inset |
 | `border-*`, `shadows` | Frame-owned border and ordered shadows |
-| `enter`, `exit` | Lifecycle operator; its frame count, easing and direction use separate properties |
-| `sustain` | Zero or more deterministic local motions such as `float 12 2 up` |
+| `motion` / `Pose` | Optional typed affine and opacity states over the Clip-local clock |
 
 Position remains an explicit graph edge:
 
 ```svml
-<space:Frame id="product-frame" within={vertical}
+<space:Frame id="product-frame" within={vertical.bounds}
   left="8%" top="20%" right="92%" bottom="68%"/>
-<media-track:Item media={product-media.media}
-  during={story.selection.demo} frame={product-frame}
-  appearance={recipes.media.product} motion={recipes.motion.product}/>
+<visual:Motion id="product-in">
+  <visual:Pose at="start" y="80" opacity="0" easing="ease-out"/>
+  <visual:Pose at="8f" y="0" opacity="1"/>
+  <visual:Pose at="end" y="0" opacity="1"/>
+</visual:Motion>
+<visual:Clip media={product-media.media}
+  during={story-time.demo} frame={product-frame}
+  z="40" fit="contain"
+  treatment={recipes.visual.product} motion={product-in}>
+  <visual:Map/>
+</visual:Clip>
 ```
+
+If a behavior coordinates several objects, changes structure or gives a source a new visual role,
+author a component. Motion is the shared mathematical substrate, not a catalogue of every effect a
+video may ever need.
 
 ## Text
 
-Text overlay appearance — typography and Paint. Placement is a separate `SpatialFrame` graph edge.
+Fine Text Style owns reusable typography and Paint only. The occurrence itself owns geometry,
+form-specific layout and absolute `z`, because those facts change from one use of a Style to another.
 
 ```svs
 text.title {
-  stack-order: 90;
   weight: 900;
   size: 64;
-  align: center;
   fill: #FFFFFF;
   tracking: -1;
 }
@@ -219,10 +219,8 @@ text.title {
 
 | Property | Description |
 |---|---|
-| `stack-order` | Z-stacking order |
 | `weight` | Font weight |
 | `size` | Font size in pixels |
-| `align` | Text alignment |
 | `fill` | Text color |
 | `tracking` | Letter spacing adjustment |
 
@@ -231,9 +229,10 @@ Compiled with exact font bytes into a `text:Style`, then referenced by a concret
 ```svml
 <fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
-<text:Area id="meaning" placement={title-frame} style={title-style} during="program">
+<text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
+  style={title-style} z="90" align="center" during="timeline">
   MEANING
-</text:Area>
+</text:Flow>
 ```
 
 ## Speaker Text Template
@@ -401,5 +400,5 @@ This file is imported once in the `.svml` source and its values are referenced t
 <caption-fine:Style id="primary-caption" recipe={recipes.caption.primary} font={caption-font}/>
 
 <space:Canvas id="vertical" width="720" height="1280"/>
-<film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
+<film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline} appearance={recipes.film.vertical}>
 ```

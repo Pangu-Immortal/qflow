@@ -4,7 +4,7 @@ description: Compose, correct and cut out images before they reach a generator o
 ---
 
 Three packages work on a picture and hand back a picture. None of them produces a Track: each output
-is an image you reference downstream — as a Seedance reference frame, as a Media Item, or as the
+is an image you reference downstream — as a Seedance reference frame, as a Visual Clip, or as the
 source of another operation.
 
 They all need an endpoint. `image-compose` and `image-transform` ask for the raster capability, which
@@ -33,7 +33,7 @@ most sixty-four, each empty:
 | `opacity` | optional — 0 to 1, default 1 |
 
 ```svml
-<compose:Image id="card" canvas={portrait} background="#00000000">
+<compose:Image id="card" canvas={portrait.canvas} background="#00000000">
   <compose:Layer source={background.image} frame={full} fit="cover"/>
   <compose:Layer source={product.image} frame={product-frame} fit="contain"/>
 </compose:Image>
@@ -95,7 +95,7 @@ that is the endpoint's business, not the Source's.
 <remove:Background id="cutout" source={portrait.image}/>
 ```
 
-**Output:** `{cutout.image}` — typically fed to a Media Item so a presenter sits over the picture
+**Output:** `{cutout.image}` — typically fed to a Visual Clip so a presenter sits over the picture
 rather than in a box.
 
 ## Removing a moving person's background
@@ -109,8 +109,7 @@ served by a supporting QflowHub Endpoint:
 <matte:Portrait id="cutout" source={performance.video}/>
 ```
 
-Normalize `cutout.video` to prepare it for the timeline. If it establishes the spoken program,
-align that prepared media to its Script Segment and assemble it through Timeline assembly. Present the
-picture with Media Track or a project scene, at the chosen location and paint order. As B-roll,
-the normalized cutout can enter Media Track directly. Matting changes the picture's background;
-the composition determines its role.
+Normalize `cutout.video` to obtain synchronized media and its local domain. If it carries spoken
+meaning, align that local domain to its Script Segment, then project the alignment through the
+equal-length Timeline Window. Place the normalized cutout as an ordinary Visual Clip. Matting changes the picture's
+background; the composition determines its role.

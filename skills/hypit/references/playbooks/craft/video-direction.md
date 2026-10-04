@@ -275,7 +275,8 @@ reference inputs, not from a one-image-per-shot correspondence.
 
 A prompt-directed jump cut asks the generator for an edited rhythm; it does not inspect or trim the
 returned media. When produced footage needs a deterministic cut, speed change or trim, use the
-corresponding media operation and align the edited result before it becomes a SemanticTake.
+corresponding media operation before normalization and alignment. The edited media, local domain and
+alignment remain separate facts.
 
 ## Size the request around the delivery
 

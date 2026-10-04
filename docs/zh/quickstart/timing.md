@@ -1,136 +1,123 @@
 ---
-title: 时序与装配
-description: 逐 Take 归一化与语义对齐，然后装配为 Timeline。
+title: 时间与装配
+description: 先构造绝对节目时间，再显式放置媒体并按需投影语义时间。
 ---
 
-对于说话视频，`Timeline` 把作者的 Script 与实际表演联系起来，是字幕、随词语出现的图形和覆盖画面的自然时间来源。它按 Segment 粒度构建：
+Qflow 只有一条节目时间轴：`Timeline`。它只是 `{ id, frameRate, frameCount }`，不包含素材、
+单词、Track 或中央事件注册表。
 
-1. 把每个已接受的音视频 Take 归一化到同一个精确帧域；
-2. 将归一化媒体与对应的 Script Segment 对齐，得到自包含的 `SemanticTake`；
-3. 用 `time:Timeline` 按节目顺序装配这些 Semantic Take。
+对于语音作品，四类独立事实围绕这条绝对时间轴组合：
 
-每个 Take 在进入 Timeline assembly 之前就已经具有语义。画面由 Media Track 或项目组件呈现，与这里的语义和音频装配分别表达。
+1. 把已接受素材规范化为 `SynchronizedMedia` 与有限的局部时间域；
+2. 在该局部时间域上对齐 Script Segment，得到 `NarrativeAlignment`；
+3. 用具名 Instant、Window 与 Extent 构造一个包含必需 `end` 的 Timeline DAG；
+4. 把每个 Alignment 通过等长 Window 投影，并让普通媒体独立进入 Visual 与 Audio Source。
 
-纯视觉动画使用同一种 Timeline 声明：指定结束时间，不放入 Take，见 [纯组件绘制的影片](./composition.md)。其事件可以使用秒或帧；说话视频则可以用 Script Selection 和 Moment 驱动相同的视觉行为。
+这种分离很重要：移动一段内容不改变媒体和局部词时序；改变画面构图不改变声音；纯动效
+只需要 Timeline，不需要媒体或 Script。
 
 ```svml
-<import as="program" from="@qflow/program-space@1"/>
 <import as="pipeline" from="@qflow/media-pipeline@1"/>
 <import as="whisperx" from="@qflow/whisperx@1"/>
+<import as="semantic" from="@qflow/narrative-temporal@1"/>
 <import as="time" from="@qflow/timeline-author@1"/>
-<import as="media-track" from="@qflow/media-track@1"/>
-  <import as="performance" from="@qflow/performance@1"/>
-<import as="space" from="@qflow/spatial@1"/>
-<import as="recipes" source="./recipes.svs"/>
+<import as="media" from="@qflow/media@1"/>
+<import as="visual" from="@qflow/visual-track@1"/>
+<import as="audio" from="@qflow/audio-track@1"/>
 ```
 
-## 逐 Take 归一化
+## 规范化局部媒体
 
-归一化把视频、音频、时长和帧率变成一个明确的 `SynchronizedMedia` 事实。同一条
-Timeline 内的所有 Take 共享作者显式声明的 Clock。
+Clock 固定最终 Timeline 与所有局部时间域共享的帧率：
 
 ```svml
-<program:Clock id="clock" frame-rate="30"/>
-
+<time:Clock id="clock" frame-rate="30"/>
 <pipeline:Normalize id="opening-media" source={opening-video.video}
   video="primary-moving" audio="default" span-authority="video" clock={clock}/>
 <pipeline:Normalize id="answer-media" source={answer-video.video}
   video="primary-moving" audio="default" span-authority="video" clock={clock}/>
 ```
 
-归一化不包含 Script 语义，也不负责转录；它只建立后续语义对齐可以信任的客观媒体事实。
+规范化只建立媒体事实，不包含 Script 含义或节目中的位置。
 
-## 每个 Segment 产生一个 SemanticTake
-
-`whisperx:SemanticTake` 测量一段归一化媒体，并把声学证据与唯一一个作者 Segment 对齐：
+## 在局部时间域上对齐语义
 
 ```svml
-<whisperx:SemanticTake id="opening-semantic" narrative={story}
-  segment={story.segment.opening} media={opening-media.media} language="en"/>
-<whisperx:SemanticTake id="answer-semantic" narrative={story}
-  segment={story.segment.answer} media={answer-media.media} language="en"/>
+<whisperx:Alignment id="opening-alignment" narrative={story}
+  segment={story.segment.opening} media={opening-media.media}
+  domain={opening-media.domain} language="en"/>
+<whisperx:Alignment id="answer-alignment" narrative={story}
+  segment={story.segment.answer} media={answer-media.media}
+  domain={answer-media.domain} language="en"/>
 ```
 
-含有台词的 Segment 必须显式填写 `language`，例如 `en`、`zh` 或 `ko`。使用所选
-WhisperX 服务支持的小写两字母或三字母语言代码。该值原样传递；Qflow 不会根据 Script
-文本或音频自动检测、分流语言。无台词的空 Segment 省略 `language`，直接使用归一化媒体边界。
+每个输出只是 `NarrativeAlignment`：在局部时间域上测得的 Segment 与单词边界。它不包含
+媒体，也不选择 Timeline 位置。没有 Token 的 Segment 省略 `language`，边界直接采用局部
+时间域边界，并且不发起声学请求。
 
-每个输出都自带归一化媒体、Segment 身份、每个作者词语的局部帧窗口以及该 Segment 的全部
-结构锚点：Segment 有两个锚点，每个词也有两个锚点。声学证据只是这一步的实现输入；下游
-组件看到的是完成后的 `SemanticTake`，而不是第二套 evidence 形状的时间结构。
+## 构造绝对 Timeline
 
-## 装配 Timeline
-
-`time:Timeline` 默认顺接已经准备好的 Take，也允许通过 `at` 自由放置，提供完整 Timeline。
-Performance 和 Sound 分别呈现其中的画面和声音：
+Timeline 声明是无环构造图。`end` 必填；每个具名 Instant 或 Window 都自然发布为普通图值：
 
 ```svml
-<space:Canvas id="vertical" width="1080" height="1920"/>
-<space:Frame id="speech-frame" within={vertical}
-  left="0%" top="0%" right="100%" bottom="100%"/>
-
-<time:Timeline id="speech" clock={clock}>
-  <time:Take source={opening-semantic.take}/>
-  <time:Take source={answer-semantic.take}/>
+<time:Timeline id="speech" clock={clock} end="answer.end">
+  <time:Window id="opening" from="start" for={opening-media.extent}/>
+  <time:Window id="answer" from="opening.end" for={answer-media.extent}/>
 </time:Timeline>
-<import as="sound" from="@qflow/sound@1"/>
-<sound:Style id="voice-style"/>
-<sound:Track id="voice" timeline={speech.timeline}>
-  <sound:Use style={voice-style}/>
-</sound:Track>
-<performance:Style id="performance-style" frame={speech-frame} appearance={recipes.media.performance}/>
-  <performance:Track id="performance" timeline={speech.timeline} canvas={vertical}>
-    <performance:Use style={performance-style} during="program"/>
-  </performance:Track>
 ```
 
-| 输出 | 类型 | 含义 |
-|---|---|---|
-| `{speech.timeline}` | Timeline | 全局语义与帧域真相 |
-| `{voice.audio}` | AudioTrack | Sound 对已有 Take 声音的呈现 |
+每个 `for={...extent}` 使用已经解析、但尚未定位的时长。因此，未知长度的生成语音可以在
+普通图求值中撑开 Timeline。`from="opening.end+2s"` 表示空隙，
+`from="opening.end-12f"` 表示重叠，`latest(a.end,b.end)` 可以合并并行分支。纯动效可直接
+声明 `<time:Timeline id="animation" clock={clock} end="8s"/>`。Timeline 不保留媒体或局部
+时间域身份。
 
-Performance 和 Sound 使用同一批素材及源位置。每个 Take 的全局位置由放置起点加局部位置得到。
-第一段省略 `at` 表示从零开始，后续省略则顺接上一段。`at="previous.end+2s"` 留出间隔，
-`at="previous.end-12f"` 表示交叠，也可以写绝对位置。Timeline 的 `end` 默认取所有 Take 的最晚终点；
-`end="content.end+2s"` 留出片尾，`end="30s"` 指定完整时长。位置须落在精确帧上，完整范围须容纳所有 Take。
-零 Take 的 Timeline 需要明确的正时长，空隔不生成占位素材。
+## 独立投影语义
 
-## 消费语义时间
-
-Selection、Moment 与完整 Segment 始终是 Script 中的作者身份。下游组件只接收一次
-Timeline，并在构建确定性 Track 时把这些身份投影成帧：
+把每个 Alignment、完整局部时间域和等长绝对 Window 配对，投影语义证据：
 
 ```svml
-<media-track:Track id="cards" timeline={speech.timeline} canvas={vertical}>
-  <media-track:Item image={card.image} extent={card-extent}
-    during={story.selection.demo} frame={card-frame}
-    appearance={recipes.media.card} motion={recipes.motion.card}/>
-</media-track:Track>
-
-<caption-fine:Track id="captions"
-  document={story.caption}
-  timeline={speech.timeline}
->
-  <caption-fine:Use style={primary-caption}/>
-</caption-fine:Track>
-
-<film:Film id="main" canvas={vertical}
-  timeline={speech.timeline} appearance={recipes.film.vertical}>
-  <film:Track source={performance.visual}/>
-  <film:Track source={voice.audio}/>
-  <film:Track source={cards.visual}/>
-  <film:Track source={captions.track}/>
-</film:Film>
-
-<render:Video id="final"
-  composition={main.composition} timeline={speech.timeline}/>
+<semantic:Projection id="story-time" narrative={story} timeline={speech.timeline}>
+  <semantic:Map alignment={opening-alignment.alignment}
+    domain={opening-media.domain} window={speech.opening}/>
+  <semantic:Map alignment={answer-alignment.alignment}
+    domain={answer-media.domain} window={speech.answer}/>
+  <semantic:Window id="proof" selection={story.selection.proof}/>
+  <semantic:Instant id="claim" moment={story.moment.claim}/>
+</semantic:Projection>
 ```
 
-整段使用 `during={story.segment.answer}`，作者范围使用 Selection，点事件使用 Moment，完整节目使用 `during="program"`。组件统一消费 `timeline={speech.timeline}`。
+显式请求的 `story-time.proof` 与 `story-time.claim` 是普通的绝对 Window 与 Instant。
+语义时间只是一种可选投影来源；
+直接秒数、帧数以及 Timeline 的具名绝对值同样是一等公民。
+
+## 呈现画面与声音
+
+```svml
+<visual:Track id="picture" timeline={speech.timeline}>
+  <visual:Clip id="opening" media={opening-media.media} during={speech.opening}
+    frame={speech-frame} z="10" fit="cover"/>
+  <visual:Clip id="answer" media={answer-media.media} during={speech.answer}
+    frame={speech-frame} z="10" fit="cover"/>
+</visual:Track>
+
+<audio:Track id="mix" timeline={speech.timeline}>
+  <audio:Clip id="opening" source={opening-media.media} during={speech.opening}/>
+  <audio:Clip id="answer" source={answer-media.media} during={speech.answer}/>
+</audio:Track>
+```
+
+不再存在独立的 Performance、Sound 或通用 Presentation 协议。Visual 与 Audio Clip 是
+平等的媒体出现关系。同一份规范化媒体可以同时供两边使用，但选择画面绝不会自动让声音
+进入成片。
 
 ```text
-prepared Takes → Timeline → Performance / project scene → visual ─┐
-                         ├→ Caption / semantic graphics → visual ┤
-                         └→ Sound → audio ───────────────────────┤
-                                                                Film
+SynchronizedMedia + Window ──────────────────────────────→ Visual / Audio occurrence
+
+NarrativeAlignment + LocalDomain + Window ──────────────→ 绝对 Instant / Window
+
+Instant / Window / TemporalExtent DAG ───────────────────→ Timeline
 ```
+
+组件最终只消费 Timeline 与绝对 Instant/Window。领域投影在上游发布这些值；通用组件的
+Surface 不接受 Script 对象，也不携带投影器。

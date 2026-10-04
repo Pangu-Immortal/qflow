@@ -7,10 +7,10 @@ that picture and sound should follow. It also covers measured delivery and wordl
 
 [Source syntax](../production/source-syntax.md) covers the surrounding imports, references, Recipes
 and Runs; [Tracks](../production/tracks.md) covers the consumers of Script meaning.
-[Timeline authoring](../production/timeline.md) places Takes, allows gaps and overlaps, and declares
+[Timeline authoring](../production/timeline.md) places local temporal domains, allows gaps and overlaps, and declares
 the complete work, including pure MG with no Script.
 [Media preparation](../production/media.md) explains connecting actual footage to a Segment, and
-[Runs](../production/runs.md) explains targeting material and reusing produced Takes.
+[Runs](../production/runs.md) explains targeting material and reusing produced media, domains and alignment evidence.
 
 ## Script is the target's sole verbal authority
 
@@ -21,8 +21,8 @@ the purpose of a passage, but the adopted wording appears in Source only once.
 
 Choose Script structure from the thought being expressed and the performance carrying it:
 
-- a **Segment** groups a performable passage around its thought, delivery and action; its accepted
-  media can become one SemanticTake;
+- a **Segment** groups a performable passage around its thought, delivery and action; accepted media
+  can be aligned to it without becoming a compound semantic-media object;
 - a **Role Cue** assigns a spoken turn to a performer and carries that label into the model's dialogue;
 - **Dual Text** gives one authored unit separate display and pronunciation text;
 - `||` says that one on-screen **Caption Cue** hands off to the next after a complete Alignment Unit;
@@ -136,8 +136,9 @@ Script also represents passages without speech:
 ```
 
 `empty` is an ordinary Segment name; a name such as `product-detail` can express the passage's role.
-No words does not mean no semantics: the Segment retains its identity and start/end anchors. Its
-associated normalized media determines the duration, and its SemanticTake has an empty word array.
+No words does not mean no semantics: the Segment retains its identity. Associated normalized media
+provides a local duration, and its NarrativeAlignment can have an empty unit array while still mapping
+the Segment boundaries.
 The same Timeline and Track timing vocabulary apply to a wordless passage or an entire
 piece made from prepared media. The empty tag itself declares neither a zero-length interval nor a duration.
 For an interval made only of component animation, use Timeline placement and extent instead; it
@@ -164,15 +165,15 @@ A chat animation, diagram or kinetic-text piece can instead be drawn entirely by
 messages and changes still carry meaning; the author chooses when the audience receives them and
 how long they need to read. Keep content and event timing together in the owning component's Source.
 An event can have an identity such as `question` or `reveal` and an authored `at="2.6s"` without
-inventing spoken words or a media-backed Segment. Film time is declared through a Timeline with an explicit end and zero Takes;
+inventing spoken words or a media-backed Segment. Film time is declared through a Timeline with an explicit end;
 [composition and rendering](../production/rendering.md#compose-an-authored-animation) shows the form.
 
 Choose timing per relationship, not once for the whole video. A spoken Moment can introduce a chat
 scene whose messages then unfold at authored intervals. Conversely, an authored animation can reveal
-one item on a spoken Moment. A projected expression such as `instant="moment.cue + 12f"` with
-`moment={story.moment.intro}` keeps an interval relative to that spoken event. The event's trigger
-and its entrance duration are different choices:
-`at={story.moment.answer}` locates the answer; ten frames can give its arrival a particular character.
+one item on a spoken Moment. Ask the Narrative projection to publish that Moment as an absolute
+Instant, optionally with an explicit offset, then pass the result to the component. The event's
+trigger and its entrance duration are different choices: `at={story-time.answer}` locates the
+answer; ten frames can give its arrival a particular character.
 
 ## Measure before choosing durations
 
@@ -217,8 +218,8 @@ energy while finding a performable shape, then measure the affected wording agai
 applies this judgment to the selected model's request range.
 
 Measurement balances the intended speaking density and sizes generation; it supplies no timeline
-anchors. Once a Take is accepted, normalize it, align its actual speech to its Script Segment, and
-assemble the resulting SemanticTakes into the Timeline. The literal duration answers how much
+anchors. Once a generated clip is accepted, normalize it, align its actual speech to its Script Segment,
+construct an equal-length Timeline Window and map the alignment through that domain/Window relation. The literal duration answers how much
 media to request. The aligned words answer where Caption, B-roll, MG, and Effects belong in that actual
 media. Alignment measures real word positions inside that media envelope; it does not reproduce an
 estimated distribution of words.

@@ -145,7 +145,7 @@ Comments is a review view of the editable work; the exported file is the deliver
 
 Alongside the delivered video, a brief look at its editable production can make the handoff more
 tangible. When Studio is readily accessible to the user, open the finished work and share the session
-URL. Use a Run that reuses the completed media and SemanticTakes while keeping its Tracks and Recipes
+URL. Use a Run that reuses the completed normalized media, local domains and alignment evidence while keeping its Tracks and Recipes
 available for editing. Reuse a suitable existing session or launch one as described above.
 
 Point out something specific to this piece: a reveal tied to a word, the Caption styling, or a
@@ -163,7 +163,7 @@ include when the user wants to continue editing on another machine.
 | Timeline | Semantic Segments, Selections and Moments, plus the component-projected Track entities and their visible intervals, materials or event lanes. A rectangle may describe occupancy, activation or persistent visibility; read the component's meaning. |
 | Inspector | With nothing selected, project, Canvas, time and Run facts. For a selected entity, its declared read-only facts and adjustable fields, organized under Where, When and How where applicable. |
 | Tasks | One card per Build, grouped into ongoing and finished. Active status and progress come from the selected Runtime; completed, failed and cancelled Builds come from project Results. Cards retain the source Run, times and any failure or attention reason. |
-| Artifacts | Image, video and audio file Outputs from project Results, including those already published by ongoing Builds. Use the sidebar to choose all media, videos, images or audio. View media on a Build opens its Outputs; opening the Artifacts tab returns to project media. Composite Outputs such as normalized media and Semantic Takes stay intact and do not add their internal files to this gallery. Click a card to view it in the central preview; video and audio have playback and a time slider. Back to composition returns to the existing composition position. Previewing a file does not select it as a Candidate in the Run. |
+| Artifacts | Image, video and audio file Outputs from project Results, including those already published by ongoing Builds. Use the sidebar to choose all media, videos, images or audio. View media on a Build opens its Outputs; opening the Artifacts tab returns to project media. Structured Outputs such as normalized media and NarrativeAlignment stay intact and do not add their internal files to this gallery. Click a card to view it in the central preview; video and audio have playback and a time slider. Back to composition returns to the existing composition position. Previewing a file does not select it as a Candidate in the Run. |
 
 A declared lane stays one row even when items overlap. Later items cover earlier ones at equal
 stacking order; selecting an item brings its full rectangle forward within that lane. This changes
@@ -218,16 +218,18 @@ through the selected Style. It edits the shared font declaration; its weight and
 available in the chosen family. A local font continues to use its exact file. A project component
 can offer its own font or preset choices through Companion fields.
 
-Timeline's placed Takes and complete extent provide reference information. Edit their `at` and
-`end` declarations in Source when their placement should change. Presentation handles edit Uses
-or component events; they do not move Takes or adjust Canvas dimensions implicitly.
+Timeline's declared Instants, Windows and complete extent provide reference information. Edit their
+`at`, `from`, `until`, `for` and `end` declarations in Source when temporal construction should change.
+Edit the Timeline declaration or domain projection declaration that owns a temporal relationship.
+Clip editing handles its source occurrence; a component Companion handles its own Sources, Uses or
+events. Neither rewrites semantic projection or adjusts Canvas dimensions implicitly.
 
 Timing edits follow the authored relationship. A direct Selection or Moment edits that identity
 in Script; a quoted expression edits its local clock value or offset; a duration changes independently.
 [Timing and edit behavior](timing.md#choose-what-a-later-edit-changes) gives the complete forms,
 affinity choices and shared-consumer consequences. Marker moves preserve unrelated prose whitespace. With unchanged spoken tokens and identities,
-new marker references can use the existing Take's anchor times. [Reuse boundaries](authoring.md#reuse-produced-work-explicitly)
-explain when to retain prepared Takes and when to retain only their upstream media.
+new marker references can use the existing alignment evidence. [Reuse boundaries](authoring.md#reuse-produced-work-explicitly)
+explain when to retain media, its local domain, alignment evidence or only an upstream generated file.
 
 A successful parameter or timeline edit saves the owning Source and recompiles the selected Run
 for the view. Rejected edits retain the accepted Source and values. Result renaming instead updates

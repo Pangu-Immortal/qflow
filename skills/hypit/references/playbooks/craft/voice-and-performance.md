@@ -12,11 +12,12 @@ spoken words acquire local timing through semantic preparation. Visible performa
 picture and sound together; audio-only performance carries the passage while other contributions
 supply its picture.
 
-Timeline assembly places the prepared Take within the complete work, ordinarily after the previous
-Take, or at an authored position.
+Timeline construction uses the prepared media's Extent to create an absolute Window within the
+complete work, ordinarily after the previous passage, or at an authored position.
 The work can also contain graphics-only passages before, between or after those performances.
-[Timeline authoring](../../production/timeline.md) owns the exact
-SemanticTake assembly and projection mechanism.
+[Timeline authoring](../../production/timeline.md) owns the exact temporal DAG;
+[semantic projection](../../production/timing.md) maps separate NarrativeAlignment evidence through
+its complete local domain and equal-length Window.
 
 For spoken work, ask **who is speaking this Segment?** The selected visible performance carries
 words, mouth movement, gesture, gaze, delivery, picture, and sound together.
@@ -30,30 +31,31 @@ and Effects are authored against the time that performance established. If an ed
 performance's actual length, prepare and align the edited media before assembly.
 
 A wordless Segment can identify a real performed passage, such as a dance or reaction. Its prepared
-media supplies start/end boundaries without spoken words. A graphics-only interval can instead
-occupy the Timeline directly, with no Take. Choose from the content the passage actually uses.
+media supplies a local domain without spoken words. A graphics-only interval can instead contribute
+an authored Span to Timeline with no media. Choose from the content the passage actually uses.
 
 ## Keep the performance role separate from the picture
 
 A-roll identifies a performance's role in the work. Its accepted material, Script relationship and
-Timeline placement persist while the author changes its visual use. The picture can lead the frame,
+Timeline Window persist while the author changes its visual use. The picture can lead the frame,
 share space, appear more than once, become part of a diagram or leave the picture entirely. A large
 app recording can lead attention while a small presenter supplies the passage's words and timing.
-Several such changes can happen within one Take; a visual treatment can also continue across Takes.
+Several such changes can happen within one source Window; a visual treatment can also continue
+across several sources.
 
 The covering B-roll may even show the same person doing a silent lifestyle action. Seeing a person
-while hearing words does not by itself make that picture the speaking Take or create a new speech
-source. Sound presents the placed performance's audio, while the visual contribution chooses what
-to show. The same source clip can also serve as an independently timed replay or example elsewhere.
+while hearing words does not by itself make that picture the speaking source or create a new speech
+source. An Audio Clip plays the explicitly declared performance audio, while a Visual Clip
+chooses what to show. The same source clip can also serve as an independently timed replay or example elsewhere.
 Its role follows that use; size, crop, transparency and the presence of a face do not establish it.
 
-Follow the relationship the picture needs: [Performance](../../production/performance.md) and project
-scenes can present the current Timeline footage; [Media](../../production/media-presentation.md)
-receives independently supplied material and playback choices. A change of emphasis can be a direct
+Follow the relationship the picture needs: a [Visual Clip](../../production/visual-clips.md) places
+one source occurrence, while a project scene can coordinate several materials and events. A change
+of emphasis can be a direct
 cut, a held arrangement or a continuous motion. Decide from the idea and viewing rhythm. For a
 continuous move, retain the source playback position while directing the viewport's motion; for a
 direct cut, make the two intended states meet at the chosen event. Speech remains independently
-connected through [Sound](../../production/sound.md).
+connected through an [Audio Clip](../../production/audio-clips.md).
 
 The [presenter-led explainer guide](../formats/presenter-led-explainer.md) develops the whole-work
 relationship among performance, demonstration and graphics. [Graphic composition](graphic-compositions.md) owns
@@ -73,16 +75,16 @@ the listening rhythm. For ordinary creator speech, podcast turns, interviews and
 makes a direct join between the prepared Segment Takes a practical starting point. Visual coverage
 and effects can still cross that seam without changing the underlying speech time.
 
-Deliberate interruption, overlapping dialogue or musical phrasing can use the Timeline's explicit
-Take positions. [Timeline authoring](../../production/timeline.md) supports gaps and overlaps directly.
+Deliberate interruption, overlapping dialogue or musical phrasing can use explicit Window positions.
+[Timeline authoring](../../production/timeline.md) supports gaps and overlaps directly.
 The sources retain their local timing; a crossfade or other coordinated picture treatment belongs
-to the visual component owning that behavior. Sequential placement remains the concise ordinary
+to the visual component owning that behavior. Sequential Window construction remains the concise ordinary
 choice for creator speech.
 
 ## Give a recurring person one accepted voice
 
 When the intended work retains a person's recorded delivery, prepare that passage and align its
-actual sound to Script; its picture, if retained, is available to Performance. A supplied recording
+actual sound to Script; its picture, if retained, is available to Visual Clip. A supplied recording
 may instead guide a new performance or provide a short Voice Reference. Voice Design can make such
 a reference when a new performance needs one and none was supplied; Voice Clone can then perform
 independently narrated lines from Script. The intended use of the recording, not its mere presence,
@@ -147,8 +149,9 @@ Audio-only A-roll is useful when a Segment is constructed without an on-camera s
 performance: a desktop point-of-view demonstration, a narration-led montage, a pure MG explanation,
 or a product-explanation passage inside an otherwise presenter-led work. Voice Clone
 uses the person's existing Voice Reference and the Segment's actual Script to produce that passage.
-The resulting audio-only SemanticTake carries the A-roll role even though it contributes no picture;
-Media Track, Typography, MG, or another visual Track supplies what the viewer sees.
+The resulting audio is normalized and aligned like any other performed media. An Audio Clip
+Source pairs that ordinary media with its exact Window while Visual Clips, Typography, MG, or another visual Track supplies what the
+viewer sees; no compound audio-only semantic object is required.
 
 Choose audio-only A-roll because the passage itself is independently narrated, not merely because
 B-roll or graphics happen to hide a visible performance. Use Voice Design to establish the person's

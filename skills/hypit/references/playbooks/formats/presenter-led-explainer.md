@@ -27,17 +27,19 @@ number or comparison helps the viewer read that demonstration.
 
 ## Compose the performance and its presentation independently
 
-A Take supplies accepted performance, media and local word timing. Place it on the complete Timeline;
-the picture's arrangement can change several times during that same Take. A new layout usually calls
-for a presentation change, while a different spoken line or acted beat may call for new material.
-One scene may also develop across several Takes. Spoken segment boundaries do not prescribe scene
-boundaries or camera cuts.
+A generated clip supplies accepted performance media. Normalization supplies its local domain and
+Extent; alignment supplies local word timing; an equal-length Window locates it in Timeline and lets
+the projector publish absolute meaning. The picture's arrangement can change several times during
+that same Window. A new layout usually calls for a
+presentation change, while a different spoken line or acted beat may call for new material. One
+scene may also develop across several source occurrences. Spoken Segment boundaries do not prescribe
+scene boundaries or camera cuts.
 
-Use [Performance](../../production/performance.md) for presentation of the Timeline's existing visual
-material and [Media](../../production/media-presentation.md) for independently supplied material.
+Use [Visual Clips](../../production/visual-clips.md) for both time-bearing footage and independently
+supplied material.
 Treat the accepted footage as available material for the changing picture: it can fill a view,
 appear in several views, join a comparison or disappear while the argument continues. A project
-scene can consume its Timeline mapping alongside other inputs when their layout or action belongs
+scene can consume its ordinary media and Window alongside other inputs when their layout or action belongs
 together. Let visual emphasis follow who or what currently carries the idea, including returning
 to the presenter for a reaction or direct address.
 
@@ -49,7 +51,7 @@ rhythm. Full-frame, inset and cutout describe appearances, not separate producti
 
 Speech sound remains an independently connected contribution when MG covers the presenter. Genuinely
 independent narration uses the [narration-led relationship](narration-led-demo.md). A montage or silent
-ending can occupy ordinary time outside any Take: the complete Timeline has room for both semantic
+ending can occupy ordinary authored time: the complete Timeline has room for both semantic
 anchors and independently authored events. No invented performance is needed to create that room.
 
 ## Direct material for its intended uses
@@ -150,7 +152,7 @@ full picture uses the supplied media/Result archive. The default Run reuses that
 | --- | --- |
 | How did the design change, and what made the revisions useful? | [Treatment and craft notes](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/productions/explainer/CRAFT-NOTES.md) |
 | How does a spoken phrase become a scene event? | [Script](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/productions/explainer/authors/script.svml) and [Main Source](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/productions/explainer/authors/main.svml) |
-| How do existing footage, a moving viewport and independent graphics coexist? | [Opening system and Performance Styles](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/packages/opening-system/README.md) |
+| How do existing footage, a moving viewport and independent graphics coexist? | [Opening system and visual presentation](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/packages/opening-system/README.md) |
 | What belongs inside a coordinated demonstration? | [Scene map, inputs and internal modules](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/packages/web-scenes/README.md) |
 | How can Caption stay independently editable? | [Project Caption package](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/packages/single-line-captions/README.md) |
 

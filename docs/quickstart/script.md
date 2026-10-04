@@ -128,7 +128,7 @@ as `<API|...>` supplies no timed correspondence and is invalid.
 
 `||` is the **Caption Cue Break** syntax. It records a boundary between complete Alignment Units;
 it cannot appear inside Dual Text or split an N:M unit. Cue timing is still obtained later by
-joining the CaptionDocument to the Timeline.
+projecting its peer NarrativeCaptionBinding through explicit Narrative time.
 
 ### Spaces and spelling
 
@@ -156,7 +156,7 @@ Caption Style; attributes do not split, wrap or retime a Dual Alignment Unit.
 
 ### CaptionDocument vocabulary
 
-`CaptionDocument` is the Script-owned caption truth. Its named parts are:
+`CaptionDocument` is a Caption-owned display value that Script can produce from the same source. Its named parts are:
 
 - **Display Word** — one rendered lexical surface, including display punctuation;
 - **Alignment Unit** — the smallest display-to-speech correspondence, including N:M Dual Text;

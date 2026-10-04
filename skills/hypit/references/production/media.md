@@ -1,7 +1,7 @@
 # Preparing media for a production
 
 Read this when admitting files, connecting generated media, choosing streams, or editing a clip
-before using it in a component or a model reference. [Media presentation](media-presentation.md)
+before using it in a component or a model reference. [Media presentation](visual-clips.md)
 owns independent picture placement and playback; [Tracks](tracks.md) routes other content relationships.
 For a source video at a link, read [video download](video-downloads.md).
 For acquiring website screenshots, page recordings or local HTML graphics, read
@@ -21,14 +21,14 @@ Keep source facts, preparation and presentation distinct:
 | A model reference | The exact image, video or audio input accepted by that model's Surface; normalization is not a universal prerequisite. |
 
 Files, generated Outputs and earlier Results are sources of these values. A reference need not
-appear in the film. A video containing a person is not automatically a SemanticTake; the author
-establishes that relationship when it performs a Script passage. [Runs](runs.md) owns explicit Result
+appear in the film. A video containing a person is not automatically semantic; the author establishes
+that relation by aligning one Script Segment to its local domain. [Runs](runs.md) owns explicit Result
 reuse. [Image operations](image-operations.md) owns still-image preparation.
 
-Normalization establishes moving media's frame clock, local duration and selected picture/audio
-streams. A SemanticTake adds one Script passage and its local word/boundary positions.
-[Timeline assembly](timeline.md) then places that Take in the work. Independent material goes to its
-own component without a SemanticTake. Its presentation still uses the same Timeline for event times.
+Normalization establishes moving media's frame clock, local domain and selected picture/audio
+streams. `NarrativeAlignment` separately adds one Script Segment's local word/boundary positions.
+[Timeline construction](timeline.md) may consume the prepared Extent. A domain projector may consume
+the local domain with an equal-length Timeline Window. Neither operation changes the media value.
 
 ## Files and generated Outputs
 
@@ -62,14 +62,14 @@ qflow media cut assets/voice.wav --keep 0.3:4.1 --keep 4.6:9.2 --to assets/narra
 The first form retains one interval; repeated `--keep` joins selected parts of the *same* recording.
 The command keeps existing audio and picture together and can write an ordinary MP4 or audio-only
 WAV. Import that output as `asset:Video` or `asset:Audio` for its intended use. If the edited
-delivery is a Script performance, normalize and align that result as the SemanticTake below.
+delivery is a Script performance, normalize it and align its local domain as described below.
 Independent footage can instead enter Media or another visual component, with source sound included
 when the work needs it. A file cut does not choose Script or Segment boundaries. The installed Video
 CLI README owns exact options and output behavior. `qflow transcribe` accepts either audio or video
 when a transcript helps inspect the recording; its word times refer to that input file, while a
 retained edited performance receives its own semantic alignment in the Build.
 
-An image reference can enter a model directly. A still placed by Media Track needs its actual
+An image reference can enter a model directly. A still placed as a Visual Clip needs its actual
 IntrinsicExtent as well. Inspect its dimensions with `qflow media probe <file>` and declare them
 with `space:Extent`; [spatial layout](spatial.md) explains extent versus destination Frame.
 
@@ -82,10 +82,9 @@ so their lengths and later playback can be combined precisely.
 The following excerpt prepares a performance and an independent soundtrack:
 
 ```svml
-<import as="program" from="@qflow/program-space@1"/>
 <import as="pipeline" from="@qflow/media-pipeline@1"/>
 
-<program:Clock id="clock" frame-rate="30"/>
+<time:Clock id="clock" frame-rate="30"/>
 <pipeline:Normalize id="performance-media" source={performance} clock={clock}
   video="primary-moving" audio="default" span-authority="video"/>
 <pipeline:Normalize id="music-media" source={music} clock={clock}
@@ -110,62 +109,45 @@ mix decisions in [Audio Track and sound mix](../playbooks/craft/sound-mix.md).
 
 ## Associate a performance with Script
 
-For a performance-led work, including pure A-roll and short drama, prefer this path even when the
-picture needs no additional graphics. Script preserves the performed wording and meaningful
-passages; semantic preparation lets later presentation and revisions use their actual times.
-
-For an already declared Script and prepared spoken performance:
+For performance-led work, Script preserves wording and meaningful events while alignment locates
+them on the accepted media's local domain:
 
 ```svml
 <import as="whisperx" from="@qflow/whisperx@1"/>
 
-<whisperx:SemanticTake id="opening-semantic" narrative={story}
-  segment={story.segment.opening} media={performance-media.media} language="en"/>
+<whisperx:Alignment id="opening-semantic" narrative={story}
+  segment={story.segment.opening} media={performance-media.media}
+  domain={performance-media.domain} language="en"/>
 ```
 
-Set `language` to this Take's explicit spoken language code, such as `ko` for Korean. The selected
-WhisperX service chooses its language-specific alignment model; ASR size and local resource
-preparation belong to the Runtime Profile. Follow [local tools](../environment/local-tools.md)
-when preparing a new language. The installed `packages/whisperx/README.md` owns the exact language
-expression and preparation examples.
+Set `language` to the performed language supported by the selected WhisperX Endpoint. WhisperX
+supplies timed evidence; deterministic alignment associates it with Script. The result
+`opening-semantic.alignment` is `NarrativeAlignment`: Segment and Token boundaries on the named local
+domain. It carries no media and no Timeline position.
 
-WhisperX supplies timed speech evidence; alignment locates the authored Script in that evidence.
-Script remains the wording authority, and this step establishes where its words occur in the
-performance. The result `opening-semantic.take` contains the same media and that Segment's local
-timing. [Timeline assembly](timeline.md) places Takes sequentially or at authored starts and
-translates their local positions into Program time.
-Use the performed language supported by the selected package and Endpoint.
-
-Audio-only A-roll follows the same path with audio-only media. Its final speech can be a supplied
-recording, or Voice Clone can produce it from the Segment's Script and the person's Voice Reference.
-Normalize that audio with
-`video="none"`, `audio="default"` and `span-authority="audio"`, then align it to the same Segment.
-The resulting SemanticTake publishes semantic time and sound through Timeline assembly without inventing
-a visual performance; the work's Media, Typography or MG Tracks supply the picture.
-
-## Empty Segments use their media boundaries
-
-An ordinary Script Segment such as `<empty></empty>` can carry a passage without words. Its prepared
-media gives it a duration, so the resulting SemanticTake has the Segment's start/end Anchors and no
-timed Tokens. It enters the same Timeline assembly as a spoken Take. An interval with no performance
-material can instead be left open by Timeline placement or extent, with graphics authored there directly.
-
-The semantic Surface maps an empty Segment directly to its prepared media domain:
+Combine the alignment, its complete local domain and the equal-length Window in one explicit
+semantic projection:
 
 ```svml
-<whisperx:SemanticTake id="pause" narrative={story}
-  segment={story.segment.pause} media={pause-media.media}/>
+<time:Timeline id="program" clock={clock} end="opening.end">
+  <time:Window id="opening" from="start" for={performance-media.extent}/>
+</time:Timeline>
+<semantic:Projection id="story-time" narrative={story} timeline={program.timeline}>
+  <semantic:Map alignment={opening-semantic.alignment}
+    domain={performance-media.domain} window={program.opening}/>
+</semantic:Projection>
 ```
 
-This performs boundary materialization without a transcription request because the Segment has no
-Tokens. Action, music or visual rhythm can determine the media duration. The ordinary SemanticTake
-enters Timeline assembly alongside spoken Takes. This supplies Segment boundaries, not automatic
-within-shot action detection. An event such as a silent door opening needs its own observed timing
-if another component must respond to it. A simple material edit does not require inventing a Segment.
+After projection, picture and sound use the ordinary normalized media with explicit absolute Windows.
+They do not retain or inspect this semantic relation. Audio-only A-roll uses the same projection chain
+without a dummy picture. A wordless Segment can align directly to its local
+domain boundaries without transcription; it contributes the real Segment start/end identities and
+no Tokens. A silent action inside that passage needs its own authored or measured event if another
+component must respond to it.
 
 ## Give a still a duration when that is its role
 
-A still B-roll Item already occupies an authored Window. To make one or several images into a
+A still B-roll Clip already occupies an authored Window. To make one or several images into a
 time-bearing clip, use StillVideo:
 
 ```svml
@@ -186,7 +168,7 @@ is assigned by the downstream Source relationships just like any other video.
 ```svml
 <media:Transform id="edited" source={performance-media.media}>
   <media:Trim tail="0.25s"/>
-  <media:Retime rate="1.05" pitch="preserve"/>
+  <media:Retime rate="1.05"/>
 </media:Transform>
 <media:ExtractAudio id="voice-reference" source={edited.video} audio="default"/>
 <media:ExtractFrame id="frame-reference" source={edited.video}
@@ -194,7 +176,7 @@ is assigned by the downstream Source relationships just like any other video.
 ```
 
 Transform applies its operations in order. These Outputs are BlobArtifacts; normalize an edited
-clip again when feeding it into a prepared-media input, and align the edited performance when its
+clip again when feeding it into a prepared-media input, and realign the edited performance when its
 timing changed. Extracted audio or a frame can directly feed a compatible model reference port.
 `ExtractFrame` also accepts `first`, `frame:<index>` and `time:<seconds>`.
 
@@ -206,16 +188,14 @@ and `@qflow/background-removal`; select the operation that matches the asset's i
 ## Keep original and processed material explicit
 
 A crop, background removal or flattened composite produces a selected asset. Normalization prepares
-that output; it does not make original pixels recoverable through a different presentation Style.
-A transparent video can enter the same SemanticTake/Timeline/Performance path as an opaque video.
-A circular clip or rounded Frame instead masks a presentation geometrically; it does not remove
-the subject's background from the underlying bytes.
+that output; it does not make original pixels recoverable through another presentation Style. A
+transparent video enters the same normalization and presentation paths as opaque video. A circular clip or
+rounded Frame instead masks presentation geometry; it does not remove the source background.
 
-If the whole performance should use a processed picture, prepare it before the SemanticTake and
-place that Take. When both the original and processed picture appear, keep both outputs and bind the
-one each presentation needs. For example, Timeline can hold the cutout while an opening Media Item
-explicitly uses the original. [Performance](performance.md#choose-the-picture-actually-held-by-the-timeline)
-explains that presentation boundary.
+When original and processed pictures both appear, retain both and bind each as an explicit media
+input. If a picture-only transformation preserves the same frame correspondence, a project
+preparation component may reuse the accepted local domain and alignment while publishing a new
+visual source. This is an authored relation, never automatic variant inheritance.
 
 For a moving portrait, the installed `@qflow/volcengine-matting` package exposes `Portrait` with
 `source={performance.video}` and publishes `cutout.video`; query its vocabulary and README for
@@ -233,11 +213,8 @@ preserves input alpha, while its Transform emits opaque MP4. When using that Tra
 or retiming a cutout performance, perform it before matting. Read the selected operation's output
 behavior rather than assuming every video operation preserves transparency.
 
-A picture-only operation can preserve the accepted local timing when frames still represent the
-same source instants. A project preparation component may explicitly combine that picture with the
-accepted Take's audio and evidence. That is an authored computation with both inputs, not automatic
-variant inheritance. Trimming, retiming or replacing the performance changes the relationship and
-requires timing prepared for that result. [Reuse boundaries](authoring.md#reuse-produced-work-explicitly)
+Trimming, retiming or replacing the performance changes the temporal relation and requires a new
+local domain and timing prepared for that result. [Reuse boundaries](authoring.md#reuse-produced-work-explicitly)
 explain which completed Output can remain selected.
 
 Choose source proportions and framing for the actual footage the work needs. A full-frame spoken

@@ -56,7 +56,12 @@ Output paths are package vocabulary, not inferred from the element's tag:
 - an imported `media:Image id="logo"` publishes `{logo}`;
 - `gpt:Image id="portrait"` publishes `{portrait.image}`;
 - `pipeline:Normalize id="prepared"` publishes `{prepared.media}`;
-- `time:Timeline id="speech"` publishes `{speech.timeline}`. Performance and Sound separately publish the picture and sound contributions selected in Film.
+- `time:Timeline id="speech"` publishes `{speech.timeline}`;
+- `typo:Flow id="title"` publishes `{title.occurrence}` and `{title.visual}`;
+- `visual:Track id="picture"` publishes `{picture.visual}` and `{picture.program}`;
+- `audio:Track id="mix"` publishes `{mix.audio}`.
+
+Visual and Audio Tracks separately publish the picture and sound contributions selected in Film.
 
 Inspect `qflow vocabulary` for the actual Surface's exports and use the published path it reports.
 Public bindings can be authored Records or realizable Logical Outputs. Script,
@@ -153,8 +158,9 @@ are not executed.
 
 To reuse a prior Output, declare a `build-record` Candidate and select it with `satisfy`; the prior
 Result name and the current Logical Output name can differ. A raw MP4 file is a Blob Artifact, not
-an aligned SemanticTake. Select Candidates by their real nominal Type and creative meaning, retaining
-normalization or alignment where still needed. [Runs](runs.md) explains complete Candidate forms,
+normalized media or alignment evidence. Select Candidates by their real nominal Type and creative
+meaning, retaining normalization, local temporal-domain recovery or alignment where still needed.
+[Runs](runs.md) explains complete Candidate forms,
 Fragment inputs and exports; [Authoring](authoring.md) owns the creative reuse decisions;
 the installed Fragment package owns its own input and export names.
 

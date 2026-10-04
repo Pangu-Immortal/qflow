@@ -91,48 +91,50 @@ The following excerpt assumes the named Fonts, layout Frames, Timeline and Recip
 
 ```svml
 <import as="copy" from="@qflow/text@1"/>
-<import as="typo" from="@qflow/typography-track@1"/>
+<import as="typo" from="@qflow/text-fine@1"/>
 
 <typo:Style id="headline-style" recipe={look.text.title} font={headline-font}>
   <typo:Fill color="#F1E7D8"/>
 </typo:Style>
 <copy:Value id="headline">A useful idea, clearly shown.</copy:Value>
-<typo:Track id="titles" timeline={speech.timeline}>
-  <typo:Area id="opening-title" content={headline} placement={title-frame}
-    style={headline-style} during={story.selection.proof}/>
-</typo:Track>
+<typo:Flow id="opening-title" timeline={speech.timeline} content={headline}
+  within={title-frame} style={headline-style} z="20" align="center"
+  during={speech.opening}/>
 ```
 
-Include `titles.track` in Film. The Style supplies typography, Paint and layer order; the item
-supplies content, placement and time. Use `during="program"` for a title that lasts throughout the
-program, or the component's declared Window forms for a shorter appearance.
+Include `opening-title.visual` in Film. The Style supplies reusable typography and Paint; the
+occurrence supplies content, placement, form-specific layout, layer order and absolute time. Use `during="timeline"` for a title that
+lasts throughout the program, a named Timeline Window such as `speech.opening`, or the
+component's direct `at/for`, `until/for` and `start/end` forms for a shorter appearance. A semantic
+or musical domain projects its own evidence to a Window before a fine-text occurrence consumes it.
 
 For the example above, `look.text.title` can be the Recipe
-`text.title { size: 54; weight: 400; stack-order: 20; }`, matching the selected headline face.
+`text.title { size: 54; weight: 400; }`, matching the selected headline face. The direct `z="20"`
+remains visible at the occurrence where it affects composition.
 
 | Placement | Input and use |
 | --- | --- |
 | Point | A SpatialPoint anchoring text whose box follows its content |
-| Area | A SpatialFrame for wrapping and fitting text in a bounded region |
+| Flow | A SpatialFrame for wrapping and fitting text in a bounded region |
 | Path | A SpatialPath for text following an authored curve |
 
-Query `qflow vocabulary @qflow/typography-track --tag Style` for the Recipe properties and
-`--tag Track` for placement, content and motion forms. [Spatial layout](spatial.md) explains the
+Query `qflow vocabulary @qflow/text-fine --tag Style` for the Recipe properties and
+`--tag Flow`, `--tag Point` or `--tag Path` for placement, content and motion forms. [Spatial layout](spatial.md) explains the
 geometry these inputs carry.
 
 ## Rich text and motion
 
-An item can take graph Text through `content={...}`, or own an inline document with `typo:P`,
-`typo:Span` and `typo:Break`. For example, inside an Area:
+An occurrence can take graph Text through `content={...}`, or own an inline document with `typo:P`,
+`typo:Span` and `typo:Break`. For example, inside a Flow:
 
 ```svml
 <typo:P>Made for <typo:Span style={accent-style}>this moment</typo:Span>.</typo:P>
 ```
 
 A paragraph or Span Style replaces that run's complete typography and Paint, including its font
-and size. The outer item continues to supply placement and layer order.
+and size. The outer occurrence continues to supply placement and layer order.
 
-Typography Motion can act on the item or stagger words and graphemes. Use the installed Motion
+Typography Motion can act on the occurrence or stagger words and graphemes. Use the installed Motion
 vocabulary for its frame offsets and normalized sequence positions. For a new speech-text layout
 or scheduling relationship, [Caption authoring](caption-authoring.md) explains creating a family
 that consumes the existing Caption document and semantic timing.

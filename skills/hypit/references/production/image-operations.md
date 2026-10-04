@@ -5,7 +5,7 @@ cut out before it becomes a model reference or a Track item. [Image direction](.
 owns what the image should communicate; [spatial layout](spatial.md) owns Canvas, Frame and fit.
 
 An image operation publishes another ordinary image Output. The resulting image can feed Seedance,
-a Media Track, another image operation, or any compatible project component. The operation belongs
+a Visual Clip, another image operation, or any compatible project component. The operation belongs
 in Source when that transformation is part of the reproducible production relationship.
 
 ## Flatten a fixed still-image arrangement
@@ -21,12 +21,12 @@ Declare the Canvas and every rectangular destination explicitly:
 <import as="compose" from="@qflow/image-compose@1"/>
 
 <space:Canvas id="comparison-canvas" width="2048" height="1024"/>
-<space:Frame id="before-panel" within={comparison-canvas}
+<space:Frame id="before-panel" within={comparison-canvas.bounds}
   left="0%" top="0%" right="50%" bottom="100%"/>
-<space:Frame id="after-panel" within={comparison-canvas}
+<space:Frame id="after-panel" within={comparison-canvas.bounds}
   left="50%" top="0%" right="100%" bottom="100%"/>
 
-<compose:Image id="comparison" canvas={comparison-canvas} background="#EEEAE2FF">
+<compose:Image id="comparison" canvas={comparison-canvas.canvas} background="#EEEAE2FF">
   <compose:Layer source={before.image} frame={before-panel} fit="contain"/>
   <compose:Layer source={after.image} frame={after-panel} fit="contain"/>
 </compose:Image>
@@ -77,7 +77,7 @@ Use Background Removal when the next composition needs a still subject without i
 <remove:Background id="presenter-cutout" source={portrait.image}/>
 ```
 
-`{presenter-cutout.image}` is an image with transparency, ready for a Media Track, image composition,
+`{presenter-cutout.image}` is an image with transparency, ready for a Visual Clip, image composition,
 or another compatible consumer. The Runtime Profile chooses the Endpoint that performs the removal;
 the Source records only the requested visual relationship.
 
@@ -93,7 +93,7 @@ explains video matting, operation order, retained originals and the processed pi
 
 ## Keep operation and presentation distinct
 
-Composing or correcting image bytes changes the reusable image itself. A Media Track instead places
+Composing or correcting image bytes changes the reusable image itself. A Visual Clip instead places
 an image in a Frame for a Window and may animate that presentation. Choose the former when several
 downstream consumers should receive the same prepared pixels; choose the latter when the change
 belongs only to how this video presents the image.

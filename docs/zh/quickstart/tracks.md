@@ -3,8 +3,9 @@ title: 轨道
 description: 对等 Track 组件——字幕、媒体、排版与作者声明的音频。
 ---
 
-每个进入最终合成的视听内容都是一个对等的 **Track**。Track 是扁平的（无嵌套）；视觉层的
-z 轴顺序由 SVS 中的 `stack-order` 属性决定。本页介绍 Caption、Media、Typography 与 Audio
+每个进入最终合成的视听内容都是一个对等的 **Track**。Track 是扁平的（无嵌套）。每个视觉
+occurrence 都发布绝对 `z`：Fine Caption 等领域家族可以把它放在可复用 Recipe 中，基础
+Visual Clip 与 Fine Text 则直接声明。本页介绍 Caption、Media、Typography 与 Audio
 Track 的作者语法。
 
 ## 字幕系统
@@ -12,7 +13,8 @@ Track 的作者语法。
 字幕由 Script 产生的单一文档与可替换的样式族组成：
 
 ```text
-Script CaptionDocument + Timeline → 完整 Cue 定时 → Use 呈现
+Script → CaptionDocument + NarrativeCaptionBinding
+绑定 + NarrativeProjection → CaptionTiming → Use 呈现
 ```
 
 ```svml
@@ -73,35 +75,41 @@ Fine 是“统一文字流”字幕：同一 Cue 的每个 token 遵守同一 Re
 
 CJK 口播可以直接书写。若一个只负责显示的 emoji 仍需跟随语音计时，应显式写出对应，例如 `<🌐 | globe>`；系统不会替裸符号虚构一个口播词。
 
-### caption-fine:Track
+### caption-fine:Caption
 
 字幕内容来自 Script 和 Timeline；Use 决定某段时间的呈现方式。后声明的 Use 在窗口内覆盖前面的样式，隐藏也遵守这个规则。
 
 ```svml
 <caption:Hidden id="hidden"/>
-<caption-fine:Track id="captions" document={story.caption} timeline={speech.timeline}>
+<narrative-caption:Timing id="story-captions" document={story.caption}
+  binding={story.caption-binding} projection={story-time.projection}/>
+<caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
+  timeline={speech.timeline} within={vertical.bounds}>
   <caption-fine:Use style={primary-caption}/>
   <caption-fine:Use role="ALICE" style={alice-caption}/>
   <caption-fine:Use role="BOB" style={bob-caption}/>
-  <caption-fine:Use during={story.selection.product-demo} style={dialogue-caption}/>
-  <caption-fine:Use during={story.selection.private} style={hidden}/>
-</caption-fine:Track>
+  <caption-fine:Use during={product-demo-window} style={dialogue-caption}/>
+  <caption-fine:Use during={private-window} style={hidden}/>
+</caption-fine:Caption>
 ```
 
 `||` 决定 Cue 分组。窗口可以从 Cue 中间开始，完整文字和原来的逐词时间仍然保留。`role` 按说话人过滤内容，独立于时间窗口。也可以使用 `at`/`for`、`until`/`for` 或 `start`/`end`。
 
-## Media 叠加层与 B-roll
+## Visual Clip 与 B-roll
 
-B-roll 是通用 Media Track 的一种剪辑用途，不是独立 Track 家族。一个 Item 可以在语义或绝对窗口内放置图片、生成视频、已规范化含时素材或 Compositable Surface。
+B-roll 是 Visual Clip 的一种剪辑用途，不是独立 Track 家族。一个 Clip 可以在语义或绝对窗口内放置图片、生成视频、已规范化含时素材或 Compositable Surface。
 
 ```svml
-<import as="media-track" from="@qflow/media-track@1"/>
+<import as="visual" from="@qflow/visual-track@1"/>
+<import as="time" from="@qflow/timeline-author@1"/>
 <import as="wording" from="@qflow/text@1"/>
+<time:Clock id="clock" frame-rate="30"/>
 ```
 
-### media-track:Track 与 media-track:Item
+### visual:Track 与 visual:Clip
 
-位置是一条显式 Spatial Frame 边，外观和运动则是可复用的 SVS 值：
+位置是一条显式 Spatial Frame 边。fit、源时间映射与层叠顺序直接属于这次出现；像素处理
+Recipe 与类型化 Motion 都只是可选的复用值：
 
 ```svml
 <wording:Value id="product-direction">
@@ -114,23 +122,37 @@ B-roll 是通用 Media Track 的一种剪辑用途，不是独立 Track 家族�
   <seedance:Reference image={product-reference} person-reference="false"/>
 </seedance:ReferenceVideo>
 
-<space:Frame id="product-frame" within={vertical}
+<space:Frame id="product-frame" within={vertical.bounds}
   left="8%" top="20%" right="92%" bottom="68%"/>
 
 <pipeline:Normalize id="product-media" source={product-motion.video}
-  video="primary-moving" audio="none" span-authority="video" frame-rate="30"/>
+  video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 
-<media-track:Track id="product-broll" timeline={speech.timeline} canvas={vertical}>
-  <media-track:Item media={product-media.media} frame={product-frame}
-    during={story.selection.product-demo}
-    appearance={recipes.media.product}
-    motion={recipes.motion.product}/>
-</media-track:Track>
+<visual:Motion id="product-motion-in">
+  <visual:Pose at="start" y="80" opacity="0" easing="ease-out"/>
+  <visual:Pose at="8f" y="0" opacity="1"/>
+  <visual:Pose at="end" y="0" opacity="1"/>
+</visual:Motion>
+
+<visual:Track id="product-broll" timeline={speech.timeline}>
+  <visual:Clip media={product-media.media} frame={product-frame}
+    during={story-time.product-demo} z="40" fit="contain"
+    treatment={recipes.visual.product} motion={product-motion-in}>
+    <visual:Map/>
+  </visual:Clip>
+</visual:Track>
 ```
 
-`left`、`top`、`right`、`bottom` 是父 Frame 内的边坐标；`right` 和 `bottom` 不是 CSS 式外边距。Selection 只贡献语义点；Media 包负责将这些点投影为窗口。同一个 Item 模型也能表达全屏切换、分屏和角落小窗。需要多个素材时，可以使用有序局部 Layer 或显式 Sequence。
+`left`、`top`、`right`、`bottom` 是父 Frame 内的边坐标；`right` 和 `bottom` 不是 CSS 式外边距。
+Narrative 投影可以在上游发布 `story-time.product-demo`；Visual Track 只消费完成的 Window。同一个
+fit 是构造 Clip 源局部平面到节目画面 `SpatialMap2D` 的常用入口；解析后的 Program 保存 Map，
+而不是另存一个“内容框”。当组件或源局部证据已经拥有精确仿射关系时，可以声明
+`<space:Map>`，并用 `mapping={...}` 代替全部 fit 属性。Clip 的 `frame` 仍独立负责裁剪和外框处理。
+同一个
+Clip 模型也能表达全屏切换、分屏和角落小窗。公开 Clip 只有一个来源；跨多个来源或
+多个 Clip 的关系属于组件，而不是基础 Track 内置的 Sequence 语法。
 
-每个 Item、Member 或采样 Layer 都必须且只能声明一种视觉输入形式：
+每个直接 Clip 或采样 Layer 都必须且只能声明一种视觉输入形式：
 
 | 输入 | 值 | 含义 |
 |---|---|---|
@@ -140,26 +162,31 @@ B-roll 是通用 Media Track 的一种剪辑用途，不是独立 Track 家族�
 
 生成或导入的视频 Blob 经 `<pipeline:Normalize>` 进入 Track：它检查该 Blob、选出其中的流并放到同一个帧域上，输出的 `.media` 即 `media=` 所连接的值。`audio="none"` 只取画面，`audio="default"` 取源自带的声音，再由 `audio-gain` 调节。输入名必须显式，是为了绝不靠猜测把一个通用 Blob 当成图片或视频。
 
-**输出：**`{product-broll.visual}`；只有作者显式选择了源音频或 SFX 时才会出现
-`{product-broll.audio}`。
+**输出：**`{product-broll.program}` 与 `{product-broll.visual}`。音频始终在 Audio Track
+中单独声明；这里连接 SynchronizedMedia 不会顺带选择它的音频成员。
 
 ## Audio Track
 
-`@qflow/audio-track` 把显式准备好的音频放进与视觉 Track 相同的 Timeline。`Item`
-消费 `SynchronizedMedia`；先规范化已声明或生成的音频 Blob，再选择精确节目窗口与占用方式：
+`@qflow/audio-track` 把显式准备好的音频放进与视觉 Track 相同的 Timeline。`Clip`
+消费 `SynchronizedMedia`；先规范化已声明或生成的音频 Blob，再选择精确节目窗口与源时间关系：
 
 ```svml
 <import as="media" from="@qflow/media@1"/>
 <import as="pipeline" from="@qflow/media-pipeline@1"/>
 <import as="audio" from="@qflow/audio-track@1"/>
+<import as="time" from="@qflow/timeline-author@1"/>
 
+<time:Clock id="clock" frame-rate="30"/>
 <media:Audio id="music" src="./assets/music.wav"/>
 <pipeline:Normalize id="music-media" source={music}
-  video="none" audio="default" span-authority="audio" frame-rate="30"/>
+  video="none" audio="default" span-authority="audio" clock={clock}/>
 
 <audio:Track id="music-bed" timeline={speech.timeline}>
-  <audio:Item source={music-media.media} during="program"
-    playback="loop-end" gain="0.28" fade-in="600ms" fade-out="800ms"/>
+  <audio:Clip source={music-media.media} during="timeline"
+    gain="0.28" fade-in="600ms" fade-out="800ms">
+    <audio:Map target-at="end" source-at="end" rate="1"
+      wrap-from="start" wrap-until="end"/>
+  </audio:Clip>
 </audio:Track>
 ```
 
@@ -167,13 +194,12 @@ B-roll 是通用 Media Track 的一种剪辑用途，不是独立 Track 家族�
 |---|---|---|
 | `Track.id` | 是 | 稳定的 Audio Track 身份 |
 | `Track.timeline` | 是 | 定义精确采样域与帧域的 Timeline |
-| `Item.source` | 是 | 显式选流并规范化后的 `SynchronizedMedia` |
+| `Clip.source` | 是 | 显式选流并规范化后的 `SynchronizedMedia` |
 | `during`、`at`/`for` 或 `start`/`end` | 三种形式选一 | 全节目、Selection、Moment 或显式窗口 |
-| `playback` | 否 | `once`、`once-end`、`loop`、`loop-end` 或有界 `stretch` |
-| `trim-start`、`trim-end` | 否 | 精确源裁切 |
-| `gain`、`fade-in`、`fade-out` | 否 | 显式的单 Item 混音值 |
+| `source-time` 或 `Map` 子节点 | 否 | 可复用或内联的目标时间到源时间偏函数；省略时为有界局部恒等映射 |
+| `gain`、`fade-in`、`fade-out` | 否 | 显式的单 Clip 混音值 |
 
-该包不会自动提取、规范化、duck 或分配 bus。同一 Track 内的多个 Item 与多个对等 Audio
+该包不会自动提取、规范化、duck 或分配 bus。同一 Track 内的多个 Clip 与多个对等 Audio
 Track 都会作为独立输入进入 Film。输出 `{music-bed.audio}` 是普通 `AudioTrack`。
 
 ## 文字叠加层
@@ -181,77 +207,82 @@ Track 都会作为独立输入进入 Film。输出 `{music-bed.audio}` 是普通
 在屏幕上显示的静态或定时文字——标题、标注、下方三分之一字幕条。
 
 ```svml
-<import as="text" from="@qflow/typography-track@1"/>
+<import as="text" from="@qflow/text-fine@1"/>
 <import as="wording" from="@qflow/text@1"/>
 ```
 
-### text:Track
+### text:Flow、text:Point 与 text:Path
 
-文字项目的容器。
+细粒度文字没有聚合容器。每个独立标题、标签或短篇编辑文字都是一个 occurrence，并各自
+产生一条普通 VisualTrack 贡献。
 
 ```svml
 <space:Canvas id="vertical" width="1080" height="1920"/>
-<space:Frame id="title-frame" within={vertical}
+<space:Frame id="title-frame" within={vertical.bounds}
   left="6%" top="6%" right="94%" bottom="16%"/>
 <fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
-<text:Track id="titles" timeline={speech.timeline}>
-  <text:Area id="title" placement={title-frame} style={title-style} during="program">
-    EDIT MEANING, NOT TIMELINES
-  </text:Area>
-</text:Track>
+<text:Flow id="title" timeline={speech.timeline} within={title-frame}
+  style={title-style} z="90" align="center" during="timeline">
+  EDIT MEANING, NOT TIMELINES
+</text:Flow>
 ```
 
 | 属性 | 必填 | 描述 |
 |---|---|---|
 | `id` | 是 | 唯一标识符 |
-| `semantic` | 是 | 来自 `time:Timeline` 的 Timeline——也用于解析基于 Selection 的项目计时 |
+| `timeline` | 是 | 拥有 occurrence 窗口的绝对 Timeline |
+| `during`、`at`/`for` 或 `start`/`end` | 三选一 | 绝对 Window、Instant 加时长，或作者声明的边界 |
+| `within`、`point` 或 `path` | 是 | 与 `Flow`、`Point` 或 `Path` 对应的位置 |
+| `style` | 是 | 由 SVS Recipe 与精确字体字节编译出的 Style |
+| `z` | 是 | 这个 occurrence 的绝对层叠顺序；它不属于 Style |
+| 形式布局 | 否 | `Flow` 的对齐/换行、`Point` 的锚定或 `Path` 的边距/方向，只写在对应 occurrence 上 |
 
-### text:Point、text:Area 与 text:Path
-
-每个 Item 都明确选择一种放置形式、一份精确 Style 和一种时间投影。`Area` 把流式文字放入
-`SpatialFrame`：
+每个 occurrence 都明确选择一种位置形式、一份精确 Style 和一个绝对时间表达式。`Flow`
+把流式文字放入 `SpatialFrame`：
 
 ```svml
-<text:Area id="meaning" placement={title-frame} style={title-style} during="program">
+<text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
+  style={title-style} z="90" align="center" during="timeline">
   MEANING
-</text:Area>
+</text:Flow>
 ```
 
 | 属性 | 必填 | 描述 |
 |---|---|---|
-| `id` | 是 | 稳定的 Item 身份 |
+| `id` | 是 | 稳定的文字 occurrence 身份 |
 | 子内容或 `content` | 是 | 内联纯文本/富文本，或普通图 `Text` 引用；两种形式互斥 |
-| `during` | 是 | `"program"` 或 Selection 引用；也可使用 `at` 与显式 `start`/`end` |
-| `placement` | 是 | 与 Item 形式匹配的 `SpatialPoint`、`SpatialFrame` 或 `SpatialPath` |
+| 时间 | 是 | `during="timeline"`、绝对 Window，或 `at`/`for`、`until`/`for`、`start`/`end` |
+| 位置 | 是 | 与 occurrence 形式匹配的 `SpatialPoint`、`SpatialFrame` 或 `SpatialPath` |
 | `style` | 是 | 由 SVS Recipe 与精确字体字节共同编译出的 `text:Style` |
+| `z` | 是 | 这个 occurrence 的绝对层叠顺序 |
+| 形式布局 | 否 | 所选 `Flow`、`Point` 或 `Path` 直接声明的布局属性 |
 
-`during` 属性接受字面字符串 `"program"`（表示完整 Timeline），或用于语义计时的 Selection、Segment 引用。同一套时间接口也接受作者声明的 `start`/`end` 窗口和 `at`/`for` 事件：
+`during="timeline"` 表示完整 Timeline。作者声明的 Timeline Window，或者上游语义、节拍等
+领域的投影，也可以提供普通的绝对 Window；细粒度文字组件不认识这个 Window 来自哪个领域：
 
 ```svml
 <text:Style id="callout-style" recipe={recipes.text.callout} font={title-font}/>
-<text:Track id="callout" timeline={speech.timeline}>
-  <text:Area id="callout-copy" placement={callout-frame}
-    style={callout-style} during={story.selection.callout}>
-    EXACTLY THE RIGHT MOMENT
-  </text:Area>
-</text:Track>
+<text:Flow id="callout-copy" timeline={speech.timeline} within={callout-frame}
+  style={callout-style} z="90" during={program.callout}>
+  EXACTLY THE RIGHT MOMENT
+</text:Flow>
 ```
 
 图中产生的文字会保留为显式边：
 
 ```svml
 <wording:Value id="headline">EXACTLY THE RIGHT MOMENT</wording:Value>
-<text:Track id="callout" timeline={speech.timeline}>
-  <text:Area id="callout-copy" content={headline}
-    placement={callout-frame} style={callout-style} during="program"/>
-</text:Track>
+<text:Flow id="callout-copy" timeline={speech.timeline} content={headline}
+  within={callout-frame} style={callout-style} z="90" during="timeline"/>
 ```
 
 通用 `Text` 只提供字符；Typography 仍然拥有文档包装、位置、时间、样式与动画。作者需要富文本
 Run 时，继续使用内联 `P`/`Span`/`Break`。
 
-**输出：**`{titles.track}` —— 添加到 `film:Film` 的 VisualTrack。
+每个 occurrence 发布 `{callout-copy.occurrence}` 供同族文字工具使用，并发布
+`{callout-copy.visual}` 供 `film:Film` 使用。多个无关标题仍是 Film 的多个显式输入；若它们
+共享行为，应由项目组件负责协调，而不是偶然聚成一条文字集合。
 
 ## 榜单板
 
@@ -274,12 +305,13 @@ Run 时，继续使用内联 `P`/`Span`/`Break`。
 
 | 属性 | 取值 |
 |---|---|
-| `semantic` | 板据以计时的 Timeline |
+| `timeline` | 板据以计时的绝对 Timeline |
+| `semantic` | 仅供语义时间表达式使用的可选 Narrative 投影 |
+| `within` | 所选板型拥有独立揭示区或讲解区时使用的 `space:Frame` |
 | `frame` | 一个 `space:Frame`——选中组件声明的板面位置 |
 | `during` | 选中组件声明的时间形式 |
 | `style` | 对应的样式记录，且只接受本变体的 |
 | `terminal` | 完整板定格的 Moment。仅 `TopThree` |
-| `canvas` | 选中组件可声明的 `space:Canvas` |
 | `appear-sound`、`move-sound` | 可选，Synchronized Media |
 
 只使用所选包明确声明的时间形式；不要从另一个组件族推断 terminal 或 reveal 规则。
@@ -288,17 +320,17 @@ Run 时，继续使用内联 `P`/`Span`/`Break`。
 
 每个变体只接受自己的那一种，至少一个，且 id 在同一块板内不可重复。
 
-- **`TopThreeItem`** —— `label` 与 item 自己的 `at={story.moment...}` 必填，可选 `icon` 与 `stack`，最多三条。揭示顺序由这些 Moment 的真实帧顺序决定。
+- **`TopThreeItem`** —— `label` 与 item 自己的绝对 `at={story-time...}` 必填，可选 `icon` 与 `stack`，最多三条。揭示顺序由这些 Instant 的真实帧顺序决定。
 - **`ColumnItem`** —— `label` 与 `rank` 必填，可选 `icon` 与 `stack`。非 preset item 用自己的 `during` Selection；`preset="true"` 的 item 开场已在位且不写 `during`。
 
 ```svml
 <ranking:ColumnStyle id="board-style" recipe={recipes.ranking.board} font={ui-font}/>
-<ranking:Column id="board" timeline={speech.timeline} canvas={vertical} frame={board-frame}
-  during={story.selection.board} style={board-style}>
+<ranking:Column id="board" timeline={speech.timeline} within={vertical.bounds} frame={board-frame}
+  during={story-time.board} style={board-style}>
   <ranking:ColumnItem id="row-regen" rank="1" label="ReGen" icon={icon-regen}
-    during={story.selection.regen-reveal}/>
+    during={story-time.regen-reveal}/>
   <ranking:ColumnItem id="row-chatgpt" rank="2" label="ChatGPT" icon={icon-chatgpt}
-    during={story.selection.chatgpt-reveal}/>
+    during={story-time.chatgpt-reveal}/>
   <ranking:ColumnItem id="row-remini" rank="3" preset="true" label="Remini" icon={icon-remini}/>
 </ranking:Column>
 ```
@@ -307,15 +339,16 @@ Run 时，继续使用内联 `P`/`Span`/`Break`。
 
 ## 卡片堆
 
-卡片堆按深度排布卡片：一张在最前，其余向后退去，每张新卡在一个 Moment 上发出。Media Item 是把一个镜头放进一个 Frame，而卡片堆是在同一个 Frame 里维持一叠并整体移动它们。
+卡片堆按深度排布卡片：一张在最前，其余向后退去，每张新卡在一个 Moment 上发出。Visual Clip 是把一个镜头放进一个 Frame，而卡片堆是在同一个 Frame 里维持一叠并整体移动它们。
 
 ```svml
-<import as="deck" from="@qflow/deck-track@1"/>
+<import as="deck" from="@qflow/depth-stack@1"/>
 ```
 
 ### deck:DepthStack
 
-`id`、`timeline`、`canvas`、`frame` 与 `appearance` 全部必填。同一份 Timeline 提供作者时间和已放置的语义锚点。`until` 同样必填，指定这叠卡片何时结束：Moment、Selection 或 Segment 的边界，或 `8s`、`program.end` 等作者时间。Selection 或 Segment 可以用 `until-boundary="start" | "end"` 选择首尾，默认是 `end`。
+`id`、`timeline`、`within`、`frame`、`appearance` 与 `until` 全部必填。`until` 接受绝对
+Instant，例如上游从语义投影出的事件，或 `8s` 这样的作者时间。
 
 ### deck:Card
 
@@ -325,7 +358,7 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 |---|---|
 | `source` | 必填——静态图片、Synchronized Medium 或 Compositable Surface |
 | `extent` | 静态图片必填，其余情况给了会被拒绝 |
-| `at` | 必填——这张卡发出的事件，可以是 Moment 或 `2s`、`12f` 等作者时间 |
+| `at` | 必填——绝对发牌 Instant，或 `2s`、`12f` 等作者时间 |
 | `appearance` | 可选——它自己的 Recipe，否则沿用整叠的 |
 | `label` | 可选——一条 `deck:Label` 记录 |
 
@@ -334,15 +367,15 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 `id` 与 `font` 必填。文案来自 `content=` 引用或元素自身的文字，两个都给会被拒绝。`size`、`color`、`align`、`block`、`padding` 可选。
 
 ```svml
-<space:Frame id="deck-frame" within={vertical} left="44%" top="60%" right="98%" bottom="88%"/>
-<deck:DepthStack id="deck" timeline={speech.timeline} canvas={vertical}
-  frame={deck-frame} appearance={recipes.deck.stack} until={story.moment.done}>
-  <deck:Card id="card-spatial" source={icon-spatial} extent={square} at={story.moment.deal-one}/>
-  <deck:Card id="card-type" source={icon-type} extent={square} at={story.moment.deal-two}/>
+<space:Frame id="deck-frame" within={vertical.bounds} left="44%" top="60%" right="98%" bottom="88%"/>
+<deck:DepthStack id="deck" timeline={speech.timeline} within={vertical.bounds}
+  frame={deck-frame} appearance={recipes.deck.stack} until={story-time.done}>
+  <deck:Card id="card-spatial" source={icon-spatial} extent={square} at={story-time.deal-one}/>
+  <deck:Card id="card-type" source={icon-type} extent={square} at={story-time.deal-two}/>
 </deck:DepthStack>
 ```
 
-**输出：** `{deck.track}`——一条 VisualTrack，与 Film 中其它每一条 Track 平级。
+**输出：** `{deck.visual}`——一条 VisualTrack，与 Film 中其它每一条 Track 平级。
 
 ## 屏幕叠加层
 
@@ -356,10 +389,10 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 
 | 时间窗 | 写法 |
 |---|---|
-| 整个节目 | `during="program"` |
-| 一个 Selection | 在带有 `timeline={speech.timeline}` 的 Track 内写 `during={story.selection.x}` |
-| 一个 Moment，持续一段时长 | 在带有 `timeline={speech.timeline}` 的 Track 内写 `at={story.moment.x} for="12f"` |
-| 显式区间 | `start="…" end="…"`，可另外指定 `selection=` 或 `moment=` |
+| 整个节目 | `during="timeline"` |
+| 已解析的 Window | `during={story-time.overlay}` |
+| 绝对起点与时长 | `from="2s" for="12f"` |
+| 显式区间 | `from={story-time.start} until={story-time.end}` |
 
 时长写作 `12f`、`250ms` 或 `1.5s`。一个 Selection
 只表示一个连续区间，一个 Moment 只表示一个点；同一效果需要再次出现时，应再写一个 item。
@@ -367,13 +400,13 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 可用的效果有十一种——`Flash`、`ColorWash`、`Vignette`、`ScanLines`、`DirectionalMatte`、`WhipVeil`、`GlitchVeil`、`Grain`、`LightLeak`、`Bokeh` 与 `TVStatic`——每种各有自己的必填属性，例如 `Flash` 的 `color` / `intensity` / `attack` / `hold` / `decay`，或 `Vignette` 的 `center-x` / `center-y` / `radius-x` / `radius-y` / `softness` / `color` / `opacity`。它们都没有默认值：一个效果要么把自己的形状说全，要么被拒绝。
 
 ```svml
-<screen:Track id="effects" timeline={speech.timeline} canvas={vertical}>
-  <screen:Flash during={story.selection.overlay} z="80"
+<screen:Track id="effects" timeline={speech.timeline} within={vertical.bounds}>
+  <screen:Flash during={story-time.overlay} z="80"
     color="#ffffff" intensity="0.6" attack="2" hold="2" decay="6"/>
 </screen:Track>
 ```
 
-**输出：** `{effects.track}`——一条 VisualTrack。
+**输出：** `{effects.visual}`——一条 VisualTrack。
 
 ## 评论贴纸
 
@@ -385,21 +418,21 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 
 `comment:Style` 必须为空，接受 `id`、`recipe` 与 `font`，全部必填。Recipe 承载整张卡的外观——背景、描边、圆角、气泡尾、头像、三行文字，以及进入/停留/退出的动效——每个键都有默认值，所以一份 recipe 只需写它要改的部分。
 
-`comment:Track` 接受 `id`、`canvas` 与 `semantic`，三者皆为必填。
+`comment:Track` 接受 `id` 与 `timeline`，两者皆为必填。
 
 `comment:Sticker` 必填 `id`、`frame` 与 `style`，时间窗与上面的屏幕叠加层相同。它的文案来自 `comment=` 属性或元素自身的文字，两个都给会被拒绝。可选的 `author`、`header` 与 `meta` 各接受字符串或 Text 引用，`avatar` 接受一张图片；这里没有 `z`，层叠顺序来自 recipe 的 `stack-order`。
 
 ```svml
 <comment:Style id="social" recipe={recipes.comment} font={ui-font}/>
-<comment:Track id="comments" canvas={vertical} timeline={speech.timeline}>
+<comment:Track id="comments" timeline={speech.timeline}>
   <comment:Sticker id="one" frame={comment-frame} style={social} avatar={viewer-avatar}
-    author="@viewer" meta="Featured" during={story.selection.reaction}>
+    author="@viewer" meta="Featured" during={story-time.reaction}>
     原来它把字幕钉在词上，而不是钉在秒上。
   </comment:Sticker>
 </comment:Track>
 ```
 
-**输出：** `{comments.track}`——一条 VisualTrack。
+**输出：** `{comments.visual}`——一条 VisualTrack。
 
 ## 组合示例
 
@@ -411,69 +444,70 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 <import as="fonts" from="@qflow/fonts-open@1"/>
 <import as="media" from="@qflow/media@1"/>
 <import as="pipeline" from="@qflow/media-pipeline@1"/>
-<import as="media-track" from="@qflow/media-track@1"/>
-<import as="text" from="@qflow/typography-track@1"/>
+<import as="visual" from="@qflow/visual-track@1"/>
+<import as="text" from="@qflow/text-fine@1"/>
 <import as="audio" from="@qflow/audio-track@1"/>
 <import as="space" from="@qflow/spatial@1"/>
+<import as="time" from="@qflow/timeline-author@1"/>
+
+<time:Clock id="clock" frame-rate="30"/>
 
 <!-- Captions: primary style for all text -->
 <fonts:Stack id="caption-font" family="inter" weight="700" style="normal"/>
 <fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
 <caption-fine:Style id="base-caption" recipe={recipes.caption.base} font={caption-font}/>
 
-<caption-fine:Track id="captions" document={story.caption}
-  timeline={speech.timeline}>
+<caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
+  timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={base-caption}/>
-  </caption-fine:Track>
+  </caption-fine:Caption>
 
 <!-- 共享位置是显式边，与 Media/Text 外观分开。 -->
 <space:Canvas id="vertical" width="1080" height="1920"/>
-<space:Frame id="title-frame" within={vertical}
+
+<space:Frame id="title-frame" within={vertical.bounds}
   left="6%" top="6%" right="94%" bottom="16%"/>
-<space:Frame id="card-frame" within={vertical}
+
+<space:Frame id="card-frame" within={vertical.bounds}
   left="10%" top="20%" right="90%" bottom="70%"/>
 
-<!-- Media：Selection 期间显示一个普通 Item -->
+<!-- Media：Selection 期间显示一个普通 Clip -->
 <pipeline:Normalize id="card-media" source={motion.video}
-  video="primary-moving" audio="none" span-authority="video" frame-rate="30"/>
-<media-track:Track id="cards" timeline={speech.timeline} canvas={vertical}>
-  <media-track:Item media={card-media.media} frame={card-frame}
-    during={story.selection.demo} appearance={recipes.media.card} motion={recipes.motion.card}/>
-</media-track:Track>
+  video="primary-moving" audio="none" span-authority="video" clock={clock}/>
+<visual:Track id="cards" timeline={speech.timeline}>
+  <visual:Clip media={card-media.media} frame={card-frame}
+    during={story-time.demo} z="40" fit="cover" treatment={recipes.visual.card}/>
+</visual:Track>
 
 <!-- Text: persistent title overlay -->
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
-<text:Track id="titles" timeline={speech.timeline}>
-  <text:Area id="meaning" placement={title-frame} style={title-style} during="program">
-    MEANING
-  </text:Area>
-</text:Track>
+<text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
+  style={title-style} z="90" align="center" during="timeline">
+  MEANING
+</text:Flow>
 
 <!-- Audio：先规范化一份已声明素材，再把它放满整个节目 -->
 <media:Audio id="music" src="./assets/music.wav"/>
 <pipeline:Normalize id="music-media" source={music}
-  video="none" audio="default" span-authority="audio" frame-rate="30"/>
+  video="none" audio="default" span-authority="audio" clock={clock}/>
 <audio:Track id="music-bed" timeline={speech.timeline}>
-  <audio:Item source={music-media.media} during="program"
-    playback="loop-end" gain="0.28" fade-in="600ms" fade-out="800ms"/>
+  <audio:Clip source={music-media.media} during="timeline"
+    gain="0.28" fade-in="600ms" fade-out="800ms">
+    <audio:Map target-at="end" source-at="end" rate="1"
+      wrap-from="start" wrap-until="end"/>
+  </audio:Clip>
 </audio:Track>
 
 <!-- 所有对等 Track 都进入 Film -->
-<import as="sound" from="@qflow/sound@1"/>
-<sound:Style id="voice-style"/>
-<sound:Track id="voice" timeline={speech.timeline}>
-  <sound:Use style={voice-style}/>
-</sound:Track>
-
-<film:Film id="main" canvas={vertical} timeline={speech.timeline} appearance={recipes.film.vertical}>
-  <film:Track source={performance.visual}/>
-  <film:Track source={voice.audio}/>
+<film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline} appearance={recipes.film.vertical}>
+  <film:Track source={picture.visual}/>
+  <film:Track source={mix.audio}/>
   <film:Track source={cards.visual}/>
-  <film:Track source={captions.track}/>
-  <film:Track source={titles.track}/>
+  <film:Track source={captions.visual}/>
+  <film:Track source={meaning.visual}/>
   <film:Track source={music-bed.audio}/>
 </film:Film>
 ```
 
-本例的 Recipe 将表演画面放在 10，Media 放在 40，字幕放在 70，文字放在 90。
+本例的 Recipe 将已放置的画面放在 10，Visual Clip 放在 40，字幕放在 70，文字放在 90。
 数值越高，绘制位置越靠前；作者按作品需要选择这些关系。

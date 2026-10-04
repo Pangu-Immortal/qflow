@@ -24,7 +24,7 @@ the final composition. Both participate in the same graph, with explicit inputs 
 
 ## Components follow the work
 
-A video's spatial structure is organized where that organization is useful. Media Track can present
+A video's spatial structure is organized where that organization is useful. Visual Track can present
 an ordinary clip or picture; a project component can coordinate a moving video viewport, labels and
 a diagram inside one scene. Independent captions or overlays can remain separate contributions.
 Each component owns the content whose behavior belongs together.

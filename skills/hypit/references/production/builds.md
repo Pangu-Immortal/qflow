@@ -11,7 +11,7 @@ how the selected graph becomes a Build, and [rendering](rendering.md) covers who
 
 For a revision, identify the relevant Run and its completed Outputs, then preserve the still-useful
 ones with `build-record` and `satisfy`. Keep unrelated Candidate selections. [Authoring](authoring.md#reuse-produced-work-explicitly)
-explains which media or SemanticTake Output to keep without freezing the downstream edit. A failed
+explains which media, local-domain or alignment Output to keep without freezing the downstream edit. A failed
 Build can still supply completed Outputs; a missing exported file is not evidence of missing media.
 
 If the CLI or observation tool loses its reply while submitting or following a Build, inspect the
@@ -66,8 +66,8 @@ from the earlier attempt in its Run.
 
 When a usable receipt does exist and gives access to a generated asset, the Agent can retrieve that
 asset as an ordinary project file and select it with `file` and `satisfy` in the new Run. This supplies
-the file Output; downstream preparation and alignment still run when needed. A completed SemanticTake
-can instead be reused directly through its existing Result Output.
+the file Output; downstream preparation and alignment still run when needed. Completed normalized
+media, local-domain and alignment Outputs can instead be reused independently through the existing Result.
 
 Use `status <build-id> --verbose` for task IDs, Endpoints and progress. Use
 `inspect <build-id> --verbose --json` for the Result's full retained execution records, including
