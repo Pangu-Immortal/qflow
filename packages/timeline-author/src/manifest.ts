@@ -54,15 +54,15 @@ export const timelineAuthorManifest: ModuleManifest = {
     { name: timelineAuthorProducers.spanBetween.name, inputs: [{ name: "start", type: timelineAuthorTypes.point }, { name: "end", type: timelineAuthorTypes.point }], outputs: [{ name: "span", type: timelineAuthorTypes.span }], needs: [] },
     { name: timelineAuthorProducers.spanStart.name, inputs: [{ name: "span", type: timelineAuthorTypes.span }], outputs: [{ name: "point", type: timelineAuthorTypes.point }], needs: [] },
     { name: timelineAuthorProducers.spanEnd.name, inputs: [{ name: "span", type: timelineAuthorTypes.span }], outputs: [{ name: "point", type: timelineAuthorTypes.point }], needs: [] },
-    { name: timelineAuthorProducers.finalize.name, inputs: [{ name: "header", type: timelineAuthorTypes.header }, { name: "clock", type: timelineTypes.clock }, { name: "end", type: timelineAuthorTypes.point }], outputs: [{ name: "timeline", type: timelineTypes.track }], needs: [] },
-    { name: timelineAuthorProducers.instant.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "point", type: timelineAuthorTypes.point }, { name: "spec", type: timelineAuthorTypes.identity }], outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
-    { name: timelineAuthorProducers.window.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "span", type: timelineAuthorTypes.span }, { name: "spec", type: timelineAuthorTypes.identity }], outputs: [{ name: "window", type: temporalTypes.window }], needs: [] },
+    { name: timelineAuthorProducers.finalize.name, inputs: [{ name: "header", type: timelineAuthorTypes.header }, { name: "clock", type: timelineTypes.clock }, { name: "end", type: timelineAuthorTypes.point }], outputs: [{ name: "timeline", type: timelineTypes.timeline }], needs: [] },
+    { name: timelineAuthorProducers.instant.name, inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "point", type: timelineAuthorTypes.point }, { name: "spec", type: timelineAuthorTypes.identity }], outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
+    { name: timelineAuthorProducers.window.name, inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "span", type: timelineAuthorTypes.span }, { name: "spec", type: timelineAuthorTypes.identity }], outputs: [{ name: "window", type: temporalTypes.window }], needs: [] },
   ],
 };
 
 export const timelineAuthorMarkupSurfaces = [{
   name: "timeline", tag: "Timeline", mode: "structured",
-  outputs: [...Object.values(timelineAuthorTypes), timelineTypes.track, temporalTypes.instant, temporalTypes.window],
+  outputs: [...Object.values(timelineAuthorTypes), timelineTypes.timeline, temporalTypes.instant, temporalTypes.window],
   vocabulary: {
     summary: "Lowers a small acyclic Instant/Window author graph into one finite Timeline and scoped absolute anchors.",
     attributes: [
@@ -83,7 +83,7 @@ export const timelineAuthorMarkupSurfaces = [{
       ] },
     ],
     ports: [
-      { name: "timeline", type: timelineTypes.track, summary: "The finalized absolute Timeline." },
+      { name: "timeline", type: timelineTypes.timeline, summary: "The finalized absolute Timeline." },
       { name: "window", type: temporalTypes.window, summary: "The complete [start,end) Window." },
       { name: "start/end", type: temporalTypes.instant, summary: "The complete Timeline boundaries." },
       { name: "<name>", type: temporalTypes.instant, summary: "A named Instant child." },
@@ -111,7 +111,7 @@ export const timelineAuthorMarkupSurfaces = [{
     summary: "Publishes one reusable absolute Window without putting content on Timeline.",
     attributes: [
       { name: "id", kind: "identifier", required: true, summary: "Names the Window and its .start/.end Instants." },
-      { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.track], summary: "Selects the absolute coordinate system." },
+      { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.timeline], summary: "Selects the absolute coordinate system." },
       { name: "from", kind: "expression", required: false, accepts: [temporalTypes.instant], summary: "Inclusive absolute start." },
       { name: "until", kind: "expression", required: false, accepts: [temporalTypes.instant], summary: "Exclusive absolute end." },
       { name: "for", kind: "expression", required: false, accepts: [temporalTypes.extent], summary: "Exact duration." },
@@ -128,7 +128,7 @@ export const timelineAuthorMarkupSurfaces = [{
     summary: "Publishes one reusable authored absolute Instant.",
     attributes: [
       { name: "id", kind: "identifier", required: true, summary: "Names the Instant." },
-      { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.track], summary: "Selects the absolute coordinate system." },
+      { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.timeline], summary: "Selects the absolute coordinate system." },
       { name: "at", kind: "literal", required: true, summary: "Absolute time or Timeline-boundary expression." },
     ],
     ports: [{ name: "<id>", type: temporalTypes.instant, summary: "The resolved Instant." }],

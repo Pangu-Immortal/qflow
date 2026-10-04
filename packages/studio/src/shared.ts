@@ -13,10 +13,9 @@ import type {
   StudioMaterialPreview,
   StudioInspectorField,
   StudioInspectorDomain,
-  StudioSemanticAnchor,
-  StudioSemanticSegment,
-  StudioSemanticTimeline,
-  StudioSemanticToken,
+  StudioTemporalDomainAnchor,
+  StudioTemporalDomainItem,
+  StudioTemporalDomainView,
   StudioTemporalLineage,
   StudioTemporalPhase,
   StudioTemporalProjection,
@@ -128,56 +127,9 @@ export type Track = {
   readonly provenance: CandidateProvenance;
 };
 
-export type ScriptMap = {
-  readonly companion: string;
-  readonly narrativeId: string;
-  readonly sourcePath: string;
-  readonly range: Range;
-  readonly content: Range;
-  readonly selections: readonly {
-    readonly id: string;
-    readonly startAnchorId: string;
-    readonly endAnchorId: string;
-    /** How many Selections enclose this one. Nesting is what depth means. */
-    readonly depth: number;
-    readonly open: Range;
-    readonly close: Range;
-  }[];
-  readonly segments: readonly {
-    readonly id: string;
-    /** Always 0: a Segment is the outermost range the Script declares. */
-    readonly depth: number;
-    readonly range: Range;
-  }[];
-  readonly moments: readonly {
-    readonly id: string;
-    readonly anchorId: string;
-    readonly range: Range;
-  }[];
-  /** Spoken words placed on the timeline by the selected semantic Candidate. */
-  readonly tokens: readonly {
-    readonly id: string;
-    readonly range: Range;
-    readonly startFrame: number;
-    readonly endFrame: number;
-  }[];
-};
-
-/** A semantic boundary that can be addressed by the timeline without guessing. */
-export type SemanticAnchorKind =
-  | "segment-start"
-  | "segment-end"
-  | "token-start"
-  | "token-end";
-
-export type SemanticAnchor = StudioSemanticAnchor;
-
-export type SemanticSegment = StudioSemanticSegment;
-
-export type SemanticToken = StudioSemanticToken;
-
-/** The semantic timebase projected from the compiled Narrative and its anchors. */
-export type SemanticTimeline = StudioSemanticTimeline;
+export type TemporalDomainAnchor = StudioTemporalDomainAnchor;
+export type TemporalDomainItem = StudioTemporalDomainItem;
+export type TemporalDomainView = StudioTemporalDomainView;
 
 export type StudioSourceView = {
   /** Workspace-relative path. It is also the exact source write target. */
@@ -267,7 +219,6 @@ export type StudioSnapshot = {
     readonly targets: readonly string[];
     readonly satisfactions: readonly { readonly output: string; readonly candidate: string }[];
   };
-  readonly script?: ScriptMap;
   /** The resolved picture plane. It is a preview snapshot, not another authored Canvas. */
   readonly canvas: {
     readonly width: number;
@@ -281,11 +232,8 @@ export type StudioSnapshot = {
     readonly durationSec: number;
   };
   readonly tracks: readonly Track[];
-  /**
-   * The special Studio lane. This is not another VisualTrack: it is the
-   * Narrative's segment/word geometry projected onto the same frame domain.
-   */
-  readonly semantic?: SemanticTimeline;
+  /** Package-contributed temporal views projected onto the same absolute ruler. */
+  readonly temporalDomains: readonly TemporalDomainView[];
   /** The Tracks, compiled into the document the renderer photographs. */
   readonly preview: { readonly kind: "hyperframes"; readonly srcdoc: string };
   readonly provenance: {
@@ -306,17 +254,13 @@ export type StudioMutation =
         | {
             readonly kind: "instant";
             readonly frame: number;
-            readonly semantic?:
-              | { readonly kind: "selection"; readonly startAnchorId: string; readonly endAnchorId: string }
-              | { readonly kind: "moment"; readonly anchorId: string };
+            readonly domain?: import("@qflow/studio-adapter").StudioTemporalDomainEditTarget;
           }
         | {
             readonly kind: "window";
             readonly startFrame: number;
             readonly endFrameExclusive: number;
-            readonly semantic?:
-              | { readonly kind: "selection"; readonly startAnchorId: string; readonly endAnchorId: string }
-              | { readonly kind: "moment"; readonly anchorId: string };
+            readonly domain?: import("@qflow/studio-adapter").StudioTemporalDomainEditTarget;
           };
     }
   | {

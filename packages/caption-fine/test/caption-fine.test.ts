@@ -460,7 +460,7 @@ test("Caption Surface wires one Timeline to both ordinary and tracked-region ren
   const { captionTypes } = await import("@qflow/caption");
   const { regionTrackTypes } = await import("@qflow/region-track");
   const { spatialTypes } = await import("@qflow/spatial");
-  const types = { timeline: timelineTypes.track, document: captionTypes.document,
+  const types = { timeline: timelineTypes.timeline, document: captionTypes.document,
     timing: captionTypes.timing, within: spatialTypes.frame, program: captionTypes.program, regions: regionTrackTypes.track };
   for (const tracking of [false, true]) {
     const names = tracking ? ["timeline", "document", "timing", "within", "regions"] as const
@@ -541,7 +541,7 @@ test("Caption Uses share the temporal author language and reject the removed Pro
   const { captionTypes } = await import("@qflow/caption");
   const { temporalTypes } = await import("@qflow/temporal");
   const { spatialTypes } = await import("@qflow/spatial");
-  const refs: Record<string, import("@qflow/protocol").TypeRef> = { timeline: timelineTypes.track, document: captionTypes.document,
+  const refs: Record<string, import("@qflow/protocol").TypeRef> = { timeline: timelineTypes.timeline, document: captionTypes.document,
     timing: captionTypes.timing, within: spatialTypes.frame,
     style: captionTypes.style, window: temporalTypes.window, instant: temporalTypes.instant };
   const decode = async (body:string,extra="") => decodeFineCaptionTrackSurface({sourceName:"caption.svml",

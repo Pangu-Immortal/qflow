@@ -42,7 +42,7 @@ export function createDepthStackFragment(
   const inputs: Array<GraphFragment["inputs"][number]> = [
     { name: "frame", type: spatialTypes.frame },
     { name: "header", type: depthStackTypes.header },
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
     { name: "spec", type: depthStackTypes.spec },
   ];
   const operations: FragmentOperation[] = [

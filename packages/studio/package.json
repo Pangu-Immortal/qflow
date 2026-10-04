@@ -35,7 +35,6 @@
     "@qflow/screen-overlay-studio": "workspace:*",
     "@qflow/script-studio": "workspace:*",
     "@qflow/speech": "workspace:*",
-    "@qflow/narrative-temporal": "workspace:*",
     "@qflow/studio-adapter": "workspace:*",
     "@qflow/svs": "workspace:*",
     "@qflow/temporal": "workspace:*",

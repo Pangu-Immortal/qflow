@@ -57,7 +57,7 @@ export function createRankingFragment(
   const selected = definition(variant);
   const inputs: Array<GraphFragment["inputs"][number]> = [
     { name: "header", type: rankingTypes.header },
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
     { name: "outer", type: temporalTypes.window },
     ...(variant === "top-three" ? [
       { name: "terminal", type: temporalTypes.instant },

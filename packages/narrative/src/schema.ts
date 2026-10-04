@@ -15,7 +15,7 @@ const semanticAnchor: ValueSchema = { kind: "oneOf", variants: [
     segmentId: { schema: string }, tokenId: { schema: string },
   }),
 ] };
-export const narrativeExcerptSchema: ValueSchema = object({
+export const narrativeSegmentRefSchema: ValueSchema = object({
   narrativeId: { schema: string },
   kind: { schema: { kind: "literal", value: "segment" } }, id: { schema: string },
   tokenStart: { schema: integer }, tokenEndExclusive: { schema: integer },
@@ -41,10 +41,7 @@ export const narrativeSchema: ValueSchema = object({
   moments: { schema: { kind: "array", items: object({
     id: { schema: string }, anchorId: { schema: string },
   }) } },
-  semanticIndex: { schema: object({
-
-    anchors: { schema: { kind: "array", minItems: 2, items: semanticAnchor } },
-  }) },
+  anchors: { schema: { kind: "array", minItems: 2, items: semanticAnchor } },
 });
 
 export const narrativeMomentSchema: ValueSchema = object({

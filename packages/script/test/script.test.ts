@@ -54,8 +54,8 @@ test("Script outer cuts are the first and last Segment boundaries", () => {
   const parsed = parseScript("outer-cuts.svml", source);
   const selection = parsed.selections[0]!;
   assert.deepEqual([selection.startAnchorId, selection.endAnchorId], ["segment:one:start", "segment:two:end"]);
-  assert.equal(parsed.semanticIndex.anchors.length, 2 * parsed.tokens.length + 2 * parsed.segments.length);
-  assert.equal(parsed.semanticIndex.anchors.some((anchor) => anchor.id.startsWith("program:")), false);
+  assert.equal(parsed.anchors.length, 2 * parsed.tokens.length + 2 * parsed.segments.length);
+  assert.equal(parsed.anchors.some((anchor) => anchor.id.startsWith("program:")), false);
 });
 
 test("Moment source edits relocate one marker to an exact semantic Anchor", () => {
@@ -81,7 +81,7 @@ test("Script keeps speech, dialogue and CaptionDocument as separate projections"
   assert.equal(document.units[1]!.wordIds.length, 1);
   assert.equal(narrativeCaptionBinding(parsed, "story.caption", "story").units[1]!.sourceTokenIds.length, 4);
   assert.deepEqual(document.cueBreaks, []);
-  assert.equal((narrativeValue(parsed, "story") as { semanticIndex: { anchors: unknown[] } }).semanticIndex.anchors.length,
+  assert.equal((narrativeValue(parsed, "story") as { anchors: unknown[] }).anchors.length,
     2 * parsed.tokens.length + 2 * parsed.segments.length);
 });
 

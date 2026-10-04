@@ -21,13 +21,13 @@ const module = { name: "@example/responsive-explainer", version: "1" } as const;
 const optionsType = { module, name: "ExplainerOptions" };
 const producer = { module, name: "compose" };
 const inputs = [
-  { name: "timeline", type: timelineTypes.track }, { name: "within", type: spatialTypes.frame },
+  { name: "timeline", type: timelineTypes.timeline }, { name: "within", type: spatialTypes.frame },
   { name: "window", type: temporalTypes.window }, { name: "reveal", type: temporalTypes.instant },
   { name: "media", type: mediaTypes.synchronized }, { name: "sourceWindow", type: temporalTypes.window },
   { name: "font", type: mediaTypes.fontStack }, { name: "options", type: optionsType },
 ];
 export const manifest: ModuleManifest = { format: "qflow.module@1", ...module,
-  dependencies: [compositionTypes.visualTrack, mediaTypes.fontStack, timelineTypes.track,
+  dependencies: [compositionTypes.visualTrack, mediaTypes.fontStack, timelineTypes.timeline,
     spatialTypes.frame, temporalTypes.window, temporalTypes.instant]
     .map(type => ({ module: type.module })),
   types: [{ name: optionsType.name }], capabilities: [],

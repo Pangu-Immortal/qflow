@@ -265,7 +265,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
     name: "inputs", tag: "Inputs", mode: "structured",
     outputs: [
       svsRecipeType,
-      timelineTypes.track,
+      timelineTypes.timeline,
       spatialTypes.point,
       spatialTypes.frame,
       spatialTypes.path,
@@ -326,7 +326,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
         } },
         range: element.range,
       },
-      { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "semantic", type: timelineTypes.timeline, value: { kind: "inline", value: semantic }, range: element.range },
       { id: "title-point", type: spatialTypes.point, value: { kind: "inline", value: { xPx: 540, yPx: 120 } }, range: element.range },
       { id: "body-frame", type: spatialTypes.frame, value: { kind: "inline", value: { xPx: 80, yPx: 220, widthPx: 920, heightPx: 520 } }, range: element.range },
       { id: "arc", type: spatialTypes.path, value: { kind: "inline", value: { commands: [
@@ -582,7 +582,7 @@ test("a paragraph's source indentation is not part of its words", async () => {
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
     outputs: [
-      svsRecipeType, timelineTypes.track, spatialTypes.frame,
+      svsRecipeType, timelineTypes.timeline, spatialTypes.frame,
       mediaTypes.fontArtifact, textTypes.text,
     ],
   } as const;
@@ -601,7 +601,7 @@ test("a paragraph's source indentation is not part of its words", async () => {
       { id: "editorial", type: svsRecipeType, value: { kind: "inline", value: {
           path: "text.editorial", properties: { size: 44, "line-height": 1.15 } } },
         range: element.range },
-      { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "semantic", type: timelineTypes.timeline, value: { kind: "inline", value: semantic }, range: element.range },
       { id: "body-frame", type: spatialTypes.frame, value: { kind: "inline", value: { xPx: 80, yPx: 220, widthPx: 920, heightPx: 520 } }, range: element.range },
       { id: "exact-font", type: mediaTypes.fontArtifact, value: { kind: "inline", value: exactTestFont }, range: element.range },
     ],

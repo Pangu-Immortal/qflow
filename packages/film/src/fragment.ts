@@ -66,7 +66,7 @@ export function createFilmAssemblyFragment(options: FilmAssemblyFragmentOptions)
     inputs: [
       { name: "program", type: filmTypes.program },
       { name: "canvas", type: spatialTypes.canvas },
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       ...tracks.map((track) => ({
         name: track.name,
         type: track.kind === "visual" ? compositionTypes.visualTrack : compositionTypes.audioTrack,

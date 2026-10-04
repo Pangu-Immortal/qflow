@@ -9,7 +9,7 @@ import {
   previewLayer,
   requiredSurfaceValue,
   temporalLineageFor,
-  temporalSemanticSource,
+  temporalDomainSource,
 } from "@qflow/studio-adapter";
 
 function projectAudio(context: StudioTrackCompanionContext) {
@@ -26,7 +26,7 @@ function projectAudio(context: StudioTrackCompanionContext) {
   return childEntities(context, clips, "audio-clip", "standard").map((entity, index) => {
     const clip = clips[index]!;
     const temporal = temporalLineageFor(context, clip.id, "window");
-    const semanticSource = temporalSemanticSource(temporal);
+    const semanticSource = temporalDomainSource(temporal);
     return {
       ...entity,
       display: {

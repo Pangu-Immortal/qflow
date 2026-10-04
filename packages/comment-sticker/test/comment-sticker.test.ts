@@ -167,7 +167,7 @@ test("Style Surface consumes an explicit SVS Recipe and exact Font Stack", async
 test("Track Surface lowers mixed literal and resolved-Window Stickers to a finite explicit graph", async () => {
   const blob = { kind: "blob" as const, resource: fixtureResource("comment-avatar"), size: 128, mediaType: "image/png" };
   const refs = new Map<string, SurfaceResolvedReference>([
-    ["video.timeline", authored("video.timeline", timelineTypes.track, semantic)],
+    ["video.timeline", authored("video.timeline", timelineTypes.timeline, semantic)],
     ["layout.comment", authored("layout.comment", spatialTypes.frame, frame)],
     ["social", authored("social", commentStickerTypes.style, style)],
     ["avatar", authored("avatar", artifactTypes.blob, blob)],

@@ -108,7 +108,7 @@ const compositionRecord = await admitRecord(closure, sealRecord({
 }), validatorRegistry());
 const spaceRecord = await admitRecord(closure, sealRecord({
   id: "space",
-  type: timelineTypes.track,
+  type: timelineTypes.timeline,
   value: stored(space),
 }), validatorRegistry());
 const linked = link(closure, [compositionRecord, spaceRecord]);
@@ -305,7 +305,7 @@ const fixtureModule = { name: "example.composition-fixture", version: "1" } as c
 const fixtureSurfaceDigest = fixtureResource("example.composition-fixture/surface@1");
 const fixtureSurface = {
   name: "composition", tag: "Composition", mode: "structured",
-  outputs: [compositionTypes.composition, timelineTypes.track],
+  outputs: [compositionTypes.composition, timelineTypes.timeline],
 } as const;
 const fixtureManifest: ModuleManifest = {
   format: "qflow.module@1",
@@ -338,7 +338,7 @@ test(`the ${selectedRange ? "selected" : "full"} rendered video remains an ordin
   surfaces.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
       { id: "composition", type: compositionTypes.composition, value: stored(composition), range: element.range },
-      { id: "semantic", type: timelineTypes.track, value: stored(semantic), range: element.range },
+      { id: "semantic", type: timelineTypes.timeline, value: stored(semantic), range: element.range },
     ],
     components: [],
     fragments: [],

@@ -69,7 +69,7 @@ export const audioTrackProgramSchema: ValueSchema = object({
 
 const clipInputs = [
   { name: "set", type: audioTrackTypes.set }, { name: "header", type: audioTrackTypes.header },
-  { name: "timeline", type: timelineTypes.track }, { name: "media", type: mediaTypes.synchronized },
+  { name: "timeline", type: timelineTypes.timeline }, { name: "media", type: mediaTypes.synchronized },
   { name: "spec", type: audioTrackTypes.clipSpec }, { name: "window", type: temporalTypes.window },
 ] as const;
 
@@ -161,7 +161,7 @@ export const audioTrackManifest: ModuleManifest = {
     { name: audioTrackProducers.createSet.name, inputs: [], outputs: [{ name: "set", type: audioTrackTypes.set }], needs: [] },
     { name: audioTrackProducers.appendClip.name, inputs: [...clipInputs], outputs: [{ name: "set", type: audioTrackTypes.set }], needs: [] },
     { name: audioTrackProducers.finalize.name, inputs: [{ name: "set", type: audioTrackTypes.set }, { name: "header", type: audioTrackTypes.header }], outputs: [{ name: "program", type: audioTrackTypes.program }], needs: [] },
-    { name: audioTrackProducers.render.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: audioTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.audioTrack }], needs: [] },
+    { name: audioTrackProducers.render.name, inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "program", type: audioTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.audioTrack }], needs: [] },
   ],
 };
 

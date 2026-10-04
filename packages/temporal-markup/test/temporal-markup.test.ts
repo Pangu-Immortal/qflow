@@ -12,7 +12,7 @@ const reference = (path: string): MarkupAttributeValue => ({ kind: "reference", 
 const resolved = (path: string, type: SurfaceResolvedReference["type"]): SurfaceResolvedReference => ({
   path, type, ref: { kind: "record", id: path },
 });
-const timeline = resolved("timeline", timelineTypes.track);
+const timeline = resolved("timeline", timelineTypes.timeline);
 const references = new Map([
   ["timeline", timeline],
   ["start-instant", resolved("start-instant", temporalTypes.instant)],

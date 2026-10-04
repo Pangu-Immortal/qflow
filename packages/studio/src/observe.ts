@@ -11,7 +11,7 @@ import type {
   MarkupSurfaceRegistryLike, RegisteredSurface, StructuredElement, StructuredSurfaceInput, SurfaceDecodeOutput,
 } from "@qflow/markup";
 import type { ModuleRef } from "@qflow/protocol";
-import type { StudioObservedValue, StudioPlacement, StudioScriptSourceMap } from "@qflow/studio-adapter";
+import type { StudioObservedValue, StudioPlacement, StudioTemporalDomainSourceMap } from "@qflow/studio-adapter";
 
 import type { Range } from "./shared.js";
 import type { StudioCompanionRegistry } from "./studio-registry.js";
@@ -24,7 +24,7 @@ export type Placement = StudioPlacement;
 export type Observations = {
   readonly placements: readonly Placement[];
   /** Whatever the Surfaces mapped back onto the Source, such as a Script's markers. */
-  readonly sourceMaps: readonly StudioScriptSourceMap[];
+  readonly temporalDomains: readonly StudioTemporalDomainSourceMap[];
 };
 
 export type Observer = {
@@ -71,7 +71,7 @@ export function createObserver(
   registry: StudioCompanionRegistry,
 ): Observer {
   const placements: Placement[] = [];
-  const sourceMaps: StudioScriptSourceMap[] = [];
+  const temporalDomains: StudioTemporalDomainSourceMap[] = [];
 
   // A Frontend may reach a Surface by name or by walking a module's whole list,
   // so both ways in are wrapped: an unwatched Surface decodes silently and the
@@ -90,11 +90,12 @@ export function createObserver(
               && Number.isInteger((output as { readonly nextOffset?: unknown }).nextOffset)
               ? (output as { readonly nextOffset: number }).nextOffset
               : undefined;
-            const sourceMap = registry.observeScript(module, found.surface, {
+            const sourceMap = registry.observeTemporalDomain(module, found.surface, {
               ...input,
+              range: { start: input.openingStart, end: nextOffset ?? input.contentStart },
               ...(nextOffset === undefined ? {} : { nextOffset }),
             });
-            if (sourceMap !== undefined) sourceMaps.push(sourceMap);
+            if (sourceMap !== undefined) temporalDomains.push(sourceMap);
             return output;
           },
         } as RegisteredSurface;
@@ -159,6 +160,13 @@ export function createObserver(
                 };
               }),
           });
+          const sourceMap = registry.observeTemporalDomain(module, found.surface, {
+            sourceName: input.sourceName,
+            tag: input.element.name,
+            range: { start: input.element.range.start, end: input.element.range.end },
+            attributes: input.element.attributes,
+          });
+          if (sourceMap !== undefined) temporalDomains.push(sourceMap);
           return output;
         },
       } as RegisteredSurface;
@@ -174,7 +182,7 @@ export function createObserver(
   return {
     surfaces: watchedSurfaces,
     frontend<T extends { readonly id: string }>(frontend: T): T { return frontend; },
-    observations: () => ({ placements, sourceMaps }),
+    observations: () => ({ placements, temporalDomains }),
   };
 }
 

@@ -26,14 +26,14 @@ export const narrativeTemporalManifest: ModuleManifest = {
   dependencies: [narrativeDependency, temporalDependency, timelineDependency],
   types: Object.values(narrativeTemporalTypes).map((type) => ({ name: type.name })), capabilities: [], producers: [{
     name: narrativeTemporalProducers.materializeSegmentBoundaries.name,
-    inputs: [{ name: "narrative", type: narrativeTypes.narrative }, { name: "segment", type: narrativeTypes.excerpt },
+    inputs: [{ name: "narrative", type: narrativeTypes.narrative }, { name: "segment", type: narrativeTypes.segmentRef },
       { name: "domain", type: temporalTypes.localDomain }],
     outputs: [{ name: "alignment", type: narrativeTemporalTypes.narrativeAlignment }], needs: [],
   }, {
     name: narrativeTemporalProducers.projectAlignment.name,
     inputs: [{ name: "alignment", type: narrativeTemporalTypes.narrativeAlignment },
       { name: "domain", type: temporalTypes.localDomain }, { name: "window", type: temporalTypes.window },
-      { name: "timeline", type: timelineTypes.track }],
+      { name: "timeline", type: timelineTypes.timeline }],
     outputs: [{ name: "parts", type: narrativeTemporalTypes.narrativeProjectionParts }], needs: [],
   }, {
     name: narrativeTemporalProducers.combineProjectionParts.name,
@@ -42,22 +42,22 @@ export const narrativeTemporalManifest: ModuleManifest = {
   }, {
     name: narrativeTemporalProducers.finalizeProjection.name,
     inputs: [{ name: "header", type: narrativeTemporalTypes.narrativeProjectionHeader },
-      { name: "narrative", type: narrativeTypes.narrative }, { name: "timeline", type: timelineTypes.track },
+      { name: "narrative", type: narrativeTypes.narrative }, { name: "timeline", type: timelineTypes.timeline },
       { name: "parts", type: narrativeTemporalTypes.narrativeProjectionParts }],
     outputs: [{ name: "projection", type: narrativeTemporalTypes.narrativeProjection }], needs: [],
   }, {
     name: narrativeTemporalProducers.projectSelectionInstant.name,
-    inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
+    inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
       { name: "selection", type: narrativeTypes.selection }, { name: "spec", type: narrativeTemporalTypes.narrativeInstantSpec }],
     outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [],
   }, {
     name: narrativeTemporalProducers.projectSegmentInstant.name,
-    inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
-      { name: "segment", type: narrativeTypes.excerpt }, { name: "spec", type: narrativeTemporalTypes.narrativeInstantSpec }],
+    inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
+      { name: "segment", type: narrativeTypes.segmentRef }, { name: "spec", type: narrativeTemporalTypes.narrativeInstantSpec }],
     outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [],
   }, {
     name: narrativeTemporalProducers.projectMomentInstant.name,
-    inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
+    inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
       { name: "moment", type: narrativeTypes.moment }, { name: "spec", type: narrativeTemporalTypes.narrativeInstantSpec }],
     outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [],
   }],

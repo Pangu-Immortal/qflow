@@ -1,5 +1,5 @@
 import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft } from "@qflow/studio-adapter";
-import { artifactPreview, previewLayer, temporalLineageFor, temporalSemanticSource } from "@qflow/studio-adapter";
+import { artifactPreview, previewLayer, temporalLineageFor, temporalDomainSource } from "@qflow/studio-adapter";
 import { compositionTypes } from "@qflow/composition";
 import { timelineTypes } from "@qflow/timeline";
 
@@ -28,12 +28,12 @@ function withTemporalLineage(
 ): StudioEntityDraft {
   const temporal = temporalLineageFor(context, entity.authoredId);
   if (temporal === undefined) return entity;
-  const semanticSource = temporalSemanticSource(temporal);
+  const domainSource = temporalDomainSource(temporal);
   return {
     ...entity,
-    ...(semanticSource?.id === undefined
+    ...(domainSource?.id === undefined
       ? {}
-      : { markerId: semanticSource.id }),
+      : { markerId: domainSource.id }),
     temporal,
   };
 }
@@ -79,8 +79,8 @@ function projectTerminalAudio(context: StudioTrackCompanionContext): readonly St
 /** Cross-domain terminal protocols understood even when no Companion is installed. */
 export const fallbackStudioTrackCompanions: readonly StudioTrackCompanion[] = [
   {
-    id: "@qflow/studio#timeline", role: "timeline", output: { type: timelineTypes.track },
-    family: "semantic", tone: "teal", label: "Timeline", icon: "brand",
+    id: "@qflow/studio#timeline", role: "timeline", output: { type: timelineTypes.timeline },
+    family: "timeline", tone: "teal", label: "Timeline", icon: "brand",
     lane: { heightPx: 45 },
   },
   {

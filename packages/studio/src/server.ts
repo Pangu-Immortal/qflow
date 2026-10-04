@@ -9,6 +9,7 @@ import { pipeline } from "node:stream/promises";
 import type { Plugin, ViteDevServer } from "vite";
 import type { BuildResultFileRange } from "@qflow/build-result";
 import type { StudioTemporalInstantProjection } from "@qflow/studio-adapter";
+import { sameType } from "@qflow/protocol";
 
 import type { StudioBuildLibrary } from "./build-library.js";
 import type { ServedFile } from "./compile.js";
@@ -22,7 +23,7 @@ import type { Range, StudioFailure, StudioLibraryRequest, StudioLibraryView, Stu
 import { createStudioStoryboard } from "./storyboard.js";
 import type { StudioStoryboard } from "./storyboard.js";
 import { findSurfacePreview } from "./surface-preview.js";
-import { formatTemporalPointEdit, semanticGestureSpan } from "./temporal-edit.js";
+import { formatTemporalPointEdit, domainGestureSpan } from "./temporal-edit.js";
 import { replaceSourceFiles } from "./source-transaction.js";
 
 export type StudioPluginOptions = {
@@ -278,7 +279,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       throw new Error("A timeline target must use valid whole frames.");
     }
     if (temporal.kind === "window") {
-      if (mutation.gesture === "move" && handle.semantic?.kind !== "selection"
+      if (mutation.gesture === "move" && handle.domain?.kind !== "span"
         && endFrameExclusive - startFrame !== clip.endFrameExclusive - clip.startFrame) {
         throw new Error("Move must preserve the Window duration.");
       }
@@ -293,62 +294,62 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
     }
 
     const patches: Patch[] = [];
-    const semanticTarget = mutation.target.semantic;
-    if (handle.semantic !== undefined && semanticTarget === undefined) throw new Error("A semantic edit requires explicit target anchors.");
-    if (semanticTarget !== undefined) {
-      if (handle.semantic?.kind !== semanticTarget.kind) {
-        throw new Error(`Entity ${mutation.entityId} is not bound to a writable ${semanticTarget.kind}.`);
+    const domainTarget = mutation.target.domain;
+    if (handle.domain !== undefined && domainTarget === undefined) throw new Error("A temporal-domain edit requires explicit target anchors.");
+    if (domainTarget !== undefined) {
+      if (handle.domain?.kind !== domainTarget.kind
+        || handle.domain.companion !== domainTarget.companion
+        || handle.domain.domainId !== domainTarget.domainId
+        || handle.domain.itemId !== domainTarget.itemId) {
+        throw new Error(`Entity ${mutation.entityId} is not bound to the requested temporal-domain item.`);
       }
       const current = snapshot;
-      const script = current?.script;
-      if (current === undefined || script === undefined || current.semantic === undefined) throw new Error("Studio has no writable Script source map.");
-      if (handle.semantic.narrativeId !== current.semantic.narrativeId
-        || script.narrativeId !== current.semantic.narrativeId) {
-        throw new Error("The timeline entity and writable Script do not belong to the selected Narrative.");
-      }
-      const projected = semanticGestureSpan(current.semantic.anchors, handle, semanticTarget);
+      const domain = current?.temporalDomains.find((candidate) => candidate.companion === domainTarget.companion
+        && candidate.id === domainTarget.domainId);
+      if (current === undefined || domain === undefined) throw new Error("Studio has no writable temporal-domain source.");
+      const projected = domainGestureSpan(domain.anchors, handle, domainTarget);
       if (projected === undefined || projected.startFrame !== startFrame || projected.endFrameExclusive !== endFrameExclusive) {
-        throw new Error("The semantic edit does not produce the requested timeline projection.");
+        throw new Error("The temporal-domain edit does not produce the requested timeline projection.");
       }
-      const absolute = resolve(options.workspaceRoot, script.sourcePath);
+      const absolute = resolve(options.workspaceRoot, domain.source.path);
       const source = await readFile(absolute, "utf8");
-      if (script.content.start < 0 || script.content.end < script.content.start || script.content.end > source.length) {
-        throw new Error("The current Script source range is invalid.");
+      if (domain.source.content.start < 0 || domain.source.content.end < domain.source.content.start || domain.source.content.end > source.length) {
+        throw new Error("The current temporal-domain source range is invalid.");
       }
-      const body = source.slice(script.content.start, script.content.end);
-      const replacement = options.registry.adjustScript({
-        companion: script.companion,
-        sourceName: script.sourcePath,
+      const body = source.slice(domain.source.content.start, domain.source.content.end);
+      const replacement = options.registry.adjustTemporalDomain({
+        companion: domain.companion,
+        sourceName: domain.source.path,
         source: body,
-        adjustment: semanticTarget.kind === "selection"
+        adjustment: domainTarget.kind === "span"
           ? {
-              kind: "selection",
-              id: handle.semantic.id,
-              startAnchorId: semanticTarget.startAnchorId,
-              endAnchorId: semanticTarget.endAnchorId,
+              kind: "span",
+              itemId: domainTarget.itemId,
+              startAnchorId: domainTarget.startAnchorId,
+              endAnchorId: domainTarget.endAnchorId,
             }
-          : { kind: "moment", id: handle.semantic.id, anchorId: semanticTarget.anchorId },
+          : { kind: "point", itemId: domainTarget.itemId, anchorId: domainTarget.anchorId },
       });
       if (replacement !== body) patches.push({
-        path: relative(options.workspaceRoot, absolute), range: script.content, replacement, preimage: body,
+        path: relative(options.workspaceRoot, absolute), range: domain.source.content, replacement, preimage: body,
       });
     }
 
     const source = (role: "start" | "end" | "duration") =>
       handle.sources?.find((candidate) => candidate.role === role)?.source;
     const frame = (value: number): string => `${value}f`;
-    const semanticFrame = (endpoint: StudioTemporalInstantProjection): number | undefined => {
-      if (endpoint.authority.kind !== "domain" || semanticTarget === undefined || handle.semantic === undefined) return undefined;
-      if (endpoint.source.kind === "selection" && semanticTarget.kind === "selection"
-        && endpoint.source.id === handle.semantic.id) {
+    const domainFrame = (endpoint: StudioTemporalInstantProjection): number | undefined => {
+      if (endpoint.authority.kind !== "domain" || domainTarget === undefined || handle.domain === undefined) return undefined;
+      const domain = snapshot?.temporalDomains.find((candidate) => candidate.companion === domainTarget.companion
+        && candidate.id === domainTarget.domainId);
+      if (domainTarget.kind === "span" && handle.domain.kind === "span") {
         const anchorId = endpoint.authority.boundary === "start"
-          ? semanticTarget.startAnchorId
-          : semanticTarget.endAnchorId;
-        return snapshot?.semantic?.anchors.find((anchor) => anchor.id === anchorId)?.frame;
+          ? domainTarget.startAnchorId
+          : domainTarget.endAnchorId;
+        return domain?.anchors.find((anchor) => anchor.id === anchorId)?.frame;
       }
-      if (endpoint.source.kind === "moment" && semanticTarget.kind === "moment"
-        && endpoint.source.id === handle.semantic.id) {
-        return snapshot?.semantic?.anchors.find((anchor) => anchor.id === semanticTarget.anchorId)?.frame;
+      if (domainTarget.kind === "point" && handle.domain.kind === "point") {
+        return domain?.anchors.find((anchor) => anchor.id === domainTarget.anchorId)?.frame;
       }
       return undefined;
     };
@@ -356,17 +357,16 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       if (endpoint.reference === "absolute") return undefined;
       if (endpoint.reference === "timeline.start") return 0;
       if (endpoint.reference === "timeline.end") return snapshot?.timeline.frameCount;
-      const id = endpoint.source.id;
-      if (id === undefined) return undefined;
-      if (endpoint.reference === "selection.start" || endpoint.reference === "selection.end") {
-        const selection = snapshot?.semantic?.selections.find((candidate) => candidate.id === id);
-        return endpoint.reference === "selection.start" ? selection?.startFrame : selection?.endFrameExclusive;
-      }
-      if (endpoint.reference === "segment.start" || endpoint.reference === "segment.end") {
-        const segment = snapshot?.semantic?.segments.find((candidate) => candidate.id === id);
-        return endpoint.reference === "segment.start" ? segment?.startFrame : segment?.endFrameExclusive;
-      }
-      return snapshot?.semantic?.moments.find((candidate) => candidate.id === id)?.frame;
+      const domain = endpoint.source.domain;
+      const view = domain === undefined ? undefined : snapshot?.temporalDomains.find((candidate) =>
+        candidate.companion === domain.companion && candidate.id === domain.id);
+      const item = view?.items.find((candidate) => candidate.source !== undefined
+        && sameType(candidate.source.type, endpoint.source.type)
+        && candidate.source.kind === endpoint.source.kind && candidate.source.id === endpoint.source.id);
+      if (item === undefined) return undefined;
+      if (item.kind === "point") return item.frame;
+      return endpoint.authority.kind === "domain" && endpoint.authority.boundary === "start"
+        ? item.startFrame : item.endFrameExclusive;
     };
     const projectedPointValue = (endpoint: StudioTemporalInstantProjection, desired: number): string =>
       formatTemporalPointEdit(endpoint.reference, desired, projectionBaseFrame(endpoint));
@@ -378,7 +378,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       if (desired === endpoint.frame) return;
       if (endpoint.authority.kind === "fixed") throw new Error(`The ${role} endpoint has no timeline write target.`);
       if (endpoint.authority.kind === "domain") {
-        if (semanticFrame(endpoint) !== desired) throw new Error(`The ${role} endpoint does not match its semantic Anchor.`);
+        if (domainFrame(endpoint) !== desired) throw new Error(`The ${role} endpoint does not match its temporal-domain Anchor.`);
         return;
       }
       if (endpoint.authority.relation !== "direct") return;

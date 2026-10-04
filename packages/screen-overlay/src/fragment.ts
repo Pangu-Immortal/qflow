@@ -32,7 +32,7 @@ export function createScreenOverlayFragment(items: readonly ScreenOverlayFragmen
   );
   return sealGraphFragment({ inputs: [
     { name: "within", type: spatialTypes.frame }, { name: "header", type: screenOverlayTypes.header },
-    { name: "timeline", type: timelineTypes.track }, ...[...types].map(([inputName, type]) => ({ name: inputName, type })),
+    { name: "timeline", type: timelineTypes.timeline }, ...[...types].map(([inputName, type]) => ({ name: inputName, type })),
   ], operations, exports: [
     { name: "program", type: screenOverlayTypes.program, root: operation("overlay:program") },
     { name: "visual", type: compositionTypes.visualTrack, root: operation("overlay:track") },

@@ -145,7 +145,7 @@ function normalizeObservations(
       }),
     };
   });
-  return { placements, sourceMaps: observations.sourceMaps };
+  return { placements, temporalDomains: observations.temporalDomains };
 }
 
 async function bytesOf(attachment: ArtifactAttachment): Promise<Uint8Array> {

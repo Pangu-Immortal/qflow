@@ -1,12 +1,12 @@
 export { narrativeDependency, narrativeManifest, narrativeModuleRef, narrativeTypes } from "./manifest.js";
 export { narrativeComponent } from "./component.js";
 export {
-  assertNarrativeExcerptIdentity,
+  assertNarrativeSegmentRefIdentity,
   assertNarrativeIdentity,
   assertNarrativeMomentRefIdentity,
   assertNarrativeSelectionRefIdentity,
 } from "./identity.js";
-export { narrativeExcerptSchema, narrativeMomentSchema, narrativeSchema, narrativeSelectionSchema } from "./schema.js";
+export { narrativeSegmentRefSchema, narrativeMomentSchema, narrativeSchema, narrativeSelectionSchema } from "./schema.js";
 export type * from "./types.js";
 
 export { narrativeAnchorTokenBoundary, narrativeSelectionTokenRange, narrativeTokensForSelection } from "./selection.js";

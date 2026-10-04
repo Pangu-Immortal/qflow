@@ -734,7 +734,7 @@ export const rankingManifest: ModuleManifest = {
     ], outputs: [{ name: "set", type: rankingTypes.triggeredCandidates }], needs: [] },
     { name: rankingProducers.schedule.name, inputs: [
       { name: "header", type: rankingTypes.header }, { name: "items", type: rankingTypes.itemSpecs },
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       { name: "outer", type: temporalTypes.window }, { name: "candidates", type: rankingTypes.triggeredCandidates },
       { name: "terminal", type: temporalTypes.instant },
     ], outputs: [{ name: "schedule", type: rankingTypes.schedule }], needs: [] },
@@ -747,7 +747,7 @@ export const rankingManifest: ModuleManifest = {
     ], outputs: [{ name: "set", type: rankingTypes.tierWindows }], needs: [] },
     { name: rankingProducers.tierSchedule.name, inputs: [
       { name: "header", type: rankingTypes.header }, { name: "items", type: rankingTypes.itemSpecs },
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       { name: "outer", type: temporalTypes.window }, { name: "windows", type: rankingTypes.tierWindows },
     ], outputs: [{ name: "schedule", type: rankingTypes.schedule }], needs: [] },
     { name: rankingProducers.createColumnWindows.name, inputs: [], outputs: [
@@ -759,7 +759,7 @@ export const rankingManifest: ModuleManifest = {
     ], outputs: [{ name: "set", type: rankingTypes.columnWindows }], needs: [] },
     { name: rankingProducers.columnSchedule.name, inputs: [
       { name: "header", type: rankingTypes.header }, { name: "items", type: rankingTypes.itemSpecs },
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       { name: "outer", type: temporalTypes.window }, { name: "windows", type: rankingTypes.columnWindows },
     ], outputs: [{ name: "schedule", type: rankingTypes.schedule }], needs: [] },
     ...([
@@ -793,7 +793,7 @@ export const rankingManifest: ModuleManifest = {
       { name: eventProducer.name, inputs: [
         { name: "schedule", type: rankingTypes.schedule }, { name: "style", type: styleType }, { name: "specs", type: rankingTypes.itemSpecs },
       ], outputs: [{ name: "events", type: rankingTypes.soundEvents }], needs: [] },
-      { name: renderProducer.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: programType }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+      { name: renderProducer.name, inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "program", type: programType }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
     ]),
     { name: rankingProducers.createSounds.name, inputs: [], outputs: [{ name: "sounds", type: rankingTypes.sounds }], needs: [] },
     ...([
@@ -803,7 +803,7 @@ export const rankingManifest: ModuleManifest = {
       name: producer.name, inputs: [{ name: "sounds", type: rankingTypes.sounds }, { name: "media", type: mediaTypes.synchronized }], outputs: [{ name: "sounds", type: rankingTypes.sounds }], needs: [],
     })),
     { name: rankingProducers.renderAudio.name, inputs: [
-      { name: "timeline", type: timelineTypes.track }, { name: "events", type: rankingTypes.soundEvents },
+      { name: "timeline", type: timelineTypes.timeline }, { name: "events", type: rankingTypes.soundEvents },
       { name: "style", type: rankingTypes.soundStyle }, { name: "sounds", type: rankingTypes.sounds },
     ], outputs: [{ name: "track", type: compositionTypes.audioTrack }], needs: [] },
   ],

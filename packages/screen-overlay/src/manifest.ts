@@ -64,7 +64,7 @@ export const screenOverlayHeaderSchema: ValueSchema = object({ id: { schema: str
 export const screenOverlayItemSpecSchema: ValueSchema = itemSpec;
 export const screenOverlaySetSchema: ValueSchema = object({ items: { schema: { kind: "array", items: item } } });
 export const screenOverlayProgramSchema: ValueSchema = object({ id: { schema: string }, items: { schema: { kind: "array", minItems: 1, items: item } } });
-const appendInputs = [{ name: "set", type: screenOverlayTypes.set }, { name: "header", type: screenOverlayTypes.header }, { name: "timeline", type: timelineTypes.track }, { name: "spec", type: screenOverlayTypes.itemSpec }, { name: "window", type: temporalTypes.window }] as const;
+const appendInputs = [{ name: "set", type: screenOverlayTypes.set }, { name: "header", type: screenOverlayTypes.header }, { name: "timeline", type: timelineTypes.timeline }, { name: "spec", type: screenOverlayTypes.itemSpec }, { name: "window", type: temporalTypes.window }] as const;
 
 const itemAttributes = [
   { name: "id", kind: "identifier", required: false,
@@ -297,7 +297,7 @@ export const screenOverlayManifest: ModuleManifest = {
     { name: screenOverlayProducers.createSet.name, inputs: [], outputs: [{ name: "set", type: screenOverlayTypes.set }], needs: [] },
     { name: screenOverlayProducers.appendItem.name, inputs: [...appendInputs], outputs: [{ name: "set", type: screenOverlayTypes.set }], needs: [] },
     { name: screenOverlayProducers.finalize.name, inputs: [{ name: "set", type: screenOverlayTypes.set }, { name: "header", type: screenOverlayTypes.header }], outputs: [{ name: "program", type: screenOverlayTypes.program }], needs: [] },
-    { name: screenOverlayProducers.render.name, inputs: [{ name: "within", type: spatialTypes.frame }, { name: "timeline", type: timelineTypes.track }, { name: "program", type: screenOverlayTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+    { name: screenOverlayProducers.render.name, inputs: [{ name: "within", type: spatialTypes.frame }, { name: "timeline", type: timelineTypes.timeline }, { name: "program", type: screenOverlayTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };
 export const screenOverlayDependency = { module: screenOverlayModuleRef } as const;

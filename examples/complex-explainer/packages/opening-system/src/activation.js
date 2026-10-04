@@ -35,7 +35,7 @@ const optionsType = type("Options"),
 const producer = (name) => ({ module, name });
 const port = (name, type) => ({ name, type });
 const common = [
-  port("timeline", timelineTypes.track),
+  port("timeline", timelineTypes.timeline),
   port("within", spatialTypes.frame),
   port("window", temporalTypes.window),
   port("options", optionsType),
@@ -50,7 +50,7 @@ export const manifest = {
         mediaTypes.fontArtifact,
         mediaTypes.synchronized,
         mediaTypes.blobArtifact,
-        timelineTypes.track,
+        timelineTypes.timeline,
         spatialTypes.frame,
         temporalTypes.window,
         temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec,
@@ -441,7 +441,7 @@ const declarations = Object.keys(defaults).map((tag) => ({
     optionsType,
     itemsType,
     compositionTypes.visualTrack,
-    timelineTypes.track,
+    timelineTypes.timeline,
     temporalTypes.window,
     temporalTypes.instant,
     temporalTypes.windowSpec,

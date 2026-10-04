@@ -463,7 +463,7 @@ export function locateAlignedSegmentTiming(
 
   const tokensById = new Map(timedTokens.map((token) => [token.tokenId, token]));
   const segmentsById = new Map(timedSegments.map((segment) => [segment.segmentId, segment]));
-  const boundaries: LocalSemanticTimePoint[] = narrative.semanticIndex.anchors.flatMap((anchor): LocalSemanticTimePoint[] => {
+  const boundaries: LocalSemanticTimePoint[] = narrative.anchors.flatMap((anchor): LocalSemanticTimePoint[] => {
     if (anchor.kind === "segment-start" || anchor.kind === "segment-end") {
       const segment = segmentsById.get(anchor.segmentId)!;
       return [anchor.kind === "segment-start"

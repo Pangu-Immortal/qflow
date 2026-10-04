@@ -1,6 +1,6 @@
 import type { ModuleManifest, TypeRef } from "@qflow/protocol";
 import {
-  narrativeExcerptSchema,
+  narrativeSegmentRefSchema,
   narrativeSchema,
   narrativeMomentSchema,
   narrativeSelectionSchema,
@@ -9,7 +9,7 @@ import {
 export const narrativeModuleRef = { name: "@qflow/narrative", version: "1" } as const;
 export const narrativeTypes = {
   narrative: { module: narrativeModuleRef, name: "Narrative" },
-  excerpt: { module: narrativeModuleRef, name: "NarrativeExcerpt" },
+  segmentRef: { module: narrativeModuleRef, name: "NarrativeSegmentRef" },
   selection: { module: narrativeModuleRef, name: "NarrativeSelection" },
   moment: { module: narrativeModuleRef, name: "NarrativeMoment" },
 } satisfies Record<string, TypeRef>;
@@ -18,7 +18,7 @@ export const narrativeManifest: ModuleManifest = {
   dependencies: [],
   types: [
     { name: narrativeTypes.narrative.name },
-    { name: narrativeTypes.excerpt.name },
+    { name: narrativeTypes.segmentRef.name },
     { name: narrativeTypes.selection.name },
     { name: narrativeTypes.moment.name },
   ],

@@ -141,14 +141,15 @@ a separate, planned connection; **Send comment** currently saves the note only.
 ### Composition editing
 
 The selected targets must reach one Film and its resolved time source. Studio rejects several
-distinct Films in one view; use separate Runs/sessions for those. A Timeline supplies the
-placed material and semantic timing, including wordless Segments. The ruler always shows program
-time. When placed Segments are present, its left Timeline header spans the time ticks and the
-Segment, Word and Selection/Moment bands. Empty Word or marker bands are omitted based on the
-whole work, not the visible window or playhead. With no Segments, only the ordinary time ruler remains.
-The complete ruler area stays pinned while component tracks scroll.
+distinct Films in one view; use separate Runs/sessions for those. A Timeline supplies the complete
+program range and the ruler always shows program time. Independently installed temporal-domain
+Companions may add labelled lanes of anchors, points and spans. Script Studio projects Narrative
+Segments, words, Selections and Moments this way; common Studio has no Narrative slot or
+Narrative-shaped fallback. A beat or shot package can use the same surface without changing Studio.
+Empty domain lanes are omitted based on the whole work, not the visible window or playhead. The
+complete ruler area stays pinned while component tracks scroll.
 
-Semantic objects retain declaration-order drawing within each band. Their fine borders distinguish
+Domain items retain Companion projection order within each lane. Their fine borders distinguish
 adjacent and overlapping intervals without inventing time gaps. Selection raises an object above
 its peers; playback highlighting changes color without changing that order. Right-click an overlap
 to choose a covered object. These are editor presentation rules, independent of Film paint order.
@@ -167,9 +168,9 @@ the selected entity. A reference can resolve to a shared Frame or Recipe, so one
 may affect several consumers. Structured fields save together when editing ends and the value is complete; missing required values stay in the editor with a completion hint.
 Check save status; source conflicts reject stale edits rather than overwrite newer files.
 
-Script source ranges come from its raw Surface and Companion. Marker edits use Script's parsed
-anchors and preserve unrelated prose, whitespace and word attributes; the displayed timeline words
-are not a replacement text source. Recipe parameter reads use the same Source Header preparation
+Temporal-domain source ranges come from their package Companion. For Script, marker edits use its
+parsed anchors and preserve unrelated prose, whitespace and word attributes; the displayed timeline
+words are not a replacement text source. Recipe parameter reads use the same Source Header preparation
 as compilation, preserving UTF-16 offsets for the exact property being edited.
 
 The Timeline owns the editor's complete range; displayed objects do not extend it. Take placement
@@ -180,14 +181,14 @@ Moment edits Script and moves its consumers after recompilation. A parameter-bas
 handle edits its exact authored parameter. Fixed or derived values with no supported
 inverse remain read-only. Seeing an entity does not promise every drag gesture.
 
-A direct `during={selection}` move advances both endpoints by the same number of semantic
+A direct `during={selection}` move advances both endpoints by the same number of domain
 stops (distinct frame positions), so its duration may change. `at/for` moves its event and
 offers a trailing duration trim; `until/for` offers the corresponding leading trim.
 An Instant reference expression edits only its offset; a bare reference has an implicit zero offset.
 `start/end` trims edit the corresponding expression; moving the window shifts both by the same
 frame delta. Edited clock values and offsets are written in frames at the current Timeline rate.
-The semantic marker Inspector exposes exact anchor identities and, where a
-declared handle supports it, offers choices among coincident anchors.
+The domain-item Inspector exposes exact anchor identities and, where a declared handle supports it,
+offers choices among coincident anchors. Their meaning and writeback remain package-owned.
 See [temporal author forms](../temporal-markup/EDITING.md) for the complete behavior.
 
 Tasks and Artifacts are inspection surfaces; selecting an Artifact does not write a

@@ -18,7 +18,7 @@ export function createRenderHyperframesFragment(selectedRange = false) {
   return sealGraphFragment({
     inputs: [
       { name: "composition", type: compositionTypes.composition },
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       ...(selectedRange ? [{ name: "range", type: mediaTypes.frameRange }] : []),
     ],
     operations: [

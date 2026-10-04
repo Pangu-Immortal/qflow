@@ -120,8 +120,8 @@ const closure = createResolvedClosure([
   filmManifest,
 ]);
 const records = await Promise.all([
-  sealRecord({ id: "timeline", type: timelineTypes.track, value: stored(space) }),
-  sealRecord({ id: "semantic", type: timelineTypes.track, value: stored(semantic) }),
+  sealRecord({ id: "timeline", type: timelineTypes.timeline, value: stored(space) }),
+  sealRecord({ id: "semantic", type: timelineTypes.timeline, value: stored(semantic) }),
   sealRecord({ id: "canvas", type: spatialTypes.canvas, value: stored(canvas) }),
   sealRecord({ id: "film-program", type: filmTypes.program, value: stored(filmProgram) }),
   sealRecord({ id: "title", type: compositionTypes.visualTrack, value: stored(titleVisual) }),

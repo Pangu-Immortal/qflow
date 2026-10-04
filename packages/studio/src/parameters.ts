@@ -10,7 +10,7 @@ import type {
   StudioEditSource,
   StudioPlacement,
   StudioEditHandle,
-  StudioSemanticTimeline,
+  StudioTemporalDomainView,
   StudioTemporalInstantProjection,
   StudioTemporalLineage,
   StudioTimelineGesture,
@@ -19,6 +19,7 @@ import { parseSvs } from "@qflow/svs";
 import { parseOpeningTag } from "@qflow/markup";
 import { prepareAuthorSource } from "@qflow/elaborator";
 import { parameterControlForSchema, parameterRecordSchema } from "./parameter-values.js";
+import { sameType } from "@qflow/protocol";
 import type { CanonicalValue } from "@qflow/protocol";
 
 import type { StudioCompanionRegistry } from "./studio-registry.js";
@@ -517,7 +518,7 @@ export function temporalBindingDeclarations(
 export function resolveTimelineEditHandles(
   bindings: readonly StudioSourceBinding[],
   temporal?: StudioTemporalLineage,
-  semantic?: StudioSemanticTimeline,
+  domains: readonly StudioTemporalDomainView[] = [],
 ): readonly StudioEditHandle[] {
   const byName = new Map<string, StudioSourceBinding>();
   for (const binding of bindings) {
@@ -538,38 +539,31 @@ export function resolveTimelineEditHandles(
   if (temporal === undefined) return [];
   const projection = temporal.projection;
 
-  const semanticTarget = (endpoints: readonly StudioTemporalInstantProjection[]) => {
+  const domainTarget = (endpoints: readonly StudioTemporalInstantProjection[]) => {
     const sources = endpoints.flatMap((endpoint) => endpoint.authority.kind === "domain"
       ? [endpoint.authority.source]
       : []);
     const first = sources[0];
-    if (first === undefined || first.narrativeId === undefined
-      || first.timelineId !== semantic?.timelineId
-      || first.narrativeId !== semantic.narrativeId
+    if (first === undefined || first.domain === undefined
       || !sources.every((candidate) => candidate.kind === first.kind
         && candidate.id === first.id
         && candidate.timelineId === first.timelineId
-        && candidate.narrativeId === first.narrativeId)) return undefined;
-    if (first.kind === "selection") {
-      const selection = semantic?.selections.find((candidate) => candidate.id === first.id);
-      return selection === undefined ? undefined : {
-        kind: "selection" as const,
-        narrativeId: first.narrativeId,
-        id: selection.id,
-        startAnchorId: selection.startAnchorId,
-        endAnchorId: selection.endAnchorId,
-      };
-    }
-    if (first.kind === "moment") {
-      const moment = semantic?.moments.find((candidate) => candidate.id === first.id);
-      return moment === undefined ? undefined : {
-        kind: "moment" as const,
-        narrativeId: first.narrativeId,
-        id: moment.id,
-        anchorId: moment.anchorId,
-      };
-    }
-    return undefined;
+        && candidate.domain?.companion === first.domain?.companion
+        && candidate.domain?.id === first.domain?.id)) return undefined;
+    const view = domains.find((candidate) => candidate.timelineId === first.timelineId
+      && candidate.companion === first.domain!.companion && candidate.id === first.domain!.id);
+    const item = view?.items.find((candidate) => candidate.editable === true
+      && candidate.source !== undefined
+      && sameType(candidate.source.type, first.type)
+      && candidate.source.kind === first.kind && candidate.source.id === first.id);
+    if (view === undefined || item === undefined) return undefined;
+    return item.kind === "span" ? {
+      kind: "span" as const, companion: view.companion, domainId: view.id, itemId: item.id,
+      startAnchorId: item.startAnchorId, endAnchorId: item.endAnchorId,
+    } : {
+      kind: "point" as const, companion: view.companion, domainId: view.id, itemId: item.id,
+      anchorId: item.anchorId,
+    };
   };
 
   const handle = (
@@ -596,10 +590,10 @@ export function resolveTimelineEditHandles(
     if (missing !== undefined && "missing" in missing) {
       return disabled(gesture, `投影参数 ${missing.missing} 在当前作者源码中不可写。`);
     }
-    const semanticEndpoints = affected.filter(({ endpoint }) => endpoint.authority.kind === "domain").map(({ endpoint }) => endpoint);
-    const target = semanticTarget(semanticEndpoints);
-    if (semanticEndpoints.length > 0 && target === undefined) {
-      return disabled(gesture, "语义端点在当前 Candidate 中没有可写的作者身份。");
+    const domainEndpoints = affected.filter(({ endpoint }) => endpoint.authority.kind === "domain").map(({ endpoint }) => endpoint);
+    const target = domainTarget(domainEndpoints);
+    if (domainEndpoints.length > 0 && target === undefined) {
+      return disabled(gesture, "时间域端点在当前 Candidate 中没有可写的作者身份。");
     }
     const sources = projected.filter((item): item is StudioEditSource => "source" in item);
     return {
@@ -607,11 +601,11 @@ export function resolveTimelineEditHandles(
       operation: "timeline.adjust",
       gesture,
       enabled: true,
-      coordinate: target === undefined ? "program-frame" : "semantic-anchor",
+      coordinate: target === undefined ? "program-frame" : "domain-anchor",
       ...(moveEffect === undefined ? {} : { moveEffect }),
-      snapTo: target === undefined ? ["frame", "semantic-anchor", "item-edge"] : ["semantic-anchor"],
+      snapTo: target === undefined ? ["frame", "domain-anchor", "item-edge"] : ["domain-anchor"],
       ...(sources.length === 0 ? {} : { sources }),
-      ...(target === undefined ? {} : { semantic: target }),
+      ...(target === undefined ? {} : { domain: target }),
       temporal: projection,
     };
   };

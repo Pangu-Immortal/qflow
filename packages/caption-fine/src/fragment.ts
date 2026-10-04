@@ -14,7 +14,7 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 export const fineCaptionTrackFragment = sealGraphFragment({
   inputs: [
     { name: "document", type: captionTypes.document },
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
     { name: "within", type: spatialTypes.frame },
     { name: "timing", type: captionTypes.timing },
     { name: "program", type: captionTypes.program },
@@ -56,7 +56,7 @@ export const fineCaptionTrackFragment = sealGraphFragment({
 export const fineCaptionRegionTrackFragment = sealGraphFragment({
   inputs: [
     { name: "document", type: captionTypes.document },
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
     { name: "within", type: spatialTypes.frame },
     { name: "timing", type: captionTypes.timing },
     { name: "program", type: captionTypes.program },

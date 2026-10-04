@@ -71,7 +71,7 @@ export const hyperframesManifest: ModuleManifest = {
     name: hyperframesProducers.compile.name,
     inputs: [
       { name: "composition", type: compositionTypes.composition },
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
     ],
     outputs: [{ name: "document", type: hyperframesTypes.document }],
     needs: [],

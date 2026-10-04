@@ -701,7 +701,7 @@ function createFineTextFragment(form: FineTextForm, externalContent: boolean): G
   );
   return sealGraphFragment({
     inputs: [
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       { name: "geometry", type: form === "flow" ? spatialTypes.frame : form === "point" ? spatialTypes.point : spatialTypes.path },
       { name: "placementPolicy", type: form === "flow" ? textFineTypes.flowPlacementPolicy : form === "point" ? textFineTypes.pointPlacementPolicy : textFineTypes.pathPlacementPolicy },
       ...(form === "path" ? [{ name: "pathMotion", type: textFineTypes.pathMotion }] : []),
@@ -804,7 +804,7 @@ export const decodeTypographyPathSurface = decodeFineTextOccurrenceSurface("path
 
 function createMaskFragment(id: string): GraphFragment {
   const inputs = [
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
     { name: "occurrence", type: textFineTypes.occurrence },
     { name: "material", type: mediaTypes.compositableSurface },
     { name: "spec", type: textFineTypes.maskSpec },

@@ -1,5 +1,5 @@
 import type { ComponentPackage } from "@qflow/component-kit";
-import type { Narrative, NarrativeExcerpt } from "@qflow/narrative";
+import type { Narrative, NarrativeSegmentRef } from "@qflow/narrative";
 import type { StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
@@ -19,7 +19,7 @@ export const speechAlignmentComponent = {
     handler: ({ inputs }) => {
       const result = alignNarrative(
         inline<Narrative>(inputs.narrative?.value, "Narrative"),
-        inline<NarrativeExcerpt>(inputs.segment?.value, "NarrativeExcerpt"),
+        inline<NarrativeSegmentRef>(inputs.segment?.value, "NarrativeSegmentRef"),
         inline<LocalTemporalDomain>(inputs.domain?.value, "LocalTemporalDomain"),
         inline<AlignedTranscriptEvidence>(inputs.evidence?.value, "AlignedTranscriptEvidence"),
       );

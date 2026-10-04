@@ -56,7 +56,7 @@ test("Studio joins repeated local names through compiler-owned provenance", asyn
   } as unknown as NodeCompiledSourceClosure;
   const source = await observedCompiledSource(compiled, {
     placements: [placement("a.svml"), placement("b.svml")],
-    sourceMaps: [],
+    temporalDomains: [],
   });
   assert.equal(outputFor(source, "b::output::visual")?.ref, "b::output::visual");
   assert.equal(placementFor(source, "b::output::visual")?.sourcePath, "b.svml");

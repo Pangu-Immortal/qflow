@@ -14,7 +14,7 @@ const filmModule = { name: "@example/film", version: "1" } as const;
 const companion: StudioFilmCompanion = {
   id: "film",
   match: { module: filmModule, surface: "film", outputType: compositionTypes.composition },
-  timeSources: [{ attribute: "semantic", type: timelineTypes.track }, { attribute: "space", type: timelineTypes.track }],
+  timeSources: [{ attribute: "semantic", type: timelineTypes.timeline }, { attribute: "space", type: timelineTypes.timeline }],
   tracks: { childSurface: "Track", sourceAttribute: "source", types: [compositionTypes.visualTrack] },
 };
 
@@ -28,7 +28,7 @@ function placement(id: string): StudioPlacement {
 
 test("Studio rejects a Run that reaches two distinct Film compositions", () => {
   const source = {
-    observations: { placements: [placement("one"), placement("two")], sourceMaps: [] },
+    observations: { placements: [placement("one"), placement("two")], temporalDomains: [] },
     served: new Map(),
     exports: ["one", "two"].map((id) => ({
       name: `${id}.composition`, ref: `${id}.composition`, type: "Composition", typeRef: compositionTypes.composition,

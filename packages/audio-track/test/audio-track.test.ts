@@ -312,7 +312,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
   const fixtureSurfaceDigest = fixtureResource("example.audio-inputs/surface@1");
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
-    outputs: [mediaTypes.synchronized, timelineTypes.track],
+    outputs: [mediaTypes.synchronized, timelineTypes.timeline],
   } as const;
   const fixtureManifest: ModuleManifest = {
     format: "qflow.module@1",
@@ -343,7 +343,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
   registry.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
       { id: "source", type: mediaTypes.synchronized, value: { kind: "inline", value: media("surface", 48_000) }, range: element.range },
-      { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "semantic", type: timelineTypes.timeline, value: { kind: "inline", value: semantic }, range: element.range },
     ],
     components: [],
     fragments: [],

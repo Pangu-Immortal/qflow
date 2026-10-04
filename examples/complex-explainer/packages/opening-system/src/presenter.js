@@ -167,19 +167,19 @@ export function installPresenter(module, manifest, component) {
     ordinary: { module, name: "ordinary-presenter" },
   };
   const common = [
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
     { name: "window", type: temporalTypes.window },
     { name: "sources", type: types.sources },
   ];
   manifest.producers.push(
     { name: producers.source.name, inputs: [
       { name: "spec", type: types.sourceSpec }, { name: "media", type: mediaTypes.synchronized },
-      { name: "window", type: temporalTypes.window }, { name: "timeline", type: timelineTypes.track },
+      { name: "window", type: temporalTypes.window }, { name: "timeline", type: timelineTypes.timeline },
     ], outputs: [{ name: "sources", type: types.sources }], needs: [] },
     { name: producers.combineSources.name, inputs: [{ name: "left", type: types.sources }, { name: "right", type: types.sources }], outputs: [{ name: "sources", type: types.sources }], needs: [] },
     { name: producers.create.name, inputs: [], outputs: [{ name: "program", type: types.program }], needs: [] },
     { name: producers.append.name, inputs: [{ name: "program", type: types.program }, { name: "window", type: temporalTypes.window }, { name: "visual", type: compositionTypes.visualTrack }], outputs: [{ name: "program", type: types.program }], needs: [] },
-    { name: producers.resolve.name, inputs: [{ name: "program", type: types.program }, { name: "timeline", type: timelineTypes.track }, { name: "header", type: types.header }], outputs: [{ name: "visual", type: compositionTypes.visualTrack }], needs: [] },
+    { name: producers.resolve.name, inputs: [{ name: "program", type: types.program }, { name: "timeline", type: timelineTypes.timeline }, { name: "header", type: types.header }], outputs: [{ name: "visual", type: compositionTypes.visualTrack }], needs: [] },
   );
   component.producers.push(
     { producer: producers.source, handler: ({ inputs }) => ({ outputs: { sources: stored(sourcesValue([sourceValue(inline(inputs.spec, "PresenterSourceSpec"), inline(inputs.media, "SynchronizedMedia"), inline(inputs.window, "TemporalWindow"), inline(inputs.timeline, "Timeline"))])) }, needs: {} }) },
@@ -262,7 +262,7 @@ export function installPresenter(module, manifest, component) {
     ],
     vocabulary: { summary: "Continuing presenter role owned by the explainer project.", attributes: [
       { name: "id", kind: "identifier", required: true, summary: "Presenter identity." },
-      { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.track], summary: "Completed Timeline." },
+      { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.timeline], summary: "Completed Timeline." },
       { name: "within", kind: "reference", required: true, accepts: [spatialTypes.frame], summary: "Picture plane available to Presenter treatments that move beyond their local Frame." },
     ], children: [
       { tag: "Source", cardinality: "many", summary: "One native presenter media occurrence.", attributes: [
@@ -295,7 +295,7 @@ export function installPresenter(module, manifest, component) {
       else throw Error("Presenter accepts only Source and Use children.");
     }
     if (!sourceDeclarations.length || !uses.length) throw Error("Presenter requires at least one Source and one Use.");
-    const sourceInputs = [{ name: "timeline", type: timelineTypes.track }, ...sourceDeclarations.flatMap((_, index) => [
+    const sourceInputs = [{ name: "timeline", type: timelineTypes.timeline }, ...sourceDeclarations.flatMap((_, index) => [
       { name: `spec-${index}`, type: types.sourceSpec }, { name: `media-${index}`, type: mediaTypes.synchronized }, { name: `window-${index}`, type: temporalTypes.window },
     ])];
     const sourceOps = sourceDeclarations.map((_, index) => ({ id: `source-${index}`, producer: producers.source, inputs: {
@@ -320,7 +320,7 @@ export function installPresenter(module, manifest, component) {
     components.push({ id: `${id}.__sources`, fragment: sourceFragment.id, inputs: { timeline: context.timeline.ref, ...Object.fromEntries(sourceDeclarations.flatMap((source, index) => [
       [`spec-${index}`, { kind: "record", id: source.specId }], [`media-${index}`, source.media.ref], [`window-${index}`, source.window.ref],
     ])) }, outputs: { sources: `${id}.__sources.value` }, range: element.range });
-    const collectorInputs = [{ name: "timeline", type: timelineTypes.track }, { name: "header", type: types.header }];
+    const collectorInputs = [{ name: "timeline", type: timelineTypes.timeline }, { name: "header", type: types.header }];
     const bindings = { timeline: context.timeline.ref, header: { kind: "record", id: `${id}.header` } };
     const ops = [{ id: "empty", producer: producers.create, inputs: {}, result: { kind: "output", name: "program" } }];
     let previous = "empty";

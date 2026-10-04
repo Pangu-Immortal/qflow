@@ -32,7 +32,7 @@ const module = { name: "@explainer/launch-scenes", version: "1" },
 const options = type("Options"),
   events = type("Events");
 const common = [
-  port("timeline", timelineTypes.track),
+  port("timeline", timelineTypes.timeline),
   port("within", spatialTypes.frame),
   port("window", temporalTypes.window),
   port("font", mediaTypes.fontArtifact),
@@ -65,7 +65,7 @@ export const manifest = {
         compositionTypes.visualTrack,
         mediaTypes.fontArtifact,
         mediaTypes.blobArtifact,
-        timelineTypes.track,
+        timelineTypes.timeline,
         spatialTypes.frame,
         temporalTypes.window,
         temporalTypes.instant,
@@ -80,7 +80,7 @@ export const manifest = {
     {
       name: "append",
       inputs: [
-        port("timeline", timelineTypes.track),
+        port("timeline", timelineTypes.timeline),
         port("events", events),
         port("options", options),
         port("at", temporalTypes.instant),

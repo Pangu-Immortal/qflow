@@ -60,7 +60,7 @@ function projectionOutput(element: StructuredElement,
       ? { element, id: textAttribute(element, "id"), kind: "window", sourceKind: "selection",
           source: reference(selection, `${element.name}.selection`, narrativeTypes.selection, resolveReference) }
       : { element, id: textAttribute(element, "id"), kind: "window", sourceKind: "segment",
-          source: reference(segment, `${element.name}.segment`, narrativeTypes.excerpt, resolveReference) };
+          source: reference(segment, `${element.name}.segment`, narrativeTypes.segmentRef, resolveReference) };
   }
   if (tag !== "Instant") throw new Error(`Projection accepts Map, Window and Instant children only.`);
   assertAttributes(element, ["id", "selection", "segment", "moment", "boundary", "offset"], ["id"]); assertEmptyElement(element);
@@ -68,7 +68,7 @@ function projectionOutput(element: StructuredElement,
   if (sources.length !== 1) throw new Error(`${element.name} requires exactly one of selection, segment or moment.`);
   const sourceKind = sources[0] as "selection" | "segment" | "moment";
   const sourceType = sourceKind === "selection" ? narrativeTypes.selection
-    : sourceKind === "segment" ? narrativeTypes.excerpt : narrativeTypes.moment;
+    : sourceKind === "segment" ? narrativeTypes.segmentRef : narrativeTypes.moment;
   const boundaryRaw = element.attributes.boundary;
   if (sourceKind === "moment") {
     if (boundaryRaw !== undefined) throw new Error(`${element.name}.boundary is invalid for a Moment.`);
@@ -94,9 +94,9 @@ function projectionProducer(kind: ProjectionOutput["sourceKind"]) {
 
 function outputFragment(output: ProjectionOutput): GraphFragment {
   const sourceType = output.sourceKind === "selection" ? narrativeTypes.selection
-    : output.sourceKind === "segment" ? narrativeTypes.excerpt : narrativeTypes.moment;
+    : output.sourceKind === "segment" ? narrativeTypes.segmentRef : narrativeTypes.moment;
   const ports: Array<{ readonly name: string; readonly type: TypeRef }> = [
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
     { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
     { name: "source", type: sourceType },
     { name: "start-spec", type: narrativeTemporalTypes.narrativeInstantSpec },
@@ -127,7 +127,7 @@ export const decodeNarrativeProjectionSurface: StructuredSurfaceHandler = ({ ele
   assertAttributes(element, ["id", "narrative", "timeline"]);
   const id = textAttribute(element, "id");
   const narrative = reference(element.attributes.narrative, `${element.name}.narrative`, narrativeTypes.narrative, resolveReference);
-  const timeline = reference(element.attributes.timeline, `${element.name}.timeline`, timelineTypes.track, resolveReference);
+  const timeline = reference(element.attributes.timeline, `${element.name}.timeline`, timelineTypes.timeline, resolveReference);
   const maps: ProjectionMap[] = [], requested: ProjectionOutput[] = [];
   const outputIds = new Set<string>();
   for (const child of element.children) {
@@ -149,7 +149,7 @@ export const decodeNarrativeProjectionSurface: StructuredSurfaceHandler = ({ ele
 
   const ports: Array<{ readonly name: string; readonly type: TypeRef }> = [
     { name: "header", type: narrativeTemporalTypes.narrativeProjectionHeader },
-    { name: "narrative", type: narrativeTypes.narrative }, { name: "timeline", type: timelineTypes.track },
+    { name: "narrative", type: narrativeTypes.narrative }, { name: "timeline", type: timelineTypes.timeline },
   ];
   const bindings: Record<string, SurfaceResolvedReference["ref"] | { kind: "record"; id: string }> = {
     header: { kind: "record", id: `${id}.__header` }, narrative: narrative.ref, timeline: timeline.ref,
@@ -235,7 +235,7 @@ export const narrativeProjectionMarkupSurface = {
     attributes: [
       { name: "id", kind: "identifier", required: true, summary: "Names this projection." },
       { name: "narrative", kind: "reference", required: true, accepts: [narrativeTypes.narrative], summary: "Selects the Narrative identity." },
-      { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.track], summary: "Selects the target Timeline." },
+      { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.timeline], summary: "Selects the target Timeline." },
     ],
     children: [
       { tag: "Map", cardinality: "many", summary: "Projects one local NarrativeAlignment through an exact domain-to-Window relation.", attributes: [
@@ -246,13 +246,13 @@ export const narrativeProjectionMarkupSurface = {
       { tag: "Window", cardinality: "many", summary: "Publishes one selected Segment or Selection as an absolute Window.", attributes: [
         { name: "id", kind: "identifier", required: true, summary: "Scoped absolute output name." },
         { name: "selection", kind: "reference", required: false, accepts: [narrativeTypes.selection], summary: "Selection to project." },
-        { name: "segment", kind: "reference", required: false, accepts: [narrativeTypes.excerpt], summary: "Segment to project." },
+        { name: "segment", kind: "reference", required: false, accepts: [narrativeTypes.segmentRef], summary: "Segment to project." },
       ] },
       { tag: "Instant", cardinality: "many", summary: "Publishes one Narrative boundary as an absolute Instant.", attributes: [
         { name: "id", kind: "identifier", required: true, summary: "Scoped absolute output name." },
         { name: "moment", kind: "reference", required: false, accepts: [narrativeTypes.moment], summary: "Moment cue to project." },
         { name: "selection", kind: "reference", required: false, accepts: [narrativeTypes.selection], summary: "Selection boundary source." },
-        { name: "segment", kind: "reference", required: false, accepts: [narrativeTypes.excerpt], summary: "Segment boundary source." },
+        { name: "segment", kind: "reference", required: false, accepts: [narrativeTypes.segmentRef], summary: "Segment boundary source." },
         { name: "boundary", kind: "literal", required: false, values: ["start", "end"], summary: "Boundary for Selection or Segment." },
         { name: "offset", kind: "literal", required: false, summary: "Exact signed offset applied after projection." },
       ] },

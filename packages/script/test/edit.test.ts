@@ -24,7 +24,7 @@ for (const source of fixtures) test(`Moment round trips through structural and l
   const move = (text: string, anchorId: string) => adjustScriptMoment({
     sourceName: "edit", source: text, parsed: parseScript("edit", text), adjustment: { id: "beat", anchorId },
   });
-  for (const anchor of original.semanticIndex.anchors) {
+  for (const anchor of original.anchors) {
     const first = move(source, anchor.id);
     const back = move(first, original.moments[0]!.anchorId);
     assert.deepEqual(narrativeValue(parseScript("edit", back), "story"), narrativeValue(original, "story"));
@@ -68,7 +68,7 @@ test("an unchanged Selection leaves its source formatting untouched", () => {
 test("Selection endpoints sharing a source position are written together in semantic order", () => {
   const source = '<one><HOST>@{range} hello @{/range} world.</one><empty/>';
   const original = parseScript("edit", source);
-  const anchors = original.semanticIndex.anchors;
+  const anchors = original.anchors;
   for (let start = 0; start < anchors.length; start++) for (let end = start; end < anchors.length; end++) {
     const adjustment = { id: "range", startAnchorId: anchors[start]!.id, endAnchorId: anchors[end]!.id };
     const next = adjustScriptSelection({ sourceName: "edit", source, parsed: original, adjustment });
@@ -92,7 +92,7 @@ for (const source of [
     adjustment: { id: selection.id, startAnchorId, endAnchorId },
   });
   const expected = move(source, selection.startAnchorId, selection.endAnchorId);
-  const anchors = original.semanticIndex.anchors;
+  const anchors = original.anchors;
   for (let start = 0; start < anchors.length; start++) for (let end = start; end < anchors.length; end++) {
     const moved = move(expected, anchors[start]!.id, anchors[end]!.id);
     const actual = parseScript("edit", moved).selections[0]!;

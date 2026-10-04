@@ -134,7 +134,7 @@ export const decodeFineCaptionTrackSurface: StructuredSurfaceHandler = ({ elemen
     value: { kind: "inline", value: { id } }, range: element.range }];
   const components: SurfaceComponentDraft[] = [];
   const fragments: ReturnType<typeof sealGraphFragment>[] = [];
-  const inputs: { name: string; type: SurfaceResolvedReference["type"] }[] = [{ name: "document", type: captionTypes.document }, { name: "timing", type: captionTypes.timing }, { name: "timeline", type: timelineTypes.track }, { name: "within", type: spatialTypes.frame }, { name: "header", type: captionTypes.header }];
+  const inputs: { name: string; type: SurfaceResolvedReference["type"] }[] = [{ name: "document", type: captionTypes.document }, { name: "timing", type: captionTypes.timing }, { name: "timeline", type: timelineTypes.timeline }, { name: "within", type: spatialTypes.frame }, { name: "header", type: captionTypes.header }];
   const bindings: Record<string, SurfaceResolvedReference["ref"]> = { document: document.ref, timing: timing.ref, timeline: context.timeline.ref, within: within.ref, header: { kind: "record", id: `${id}.header` } };
   const operations: FragmentOperation[] = [{ id: "create", producer: captionProducers.create,
     inputs: { document: input("document"), header: input("header") }, result: { kind: "output", name: "program" } }];

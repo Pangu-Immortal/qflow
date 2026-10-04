@@ -45,7 +45,7 @@ test("WhisperX receives normalized bytes without authored Segment truth", () => 
 test("SVML language reaches the alignment request without a service-support table", async () => {
   const refs = new Map<string, SurfaceResolvedReference>([
     ["story", { path: "story", ref: { kind: "record", id: "story" }, type: narrativeTypes.narrative }],
-    ["excerpt", { path: "excerpt", ref: { kind: "record", id: "excerpt" }, type: narrativeTypes.excerpt }],
+    ["excerpt", { path: "excerpt", ref: { kind: "record", id: "excerpt" }, type: narrativeTypes.segmentRef }],
     ["media", { path: "media", ref: { kind: "record", id: "media" }, type: mediaTypes.synchronized }],
     ["domain", { path: "domain", ref: { kind: "record", id: "domain" }, type: temporalTypes.localDomain }],
   ]);
@@ -87,10 +87,10 @@ test("the real-media Surface materializes an empty Segment from its media domain
       tokenEndExclusive: 0,
     }],
     tokens: [], turns: [], selections: [], moments: [],
-    semanticIndex: { anchors: [
+    anchors: [
       { id: "pause:start", kind: "segment-start", segmentId: "pause" },
       { id: "pause:end", kind: "segment-end", segmentId: "pause" },
-    ] },
+    ],
   };
   const excerpt = {
     narrativeId: narrative.id,
@@ -119,7 +119,7 @@ test("the real-media Surface materializes an empty Segment from its media domain
   });
   const refs = new Map<string, SurfaceResolvedReference>([
     ["story", authored("story", narrativeTypes.narrative, narrative)],
-    ["story.segment.pause", authored("story.segment.pause", narrativeTypes.excerpt, excerpt)],
+    ["story.segment.pause", authored("story.segment.pause", narrativeTypes.segmentRef, excerpt)],
     ["pause-media.domain", authored("pause-media.domain", temporalTypes.localDomain, {
       id: "pause-media", frameRate: media.frameDomain.frameRate, frameCount: media.frameDomain.frameCount,
     })],

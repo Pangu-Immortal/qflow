@@ -112,7 +112,7 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
   return sealGraphFragment({
     inputs: [
       { name: "header", type: commentStickerTypes.header },
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       ...[...types].map(([inputName, type]) => ({ name: inputName, type })),
     ],
     operations,

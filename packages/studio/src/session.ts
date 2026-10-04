@@ -71,6 +71,7 @@ export async function readStudioSession(input: {
   ];
   const built = await preview({
     source,
+    registry: input.registry,
     run: input.run,
     domain: input.domain,
     outputRefs,

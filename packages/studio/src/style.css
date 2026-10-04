@@ -38,15 +38,15 @@
   --tone-teal: #008889;
   --tone-teal-rail: #00d4d5;
   /* Semantic ruler: brightness separates content from its own band; hue marks state. */
-  --semantic-segment: light-dark(#9cc5c1, #417370);
-  --semantic-word: light-dark(#b5d4d0, #005551);
-  --semantic-ink: light-dark(#1d4744, #eef0f3);
+  --temporal-domain-segment: light-dark(#9cc5c1, #417370);
+  --temporal-domain-compact: light-dark(#b5d4d0, #005551);
+  --temporal-domain-ink: light-dark(#1d4744, #eef0f3);
   /* Author intent uses a gold annotation hue; brand pink stays in the chrome. */
-  --semantic-intent: light-dark(#dcc570, #a28b2b);
-  --semantic-intent-ink: light-dark(#5a4700, #fff);
-  --semantic-moment: var(--brand-500);
-  /* Same perceived active level as a selected/covered semantic cell. */
-  --semantic-current: #009f98;
+  --temporal-domain-intent: light-dark(#dcc570, #a28b2b);
+  --temporal-domain-intent-ink: light-dark(#5a4700, #fff);
+  --temporal-domain-point: var(--brand-500);
+  /* Same perceived active level as a selected/covered temporal-domain item. */
+  --temporal-domain-current: #009f98;
   /* Ordered marker depth: one hue, decreasing contrast with the background. */
   --intent-depth-0: light-dark(#6e5800, #dfca7d);
   --intent-depth-1: light-dark(#846d00, #c0aa54);
@@ -1171,29 +1171,29 @@ button:focus-visible, textarea:focus-visible {
 .tick-last { padding-right: 4px; padding-left: 0; border-right: 1px solid light-dark(#c4c0b9, #45484e); border-left: 0; transform: translateX(-100%); }
 .lanes { min-height: 0; cursor: default; }
 .lane { position: relative; isolation: isolate; min-height: 0; overflow: hidden; border-bottom: 1px solid light-dark(#ebe8e4, #191b1f); background: var(--lane); }
-.semantic-lane { position: sticky; top: var(--timeline-ruler-height); z-index: 8; min-height: 0; border-bottom: 1px solid var(--line); background: var(--lane); }
-.semantic-band {
+.temporal-domain-lane { position: sticky; top: var(--timeline-ruler-height); z-index: 8; min-height: 0; border-bottom: 1px solid var(--line); background: var(--lane); }
+.temporal-domain-band {
   position: absolute;
   right: 0;
   left: 0;
-  height: var(--semantic-band-height);
+  height: var(--temporal-domain-band-height);
   overflow: hidden;
   background: var(--lane);
   box-shadow: inset 0 -1px var(--line);
   isolation: isolate;
 }
-.semantic-band:last-child { box-shadow: none; }
+.temporal-domain-band:last-child { box-shadow: none; }
 .lane-attached {
   border-left: 0;
   background: var(--lane);
 }
 .timeline-labels > .track-label:last-child,
 .lanes > .lane:last-child { border-bottom: 0; }
-.semantic-cell {
-  --semantic-cell: color-mix(in srgb, var(--speech) 54%, var(--lane));
+.temporal-domain-cell {
+  --temporal-domain-cell: color-mix(in srgb, var(--speech) 54%, var(--lane));
   position: absolute;
   top: 0;
-  height: var(--semantic-band-height);
+  height: var(--temporal-domain-band-height);
   min-width: 2px;
   overflow: hidden;
   display: flex;
@@ -1201,58 +1201,58 @@ button:focus-visible, textarea:focus-visible {
   padding: 0;
   border: 0;
   border-radius: 0;
-  background: var(--semantic-cell);
+  background: var(--temporal-domain-cell);
   box-shadow: inset 0 0 0 1px light-dark(#ffffffb3, #ffffff12);
   color: var(--text);
   text-align: left;
   cursor: default;
 }
-.semantic-cell:focus-visible { outline: 0; box-shadow: inset 0 0 0 1px light-dark(#00000059, #ffffff60); }
-.semantic-segment {
-  --semantic-cell: var(--semantic-segment);
+.temporal-domain-cell:focus-visible { outline: 0; box-shadow: inset 0 0 0 1px light-dark(#00000059, #ffffff60); }
+.temporal-domain-block {
+  --temporal-domain-cell: var(--temporal-domain-segment);
 }
-.semantic-word {
-  --semantic-cell: var(--semantic-word);
-  color: light-dark(var(--semantic-ink), #e7e8eb);
+.temporal-domain-compact {
+  --temporal-domain-cell: var(--temporal-domain-compact);
+  color: light-dark(var(--temporal-domain-ink), #e7e8eb);
 }
-.semantic-selection {
-  --semantic-cell: var(--semantic-intent);
-  color: var(--semantic-intent-ink);
+.temporal-domain-span {
+  --temporal-domain-cell: var(--temporal-domain-intent);
+  color: var(--temporal-domain-intent-ink);
 }
-.semantic-cell.live { filter: brightness(1.12); }
-.semantic-cell.selected { z-index: 4; filter: brightness(1.16); box-shadow: inset 0 0 0 1px light-dark(#00000059, #ffffff60); }
-.semantic-moment.selected { z-index: 5; filter: brightness(1.16); box-shadow: inset 0 0 0 1px light-dark(#00000059, #ffffff60); }
-:root[data-theme="light"] .semantic-cell.live { filter: brightness(.94); }
-:root[data-theme="light"] :is(.semantic-cell, .semantic-moment).selected { filter: brightness(.9); }
-.semantic-segment-label {
+.temporal-domain-cell.live { filter: brightness(1.12); }
+.temporal-domain-cell.selected { z-index: 4; filter: brightness(1.16); box-shadow: inset 0 0 0 1px light-dark(#00000059, #ffffff60); }
+.temporal-domain-point.selected { z-index: 5; filter: brightness(1.16); box-shadow: inset 0 0 0 1px light-dark(#00000059, #ffffff60); }
+:root[data-theme="light"] .temporal-domain-cell.live { filter: brightness(.94); }
+:root[data-theme="light"] :is(.temporal-domain-cell, .temporal-domain-point).selected { filter: brightness(.9); }
+.temporal-domain-span-label {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: clip;
-  color: var(--semantic-ink);
+  color: var(--temporal-domain-ink);
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
 }
-.semantic-selection-label {
+.temporal-domain-span-label {
   display: block;
   overflow: hidden;
   text-overflow: clip;
-  color: var(--semantic-intent-ink);
+  color: var(--temporal-domain-intent-ink);
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
 }
-.semantic-word.current { background: var(--semantic-current); color: #fff; }
-.semantic-word-label {
+.temporal-domain-compact.current { background: var(--temporal-domain-current); color: #fff; }
+.temporal-domain-compact-label {
   display: none;
   font-size: 11px;
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
 }
-.semantic-word.word-label-visible .semantic-word-label { display: block; }
-.semantic-cell-content {
+.temporal-domain-compact.word-label-visible .temporal-domain-compact-label { display: block; }
+.temporal-domain-cell-content {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -1266,10 +1266,10 @@ button:focus-visible, textarea:focus-visible {
   overflow: hidden;
   padding: 0 0 0 5px;
 }
-.semantic-word .semantic-cell-content { padding: 0 5px; }
-.semantic-moment {
+.temporal-domain-compact .temporal-domain-cell-content { padding: 0 5px; }
+.temporal-domain-point {
   position: absolute;
-  top: calc((var(--semantic-band-height) - 9px) / 2);
+  top: calc((var(--temporal-domain-band-height) - 9px) / 2);
   z-index: 1;
   width: 9px;
   height: 9px;
@@ -1277,11 +1277,11 @@ button:focus-visible, textarea:focus-visible {
   border-radius: 0;
   padding: 0;
   border: 1px solid var(--lane);
-  background: var(--semantic-moment);
+  background: var(--temporal-domain-point);
 }
-.semantic-moment:focus-visible { outline: 0; }
-.track-label-semantic { position: sticky; top: 0; z-index: 8; border-bottom: 1px solid var(--line); background: light-dark(#faf9f7, #111216); }
-.track-label-semantic::before { display: none; }
+.temporal-domain-point:focus-visible { outline: 0; }
+.track-label-temporal-domain { position: sticky; top: 0; z-index: 8; border-bottom: 1px solid var(--line); background: light-dark(#faf9f7, #111216); }
+.track-label-temporal-domain::before { display: none; }
 .track-label-attached {
   /* The branch marker occupies the same 18px prefix as a root icon;
      attached and root labels therefore share one exact text column. */

@@ -9,7 +9,7 @@ import { projectMomentInstantFixture, projectSegmentWindow, projectSelectionWind
 import { createResolvedClosure } from "@qflow/core";
 import type { FontArtifactRef, SynchronizedMedia } from "@qflow/media";
 import { mediaTypes } from "@qflow/media";
-import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import type { NarrativeSegmentRef, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import { sealCanvas, sealSpatialFrame } from "@qflow/spatial";
 import type { SvsRecipe } from "@qflow/svs";
 
@@ -137,7 +137,7 @@ const terminal: NarrativeMomentRef = {
   id: "ranking-complete",
   anchorId: "terminal",
 };
-const rankingSegment: NarrativeExcerpt = { narrativeId: "script", kind: "segment", id: "ranking", tokenStart: 0, tokenEndExclusive: 1 };
+const rankingSegment: NarrativeSegmentRef = { narrativeId: "script", kind: "segment", id: "ranking", tokenStart: 0, tokenEndExclusive: 1 };
 const selection = (id: string, startAnchorId: string, endAnchorId: string): NarrativeSelectionRef => ({
   narrativeId: "script", id, startAnchorId, endAnchorId,
 });
@@ -235,7 +235,7 @@ function appendProjectedTierWindow(
   }));
 }
 
-function projectColumnSegmentOuterWindow(semantic: typeof timeline, segment: NarrativeExcerpt, subjectId: string): TemporalWindow {
+function projectColumnSegmentOuterWindow(semantic: typeof timeline, segment: NarrativeSegmentRef, subjectId: string): TemporalWindow {
   return projectSegmentWindow({
     itemId: `${segment.id}:outer`, subjectId, semantic, narrative: narrativeProjection, segment,
     projection: { start: { ref: "segment.start" }, end: { ref: "segment.end" } },
@@ -525,7 +525,7 @@ test("all three author Surfaces preserve absolute temporal, spatial, font, image
     record: { value: { kind: "inline", value } } as never,
   });
   const references = new Map<string, SurfaceResolvedReference>([
-    ["semantic", plain("semantic", timelineTypes.track)],
+    ["semantic", plain("semantic", timelineTypes.timeline)],
     ["frame", plain("frame", spatialTypes.frame)],
     ["outer", plain("outer", temporalTypes.window)],
     ["ranking-segment", plain("ranking-segment", temporalTypes.window)],
@@ -645,7 +645,7 @@ test("Ranking author Surfaces fail closed on impossible image and sound combinat
   const ref = (path: string): MarkupAttributeValue => ({ kind: "reference", path });
   const plain = (path: string, type: SurfaceResolvedReference["type"]): SurfaceResolvedReference => ({ path, ref: { kind: "record", id: path }, type });
   const references = new Map<string, SurfaceResolvedReference>([
-    ["semantic", plain("semantic", timelineTypes.track)],
+    ["semantic", plain("semantic", timelineTypes.timeline)],
     ["frame", plain("frame", spatialTypes.frame)], ["outer", plain("outer", temporalTypes.window)],
     ["icon", plain("icon", mediaTypes.blobArtifact)],
     ["style", plain("style", rankingTypes.tierStyle)], ["style.sound", plain("style.sound", rankingTypes.soundStyle)],

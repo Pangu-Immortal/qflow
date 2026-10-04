@@ -125,7 +125,7 @@ function constructWindow(value: {
   readonly extent?: ExtentDraft; readonly direction?: 1 | -1;
 }): TemporalMarkupConstruction {
   const ports: Array<{ readonly name: string; readonly type: TypeRef }> = [
-    { name: "timeline", type: timelineTypes.track }, { name: "window-spec", type: temporalTypes.windowSpec },
+    { name: "timeline", type: timelineTypes.timeline }, { name: "window-spec", type: temporalTypes.windowSpec },
   ];
   const bindings: Record<string, SurfaceResolvedReference["ref"] | { kind: "record"; id: string }> = {
     timeline: value.timeline.ref, "window-spec": { kind: "record", id: `${value.id}.__temporal.window` },
@@ -254,7 +254,7 @@ export function createTemporalInstantConstruction(value: {
   }
   const specId = `${value.id}.__temporal.instant`;
   const fragment = sealGraphFragment({ inputs: [
-    { name: "timeline", type: timelineTypes.track }, { name: "spec", type: temporalTypes.instantSpec },
+    { name: "timeline", type: timelineTypes.timeline }, { name: "spec", type: temporalTypes.instantSpec },
   ], operations: [{ id: "materialize", producer: temporalProducers.projectProgramInstant,
     inputs: { timeline: fragmentInput("timeline"), spec: fragmentInput("spec") }, result: { kind: "output", name: "instant" } }],
   exports: [{ name: "instant", type: temporalTypes.instant, root: operation("materialize") }] });

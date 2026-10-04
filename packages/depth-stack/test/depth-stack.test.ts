@@ -416,7 +416,7 @@ test("the author Surface keeps every source, trigger, terminal, Frame and option
     record: { value: { kind: "inline", value: { path, properties } } } as never,
   });
   const references = new Map<string, SurfaceResolvedReference>([
-    ["timeline", plain("timeline", timelineTypes.track)],
+    ["timeline", plain("timeline", timelineTypes.timeline)],
     ["within", plain("within", spatialTypes.frame)],
     ["frame", plain("frame", spatialTypes.frame)],
     ["first", plain("first", artifactTypes.blob)], ["first-extent", plain("first-extent", spatialTypes.extent)],

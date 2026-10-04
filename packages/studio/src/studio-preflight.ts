@@ -137,7 +137,7 @@ export function inspectStudioRun(
   });
   const timeOutput = times[0];
   if (times.length !== 1) issues.push("Film requires one traceable time source.");
-  const semanticOutput = timeOutput !== undefined && sameType(timeOutput.typeRef, timelineTypes.track) ? timeOutput : undefined;
+  const semanticOutput = timeOutput !== undefined && sameType(timeOutput.typeRef, timelineTypes.timeline) ? timeOutput : undefined;
   let companionValueRefs: readonly string[] = [];
   try {
     companionValueRefs = unique(filmTrackRefs.flatMap((ref) =>
@@ -149,7 +149,7 @@ export function inspectStudioRun(
 
   const projectionRefs = unique([
     ...filmTrackRefs,
-    ...(semanticOutput !== undefined && sameType(semanticOutput.typeRef, timelineTypes.track) ? [semanticOutput.ref] : []),
+    ...(semanticOutput !== undefined && sameType(semanticOutput.typeRef, timelineTypes.timeline) ? [semanticOutput.ref] : []),
     ...companionValueRefs,
   ]);
   const projections: StudioViewRequirement[] = [];

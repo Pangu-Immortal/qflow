@@ -10,7 +10,7 @@ const input = (name: string) => ({ kind: "fragment-input" as const, name });
 export const regionTrackFragment = sealGraphFragment({
   inputs: [
     { name: "within", type: spatialTypes.frame },
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
     { name: "recipe", type: svsRecipeType },
   ],
   operations: [{ id: "resolve", producer: regionTrackProducers.resolve, inputs: {

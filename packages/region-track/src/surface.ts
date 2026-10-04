@@ -28,7 +28,7 @@ export const decodeRegionTrackSurface: StructuredSurfaceHandler = ({ element, re
   if (element.children.some((child) => child.kind === "element" || child.value.trim())) throw new Error(`${element.name} must be empty.`);
   const id = text(element, "id");
   const within = reference(element, "within", spatialTypes.frame, resolveReference);
-  const timeline = reference(element, "timeline", timelineTypes.track, resolveReference);
+  const timeline = reference(element, "timeline", timelineTypes.timeline, resolveReference);
   const recipe = reference(element, "recipe", svsRecipeType, resolveReference);
   return {
     records: [],

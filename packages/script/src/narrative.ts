@@ -224,14 +224,12 @@ export function narrativeValue(parsed: ParsedNarrative, id: string): CanonicalVa
       endAnchorId: selection.close.boundary.anchorId,
     })),
     moments: parsed.moments.map((moment) => ({ id: moment.id, anchorId: moment.boundary.anchorId })),
-    semanticIndex: {
-      anchors: parsed.semanticIndex.anchors.map((anchor) => ({
-        id: anchor.id,
-        kind: anchor.kind,
-        ...("segmentId" in anchor ? { segmentId: anchor.segmentId } : {}),
-        ...("tokenId" in anchor && anchor.tokenId !== undefined ? { tokenId: anchor.tokenId } : {}),
-      })),
-    },
+    anchors: parsed.anchors.map((anchor) => ({
+      id: anchor.id,
+      kind: anchor.kind,
+      ...("segmentId" in anchor ? { segmentId: anchor.segmentId } : {}),
+      ...("tokenId" in anchor && anchor.tokenId !== undefined ? { tokenId: anchor.tokenId } : {}),
+    })),
   });
 }
 

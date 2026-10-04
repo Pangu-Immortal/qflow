@@ -133,7 +133,7 @@ export const commentStickerProgramSchema: ValueSchema = object({
 });
 const appendInputs = [
   { name: "set", type: commentStickerTypes.set }, { name: "header", type: commentStickerTypes.header },
-  { name: "timeline", type: timelineTypes.track },
+  { name: "timeline", type: timelineTypes.timeline },
   { name: "frame", type: spatialTypes.frame }, { name: "style", type: commentStickerTypes.style },
   { name: "spec", type: commentStickerTypes.itemSpec },
   { name: "content", type: commentStickerTypes.content }, { name: "window", type: temporalTypes.window },
@@ -363,7 +363,7 @@ export const commentStickerManifest: ModuleManifest = {
       needs: [],
     })),
     { name: commentStickerProducers.finalize.name, inputs: [{ name: "set", type: commentStickerTypes.set }, { name: "header", type: commentStickerTypes.header }], outputs: [{ name: "program", type: commentStickerTypes.program }], needs: [] },
-    { name: commentStickerProducers.render.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: commentStickerTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+    { name: commentStickerProducers.render.name, inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "program", type: commentStickerTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };
 

@@ -1,4 +1,4 @@
-import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import type { NarrativeSegmentRef, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import { durationInFrames, projectDomainFrame, resolvedInstant } from "@qflow/temporal";
 import type { LocalTemporalDomain, TemporalInstant, TemporalWindow } from "@qflow/temporal";
 import { assertTimelineIdentity, timelineFrameCount } from "@qflow/timeline";
@@ -82,7 +82,7 @@ export function momentFrame(projection: NarrativeProjection, moment: NarrativeMo
   return narrativeBoundaryFrame(projection, moment.anchorId);
 }
 
-export function segmentFrameSpan(projection: NarrativeProjection, segment: NarrativeExcerpt) {
+export function segmentFrameSpan(projection: NarrativeProjection, segment: NarrativeSegmentRef) {
   assert(segment.kind === "segment" && segment.narrativeId === projection.narrativeId,
     `Segment ${segment.id} belongs to another Narrative.`);
   const projected = projection.segments.find((candidate) => candidate.segmentId === segment.id);
@@ -102,19 +102,19 @@ export function tokenFrameSpan(projection: NarrativeProjection, tokenIds: readon
 }
 
 function narrativeBase(boundary: NarrativeInstantSpec["boundary"], projection: NarrativeProjection,
-  source: NarrativeSelectionRef | NarrativeMomentRef | NarrativeExcerpt, sourceKind: "selection" | "moment" | "segment"): number {
+  source: NarrativeSelectionRef | NarrativeMomentRef | NarrativeSegmentRef, sourceKind: "selection" | "moment" | "segment"): number {
   if (sourceKind === "moment") {
     if (boundary !== "cue") throw new Error("A Narrative Moment only has a cue boundary.");
     return momentFrame(projection, source as NarrativeMomentRef);
   }
   if (boundary === "cue") throw new Error("A Narrative interval has start and end boundaries, not cue.");
   const span = sourceKind === "selection" ? selectionFrameSpan(projection, source as NarrativeSelectionRef)
-    : segmentFrameSpan(projection, source as NarrativeExcerpt);
+    : segmentFrameSpan(projection, source as NarrativeSegmentRef);
   return boundary === "start" ? span.startFrame : span.endFrameExclusive;
 }
 
 export function projectNarrativeInstant(input: { readonly timeline: Timeline; readonly narrative: NarrativeProjection;
-  readonly source: NarrativeSelectionRef | NarrativeMomentRef | NarrativeExcerpt;
+  readonly source: NarrativeSelectionRef | NarrativeMomentRef | NarrativeSegmentRef;
   readonly sourceKind: "selection" | "moment" | "segment"; readonly spec: NarrativeInstantSpec }): TemporalInstant {
   assertTimelineIdentity(input.timeline);
   assert(input.narrative.timelineId === input.timeline.id, "NarrativeProjection belongs to another Timeline.");

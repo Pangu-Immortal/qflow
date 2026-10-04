@@ -10,7 +10,7 @@ const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
 
 export function createExampleFragment(producer: typeof exampleProducers[keyof typeof exampleProducers], id: string, image = false) {
-  const inputs = [{ name: "timeline", type: timelineTypes.track }, { name: "within", type: spatialTypes.frame },
+  const inputs = [{ name: "timeline", type: timelineTypes.timeline }, { name: "within", type: spatialTypes.frame },
     ...(image ? [{ name: "image", type: artifactTypes.blob }] : [])];
   const renderInputs = { timeline: input("timeline"), within: input("within"), ...(image ? { image: input("image") } : {}) };
   return sealGraphFragment({

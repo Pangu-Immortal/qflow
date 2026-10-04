@@ -66,7 +66,7 @@ test("Caption Companion projects Cue text and Style from public domain values", 
     spans: [{ id: "cue-1", startFrame: 8, endFrameExclusive: 24, stackOrder: 70 }],
     values: new Map<string, unknown>([["captions.schedule", schedule], ["captions.timing", {timelineId:"speech",documentId:document.id, cues:[{id:"cue-1",startFrame:10,endFrameExclusive:20,units:schedule.cues[0]!.units}]}], ["story.caption", document]]),
     temporalBindings: [],
-    semantic: { timelineId: "speech", narrativeId: "story", presentation: { family: "speech", tone: "teal", icon: "timeline", lane: { heightPx: 45 } }, anchors: [], segments: [], tokens: [], selections: [], moments: [], provenance: { output: "speech", outputRef: "speech", origin: "source", status: "resolved", errors: [] } },
+    temporalDomains: [],
     generic: () => [base],
   } satisfies StudioTrackCompanionContext;
   const [cue] = projectCaptionContents(context);

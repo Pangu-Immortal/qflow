@@ -1,7 +1,7 @@
 export { ScriptSyntaxError } from "./error.js";
 export { adjustScriptMoment, adjustScriptSelection, scriptAnchorEditSites } from "./edit.js";
 export { formatScript } from "./format.js";
-export { captionDocumentType, narrativeCaptionBindingType, narrativeExcerptType, narrativeMomentType, narrativeSelectionType, narrativeSchema, narrativeType, scriptManifest, scriptMarkupSurfaces, scriptModuleRef } from "./manifest.js";
+export { captionDocumentType, narrativeCaptionBindingType, narrativeSegmentRefType, narrativeMomentType, narrativeSelectionType, narrativeSchema, narrativeType, scriptManifest, scriptMarkupSurfaces, scriptModuleRef } from "./manifest.js";
 export {
   captionDocument,
   captionDocumentValue,

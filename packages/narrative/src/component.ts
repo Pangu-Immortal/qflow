@@ -2,7 +2,7 @@ import type { ComponentPackage } from "@qflow/component-kit";
 import type { StoredValue } from "@qflow/protocol";
 
 import {
-  assertNarrativeExcerptIdentity,
+  assertNarrativeSegmentRefIdentity,
   assertNarrativeIdentity,
   assertNarrativeMomentRefIdentity,
   assertNarrativeSelectionRefIdentity,
@@ -10,7 +10,7 @@ import {
 import { narrativeTypes } from "./manifest.js";
 import type {
   Narrative,
-  NarrativeExcerpt,
+  NarrativeSegmentRef,
   NarrativeMomentRef,
   NarrativeSelectionRef,
 } from "./types.js";
@@ -23,7 +23,7 @@ function inline<T>(value: StoredValue, subject: string): T {
 export const narrativeComponent = {
   validators: [
     { type: narrativeTypes.narrative, handler: ({ value }) => assertNarrativeIdentity(inline<Narrative>(value, "Narrative")) },
-    { type: narrativeTypes.excerpt, handler: ({ value }) => assertNarrativeExcerptIdentity(inline<NarrativeExcerpt>(value, "NarrativeExcerpt")) },
+    { type: narrativeTypes.segmentRef, handler: ({ value }) => assertNarrativeSegmentRefIdentity(inline<NarrativeSegmentRef>(value, "NarrativeSegmentRef")) },
     { type: narrativeTypes.selection, handler: ({ value }) => assertNarrativeSelectionRefIdentity(inline<NarrativeSelectionRef>(value, "NarrativeSelection")) },
     { type: narrativeTypes.moment, handler: ({ value }) => assertNarrativeMomentRefIdentity(inline<NarrativeMomentRef>(value, "NarrativeMoment")) },
   ],

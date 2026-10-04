@@ -657,7 +657,7 @@ test("the Visual author Surface emits explicit graph edges for layers, absolute 
     path, ref: { kind: "record", id: path }, type,
   });
   const references = new Map<string, SurfaceResolvedReference>([
-    ["semantic", plain("semantic", timelineTypes.track)],
+    ["semantic", plain("semantic", timelineTypes.timeline)],
     ["frame", plain("frame", spatialTypes.frame)],
     ["mapping", plain("mapping", spatialTypes.map2D)],
     ["clip-path", plain("clip-path", spatialTypes.path)],

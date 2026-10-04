@@ -5,9 +5,7 @@ import type { Composition } from "@qflow/composition";
 import { compositionTypes } from "@qflow/composition";
 import { timelineTypes, assertTimelineIdentity } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
-import { narrativeTemporalTypes } from "@qflow/narrative-temporal";
-import type { NarrativeProjection } from "@qflow/narrative-temporal";
-import type { StudioResolvedTrack, StudioTemporalBinding } from "@qflow/studio-adapter";
+import type { StudioObservedValue, StudioResolvedTrack, StudioTemporalBinding } from "@qflow/studio-adapter";
 import type { RuntimeHostTransientExecution } from "@qflow/runtime-host-node";
 
 import type { CompiledSource, ServedFile } from "./compile.js";
@@ -17,6 +15,7 @@ import type { RunPlan } from "./run.js";
 import type { StudioViewRequirement } from "./studio-preflight.js";
 import { studioSurfacePreview } from "./surface-preview.js";
 import { executedTemporalBindings } from "./temporal-graph.js";
+import type { StudioCompanionRegistry } from "./studio-registry.js";
 
 function playable(type: import("@qflow/protocol").TypeRef): boolean {
   return sameType(type, compositionTypes.visualTrack) || sameType(type, compositionTypes.audioTrack);
@@ -29,9 +28,9 @@ export type Preview = {
   readonly tracks: readonly BuiltTrack[];
   /** Resolved Companion realizations keyed by exact graph output ref. */
   readonly values: ReadonlyMap<string, unknown>;
+  readonly temporalDomainValues: readonly StudioObservedValue[];
   readonly temporalBindings: ReadonlyMap<string, readonly StudioTemporalBinding[]>;
   readonly composition: Composition;
-  readonly narrativeId?: string;
   readonly timingOutput?: { readonly name: string; readonly ref: string };
   readonly timingCandidateId?: string;
   readonly timingCandidateOrigin: "run" | "source" | "none";
@@ -39,12 +38,6 @@ export type Preview = {
   readonly canvas: { readonly width: number; readonly height: number; readonly clearColor: string };
   readonly frameRate: { readonly numerator: number; readonly denominator: number };
   readonly timeline: Timeline;
-  readonly anchors: ReadonlyMap<string, number>;
-  readonly tokens: readonly {
-    readonly id: string;
-    readonly startAnchorId: string;
-    readonly endAnchorId: string;
-  }[];
 };
 
 async function bytesOf(attachment: ArtifactAttachment): Promise<Uint8Array> {
@@ -101,6 +94,7 @@ function compositionArtifacts(composition: Composition): readonly BlobRef[] {
 /** Build only the Studio-approved deterministic projection of one explicit Run. */
 export async function preview(input: {
   readonly source: CompiledSource;
+  readonly registry: StudioCompanionRegistry;
   readonly run: RunPlan;
   readonly domain: StudioDomain;
   readonly outputRefs: readonly string[];
@@ -167,7 +161,7 @@ export async function preview(input: {
   const timingType = timingOutput?.typeRef ?? timingRecord?.type;
   const timingValue = selectedValue(executed.state, input.timeRef);
   if (timingValue?.kind !== "inline" || timingType === undefined) throw new Error("Studio requires a resolved film time source.");
-  if (!sameType(timingType, timelineTypes.track)) throw new Error("Studio requires the declared Timeline.");
+  if (!sameType(timingType, timelineTypes.timeline)) throw new Error("Studio requires the declared Timeline.");
   const timeline = timingValue.value as unknown as Timeline;
   assertTimelineIdentity(timeline);
   const rate = timeline.frameRate;
@@ -211,7 +205,7 @@ export async function preview(input: {
   });
   const temporalBindings = new Map(tracks.map((track) => [
     track.outputRef,
-    executedTemporalBindings(executed.state, track.outputRef),
+    executedTemporalBindings(executed.state, track.outputRef, (type, value) => input.registry.identifyTemporalSource(type, value)),
   ] as const));
   const values = new Map<string, unknown>();
   for (const target of targets) {
@@ -227,33 +221,23 @@ export async function preview(input: {
       values.set(record.id, record.value.value);
     }
   }
-  const narrativeProjections = input.projections.flatMap((view) => view.trace.references
-    .filter((reference) => sameType(reference.typeRef, narrativeTemporalTypes.narrativeProjection))
-    .flatMap((reference) => {
-      const stored = selectedValue(executed.state, reference.ref);
-      return stored?.kind === "inline" ? [stored.value as unknown as NarrativeProjection] : [];
-    }));
-  const anchors = new Map<string, number>();
-  const tokens: Preview["tokens"][number][] = [];
-  const narrativeIds = new Set<string>();
-  for (const projection of narrativeProjections) {
-    if (projection.timelineId !== timeline.id) continue;
-    narrativeIds.add(projection.narrativeId);
-    for (const boundary of projection.boundaries) anchors.set(boundary.id, boundary.frame);
-    tokens.push(...projection.tokens.map((token) => ({
-      id: token.tokenId,
-      startAnchorId: token.startBoundaryId,
-      endAnchorId: token.endBoundaryId,
-    })));
+  const temporalValueTypes = input.registry.temporalDomainValueTypes();
+  const temporalDomainValues: StudioObservedValue[] = [];
+  for (const record of [...executed.state.program.records, ...executed.state.records]) {
+    if (!temporalValueTypes.some((type) => sameType(type, record.type)) || record.value.kind !== "inline") continue;
+    values.set(record.id, record.value.value);
+    if (!temporalDomainValues.some((item) => item.id === record.id)) {
+      temporalDomainValues.push({ id: record.id, type: record.type, value: record.value.value });
+    }
   }
   const timingCandidateId = satisfactions.get(input.timeRef);
   return {
     source: input.source,
     tracks,
     values,
+    temporalDomainValues,
     temporalBindings,
     composition,
-    ...(narrativeIds.size === 1 ? { narrativeId: [...narrativeIds][0] } : {}),
     timingOutput: { name: timingOutput?.name ?? timeline.id, ref: input.timeRef },
     ...(timingCandidateId === undefined ? {} : { timingCandidateId }),
     timingCandidateOrigin: timingCandidateId === undefined ? "source" : "run",
@@ -261,7 +245,5 @@ export async function preview(input: {
     canvas: composition.canvas,
     frameRate: rate,
     timeline,
-    anchors,
-    tokens,
   };
 }

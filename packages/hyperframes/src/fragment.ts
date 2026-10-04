@@ -16,7 +16,7 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 export const hyperframesDocumentFragment = sealGraphFragment({
   inputs: [
     { name: "composition", type: compositionTypes.composition },
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
   ],
   operations: [{
     id: "compile-document",

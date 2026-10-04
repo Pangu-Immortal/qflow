@@ -7,7 +7,7 @@ import { StudioCompanionRegistry } from "../src/studio-registry.js";
 import { fallbackStudioTrackCompanions } from "../src/fallback-companions.js";
 
 test("a pure-MG work keeps its declared extent even when an editor entity extends beyond it", () => {
-  const built = { source: { observations: { placements: [], sourceMaps: [] } },
+  const built = { source: { observations: { placements: [], temporalDomains: [] } },
     tracks: [{ outputRef: "art.visual", name: "art.visual", typeRef: compositionTypes.visualTrack,
       trace: { outputPorts: [], references: [] }, candidateOrigin: "source", value: { presents: [{ id: "scene", order: 0, z: 0, span: { startFrame: 0, endFrameExclusive: 150 } }] } }],
     timeline: { id: "work", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } },
@@ -20,6 +20,6 @@ test("a pure-MG work keeps its declared extent even when an editor entity extend
   });
   assert.equal(result.timeline.frameCount, 90); assert.equal(result.timeline.durationSec, 3);
   assert.equal(result.tracks[0]!.clips[0]!.endFrameExclusive, 150);
-  assert.equal(result.semantic, undefined);
+  assert.deepEqual(result.temporalDomains, []);
   assert.equal("timing" in result.provenance, false);
 });

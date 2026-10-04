@@ -12,7 +12,7 @@ import type {
   StudioEntityDraft,
   StudioInspectorFieldDeclaration,
 } from "@qflow/studio-adapter";
-import { authoredChildFor, temporalLineageFor, temporalSemanticSource, requiredReferencedValue, requiredSurfaceValue } from "@qflow/studio-adapter";
+import { authoredChildFor, temporalLineageFor, temporalDomainSource, requiredReferencedValue, requiredSurfaceValue } from "@qflow/studio-adapter";
 
 const styleSurface = captionFineMarkupSurfaces.find((surface) => surface.name === "style");
 
@@ -140,7 +140,7 @@ export function projectCaption(context: StudioTrackCompanionContext): readonly S
     const child = authoredChildFor(context, authoredId, [temporalTypes.windowSpec]);
     if (child === undefined) throw new Error(`Caption Use ${authoredId} has no author provenance.`);
     const temporal = temporalLineageFor(context, authoredId, "window");
-    const semantic = temporalSemanticSource(temporal);
+    const semantic = temporalDomainSource(temporal);
     return {
       id: `${context.track.outputRef}:use:${authoredId}`, authoredId,
       display: { title: use.styleId, layers: [] },

@@ -146,7 +146,7 @@ One Script publishes the full Narrative and the narrow views needed by the rest 
 | Reference | What it carries |
 | --- | --- |
 | `{story}` | The complete authored Narrative. |
-| `{story.segment.hook}` | The `hook` Segment as a NarrativeExcerpt for generation, alignment or another semantic consumer. |
+| `{story.segment.hook}` | The `hook` Segment as a NarrativeSegmentRef for generation, alignment or another semantic consumer. |
 | `{story.segment.hook.dialogue}` | Role-aware dialogue using the spoken side of Dual Text, suitable for a speaking performance request. |
 | `{story.segment.hook.speech}` | Pronunciation-only Text, suitable for `qflow measure` or independent speech. |
 | `{story.caption}` | Display Words, Alignment Units, attributes, Roles, and authored Cue Breaks for Caption. |

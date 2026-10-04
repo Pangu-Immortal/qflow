@@ -13,7 +13,7 @@ import {
 } from "@qflow/timeline-author";
 
 const absoluteReferences = new Map([
-  ["film.timeline", { path: "film.timeline", type: timelineTypes.track, ref: { kind: "record" as const, id: "film.timeline" } }],
+  ["film.timeline", { path: "film.timeline", type: timelineTypes.timeline, ref: { kind: "record" as const, id: "film.timeline" } }],
   ["reveal", { path: "reveal", type: temporalTypes.instant, ref: { kind: "record" as const, id: "reveal" } }],
   ["answer-end", { path: "answer-end", type: temporalTypes.instant, ref: { kind: "record" as const, id: "answer-end" } }],
 ]);

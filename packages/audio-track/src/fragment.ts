@@ -48,7 +48,7 @@ export function createAudioTrackFragment(clips: readonly AudioTrackFragmentItem[
   return sealGraphFragment({
     inputs: [
       { name: "header", type: audioTrackTypes.header },
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       ...[...inputTypes].map(([inputName, type]) => ({ name: inputName, type })),
     ],
     operations,

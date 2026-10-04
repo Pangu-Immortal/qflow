@@ -1,4 +1,4 @@
-import type { Narrative, NarrativeExcerpt } from "@qflow/narrative";
+import type { Narrative, NarrativeSegmentRef } from "@qflow/narrative";
 import { sealNarrativeAlignment } from "@qflow/narrative-temporal";
 import type { NarrativeAlignment } from "@qflow/narrative-temporal";
 import { assertLocalTemporalDomain } from "@qflow/temporal";
@@ -6,13 +6,13 @@ import type { LocalTemporalDomain } from "@qflow/temporal";
 
 import type { NarrativeAlignmentTiming } from "./types.js";
 
-function authoredSegment(narrative: Narrative, excerpt: NarrativeExcerpt): Narrative["segments"][number] {
-  if (narrative.id !== excerpt.narrativeId) throw new Error(`NarrativeExcerpt ${excerpt.id} belongs to another Narrative.`);
+function authoredSegment(narrative: Narrative, excerpt: NarrativeSegmentRef): Narrative["segments"][number] {
+  if (narrative.id !== excerpt.narrativeId) throw new Error(`NarrativeSegmentRef ${excerpt.id} belongs to another Narrative.`);
   if (excerpt.kind !== "segment") throw new Error("NarrativeAlignment materialization requires a Segment excerpt.");
   const segment = narrative.segments.find((candidate) => candidate.id === excerpt.id);
   if (segment === undefined) throw new Error(`Narrative does not contain Segment ${excerpt.id}.`);
   if (excerpt.tokenStart !== segment.tokenStart || excerpt.tokenEndExclusive !== segment.tokenEndExclusive) {
-    throw new Error(`NarrativeExcerpt ${excerpt.id} does not describe its authored Segment.`);
+    throw new Error(`NarrativeSegmentRef ${excerpt.id} does not describe its authored Segment.`);
   }
   return segment;
 }
@@ -24,7 +24,7 @@ function localFrame(frame: number, domain: LocalTemporalDomain, label: string): 
   return frame;
 }
 
-export function materializeNarrativeAlignment(narrative: Narrative, excerpt: NarrativeExcerpt,
+export function materializeNarrativeAlignment(narrative: Narrative, excerpt: NarrativeSegmentRef,
   domain: LocalTemporalDomain, timing: NarrativeAlignmentTiming): NarrativeAlignment {
   assertLocalTemporalDomain(domain);
   const segment = authoredSegment(narrative, excerpt);
@@ -39,7 +39,7 @@ export function materializeNarrativeAlignment(narrative: Narrative, excerpt: Nar
       startBoundaryId: token.startAnchorId, endBoundaryId: token.endAnchorId };
   });
   const measuredById = new Map(timing.boundaries.map((boundary) => [boundary.id, boundary]));
-  const boundaries = narrative.semanticIndex.anchors.filter((anchor) => anchor.segmentId === segment.id).map((anchor) => {
+  const boundaries = narrative.anchors.filter((anchor) => anchor.segmentId === segment.id).map((anchor) => {
     const measured = measuredById.get(anchor.id);
     if (measured === undefined) throw new Error(`Semantic timing does not locate Boundary ${anchor.id}.`);
     return { id: anchor.id, frame: localFrame(measured.frame, domain, `Boundary ${anchor.id}`) };

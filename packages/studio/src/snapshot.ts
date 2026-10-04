@@ -17,8 +17,7 @@ import type {
   Clip,
   StudioSnapshot,
   Range,
-  ScriptMap,
-  SemanticTimeline,
+  TemporalDomainView,
   Track,
 } from "./shared.js";
 import type { Placement } from "./observe.js";
@@ -94,65 +93,11 @@ function authored(placements: readonly Placement[]): readonly Located[] {
   return found;
 }
 
-function scriptMap(
-  maps: Preview["source"]["observations"]["sourceMaps"],
-  built: Preview,
-  narrativeId: string,
-): ScriptMap | undefined {
-  const candidates = maps.filter((map, index) => map.narrativeId === narrativeId
-    && maps.findIndex((other) => other.narrativeId === map.narrativeId
-      && other.sourcePath === map.sourcePath
-      && other.range.start === map.range.start
-      && other.range.end === map.range.end) === index);
-  if (candidates.length > 1) {
-    throw new Error(`Studio Narrative id ${narrativeId} is declared by more than one Script in the Source closure.`);
-  }
-  const found = candidates[0];
-  if (found === undefined) return undefined;
-  const selections = found.selections;
-  const segments = found.segments;
-  const moments = found.moments;
-  return {
-    companion: found.companion,
-    narrativeId: found.narrativeId,
-    sourcePath: found.sourcePath,
-    range: found.range,
-    content: found.content,
-    // A Segment is the outermost range a Script declares; a Selection written
-    // inside one is a level down, and one inside that another.
-    segments: segments.map((segment) => ({ ...segment, depth: 0 })),
-    selections: selections.map((selection) => ({
-      ...selection,
-      depth: depthOf(selection, selections),
-    })),
-    moments,
-    // A Script says where a word is written; the timings say when it is said.
-    tokens: found.tokens.flatMap((token) => {
-      const placed = built.tokens.find((item) => item.id === token.id);
-      const startFrame = placed === undefined ? undefined : built.anchors.get(placed.startAnchorId);
-      const endFrame = placed === undefined ? undefined : built.anchors.get(placed.endAnchorId);
-      if (startFrame === undefined || endFrame === undefined) return [];
-      return [{ id: token.id, range: token.range, startFrame, endFrame }];
-    }),
-  };
-}
-
-/**
- * Project the compiled Narrative into the frame domain that the preview is
- * already using. No frontend timing is invented here: if an anchor is absent
- * from the built Timeline, the corresponding item is simply not drawable yet.
- */
-function semanticTimeline(
+/** Package Companions project their own temporal facts onto Studio's absolute ruler. */
+function temporalDomains(
   registry: StudioCompanionRegistry,
   built: Preview,
-  script: ScriptMap | undefined,
-): SemanticTimeline | undefined {
-  if (built.narrativeId === undefined) return undefined;
-  if (script === undefined) throw new Error("Timeline's Script has no Studio source mapping.");
-  const projected = registry.projectScript({ source: script, anchors: built.anchors,
-    values: built.source.compiled.program.records.flatMap(record => record.value.kind === "inline"
-      ? [{ id: record.id, type: record.type, value: record.value.value }] : []),
-  });
+): readonly TemporalDomainView[] {
   const provenance: CandidateProvenance = {
     output: built.timingOutput?.name ?? "Timeline",
     ...(built.timingOutput?.ref === undefined ? {} : { outputRef: built.timingOutput.ref }),
@@ -161,28 +106,13 @@ function semanticTimeline(
     status: "resolved",
     errors: [],
   };
-  return {
-    timelineId: built.timeline.id,
-    narrativeId: built.narrativeId,
-    // The generic ruler presentation is independent of the authored Timeline id.
-    presentation: registry.semanticTimelinePresentation(),
-    // Preserve the Companion's ordered anchors, including coincident boundaries.
-    ...projected,
-    provenance,
-  };
-}
-
-/** The element an output belongs to: `take-opening.video` is `take-opening`. */
-function depthOf(
-  selection: Omit<ScriptMap["selections"][number], "depth">,
-  all: readonly Omit<ScriptMap["selections"][number], "depth">[],
-): number {
-  let depth = 1;
-  for (const other of all) {
-    if (other.id === selection.id) continue;
-    if (other.open.start < selection.open.start && other.close.end > selection.close.end) depth += 1;
-  }
-  return depth;
+  return built.source.observations.temporalDomains.flatMap((source) => {
+    const projected = registry.projectTemporalDomain({ source, values: built.temporalDomainValues, timeline: built.timeline });
+    if (projected === undefined || projected.timelineId !== built.timeline.id) return [];
+    return [{ ...projected, companion: source.companion,
+      presentation: registry.temporalDomainPresentation(source.companion), provenance,
+      source: { path: source.sourcePath, content: source.content } }];
+  });
 }
 
 export function snapshot(registry: StudioCompanionRegistry, built: Preview, input: {
@@ -198,8 +128,7 @@ export function snapshot(registry: StudioCompanionRegistry, built: Preview, inpu
   readonly surfaces: MarkupSurfaceRegistryLike;
 }): StudioSnapshot {
   const located = authored(built.source.observations.placements);
-  const script = built.narrativeId === undefined ? undefined : scriptMap(built.source.observations.sourceMaps, built, built.narrativeId);
-  const semantic = semanticTimeline(registry, built, script);
+  const domains = temporalDomains(registry, built);
   const tracks: Track[] = [];
   for (const item of built.tracks) {
     const projectedSpans = spans(item.value, input.frameRate);
@@ -230,7 +159,7 @@ export function snapshot(registry: StudioCompanionRegistry, built: Preview, inpu
       spans: projectedSpans,
       values: built.values,
       temporalBindings: built.temporalBindings.get(item.outputRef) ?? [],
-      semantic,
+      temporalDomains: domains,
       generic,
     }).map((draft) => {
       const declarations = composeParameterDeclarations({
@@ -257,7 +186,7 @@ export function snapshot(registry: StudioCompanionRegistry, built: Preview, inpu
       const editHandles = resolveTimelineEditHandles(
         bindings,
         draft.temporal,
-        semantic,
+        domains,
       );
       return {
         draft,
@@ -319,7 +248,6 @@ export function snapshot(registry: StudioCompanionRegistry, built: Preview, inpu
       })),
     },
     run: input.run,
-    ...(script === undefined ? {} : { script }),
     canvas: {
       width: input.canvas.width,
       height: input.canvas.height,
@@ -331,7 +259,7 @@ export function snapshot(registry: StudioCompanionRegistry, built: Preview, inpu
       durationSec: frameCount * input.frameRate.denominator / input.frameRate.numerator,
     },
     tracks: rows,
-    ...(semantic === undefined ? {} : { semantic }),
+    temporalDomains: domains,
     preview: input.preview,
     provenance: {
       picture: "resolved",

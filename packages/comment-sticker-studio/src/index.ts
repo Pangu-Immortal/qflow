@@ -2,7 +2,7 @@ import { commentStickerMarkupSurfaces, commentStickerModuleRef, commentStickerTy
 import type { CommentStickerProgram } from "@qflow/comment-sticker";
 import { compositionTypes } from "@qflow/composition";
 import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-adapter";
-import { artifactPreview, childEntities, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalSemanticSource, textLayer } from "@qflow/studio-adapter";
+import { artifactPreview, childEntities, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource, textLayer } from "@qflow/studio-adapter";
 
 const frameParameters: readonly StudioSourceBindingDeclaration[] = [
   { name: "within" },
@@ -82,7 +82,7 @@ function projectComments(context: StudioTrackCompanionContext): readonly StudioE
     const item = program.items[index];
     if (item === undefined) return entity;
     const temporal = temporalLineageFor(context, item.id, "window");
-    const semanticSource = temporalSemanticSource(temporal);
+    const semanticSource = temporalDomainSource(temporal);
     return {
       ...entity,
       display: {

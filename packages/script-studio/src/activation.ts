@@ -1,8 +1,8 @@
 import { createStudioCompanionHostFacet } from "@qflow/studio-adapter";
 
-import { scriptStudioCompanions } from "./index.js";
+import { scriptStudioTemporalDomains } from "./index.js";
 
 export default {
   format: "qflow.node-package@1" as const,
-  hostFacets: [createStudioCompanionHostFacet({ scripts: scriptStudioCompanions })],
+  hostFacets: [createStudioCompanionHostFacet({ temporalDomains: scriptStudioTemporalDomains })],
 };

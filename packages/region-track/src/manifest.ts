@@ -18,7 +18,7 @@ export const regionTrackMarkupSurface = {
     attributes: [
       { name: "id", kind: "identifier", required: true, summary: "Names the RegionTrack value." },
       { name: "within", kind: "reference", required: true, accepts: [spatialTypes.frame], summary: "Chooses the program-picture Frame normalized regions occupy." },
-      { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.track], summary: "Chooses the Timeline whose Frames index the evidence." },
+      { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.timeline], summary: "Chooses the Timeline whose Frames index the evidence." },
       { name: "recipe", kind: "reference", required: true, accepts: [svsRecipeType], summary: "Chooses a Recipe with one or more named region series.", recipe: [
         { name: "series", required: true, summary: "Lists {id, regions}; each regions array contains one normalized [x, y, width, height] or null per Timeline Frame." },
       ] },
@@ -43,7 +43,7 @@ export const regionTrackManifest: ModuleManifest = {
     name: regionTrackProducers.resolve.name,
     inputs: [
       { name: "within", type: spatialTypes.frame },
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       { name: "recipe", type: svsRecipeType },
     ],
     outputs: [{ name: "track", type: regionTrackTypes.track }], needs: [],

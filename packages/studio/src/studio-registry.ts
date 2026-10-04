@@ -8,10 +8,10 @@ import type {
   StudioLaneAttachment,
   StudioViewRole,
   StudioResolvedTrack,
-  StudioScriptAdjustment,
-  StudioScriptProjectionInput,
-  StudioScriptCompanion,
-  StudioScriptSourceMap,
+  StudioTemporalDomainAdjustment,
+  StudioTemporalDomainProjectionInput,
+  StudioTemporalDomainCompanion,
+  StudioTemporalDomainSourceMap,
   StudioSourceBindingDeclaration,
   StudioSpan,
 } from "@qflow/studio-adapter";
@@ -20,7 +20,6 @@ import { parameterOption } from "./parameter-values.js";
 import { compositionTypes } from "@qflow/composition";
 import { sameModule, sameType } from "@qflow/protocol";
 import type { ModuleRef, TypeRef } from "@qflow/protocol";
-import { timelineTypes } from "@qflow/timeline";
 
 import type { Placement } from "./observe.js";
 import type { Clip, StudioTrackBinding } from "./shared.js";
@@ -188,13 +187,13 @@ export class StudioCompanionRegistry {
   readonly #parameters: readonly StudioParameterCompanion[];
   readonly #tracks: readonly StudioTrackCompanion[];
   readonly #films: readonly StudioFilmCompanion[];
-  readonly #scripts: readonly StudioScriptCompanion[];
+  readonly #temporalDomains: readonly StudioTemporalDomainCompanion[];
 
   constructor(
     tracks: readonly StudioTrackCompanion[],
     options: {
       readonly films?: readonly StudioFilmCompanion[];
-      readonly scripts?: readonly StudioScriptCompanion[];
+      readonly temporalDomains?: readonly StudioTemporalDomainCompanion[];
       readonly parameters?: readonly StudioParameterCompanion[];
     } = {},
   ) {
@@ -205,8 +204,8 @@ export class StudioCompanionRegistry {
       validateCompanionVocabulary(companion);
     }
     const films = [...(options.films ?? [])];
-    const scripts = [...(options.scripts ?? [])];
-    for (const [label, companions] of [["Film", films], ["Script", scripts]] as const) {
+    const temporalDomains = [...(options.temporalDomains ?? [])];
+    for (const [label, companions] of [["Film", films], ["Temporal Domain", temporalDomains]] as const) {
       const companionIds = new Set<string>();
       for (const companion of companions) {
         if (companionIds.has(companion.id) || ids.has(companion.id)) {
@@ -224,7 +223,7 @@ export class StudioCompanionRegistry {
     }
     this.#tracks = Object.freeze([...tracks]);
     this.#films = Object.freeze(films);
-    this.#scripts = Object.freeze(scripts);
+    this.#temporalDomains = Object.freeze(temporalDomains);
   }
 
   parameterCompanionFor(module: ModuleRef, surface: string): StudioParameterCompanion | undefined {
@@ -246,40 +245,60 @@ export class StudioCompanionRegistry {
     return found[0];
   }
 
-  scriptCompanionFor(module: ModuleRef, surface: string): StudioScriptCompanion | undefined {
-    const found = this.#scripts.filter((companion) =>
+  temporalDomainCompanionFor(module: ModuleRef, surface: string): StudioTemporalDomainCompanion | undefined {
+    const found = this.#temporalDomains.filter((companion) =>
       sameModule(companion.match.module, module) && companion.match.surface === surface);
-    if (found.length > 1) throw new Error(`Studio Script companions are ambiguous for ${module.name}@${module.version}#${surface}.`);
+    if (found.length > 1) throw new Error(`Studio Temporal Domain companions are ambiguous for ${module.name}@${module.version}#${surface}.`);
     return found[0];
   }
 
-  observeScript(
+  observeTemporalDomain(
     module: ModuleRef,
     surface: string,
-    input: Parameters<StudioScriptCompanion["observe"]>[0],
-  ): StudioScriptSourceMap | undefined {
-    const companion = this.scriptCompanionFor(module, surface);
+    input: Parameters<StudioTemporalDomainCompanion["observe"]>[0],
+  ): StudioTemporalDomainSourceMap | undefined {
+    const companion = this.temporalDomainCompanionFor(module, surface);
     const found = companion?.observe(input);
     return companion === undefined || found === undefined
       ? undefined
       : { ...found, companion: companion.id };
   }
 
-  projectScript(input: StudioScriptProjectionInput) {
-    const companion = this.#scripts.find(item => item.id === input.source.companion);
-    if (companion?.project === undefined) throw new Error(`Script Companion ${input.source.companion} does not provide a timeline projection.`);
+  projectTemporalDomain(input: StudioTemporalDomainProjectionInput) {
+    const companion = this.#temporalDomains.find(item => item.id === input.source.companion);
+    if (companion === undefined) throw new Error(`Temporal Domain Companion ${input.source.companion} is unavailable.`);
     return companion.project(input);
   }
 
-  adjustScript(input: {
+  adjustTemporalDomain(input: {
     readonly companion: string;
     readonly sourceName: string;
     readonly source: string;
-    readonly adjustment: StudioScriptAdjustment;
+    readonly adjustment: StudioTemporalDomainAdjustment;
   }): string {
-    const companion = this.#scripts.find((candidate) => candidate.id === input.companion);
-    if (companion === undefined) throw new Error(`Studio Script companion ${input.companion} is unavailable.`);
+    const companion = this.#temporalDomains.find((candidate) => candidate.id === input.companion);
+    if (companion === undefined) throw new Error(`Studio Temporal Domain companion ${input.companion} is unavailable.`);
     return companion.adjust({ sourceName: input.sourceName, source: input.source, adjustment: input.adjustment });
+  }
+
+  temporalDomainValueTypes(): readonly TypeRef[] {
+    return this.#temporalDomains.flatMap((companion) => companion.valueTypes);
+  }
+
+  identifyTemporalSource(type: TypeRef, value: unknown): { readonly companion: string; readonly id: string; readonly kind: string; readonly itemId: string } | undefined {
+    const candidates = this.#temporalDomains.filter((companion) => companion.sourceTypes.some((sourceType) => sameType(sourceType, type)))
+      .flatMap((companion) => {
+        const found = companion.identify({ type, value });
+        return found === undefined ? [] : [{ companion: companion.id, id: found.domainId, kind: found.kind, itemId: found.id }];
+      });
+    if (candidates.length > 1) throw new Error(`Studio Temporal Domain source is ambiguous for ${type.module.name}@${type.module.version}#${type.name}.`);
+    return candidates[0];
+  }
+
+  temporalDomainPresentation(companionId: string) {
+    const companion = this.#temporalDomains.find((candidate) => candidate.id === companionId);
+    if (companion === undefined) throw new Error(`Studio Temporal Domain companion ${companionId} is unavailable.`);
+    return companion.presentation;
   }
 
   trackCompanionFor(
@@ -314,25 +333,6 @@ export class StudioCompanionRegistry {
     siblingTypes: readonly TypeRef[],
   ): readonly string[] {
     return this.trackCompanionFor(type, placement, siblingTypes)?.requiredValues ?? [];
-  }
-
-  semanticTimelinePresentation(authoredLabel?: string): {
-    readonly family: StudioTrackBinding["family"];
-    readonly tone: StudioTrackBinding["tone"];
-    readonly label?: string;
-    readonly icon: StudioTrackBinding["icon"];
-    readonly lane: StudioTrackBinding["lane"];
-  } {
-    const companion = this.trackCompanionFor(timelineTypes.track, undefined, []);
-    return {
-      family: companion?.family ?? "semantic",
-      tone: companion?.tone ?? "teal",
-      ...(authoredLabel === undefined
-        ? (companion?.label === undefined ? {} : { label: companion.label })
-        : { label: authoredLabel }),
-      icon: companion?.icon ?? "brand",
-      lane: companion?.lane ?? flatLane,
-    };
   }
 
   #trackCompanion(track: StudioResolvedTrack): StudioTrackCompanion & { readonly family: StudioTrackBinding["family"] } {

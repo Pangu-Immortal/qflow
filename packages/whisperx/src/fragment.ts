@@ -12,7 +12,7 @@ const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
 
 export const whisperXAlignmentFragment = sealGraphFragment({
-  inputs: [{ name: "narrative", type: narrativeTypes.narrative }, { name: "segment", type: narrativeTypes.excerpt },
+  inputs: [{ name: "narrative", type: narrativeTypes.narrative }, { name: "segment", type: narrativeTypes.segmentRef },
     { name: "media", type: mediaTypes.synchronized }, { name: "domain", type: temporalTypes.localDomain },
     { name: "language", type: whisperXTypes.language }],
   operations: [
@@ -29,7 +29,7 @@ export const whisperXAlignmentFragment = sealGraphFragment({
 });
 
 export const whisperXBoundaryAlignmentFragment = sealGraphFragment({
-  inputs: [{ name: "narrative", type: narrativeTypes.narrative }, { name: "segment", type: narrativeTypes.excerpt },
+  inputs: [{ name: "narrative", type: narrativeTypes.narrative }, { name: "segment", type: narrativeTypes.segmentRef },
     { name: "domain", type: temporalTypes.localDomain }],
   operations: [
     { id: "materialize-boundaries", producer: narrativeTemporalProducers.materializeSegmentBoundaries,

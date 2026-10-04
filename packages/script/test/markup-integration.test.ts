@@ -1,7 +1,7 @@
 import { narrativeManifest } from "@qflow/narrative";
 import { captionManifest } from "@qflow/caption";
 import { narrativeCaptionManifest } from "@qflow/narrative-caption";
-import type { Narrative, NarrativeExcerpt } from "@qflow/narrative";
+import type { Narrative, NarrativeSegmentRef } from "@qflow/narrative";
 import { textManifest } from "@qflow/text";
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -68,7 +68,7 @@ test("Script teaches Markup <script> only through its imported Manifest", async 
   assert.equal(result.records[0]?.id, "story");
   assert.equal(result.records[0]?.type.name, "Narrative");
   assert.equal(result.records.some((record) =>
-    record.id === "story.segment.opening" && record.type.name === "NarrativeExcerpt"), true);
+    record.id === "story.segment.opening" && record.type.name === "NarrativeSegmentRef"), true);
   assert.equal(result.records.some((record) =>
     record.id === "story.segment.opening.dialogue" && record.type.name === "Text"), true);
   assert.equal(result.records.some((record) =>

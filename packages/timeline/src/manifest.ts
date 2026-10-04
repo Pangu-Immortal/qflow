@@ -2,7 +2,7 @@ import type { ModuleManifest, TypeRef, ValueSchema } from "@qflow/protocol";
 
 export const timelineModuleRef = { name: "@qflow/timeline", version: "1" } as const;
 export const timelineTypes = {
-  track: { module: timelineModuleRef, name: "Timeline" },
+  timeline: { module: timelineModuleRef, name: "Timeline" },
   clock: { module: timelineModuleRef, name: "Clock" },
 } satisfies Record<string, TypeRef>;
 
@@ -26,7 +26,7 @@ export const timelineManifest: ModuleManifest = {
   name: timelineModuleRef.name,
   version: timelineModuleRef.version,
   dependencies: [],
-  types: [{ name: timelineTypes.track.name }, { name: timelineTypes.clock.name }],
+  types: [{ name: timelineTypes.timeline.name }, { name: timelineTypes.clock.name }],
   capabilities: [],
   producers: [],
 };

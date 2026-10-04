@@ -19,7 +19,7 @@ const styles = (o) =>
 export function installReframe(module, manifest, component) {
   const types = presenterTypes(module);
   const inputs = [
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       { name: "within", type: spatialTypes.frame },
       { name: "window", type: temporalTypes.window },
       { name: "sources", type: types.sources },

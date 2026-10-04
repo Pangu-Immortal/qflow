@@ -232,7 +232,7 @@ export function compileTimelineAuthorFragment(options: TimelineAuthorFragmentOpt
     inputs: { start: originRef(), end: operation("point:end") }, result: { kind: "output", name: "span" } });
 
   const exports: { name: string; type: TypeRef; root: FragmentOperationRef }[] = [
-    { name: "timeline", type: timelineTypes.track, root: operation("timeline") },
+    { name: "timeline", type: timelineTypes.timeline, root: operation("timeline") },
   ];
   const outputNames: { port: string; suffix: string }[] = [{ port: "timeline", suffix: "timeline" }];
   const exportInstant = (port: string, suffix: string, point: FragmentOperationRef, id: string, subjectId: string): void => {

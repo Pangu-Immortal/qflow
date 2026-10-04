@@ -136,7 +136,7 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
   const fixtureSurfaceDigest = fixtureResource("example.screen-inputs/surface@1");
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
-    outputs: [spatialTypes.frame, timelineTypes.track],
+    outputs: [spatialTypes.frame, timelineTypes.timeline],
   } as const;
   const fixtureManifest: ModuleManifest = {
     format: "qflow.module@1",
@@ -167,7 +167,7 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
   registry.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
       { id: "within", type: spatialTypes.frame, value: { kind: "inline", value: within }, range: element.range },
-      { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "semantic", type: timelineTypes.timeline, value: { kind: "inline", value: semantic }, range: element.range },
     ],
     components: [],
     fragments: [],

@@ -40,11 +40,12 @@ export type StudioTimelinePresentation = {
 
 export type StudioTemporalSource = {
   readonly timelineId: string;
-  readonly narrativeId?: string;
   /** Domain-owned Type and role; Studio does not enumerate future time domains. */
   readonly type: TypeRef;
   readonly kind: string;
   readonly id: string;
+  /** Present only when a package Companion recognizes the domain-owned value. */
+  readonly domain?: { readonly companion: string; readonly id: string };
 };
 
 export type StudioTemporalAuthority =
@@ -270,12 +271,12 @@ export type StudioTimelineGesture =
 
 export type StudioEditCoordinate =
   | "program-frame"
-  | "semantic-anchor"
+  | "domain-anchor"
   | "source-frame"
   | "canvas-pixel"
   | "normalized-progress";
 
-export type StudioSnapTarget = "frame" | "semantic-anchor" | "item-edge";
+export type StudioSnapTarget = "frame" | "domain-anchor" | "item-edge";
 
 export type StudioEditSourceRole = "start" | "end" | "duration" | "frame" | "x" | "y";
 
@@ -284,18 +285,20 @@ export type StudioEditSource = {
   readonly source: StudioSourceBinding["source"];
 };
 
-export type StudioSemanticEditTarget =
+export type StudioTemporalDomainEditTarget =
   | {
-      readonly kind: "selection";
-      readonly narrativeId: string;
-      readonly id: string;
+      readonly kind: "span";
+      readonly companion: string;
+      readonly domainId: string;
+      readonly itemId: string;
       readonly startAnchorId: string;
       readonly endAnchorId: string;
     }
   | {
-      readonly kind: "moment";
-      readonly narrativeId: string;
-      readonly id: string;
+      readonly kind: "point";
+      readonly companion: string;
+      readonly domainId: string;
+      readonly itemId: string;
       readonly anchorId: string;
     };
 
@@ -307,13 +310,13 @@ export type StudioEditHandle = {
   readonly enabled: boolean;
   /** Coordinate space in which the central gesture resolver measures intent. */
   readonly coordinate?: StudioEditCoordinate;
-  /** How moving a semantic Point changes the visible entity before recompilation. */
+  /** How moving a domain Point changes the visible entity before recompilation. */
   readonly moveEffect?: "translate-window" | "move-start";
   /** Snap policy is data, not a timeline-wide guess. */
   readonly snapTo?: readonly StudioSnapTarget[];
   readonly sources?: readonly StudioEditSource[];
-  /** Shared Script identity adjusted by this rectangle; every consumer follows it. */
-  readonly semantic?: StudioSemanticEditTarget;
+  /** Package-owned temporal-domain identity adjusted by this rectangle. */
+  readonly domain?: StudioTemporalDomainEditTarget;
   /** Exact endpoint authority used to validate and execute this inverse. */
   readonly temporal?: StudioTemporalProjection;
   readonly disabledReason?: string;
@@ -372,56 +375,68 @@ export type StudioCandidateProvenance = {
   readonly errors: readonly string[];
 };
 
-export type StudioSemanticAnchor = {
+export type StudioTemporalDomainAnchor = {
   readonly id: string;
-  readonly kind: "segment-start" | "segment-end" | "token-start" | "token-end";
   readonly frame: number;
-  readonly segmentId?: string;
-  readonly tokenId?: string;
-};
-
-export type StudioSemanticSegment = {
-  readonly id: string;
-  readonly startFrame: number;
-  readonly endFrameExclusive: number;
+  /** Domain-owned classification used only for display and stable coincident-point ordering. */
+  readonly kind: string;
+  readonly label?: string;
+  readonly detail?: string;
   readonly range?: Range;
 };
 
-export type StudioSemanticToken = {
+export type StudioTemporalDomainLane = {
   readonly id: string;
-  readonly segmentId: string;
-  readonly text: string;
-  readonly startFrame: number;
-  readonly endFrameExclusive: number;
-  readonly range?: Range;
+  readonly label?: string;
+  readonly heightPx: number;
 };
 
-export type StudioSemanticTimeline = {
+export type StudioTemporalDomainItem = {
+  readonly id: string;
+  readonly laneId: string;
+  readonly label: string;
+  readonly range?: Range;
+  /** Matches the domain-owned value carried by Temporal lineage. */
+  readonly source?: { readonly type: TypeRef; readonly kind: string; readonly id: string };
+  /** Allows the package Companion to receive an inverse edit for this item. */
+  readonly editable?: boolean;
+  /** Let the code pane follow this item's source range while the playhead crosses it. */
+  readonly followPlayhead?: boolean;
+} & ({
+  readonly kind: "span";
+  readonly appearance: "block" | "compact";
+  readonly startAnchorId: string;
+  readonly endAnchorId: string;
+  readonly startFrame: number;
+  readonly endFrameExclusive: number;
+} | {
+  readonly kind: "point";
+  readonly appearance: "marker";
+  readonly anchorId: string;
+  readonly frame: number;
+});
+
+export type StudioTemporalDomainView = {
+  /** Domain identity supplied by its package, such as one Narrative id. */
+  readonly id: string;
+  /** Qualified Companion identity; together with id this is globally unambiguous. */
+  readonly companion: string;
   readonly timelineId: string;
-  readonly narrativeId: string;
   readonly presentation: {
     readonly family: StudioTrackFamily;
     readonly tone: StudioTimelineTone;
     readonly label?: string;
     readonly icon: StudioIcon;
-    readonly lane: StudioLaneDescription;
   };
-  readonly anchors: readonly StudioSemanticAnchor[];
-  readonly segments: readonly StudioSemanticSegment[];
-  readonly tokens: readonly StudioSemanticToken[];
-  readonly selections: readonly {
-    readonly id: string;
-    readonly startAnchorId: string;
-    readonly endAnchorId: string;
-    readonly startFrame: number;
-    readonly endFrameExclusive: number;
-  }[];
-  readonly moments: readonly {
-    readonly id: string;
-    readonly anchorId: string;
-    readonly frame: number;
-  }[];
+  readonly lanes: readonly StudioTemporalDomainLane[];
+  readonly anchors: readonly StudioTemporalDomainAnchor[];
+  readonly items: readonly StudioTemporalDomainItem[];
   readonly provenance: StudioCandidateProvenance;
+  /** Exact package-owned author source used only for inverse dispatch. */
+  readonly source: {
+    readonly path: string;
+    readonly content: Range;
+  };
 };
 
 export type StudioObservedValue = {
@@ -561,7 +576,7 @@ export type StudioTrackCompanionContext = {
   readonly values: ReadonlyMap<string, unknown>;
   /** Temporal values in this Track's actual executed dependency closure. */
   readonly temporalBindings: readonly StudioTemporalBinding[];
-  readonly semantic: StudioSemanticTimeline | undefined;
+  readonly temporalDomains: readonly StudioTemporalDomainView[];
   readonly generic: () => readonly StudioEntityDraft[];
 };
 
@@ -606,7 +621,7 @@ export type StudioCompanionContribution = {
   readonly format: "qflow.studio-companions@1";
   readonly tracks: readonly StudioTrackCompanion[];
   readonly films?: readonly StudioFilmCompanion[];
-  readonly scripts?: readonly StudioScriptCompanion[];
+  readonly temporalDomains?: readonly StudioTemporalDomainCompanion[];
   readonly parameters?: readonly StudioParameterCompanion[];
 };
 
@@ -626,54 +641,68 @@ export type StudioFilmCompanion = {
   };
 };
 
-export type StudioScriptSourceMap = {
+export type StudioTemporalDomainSourceMap = {
   readonly companion: string;
-  readonly narrativeId: string;
+  readonly domainId: string;
   readonly sourcePath: string;
   readonly range: Range;
   readonly content: Range;
-  readonly segments: readonly { readonly id: string; readonly range: Range }[];
-  readonly selections: readonly {
-    readonly id: string;
-    readonly startAnchorId: string;
-    readonly endAnchorId: string;
-    readonly open: Range;
-    readonly close: Range;
-  }[];
-  readonly moments: readonly { readonly id: string; readonly anchorId: string; readonly range: Range }[];
-  readonly tokens: readonly { readonly id: string; readonly range: Range }[];
+  /** Opaque package-owned observation; common Studio never interprets its fields. */
+  readonly data: unknown;
 };
 
-export type StudioScriptAdjustment =
-  | { readonly kind: "selection"; readonly id: string; readonly startAnchorId: string; readonly endAnchorId: string }
-  | { readonly kind: "moment"; readonly id: string; readonly anchorId: string };
+export type StudioTemporalDomainAdjustment =
+  | { readonly kind: "span"; readonly itemId: string; readonly startAnchorId: string; readonly endAnchorId: string }
+  | { readonly kind: "point"; readonly itemId: string; readonly anchorId: string };
 
-export type StudioScriptProjection = Pick<StudioSemanticTimeline, "anchors" | "segments" | "tokens" | "selections" | "moments">;
-export type StudioScriptProjectionInput = {
-  readonly source: StudioScriptSourceMap;
+export type StudioTemporalDomainProjection = Pick<StudioTemporalDomainView, "id" | "timelineId" | "lanes" | "anchors" | "items">;
+export type StudioTemporalDomainProjectionInput = {
+  readonly source: StudioTemporalDomainSourceMap;
   readonly values: readonly StudioObservedValue[];
-  readonly anchors: ReadonlyMap<string, number>;
+  readonly timeline: {
+    readonly id: string;
+    readonly frameRate: { readonly numerator: number; readonly denominator: number };
+    readonly frameCount: number;
+  };
 };
 
-/** Script grammar companion. It owns source observation and semantic inverse edits. */
-export type StudioScriptCompanion = {
+/** A package projects its own temporal facts and receives its own inverse edits. */
+export type StudioTemporalDomainCompanion = {
   readonly id: string;
   readonly match: { readonly module: ModuleRef; readonly surface: string };
+  /** Inline values required to build the domain view after execution. */
+  readonly valueTypes: readonly TypeRef[];
+  /** Domain reference Types that may appear in executed Temporal lineage. */
+  readonly sourceTypes: readonly TypeRef[];
+  readonly presentation: {
+    readonly family: StudioTrackFamily;
+    readonly tone: StudioTimelineTone;
+    readonly label?: string;
+    readonly icon: StudioIcon;
+  };
+  readonly identify: (input: { readonly type: TypeRef; readonly value: unknown }) => {
+    readonly domainId: string;
+    readonly kind: string;
+    readonly id: string;
+  } | undefined;
   readonly observe: (input: {
     readonly sourceName: string;
-    readonly source: string;
+    /** Raw Surfaces receive Source text; structured Surfaces can rely on their decoded attributes/range. */
+    readonly source?: string;
     readonly tag: string;
-    readonly openingStart: number;
-    readonly contentStart: number;
+    /** Exact whole element range for raw and structured Surfaces alike. */
+    readonly range: Range;
+    /** Raw grammars may expose their body boundaries for package-owned parsing. */
+    readonly contentStart?: number;
     /** Authoritative end returned by the raw Surface after it parsed its own grammar. */
     readonly nextOffset?: number;
     readonly attributes: Readonly<Record<string, unknown>>;
-  }) => Omit<StudioScriptSourceMap, "companion"> | undefined;
-  readonly project?: (input: StudioScriptProjectionInput) => StudioScriptProjection;
+  }) => Omit<StudioTemporalDomainSourceMap, "companion"> | undefined;
+  readonly project: (input: StudioTemporalDomainProjectionInput) => StudioTemporalDomainProjection | undefined;
   readonly adjust: (input: {
     readonly sourceName: string;
     readonly source: string;
-    readonly adjustment: StudioScriptAdjustment;
+    readonly adjustment: StudioTemporalDomainAdjustment;
   }) => string;
 };
 
@@ -692,7 +721,7 @@ export function createStudioTrackCompanionHostFacet(tracks: readonly StudioTrack
 export function createStudioCompanionHostFacet(input: {
   readonly tracks?: readonly StudioTrackCompanion[];
   readonly films?: readonly StudioFilmCompanion[];
-  readonly scripts?: readonly StudioScriptCompanion[];
+  readonly temporalDomains?: readonly StudioTemporalDomainCompanion[];
   readonly parameters?: readonly StudioParameterCompanion[];
 }): StudioCompanionHostFacet {
   return {
@@ -701,7 +730,7 @@ export function createStudioCompanionHostFacet(input: {
       format: "qflow.studio-companions@1",
       tracks: input.tracks ?? [],
       ...(input.films === undefined ? {} : { films: input.films }),
-      ...(input.scripts === undefined ? {} : { scripts: input.scripts }),
+      ...(input.temporalDomains === undefined ? {} : { temporalDomains: input.temporalDomains }),
       ...(input.parameters === undefined ? {} : { parameters: input.parameters }),
     },
   };
@@ -710,7 +739,7 @@ export function createStudioCompanionHostFacet(input: {
 export type StudioPackageContribution = {
   readonly tracks: readonly StudioTrackCompanion[];
   readonly films: readonly StudioFilmCompanion[];
-  readonly scripts: readonly StudioScriptCompanion[];
+  readonly temporalDomains: readonly StudioTemporalDomainCompanion[];
   readonly parameters: readonly StudioParameterCompanion[];
 };
 
@@ -728,7 +757,7 @@ export function studioContributionFromPackage(
   if (owner.length === 0 || owner.includes("#")) throw new Error(`Invalid Studio companion package identity: ${owner}`);
   const tracks: StudioTrackCompanion[] = [];
   const films: StudioFilmCompanion[] = [];
-  const scripts: StudioScriptCompanion[] = [];
+  const temporalDomains: StudioTemporalDomainCompanion[] = [];
   const parameters: StudioParameterCompanion[] = [];
   for (const facet of facets) {
     if (facet.abi !== studioCompanionHostAbi) continue;
@@ -747,12 +776,12 @@ export function studioContributionFromPackage(
     parameters.push(...(contribution.parameters ?? []).map((parameter) => ({
       ...parameter, id: qualify(owner, parameter.id, "Studio Parameter companion"),
     })));
-    scripts.push(...(contribution.scripts ?? []).map((script) => ({
-      ...script,
-      id: qualify(owner, script.id, "Studio Script companion"),
+    temporalDomains.push(...(contribution.temporalDomains ?? []).map((domain) => ({
+      ...domain,
+      id: qualify(owner, domain.id, "Studio Temporal Domain companion"),
     })));
   }
-  return { tracks, films, scripts, parameters };
+  return { tracks, films, temporalDomains, parameters };
 }
 
 /**
@@ -930,20 +959,21 @@ export function temporalLineageFor(
   };
 }
 
-/** Unique semantic author identity carried by one projection, when there is one. */
-export function temporalSemanticSource(lineage: StudioTemporalLineage | undefined): StudioTemporalSource | undefined {
+/** Unique domain-owned author identity carried by one projection, when there is one. */
+export function temporalDomainSource(lineage: StudioTemporalLineage | undefined): StudioTemporalSource | undefined {
   if (lineage === undefined) return undefined;
   const projection = lineage.projection;
   const endpoints = projection.kind === "instant" ? [projection] : [projection.start, projection.end];
-  const semantic = endpoints.flatMap((endpoint) => endpoint.authority.kind === "domain"
+  const domain = endpoints.flatMap((endpoint) => endpoint.authority.kind === "domain"
     ? [endpoint.authority.source]
     : []);
-  const first = semantic[0];
+  const first = domain[0];
   if (first === undefined) return undefined;
-  return semantic.every((candidate) => candidate.kind === first.kind
+  return domain.every((candidate) => candidate.kind === first.kind
     && candidate.id === first.id
     && candidate.timelineId === first.timelineId
-    && candidate.narrativeId === first.narrativeId)
+    && candidate.domain?.companion === first.domain?.companion
+    && candidate.domain?.id === first.domain?.id)
     ? first
     : undefined;
 }

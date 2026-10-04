@@ -7,7 +7,7 @@ import { filmModuleRef } from "@qflow/film";
 export const filmStudioCompanions: readonly StudioFilmCompanion[] = [{
   id: "film",
   match: { module: filmModuleRef, surface: "film", outputType: compositionTypes.composition },
-  timeSources: [{ attribute: "timeline", type: timelineTypes.track }],
+  timeSources: [{ attribute: "timeline", type: timelineTypes.timeline }],
   tracks: {
     childSurface: "Track",
     sourceAttribute: "source",

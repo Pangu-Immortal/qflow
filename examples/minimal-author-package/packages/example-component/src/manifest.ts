@@ -36,7 +36,7 @@ export const exampleManifest: ModuleManifest = {
     { module: compositionTypes.visualTrack.module },
     { module: mediaTypes.fontStack.module },
     { module: spatialTypes.frame.module },
-    { module: timelineTypes.track.module },
+    { module: timelineTypes.timeline.module },
     { module: svsRecipeType.module },
     { module: temporalTypes.window.module },
   ],
@@ -46,7 +46,7 @@ export const exampleManifest: ModuleManifest = {
     name: producer.name,
     inputs: producer === exampleProducers.appendItems
       ? [{ name: "previous", type: exampleTypes.itemSet }, { name: "item", type: exampleTypes.itemSet }]
-      : [{ name: "timeline", type: timelineTypes.track }, { name: "within", type: spatialTypes.frame },
+      : [{ name: "timeline", type: timelineTypes.timeline }, { name: "within", type: spatialTypes.frame },
         ...(producer === exampleProducers.renderImage ? [{ name: "image", type: artifactTypes.blob }] : [])],
     outputs: producer === exampleProducers.appendItems
       ? [{ name: "set", type: exampleTypes.itemSet }]
@@ -61,7 +61,7 @@ const vocabulary = (summary: string, example: string) => ({
   preview: previewImage("Box.png"),
   attributes: [
     { name: "id", kind: "identifier" as const, required: true, summary: "Names this instance." },
-    { name: "timeline", kind: "reference" as const, required: true, accepts: [timelineTypes.track], summary: "Selects the complete Timeline." },
+    { name: "timeline", kind: "reference" as const, required: true, accepts: [timelineTypes.timeline], summary: "Selects the complete Timeline." },
     { name: "within", kind: "reference" as const, required: true, accepts: [spatialTypes.frame], summary: "Places the complete surface in this picture-plane Frame." },
   ],
   ports: [{ name: "visual", type: compositionTypes.visualTrack, summary: "The terminal visual contribution." }],

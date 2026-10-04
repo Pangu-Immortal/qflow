@@ -43,7 +43,7 @@ const fixtureModule = { name: "example.film-fixture", version: "1" } as const;
 const fixtureSurfaceDigest = fixtureResource("example.film-fixture/inputs-surface@1");
 const fixtureSurface = {
   name: "inputs", tag: "Inputs", mode: "structured",
-  outputs: [timelineTypes.track, compositionTypes.visualTrack, compositionTypes.audioTrack],
+  outputs: [timelineTypes.timeline, compositionTypes.visualTrack, compositionTypes.audioTrack],
 } as const;
 const fixtureManifest: ModuleManifest = {
   format: "qflow.module@1",
@@ -103,7 +103,7 @@ async function compileFilm(options: { readonly styles?: string; readonly tracks?
   const surfaces = new MarkupSurfaceRegistry();
   surfaces.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
-      { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "semantic", type: timelineTypes.timeline, value: { kind: "inline", value: semantic }, range: element.range },
       { id: "visual", type: compositionTypes.visualTrack, value: { kind: "inline", value: visual }, range: element.range },
       { id: "audio", type: compositionTypes.audioTrack, value: { kind: "inline", value: audio }, range: element.range },
     ],
@@ -192,7 +192,7 @@ test("Film rejects a repeated Track reference during check, before executing its
 test("Film distinguishes component output ports and resolves duplicate aliases", async () => {
   const range = { source: "main.svml", start: 0, end: 1 };
   const refs = new Map<string, SurfaceResolvedReference>();
-  for (const [path, type] of [["canvas", spatialTypes.canvas], ["timeline", timelineTypes.track]] as const) {
+  for (const [path, type] of [["canvas", spatialTypes.canvas], ["timeline", timelineTypes.timeline]] as const) {
     refs.set(path, { path, type, ref: { kind: "record", id: path } });
   }
   refs.set("appearance", { path: "appearance", type: svsRecipeType,

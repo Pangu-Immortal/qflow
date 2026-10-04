@@ -53,10 +53,6 @@
     "common.waiting": "Waiting",
     "inspector.add-color": "Add color",
     "inspector.add-item": "Add item",
-    "inspector.anchor.segment-end": "Segment end{detail}",
-    "inspector.anchor.segment-start": "Segment start{detail}",
-    "inspector.anchor.token-end": "Word end{detail}",
-    "inspector.anchor.token-start": "Word start{detail}",
     "inspector.aspect-ratio": "Aspect ratio",
     "inspector.author": "Author",
     "inspector.build": "Build",
@@ -65,7 +61,6 @@
     "inspector.duration": "Duration",
     "inspector.empty": "No details for this selection",
     "inspector.end": "End",
-    "inspector.end-anchor": "End semantic anchor",
     "inspector.frame-rate": "Frame rate",
     "inspector.frames": "Frames",
     "inspector.how": "How",
@@ -75,7 +70,6 @@
       "other": "{count} items"
     },
     "inspector.moment": "Moment",
-    "inspector.moment-anchor": "Moment semantic anchor",
     "inspector.move-down": "Move down",
     "inspector.move-up": "Move up",
     "inspector.project": "Project",
@@ -83,10 +77,8 @@
     "inspector.remove-item": "Remove item",
     "inspector.resolution": "Resolution",
     "inspector.run": "Run",
-    "inspector.semantic-anchors": "Semantic anchors",
     "inspector.sources": "Sources",
     "inspector.start": "Start",
-    "inspector.start-anchor": "Start semantic anchor",
     "inspector.structured-value": "Structured value",
     "inspector.targets": "Targets",
     "inspector.timeline": "Timeline",
@@ -176,22 +168,12 @@
     "tasks.refresh-hint": "Refresh to read the latest task status.",
     "tasks.saved-only": "Saved project Results · no Runtime selected",
     "timeline.fit-timeline": "Fit timeline",
-    "timeline.moment-name": "Moment {name}",
     "timeline.overlapping-timeline-objects": "Overlapping timeline objects",
     "timeline.resize-timeline-track-labels": "Resize timeline track labels",
     "timeline.resize-track-labels": "Resize track labels",
-    "timeline.segment-name": "Segment {name}",
-    "timeline.segments": "Segments",
     "timeline.select": "Select",
-    "timeline.selection-name": "Selection {name}",
-    "timeline.selections-and-moments": "Selections and Moments",
-    "timeline.words": "Words",
     "timeline.zoom-in": "Zoom in",
     "timeline.zoom-out": "Zoom out",
-    "inspector.color-picker": "{label} picker",
-    "timeline.segment-count": {
-      "one": "{count} segment",
-      "other": "{count} segments"
-    }
+    "inspector.color-picker": "{label} picker"
   }
 }

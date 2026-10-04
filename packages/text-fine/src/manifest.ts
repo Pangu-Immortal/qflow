@@ -176,7 +176,7 @@ export const fineTextWindowAttributeVocabulary = [
 
 const fineTextCommonAttributes = [
   { name: "id", kind: "identifier", required: true, summary: "Names this independent text occurrence and both compiled outputs." },
-  { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.track], summary: "The absolute Timeline on which this occurrence is placed." },
+  { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.timeline], summary: "The absolute Timeline on which this occurrence is placed." },
   { name: "style", kind: "reference", required: true, accepts: [textFineTypes.style], summary: "Chooses the compiled fine-text Style." },
   { name: "z", kind: "literal", required: true, summary: "Sets this occurrence's absolute picture stacking position; it is not part of the reusable Style." },
   { name: "motion", kind: "reference", required: false, accepts: [textFineTypes.motion], summary: "Chooses the Motion; an omitted Motion is still." },
@@ -478,7 +478,7 @@ export const textFineMarkupSurfaces = [
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names this Mask, under which its VisualTrack is published." },
-          { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.track],
+          { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.timeline],
             summary: "The absolute Timeline shared with the consumed occurrence." },
           { name: "text", kind: "reference", required: true, accepts: [textFineTypes.occurrence],
             summary: "Chooses the one authored fine-text occurrence that gives the mask its shape and timing." },
@@ -528,8 +528,8 @@ export const textFineManifest: ModuleManifest = {
     { name: textFineProducers.bindPoint.name, inputs: [{ name: "point", type: spatialTypes.point }, { name: "policy", type: textFineTypes.pointPlacementPolicy }], outputs: [{ name: "placement", type: textFineTypes.placement }], needs: [] },
     { name: textFineProducers.bindArea.name, inputs: [{ name: "frame", type: spatialTypes.frame }, { name: "policy", type: textFineTypes.flowPlacementPolicy }], outputs: [{ name: "placement", type: textFineTypes.placement }], needs: [] },
     { name: textFineProducers.bindPath.name, inputs: [{ name: "path", type: spatialTypes.path }, { name: "policy", type: textFineTypes.pathPlacementPolicy }, { name: "marginMotion", type: textFineTypes.pathMotion }], outputs: [{ name: "placement", type: textFineTypes.placement }], needs: [] },
-    { name: textFineProducers.createOccurrence.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "placement", type: textFineTypes.placement }, { name: "spec", type: textFineTypes.itemSpec }, { name: "style", type: textFineTypes.style }, { name: "motion", type: textFineTypes.motion }, { name: "window", type: temporalTypes.window }], outputs: [{ name: "occurrence", type: textFineTypes.occurrence }], needs: [] },
-    { name: textFineProducers.renderOccurrence.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "occurrence", type: textFineTypes.occurrence }], outputs: [{ name: "visual", type: compositionTypes.visualTrack }], needs: [] },
-    { name: textFineProducers.renderOccurrenceMask.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "occurrence", type: textFineTypes.occurrence }, { name: "material", type: mediaTypes.compositableSurface }, { name: "spec", type: textFineTypes.maskSpec }], outputs: [{ name: "visual", type: compositionTypes.visualTrack }], needs: [] },
+    { name: textFineProducers.createOccurrence.name, inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "placement", type: textFineTypes.placement }, { name: "spec", type: textFineTypes.itemSpec }, { name: "style", type: textFineTypes.style }, { name: "motion", type: textFineTypes.motion }, { name: "window", type: temporalTypes.window }], outputs: [{ name: "occurrence", type: textFineTypes.occurrence }], needs: [] },
+    { name: textFineProducers.renderOccurrence.name, inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "occurrence", type: textFineTypes.occurrence }], outputs: [{ name: "visual", type: compositionTypes.visualTrack }], needs: [] },
+    { name: textFineProducers.renderOccurrenceMask.name, inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "occurrence", type: textFineTypes.occurrence }, { name: "material", type: mediaTypes.compositableSurface }, { name: "spec", type: textFineTypes.maskSpec }], outputs: [{ name: "visual", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };

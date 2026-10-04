@@ -1,4 +1,4 @@
-import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import type { NarrativeSegmentRef, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import type { Timeline } from "@qflow/timeline";
 import {
   composeTemporalWindow,
@@ -73,7 +73,7 @@ export function projectSegmentWindow(input: {
   readonly subjectId?: string;
   readonly semantic: Timeline;
   readonly narrative: NarrativeProjection;
-  readonly segment: NarrativeExcerpt;
+  readonly segment: NarrativeSegmentRef;
   readonly projection: NarrativeWindowProjection;
 }) {
   const subjectId = input.subjectId ?? input.itemId;

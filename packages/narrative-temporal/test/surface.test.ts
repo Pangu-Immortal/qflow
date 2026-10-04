@@ -20,10 +20,10 @@ test("Projection Surface balances maps and publishes only requested absolute val
     ({ path, type, ref: { kind: "record", id: path } });
   const references = new Map<string, SurfaceResolvedReference>([
     ["story", typed("story", narrativeTypes.narrative)],
-    ["film", typed("film", timelineTypes.track)],
+    ["film", typed("film", timelineTypes.timeline)],
     ["proof", typed("proof", narrativeTypes.selection)],
     ["reveal", typed("reveal", narrativeTypes.moment)],
-    ["ending", typed("ending", narrativeTypes.excerpt)],
+    ["ending", typed("ending", narrativeTypes.segmentRef)],
     ...["one", "two", "three"].flatMap((id): Array<[string, SurfaceResolvedReference]> => [
       [`${id}.alignment`, typed(`${id}.alignment`, narrativeTemporalTypes.narrativeAlignment)],
       [`${id}.domain`, typed(`${id}.domain`, temporalTypes.localDomain)],

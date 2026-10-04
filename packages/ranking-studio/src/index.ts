@@ -4,7 +4,7 @@ import type { RankingProgram, RankingSchedule, RankingSoundEventPlan } from "@qf
 import { compositionTypes } from "@qflow/composition";
 import type { AudioTrack } from "@qflow/composition";
 import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-adapter";
-import { artifactPreview, authoredChildFor, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalSemanticSource } from "@qflow/studio-adapter";
+import { artifactPreview, authoredChildFor, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-adapter";
 
 
 const fontInspector = openFontStudioFields("style");
@@ -115,7 +115,7 @@ function projectRanking(context: StudioTrackCompanionContext): readonly StudioEn
   if (placement === undefined) return context.generic();
   const boardId = placement.id ?? context.track.outputRef;
   const outerTemporal = temporalLineageFor(context, boardId, "outer");
-  const outerSemanticSource = temporalSemanticSource(outerTemporal);
+  const outerSemanticSource = temporalDomainSource(outerTemporal);
   const group: StudioEntityDraft = {
     id: `${context.track.outputRef}:entity:${boardId}`,
     authoredId: boardId,
@@ -135,7 +135,7 @@ function projectRanking(context: StudioTrackCompanionContext): readonly StudioEn
     const child = authoredChildFor(context, entry.itemId, [rankingTypes.itemSpec, rankingTypes.textItemShell]);
     const item = programItems.get(entry.itemId);
     const temporal = temporalLineageFor(context, entry.itemId, "mode" in entry ? "window" : "activation");
-    const semanticSource = temporalSemanticSource(temporal);
+    const semanticSource = temporalDomainSource(temporal);
     const visible = "mode" in entry ? entry.window : entry.cumulative;
     const icon = item?.icon;
     const label = item !== undefined && "label" in item ? item.label : child?.attributes.label ?? entry.itemId;

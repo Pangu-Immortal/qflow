@@ -14,6 +14,7 @@
     "@qflow/script": "workspace:*",
     "@qflow/studio-adapter": "workspace:*",
     "@qflow/narrative": "workspace:*",
+    "@qflow/narrative-temporal": "workspace:*",
     "@qflow/protocol": "workspace:*"
   }
 }

@@ -116,7 +116,7 @@ export const depthStackProgramSchema: ValueSchema = object({
 const finalizeInputs = [
   { name: "set", type: depthStackTypes.cardSet }, { name: "header", type: depthStackTypes.header },
   { name: "frame", type: spatialTypes.frame }, { name: "spec", type: depthStackTypes.spec },
-  { name: "timeline", type: timelineTypes.track },
+  { name: "timeline", type: timelineTypes.timeline },
 ] as const;
 
 export const depthStackMarkupSurfaces = [
@@ -376,7 +376,7 @@ export const depthStackManifest: ModuleManifest = {
     { name: depthStackProducers.bindLabelText.name, inputs: [{ name: "style", type: depthStackTypes.cardLabelStyle }, { name: "content", type: textTypes.text }], outputs: [{ name: "label", type: depthStackTypes.cardLabel }], needs: [] },
     { name: depthStackProducers.createCards.name, inputs: [], outputs: [{ name: "set", type: depthStackTypes.cardSet }], needs: [] },
     { name: depthStackProducers.appendCard.name, inputs: [
-      { name: "set", type: depthStackTypes.cardSet }, { name: "timeline", type: timelineTypes.track }, { name: "material", type: visualTrackTypes.layerSet },
+      { name: "set", type: depthStackTypes.cardSet }, { name: "timeline", type: timelineTypes.timeline }, { name: "material", type: visualTrackTypes.layerSet },
       { name: "label", type: depthStackTypes.cardLabel }, { name: "spec", type: depthStackTypes.cardSpec },
       { name: "activation", type: temporalTypes.instant },
     ], outputs: [{ name: "set", type: depthStackTypes.cardSet }], needs: [] },
@@ -384,7 +384,7 @@ export const depthStackManifest: ModuleManifest = {
       inputs: [...finalizeInputs, { name: "terminal", type: temporalTypes.instant }],
       outputs: [{ name: "program", type: depthStackTypes.program }], needs: [] },
     { name: depthStackProducers.render.name, inputs: [
-      { name: "timeline", type: timelineTypes.track },
+      { name: "timeline", type: timelineTypes.timeline },
       { name: "program", type: depthStackTypes.program },
     ], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],

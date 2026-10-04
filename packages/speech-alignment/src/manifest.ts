@@ -14,7 +14,7 @@ export const speechAlignmentManifest: ModuleManifest = {
   dependencies: [narrativeDependency, narrativeTemporalDependency, speechEvidenceDependency, temporalDependency],
   types: [], capabilities: [], producers: [{
     name: speechAlignmentProducers.alignNarrative.name,
-    inputs: [{ name: "narrative", type: narrativeTypes.narrative }, { name: "segment", type: narrativeTypes.excerpt },
+    inputs: [{ name: "narrative", type: narrativeTypes.narrative }, { name: "segment", type: narrativeTypes.segmentRef },
       { name: "domain", type: temporalTypes.localDomain },
       { name: "evidence", type: speechEvidenceTypes.alignedTranscript }],
     outputs: [{ name: "alignment", type: narrativeTemporalTypes.narrativeAlignment }],

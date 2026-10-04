@@ -1,5 +1,5 @@
 import type { ComponentPackage } from "@qflow/component-kit";
-import type { Narrative, NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
+import type { Narrative, NarrativeSegmentRef, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import { canonicalize } from "@qflow/protocol";
 import type { ProducerRef, StoredValue } from "@qflow/protocol";
 import type { LocalTemporalDomain, TemporalWindow } from "@qflow/temporal";
@@ -23,7 +23,7 @@ export const narrativeTemporalComponent = {
     producer: narrativeTemporalProducers.materializeSegmentBoundaries,
     handler: ({ inputs }) => ({ outputs: { alignment: { kind: "inline", value: canonicalize(materializeSegmentBoundaryAlignment(
       inline<Narrative>(inputs.narrative?.value, "Narrative"),
-      inline<NarrativeExcerpt>(inputs.segment?.value, "NarrativeExcerpt"),
+      inline<NarrativeSegmentRef>(inputs.segment?.value, "NarrativeSegmentRef"),
       inline<LocalTemporalDomain>(inputs.domain?.value, "LocalTemporalDomain"),
     )) } }, needs: {} }),
   }, {
@@ -68,7 +68,7 @@ function projectionFacet(producer: ProducerRef, inputName: "selection" | "segmen
     return { outputs: { instant: { kind: "inline" as const, value: canonicalize(projectNarrativeInstant({
       timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
       narrative: inline<NarrativeProjection>(inputs.projection?.value, "NarrativeProjection"),
-      source: inline<NarrativeSelectionRef | NarrativeExcerpt | NarrativeMomentRef>(inputs[inputName]?.value, inputName),
+      source: inline<NarrativeSelectionRef | NarrativeSegmentRef | NarrativeMomentRef>(inputs[inputName]?.value, inputName),
       sourceKind, spec,
     })) } }, needs: {} };
   } };

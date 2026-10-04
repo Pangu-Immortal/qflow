@@ -2,7 +2,7 @@ import { assertExactAttributes as exactAttributes, textAttribute as stringAttrib
   type StructuredElement, type StructuredSurfaceHandler, type SurfaceResolvedReference, type SurfaceRecordDraft, type MarkupAttributeValue } from "@qflow/markup";
 import { sameType } from "@qflow/protocol";
 import { narrativeTypes } from "@qflow/narrative";
-import type { NarrativeExcerpt } from "@qflow/narrative";
+import type { NarrativeSegmentRef } from "@qflow/narrative";
 import { mediaTypes } from "@qflow/media";
 import { temporalTypes } from "@qflow/temporal";
 
@@ -18,13 +18,13 @@ function reference(element: StructuredElement, name: string, expected: SurfaceRe
   if (value === undefined || !sameType(value.type, expected)) throw new Error(`${element.name}.${name} has the wrong type`);
   return value;
 }
-function authoredExcerpt(value: SurfaceResolvedReference): NarrativeExcerpt | undefined {
-  return value.record?.value.kind === "inline" ? value.record.value.value as unknown as NarrativeExcerpt : undefined;
+function authoredExcerpt(value: SurfaceResolvedReference): NarrativeSegmentRef | undefined {
+  return value.record?.value.kind === "inline" ? value.record.value.value as unknown as NarrativeSegmentRef : undefined;
 }
 
 export const decodeWhisperXAlignmentSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
   const narrative = reference(element, "narrative", narrativeTypes.narrative, resolveReference);
-  const segment = reference(element, "segment", narrativeTypes.excerpt, resolveReference);
+  const segment = reference(element, "segment", narrativeTypes.segmentRef, resolveReference);
   const domain = reference(element, "domain", temporalTypes.localDomain, resolveReference);
   const excerpt = authoredExcerpt(segment);
   const hasNoTokens = excerpt !== undefined && excerpt.tokenStart === excerpt.tokenEndExclusive;

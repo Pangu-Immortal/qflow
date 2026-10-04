@@ -33,7 +33,7 @@ export const whisperXMarkupSurfaces = [{
           accepts: [narrativeTypes.narrative],
           summary: "Selects the authored Narrative that owns the Segment and Token identities." },
         { name: "segment", kind: "reference", required: true,
-          accepts: [narrativeTypes.excerpt],
+          accepts: [narrativeTypes.segmentRef],
           summary: "Selects the single authored Segment performed by this Take." },
         { name: "media", kind: "reference", required: true,
           accepts: [mediaTypes.synchronized],

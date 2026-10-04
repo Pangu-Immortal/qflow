@@ -15,7 +15,7 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 export const stillVisualTrackFragment = sealGraphFragment({
   inputs: [
     { name: "header", type: visualTrackTypes.header },
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
     { name: "source", type: artifactTypes.blob },
     { name: "extent", type: spatialTypes.extent },
     { name: "frame", type: spatialTypes.frame },
@@ -48,7 +48,7 @@ export const stillVisualTrackFragment = sealGraphFragment({
 });
 
 export const renderVisualTrackFragment = sealGraphFragment({
-  inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: visualTrackTypes.program }],
+  inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "program", type: visualTrackTypes.program }],
   operations: [
     { id: "visual", producer: visualTrackProducers.projectVisual, inputs: { timeline: input("timeline"), program: input("program") }, result: { kind: "output", name: "track" } },
   ],

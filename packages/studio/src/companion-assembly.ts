@@ -33,7 +33,7 @@ export async function loadStudioCompanionRegistry(input: {
     [...fallbackStudioTrackCompanions, ...contributions.flatMap((item) => item.tracks)],
     {
       films: contributions.flatMap((item) => item.films),
-      scripts: contributions.flatMap((item) => item.scripts),
+      temporalDomains: contributions.flatMap((item) => item.temporalDomains),
       parameters: contributions.flatMap((item) => item.parameters),
     },
   );

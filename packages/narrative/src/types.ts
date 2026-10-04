@@ -71,9 +71,7 @@ export type Narrative = {
   readonly turns: readonly NarrativeTurn[];
   readonly selections: readonly NarrativeSelection[];
   readonly moments: readonly NarrativeMoment[];
-  readonly semanticIndex: {
-    readonly anchors: readonly SemanticAnchor[];
-  };
+  readonly anchors: readonly SemanticAnchor[];
 };
 
 /**
@@ -81,7 +79,7 @@ export type Narrative = {
  * generation and speech packages consume this shared value without importing
  * Script's parser or source representation.
  */
-export type NarrativeExcerpt = {
+export type NarrativeSegmentRef = {
   readonly kind: "segment";
   /** Author-visible `<script id>` that owns this Segment. */
   readonly narrativeId: string;

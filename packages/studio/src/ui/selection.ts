@@ -10,9 +10,7 @@ export type Origin = "timeline" | "code" | "video";
 export type Selection =
   | { readonly kind: "none" }
   | { readonly kind: "clip"; readonly clipId: string; readonly origin: Origin }
-  | { readonly kind: "semantic-segment"; readonly segmentId: string; readonly origin: Origin }
-  | { readonly kind: "semantic-selection"; readonly selectionId: string; readonly origin: Origin }
-  | { readonly kind: "semantic-moment"; readonly momentId: string; readonly origin: Origin };
+  | { readonly kind: "temporal-domain"; readonly companion: string; readonly domainId: string; readonly itemId: string; readonly origin: Origin };
 
 export type Playhead = { readonly frame: number; readonly origin: Origin | "play" };
 
@@ -31,12 +29,8 @@ export type Store = {
   load(snapshot: StudioSnapshot): void;
   /** Select without moving the playhead; timeline inspection must not destroy position. */
   select(clipId: string, origin: Origin): void;
-  /** Select one authored semantic relation without moving the playhead. */
-  selectSemanticSegment(segmentId: string, origin: Origin): void;
-  /** Select one authored Selection marker without moving the playhead. */
-  selectSemanticSelection(selectionId: string, origin: Origin): void;
-  /** Select one authored Moment marker without moving the playhead. */
-  selectSemanticMoment(momentId: string, origin: Origin): void;
+  /** Select one package-contributed temporal-domain item without moving the playhead. */
+  selectTemporalDomainItem(companion: string, domainId: string, itemId: string, origin: Origin): void;
   /** Select and seek to the clip start, used by source navigation. */
   selectClip(clipId: string, origin: Origin): void;
   /**
@@ -110,16 +104,9 @@ export function createStore(): Store {
       if (held.kind === "clip" && !clips().some((clip) => clip.id === held.clipId)) {
         selection = { kind: "none" };
       }
-      if (held.kind === "semantic-segment"
-        && !snapshot.semantic?.segments.some((segment) => segment.id === held.segmentId)) {
-        selection = { kind: "none" };
-      }
-      if (held.kind === "semantic-selection"
-        && !snapshot.semantic?.selections.some((item) => item.id === held.selectionId)) {
-        selection = { kind: "none" };
-      }
-      if (held.kind === "semantic-moment"
-        && !snapshot.semantic?.moments.some((item) => item.id === held.momentId)) {
+      if (held.kind === "temporal-domain"
+        && !snapshot.temporalDomains.some((domain) => domain.companion === held.companion
+          && domain.id === held.domainId && domain.items.some((item) => item.id === held.itemId))) {
         selection = { kind: "none" };
       }
       playhead = { frame: clamp(playhead.frame), origin: playhead.origin };
@@ -131,19 +118,10 @@ export function createStore(): Store {
       selection = { kind: "clip", clipId, origin };
       emit();
     },
-    selectSemanticSegment(segmentId, origin) {
-      if (snapshot?.semantic?.segments.some((segment) => segment.id === segmentId) !== true) return;
-      selection = { kind: "semantic-segment", segmentId, origin };
-      emit();
-    },
-    selectSemanticSelection(selectionId, origin) {
-      if (snapshot?.semantic?.selections.some((item) => item.id === selectionId) !== true) return;
-      selection = { kind: "semantic-selection", selectionId, origin };
-      emit();
-    },
-    selectSemanticMoment(momentId, origin) {
-      if (snapshot?.semantic?.moments.some((item) => item.id === momentId) !== true) return;
-      selection = { kind: "semantic-moment", momentId, origin };
+    selectTemporalDomainItem(companion, domainId, itemId, origin) {
+      if (snapshot?.temporalDomains.some((domain) => domain.companion === companion
+        && domain.id === domainId && domain.items.some((item) => item.id === itemId)) !== true) return;
+      selection = { kind: "temporal-domain", companion, domainId, itemId, origin };
       emit();
     },
     selectClip(clipId, origin) {

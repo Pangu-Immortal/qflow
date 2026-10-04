@@ -19,13 +19,13 @@ const module = { name: "@example/chat-scene", version: "1" } as const;
 const types = Object.fromEntries(["Options", "Message", "Messages"].map(name => [name, { module, name }])) as Record<"Options" | "Message" | "Messages", TypeRef>;
 const producers = Object.fromEntries(["empty", "append", "render"].map(name => [name, { module, name }])) as Record<"empty" | "append" | "render", { module: typeof module; name: string }>;
 export const manifest: ModuleManifest = { format: "qflow.module@1", ...module,
-  dependencies: [compositionTypes.visualTrack, mediaTypes.fontStack, timelineTypes.track, spatialTypes.frame, temporalTypes.instant].map(type => ({ module: type.module })),
+  dependencies: [compositionTypes.visualTrack, mediaTypes.fontStack, timelineTypes.timeline, spatialTypes.frame, temporalTypes.instant].map(type => ({ module: type.module })),
   types: Object.values(types).map(type => ({ name: type.name })), capabilities: [], producers: [
     { name: "empty", inputs: [], outputs: [{ name: "messages", type: types.Messages }], needs: [] },
     { name: "append", inputs: [{ name: "messages", type: types.Messages }, { name: "message", type: types.Message },
-      { name: "at", type: temporalTypes.instant }, { name: "timeline", type: timelineTypes.track }], outputs: [{ name: "messages", type: types.Messages }], needs: [] },
+      { name: "at", type: temporalTypes.instant }, { name: "timeline", type: timelineTypes.timeline }], outputs: [{ name: "messages", type: types.Messages }], needs: [] },
     { name: "render", inputs: [{ name: "messages", type: types.Messages }, { name: "options", type: types.Options },
-      { name: "timeline", type: timelineTypes.track }, { name: "within", type: spatialTypes.frame },
+      { name: "timeline", type: timelineTypes.timeline }, { name: "within", type: spatialTypes.frame },
       { name: "window", type: temporalTypes.window }, { name: "font", type: mediaTypes.fontStack }], outputs: [{ name: "visual", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };
@@ -62,7 +62,7 @@ export const decodeSurface: StructuredSurfaceHandler = ({ element, resolveRefere
   const options: ChatOptions = { id, title: textAttribute(element, "title"), entranceFrames: Number(element.attributes["entrance-frames"] ?? "10") };
   const records = [...window.records, { id: `${id}.options`, type: types.Options, value: value(options), range: element.range }];
   const components = [...window.components], fragments = [...window.fragments];
-  const inputs = [{ name: "timeline", type: timelineTypes.track }, { name: "within", type: spatialTypes.frame },
+  const inputs = [{ name: "timeline", type: timelineTypes.timeline }, { name: "within", type: spatialTypes.frame },
     { name: "font", type: mediaTypes.fontStack }, { name: "window", type: temporalTypes.window }, { name: "options", type: types.Options }];
   const bindings: Record<string, SurfaceResolvedReference["ref"]> = { timeline: context.timeline.ref, within: reference("within", spatialTypes.frame).ref,
     font: reference("font", mediaTypes.fontStack).ref, window: window.ref, options: { kind: "record", id: `${id}.options` } };
@@ -93,7 +93,7 @@ export const decodeSurface: StructuredSurfaceHandler = ({ element, resolveRefere
     { id, fragment: fragment.id, inputs: bindings, outputs: { visual: `${id}.visual` }, range: element.range }], exports: [`${id}.visual`] };
 };
 const declaration = { name: "scene", tag: "Scene", mode: "structured" as const,
-  outputs: [compositionTypes.visualTrack, timelineTypes.track, temporalTypes.window, temporalTypes.instant, temporalTypes.windowSpec, temporalTypes.instantSpec, ...Object.values(types)],
+  outputs: [compositionTypes.visualTrack, timelineTypes.timeline, temporalTypes.window, temporalTypes.instant, temporalTypes.windowSpec, temporalTypes.instantSpec, ...Object.values(types)],
   vocabulary: { summary: "A conversation whose message arrivals and scrolling form one visual scene.", attributes: [
     ...temporalContextAttributeVocabulary, ...temporalWindowAttributeVocabulary,
     ...["id", "title", "within", "font"].map(name => ({ name, kind: "expression" as const, required: true, summary: name })),

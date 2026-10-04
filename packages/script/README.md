@@ -47,7 +47,7 @@ components without importing Script internals.
 
 The Surface exports one full Narrative plus narrow, immutable views:
 
-- `script.segment.<id>` is a narrow `NarrativeExcerpt` used to align generated or supplied media with one Segment;
+- `script.segment.<id>` is a narrow `NarrativeSegmentRef` used to align generated or supplied media with one Segment;
 - `script.segment.<id>.dialogue` is ordinary `Text`: display-independent dialogue, including optional
   Role cues and right-side Dual Text pronunciation, for a speech-video model;
 - `script.segment.<id>.speech` is ordinary pronunciation-only `Text` for duration estimation or TTS;

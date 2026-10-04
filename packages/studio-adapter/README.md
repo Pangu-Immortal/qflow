@@ -138,7 +138,7 @@ fallback tries only the terminal object's exact `subjectId`/`authoredId`; render
 are not alternate guesses.
 
 Track Companions match terminal outputs by complete `TypeRef` and their authoring origin by complete
-`ModuleRef + Surface`; Film and Script companions use the same versioned origin match. Short Type
+`ModuleRef + Surface`; Film and temporal-domain Companions use the same versioned origin match. Short Type
 and module names remain available for UI text and diagnostics but never decide which Companion is
 allowed to interpret a value.
 
@@ -154,17 +154,19 @@ physical package identity, so executable package code cannot impersonate an
 official Companion. The Source closure selects project packages; Studio does not
 scan `node_modules` for plugins or use Runtime Profiles to select Companions.
 
-The same host facet can contribute Film, Script and parameter Companions. A Film Companion
-identifies its Timeline and terminal Tracks. The Timeline supplies the program range; semantic
-rows are populated when it carries Script anchors. A Script Companion owns source observation,
-projection of its values into Studio's segment/word/marker rows, and marker adjustment. Studio
-consumes that projection without reading the Script package's Narrative representation.
+The same host facet can contribute Film, temporal-domain and parameter Companions. A Film Companion
+identifies its Timeline and terminal Tracks. The Timeline supplies only the program range. A
+temporal-domain Companion owns source observation, requests the domain values it needs, projects
+generic anchors plus point/span items onto that Timeline, and receives inverse point/span edits.
+Script Studio uses this protocol for Narrative, but common Studio neither imports Narrative nor
+reserves segment, word, Selection or Moment slots. Another package can contribute beat, shot or
+motion-event domains through the same protocol.
 
 For a domain item whose Spec is consumed beside a Window or Instant, call
 `temporalLineageFor(context, item.id, "window")` using the actual projection input name. Attach the
 returned lineage to that entity; the input may instead be `activation`, `outer` or another declared
 port. Studio derives common timeline gestures from endpoint authority. No matching lineage means
-no inferred semantic edit; several matching edges require resolving the ambiguity in the component
+no inferred domain edit; several matching edges require resolving the ambiguity in the component
 projection. Visible frame coincidence is not a source relationship.
 
 ## Expose authored parameters deliberately
@@ -206,7 +208,7 @@ an entity-specific `parameterReferences` override must identify the actual autho
 
 Verify the integration in an ordinary Run: the intended Module/Surface matches, the expected entity
 is selected, its field reaches the correct Source or Recipe, and changing it recomputes the preview.
-For semantic handles, verify the exact marker and its other consumers too. Read-only derived timing
+For domain handles, verify the exact point/span identity and its other consumers too. Read-only derived timing
 is preferable to an invented inverse. The Companion explains the component; its Producers remain
 responsible for identical video behavior in Studio, seeking and encoded rendering.
 

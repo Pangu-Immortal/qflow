@@ -291,18 +291,18 @@ importers:
       '@qflow/text':
         specifier: workspace:*
         version: link:packages/text
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:packages/timeline
-      '@qflow/timeline-author':
-        specifier: workspace:*
-        version: link:packages/timeline-author
       '@qflow/text-fine':
         specifier: workspace:*
         version: link:packages/text-fine
       '@qflow/text-fine-studio':
         specifier: workspace:*
         version: link:packages/text-fine-studio
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:packages/timeline
+      '@qflow/timeline-author':
+        specifier: workspace:*
+        version: link:packages/timeline-author
       '@qflow/visual-ir':
         specifier: workspace:*
         version: link:packages/visual-ir
@@ -2893,6 +2893,9 @@ importers:
       '@qflow/narrative':
         specifier: workspace:*
         version: link:../narrative
+      '@qflow/narrative-temporal':
+        specifier: workspace:*
+        version: link:../narrative-temporal
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -3094,9 +3097,6 @@ importers:
       '@qflow/media-pipeline':
         specifier: workspace:*
         version: link:../media-pipeline
-      '@qflow/narrative-temporal':
-        specifier: workspace:*
-        version: link:../narrative-temporal
       '@qflow/package-loader-node':
         specifier: workspace:*
         version: link:../package-loader-node
@@ -3136,12 +3136,12 @@ importers:
       '@qflow/temporal':
         specifier: workspace:*
         version: link:../temporal
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
       '@qflow/text-fine-studio':
         specifier: workspace:*
         version: link:../text-fine-studio
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
       '@qflow/validation':
         specifier: workspace:*
         version: link:../validation
@@ -3234,61 +3234,6 @@ importers:
         specifier: workspace:*
         version: link:../svs
 
-  packages/timeline:
-    dependencies:
-      '@qflow/component-kit':
-        specifier: workspace:*
-        version: link:../component-kit
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-
-  packages/timeline-author:
-    dependencies:
-      '@qflow/component-kit':
-        specifier: workspace:*
-        version: link:../component-kit
-      '@qflow/elaborator':
-        specifier: workspace:*
-        version: link:../elaborator
-      '@qflow/markup':
-        specifier: workspace:*
-        version: link:../markup
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
-      '@qflow/temporal-markup':
-        specifier: workspace:*
-        version: link:../temporal-markup
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
-    devDependencies:
-      '@qflow/core':
-        specifier: workspace:*
-        version: link:../core
-      '@qflow/script':
-        specifier: workspace:*
-        version: link:../script
-      '@qflow/text':
-        specifier: workspace:*
-        version: link:../text
-      '@qflow/validation':
-        specifier: workspace:*
-        version: link:../validation
-
-  packages/transport-aws-lambda:
-    dependencies:
-      '@aws-sdk/client-lambda':
-        specifier: 3.1103.0
-        version: 3.1103.0
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-
   packages/text-fine:
     dependencies:
       '@qflow/component-kit':
@@ -3352,6 +3297,61 @@ importers:
       '@qflow/text-fine':
         specifier: workspace:*
         version: link:../text-fine
+
+  packages/timeline:
+    dependencies:
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../component-kit
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+
+  packages/timeline-author:
+    dependencies:
+      '@qflow/component-kit':
+        specifier: workspace:*
+        version: link:../component-kit
+      '@qflow/elaborator':
+        specifier: workspace:*
+        version: link:../elaborator
+      '@qflow/markup':
+        specifier: workspace:*
+        version: link:../markup
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@qflow/temporal':
+        specifier: workspace:*
+        version: link:../temporal
+      '@qflow/temporal-markup':
+        specifier: workspace:*
+        version: link:../temporal-markup
+      '@qflow/timeline':
+        specifier: workspace:*
+        version: link:../timeline
+    devDependencies:
+      '@qflow/core':
+        specifier: workspace:*
+        version: link:../core
+      '@qflow/script':
+        specifier: workspace:*
+        version: link:../script
+      '@qflow/text':
+        specifier: workspace:*
+        version: link:../text
+      '@qflow/validation':
+        specifier: workspace:*
+        version: link:../validation
+
+  packages/transport-aws-lambda:
+    dependencies:
+      '@aws-sdk/client-lambda':
+        specifier: 3.1103.0
+        version: 3.1103.0
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
 
   packages/validation:
     dependencies:

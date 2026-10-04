@@ -214,7 +214,7 @@ export const visualTrackHeaderSchema: ValueSchema = object({
 
 const clipInputs = [
   { name: "set", type: visualTrackTypes.set }, { name: "header", type: visualTrackTypes.header },
-  { name: "timeline", type: timelineTypes.track },
+  { name: "timeline", type: timelineTypes.timeline },
   { name: "layers", type: visualTrackTypes.layerSet },
   { name: "frame", type: spatialTypes.frame }, { name: "spec", type: visualTrackTypes.clipSpec },
   { name: "window", type: temporalTypes.window },
@@ -431,8 +431,8 @@ export const visualTrackManifest: ModuleManifest = {
     { name: visualTrackProducers.appendClip.name, inputs: clipInputs, outputs: [{ name: "set", type: visualTrackTypes.set }], needs: [] },
     { name: visualTrackProducers.bindClipPath.name, inputs: [{ name: "spec", type: visualTrackTypes.clipSpec }, { name: "path", type: spatialTypes.path }], outputs: [{ name: "spec", type: visualTrackTypes.clipSpec }], needs: [] },
     { name: visualTrackProducers.bindMotion.name, inputs: [{ name: "spec", type: visualTrackTypes.clipSpec }, { name: "motion", type: visualTrackTypes.motion }], outputs: [{ name: "spec", type: visualTrackTypes.clipSpec }], needs: [] },
-    { name: visualTrackProducers.finalize.name, inputs: [{ name: "set", type: visualTrackTypes.set }, { name: "header", type: visualTrackTypes.header }, { name: "timeline", type: timelineTypes.track }], outputs: [{ name: "program", type: visualTrackTypes.program }], needs: [] },
-    { name: visualTrackProducers.projectVisual.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: visualTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+    { name: visualTrackProducers.finalize.name, inputs: [{ name: "set", type: visualTrackTypes.set }, { name: "header", type: visualTrackTypes.header }, { name: "timeline", type: timelineTypes.timeline }], outputs: [{ name: "program", type: visualTrackTypes.program }], needs: [] },
+    { name: visualTrackProducers.projectVisual.name, inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "program", type: visualTrackTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };
 

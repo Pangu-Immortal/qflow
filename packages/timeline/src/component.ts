@@ -12,7 +12,7 @@ function track(value: StoredValue | undefined): Timeline {
 export const timelineComponent = {
   producers: [],
   validators: [{
-    type: timelineTypes.track,
+    type: timelineTypes.timeline,
     handler: ({ value }) => assertTimelineIdentity(track(value)),
   }],
 } satisfies ComponentPackage;

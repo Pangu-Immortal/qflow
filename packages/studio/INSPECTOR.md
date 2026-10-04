@@ -75,7 +75,7 @@ also inform the input when no presentation override is provided. Empty input is 
 SVML strings escape attribute delimiters and entity characters. SVS values use `formatSvsValue`.
 Neither the UI nor a Companion writes source text through an arbitrary callback. Timeline temporal
 gestures are separate from Inspector field conversion; see the temporal author forms for their
-semantic-anchor and local-offset editing behavior.
+domain-anchor and local-offset editing behavior.
 
 ## Choices retain their actual value
 

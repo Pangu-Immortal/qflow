@@ -12,7 +12,7 @@ import {
 import {
   captionDocumentType,
   narrativeCaptionBindingType,
-  narrativeExcerptType,
+  narrativeSegmentRefType,
   narrativeMomentType,
   narrativeSelectionType,
   narrativeType,
@@ -98,7 +98,7 @@ export function decodeScriptSurface(input: ScriptSurfaceInput): ScriptSurfaceOut
       },
       ...parsed.segments.map((segment) => ({
         id: `${rawId}.segment.${segment.id}`,
-        type: narrativeExcerptType,
+        type: narrativeSegmentRefType,
         value: { kind: "inline" as const, value: narrativeSegmentExcerptValue(parsed, segment, rawId) },
         range: segment.range,
       })),

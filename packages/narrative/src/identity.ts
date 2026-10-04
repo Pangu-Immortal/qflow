@@ -1,6 +1,6 @@
 import type {
   Narrative,
-  NarrativeExcerpt,
+  NarrativeSegmentRef,
   NarrativeMomentRef,
   NarrativeSelectionRef,
 } from "./types.js";
@@ -27,8 +27,8 @@ export function assertNarrativeIdentity(value: Narrative): void {
   unique(value.turns.map((item) => item.id), "Narrative Turn id");
   unique(value.selections.map((item) => item.id), "Narrative Selection id");
   unique(value.moments.map((item) => item.id), "Narrative Moment id");
-  const anchorIds = unique(value.semanticIndex.anchors.map((item) => item.id), "Narrative Anchor id");
-  const anchors = value.semanticIndex.anchors;
+  const anchorIds = unique(value.anchors.map((item) => item.id), "Narrative Anchor id");
+  const anchors = value.anchors;
   const anchorOrder = new Map(anchors.map((anchor, index) => [anchor.id, index] as const));
   let anchorCursor = 0;
   let tokenCursor = 0;
@@ -91,13 +91,13 @@ export function assertNarrativeIdentity(value: Narrative): void {
   }
 }
 
-export function assertNarrativeExcerptIdentity(value: NarrativeExcerpt): void {
-  if (value.kind !== "segment") throw new Error("NarrativeExcerpt must be a Segment.");
-  nonempty(value.narrativeId, "NarrativeExcerpt narrativeId");
-  nonempty(value.id, "NarrativeExcerpt id");
+export function assertNarrativeSegmentRefIdentity(value: NarrativeSegmentRef): void {
+  if (value.kind !== "segment") throw new Error("NarrativeSegmentRef must be a Segment.");
+  nonempty(value.narrativeId, "NarrativeSegmentRef narrativeId");
+  nonempty(value.id, "NarrativeSegmentRef id");
   if (!Number.isSafeInteger(value.tokenStart) || !Number.isSafeInteger(value.tokenEndExclusive)
     || value.tokenStart < 0 || value.tokenEndExclusive < value.tokenStart) {
-    throw new Error("NarrativeExcerpt Token coverage is invalid.");
+    throw new Error("NarrativeSegmentRef Token coverage is invalid.");
   }
 }
 

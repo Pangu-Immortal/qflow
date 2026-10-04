@@ -6,7 +6,7 @@ import type { ModuleManifest, TypeRef } from "@qflow/protocol";
 
 export const scriptModuleRef = { name: "@qflow/script", version: "1" } as const;
 export const narrativeType: TypeRef = narrativeTypes.narrative;
-export const narrativeExcerptType: TypeRef = narrativeTypes.excerpt;
+export const narrativeSegmentRefType: TypeRef = narrativeTypes.segmentRef;
 export const narrativeSelectionType: TypeRef = narrativeTypes.selection;
 export const narrativeMomentType: TypeRef = narrativeTypes.moment;
 export const captionDocumentType: TypeRef = captionTypes.document;
@@ -20,7 +20,7 @@ export const scriptMarkupSurfaces = [
     mode: "raw",
     outputs: [
       narrativeType,
-      narrativeExcerptType,
+      narrativeSegmentRefType,
       textTypes.text,
       narrativeSelectionType,
       narrativeMomentType,
@@ -37,7 +37,7 @@ export const scriptMarkupSurfaces = [
       ports: [
         { name: "", type: narrativeType,
           summary: "The complete authored Narrative, including speech structure, semantic anchors and its CaptionDocument, addressed by the element's own id." },
-        { name: "segment.<id>", type: narrativeExcerptType,
+        { name: "segment.<id>", type: narrativeSegmentRefType,
           summary: "One Segment as a narrow Excerpt, used to associate a generated Take with that Segment." },
         { name: "segment.<id>.dialogue", type: textTypes.text,
           summary: "One Segment as display-independent dialogue, keeping Role Cue labels and the spoken side of Dual Text." },

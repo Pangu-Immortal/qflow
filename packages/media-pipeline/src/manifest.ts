@@ -611,7 +611,7 @@ export const mediaPipelineManifest: ModuleManifest = {
       name: mediaPipelineProducers.planAudio.name,
       inputs: [
         { name: "composition", type: compositionTypes.composition },
-        { name: "timeline", type: timelineTypes.track },
+        { name: "timeline", type: timelineTypes.timeline },
       ],
       outputs: [{ name: "plan", type: mediaPipelineTypes.audioProgramPlan }],
       needs: [],

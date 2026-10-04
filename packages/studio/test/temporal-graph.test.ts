@@ -60,8 +60,8 @@ test("Studio reads Instant lineage and author authority from executed graph edge
     id: "deck.card::cue",
     projection: {
       kind: "instant", expression: "moment.cue", reference: "moment.cue", frame: 42,
-      source: { timelineId: "speech", narrativeId: "story", type: type("@qflow/narrative", "NarrativeMoment"), kind: "moment", id: "cue" },
-      authority: { kind: "domain", source: { timelineId: "speech", narrativeId: "story", type: type("@qflow/narrative", "NarrativeMoment"), kind: "moment", id: "cue" }, boundary: "cue" },
+      source: { timelineId: "speech", type: type("@qflow/narrative", "NarrativeMoment"), kind: "moment", id: "cue" },
+      authority: { kind: "domain", source: { timelineId: "speech", type: type("@qflow/narrative", "NarrativeMoment"), kind: "moment", id: "cue" }, boundary: "cue" },
     },
     consumers: [{
       step: "append",

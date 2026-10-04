@@ -1,15 +1,12 @@
 import { userText, uiAttribute, uiText, uiAttr } from "./i18n.js";
-import type {
-  SemanticToken,
-  StudioSnapshot,
-} from "../shared.js";
+import type { StudioSnapshot } from "../shared.js";
 import type { StudioEditHandle } from "@qflow/studio-adapter";
 import { icon, setIcon } from "./icons.js";
 import { mountMaterialPreview } from "./material-preview.js";
 import type { State, Store } from "./selection.js";
 import { createHandle } from "./resize.js";
 import { createZoom } from "./zoom.js";
-import { chooseSemanticGesture, semanticGestureSpan } from "../temporal-edit.js";
+import { chooseDomainGesture, domainGestureSpan } from "../temporal-edit.js";
 import { applyStudioMutation } from "./writeback.js";
 
 export type Timeline = {
@@ -20,7 +17,7 @@ export type Timeline = {
 };
 
 const itemMetrics = {
-  // Ordinary items fill their rows. Only the semantic lane owns compact word cells.
+  // Ordinary items fill their rows. Temporal-domain lanes may own compact cells.
   insetYPx: 1,
   headerPx: 15,
   contentCellPx: 18,
@@ -31,7 +28,6 @@ const labelFont = '500 11px -apple-system, BlinkMacSystemFont, "SF Pro Text", "H
 const textMeasure = document.createElement("canvas").getContext("2d");
 const textWidths = new Map<string, number>();
 const wordLabelPaddingPx = 5;
-const wordLabelEnterBufferPx = 1;
 
 function measuredText(value: string, font = labelFont): number {
   const key = `${font}\u0000${value}`;
@@ -147,7 +143,6 @@ export function createTimeline(store: Store): Timeline {
   let built = -1;
   let paintFrame = 0;
   let rebuildFrame = 0;
-  const readableWordLabels = new Set<string>();
   let selectedWord: string | undefined;
   let overlapMenu: HTMLElement | undefined;
   const closeOverlapMenu = () => { overlapMenu?.remove(); overlapMenu = undefined; };
@@ -163,12 +158,15 @@ export function createTimeline(store: Store): Timeline {
     readonly id: string;
     readonly selectionGroup?: string;
   }[] = [];
-  let semanticNodes: readonly {
+  let domainNodes: readonly {
     readonly node: HTMLElement;
+    readonly companion: string;
+    readonly domainId: string;
     readonly id: string;
     readonly start: number;
     readonly end: number;
-    readonly kind: "segment" | "word" | "selection" | "moment";
+    readonly kind: "span" | "point";
+    readonly appearance: "block" | "compact" | "marker";
   }[] = [];
 
   const playheadFraction = (): number => {
@@ -199,7 +197,7 @@ export function createTimeline(store: Store): Timeline {
       const next = Math.abs(candidate - frame);
       if (next < distance) { nearest = candidate; distance = next; }
     };
-    for (const anchor of state.snapshot.semantic?.anchors ?? []) consider(anchor.frame);
+    for (const anchor of state.snapshot.temporalDomains.flatMap((domain) => domain.anchors)) consider(anchor.frame);
     for (const clip of state.snapshot.tracks.flatMap((track) => track.clips)) {
       consider(clip.startFrame);
       consider(clip.endFrameExclusive);
@@ -237,9 +235,14 @@ export function createTimeline(store: Store): Timeline {
     readonly originalWidth: string;
   } | undefined;
 
-  const semanticTarget = (edit: NonNullable<typeof activeEdit>, nextFrame: number) =>
-    state === undefined ? undefined : chooseSemanticGesture({
-      anchors: state.snapshot.semantic?.anchors ?? [], handle: edit.handle,
+  const editDomain = (snapshot: StudioSnapshot, handle: StudioEditHandle) => handle.domain === undefined
+    ? undefined
+    : snapshot.temporalDomains.find((domain) => domain.companion === handle.domain!.companion
+      && domain.id === handle.domain!.domainId);
+
+  const domainTarget = (edit: NonNullable<typeof activeEdit>, nextFrame: number) =>
+    state === undefined ? undefined : chooseDomainGesture({
+      anchors: editDomain(state.snapshot, edit.handle)?.anchors ?? [], handle: edit.handle,
       pointerStart: edit.startFrame, pointerNow: nextFrame, frameCount: state.snapshot.timeline.frameCount,
     });
 
@@ -273,18 +276,18 @@ export function createTimeline(store: Store): Timeline {
     nextFrame: number,
   ): { readonly startFrame: number; readonly endFrameExclusive: number } | undefined => {
     if (state === undefined) return undefined;
-    const target = semanticTarget(edit, nextFrame);
-    if (target !== undefined) return semanticGestureSpan(state.snapshot.semantic?.anchors ?? [], edit.handle, target);
-    if (edit.handle.semantic !== undefined) return undefined;
+    const target = domainTarget(edit, nextFrame);
+    if (target !== undefined) return domainGestureSpan(editDomain(state.snapshot, edit.handle)?.anchors ?? [], edit.handle, target);
+    if (edit.handle.domain !== undefined) return undefined;
     return edit.handle.temporal === undefined ? undefined : absoluteWindowTarget(edit, nextFrame);
   };
   lanes.addEventListener("pointerdown", (event) => {
     pointerDownOnItem = (event.target as HTMLElement).closest(
-      ".clip, .semantic-segment, .semantic-word, .semantic-selection, .semantic-moment",
+      ".clip, .temporal-domain-block, .temporal-domain-compact, .temporal-domain-span, .temporal-domain-point",
     ) !== null;
     pointerDownX = event.clientX;
     pointerArmed = true;
-    // Let semantic children receive their native click. Capturing every
+    // Let temporal-domain children receive their native click. Capturing every
     // pointer here retargets the later click to `.lanes`, which made segment
     // and selection buttons appear to be dead zones. Blank-space scrubbing
     // still uses capture so it can continue outside the lane.
@@ -303,7 +306,7 @@ export function createTimeline(store: Store): Timeline {
     hoverTime.textContent = state === undefined ? "" : frameTimecode(state.snapshot, frame);
     hover.classList.add("visible");
     if (activeEdit !== undefined && state !== undefined) {
-      const nextFrame = activeEdit.handle.coordinate === "semantic-anchor"
+      const nextFrame = activeEdit.handle.coordinate === "domain-anchor"
         ? rawFrameAt(event.clientX)
         : frameAt(event.clientX);
       const preview = previewWindow(activeEdit, nextFrame);
@@ -330,37 +333,37 @@ export function createTimeline(store: Store): Timeline {
     pointerArmed = false;
     try { lanes.releasePointerCapture(event.pointerId); } catch { /* already released */ }
     if (edit === undefined || state === undefined || event.type === "pointercancel") return;
-    const nextFrame = edit.handle.coordinate === "semantic-anchor"
+    const nextFrame = edit.handle.coordinate === "domain-anchor"
       ? rawFrameAt(event.clientX)
       : frameAt(event.clientX);
-    const resolvedSemanticTarget = semanticTarget(edit, nextFrame);
+    const resolvedDomainTarget = domainTarget(edit, nextFrame);
     const resolvedWindow = previewWindow(edit, nextFrame);
     if (resolvedWindow === undefined || edit.handle.temporal === undefined) return;
     const target = edit.handle.temporal.kind === "instant"
       ? {
           kind: "instant" as const,
           frame: resolvedWindow.startFrame,
-          ...(resolvedSemanticTarget === undefined ? {} : { semantic: resolvedSemanticTarget }),
+          ...(resolvedDomainTarget === undefined ? {} : { domain: resolvedDomainTarget }),
         }
       : {
           kind: "window" as const,
           ...resolvedWindow,
-          ...(resolvedSemanticTarget === undefined ? {} : { semantic: resolvedSemanticTarget }),
+          ...(resolvedDomainTarget === undefined ? {} : { domain: resolvedDomainTarget }),
         };
-    if (resolvedSemanticTarget?.kind === "selection"
-      && edit.handle.semantic?.kind === "selection"
-      && resolvedSemanticTarget.startAnchorId === edit.handle.semantic.startAnchorId
-      && resolvedSemanticTarget.endAnchorId === edit.handle.semantic.endAnchorId
+    if (resolvedDomainTarget?.kind === "span"
+      && edit.handle.domain?.kind === "span"
+      && resolvedDomainTarget.startAnchorId === edit.handle.domain.startAnchorId
+      && resolvedDomainTarget.endAnchorId === edit.handle.domain.endAnchorId
       && (target.kind === "instant"
         ? target.frame === edit.clip.startFrame
         : target.startFrame === edit.clip.startFrame && target.endFrameExclusive === edit.clip.endFrameExclusive)) return;
-    if (resolvedSemanticTarget?.kind === "moment"
-      && edit.handle.semantic?.kind === "moment"
-      && resolvedSemanticTarget.anchorId === edit.handle.semantic.anchorId
+    if (resolvedDomainTarget?.kind === "point"
+      && edit.handle.domain?.kind === "point"
+      && resolvedDomainTarget.anchorId === edit.handle.domain.anchorId
       && (target.kind === "instant"
         ? target.frame === edit.clip.startFrame
         : target.startFrame === edit.clip.startFrame && target.endFrameExclusive === edit.clip.endFrameExclusive)) return;
-    if (resolvedSemanticTarget === undefined
+    if (resolvedDomainTarget === undefined
       && (target.kind === "instant"
         ? target.frame === edit.clip.startFrame
         : target.startFrame === edit.clip.startFrame && target.endFrameExclusive === edit.clip.endFrameExclusive)) return;
@@ -488,185 +491,87 @@ export function createTimeline(store: Store): Timeline {
       && (groupId === undefined || track.binding.groupId === groupId))
     .sort((left, right) => (left.binding.lane.order ?? 0) - (right.binding.lane.order ?? 0));
 
-  const buildSemanticLane = (snapshot: StudioSnapshot): void => {
-    if (snapshot.semantic === undefined || snapshot.semantic.segments.length === 0) {
-      return;
-    }
-    const presentation = snapshot.semantic.presentation;
-    const bandHeight = Math.max(1, (presentation.lane.heightPx - itemMetrics.insetYPx * 2) / 3);
-    const bands = [
-      { kind: "segment", height: bandHeight },
-      ...(snapshot.semantic.tokens.length > 0 ? [{ kind: "word", height: bandHeight }] : []),
-      ...(snapshot.semantic.selections.length + snapshot.semantic.moments.length > 0
-        ? [{ kind: "intent", height: bandHeight }] : []),
-    ];
-    const laneHeight = bands.reduce((height, band) => height + band.height, itemMetrics.insetYPx * 2);
-    const label = createTrackLabel(
-      presentation.label ?? "",
-      presentation.tone,
-      presentation.icon,
-      "",
-      laneHeight,
-    );
-    if (presentation.label === undefined) uiText(label.querySelector("strong")!, "inspector.timeline");
-    uiAttr(label, "title", "timeline.segment-count", { count: snapshot.semantic.segments.length });
-    label.classList.add("track-label-semantic");
+
+  const buildTemporalDomainLane = (
+    snapshot: StudioSnapshot,
+    domain: StudioSnapshot["temporalDomains"][number],
+  ): void => {
+    if (domain.items.length === 0 || domain.lanes.length === 0) return;
+    const laneHeight = domain.lanes.reduce((height, lane) => height + lane.heightPx, itemMetrics.insetYPx * 2);
+    const label = createTrackLabel(domain.presentation.label ?? domain.id, domain.presentation.tone,
+      domain.presentation.icon, "", laneHeight);
+    label.title = `${domain.items.length} temporal items`;
+    label.classList.add("track-label-temporal-domain");
     label.style.height = `calc(var(--timeline-ruler-height) + ${laneHeight}px)`;
     labels.append(label);
 
     const lane = document.createElement("div");
-    lane.className = `lane semantic-lane track-tone-${presentation.tone}`;
+    lane.className = `lane temporal-domain-lane track-tone-${domain.presentation.tone}`;
     lane.style.height = `${laneHeight}px`;
-    const laneWidth = lanes.clientWidth;
-    const nextSemanticNodes: {
-      node: HTMLElement;
-      id: string;
-      start: number;
-      end: number;
-      kind: "segment" | "word" | "selection" | "moment";
-    }[] = [];
-
+    const bands = new Map<string, HTMLElement>();
     let bandTop = itemMetrics.insetYPx;
-    for (const { kind, height } of bands) {
+    for (const description of domain.lanes) {
       const band = document.createElement("div");
-      band.className = `semantic-band semantic-band-${kind}`;
+      band.className = "temporal-domain-band";
       band.style.top = `${bandTop}px`;
-      band.style.setProperty("--semantic-band-height", `${height}px`);
-      uiAttr(band, "aria-label", kind === "intent" ? "timeline.selections-and-moments" : kind === "word" ? "timeline.words" : "timeline.segments");
+      band.style.setProperty("--temporal-domain-band-height", `${description.heightPx}px`);
+      band.setAttribute("aria-label", description.label ?? description.id);
+      bands.set(description.id, band);
       lane.append(band);
-      bandTop += height;
+      bandTop += description.heightPx;
     }
-    const segmentBand = lane.querySelector<HTMLElement>(".semantic-band-segment")!;
-    const wordBand = lane.querySelector<HTMLElement>(".semantic-band-word")!;
-    const intentBand = lane.querySelector<HTMLElement>(".semantic-band-intent")!;
-
-    for (const segment of snapshot.semantic.segments) {
-      const from = place(segment.startFrame, snapshot.timeline.frameCount, zoom.window());
-      const to = place(segment.endFrameExclusive, snapshot.timeline.frameCount, zoom.window());
+    const nextNodes: typeof domainNodes[number][] = [];
+    for (const item of domain.items) {
+      const band = bands.get(item.laneId);
+      if (band === undefined) continue;
+      const start = item.kind === "point" ? item.frame : item.startFrame;
+      const end = item.kind === "point" ? item.frame + 1 : item.endFrameExclusive;
+      const from = place(start, snapshot.timeline.frameCount, zoom.window());
+      const to = place(end, snapshot.timeline.frameCount, zoom.window());
       if (to <= 0 || from >= 1) continue;
-      const node = document.createElement("button");
-      node.type = "button";
-      node.className = "semantic-cell semantic-segment";
-      node.tabIndex = 0;
-      node.setAttribute("role", "button");
-      uiAttr(node, "aria-label", "timeline.segment-name", { name: segment.id });
-      node.dataset.semanticSegment = segment.id;
+      const node = item.appearance === "compact" ? document.createElement("span") : document.createElement("button");
+      if (node instanceof HTMLButtonElement) node.type = "button";
+      node.className = item.kind === "point" ? "temporal-domain-point"
+        : item.appearance === "compact" ? "temporal-domain-cell temporal-domain-compact"
+        : "temporal-domain-cell temporal-domain-span";
       node.style.left = `${from * 100}%`;
-      const segmentWidth = Math.max(0, to - from) * 100;
-      node.style.width = `max(2px, ${segmentWidth}%)`;
-      node.title = segment.id;
-      const segmentLabel = document.createElement("span");
-      segmentLabel.className = "semantic-segment-label";
-      segmentLabel.textContent = segment.id;
-      const head = document.createElement("div");
-      head.className = "semantic-cell-content";
-      head.append(segmentLabel);
-      node.append(head);
+      if (item.kind === "span") node.style.width = `max(${item.appearance === "compact" ? 1 : 2}px, ${Math.max(0, to - from) * 100}%)`;
+      node.title = item.label;
+      node.setAttribute("aria-label", item.label);
+      if (item.kind === "span") {
+        const content = document.createElement("span");
+        content.className = "temporal-domain-cell-content";
+        const text = document.createElement("span");
+        text.className = item.appearance === "compact" ? "temporal-domain-compact-label" : "temporal-domain-span-label";
+        text.textContent = item.label;
+        content.append(text);
+        node.append(content);
+        if (item.appearance === "compact") {
+          const widthPx = Math.max(1, (to - from) * lanes.clientWidth);
+          node.classList.toggle("word-label-visible", widthPx - wordLabelPaddingPx * 2 >= measuredText(item.label));
+        }
+      }
       node.addEventListener("click", (event) => {
         event.stopPropagation();
-        if ((event.target as Element).closest(".semantic-word") !== null) return;
-        store.selectSemanticSegment(segment.id, "timeline");
-        store.seek(segment.startFrame, "timeline");
+        if (item.appearance === "compact") {
+          store.clearSelection();
+          selectedWord = `${domain.companion}:${domain.id}:${item.id}`;
+        } else {
+          store.selectTemporalDomainItem(domain.companion, domain.id, item.id, "timeline");
+        }
+        store.seek(start, "timeline");
       });
-      node.addEventListener("dblclick", (event) => {
+      if (item.kind === "span" && item.appearance !== "compact") node.addEventListener("dblclick", (event) => {
         event.stopPropagation();
-        zoom.focus(
-          segment.startFrame / Math.max(1, snapshot.timeline.frameCount),
-          segment.endFrameExclusive / Math.max(1, snapshot.timeline.frameCount),
-        );
+        zoom.focus(item.startFrame / Math.max(1, snapshot.timeline.frameCount),
+          item.endFrameExclusive / Math.max(1, snapshot.timeline.frameCount));
       });
-      node.addEventListener("keydown", (event) => {
-        if (event.key !== "Enter" && event.key !== " ") return;
-        event.preventDefault();
-        store.selectSemanticSegment(segment.id, "timeline");
-      });
-      nextSemanticNodes.push({ node, id: segment.id, start: segment.startFrame, end: segment.endFrameExclusive, kind: "segment" });
-      segmentBand.append(node);
+      band.append(node);
+      nextNodes.push({ node, companion: domain.companion, domainId: domain.id, id: item.id,
+        start, end, kind: item.kind, appearance: item.appearance });
     }
-    for (const token of snapshot.semantic.tokens) {
-      const wordFrom = place(token.startFrame, snapshot.timeline.frameCount, zoom.window());
-      const wordTo = place(token.endFrameExclusive, snapshot.timeline.frameCount, zoom.window());
-      if (wordTo <= 0 || wordFrom >= 1) continue;
-      const word = document.createElement("span");
-      word.className = "semantic-cell semantic-word";
-      word.dataset.semanticToken = token.id;
-      word.setAttribute("aria-label", token.text);
-      word.style.left = `${wordFrom * 100}%`;
-      const wordWidth = Math.max(0, wordTo - wordFrom);
-      word.style.width = `max(1px, ${wordWidth * 100}%)`;
-      word.title = token.text;
-      const text = document.createElement("span");
-      text.className = "semantic-word-label";
-      text.textContent = token.text;
-      const wordWidthPx = Math.max(1, wordWidth * laneWidth);
-      const textWidthPx = measuredText(token.text);
-      const contentWidthPx = Math.max(0, wordWidthPx - wordLabelPaddingPx * 2);
-      const wasReadable = readableWordLabels.has(token.id);
-      const textFitsCell = contentWidthPx >= textWidthPx + (wasReadable ? 0 : wordLabelEnterBufferPx);
-      if (textFitsCell) readableWordLabels.add(token.id);
-      else readableWordLabels.delete(token.id);
-      const textFitsViewport = wordFrom >= 0
-        && wordFrom * laneWidth + wordLabelPaddingPx * 2 + textWidthPx <= laneWidth;
-      word.classList.toggle("word-label-visible", textFitsCell && textFitsViewport);
-      const wordContent = document.createElement("span");
-      wordContent.className = "semantic-cell-content";
-      wordContent.append(text);
-      word.append(wordContent);
-      word.addEventListener("click", (event) => {
-        event.stopPropagation();
-        store.clearSelection();
-        selectedWord = token.id;
-        store.seek(token.startFrame, "timeline");
-      });
-      nextSemanticNodes.push({ node: word, id: token.id, start: token.startFrame, end: token.endFrameExclusive, kind: "word" });
-      wordBand.append(word);
-    }
-    for (const selection of snapshot.semantic.selections) {
-      const from = place(selection.startFrame, snapshot.timeline.frameCount, zoom.window());
-      const to = place(selection.endFrameExclusive, snapshot.timeline.frameCount, zoom.window());
-      if (to <= 0 || from >= 1) continue;
-      const node = document.createElement("button");
-      node.type = "button";
-      node.className = "semantic-cell semantic-selection";
-      node.tabIndex = 0;
-      uiAttr(node, "aria-label", "timeline.selection-name", { name: selection.id });
-      node.style.left = `${from * 100}%`;
-      node.style.width = `max(2px, ${Math.max(0, to - from) * 100}%)`;
-      node.title = selection.id;
-      const selectionLabel = document.createElement("span");
-      selectionLabel.className = "semantic-selection-label";
-      selectionLabel.textContent = selection.id;
-      const selectionContent = document.createElement("div");
-      selectionContent.className = "semantic-cell-content";
-      selectionContent.append(selectionLabel);
-      node.append(selectionContent);
-      node.addEventListener("click", (event) => {
-        event.stopPropagation();
-        store.selectSemanticSelection(selection.id, "timeline");
-        store.seek(selection.startFrame, "timeline");
-      });
-      intentBand.append(node);
-      nextSemanticNodes.push({ node, id: selection.id, start: selection.startFrame, end: selection.endFrameExclusive, kind: "selection" });
-    }
-    for (const moment of snapshot.semantic.moments) {
-      const at = place(moment.frame, snapshot.timeline.frameCount, zoom.window());
-      if (at < 0 || at > 1) continue;
-      const node = document.createElement("button");
-      node.type = "button";
-      node.className = "semantic-moment";
-      node.tabIndex = 0;
-      uiAttr(node, "aria-label", "timeline.moment-name", { name: moment.id });
-      node.style.left = `${at * 100}%`;
-      node.title = moment.id;
-      node.addEventListener("click", (event) => {
-        event.stopPropagation();
-        store.selectSemanticMoment(moment.id, "timeline");
-      });
-      intentBand.append(node);
-      nextSemanticNodes.push({ node, id: moment.id, start: moment.frame, end: moment.frame + 1, kind: "moment" });
-    }
-    lane.addEventListener("contextmenu", event => {
-      const hits = nextSemanticNodes.filter(({ node }) => {
+    lane.addEventListener("contextmenu", (event) => {
+      const hits = nextNodes.filter(({ node }) => {
         const rect = node.getBoundingClientRect();
         return event.clientX >= rect.left && event.clientX < rect.right
           && event.clientY >= rect.top && event.clientY < rect.bottom;
@@ -693,7 +598,7 @@ export function createTimeline(store: Store): Timeline {
       menu.querySelector("button")?.focus();
     });
     rows.append(lane);
-    semanticNodes = nextSemanticNodes;
+    domainNodes = [...domainNodes, ...nextNodes];
   };
 
   const buildTrack = (
@@ -800,7 +705,7 @@ export function createTimeline(store: Store): Timeline {
           if (handle !== undefined
             && (handle.gesture === "move" || handle.gesture === "trim-start" || handle.gesture === "trim-end")) {
             event.stopPropagation();
-            const pointerFrame = handle.coordinate === "semantic-anchor"
+            const pointerFrame = handle.coordinate === "domain-anchor"
               ? rawFrameAt(event.clientX)
               : frameAt(event.clientX);
             activeEdit = {
@@ -835,12 +740,12 @@ export function createTimeline(store: Store): Timeline {
     const scrollTop = body.scrollTop;
     labels.replaceChildren();
     rows.replaceChildren();
-    semanticNodes = [];
+    domainNodes = [];
     const corner = document.createElement("div");
     corner.className = "label-corner";
     userText(corner, "");
-    if (snapshot.semantic === undefined || snapshot.semantic.segments.length === 0) labels.append(corner);
-    buildSemanticLane(snapshot);
+    if (snapshot.temporalDomains.every((domain) => domain.items.length === 0)) labels.append(corner);
+    for (const domain of snapshot.temporalDomains) buildTemporalDomainLane(snapshot, domain);
     const nextClipNodes: { node: HTMLElement; start: number; end: number; id: string; selectionGroup?: string }[] = [];
     for (const track of snapshot.tracks) {
       const attachedTo = track.binding.lane.attachedTo;
@@ -880,20 +785,16 @@ export function createTimeline(store: Store): Timeline {
       item.node.setAttribute("aria-pressed", String(selected));
       item.node.classList.toggle("live", head.frame >= item.start && head.frame < item.end);
     }
-    for (const item of semanticNodes) {
-      item.node.classList.toggle("live",
-        (item.kind === "segment" || item.kind === "selection")
-        && head.frame >= item.start && head.frame < item.end);
-      item.node.classList.toggle("current", item.kind === "word" && head.frame >= item.start && head.frame < item.end);
-      const selected = (item.kind === "word" && selectedWord === item.id && selection.kind === "none")
-        || (item.kind === "segment"
-        && selection.kind === "semantic-segment" && selection.segmentId === item.id)
-        || (item.kind === "selection"
-          && selection.kind === "semantic-selection" && selection.selectionId === item.id)
-        || (item.kind === "moment"
-          && selection.kind === "semantic-moment" && selection.momentId === item.id);
+    for (const item of domainNodes) {
+      const inside = item.kind === "span" && head.frame >= item.start && head.frame < item.end;
+      item.node.classList.toggle("live", inside && item.appearance !== "compact");
+      item.node.classList.toggle("current", inside && item.appearance === "compact");
+      const identity = `${item.companion}:${item.domainId}:${item.id}`;
+      const selected = (item.appearance === "compact" && selectedWord === identity && selection.kind === "none")
+        || (selection.kind === "temporal-domain" && selection.companion === item.companion
+          && selection.domainId === item.domainId && selection.itemId === item.id);
       item.node.classList.toggle("selected", selected);
-      if (item.kind !== "word") item.node.setAttribute("aria-pressed", String(selected));
+      if (item.appearance !== "compact") item.node.setAttribute("aria-pressed", String(selected));
     }
   };
 

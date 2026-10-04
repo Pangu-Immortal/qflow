@@ -121,7 +121,7 @@ export const filmManifest: ModuleManifest = {
       name: filmProducers.appendVisualTrack.name,
       inputs: [
         { name: "set", type: filmTypes.trackSet },
-        { name: "timeline", type: timelineTypes.track },
+        { name: "timeline", type: timelineTypes.timeline },
         { name: "track", type: compositionTypes.visualTrack },
       ],
       outputs: [{ name: "set", type: filmTypes.trackSet }],
@@ -131,7 +131,7 @@ export const filmManifest: ModuleManifest = {
       name: filmProducers.appendAudioTrack.name,
       inputs: [
         { name: "set", type: filmTypes.trackSet },
-        { name: "timeline", type: timelineTypes.track },
+        { name: "timeline", type: timelineTypes.timeline },
         { name: "track", type: compositionTypes.audioTrack },
       ],
       outputs: [{ name: "set", type: filmTypes.trackSet }],
@@ -142,7 +142,7 @@ export const filmManifest: ModuleManifest = {
       inputs: [
         { name: "program", type: filmTypes.program },
         { name: "canvas", type: spatialTypes.canvas },
-        { name: "timeline", type: timelineTypes.track },
+        { name: "timeline", type: timelineTypes.timeline },
         { name: "set", type: filmTypes.trackSet },
       ],
       outputs: [{ name: "composition", type: compositionTypes.composition }],

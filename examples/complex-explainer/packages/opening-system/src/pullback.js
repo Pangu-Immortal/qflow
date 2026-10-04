@@ -20,7 +20,7 @@ export function installPullback(module, manifest, component, optionsType, mode="
   const types = presenterTypes(module);
   const isFade=mode==="fade-out",tag=isFade?"FadeOut":"Pullback";
   const inputs = [
-    { name: "timeline", type: timelineTypes.track },
+    { name: "timeline", type: timelineTypes.timeline },
     { name: "within", type: spatialTypes.frame },
     { name: "window", type: temporalTypes.window },
     { name: "sources", type: types.sources },

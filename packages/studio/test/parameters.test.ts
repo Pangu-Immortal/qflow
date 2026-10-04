@@ -3,7 +3,7 @@ import test from "node:test";
 
 import type {
   StudioPlacement,
-  StudioSemanticTimeline,
+  StudioTemporalDomainView,
   StudioTemporalLineage,
 } from "@qflow/studio-adapter";
 import type { MarkupSurfaceRegistryLike, RegisteredSurface } from "@qflow/markup";
@@ -13,35 +13,36 @@ import { serializeParameterValue, validateParameterValue } from "../src/paramete
 
 const temporalIdentity = { timelineId: "speech", narrativeId: "story" } as const;
 const narrativeSourceIdentity = { ...temporalIdentity,
+  domain: { companion: "script", id: "story" },
   type: { module: { name: "@qflow/narrative", version: "1" }, name: "NarrativeReference" } } as const;
 const timelineSourceType = { module: { name: "@qflow/timeline", version: "1" }, name: "Timeline" } as const;
 
-const semantic: StudioSemanticTimeline = {
-  ...temporalIdentity,
-  presentation: {
-    family: "speech",
-    tone: "teal",
-    icon: "timeline",
-    lane: { heightPx: 52 },
-  },
+const temporalDomain: StudioTemporalDomainView = {
+  id: "story", companion: "script", timelineId: "speech",
+  presentation: { family: "speech", tone: "teal", icon: "timeline" },
+  lanes: [{ id: "intent", heightPx: 26 }],
   anchors: [
-    { id: "segment:a:start", kind: "segment-start", frame: 0, segmentId: "a" },
-    { id: "segment:a:token:1:start", kind: "token-start", frame: 0, segmentId: "a", tokenId: "segment:a:token:1" },
-    { id: "segment:a:token:1:end", kind: "token-end", frame: 12, segmentId: "a", tokenId: "segment:a:token:1" },
-    { id: "segment:a:end", kind: "segment-end", frame: 12, segmentId: "a" },
+    { id: "segment:a:start", kind: "segment-start", frame: 0 },
+    { id: "segment:a:token:1:start", kind: "token-start", frame: 0 },
+    { id: "segment:a:token:1:end", kind: "token-end", frame: 12 },
+    { id: "segment:a:end", kind: "segment-end", frame: 12 },
   ],
-  segments: [{ id: "a", startFrame: 0, endFrameExclusive: 12 }],
-  tokens: [{ id: "segment:a:token:1", segmentId: "a", text: "hello", startFrame: 0, endFrameExclusive: 12 }],
-  selections: [{
-    id: "claim",
+  items: [{ kind: "span", appearance: "block", id: "claim", laneId: "intent", label: "claim",
+    source: { type: narrativeSourceIdentity.type, kind: "selection", id: "claim" }, editable: true,
     startAnchorId: "segment:a:token:1:start",
     endAnchorId: "segment:a:token:1:end",
     startFrame: 0,
     endFrameExclusive: 12,
   }],
-  moments: [],
   provenance: { output: "speech", origin: "run", status: "resolved", errors: [] },
+  source: { path: "main.svml", content: { start: 0, end: 100 } },
 };
+
+const withMoment: StudioTemporalDomainView = { ...temporalDomain, items: [...temporalDomain.items, {
+  kind: "point", appearance: "marker", id: "beat", laneId: "intent", label: "beat",
+  source: { type: narrativeSourceIdentity.type, kind: "moment", id: "beat" }, editable: true,
+  anchorId: "segment:a:token:1:end", frame: 12,
+}] };
 
 test("structured parameter values validate and serialize through the generic SVS path", () => {
   const schema = { kind: "array", minItems: 1, items: { kind: "string", format: "color" } } as const;
@@ -69,17 +70,15 @@ test("timeline gestures resolve through the shared Selection identity", () => {
     },
     phases: [],
   };
-  const handles = resolveTimelineEditHandles([], temporal, semantic);
+  const handles = resolveTimelineEditHandles([], temporal, [temporalDomain]);
 
   assert.deepEqual(handles.map((handle) => [handle.operation, handle.gesture, handle.coordinate, handle.enabled]), [
-    ["timeline.adjust", "move", "semantic-anchor", true],
-    ["timeline.adjust", "trim-start", "semantic-anchor", true],
-    ["timeline.adjust", "trim-end", "semantic-anchor", true],
+    ["timeline.adjust", "move", "domain-anchor", true],
+    ["timeline.adjust", "trim-start", "domain-anchor", true],
+    ["timeline.adjust", "trim-end", "domain-anchor", true],
   ]);
-  assert.deepEqual(handles.map((handle) => handle.semantic), Array.from({ length: 3 }, () => ({
-    kind: "selection",
-    narrativeId: "story",
-    id: "claim",
+  assert.deepEqual(handles.map((handle) => handle.domain), Array.from({ length: 3 }, () => ({
+    kind: "span", companion: "script", domainId: "story", itemId: "claim",
     startAnchorId: "segment:a:token:1:start",
     endAnchorId: "segment:a:token:1:end",
   })));
@@ -93,16 +92,11 @@ test("moving a Moment projection resolves to the shared Moment identity", () => 
       authority: { kind: "domain", source: { ...narrativeSourceIdentity, kind: "moment", id: "beat" }, boundary: "cue" },
     },
     phases: [],
-  }, {
-    ...semantic,
-    moments: [{ id: "beat", anchorId: "segment:a:token:1:end", frame: 12 }],
-  });
+  }, [withMoment]);
 
   assert.deepEqual(handles.map((handle) => [handle.gesture, handle.enabled]), [["move", true]]);
-  assert.deepEqual(handles[0]!.semantic, {
-    kind: "moment",
-    narrativeId: "story",
-    id: "beat",
+  assert.deepEqual(handles[0]!.domain, {
+    kind: "point", companion: "script", domainId: "story", itemId: "beat",
     anchorId: "segment:a:token:1:end",
   });
 });
@@ -111,10 +105,6 @@ test("at/for and until/for derive complementary semantic and duration inverses",
   const duration = {
     id: "for", binding: "for", name: "for", value: "8f", language: "svml" as const, writable: true,
     source: { endpoint: "main::for", path: "main.svml", range: { start: 4, end: 6 }, preimage: "8f" },
-  };
-  const withMoment = {
-    ...semantic,
-    moments: [{ id: "beat", anchorId: "segment:a:token:1:end", frame: 12 }],
   };
   const moment = {
     kind: "instant" as const, expression: "moment.cue", reference: "moment.cue" as const, frame: 12,
@@ -133,17 +123,17 @@ test("at/for and until/for derive complementary semantic and duration inverses",
   };
   const atFor = resolveTimelineEditHandles([duration], {
     projection: { kind: "window", start: moment, end: after, startFrame: 12, endFrameExclusive: 20 }, phases: [],
-  }, withMoment);
-  assert.deepEqual(atFor.map((handle) => [handle.gesture, handle.semantic?.kind, handle.sources?.map((source) => source.role)]), [
-    ["move", "moment", undefined],
+  }, [withMoment]);
+  assert.deepEqual(atFor.map((handle) => [handle.gesture, handle.domain?.kind, handle.sources?.map((source) => source.role)]), [
+    ["move", "point", undefined],
     ["trim-end", undefined, ["duration"]],
   ]);
 
   const untilFor = resolveTimelineEditHandles([duration], {
     projection: { kind: "window", start: before, end: moment, startFrame: 4, endFrameExclusive: 12 }, phases: [],
-  }, withMoment);
-  assert.deepEqual(untilFor.map((handle) => [handle.gesture, handle.semantic?.kind, handle.sources?.map((source) => source.role)]), [
-    ["move", "moment", undefined],
+  }, [withMoment]);
+  assert.deepEqual(untilFor.map((handle) => [handle.gesture, handle.domain?.kind, handle.sources?.map((source) => source.role)]), [
+    ["move", "point", undefined],
     ["trim-start", undefined, ["duration"]],
   ]);
 });
@@ -212,11 +202,11 @@ test("independent reference endpoints expose local edits without claiming their 
   }));
   const handles = resolveTimelineEditHandles(bindings, { projection: {
     kind: "window", start: endpoints[0]!, end: endpoints[1]!, startFrame: 2, endFrameExclusive: 20,
-  }, phases: [] }, semantic);
-  assert.deepEqual(handles.map(({ gesture, enabled, semantic, sources }) => ({ gesture, enabled, semantic, roles: sources?.map(source => source.role) })), [
-    { gesture: "move", enabled: true, semantic: undefined, roles: ["start", "end"] },
-    { gesture: "trim-start", enabled: true, semantic: undefined, roles: ["start"] },
-    { gesture: "trim-end", enabled: true, semantic: undefined, roles: ["end"] },
+  }, phases: [] }, [temporalDomain]);
+  assert.deepEqual(handles.map(({ gesture, enabled, domain, sources }) => ({ gesture, enabled, domain, roles: sources?.map(source => source.role) })), [
+    { gesture: "move", enabled: true, domain: undefined, roles: ["start", "end"] },
+    { gesture: "trim-start", enabled: true, domain: undefined, roles: ["start"] },
+    { gesture: "trim-end", enabled: true, domain: undefined, roles: ["end"] },
   ]);
 });
 

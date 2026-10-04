@@ -31,7 +31,7 @@ type Edit = { readonly range: SourceRange; readonly replacement: string };
 export function scriptAnchorEditSites(parsed: ParsedNarrative): readonly ScriptAnchorEditSite[] {
   const segments = new Map(parsed.segments.map((segment) => [segment.id, segment] as const));
   const tokens = new Map(parsed.tokens.map((token) => [token.id, token] as const));
-  return parsed.semanticIndex.anchors.map((anchor): ScriptAnchorEditSite => {
+  return parsed.anchors.map((anchor): ScriptAnchorEditSite => {
     const segmentId = anchor.segmentId;
     const segment = segments.get(segmentId);
     if (segment === undefined) throw new Error(`Semantic Anchor ${anchor.id} names unknown Segment ${segmentId}.`);
@@ -161,7 +161,7 @@ export function adjustScriptSelection(input: AdjustmentInput & { readonly adjust
   const { adjustment, parsed } = input;
   const selection = parsed.selections.find((item) => item.id === adjustment.id);
   if (!selection) throw new Error(`Script Selection ${adjustment.id} does not exist.`);
-  const order = parsed.semanticIndex.anchors.map((anchor) => anchor.id);
+  const order = parsed.anchors.map((anchor) => anchor.id);
   const start = order.indexOf(adjustment.startAnchorId);
   const end = order.indexOf(adjustment.endAnchorId);
   if (start < 0 || end < start) throw new Error("Selection endpoints must follow Script anchor order.");

@@ -8,11 +8,11 @@ import { icon } from "./icons.js";
 import { createLibraryPane } from "./library.js";
 import { createHandle } from "./resize.js";
 import type { Highlight } from "./code.js";
-import { intentAtOffset, spanAtOffset } from "./markers.js";
+import { domainItemAtOffset, spanAtOffset } from "./markers.js";
 import { clipAtOffset, createStore } from "./selection.js";
 import { createStage } from "./stage.js";
-import { semanticGestureSpan } from "../temporal-edit.js";
-import type { SemanticTarget } from "../temporal-edit.js";
+import { domainGestureSpan } from "../temporal-edit.js";
+import type { DomainTarget } from "../temporal-edit.js";
 import { applyStudioMutation } from "./writeback.js";
 import { createTimeline } from "./timeline.js";
 import { createComments } from "./comments.js";
@@ -854,98 +854,86 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
   inspector.replaceChildren(...(pageIds.length > 1 ? [subtabs] : []), ...parameterGroups(clip.id, [...commonFields, ...(page?.fields ?? [])]));
 }
 
-function renderSemanticInspector(snapshot: StudioSnapshot, segmentId: string): void {
-  const segment = snapshot.semantic?.segments.find((item) => item.id === segmentId);
-  if (segment === undefined) { inspector.replaceChildren(); return; }
+/** Exact identity choice for coincident anchors, through package-declared domain handles. */
+function renderTemporalDomainInspector(snapshot: StudioSnapshot, companion: string, domainId: string, itemId: string): void {
+  const domain = snapshot.temporalDomains.find((candidate) => candidate.companion === companion && candidate.id === domainId);
+  const item = domain?.items.find((candidate) => candidate.id === itemId);
+  if (domain === undefined || item === undefined) { inspector.replaceChildren(); return; }
   defaultWorkspaceHeading();
-  const empty = document.createElement("div");
-  empty.className = "inspector-empty";
-  uiText(empty, "inspector.empty");
-  inspector.replaceChildren(empty);
-}
-
-/** Exact identity choice for coincident anchors, through the same Companion-declared handles. */
-function semanticAnchorInspector(snapshot: StudioSnapshot, kind: "selection" | "moment", id: string): HTMLElement {
-  const semantic = snapshot.semantic;
   const consumers = snapshot.tracks.flatMap((track) => track.clips).flatMap((clip) => clip.editHandles
-    .filter((handle) => handle.enabled && handle.semantic?.kind === kind && handle.semantic.id === id)
+    .filter((handle) => handle.enabled && handle.domain?.companion === companion
+      && handle.domain.domainId === domainId && handle.domain.itemId === itemId)
     .map((handle) => ({ clip, handle })));
-  const current = kind === "selection" ? semantic?.selections.find((item) => item.id === id)
-    : semantic?.moments.find((item) => item.id === id);
-  if (!semantic || !current) return uiGroup("inspector.timing", []);
-  const endpoints: readonly (readonly [Message, string])[] = "anchorId" in current ? [["inspector.moment", current.anchorId]]
-    : [["inspector.start", current.startAnchorId], ["inspector.end", current.endAnchorId]];
-  return uiGroup("inspector.semantic-anchors", endpoints.map(([label, anchorId]) => {
-    const anchor = semantic.anchors.find((item) => item.id === anchorId)!;
-    const describe = (node: Element, item: typeof anchor) => {
-      const word = semantic.tokens.find((token) => token.id === item.tokenId)?.text;
-      uiText(node, `inspector.anchor.${item.kind}`, { detail: `${word ? ` · ${word}` : ""}${item.segmentId ? ` · ${item.segmentId}` : ""}` });
+  if (item.editable !== true || consumers.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "inspector-empty";
+    uiText(empty, "inspector.empty");
+    inspector.replaceChildren(empty);
+    return;
+  }
+  const endpoints: readonly (readonly [Message, string])[] = item.kind === "point"
+    ? [["inspector.moment", item.anchorId]]
+    : [["inspector.start", item.startAnchorId], ["inspector.end", item.endAnchorId]];
+  const rows = endpoints.map(([label, anchorId]) => {
+    const anchor = domain.anchors.find((candidate) => candidate.id === anchorId)!;
+    const describe = (node: Element, candidate: typeof anchor): void => {
+      node.textContent = candidate.label ?? candidate.detail ?? `${candidate.kind} · ${candidate.id}`;
     };
-    const candidates = semantic.anchors.filter((item) => item.frame === anchor.frame).flatMap((item) => {
-      const target: SemanticTarget = "anchorId" in current ? { kind: "moment", anchorId: item.id }
-        : { kind: "selection", startAnchorId: label === "inspector.start" ? item.id : current.startAnchorId,
-            endAnchorId: label === "inspector.end" ? item.id : current.endAnchorId };
-      const owner = consumers.find(({ handle }) => semanticGestureSpan(semantic.anchors, handle, target) !== undefined);
-      return owner ? [{ item, target, ...owner }] : [];
+    const candidates = domain.anchors.filter((candidate) => candidate.frame === anchor.frame).flatMap((candidate) => {
+      const target: DomainTarget = item.kind === "point"
+        ? { kind: "point", companion, domainId, itemId, anchorId: candidate.id }
+        : { kind: "span", companion, domainId, itemId,
+            startAnchorId: label === "inspector.start" ? candidate.id : item.startAnchorId,
+            endAnchorId: label === "inspector.end" ? candidate.id : item.endAnchorId };
+      const owner = consumers.find(({ handle }) => domainGestureSpan(domain.anchors, handle, target) !== undefined);
+      return owner === undefined ? [] : [{ item: candidate, target, ...owner }];
     });
     if (candidates.length < 2) {
-      const row = property(label!, "");
+      const row = property(label, "");
       describe(row.querySelector("strong")!, anchor);
       return row;
     }
     const row = document.createElement("label");
     row.className = "property";
     const name = document.createElement("span");
-    uiText(name, label!);
+    uiText(name, label);
     const control = document.createElement("select");
     control.className = "parameter-value";
-    uiAttr(control, "aria-label", label === "inspector.start" ? "inspector.start-anchor" : label === "inspector.end" ? "inspector.end-anchor" : "inspector.moment-anchor");
-    for (const { item } of candidates) {
-      const option = document.createElement("option"); option.value = item.id; describe(option, item);
+    control.setAttribute("aria-label", `${item.label} ${label}`);
+    for (const { item: candidate } of candidates) {
+      const option = document.createElement("option"); option.value = candidate.id; describe(option, candidate);
       control.append(option);
     }
-    control.value = anchorId!;
+    control.value = anchorId;
     control.addEventListener("change", () => {
-      const choice = candidates.find(({ item }) => item.id === control.value)!;
-      const span = semanticGestureSpan(semantic.anchors, choice.handle, choice.target)!;
+      const choice = candidates.find(({ item: candidate }) => candidate.id === control.value)!;
+      const span = domainGestureSpan(domain.anchors, choice.handle, choice.target)!;
       const temporal = choice.handle.temporal!;
       control.disabled = true;
       uiText(status, "common.saving"); status.className = "status saving";
       void applyStudioMutation({ type: "timeline.adjust", revision: snapshot.revision,
         entityId: choice.clip.id, gesture: choice.handle.gesture,
-        target: temporal.kind === "instant" ? { kind: "instant", frame: span.startFrame, semantic: choice.target }
-          : { kind: "window", ...span, semantic: choice.target },
+        target: temporal.kind === "instant" ? { kind: "instant", frame: span.startFrame, domain: choice.target }
+          : { kind: "window", ...span, domain: choice.target },
       }).then(() => { uiText(status, "common.saved"); status.className = "status saved"; })
         .catch((error: unknown) => {
-          control.value = anchorId!; uiText(status, "common.save-failed"); status.className = "status error";
+          control.value = anchorId; uiText(status, "common.save-failed"); status.className = "status error";
           status.title = error instanceof Error ? error.message : String(error);
         }).finally(() => { control.disabled = false; });
     });
     row.append(name, control);
     return row;
-  }));
-}
-
-function renderSemanticSelectionInspector(snapshot: StudioSnapshot, selectionId: string): void {
-  const selection = snapshot.semantic?.selections.find((item) => item.id === selectionId);
-  if (selection === undefined) { inspector.replaceChildren(); return; }
-  defaultWorkspaceHeading();
-  inspector.replaceChildren(semanticAnchorInspector(snapshot, "selection", selectionId));
-}
-
-function renderSemanticMomentInspector(snapshot: StudioSnapshot, momentId: string): void {
-  const moment = snapshot.semantic?.moments.find((item) => item.id === momentId);
-  if (moment === undefined) { inspector.replaceChildren(); return; }
-  defaultWorkspaceHeading();
-  inspector.replaceChildren(semanticAnchorInspector(snapshot, "moment", momentId));
+  });
+  inspector.replaceChildren(group(domain.presentation.label ?? item.label, rows));
 }
 
 // The word being spoken at the playhead, which is the point of carrying token
 // timings at all: it ties the Script text to the frame on screen.
 store.subscribe(({ snapshot, playhead }) => {
-  const token = snapshot.script?.tokens.find((item) =>
-    playhead.frame >= item.startFrame && playhead.frame < item.endFrame);
-  code.speak(token?.range);
+  const spoken = snapshot.temporalDomains.flatMap((domain) => domain.items)
+    .find((item) => item.kind === "span" && item.followPlayhead === true
+      && playhead.frame >= item.startFrame && playhead.frame < item.endFrameExclusive);
+  code.speak(spoken?.range);
 });
 
 let described = "";
@@ -954,22 +942,17 @@ let scrolledTo = "";
 store.subscribe(({ snapshot, selection, playhead }) => {
   const origin = selection.kind === "none" ? undefined : selection.origin;
   const chosen = selection.kind === "clip" ? store.clip(selection.clipId) : undefined;
-  const chosenSegment = selection.kind === "semantic-segment"
-    ? snapshot.semantic?.segments.find((item) => item.id === selection.segmentId)
-    : undefined;
-  const chosenSelection = selection.kind === "semantic-selection"
-    ? snapshot.semantic?.selections.find((item) => item.id === selection.selectionId)
-    : undefined;
-  const chosenMoment = selection.kind === "semantic-moment"
-    ? snapshot.semantic?.moments.find((item) => item.id === selection.momentId)
+  const chosenDomain = selection.kind === "temporal-domain"
+    ? snapshot.temporalDomains.find((domain) => domain.companion === selection.companion
+      && domain.id === selection.domainId)?.items.find((item) => item.id === selection.itemId)
     : undefined;
   // Rebuilding this every frame of playback would be DOM churn for no change.
-  const describes = `${snapshot.revision}:${selection.kind}:${chosen?.id ?? chosenSegment?.id ?? chosenSelection?.id ?? chosenMoment?.id ?? ""}`;
+  const describes = `${snapshot.revision}:${selection.kind}:${chosen?.id ?? chosenDomain?.id ?? ""}`;
   if (describes !== described) {
     described = describes;
-    if (chosenSegment !== undefined) renderSemanticInspector(snapshot, chosenSegment.id);
-    else if (chosenSelection !== undefined) renderSemanticSelectionInspector(snapshot, chosenSelection.id);
-    else if (chosenMoment !== undefined) renderSemanticMomentInspector(snapshot, chosenMoment.id);
+    if (selection.kind === "temporal-domain") {
+      renderTemporalDomainInspector(snapshot, selection.companion, selection.domainId, selection.itemId);
+    }
     else renderInspector(snapshot, chosen?.id);
   }
 
@@ -985,27 +968,14 @@ store.subscribe(({ snapshot, selection, playhead }) => {
   if (chosen?.elementRange !== undefined) {
     highlights.push({ range: chosen.elementRange, tone: "element" });
   }
-  if (chosenSegment?.range !== undefined) {
-    highlights.push({ range: chosenSegment.range, tone: "element" });
-  }
-  const sourceSelection = chosenSelection === undefined
-    ? undefined
-    : snapshot.script?.selections.find((item) => item.id === chosenSelection.id);
-  const sourceMoment = chosenMoment === undefined
-    ? undefined
-    : snapshot.script?.moments.find((item) => item.id === chosenMoment.id);
-  const chosenIntentRange = sourceSelection === undefined
-    ? sourceMoment?.range
-    : { start: sourceSelection.open.start, end: sourceSelection.close.end };
-  if (chosenIntentRange !== undefined) highlights.push({ range: chosenIntentRange, tone: "binding" });
+  if (chosenDomain?.range !== undefined) highlights.push({ range: chosenDomain.range, tone: "binding" });
 
   // Scroll only when the selection actually moved, and never toward the pane
   // the author is pointing at: following the playhead every frame would drag
   // the source out from under whoever is reading it.
-  const focused = chosen === undefined && chosenSegment === undefined
-    && chosenSelection === undefined && chosenMoment === undefined
+  const focused = chosen === undefined && chosenDomain === undefined
     ? ""
-    : `${snapshot.revision}:${selection.kind}:${chosen?.id ?? chosenSegment?.id ?? chosenSelection?.id ?? chosenMoment?.id}`;
+    : `${snapshot.revision}:${selection.kind}:${chosen?.id ?? chosenDomain?.id}`;
   const moved = focused.length > 0 && focused !== scrolledTo;
   scrolledTo = focused;
   code.highlight(highlights, moved && origin !== "code");
@@ -1025,13 +995,9 @@ code.element.addEventListener("click", (event) => {
     store.clearSelection();
     return;
   }
-  const intent = intentAtOffset(state.snapshot, offset);
-  if (intent?.kind === "selection") {
-    store.selectSemanticSelection(intent.id, "code");
-    return;
-  }
-  if (intent?.kind === "moment") {
-    store.selectSemanticMoment(intent.id, "code");
+  const domainItem = domainItemAtOffset(state.snapshot, offset);
+  if (domainItem !== undefined) {
+    store.selectTemporalDomainItem(domainItem.companion, domainItem.domainId, domainItem.itemId, "code");
     return;
   }
   const clip = clipAtOffset(state.snapshot, offset);
@@ -1050,11 +1016,14 @@ code.element.addEventListener("click", (event) => {
     // finds the clips it put there through the second, not the first.
     const bound = state.snapshot.tracks
       .flatMap((track) => track.clips)
-      .find((item) => item.markerId === span.id || item.authoredId === span.id);
+      .find((item) => item.markerId === span.itemId || item.authoredId === span.itemId);
     // A marker that places nothing still sits inside one that does, so the
     // enclosing clip stays selected rather than leaving the inspector blank.
     const target = bound?.id ?? clip?.id;
-    if (target === undefined) store.seek(span.startFrame, "code");
+    if (target === undefined) {
+      store.selectTemporalDomainItem(span.companion, span.domainId, span.itemId, "code");
+      store.seek(span.startFrame, "code");
+    }
     else store.focus(span.startFrame, target, "code");
     return;
   }
@@ -1122,9 +1091,8 @@ function applyFailure(failure: StudioFailure): void {
   const current = store.current();
   if (current === undefined) return;
   if (current.selection.kind === "clip") renderInspector(current.snapshot, current.selection.clipId);
-  else if (current.selection.kind === "semantic-segment") renderSemanticInspector(current.snapshot, current.selection.segmentId);
-  else if (current.selection.kind === "semantic-selection") renderSemanticSelectionInspector(current.snapshot, current.selection.selectionId);
-  else if (current.selection.kind === "semantic-moment") renderSemanticMomentInspector(current.snapshot, current.selection.momentId);
+  else if (current.selection.kind === "temporal-domain") renderTemporalDomainInspector(current.snapshot,
+    current.selection.companion, current.selection.domainId, current.selection.itemId);
 }
 
 const response = await fetch("/__studio/session");

@@ -40,7 +40,7 @@ test("internal bands keep entities in their Track and own their Inspector bindin
   assert.deepEqual(registry.bindTrack(track).bands, [{ id: "rules", placement: "after", heightPx: 15, display: "label" }]);
   assert.deepEqual(registry.bindingDeclarations(track, undefined, undefined, "rules"), [{ name: "style" }]);
   assert.equal(registry.inspectorDeclarations(track, undefined, undefined, "rules")[0]?.label, "Style");
-  const context = { track, values: new Map(), spans: [], temporalBindings: [], semantic: undefined, generic: () => [] };
+  const context = { track, values: new Map(), spans: [], temporalBindings: [], temporalDomains: [], generic: () => [] };
   const [draft] = registry.projectTrack(context);
   assert.equal(draft?.lane, undefined);
   assert.equal(draft?.band, "rules");

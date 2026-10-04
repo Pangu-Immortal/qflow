@@ -843,10 +843,7 @@ export function parseScript(
       regions: captionRegions,
       breaks: captionBreaks,
     },
-    semanticIndex: {
-
-      anchors,
-    },
+    anchors,
     serializations: {
       dialogue: dialogueTurns.join("\n"),
       speech: speechSegments.join("\n"),
