@@ -9,13 +9,14 @@ import { chooseSemanticGesture, formatTemporalPointEdit, semanticGestureSpan } f
 const source = '<one><HOST>@{proof} One two @{/proof} three.</one>';
 const narrative = parseScript("gesture", source);
 // Duplicate word/Segment boundaries count as one stop, not additional movement steps.
-const frames = [0, 0, 0, 5, 10, 20, 40, 55, 55, 55];
+const frames = [0, 0, 5, 10, 20, 40, 55, 55];
 const anchors: readonly StudioSemanticAnchor[] = narrative.semanticIndex.anchors.map((anchor, index) => ({ ...anchor, frame: frames[index]! }));
 const selection = narrative.selections[0]!;
-const temporalSource = { kind: "selection", id: "proof", narrativeId: "story", spaceId: "film" } as const;
+const narrativeType = { module: { name: "@qflow/narrative", version: "1" }, name: "NarrativeReference" } as const;
+const temporalSource = { kind: "selection", id: "proof", narrativeId: "story", timelineId: "film", type: narrativeType } as const;
 const endpoint = (boundary: "start" | "end", frame: number): StudioTemporalInstantProjection => ({
   kind: "instant", expression: `selection.${boundary}`, reference: `selection.${boundary}`, source: temporalSource, frame,
-  authority: { kind: "semantic", source: temporalSource, boundary },
+  authority: { kind: "domain", source: temporalSource, boundary },
 });
 const handle: StudioEditHandle = {
   id: "move", operation: "timeline.adjust", gesture: "move", enabled: true,
@@ -60,7 +61,7 @@ test("a directly selected boundary remains editable even when the raw range reve
 test("dragging a bound Moment keeps an event-and-duration Window intact", () => {
   const momentSource = { ...temporalSource, kind: "moment", id: "beat" } as const;
   const moment: StudioTemporalInstantProjection = { kind: "instant", frame: 20, expression: "moment.cue", reference: "moment.cue", source: momentSource,
-    authority: { kind: "semantic", source: momentSource, boundary: "cue" } };
+    authority: { kind: "domain", source: momentSource, boundary: "cue" } };
   const timed: StudioEditHandle = { ...handle, semantic: { kind: "moment", id: "beat", narrativeId: "story", anchorId: selection.endAnchorId }, temporal: {
     kind: "window", start: moment, end: { ...moment, frame: 28, authority: { kind: "parameter", binding: "for", relation: "after-start" } },
     startFrame: 20, endFrameExclusive: 28,
@@ -79,10 +80,10 @@ test("offset edits cross zero without losing the explicit editable parameter", (
 
 test("clock expressions retain units until edited and edited values reproject to the exact frame", () => {
   for (const frameRate of [{ numerator: 30, denominator: 1 }, { numerator: 60, denominator: 1 }, { numerator: 30000, denominator: 1001 }]) {
-    const space = { id: "clock", durationSec: 300 * frameRate.denominator / frameRate.numerator, frameRate };
+    const space = { id: "clock", frameCount: 300, frameRate };
     const locate = (value: string) => projectProgramInstant({
-      itemId: "point", subjectId: "point", timeline: { ...space, items: [] },
-      projection: parseTemporalInstant(value, "point"), authority: { kind: "parameter", binding: "instant", relation: "direct" },
+      itemId: "point", subjectId: "point", timeline: { ...space },
+      projection: parseTemporalInstant(value, "point") as import("@qflow/temporal").TemporalInstantExpression,
     }).frame;
     assert.equal(locate("2s"), Math.round(2 * frameRate.numerator / frameRate.denominator));
     assert.equal(locate("60f"), 60);
@@ -90,8 +91,8 @@ test("clock expressions retain units until edited and edited values reproject to
     for (const delta of [3, -2, 0]) {
       const desired = original + delta;
       assert.equal(locate(formatTemporalPointEdit("absolute", desired)), desired);
-      const base = locate("program.end");
-      assert.equal(locate(formatTemporalPointEdit("program.end", desired, base)), desired);
+      const base = locate("timeline.end");
+      assert.equal(locate(formatTemporalPointEdit("timeline.end", desired, base)), desired);
     }
   }
 });

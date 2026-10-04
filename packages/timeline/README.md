@@ -1,31 +1,29 @@
 # `@qflow/timeline`
 
-One Timeline describes the complete film time range and the prepared Takes placed within it.
-Semantic anchors exist wherever those Takes supply them; no second kind of time axis is needed
-for authored animation. The value stores `id`, `durationSec`, `frameRate`, optional `narrativeId`,
-and `items` containing `take` and `startFrame`. A zero-Take Timeline has no Narrative identity.
+Domain contract for one finite absolute program-time axis.
 
-Each Take retains its normalized local media and semantic evidence. Global positions are its
-placement start plus local positions. Items can leave gaps or overlap; their declaration order is
-preserved. Frame rates and Narrative ownership agree, identities remain unique, and every complete
-Take fits inside the positive Program range. Assembly is owned by
-[Timeline authoring](../timeline-author/README.md).
+A completed `Timeline` contains only:
 
-`projectTimelineSpace` supplies the lightweight `ProgramSpace` range used by rendering.
-`semanticAnchorFrames`, `selectionFrameSpan`, `segmentFrameSpan`, `tokenFrameSpan` and `momentFrame`
-locate evidence without copying another word table. Program boundaries are available even with zero
-Takes. Selection endpoints retain their authored identities; projection/consumption determines
-whether a requested physical Window is usable.
+- `id`;
+- exact rational `frameRate`; and
+- positive finite `frameCount`.
 
-## Project prepared material
+It contains no media, semantic anchors, Tracks, Canvas, author declarations or central event registry.
+Every consumer that shares program time receives the same Timeline value explicitly.
 
-`projectTimelineMedia(timeline, window?)` returns every intersecting Take's `media`, `segmentId`,
-global `span` and local `source` frame span. The default Window is the complete Timeline. Gaps
-return no source; overlaps return all intersecting sources. Audio-only Takes remain represented.
-Starting presentation inside a Take retains the matching source frame. This projection chooses no
-layout, winning picture, held frame or transition.
+[`@qflow/timeline-author`](../timeline-author/README.md) constructs this value from an acyclic graph
+of named Instants, Windows and typed Extents with one required exclusive `end`. Each named declaration
+naturally publishes an absolute sibling value after finalization. Local domains and media are never
+fields stored inside Timeline.
 
-`projectTimelineAudio` places original audio at each Take's position at native speed and gain.
-Takes without audio contribute no clip; gaps are silent and overlapping Takes contribute simultaneous
-clips. Film explicitly includes that audio contribution. These functions perform no media I/O,
-transcription, rendering or generation.
+Semantic time is an optional projection onto this absolute axis. A `NarrativeAlignment` locates Script
+anchors in a local temporal domain; the Narrative projector maps that domain through an equal-length
+Window to resolve absolute Instants and Windows. Other domains such as musical beats
+can provide peer adapters without extending Timeline.
+
+Media presentation is independent as well. Visual and Audio Clips consume ordinary normalized
+media with explicit absolute Windows, without asking Timeline to discover material or retaining whether
+that media's Extent helped construct it.
+
+This package validates and seals the completed value. It performs no media I/O, transcription,
+generation, rendering, projection policy or Studio behavior.

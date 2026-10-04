@@ -12,11 +12,6 @@
   },
   "dependencies": {
     "@qflow/component-kit": "workspace:*",
-    "@qflow/composition": "workspace:*",
-    "@qflow/media": "workspace:*",
-    "@qflow/narrative": "workspace:*",
-    "@qflow/program-space": "workspace:*",
-    "@qflow/protocol": "workspace:*",
-    "@qflow/speech": "workspace:*"
+    "@qflow/protocol": "workspace:*"
   }
 }

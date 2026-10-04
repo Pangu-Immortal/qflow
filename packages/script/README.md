@@ -2,8 +2,9 @@
 
 Official raw Script Surface for the Markup Frontend. It parses prose-first named Segment blocks,
 newline-independent Role Cues, Dual Text, Selection and Moment syntax, and lowers them to a
-canonical authored Narrative value with exactly `2M + 2N + 2` semantic anchor identities: both
-ends of every Token and Segment, plus the Script Program's own start and end.
+canonical authored Narrative value with exactly `2M + 2N` semantic anchor identities: both
+ends of every Token and Segment. Script adds no synthetic Narrative or program boundary anchors;
+absolute work boundaries belong to Timeline.
 
 The package is an ordinary statically declared Surface module. Core does not import it and does not
 know that Script, Segment or Narrative exist.
@@ -35,7 +36,8 @@ numbers; capitalization does not distinguish Roles from Segments.
 An empty Segment such as `<empty></empty>` (or `<empty/>`) is valid. `empty` is an ordinary
 author-chosen name, not a reserved keyword. It retains the Segment identity and both boundary anchors
 while contributing no Tokens or spoken text. This supports wordless passages in the same semantic
-model: the associated normalized media, not the empty tag, determines the SemanticTake's duration.
+model: an associated local temporal domain determines duration, while NarrativeAlignment supplies
+the Segment boundary relation with no word units.
 
 The package exports its Manifest, `parseScript`, semantic/source-map projection helpers, a
 semantic-preserving formatter and the raw `decodeScriptSurface` handler. Source ranges and parser
@@ -45,7 +47,7 @@ components without importing Script internals.
 
 The Surface exports one full Narrative plus narrow, immutable views:
 
-- `script.segment.<id>` is a narrow `NarrativeExcerpt` used to associate a generated Take with one Segment;
+- `script.segment.<id>` is a narrow `NarrativeExcerpt` used to align generated or supplied media with one Segment;
 - `script.segment.<id>.dialogue` is ordinary `Text`: display-independent dialogue, including optional
   Role cues and right-side Dual Text pronunciation, for a speech-video model;
 - `script.segment.<id>.speech` is ordinary pronunciation-only `Text` for duration estimation or TTS;
@@ -54,8 +56,8 @@ The Surface exports one full Narrative plus narrow, immutable views:
 - `script.selection.<id>` is a reusable explicit Selection;
 - `script.moment.<id>` is a reusable explicit Moment.
 
-`@qflow/caption` projects `script.selection.<id>` or a Role onto complete Caption Alignment Units;
-it then joins those units to a Timeline for frame timing. Seedance consumes dialogue `Text`,
+`@qflow/narrative-caption` relates the separately exported Caption units to Narrative Tokens and
+projects them through explicit Narrative time. Seedance consumes dialogue `Text`,
 Estimate and TTS consume speech `Text`, and semantic preparation consumes the Segment excerpt. None imports
 Script's parser AST. Another authoring package may produce the same ordinary Text, Narrative and
 CaptionDocument contracts.
@@ -69,7 +71,7 @@ CaptionDocument contracts.
   `<display text | spoken text>`. In `<display text|>`, omitted speech inherits the displayed prose.
 - **Selection marker**: a named semantic range, written `@{name} ... @{/name}`.
 - **Moment marker**: a named semantic point, written `@{name!}`.
-- **CaptionDocument**: the Script-owned caption truth; it contains **Display Words**,
+- **CaptionDocument**: a Caption-owned value produced by Script; it contains **Display Words**,
   **Alignment Units** and **Cue Breaks**. It contains no seconds or frames.
 - **Token attribute**: a flat postfix display-word annotation such as `really{emphasis}` or
   `really{emphasis,importance=2,tone=warm}`. Values may be strings, finite numbers or booleans. It
@@ -226,12 +228,12 @@ protocol identities remain `@1`. Existing rendered media is not modified by sour
 
 ## Complete authored content and narrow exports
 
-The root `story` Record contains the complete Narrative: speech structure, semantic references and
-its CaptionDocument. `story.caption`, `story.selection.<id>`, Segment excerpts and dialogue/speech
-Text outputs remain explicit narrow exports derived from that content. Caption rendering can read
-the document and Timeline. Timed Uses change its presentation; their semantic references are
-projected through the same Timeline as other components. Word attributes remain in the document
-for families that give those words structural visual roles.
+The root `story` Record contains only the complete Narrative: speech structure and semantic
+references. `story.caption`, `story.caption-binding`, `story.selection.<id>`, Segment excerpts and
+dialogue/speech Text are peer exports derived from the same parse. The binding relates Caption units
+to Narrative Tokens without embedding either value in the other. Caption rendering reads the
+document and already resolved CaptionTiming. Word attributes remain in the document for families
+that give those words structural visual roles.
 
 For content lookup, use the Narrative package's `narrativeTokensForSelection` or
 `narrativeSelectionTokenRange`. These query authored order; Timeline separately locates the same

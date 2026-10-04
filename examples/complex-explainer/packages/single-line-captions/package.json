@@ -5,5 +5,10 @@
   "type": "module",
   "qflow": {
     "activation": "./src/activation.js"
+  },
+  "dependencies": {
+    "@qflow/caption-fine": "workspace:*",
+    "@qflow/caption-fine-studio": "workspace:*",
+    "@qflow/qflow": "workspace:*"
   }
 }

@@ -105,13 +105,12 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
     {
       id: "comment:track",
       producer: commentStickerProducers.render,
-      inputs: { canvas: input("canvas"), timeline: input("timeline"), program: operation("comment:program") },
+      inputs: { timeline: input("timeline"), program: operation("comment:program") },
       result: { kind: "output", name: "track" },
     },
   );
   return sealGraphFragment({
     inputs: [
-      { name: "canvas", type: spatialTypes.canvas },
       { name: "header", type: commentStickerTypes.header },
       { name: "timeline", type: timelineTypes.track },
       ...[...types].map(([inputName, type]) => ({ name: inputName, type })),
@@ -119,7 +118,7 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
     operations,
     exports: [
       { name: "program", type: commentStickerTypes.program, root: operation("comment:program") },
-      { name: "track", type: compositionTypes.visualTrack, root: operation("comment:track") },
+      { name: "visual", type: compositionTypes.visualTrack, root: operation("comment:track") },
     ],
   });
 }

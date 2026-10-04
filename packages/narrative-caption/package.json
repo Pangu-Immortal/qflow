@@ -1,0 +1,22 @@
+{
+  "name": "@qflow/narrative-caption",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "dependencies": {
+    "@qflow/caption": "workspace:*",
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/narrative": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/narrative-temporal": "workspace:*"
+  }
+}

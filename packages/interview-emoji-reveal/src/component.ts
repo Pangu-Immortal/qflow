@@ -2,7 +2,7 @@ import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage } from "@qflow/component-kit";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef, StoredValue } from "@qflow/protocol";
-import type { CanvasSpace } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
 import { emojiRevealProducers, emojiRevealTypes } from "./manifest.js";
@@ -37,7 +37,7 @@ export const emojiRevealComponent = {
       blob(inputs.placeholder?.value, "Emoji Reveal placeholder"), inline<EmojiRevealSet>(inputs.set?.value, "EmojiRevealSet"),
     )) }, needs: {} }) },
     { producer: emojiRevealProducers.render, handler: ({ inputs }) => ({ outputs: { track: output(renderEmojiReveal(
-      inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"), inline<Timeline>(inputs.timeline?.value, "Timeline"),
+      inline<SpatialFrame>(inputs.within?.value, "SpatialFrame"), inline<Timeline>(inputs.timeline?.value, "Timeline"),
       inline<EmojiRevealProgram>(inputs.program?.value, "EmojiRevealProgram"),
     )) }, needs: {} }) },
   ],

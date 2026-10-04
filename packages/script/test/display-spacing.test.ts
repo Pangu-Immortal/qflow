@@ -5,12 +5,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { adjustScriptSelection, captionDocument, parseScript, serializeCaption, serializeSpeech } from "@qflow/script";
+import { adjustScriptSelection, captionDocument, narrativeCaptionBinding, parseScript, serializeCaption, serializeSpeech } from "@qflow/script";
 
 function displayed(body: string) {
   const parsed = parseScript("display", `<line>${body}</line>`);
   const document = captionDocument(parsed, "caption", "story");
-  return { parsed, document, text: document.words.map(word => word.separatorBefore + word.text).join("") };
+  const binding = narrativeCaptionBinding(parsed, "caption", "story");
+  return { parsed, document, binding, text: document.words.map(word => word.separatorBefore + word.text).join("") };
 }
 
 for (const text of [
@@ -46,11 +47,11 @@ test("markers, properties and Dual Text boundaries never invent or discard a sep
 });
 
 test("shared groups keep punctuation, properties, internal anchors and speech correspondence", () => {
-  const { parsed, document, text } = displayed("<组@{beat!}件{emphasis}化|>");
+  const { parsed, document, binding, text } = displayed("<组@{beat!}件{emphasis}化|>");
   assert.equal(text, "组件化");
   assert.equal(serializeSpeech(parsed), "组件化");
   assert.equal(document.units.length, 1);
-  assert.equal(document.units[0]!.sourceTokenIds.length, 3);
+  assert.equal(binding.units[0]!.sourceTokenIds.length, 3);
   assert.equal(parsed.moments[0]!.anchorId, parsed.tokens[1]!.startAnchorId);
   assert.deepEqual(document.words[1]!.attributes, [{ name: "emphasis", value: true }]);
 });

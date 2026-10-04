@@ -27,23 +27,11 @@ export type ScriptMomentAdjustment = {
 
 type Edit = { readonly range: SourceRange; readonly replacement: string };
 
-/** Script owns the exact source inverse of every one of its 2M + 2N + 2 anchors. */
+/** Script owns the exact source inverse of every one of its 2M + 2N anchors. */
 export function scriptAnchorEditSites(parsed: ParsedNarrative): readonly ScriptAnchorEditSite[] {
   const segments = new Map(parsed.segments.map((segment) => [segment.id, segment] as const));
   const tokens = new Map(parsed.tokens.map((token) => [token.id, token] as const));
   return parsed.semanticIndex.anchors.map((anchor): ScriptAnchorEditSite => {
-    if (anchor.kind === "program-start") {
-      return {
-        anchorId: anchor.id, kind: anchor.kind, offset: parsed.sourceRange.start,
-        affinity: "left", placement: "before",
-      };
-    }
-    if (anchor.kind === "program-end") {
-      return {
-        anchorId: anchor.id, kind: anchor.kind, offset: parsed.sourceRange.end,
-        affinity: "right", placement: "after",
-      };
-    }
     const segmentId = anchor.segmentId;
     const segment = segments.get(segmentId);
     if (segment === undefined) throw new Error(`Semantic Anchor ${anchor.id} names unknown Segment ${segmentId}.`);

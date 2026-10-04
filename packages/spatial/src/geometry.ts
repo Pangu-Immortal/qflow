@@ -2,17 +2,16 @@
 import type {
   AnchoredFrameProgram,
   AspectFrameProgram,
-  CanvasSpace,
+  Canvas,
   ContentFit,
-  FittedContent,
   FrameEdgesProgram,
   IntrinsicExtent,
   SpatialAnchor,
   SpatialFrame,
   SpatialLength,
+  SpatialMap2D,
   SpatialPath,
   SpatialPoint,
-  SpatialRegionTimeline,
 } from "./types.js";
 
 function finite(value: number, label: string): void {
@@ -24,12 +23,10 @@ function positive(value: number, label: string): void {
   if (value <= 0) throw new Error(`${label} must be positive.`);
 }
 
-export function assertCanvasSpace(value: CanvasSpace): void {
+export function assertCanvas(value: Canvas): void {
   if (!Number.isSafeInteger(value.widthPx) || value.widthPx <= 0
-    || !Number.isSafeInteger(value.heightPx) || value.heightPx <= 0
-    || value.origin !== "top-left" || value.xDirection !== "right"
-    || value.yDirection !== "down" || value.pixelAspect !== "square") {
-    throw new Error("CanvasSpace is invalid.");
+    || !Number.isSafeInteger(value.heightPx) || value.heightPx <= 0) {
+    throw new Error("Canvas is invalid.");
   }
 }
 
@@ -43,24 +40,6 @@ export function assertSpatialFrame(value: SpatialFrame): void {
   finite(value.yPx, "SpatialFrame.yPx");
   positive(value.widthPx, "SpatialFrame.widthPx");
   positive(value.heightPx, "SpatialFrame.heightPx");
-}
-
-export function assertSpatialRegionTimeline(value: SpatialRegionTimeline): void {
-  assertCanvasSpace(value.canvas);
-  if (!Number.isSafeInteger(value.frameCount) || value.frameCount <= 0 || value.tracks.length === 0) {
-    throw new Error("SpatialRegionTimeline is empty or has an invalid Frame count.");
-  }
-  const ids = new Set<string>();
-  for (const track of value.tracks) {
-    if (!track.id.trim() || ids.has(track.id)) throw new Error(`SpatialRegionTimeline repeats or omits Track id ${track.id}.`);
-    ids.add(track.id);
-    if (track.frames.length !== value.frameCount) {
-      throw new Error(`SpatialRegionTimeline Track ${track.id} does not cover every Frame.`);
-    }
-    for (const frame of track.frames) {
-      if (frame !== null) assertSpatialFrame(frame);
-    }
-  }
 }
 
 export function assertIntrinsicExtent(value: IntrinsicExtent): void {
@@ -87,8 +66,13 @@ export function assertContentFit(value: ContentFit): void {
   if (value.constraint !== "bounded" && value.constraint !== "free") throw new Error("ContentFit.constraint is invalid.");
 }
 
-export function assertFittedContent(value: FittedContent): void {
-  assertSpatialFrame(value.contentFrame);
+export function assertSpatialMap2D(value: SpatialMap2D): void {
+  finite(value.xx, "SpatialMap2D.xx");
+  finite(value.xy, "SpatialMap2D.xy");
+  finite(value.yx, "SpatialMap2D.yx");
+  finite(value.yy, "SpatialMap2D.yy");
+  finite(value.tx, "SpatialMap2D.tx");
+  finite(value.ty, "SpatialMap2D.ty");
 }
 
 function commandNumbers(command: SpatialPath["commands"][number]): readonly number[] {
@@ -143,8 +127,8 @@ function sealFrame(value: SpatialFrame): SpatialFrame {
   return frame;
 }
 
-export function canvasFrame(canvas: CanvasSpace): SpatialFrame {
-  assertCanvasSpace(canvas);
+export function canvasFrame(canvas: Canvas): SpatialFrame {
+  assertCanvas(canvas);
   return sealFrame({ xPx: 0, yPx: 0, widthPx: canvas.widthPx, heightPx: canvas.heightPx });
 }
 
@@ -201,7 +185,8 @@ function boundedCoordinate(position: number, contentSize: number, frameStart: nu
   return Math.min(high, Math.max(low, position));
 }
 
-export function fitContent(frame: SpatialFrame, extent: IntrinsicExtent, fit: ContentFit): FittedContent {
+/** Resolve a source-local pixel plane into the program picture plane. */
+export function resolveContentFit(frame: SpatialFrame, extent: IntrinsicExtent, fit: ContentFit): SpatialMap2D {
   assertSpatialFrame(frame);
   assertIntrinsicExtent(extent);
   assertContentFit(fit);
@@ -221,18 +206,111 @@ export function fitContent(frame: SpatialFrame, extent: IntrinsicExtent, fit: Co
     xPx = boundedCoordinate(xPx, widthPx, frame.xPx, frame.widthPx);
     yPx = boundedCoordinate(yPx, heightPx, frame.yPx, frame.heightPx);
   }
-  const result: FittedContent = {
-    contentFrame: sealFrame({ xPx, yPx, widthPx, heightPx }),
+  const result: SpatialMap2D = {
+    xx: widthPx / extent.widthPx,
+    xy: 0,
+    yx: 0,
+    yy: heightPx / extent.heightPx,
+    tx: xPx,
+    ty: yPx,
   };
-  assertFittedContent(result);
+  assertSpatialMap2D(result);
   return result;
 }
 
-export function sealCanvasSpace(value: CanvasSpace): CanvasSpace { assertCanvasSpace(value); return structuredClone(value); }
+export function mapSpatialPoint(point: SpatialPoint, mapping: SpatialMap2D): SpatialPoint {
+  assertSpatialPoint(point);
+  assertSpatialMap2D(mapping);
+  return sealSpatialPoint({
+    xPx: mapping.xx * point.xPx + mapping.xy * point.yPx + mapping.tx,
+    yPx: mapping.yx * point.xPx + mapping.yy * point.yPx + mapping.ty,
+  });
+}
+
+/** Compose mappings in application order: `first`, then `second`. */
+export function composeSpatialMaps(first: SpatialMap2D, second: SpatialMap2D): SpatialMap2D {
+  assertSpatialMap2D(first);
+  assertSpatialMap2D(second);
+  return sealSpatialMap2D({
+    xx: second.xx * first.xx + second.xy * first.yx,
+    xy: second.xx * first.xy + second.xy * first.yy,
+    yx: second.yx * first.xx + second.yy * first.yx,
+    yy: second.yx * first.xy + second.yy * first.yy,
+    tx: second.xx * first.tx + second.xy * first.ty + second.tx,
+    ty: second.yx * first.tx + second.yy * first.ty + second.ty,
+  });
+}
+
+function mapPathCommand(command: SpatialPath["commands"][number], mapping: SpatialMap2D): SpatialPath["commands"][number] {
+  const point = (xPx: number, yPx: number) => mapSpatialPoint({ xPx, yPx }, mapping);
+  if (command.kind === "close") return command;
+  if (command.kind === "move" || command.kind === "line") {
+    const mapped = point(command.xPx, command.yPx);
+    return { kind: command.kind, ...mapped };
+  }
+  if (command.kind === "quadratic") {
+    const control = point(command.controlX, command.controlY);
+    const end = point(command.xPx, command.yPx);
+    return { kind: "quadratic", controlX: control.xPx, controlY: control.yPx, ...end };
+  }
+  const control1 = point(command.control1X, command.control1Y);
+  const control2 = point(command.control2X, command.control2Y);
+  const end = point(command.xPx, command.yPx);
+  return {
+    kind: "cubic",
+    control1X: control1.xPx, control1Y: control1.yPx,
+    control2X: control2.xPx, control2Y: control2.yPx,
+    ...end,
+  };
+}
+
+export function mapSpatialPath(path: SpatialPath, mapping: SpatialMap2D): SpatialPath {
+  assertSpatialPath(path);
+  assertSpatialMap2D(mapping);
+  return sealSpatialPath({ commands: path.commands.map((command) => mapPathCommand(command, mapping)) });
+}
+
+/** Preserve an exact transformed rectangle as a closed Path. */
+export function mapSpatialFramePath(frame: SpatialFrame, mapping: SpatialMap2D): SpatialPath {
+  assertSpatialFrame(frame);
+  return mapSpatialPath({ commands: [
+    { kind: "move", xPx: frame.xPx, yPx: frame.yPx },
+    { kind: "line", xPx: frame.xPx + frame.widthPx, yPx: frame.yPx },
+    { kind: "line", xPx: frame.xPx + frame.widthPx, yPx: frame.yPx + frame.heightPx },
+    { kind: "line", xPx: frame.xPx, yPx: frame.yPx + frame.heightPx },
+    { kind: "close" },
+  ] }, mapping);
+}
+
+/** Return the axis-aligned bounds of a transformed Frame; rotation is not discarded silently. */
+export function mapSpatialFrameBounds(frame: SpatialFrame, mapping: SpatialMap2D): SpatialFrame {
+  const points = [
+    mapSpatialPoint({ xPx: frame.xPx, yPx: frame.yPx }, mapping),
+    mapSpatialPoint({ xPx: frame.xPx + frame.widthPx, yPx: frame.yPx }, mapping),
+    mapSpatialPoint({ xPx: frame.xPx + frame.widthPx, yPx: frame.yPx + frame.heightPx }, mapping),
+    mapSpatialPoint({ xPx: frame.xPx, yPx: frame.yPx + frame.heightPx }, mapping),
+  ];
+  const x = points.map((point) => point.xPx);
+  const y = points.map((point) => point.yPx);
+  const left = Math.min(...x);
+  const top = Math.min(...y);
+  return sealSpatialFrame({
+    xPx: left,
+    yPx: top,
+    widthPx: Math.max(...x) - left,
+    heightPx: Math.max(...y) - top,
+  });
+}
+
+export function mapIntrinsicExtentBounds(extent: IntrinsicExtent, mapping: SpatialMap2D): SpatialFrame {
+  assertIntrinsicExtent(extent);
+  return mapSpatialFrameBounds({ xPx: 0, yPx: 0, widthPx: extent.widthPx, heightPx: extent.heightPx }, mapping);
+}
+
+export function sealCanvas(value: Canvas): Canvas { assertCanvas(value); return structuredClone(value); }
 export function sealSpatialPoint(value: SpatialPoint): SpatialPoint { assertSpatialPoint(value); return structuredClone(value); }
 export function sealSpatialFrame(value: SpatialFrame): SpatialFrame { assertSpatialFrame(value); return structuredClone(value); }
-export function sealSpatialRegionTimeline(value: SpatialRegionTimeline): SpatialRegionTimeline { assertSpatialRegionTimeline(value); return structuredClone(value); }
 export function sealSpatialPath(value: SpatialPath): SpatialPath { assertSpatialPath(value); return structuredClone(value); }
 export function sealIntrinsicExtent(value: IntrinsicExtent): IntrinsicExtent { assertIntrinsicExtent(value); return structuredClone(value); }
+export function sealSpatialMap2D(value: SpatialMap2D): SpatialMap2D { assertSpatialMap2D(value); return structuredClone(value); }
 export function sealContentFit(value: ContentFit): ContentFit { assertContentFit(value); return structuredClone(value); }
-export function sealFittedContent(value: FittedContent): FittedContent { assertFittedContent(value); return structuredClone(value); }

@@ -38,17 +38,18 @@ function text(id, parent, value, font, size, color) {
     }),
   };
 }
-function track(timeline, canvas, window, o, program, children = [], presents) {
-  assertTemporalWindowFor(window, { subjectId: o.id, space: timeline });
+function track(timeline, within, window, o, program, children = [], presents) {
+  assertTemporalWindowFor(window, { subjectId: o.id, timeline: timeline });
   return sealVisualTrack({
     id: o.id,
-    programSpaceId: timeline.id,
+    timelineId: timeline.id,
     visualIr: "qflow.visual-ir@1",
     presents: presents ?? [
       {
         id: o.id,
+        order: 0,
+        z: o.z,
         span: window.span,
-        stacking: { order: o.z, tieBreak: o.id },
         elements: [
           {
             id: "scene",
@@ -57,9 +58,10 @@ function track(timeline, canvas, window, o, program, children = [], presents) {
             program,
             style: style({
               position: "absolute",
-              inset: 0,
-              width: canvas.widthPx + "px",
-              height: canvas.heightPx + "px",
+              left: within.xPx + "px",
+              top: within.yPx + "px",
+              width: within.widthPx + "px",
+              height: within.heightPx + "px",
             }),
           },
           ...children,
@@ -68,12 +70,12 @@ function track(timeline, canvas, window, o, program, children = [], presents) {
     ],
   });
 }
-export function renderTitle(timeline, canvas, window, font, o, bounce) {
-  const w = canvas.widthPx;
+export function renderTitle(timeline, within, window, font, o, bounce) {
+  const w = within.widthPx;
   const letters = Array.from(o.title);
   return track(
     timeline,
-    canvas,
+    within,
     window,
     o,
     browserProgram({
@@ -130,11 +132,11 @@ return frame=>{
   );
 }
 
-export function renderTimer(timeline, canvas, window, font, o, logo, stop) {
+export function renderTimer(timeline, within, window, font, o, logo, stop) {
   const fps = timeline.frameRate.numerator / timeline.frameRate.denominator;
   return track(
     timeline,
-    canvas,
+    within,
     window,
     o,
     browserProgram({
@@ -167,7 +169,7 @@ export function renderTimer(timeline, canvas, window, font, o, logo, stop) {
         "scene",
         o.title,
         font,
-        canvas.widthPx * o.width * 0.16,
+        within.widthPx * o.width * 0.16,
         `${palette.ink}`,
       ),
       text(
@@ -175,7 +177,7 @@ export function renderTimer(timeline, canvas, window, font, o, logo, stop) {
         "scene",
         o.subtitle,
         font,
-        canvas.widthPx * o.width * 0.067,
+        within.widthPx * o.width * 0.067,
         `${palette.ink}`,
       ),
       {
@@ -189,7 +191,7 @@ export function renderTimer(timeline, canvas, window, font, o, logo, stop) {
     ],
   );
 }
-export function renderStage(timeline, canvas, window, items, o) {
+export function renderStage(timeline, within, window, items, o) {
   const presents = [];
   for (const [index, item] of items.entries()) {
     const start = Math.max(window.span.startFrame, item.window.span.startFrame),
@@ -198,13 +200,13 @@ export function renderStage(timeline, canvas, window, items, o) {
         item.window.span.endFrameExclusive,
       );
     if (end <= start) continue;
-    const w = canvas.widthPx,
-      h = canvas.heightPx;
+    const w = within.widthPx,
+      h = within.heightPx;
     const artifact = item.media?.visual?.artifact ?? item.image;
     if (!artifact) throw Error("Stage video needs prepared visual media.");
-    let sampling;
+    let sourceTime;
     if (item.media) {
-      const sourceRate = item.media.timeline.frameRate,
+      const sourceRate = item.media.frameDomain.frameRate,
         rate = {
           numerator: sourceRate.numerator * timeline.frameRate.denominator,
           denominator: sourceRate.denominator * timeline.frameRate.numerator,
@@ -215,17 +217,17 @@ export function renderStage(timeline, canvas, window, items, o) {
           rate.denominator;
       const last =
         offset + ((end - start - 1) * rate.numerator) / rate.denominator;
-      if (last >= item.media.timeline.frameCount)
+      if (last >= item.media.frameDomain.frameCount)
         throw Error(
           "Stage window exceeds the supplied video. Shorten its window or supply longer media.",
         );
-      sampling = {
+      sourceTime = {
         sourceFrameRate: sourceRate,
-        sourceFrameCount: item.media.timeline.frameCount,
-        segments: [
+        sourceFrameCount: item.media.frameDomain.frameCount,
+        pieces: [
           {
             target: { startFrame: 0, endFrameExclusive: end - start },
-            sourceFrame: {
+            sourceAtStart: {
               numerator: Math.round(offset * rate.denominator),
               denominator: rate.denominator,
             },
@@ -241,7 +243,7 @@ export function renderStage(timeline, canvas, window, items, o) {
       kind: item.media ? "video" : "image",
       artifact,
       muted: true,
-      ...(sampling ? { sampling } : {}),
+      ...(sourceTime ? { sourceTime } : {}),
       style: style({
         position: "absolute",
         inset: 0,
@@ -268,9 +270,10 @@ export function renderStage(timeline, canvas, window, items, o) {
     });
     presents.push({
       id: `${o.id}.${item.id}`,
+      order: index,
+      z: o.z,
       subjectId: item.id,
       span: { startFrame: start, endFrameExclusive: end },
-      stacking: { order: o.z, tieBreak: String(index).padStart(6, "0") },
       elements: [
         {
           id: "scene",
@@ -288,12 +291,12 @@ export function renderStage(timeline, canvas, window, items, o) {
       ],
     });
   }
-  return track(timeline, canvas, window, o, undefined, [], presents);
+  return track(timeline, within, window, o, undefined, [], presents);
 }
 
 // An independent screen texture: the author's stack places it above picture and below graphics.
-export function renderVeil(timeline, canvas, window, o) {
-  const cell = (o.cell * canvas.widthPx) / 1080;
+export function renderVeil(timeline, within, window, o) {
+  const cell = (o.cell * within.widthPx) / 1080;
   const patterns = {
     mesh: `repeating-conic-gradient(from 45deg,rgba(255,255,255,.52) 0% 25%,rgba(0,0,0,.55) 0% 50%)`,
     dots: `radial-gradient(circle,rgba(0,0,0,.8) 0 22%,transparent 26%)`,
@@ -301,7 +304,7 @@ export function renderVeil(timeline, canvas, window, o) {
   };
   return track(
     timeline,
-    canvas,
+    within,
     window,
     o,
     browserProgram({
@@ -316,8 +319,8 @@ export function renderVeil(timeline, canvas, window, o) {
   );
 }
 
-export function renderFlag(timeline, canvas, window, o, logo) {
- return track(timeline, canvas, window, o, browserProgram({
+export function renderFlag(timeline, within, window, o, logo) {
+ return track(timeline, within, window, o, browserProgram({
   html: '<div class="floor-cloth"><canvas class="flag-canvas"></canvas></div><div class="logo-resource">{{flag-logo}}</div>',
   css: `:scope{pointer-events:none}.floor-cloth{position:absolute;left:${o.x*100}%;top:${o.y*100}%;width:${o.width*100}%;height:${o.height*100}%;filter:none}.flag-canvas{display:block;width:100%;height:100%;image-rendering:pixelated}.logo-resource{position:absolute;opacity:0;width:1px;height:1px}`,
   data: {fps:timeline.frameRate.numerator/timeline.frameRate.denominator,flagPose:'floor',flagColor:o.flagColor,flagAmplitude:o.flagAmplitude,flagSpeed:o.flagSpeed},

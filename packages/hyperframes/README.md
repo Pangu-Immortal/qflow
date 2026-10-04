@@ -8,9 +8,10 @@ local programs. Structural elements cover ordinary boxes, exact-font text and fr
 A browser program carries HTML, CSS and frame-driven JavaScript for a component's own composition.
 Track and Composition remain owned by `@qflow/composition`; the browser format is owned here.
 
-This package understands only `VisualTrack`, `ProgramSpace` and canvas geometry. It
+This package understands only `VisualTrack`, `Timeline` and canvas geometry. It
 does not know Caption, Speech, B-roll, Seedance or any other author-domain component. It flattens
-every Track's Presents, orders them by their own absolute stacking keys and emits frame-bound local
+every Track's Presents, orders them by absolute `z`, stable Track identity, Track-local Present
+`order` and Present identity, then emits frame-bound local
 keyframes. An authoring Track never becomes an isolated render stacking surface.
 Terminal text and SVG mask sources retain the same Present-relative frame animations as other
 elements, including direct seeks into the middle of a Present.
@@ -55,7 +56,7 @@ usage spans query a sparse selection by binary search instead of scanning every 
 
 The document exposes its render domain directly rather than asking an Endpoint to scrape HTML:
 exact rational `frameRate`, integer `frameCount`, and canvas dimensions are explicit document
-content. The ProgramSpace relationship is an input edge of the Producer and is not copied into the
+content. The Timeline relationship is an input edge of the Producer and is not copied into the
 document as lineage metadata. Legal frame addresses are exactly `[0, frameCount)`. A local worker pool or a
 hosted renderer may independently evaluate any legal frame or half-open chunk; partition size and
 worker count are Runtime policy, not author intent and not Core graph nodes. The emitted root also
@@ -122,8 +123,9 @@ Returning a Promise from `render` reports an authoring error; frame capture neve
 unbounded asynchronous drawing task or races it.
 
 Ordinary child sampling follows the Present clock. Reframing the parent leaves source playback
-unchanged. `projectTimelineMedia` from `@qflow/qflow/timeline` gives a component selected prepared
-clips with their exact program and source spans. Speech audio is an independently selected Track.
+unchanged. Components receive ordinary normalized media, absolute Windows and explicit sampling when
+they need prepared footage; target and source spans follow that authored relation. Speech audio is an
+independently selected Audio Track.
 
 `program.format` is explicit: this backend reports an unsupported format rather than interpreting
 another renderer's program. Core and the build graph do not contain browser-specific cases.

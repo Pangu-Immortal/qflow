@@ -92,7 +92,7 @@ export function createOverlay(store: Store, measure: Measure): Overlay {
   const draw = (): void => {
     if (last === undefined) return;
     const { snapshot, selected } = last;
-        canvas = { width: snapshot.space.canvasWidth, height: snapshot.space.canvasHeight };
+        canvas = { width: snapshot.canvas.width, height: snapshot.canvas.height };
     element.setAttribute("viewBox", `0 0 ${canvas.width} ${canvas.height}`);
     element.replaceChildren();
     // An editing interval can end before its visual representation disappears.

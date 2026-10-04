@@ -1,11 +1,13 @@
 import { artifactDependency, artifactTypes } from "@qflow/artifact";
-import type { ModuleManifest, TypeRef } from "@qflow/protocol";
+import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
 import { compositableSurfaceSchema, fontArtifactSchema, fontStackSchema, mediaInspectionSchema, mediaStreamSelectionSchema, muxedMediaSchema, renderedVisualSchema, synchronizedMediaSchema, timelineAudioSchema } from "./schema.js";
+import { temporalDependency, temporalTypes } from "@qflow/temporal";
 export const mediaModuleRef = { name: "@qflow/media", version: "1" } as const;
 export const mediaTypes = {
   frameRange: { module: mediaModuleRef, name: "MediaFrameRange" },
   inspection: { module: mediaModuleRef, name: "MediaInspection" },
   streamSelection: { module: mediaModuleRef, name: "MediaStreamSelection" }, synchronized: { module: mediaModuleRef, name: "SynchronizedMedia" },
+  domainSpec: { module: mediaModuleRef, name: "MediaDomainSpec" },
   renderedVisual: { module: mediaModuleRef, name: "RenderedVisual" }, timelineAudio: { module: mediaModuleRef, name: "TimelineAudio" },
   muxed: { module: mediaModuleRef, name: "MuxedMedia" }, fontArtifact: { module: mediaModuleRef, name: "FontArtifactRef" },
   fontStack: { module: mediaModuleRef, name: "FontStackRef" },
@@ -13,6 +15,9 @@ export const mediaTypes = {
   /** Declared by `@qflow/artifact`. A Type is identified by the Module that owns it, not the one that re-exports it. */
   blobArtifact: artifactTypes.blob,
 } satisfies Record<string, TypeRef>;
+export const mediaProducers = {
+  localDomain: { module: mediaModuleRef, name: "local-domain" },
+} satisfies Record<string, ProducerRef>;
 
 export const mediaMarkupSurfaces = [
     {
@@ -106,17 +111,22 @@ export const mediaMarkupSurfaces = [
   ] as const;
 
 export const mediaManifest: ModuleManifest = {
-  format: "qflow.module@1", name: mediaModuleRef.name, version: mediaModuleRef.version, dependencies: [artifactDependency],
+  format: "qflow.module@1", name: mediaModuleRef.name, version: mediaModuleRef.version, dependencies: [artifactDependency, temporalDependency],
   types: [
     { name: mediaTypes.frameRange.name },
     { name: mediaTypes.inspection.name },
     { name: mediaTypes.streamSelection.name },
     { name: mediaTypes.synchronized.name },
+    { name: mediaTypes.domainSpec.name },
     { name: mediaTypes.renderedVisual.name },
     { name: mediaTypes.timelineAudio.name },
     { name: mediaTypes.muxed.name },
     { name: mediaTypes.fontArtifact.name }, { name: mediaTypes.fontStack.name },
     { name: mediaTypes.compositableSurface.name },
-  ], capabilities: [], producers: [],
+  ], capabilities: [], producers: [
+    { name: mediaProducers.localDomain.name,
+      inputs: [{ name: "media", type: mediaTypes.synchronized }, { name: "spec", type: mediaTypes.domainSpec }],
+      outputs: [{ name: "domain", type: temporalTypes.localDomain }], needs: [] },
+  ],
 };
 export const mediaDependency = { module: mediaModuleRef } as const;

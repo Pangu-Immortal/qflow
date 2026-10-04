@@ -11,7 +11,7 @@ reads the Track's `content`, `schedule` and `program` exports; it never reconstr
 from the rendered words.
 
 Use entities retain the actual child Source range and standard Temporal lineage. Timeline gestures
-therefore use the same writeback rules as Performance and Sound. Selecting a Use exposes its
+therefore use the same writeback rules as Visual and Audio Clips. Selecting a Use exposes its
 referenced Style's font and Recipe fields. Shared Styles remain shared; changing a time window
 changes presentation without editing Script Cue breaks.
 

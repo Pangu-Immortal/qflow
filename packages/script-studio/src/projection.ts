@@ -28,7 +28,7 @@ type NarrativeValue = {
   readonly semanticIndex?: {
     readonly anchors?: readonly {
       readonly id: string;
-      readonly kind: "program-start" | "segment-start" | "segment-end" | "token-start" | "token-end" | "program-end";
+      readonly kind: "segment-start" | "segment-end" | "token-start" | "token-end";
       readonly segmentId?: string;
       readonly tokenId?: string;
     }[];

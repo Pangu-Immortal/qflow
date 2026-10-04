@@ -1,95 +1,98 @@
 # `@qflow/temporal-markup`
 
-Shared SVML author-time projection helpers for `@qflow/temporal`. The Surface lowers authored
-Selection, Segment, Moment or explicit clock expressions to ordinary Instant projections and Window
-composition. A domain consumer receives the projected values and the shared Timeline; it does not
-locate Script words or infer a semantic source inside its renderer.
+Shared SVML author helpers for constructing ordinary absolute `TemporalInstant` and
+`TemporalWindow` values. This package knows the Timeline clock. It does not know Narrative,
+speech, media, captions, beats, or any other source domain.
 
-The package exports `createTemporalWindowProjection`, `createTemporalInstantProjection`,
-`resolveTemporalContext`, attribute vocabulary, and the exact duration/instant parsers. These are helpers for component
-Surfaces, not standalone author tags or a new Track.
+The package exports `resolveTemporalContext`, `createTemporalWindowConstruction`,
+`createTemporalInstantConstruction`, their attribute vocabularies, and exact duration/instant
+parsers. They are helpers for component Surfaces, not a Track and not a second Timeline model.
 
-The editing behavior is specified in [Author-directed time editing](EDITING.md).
-It separates direct bindings, durations, and explicit offsets from derived results, with a precise
-write target for each supported gesture.
+## The boundary
 
-## Time context
+A general component accepts:
 
-A Track Surface accepts `timeline={program.timeline}`. Resolve it with
-`resolveTemporalContext({ element, resolveReference })` and pass that context to each temporal
-projection helper. Wire `context.timeline.ref` directly into the component Fragment's Timeline port.
-Preserve the projections' returned records, components and fragments.
+- `timeline={film.timeline}` for the absolute coordinate system;
+- a `TemporalWindow` when it occupies an interval; or
+- a `TemporalInstant` when it reacts to an event.
 
-The context contains one required `timeline` reference. Program time and Script references both
-project against it. Pure animation uses a zero-Take Timeline with an authored extent. Script events
-use the anchors provided by its placed Takes. Drawing Producers receive that same Timeline and the
-projected Instants/Windows; they need no Script parser or separate time-range input.
+It never receives a Narrative projector and never interprets Selection, Segment or Moment values.
+A source-domain package performs that projection once and publishes an ordinary absolute value.
+The same component can therefore consume time from Narrative, music analysis, imported edit data,
+or a literal clock position without knowing which source produced it.
 
 ## Window forms
 
-A Surface using the shared Window vocabulary accepts one complete form:
+The common Window vocabulary has four attributes and one rule:
 
-| Authored attributes | Meaning |
+| Form | Result |
 | --- | --- |
-| `during="program"` | The complete program Window. |
-| `during={story.segment.opening}` | A Segment's Window. |
-| `during={story.selection.proof}` | A Selection's Window, including its authored endpoint affinity. |
-| `at="2s" for="8f"` | Start two seconds into the program and last eight frames. |
-| `at={story.moment.reveal} for="8f"` | Start at a Moment and last eight program frames. |
-| `until={story.moment.reveal} for="250ms"` | End at a Moment after a span of 250 milliseconds. |
-| `start="program.start" end="moment.cue" moment={story.moment.reveal}` | Compose independently authored endpoints. |
+| `during="timeline"` | The complete Timeline Window. |
+| `during={story-time.proof}` | Reuse an already resolved Window. |
+| `from="2s" for="12f"` | Start at two seconds and last twelve frames. |
+| `until="3s" for="250ms"` | End at three seconds and extend 250 ms backwards. |
+| `from={cue} until="timeline.end"` | Compose two resolved or authored endpoints. |
 
-Do not combine forms: `during="program" until={...}` is not shorthand for a shortened program.
-Use explicit `start` and `end` for that relationship. Expressions can reference `program.start`,
-`program.end`, `selection.start`, `selection.end`, `segment.start`, `segment.end` or `moment.cue`.
-Bind the corresponding `selection`, `segment` or `moment` reference attribute when an expression
-uses it. An endpoint may also be an absolute duration from program start, such as `1.5s`.
+Outside `during`, supply exactly two of `from`, `until`, and `for`. `from` and `until` accept an
+existing `TemporalInstant` or an absolute expression. `for` accepts an exact duration literal or a
+resolved `TemporalExtent`.
 
-Offsets use an explicit sign and duration, for example `selection.start - 2f`. Frames and milliseconds
-are integers (`8f`, `250ms`); seconds may be fractional (`1.5s`). Projection preserves the expression
-and its authority. Invalid or out-of-program results are errors rather than silently clipped time.
+Absolute expressions are deliberately small: `start`, `end`, `timeline.start`, `timeline.end`, an
+absolute `12f`/`250ms`/`1.5s`, or one of those Timeline boundaries with a signed offset. There is no
+implicit lookup of domain names such as `moment.cue`; project that domain value upstream first.
 
 ## Instant forms
 
-An Instant consumer has a different job: an event or activation with one temporal point.
+An event consumer uses `at`:
 
-| Authored attributes | Meaning |
+| Form | Result |
 | --- | --- |
-| `at={story.moment.reveal}` | The authored Moment. |
-| `at={story.selection.proof} boundary="start"` | An explicitly chosen Selection boundary. |
-| `at={story.segment.opening} boundary="end"` | An explicitly chosen Segment boundary. |
-| `at="2.6s"` | An authored event 2.6 seconds from program start. |
-| `instant="program.start + 8f"` | A projected clock expression. |
+| `at={story-time.claim}` | Reuse an already resolved Instant. |
+| `at="2.6s"` | An absolute point 2.6 seconds from Timeline start. |
+| `at="timeline.end-12f"` | Twelve frames before the exclusive end. |
 
-The domain component decides what happens after that point. An answer may remain visible, a Sequence
-may replace its member, or a motion may run according to its own authored schedule. Instant projection
-does not impose the event's visible duration. A component whose public role requires a Script Moment
-can deliberately admit only that form; consumers need not expose unrelated temporal options.
+An Instant does not imply a visible duration. The receiving component decides whether the event
+starts an animation, changes persistent state, or ends an outer lifetime.
 
-## Component boundary
+## Surface implementation
 
-The Surface supplies an author-facing `subjectId` for the actual item whose time is being projected,
-separately from graph-qualified operation ids. The graph wires the resulting Instant or Window and
-Timeline into the consumer. Keep projection outside the domain Producer: it consumes resolved
-time and implements its own schedule or state, while the shared temporal protocol retains where that
-time came from. An outer lifetime and child activations are separate inputs when a component persists
-between events.
+Resolve the required Timeline once:
 
-Script's delimited `@{...}` Selection and Moment syntax belong to `@qflow/script`; media playback belongs
-to `@qflow/media-track`; a graphic component's reveal or preset semantics belong to that component.
-
-## Independently bound endpoints
-
-For a Window whose endpoints refer to different semantic sources, use `start-source` and
-`end-source`. The expression still states the kind and boundary; each binding supplies that source:
-
-```svml
-<example:Item start-source={story.segment.next} start="segment.start"
-  end-source={story.segment.previous} end="segment.end"/>
+```ts
+const context = resolveTemporalContext({ element, resolveReference });
+const timing = createTemporalWindowConstruction({
+  id: itemId,
+  element: child,
+  ...context,
+  resolveReference,
+});
 ```
 
-This describes an overlapping physical interval without authoring a backwards Script Selection.
-The same endpoint bindings accept Selections or Moments with their corresponding expressions.
-`segment`, `selection` and `moment` remain convenient shared bindings when both expressions use the
-same source. Explicit expressions retain local parameter writeback; these bindings do not move the
-referenced Script anchors when the expression's offset is edited.
+Preserve the returned records, components and fragments, then wire `timing.ref` to a
+`TemporalWindow` port. For an event, use `createTemporalInstantConstruction` and an Instant port.
+The consumer Producer receives only the completed value.
+
+`subjectId` identifies the authored occurrence for inspection; it is not a nominal ownership lock.
+A deliberately named Window can be reused by several components. Timeline identity and interval
+validity are still checked.
+
+## Domain projections
+
+Domain projection belongs to the domain package. For example,
+`@qflow/narrative-temporal` may publish:
+
+```svml
+<semantic:Projection id="story-time" narrative={story} timeline={film.timeline}>
+  <semantic:Map alignment={speech.alignment} domain={speech-media.domain} window={film.speech}/>
+  <semantic:Window id="proof" selection={story.selection.proof}/>
+  <semantic:Instant id="claim" moment={story.moment.claim}/>
+</semantic:Projection>
+
+<visual:Clip media={proof-media.media} during={story-time.proof}
+  frame={proof-frame} appearance={proof-appearance}/>
+<deck:Card at={story-time.claim} .../>
+```
+
+Only explicitly requested values cross that boundary. The completed projection contains absolute
+boundaries, not a reusable local-domain mapping. A visual, audio, caption, or typography component
+does not carry the projector merely to consume the resulting time.

@@ -22,8 +22,8 @@ import { spatialTypes } from "@qflow/qflow/spatial";
 import { temporalTypes, assertTemporalInstantFor } from "@qflow/qflow/temporal";
 import {
   resolveTemporalContext,
-  createTemporalWindowProjection,
-  createTemporalInstantProjection,
+  createTemporalWindowConstruction,
+  createTemporalInstantConstruction,
   temporalWindowAttributeNames,
   temporalWindowAttributeVocabulary,
   temporalContextAttributeVocabulary,
@@ -39,7 +39,7 @@ const options = type("Options"),
   events = type("Events");
 const common = [
   port("timeline", timelineTypes.track),
-  port("canvas", spatialTypes.canvas),
+  port("within", spatialTypes.frame),
   port("window", temporalTypes.window),
   port("font", mediaTypes.fontArtifact),
   port("options", options),
@@ -187,9 +187,10 @@ export const manifest = {
         mediaTypes.fontArtifact,
         mediaTypes.synchronized,
         timelineTypes.track,
-        spatialTypes.canvas,
+        spatialTypes.frame,
         temporalTypes.window,
         temporalTypes.instant,
+        temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec,
       ].map((t) => [t.module.name, { module: t.module }]),
     ).values(),
   ],
@@ -246,7 +247,7 @@ const component = {
           "track",
           tags[tag].render(
             inline(i.timeline),
-            inline(i.canvas),
+            inline(i.within),
             inline(i.window),
             inline(i.font),
             inline(i.options),
@@ -265,7 +266,7 @@ function decode(tag) {
     assertAttributes(element, [
       "id",
       "timeline",
-      "canvas",
+      "within",
       "font",
       ...spec.assets,
       ...Object.keys(spec.defaults),
@@ -273,7 +274,7 @@ function decode(tag) {
     ]);
     const id = textAttribute(element, "id"),
       context = resolveTemporalContext({ element, resolveReference }),
-      window = createTemporalWindowProjection({
+      window = createTemporalWindowConstruction({
         id: id + ".window",
         subjectId: id,
         element,
@@ -309,7 +310,7 @@ function decode(tag) {
     const inputs = ins(tag).filter((p) => p.name !== "events"),
       bindings = {
         timeline: context.timeline.ref,
-        canvas: ref(element, "canvas", spatialTypes.canvas),
+        within: ref(element, "within", spatialTypes.frame),
         window: window.ref,
         font: ref(element, "font", mediaTypes.fontArtifact),
         options: { kind: "record", id: id + ".options" },
@@ -338,7 +339,7 @@ function decode(tag) {
       const name = textAttribute(ch, "name"),
         key = "beat" + ++count,
         eid = id + "." + key,
-        at = createTemporalInstantProjection({
+        at = createTemporalInstantConstruction({
           id: eid,
           subjectId: eid,
           element: ch,
@@ -387,7 +388,7 @@ function decode(tag) {
       operations,
       exports: [
         {
-          name: "track",
+          name: "visual",
           type: compositionTypes.visualTrack,
           root: op("render"),
         },
@@ -402,11 +403,11 @@ function decode(tag) {
           id,
           fragment: fragment.id,
           inputs: bindings,
-          outputs: { track: id + ".track" },
+          outputs: { visual: id + ".visual" },
           range: element.range,
         },
       ],
-      exports: [id + ".track"],
+      exports: [id + ".visual"],
     };
   };
 }
@@ -431,13 +432,14 @@ export const qflowPackage = {
             temporalTypes.instant,
             temporalTypes.windowSpec,
             temporalTypes.instantSpec,
+            temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec,
           ],
           vocabulary: {
             summary: "Project launch scene with phrase-driven visual beats.",
             attributes: [
               ...temporalContextAttributeVocabulary,
               ...temporalWindowAttributeVocabulary,
-              ...["id", "canvas", "font", ...tags[tag].assets].map((name) => ({
+              ...["id", "within", "font", ...tags[tag].assets].map((name) => ({
                 name,
                 kind: "expression",
                 required: true,
@@ -468,7 +470,7 @@ export const qflowPackage = {
             ],
             ports: [
               {
-                name: "track",
+                name: "visual",
                 type: compositionTypes.visualTrack,
                 summary: "Visual contribution",
               },

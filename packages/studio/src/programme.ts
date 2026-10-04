@@ -3,15 +3,10 @@ import type { BlobRef, ResourceId, StoredValue } from "@qflow/protocol";
 import { sameType } from "@qflow/protocol";
 import type { Composition } from "@qflow/composition";
 import { compositionTypes } from "@qflow/composition";
-import {
-  projectTimelineSpace,
-  semanticAnchorFrames,
-  timelineSpans,
-} from "@qflow/timeline";
+import { timelineTypes, assertTimelineIdentity } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
-import { timelineTypes } from "@qflow/timeline";
-import { assertProgramSpaceIdentity } from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
+import { narrativeTemporalTypes } from "@qflow/narrative-temporal";
+import type { NarrativeProjection } from "@qflow/narrative-temporal";
 import type { StudioResolvedTrack, StudioTemporalBinding } from "@qflow/studio-adapter";
 import type { RuntimeHostTransientExecution } from "@qflow/runtime-host-node";
 
@@ -43,7 +38,7 @@ export type Preview = {
   readonly served: ReadonlyMap<string, ServedFile>;
   readonly canvas: { readonly width: number; readonly height: number; readonly clearColor: string };
   readonly frameRate: { readonly numerator: number; readonly denominator: number };
-  readonly space: ProgramSpace;
+  readonly timeline: Timeline;
   readonly anchors: ReadonlyMap<string, number>;
   readonly tokens: readonly {
     readonly id: string;
@@ -173,12 +168,9 @@ export async function preview(input: {
   const timingValue = selectedValue(executed.state, input.timeRef);
   if (timingValue?.kind !== "inline" || timingType === undefined) throw new Error("Studio requires a resolved film time source.");
   if (!sameType(timingType, timelineTypes.track)) throw new Error("Studio requires the declared Timeline.");
-  const semantic = timingValue.value as unknown as Timeline;
-  const spans = timelineSpans(semantic);
-  const anchors = semanticAnchorFrames(semantic);
-  const space = projectTimelineSpace(semantic);
-  assertProgramSpaceIdentity(space);
-  const rate = space.frameRate;
+  const timeline = timingValue.value as unknown as Timeline;
+  assertTimelineIdentity(timeline);
+  const rate = timeline.frameRate;
   const compositionValue = selectedValue(executed.state, input.compositionRef);
   if (compositionValue?.kind !== "inline") {
     throw new Error("Studio Film composition did not produce an inline Composition.");
@@ -235,6 +227,25 @@ export async function preview(input: {
       values.set(record.id, record.value.value);
     }
   }
+  const narrativeProjections = input.projections.flatMap((view) => view.trace.references
+    .filter((reference) => sameType(reference.typeRef, narrativeTemporalTypes.narrativeProjection))
+    .flatMap((reference) => {
+      const stored = selectedValue(executed.state, reference.ref);
+      return stored?.kind === "inline" ? [stored.value as unknown as NarrativeProjection] : [];
+    }));
+  const anchors = new Map<string, number>();
+  const tokens: Preview["tokens"][number][] = [];
+  const narrativeIds = new Set<string>();
+  for (const projection of narrativeProjections) {
+    if (projection.timelineId !== timeline.id) continue;
+    narrativeIds.add(projection.narrativeId);
+    for (const boundary of projection.boundaries) anchors.set(boundary.id, boundary.frame);
+    tokens.push(...projection.tokens.map((token) => ({
+      id: token.tokenId,
+      startAnchorId: token.startBoundaryId,
+      endAnchorId: token.endBoundaryId,
+    })));
+  }
   const timingCandidateId = satisfactions.get(input.timeRef);
   return {
     source: input.source,
@@ -242,19 +253,15 @@ export async function preview(input: {
     values,
     temporalBindings,
     composition,
-    ...(semantic.narrativeId === undefined ? {} : { narrativeId: semantic.narrativeId }),
-    timingOutput: { name: timingOutput?.name ?? space.id, ref: input.timeRef },
+    ...(narrativeIds.size === 1 ? { narrativeId: [...narrativeIds][0] } : {}),
+    timingOutput: { name: timingOutput?.name ?? timeline.id, ref: input.timeRef },
     ...(timingCandidateId === undefined ? {} : { timingCandidateId }),
     timingCandidateOrigin: timingCandidateId === undefined ? "source" : "run",
     served,
     canvas: composition.canvas,
     frameRate: rate,
-    space,
+    timeline,
     anchors,
-    tokens: spans.flatMap(({ item }) => item.take.tokens.map((token) => ({
-      id: token.tokenId,
-      startAnchorId: token.startAnchorId,
-      endAnchorId: token.endAnchorId,
-    }))),
+    tokens,
   };
 }

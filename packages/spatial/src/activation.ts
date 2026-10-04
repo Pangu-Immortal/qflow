@@ -6,9 +6,9 @@ import {
   decodeCanvasSurface,
   decodeExtentSurface,
   decodeFrameSurface,
+  decodeMapSurface,
   decodePathSurface,
   decodePointSurface,
-  decodeRegionTimelineSurface,
 } from "./surface.js";
 import {
   spatialManifest,
@@ -31,7 +31,7 @@ export const qflowPackage = {
     createMarkupSurfaceHostFacet({ module: spatialModuleRef,
     declaration: spatialMarkupSurfaces.find((item) => item.name === "extent")!, handler: decodeExtentSurface }),
     createMarkupSurfaceHostFacet({ module: spatialModuleRef,
-    declaration: spatialMarkupSurfaces.find((item) => item.name === "region-timeline")!, handler: decodeRegionTimelineSurface }),
+    declaration: spatialMarkupSurfaces.find((item) => item.name === "map")!, handler: decodeMapSurface }),
     createMarkupSurfaceHostFacet({ module: spatialModuleRef,
     declaration: spatialMarkupSurfaces.find((item) => item.name === "frame")!, handler: decodeFrameSurface }),
     createMarkupSurfaceHostFacet({ module: spatialModuleRef,

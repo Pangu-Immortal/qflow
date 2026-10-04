@@ -6,40 +6,6 @@
   <target output="export-part-3.video"/>
   <target output="export-part-4.video"/>
   <target output="export-part-5.video"/>
-  <build-record id="opening-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="opening.take"/>
-  <satisfy output="opening.take" candidate="opening-kept"/>
-  <build-record id="introduction-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="introduction.take"/>
-  <satisfy output="introduction.take" candidate="introduction-kept"/>
-  <build-record id="competitors-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="competitors.take"/>
-  <satisfy output="competitors.take" candidate="competitors-kept"/>
-  <build-record id="two-roads-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="two-roads.take"/>
-  <satisfy output="two-roads.take" candidate="two-roads-kept"/>
-  <build-record id="editor-road-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="editor-road.take"/>
-  <satisfy output="editor-road.take" candidate="editor-road-kept"/>
-  <build-record id="keyframe-cost-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="keyframe-cost.take"/>
-  <satisfy output="keyframe-cost.take" candidate="keyframe-cost-kept"/>
-  <build-record id="code-road-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="code-road.take"/>
-  <satisfy output="code-road.take" candidate="code-road-kept"/>
-  <build-record id="reuse-cost-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="reuse-cost.take"/>
-  <satisfy output="reuse-cost.take" candidate="reuse-cost-kept"/>
-  <build-record id="timing-cost-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="timing-cost.take"/>
-  <satisfy output="timing-cost.take" candidate="timing-cost-kept"/>
-  <build-record id="water-break-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="water-break.take"/>
-  <satisfy output="water-break.take" candidate="water-break-kept"/>
-  <build-record id="synthesis-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="synthesis.take"/>
-  <satisfy output="synthesis.take" candidate="synthesis-kept"/>
-  <build-record id="components-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="components.take"/>
-  <satisfy output="components.take" candidate="components-kept"/>
-  <build-record id="semantic-time-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="semantic-time.take"/>
-  <satisfy output="semantic-time.take" candidate="semantic-time-kept"/>
-  <build-record id="semantic-demo-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="semantic-demo.take"/>
-  <satisfy output="semantic-demo.take" candidate="semantic-demo-kept"/>
-  <build-record id="result-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="result.take"/>
-  <satisfy output="result.take" candidate="result-kept"/>
-  <build-record id="reference-reveal-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="reference-reveal.take"/>
-  <satisfy output="reference-reveal.take" candidate="reference-reveal-kept"/>
-  <build-record id="closing-kept" build="bld_20260914T043459227Z_E0B178D4A9" output="closing.take"/>
-  <satisfy output="closing.take" candidate="closing-kept"/>
   <build-record id="prepared-0" build="bld_20260914T043459227Z_E0B178D4A9" output="bgm-media.media"/>
   <satisfy output="bgm-media.media" candidate="prepared-0"/>
   <build-record id="prepared-1" build="bld_20260914T043459227Z_E0B178D4A9" output="case-creatify-media.media"/>

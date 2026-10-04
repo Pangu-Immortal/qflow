@@ -1,4 +1,4 @@
-import { audioPresentationFilter } from "./audio-presentation.js";
+import { audioLevelAutomationFilter } from "./audio-level-automation.js";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
@@ -7,9 +7,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { verifyMediaFrameRange, mediaFrameRangeSamples, mediaTypes, sealMediaInspection, sealMuxedMedia, sealSynchronizedMedia, sealTimelineAudio, verifyMediaInspection, verifyMediaStreamSelection, verifyRenderedVisual, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/media";
 import type { MediaAudioStream, MediaInspection, MediaRational, MediaStream, MediaStreamSelection, MediaTimestamp, MediaVideoStream, MuxedMedia, RenderedVisual, SynchronizedMedia, TimelineAudio } from "@qflow/media";
-import type { ProgramSpace } from "@qflow/program-space";
-import { assertSpeechEvidenceAudioIdentity, sealSpeechEvidenceAudio, speechEvidenceSampleBoundary, speechTypes } from "@qflow/speech";
-import type { SpeechEvidenceAudio } from "@qflow/speech";
+import type { Timeline } from "@qflow/timeline";
+import { assertSpeechEvidenceAudioIdentity, sealSpeechEvidenceAudio, speechEvidenceSampleBoundary } from "@qflow/speech-evidence";
+import type { SpeechEvidenceAudio } from "@qflow/speech-evidence";
 import {
   mediaPipelineCapabilities,
   verifyAudioExtractionRequest,
@@ -489,7 +489,8 @@ function renderStillVideoNeed(value: CanonicalValue): RenderStillVideoNeed {
 
 function evidenceAudioNeed(value: CanonicalValue): ProjectSpeechEvidenceAudioNeed {
   const item = object(value, "ProjectSpeechEvidenceAudioNeed") as unknown as ProjectSpeechEvidenceAudioNeed;
-  assert(item.source?.kind === "blob", "ProjectSpeechEvidenceAudioNeed is invalid");
+  assert(typeof item.domainId === "string" && item.domainId.length > 0
+    && item.source?.kind === "blob", "ProjectSpeechEvidenceAudioNeed is invalid");
   assert(Number.isSafeInteger(item.sourceSampleFrames) && item.sourceSampleFrames > 0
     && Number.isSafeInteger(item.evidenceSampleFrames) && item.evidenceSampleFrames > 0
     && item.evidenceSampleFrames === speechEvidenceSampleBoundary(item.sourceSampleFrames),
@@ -551,11 +552,7 @@ function audioClipFilter(clip: AudioProgramClip, inputIndex: number, outputIndex
     `apad=whole_len=${length}`,
     `atrim=start_sample=0:end_sample=${length}`,
     `volume=${clip.gain.toPrecision(15)}`,
-    ...(clip.fadeInSamples === 0 ? [] : [`afade=t=in:start_sample=0:nb_samples=${clip.fadeInSamples}`]),
-    ...(clip.fadeOutSamples === 0 ? [] : [
-      `afade=t=out:start_sample=${length - clip.fadeOutSamples}:nb_samples=${clip.fadeOutSamples}`,
-    ]),
-    ...audioPresentationFilter(clip),
+    ...audioLevelAutomationFilter(clip),
     // Crop after tempo, looping and envelopes, keeping their original phase.
     `atrim=start_sample=${left - clip.targetStartSample}:end_sample=${right - clip.targetStartSample}`,
     "asetpts=N/SR/TB",
@@ -748,7 +745,7 @@ export async function executeNormalizeMedia(
       audioArtifact = await env.artifacts.putFile(output, "audio/wav");
     }
     const media = sealSynchronizedMedia({
-      timeline: {
+      frameDomain: {
         frameRate: need.frameRate,
         frameCount: plan.frameCount,
       },
@@ -880,8 +877,8 @@ function decimal(value: number): string {
 }
 
 function compileTransformPlan(media: SynchronizedMedia, operations: readonly MediaTransformOperation[]): TransformPlan {
-  const rate = media.timeline.frameRate.numerator / media.timeline.frameRate.denominator;
-  let durationSec = media.timeline.frameCount / rate;
+  const rate = media.frameDomain.frameRate.numerator / media.frameDomain.frameRate.denominator;
+  let durationSec = media.frameDomain.frameCount / rate;
   const videoFilters: string[] = ["setpts=PTS-STARTPTS"];
   const audioFilters: string[] = ["asetpts=N/SR/TB"];
   for (const [index, operation] of operations.entries()) {
@@ -907,14 +904,14 @@ function compileTransformPlan(media: SynchronizedMedia, operations: readonly Med
   const frameCount = Math.max(1, Math.round(durationSec * rate));
   assert(Number.isSafeInteger(frameCount), "Media transform output frame count exceeds safe arithmetic");
   const sampleFrames = roundPositive(
-    BigInt(frameCount) * 48_000n * BigInt(media.timeline.frameRate.denominator),
-    BigInt(media.timeline.frameRate.numerator),
+    BigInt(frameCount) * 48_000n * BigInt(media.frameDomain.frameRate.denominator),
+    BigInt(media.frameDomain.frameRate.numerator),
   );
-  const fps = `${media.timeline.frameRate.numerator}/${media.timeline.frameRate.denominator}`;
+  const fps = `${media.frameDomain.frameRate.numerator}/${media.frameDomain.frameRate.denominator}`;
   videoFilters.push(
     `fps=fps=${fps}:round=near:start_time=0:eof_action=round`,
     `trim=start_frame=0:end_frame=${frameCount}`,
-    `setpts=N*${media.timeline.frameRate.denominator}/(${media.timeline.frameRate.numerator}*TB)`,
+    `setpts=N*${media.frameDomain.frameRate.denominator}/(${media.frameDomain.frameRate.numerator}*TB)`,
   );
   audioFilters.push(
     `apad=whole_len=${sampleFrames}`,
@@ -953,7 +950,7 @@ export async function executeTransformMedia(
     }
     argv.push(
       "-frames:v", String(plan.frameCount),
-      "-r", `${media.timeline.frameRate.numerator}/${media.timeline.frameRate.denominator}`, "-fps_mode", "cfr",
+      "-r", `${media.frameDomain.frameRate.numerator}/${media.frameDomain.frameRate.denominator}`, "-fps_mode", "cfr",
       "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
       "-movflags", "+faststart", output,
     );
@@ -990,7 +987,7 @@ export async function executeTransformMedia(
   }
 }
 
-/** Generic model-reference audio: no Narrative, SemanticTake or alignment claim is introduced. */
+/** Generic model-reference audio: no Narrative or alignment claim is introduced. */
 export async function executeExtractAudio(
   env: MediaExecutionEnvironment,
   constraints: CanonicalValue,
@@ -1095,7 +1092,7 @@ export async function executeProjectSpeechEvidenceAudio(
       ...(env.sharedLibraryPath === undefined ? {} : { sharedLibraryPath: env.sharedLibraryPath }),
     });
     assert(source.decodedSampleFrames === need.sourceSampleFrames,
-      "Speech master sample count differs from its ProgramSpace");
+      "Speech master sample count differs from its Timeline");
     const filter = [
       "asetpts=N/SR/TB",
       "aresample=16000:async=0:first_pts=0",
@@ -1129,6 +1126,7 @@ export async function executeProjectSpeechEvidenceAudio(
     "Alignment evidence must be exact 16 kHz mono PCM s16");
     const artifact = await env.artifacts.putFile(output, "audio/wav");
     const evidence: SpeechEvidenceAudio = sealSpeechEvidenceAudio({
+      domainId: need.domainId,
       artifact,
       sampleFrames: need.evidenceSampleFrames,
     });

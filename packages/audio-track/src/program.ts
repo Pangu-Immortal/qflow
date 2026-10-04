@@ -1,21 +1,21 @@
+import { assertTimelineIdentity, timelineFrameSampleBoundary, timelineSampleFrames } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
 import { assertAudioTrackIdentity, sealAudioTrack } from "@qflow/composition";
 import type { AudioClip, AudioTrack } from "@qflow/composition";
 import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/media";
 import type { SynchronizedMedia } from "@qflow/media";
-import { assertProgramSpaceIdentity, programFrameSampleBoundary, programSpaceSampleFrames } from "@qflow/program-space";
 import { canonicalize, isResourceId } from "@qflow/protocol";
 import { assertTemporalWindowFor, temporalDurationInSamples } from "@qflow/temporal";
-import type { ProjectedWindow, TemporalDuration } from "@qflow/temporal";
+import type { TemporalWindow, TemporalDuration } from "@qflow/temporal";
 
 import type {
   AudioClipSpec,
-  AudioItemProgram,
-  AudioOccupancy,
+  AudioClipProgram,
   AudioTrackHeader,
   AudioTrackProgram,
   AudioTrackSet,
 } from "./types.js";
+import { assertAudioSourceTimeSpec, defaultAudioSourceTimeSpec, resolveAudioSourceTime } from "./source-time.js";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -34,17 +34,6 @@ function assertDuration(value: TemporalDuration, label: string, signed = false):
   }
 }
 
-function assertOccupancy(value: AudioOccupancy, label: string): void {
-  if (value.mode === "once" || value.mode === "loop") {
-    assert(value.align === "start" || value.align === "end", `${label} alignment is invalid.`);
-    return;
-  }
-  assert(value.mode === "stretch" && value.pitch === "preserve"
-    && Number.isFinite(value.minRate) && value.minRate > 0
-    && Number.isFinite(value.maxRate) && value.maxRate >= value.minRate && value.maxRate <= 100,
-  `${label} stretch bounds are invalid.`);
-}
-
 export function sealAudioTrackHeader(value: AudioTrackHeader): AudioTrackHeader {
   assertAudioTrackHeader(value);
   return canonicalize(value) as unknown as AudioTrackHeader;
@@ -61,9 +50,7 @@ export function sealAudioClipSpec(value: AudioClipSpec): AudioClipSpec {
 
 export function assertAudioClipSpec(value: AudioClipSpec): void {
   assertIdentity(value.id, "AudioClipSpec.id");
-  if (value.trim.start !== undefined) assertDuration(value.trim.start, "AudioClipSpec trim start");
-  if (value.trim.end !== undefined) assertDuration(value.trim.end, "AudioClipSpec trim end");
-  assertOccupancy(value.occupancy, "AudioClipSpec occupancy");
+  if (value.sourceTime !== undefined) assertAudioSourceTimeSpec(value.sourceTime, "AudioClipSpec.sourceTime");
   assert(Number.isFinite(value.mix.gain) && value.mix.gain >= 0 && value.mix.gain <= 64,
     "AudioClipSpec gain is invalid.");
   assertDuration(value.mix.fadeIn, "AudioClipSpec fade in");
@@ -71,14 +58,14 @@ export function assertAudioClipSpec(value: AudioClipSpec): void {
 }
 
 export function createAudioTrackSet(): AudioTrackSet {
-  return { items: [] };
+  return { clips: [] };
 }
 
 export function assertAudioTrackSet(value: AudioTrackSet): void {
-  assert(Array.isArray(value.items), "AudioTrackSet is invalid.");
+  assert(Array.isArray(value.clips), "AudioTrackSet is invalid.");
 }
 
-function sourceFacts(media: SynchronizedMedia): AudioItemProgram["source"] {
+function sourceFacts(media: SynchronizedMedia): AudioClipProgram["source"] {
   verifySynchronizedMedia(media);
   assert(media.audio !== undefined, "Audio Track source has no explicitly normalized audio member.");
   return {
@@ -87,24 +74,20 @@ function sourceFacts(media: SynchronizedMedia): AudioItemProgram["source"] {
   };
 }
 
-function realizedItems(
+function realizedClips(
   set: AudioTrackSet,
   header: AudioTrackHeader,
   timeline: Timeline,
   media: SynchronizedMedia,
   spec: AudioClipSpec,
-  window: ProjectedWindow,
+  window: TemporalWindow,
 ): AudioTrackSet {
   assertAudioTrackSet(set);
   assertAudioTrackHeader(header);
-  assertProgramSpaceIdentity(timeline);
+  assertTimelineIdentity(timeline);
   assertAudioClipSpec(spec);
-  assertTemporalWindowFor(window, { subjectId: spec.id, space: timeline });
+  assertTemporalWindowFor(window, { subjectId: spec.id, timeline: timeline });
   const source = sourceFacts(media);
-  const trimStart = spec.trim.start === undefined ? 0 : temporalDurationInSamples(spec.trim.start, timeline);
-  const trimEnd = spec.trim.end === undefined ? source.sampleFrames : temporalDurationInSamples(spec.trim.end, timeline);
-  assert(trimStart >= 0 && trimStart < source.sampleFrames, `Audio Clip ${spec.id} trim start is outside its source.`);
-  assert(trimEnd > trimStart && trimEnd <= source.sampleFrames, `Audio Clip ${spec.id} trim end is outside its source.`);
   const fadeInSamples = temporalDurationInSamples(spec.mix.fadeIn, timeline);
   const fadeOutSamples = temporalDurationInSamples(spec.mix.fadeOut, timeline);
   const addition = {
@@ -112,32 +95,31 @@ function realizedItems(
     subjectId: spec.id,
     window: { ...window.span },
     source: structuredClone(source),
-    trim: { startSample: trimStart, endSampleExclusive: trimEnd },
-    occupancy: structuredClone(spec.occupancy),
+    sourceTime: structuredClone(spec.sourceTime ?? defaultAudioSourceTimeSpec()),
     mix: { gain: spec.mix.gain, fadeInSamples, fadeOutSamples },
-  } satisfies AudioItemProgram;
-  const ids = new Set(set.items.map((item) => item.id));
-  assert(!ids.has(addition.id), `Audio Track ${header.id} already contains Item ${addition.id}.`);
-  return { items: [...set.items, addition] };
+  } satisfies AudioClipProgram;
+  const ids = new Set(set.clips.map((clip) => clip.id));
+  assert(!ids.has(addition.id), `Audio Track ${header.id} already contains Clip ${addition.id}.`);
+  return { clips: [...set.clips, addition] };
 }
 
 /** Component entry point: the Temporal module has already resolved the target window. */
-export function appendProjectedAudioItem(
+export function appendAudioClip(
   set: AudioTrackSet,
   header: AudioTrackHeader,
   timeline: Timeline,
   media: SynchronizedMedia,
   spec: AudioClipSpec,
-  window: ProjectedWindow,
+  window: TemporalWindow,
 ): AudioTrackSet {
-  return realizedItems(set, header, timeline, media, spec, window);
+  return realizedClips(set, header, timeline, media, spec, window);
 }
 
 function normalizeProgram(value: AudioTrackProgram): AudioTrackProgram {
   return {
 
     id: value.id,
-    items: [...value.items].map((item) => structuredClone(item)).sort((left, right) => left.id.localeCompare(right.id)),
+    clips: [...value.clips].map((clip) => structuredClone(clip)).sort((left, right) => left.id.localeCompare(right.id)),
   };
 }
 
@@ -150,97 +132,64 @@ export function sealAudioTrackProgram(value: AudioTrackProgram): AudioTrackProgr
 export function finalizeAudioTrack(set: AudioTrackSet, header: AudioTrackHeader): AudioTrackProgram {
   assertAudioTrackSet(set);
   assertAudioTrackHeader(header);
-  assert(set.items.length > 0, "Audio Track requires at least one Item.");
-  return sealAudioTrackProgram({ id: header.id, items: set.items });
+  assert(set.clips.length > 0, "Audio Track requires at least one Clip.");
+  return sealAudioTrackProgram({ id: header.id, clips: set.clips });
 }
 
 export function assertAudioTrackProgram(value: AudioTrackProgram): void {
   assertIdentity(value.id, "AudioTrackProgram.id");
-  assert(value.items.length > 0, "AudioTrackProgram requires at least one Item.");
+  assert(value.clips.length > 0, "AudioTrackProgram requires at least one Clip.");
   const ids = new Set<string>();
-  for (const item of value.items) {
-    assertIdentity(item.id, "AudioItemProgram.id");
-    assertIdentity(item.subjectId, "AudioItemProgram.subjectId");
-    assert(!ids.has(item.id), `AudioTrackProgram contains duplicate Item ${item.id}.`);
-    ids.add(item.id);
-    assert(Number.isSafeInteger(item.window.startFrame) && item.window.startFrame >= 0
-      && Number.isSafeInteger(item.window.endFrameExclusive)
-      && item.window.endFrameExclusive > item.window.startFrame, `Audio Item ${item.id} window is invalid.`);
-    assert(isResourceId(item.source.artifact.resource) && item.source.artifact.mediaType === "audio/wav"
-      && Number.isSafeInteger(item.source.sampleFrames) && item.source.sampleFrames > 0,
-    `Audio Item ${item.id} source is invalid.`);
-    assert(item.trim.startSample >= 0 && item.trim.endSampleExclusive > item.trim.startSample
-      && item.trim.endSampleExclusive <= item.source.sampleFrames, `Audio Item ${item.id} trim is invalid.`);
-    assertOccupancy(item.occupancy, `Audio Item ${item.id} occupancy`);
-    assert(Number.isFinite(item.mix.gain) && item.mix.gain >= 0 && item.mix.gain <= 64
-      && Number.isSafeInteger(item.mix.fadeInSamples) && item.mix.fadeInSamples >= 0
-      && Number.isSafeInteger(item.mix.fadeOutSamples) && item.mix.fadeOutSamples >= 0,
-    `Audio Item ${item.id} mix is invalid.`);
+  for (const clip of value.clips) {
+    assertIdentity(clip.id, "AudioClipProgram.id");
+    assertIdentity(clip.subjectId, "AudioClipProgram.subjectId");
+    assert(!ids.has(clip.id), `AudioTrackProgram contains duplicate Clip ${clip.id}.`);
+    ids.add(clip.id);
+    assert(Number.isSafeInteger(clip.window.startFrame) && clip.window.startFrame >= 0
+      && Number.isSafeInteger(clip.window.endFrameExclusive)
+      && clip.window.endFrameExclusive > clip.window.startFrame, `Audio Clip ${clip.id} window is invalid.`);
+    assert(isResourceId(clip.source.artifact.resource) && clip.source.artifact.mediaType === "audio/wav"
+      && Number.isSafeInteger(clip.source.sampleFrames) && clip.source.sampleFrames > 0,
+    `Audio Clip ${clip.id} source is invalid.`);
+    assertAudioSourceTimeSpec(clip.sourceTime, `Audio Clip ${clip.id} source time`);
+    assert(Number.isFinite(clip.mix.gain) && clip.mix.gain >= 0 && clip.mix.gain <= 64
+      && Number.isSafeInteger(clip.mix.fadeInSamples) && clip.mix.fadeInSamples >= 0
+      && Number.isSafeInteger(clip.mix.fadeOutSamples) && clip.mix.fadeOutSamples >= 0,
+    `Audio Clip ${clip.id} mix is invalid.`);
   }
 }
 
-function terminalClip(item: AudioItemProgram, timeline: Timeline): AudioClip {
-  const windowStart = programFrameSampleBoundary(timeline, item.window.startFrame, 48_000);
-  const windowEnd = programFrameSampleBoundary(timeline, item.window.endFrameExclusive, 48_000);
+function terminalClip(clip: AudioClipProgram, timeline: Timeline): AudioClip {
+  const windowStart = timelineFrameSampleBoundary(timeline, clip.window.startFrame, 48_000);
+  const windowEnd = timelineFrameSampleBoundary(timeline, clip.window.endFrameExclusive, 48_000);
   const windowLength = windowEnd - windowStart;
-  const effectiveLength = item.trim.endSampleExclusive - item.trim.startSample;
-  let targetStart = windowStart;
-  let targetEnd = windowEnd;
-  let sourceStart = item.trim.startSample;
-  let sourceEnd = item.trim.endSampleExclusive;
-  let loop = false;
-  let phaseSample = 0;
-  let playbackRate = 1;
-  if (item.occupancy.mode === "once") {
-    const audibleLength = Math.min(windowLength, effectiveLength);
-    if (item.occupancy.align === "start") {
-      targetEnd = targetStart + audibleLength;
-      sourceEnd = sourceStart + audibleLength;
-    } else {
-      targetStart = targetEnd - audibleLength;
-      sourceStart = sourceEnd - audibleLength;
-    }
-  } else if (item.occupancy.mode === "loop") {
-    loop = true;
-    phaseSample = item.occupancy.align === "start"
-      ? 0
-      : (effectiveLength - (windowLength % effectiveLength)) % effectiveLength;
-  } else {
-    playbackRate = effectiveLength / windowLength;
-    assert(playbackRate >= item.occupancy.minRate && playbackRate <= item.occupancy.maxRate,
-      `Audio Item ${item.id} requires playback rate ${playbackRate}, outside authored bounds.`);
-  }
-  const audibleLength = targetEnd - targetStart;
-  assert(item.mix.fadeInSamples <= audibleLength && item.mix.fadeOutSamples <= audibleLength,
-    `Audio Item ${item.id} fade exceeds its audible interval.`);
+  assert(clip.mix.fadeInSamples <= windowLength && clip.mix.fadeOutSamples <= windowLength,
+    `Audio Clip ${clip.id} fade exceeds its Window.`);
   return {
-    id: item.id,
-    subjectId: item.subjectId,
-    artifact: structuredClone(item.source.artifact),
-    target: { startSample: targetStart, endSampleExclusive: targetEnd },
-    source: {
-      sampleFrames: item.source.sampleFrames,
-      startSample: sourceStart,
-      endSampleExclusive: sourceEnd,
-      loop,
-      phaseSample,
-    },
-    playbackRate,
-    pitch: "preserve",
-    gain: item.mix.gain,
-    fadeInSamples: item.mix.fadeInSamples,
-    fadeOutSamples: item.mix.fadeOutSamples,
+    id: clip.id,
+    subjectId: clip.subjectId,
+    artifact: structuredClone(clip.source.artifact),
+    target: { startSample: windowStart, endSampleExclusive: windowEnd },
+    sourceTime: resolveAudioSourceTime({
+      timeline,
+      sourceSampleFrames: clip.source.sampleFrames,
+      targetSampleFrames: windowLength,
+      spec: clip.sourceTime,
+    }),
+    gain: clip.mix.gain,
+    fadeInSamples: clip.mix.fadeInSamples,
+    fadeOutSamples: clip.mix.fadeOutSamples,
   };
 }
 
 export function renderAudioTrack(timeline: Timeline, program: AudioTrackProgram): AudioTrack {
-  assertProgramSpaceIdentity(timeline);
+  assertTimelineIdentity(timeline);
   assertAudioTrackProgram(program);
-  const totalSamples = programSpaceSampleFrames(timeline, 48_000);
+  const totalSamples = timelineSampleFrames(timeline, 48_000);
   const track = sealAudioTrack({
-    programSpaceId: timeline.id,
+    timelineId: timeline.id,
     id: program.id,
-    clips: program.items.map((item) => terminalClip(item, timeline)),
+    clips: program.clips.map((clip) => terminalClip(clip, timeline)),
   });
   for (const clip of track.clips) {
     assert(clip.target.endSampleExclusive <= totalSamples, `Audio Clip ${clip.id} is outside Timeline.`);

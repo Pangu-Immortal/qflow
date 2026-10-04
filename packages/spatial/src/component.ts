@@ -1,21 +1,19 @@
 import type { ComponentPackage } from "@qflow/component-kit";
 import { canonicalize } from "@qflow/protocol";
 import type { StoredValue } from "@qflow/protocol";
-
-import { anchoredFrame, aspectFrame, assertCanvasSpace, assertContentFit, assertFittedContent, assertIntrinsicExtent, assertSpatialFrame, assertSpatialPath, assertSpatialPoint, assertSpatialRegionTimeline, canvasFrame, fitContent, frameFromEdges } from "./geometry.js";
+import { anchoredFrame, aspectFrame, assertCanvas, assertContentFit, assertIntrinsicExtent, assertSpatialFrame, assertSpatialMap2D, assertSpatialPath, assertSpatialPoint, frameFromEdges, resolveContentFit } from "./geometry.js";
 import { spatialProducers, spatialTypes } from "./manifest.js";
 import type {
   AnchoredFrameProgram,
   AspectFrameProgram,
-  CanvasSpace,
+  Canvas,
   ContentFit,
-  FittedContent,
   FrameEdgesProgram,
   IntrinsicExtent,
   SpatialFrame,
+  SpatialMap2D,
   SpatialPath,
   SpatialPoint,
-  SpatialRegionTimeline,
 } from "./types.js";
 
 function inline<T>(value: StoredValue | undefined, label: string): T {
@@ -26,20 +24,18 @@ const output = (value: unknown) => ({ kind: "inline" as const, value: canonicali
 
 export const spatialComponent = {
   producers: [
-    { producer: spatialProducers.canvasFrame, handler: ({ inputs }) => ({ outputs: { frame: output(canvasFrame(inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"))) }, needs: {} }) },
     { producer: spatialProducers.frameEdges, handler: ({ inputs }) => ({ outputs: { frame: output(frameFromEdges(inline<SpatialFrame>(inputs.parent?.value, "SpatialFrame"), inline<FrameEdgesProgram>(inputs.program?.value, "FrameEdgesProgram"))) }, needs: {} }) },
     { producer: spatialProducers.anchoredFrame, handler: ({ inputs }) => ({ outputs: { frame: output(anchoredFrame(inline<SpatialFrame>(inputs.parent?.value, "SpatialFrame"), inline<AnchoredFrameProgram>(inputs.program?.value, "AnchoredFrameProgram"))) }, needs: {} }) },
     { producer: spatialProducers.aspectFrame, handler: ({ inputs }) => ({ outputs: { frame: output(aspectFrame(inline<SpatialFrame>(inputs.parent?.value, "SpatialFrame"), inline<IntrinsicExtent>(inputs.extent?.value, "IntrinsicExtent"), inline<AspectFrameProgram>(inputs.program?.value, "AspectFrameProgram"))) }, needs: {} }) },
-    { producer: spatialProducers.fitContent, handler: ({ inputs }) => ({ outputs: { fitted: output(fitContent(inline<SpatialFrame>(inputs.frame?.value, "SpatialFrame"), inline<IntrinsicExtent>(inputs.extent?.value, "IntrinsicExtent"), inline<ContentFit>(inputs.fit?.value, "ContentFit"))) }, needs: {} }) },
+    { producer: spatialProducers.resolveContentFit, handler: ({ inputs }) => ({ outputs: { mapping: output(resolveContentFit(inline<SpatialFrame>(inputs.frame?.value, "SpatialFrame"), inline<IntrinsicExtent>(inputs.extent?.value, "IntrinsicExtent"), inline<ContentFit>(inputs.fit?.value, "ContentFit"))) }, needs: {} }) },
   ],
   validators: [
-    { type: spatialTypes.canvas, handler: ({ value }) => assertCanvasSpace(inline<CanvasSpace>(value, "CanvasSpace")) },
+    { type: spatialTypes.canvas, handler: ({ value }) => assertCanvas(inline<Canvas>(value, "Canvas")) },
     { type: spatialTypes.point, handler: ({ value }) => assertSpatialPoint(inline<SpatialPoint>(value, "SpatialPoint")) },
     { type: spatialTypes.frame, handler: ({ value }) => assertSpatialFrame(inline<SpatialFrame>(value, "SpatialFrame")) },
-    { type: spatialTypes.regionTimeline, handler: ({ value }) => assertSpatialRegionTimeline(inline<SpatialRegionTimeline>(value, "SpatialRegionTimeline")) },
     { type: spatialTypes.path, handler: ({ value }) => assertSpatialPath(inline<SpatialPath>(value, "SpatialPath")) },
     { type: spatialTypes.extent, handler: ({ value }) => assertIntrinsicExtent(inline<IntrinsicExtent>(value, "IntrinsicExtent")) },
+    { type: spatialTypes.map2D, handler: ({ value }) => assertSpatialMap2D(inline<SpatialMap2D>(value, "SpatialMap2D")) },
     { type: spatialTypes.fit, handler: ({ value }) => assertContentFit(inline<ContentFit>(value, "ContentFit")) },
-    { type: spatialTypes.fitted, handler: ({ value }) => assertFittedContent(inline<FittedContent>(value, "FittedContent")) },
   ],
 } satisfies ComponentPackage;

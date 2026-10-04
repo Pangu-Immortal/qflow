@@ -3,7 +3,7 @@ import type { ModuleManifest, TypeRef, ValueSchema } from "@qflow/protocol";
 export const estimateModuleRef = { name: "@qflow/estimate", version: "1" } as const;
 
 /**
- * The one graph value this package still declares: the delivery policy an estimated SemanticTake
+ * The one graph value this package still declares: the delivery policy an estimated speech result
  * weights its Tokens with. Durations themselves are author literals; measuring a script happens at
  * creation time with `qflow measure`, never inside a Build.
  */

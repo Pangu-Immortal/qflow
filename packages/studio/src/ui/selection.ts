@@ -31,7 +31,7 @@ export type Store = {
   load(snapshot: StudioSnapshot): void;
   /** Select without moving the playhead; timeline inspection must not destroy position. */
   select(clipId: string, origin: Origin): void;
-  /** Select one authored SemanticTake without moving the playhead. */
+  /** Select one authored semantic relation without moving the playhead. */
   selectSemanticSegment(segmentId: string, origin: Origin): void;
   /** Select one authored Selection marker without moving the playhead. */
   selectSemanticSelection(selectionId: string, origin: Origin): void;
@@ -92,7 +92,7 @@ export function createStore(): Store {
   };
 
   const clamp = (frame: number): number =>
-    Math.max(0, Math.min(Math.round(frame), (snapshot?.space.frameCount ?? 1) - 1));
+    Math.max(0, Math.min(Math.round(frame), (snapshot?.timeline.frameCount ?? 1) - 1));
 
   return {
     current: () => snapshot === undefined ? undefined : { snapshot, selection, playhead },

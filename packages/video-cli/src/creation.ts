@@ -16,8 +16,7 @@ import {
 import type { CanonicalValue, CapabilityRef, Need, StoredValue } from "@qflow/protocol";
 import type { ResourceStore } from "@qflow/runtime";
 import type { RuntimeHostCapabilityProvider, RuntimeHostProviderQuery, RuntimeInvocationObservation } from "@qflow/runtime-host-node";
-import { sealSpeechEvidenceAudio } from "@qflow/speech";
-import { speechEvidenceTypes } from "@qflow/speech-evidence";
+import { sealSpeechEvidenceAudio, speechEvidenceTypes } from "@qflow/speech-evidence";
 import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
 import { sealText } from "@qflow/text";
 import { whisperXCapabilities, whisperXRequestForEvidenceAudio } from "@qflow/whisperx";
@@ -291,7 +290,7 @@ async function transcribe(argv: readonly string[], io: CliIo, environment: Creat
   const evidence = await speechEvidenceBytes(source);
   const resources = new MemoryResourceStore();
   const artifact = await resources.put(evidence.bytes, "audio/wav");
-  const audio = sealSpeechEvidenceAudio({ artifact, sampleFrames: evidence.sampleFrames });
+  const audio = sealSpeechEvidenceAudio({ domainId: "cli-transcribe", artifact, sampleFrames: evidence.sampleFrames });
   const need: Need = {
     id: "need:qflow-transcribe",
     capability: whisperXCapabilities.alignment,

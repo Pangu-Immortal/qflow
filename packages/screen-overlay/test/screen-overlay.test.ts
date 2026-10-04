@@ -1,4 +1,4 @@
-import { sealTimeline } from "@qflow/timeline";
+import { sealTimeline, timelineManifest, timelineDependency, timelineTypes } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
@@ -13,7 +13,6 @@ import { AuthorFrontendRegistry, compileSourceClosure, resolveCompiledSourceExpo
 import { compileHyperframesDocument } from "@qflow/hyperframes";
 import { mediaManifest } from "@qflow/media";
 import { narrativeManifest } from "@qflow/narrative";
-import { programSpaceManifest, sealProgramSpace } from "@qflow/program-space";
 import type { ModuleManifest } from "@qflow/protocol";
 import {
   appendProjectedScreenOverlay,
@@ -30,21 +29,21 @@ import {
   sealScreenOverlayItemSpec,
 } from "@qflow/screen-overlay";
 import type { ScreenOverlayComponent } from "@qflow/screen-overlay";
-import { timelineDependency, timelineManifest, timelineProducers, timelineTypes } from "@qflow/timeline";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { speechManifest } from "@qflow/speech";
-import { sealCanvasSpace, spatialComponent, spatialDependency, spatialManifest, spatialTypes } from "@qflow/spatial";
+import { narrativeTemporalManifest } from "@qflow/narrative-temporal";
+import { sealCanvas, spatialComponent, spatialDependency, spatialManifest, spatialTypes } from "@qflow/spatial";
 import { svsManifest } from "@qflow/svs";
 import { temporalManifest, temporalProducers } from "@qflow/temporal";
 import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup";
 import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
 import { visualIrManifest } from "@qflow/visual-ir";
 
-const canvas = sealCanvasSpace({
+const canvas = sealCanvas({
   widthPx: 1080, heightPx: 1920,
-  origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square",
 });
-const space = sealTimeline({ items: [], id: "test-space", durationSec: 2, frameRate: { numerator: 30, denominator: 1 },
+const within = { xPx: 0, yPx: 0, widthPx: canvas.widthPx, heightPx: canvas.heightPx };
+const space = sealTimeline({ id: "test-space", frameCount: 60, frameRate: { numerator: 30, denominator: 1 },
 });
 const header = sealScreenOverlayHeader({ id: "screen" });
 const semantic = timelineFixture(space);
@@ -70,9 +69,9 @@ function trackFor(content: ScreenOverlayComponent, stackingOrder = 50) {
   });
   const window = projectProgramWindow({
     itemId: spec.id, semantic,
-    projection: { start: { ref: "program.start" }, end: { ref: "program.end" } },
+    projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } },
   });
-  return renderScreenOverlay(canvas, space, finalizeScreenOverlay(
+  return renderScreenOverlay(within, space, finalizeScreenOverlay(
     appendProjectedScreenOverlay(createScreenOverlaySet(), header, space, spec, window), header,
   ));
 }
@@ -108,9 +107,9 @@ test("explicit seeds control stochastic component identity", () => {
 test("overlay Tracks interleave with peer Tracks only through absolute stacking", () => {
   const below = trackFor(components[1]!, 20);
   const above = { ...trackFor(components[0]!, 80), id: "screen-above" };
-  const middle = sealVisualTrack({ programSpaceId: "test-space",
+  const middle = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1", id: "middle",
-    presents: [{ id: "middle", span: { startFrame: 0, endFrameExclusive: 60 }, stacking: { order: 50, tieBreak: "middle" },
+    presents: [{ id: "middle", order: 0, z: 50, span: { startFrame: 0, endFrameExclusive: 60 },
       elements: [{ id: "root", order: 0, kind: "box", style: [{ name: "background-color", value: "#112233" }] }] }],
   });
   const document = compileHyperframesDocument(sealComposition({
@@ -125,10 +124,10 @@ test("overlay Tracks interleave with peer Tracks only through absolute stacking"
 
 test("the Screen Overlay Fragment publishes its Program and peer VisualTrack", () => {
   const fragment = createScreenOverlayFragment([{ specName: "spec", windowName: "window" }]);
-  assert.deepEqual(fragment.inputs.map((input) => input.name), ["canvas", "header", "spec", "timeline", "window"]);
+  assert.deepEqual(fragment.inputs.map((input) => input.name), ["header", "spec", "timeline", "window", "within"]);
   assert.deepEqual(fragment.exports.map((output) => [output.name, output.type.name]), [
     ["program", "ScreenOverlayProgram"],
-    ["track", "VisualTrack"],
+    ["visual", "VisualTrack"],
   ]);
 });
 
@@ -137,7 +136,7 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
   const fixtureSurfaceDigest = fixtureResource("example.screen-inputs/surface@1");
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
-    outputs: [spatialTypes.canvas, timelineTypes.track],
+    outputs: [spatialTypes.frame, timelineTypes.track],
   } as const;
   const fixtureManifest: ModuleManifest = {
     format: "qflow.module@1",
@@ -152,10 +151,10 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
     artifactManifest,
     mediaManifest,
     narrativeManifest,
-    programSpaceManifest,
-    speechManifest,
-    speechEvidenceManifest,
     timelineManifest,
+    speechManifest,
+    narrativeTemporalManifest,
+    speechEvidenceManifest,
     spatialManifest,
     svsManifest,
     temporalManifest,
@@ -167,7 +166,7 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
   const registry = new MarkupSurfaceRegistry();
   registry.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
-      { id: "canvas", type: spatialTypes.canvas, value: { kind: "inline", value: canvas }, range: element.range },
+      { id: "within", type: spatialTypes.frame, value: { kind: "inline", value: within }, range: element.range },
       { id: "semantic", type: timelineTypes.track, value: { kind: "inline", value: semantic }, range: element.range },
     ],
     components: [],
@@ -194,8 +193,8 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
         <import as="fixture" from="example.screen-inputs@1"/>
         <import as="screen" from="@qflow/screen-overlay@1"/>
         <fixture:Inputs/>
-        <screen:Track id="screen-fx" canvas={canvas} timeline={semantic}>
-          <screen:Flash during="program" z="70" color="#ffffff" intensity="0.9" attack="2" hold="3" decay="5"/>
+        <screen:Track id="screen-fx" within={within} timeline={semantic}>
+          <screen:Flash during="timeline" z="70" color="#ffffff" intensity="0.9" attack="2" hold="3" decay="5"/>
         </screen:Track>
       </svml>`,
     },
@@ -204,7 +203,7 @@ test("the self-described Screen Surface parses into a finite peer-Track graph", 
     admitRecord: createRecordAdmitter(validators),
     resolveSource() { throw new Error("Screen fixture has no source imports."); },
   });
-  const trackExport = resolveCompiledSourceExport(compiled, "screen-fx.track", compositionTypes.visualTrack);
+  const trackExport = resolveCompiledSourceExport(compiled, "screen-fx.visual", compositionTypes.visualTrack);
   assert.equal(trackExport.ref.kind, "logical-output");
   const build = start(compiled.program, compiled.graph, sealBuildRequest({
     targets: [{ output: trackExport.ref.kind === "logical-output" ? trackExport.ref.id : "" }],

@@ -1,10 +1,7 @@
 import type { ComponentPackage } from "@qflow/component-kit";
 import type { StoredValue } from "@qflow/protocol";
-import { canonicalize } from "@qflow/protocol";
-
-import { timelineProducers, timelineTypes } from "./manifest.js";
+import { timelineTypes } from "./manifest.js";
 import { assertTimelineIdentity } from "./identity.js";
-import { projectTimelineAudio, projectTimelineSpace } from "./projection.js";
 import type { Timeline } from "./types.js";
 
 function track(value: StoredValue | undefined): Timeline {
@@ -13,10 +10,7 @@ function track(value: StoredValue | undefined): Timeline {
 }
 
 export const timelineComponent = {
-  producers: [
-    { producer: timelineProducers.projectProgramSpace, handler: ({ inputs }) => ({ outputs: { space: { kind: "inline", value: canonicalize(projectTimelineSpace(track(inputs.track?.value))) } }, needs: {} }) },
-    { producer: timelineProducers.projectAudio, handler: ({ inputs }) => ({ outputs: { audio: { kind: "inline", value: canonicalize(projectTimelineAudio(track(inputs.track?.value))) } }, needs: {} }) },
-  ],
+  producers: [],
   validators: [{
     type: timelineTypes.track,
     handler: ({ value }) => assertTimelineIdentity(track(value)),

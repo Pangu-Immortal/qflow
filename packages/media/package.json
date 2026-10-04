@@ -13,7 +13,9 @@
   "dependencies": {
     "@qflow/artifact": "workspace:*",
     "@qflow/component-kit": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
     "@qflow/protocol": "workspace:*",
+    "@qflow/temporal": "workspace:*",
     "@qflow/markup": "workspace:*"
   }
 }

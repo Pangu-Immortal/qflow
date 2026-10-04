@@ -6,6 +6,7 @@ import {
   adjustScriptMoment,
   adjustScriptSelection,
   captionDocument,
+  narrativeCaptionBinding,
   narrativeValue,
   parseScript,
   serializeCaption,
@@ -13,7 +14,7 @@ import {
   serializeSpeech,
 } from "@qflow/script";
 
-test("Selection source edits relocate markers by 2M + 2N + 2 Anchor identity", () => {
+test("Selection source edits relocate markers by 2M + 2N Anchor identity", () => {
   const source = "<one><HOST>@{focus} alpha beta @{/focus} gamma</one>\r\n<two><HOST>delta epsilon</two>";
   const parsed = parseScript("selection-adjust.svml", source);
   const movedWords = adjustScriptSelection({
@@ -48,30 +49,13 @@ test("Selection source edits relocate markers by 2M + 2N + 2 Anchor identity", (
   ]);
 });
 
-test("Program boundaries are distinct writable semantic Anchors", () => {
-  const source = "<one>alpha</one>\n<two>beta</two>";
-  const withSelection = adjustScriptSelection({
-    sourceName: "program-boundaries.svml",
-    source: "@{focus} <one>alpha</one>\n<two>beta @{/focus}</two>",
-    parsed: parseScript("program-boundaries.svml", "@{focus} <one>alpha</one>\n<two>beta @{/focus}</two>"),
-    adjustment: { id: "focus", startAnchorId: "program:start", endAnchorId: "program:end" },
-  });
-  const selection = parseScript("program-boundaries.svml", withSelection).selections[0]!;
-  assert.deepEqual([selection.startAnchorId, selection.endAnchorId], ["program:start", "program:end"]);
-  assert.match(withSelection, /^@\{~focus\}(?=[ <])/u);
-  assert.match(withSelection, /@\{\/focus~\}$/u);
-
-  const withMoment = adjustScriptMoment({
-    sourceName: "program-boundaries.svml",
-    source: `${source.slice(0, source.indexOf("beta"))}@{cue!} ${source.slice(source.indexOf("beta"))}`,
-    parsed: parseScript(
-      "program-boundaries.svml",
-      `${source.slice(0, source.indexOf("beta"))}@{cue!} ${source.slice(source.indexOf("beta"))}`,
-    ),
-    adjustment: { id: "cue", anchorId: "program:end" },
-  });
-  assert.equal(parseScript("program-boundaries.svml", withMoment).moments[0]!.anchorId, "program:end");
-  assert.match(withMoment, /@\{cue!\}$/u);
+test("Script outer cuts are the first and last Segment boundaries", () => {
+  const source = "@{focus} <one>alpha</one>\n<two>beta</two> @{/focus}";
+  const parsed = parseScript("outer-cuts.svml", source);
+  const selection = parsed.selections[0]!;
+  assert.deepEqual([selection.startAnchorId, selection.endAnchorId], ["segment:one:start", "segment:two:end"]);
+  assert.equal(parsed.semanticIndex.anchors.length, 2 * parsed.tokens.length + 2 * parsed.segments.length);
+  assert.equal(parsed.semanticIndex.anchors.some((anchor) => anchor.id.startsWith("program:")), false);
 });
 
 test("Moment source edits relocate one marker to an exact semantic Anchor", () => {
@@ -95,10 +79,10 @@ test("Script keeps speech, dialogue and CaptionDocument as separate projections"
   const document = captionDocument(parsed, "story.caption", "story");
   assert.equal(document.units.length, 3);
   assert.equal(document.units[1]!.wordIds.length, 1);
-  assert.equal(document.units[1]!.sourceTokenIds.length, 4);
+  assert.equal(narrativeCaptionBinding(parsed, "story.caption", "story").units[1]!.sourceTokenIds.length, 4);
   assert.deepEqual(document.cueBreaks, []);
   assert.equal((narrativeValue(parsed, "story") as { semanticIndex: { anchors: unknown[] } }).semanticIndex.anchors.length,
-    2 * parsed.tokens.length + 2 * parsed.segments.length + 2);
+    2 * parsed.tokens.length + 2 * parsed.segments.length);
 });
 
 test("Cue breaks are authored between complete units", () => {
@@ -190,7 +174,7 @@ test("Script projects flat token attributes onto display words without changing 
     ["qflow", [{ name: "brand", value: true }]],
     ["now.", []],
   ]);
-  assert.equal(document.units[3]!.sourceTokenIds.length, 2);
+  assert.equal(narrativeCaptionBinding(parsed, "story.caption", "story").units[3]!.sourceTokenIds.length, 2);
 });
 
 test("Token attributes are flat and must follow a complete display token", () => {

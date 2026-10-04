@@ -1,152 +1,55 @@
 import { sealGraphFragment } from "@qflow/elaborator";
-import type { FragmentOperation, GraphFragment } from "@qflow/elaborator";
+import type { FragmentOperation, FragmentOperationRef, GraphFragment } from "@qflow/elaborator";
 import type {
-  MarkupAttributeValue,
-  StructuredElement,
-  SurfaceComponentDraft,
-  SurfaceAttributeVocabulary,
-  SurfaceRecordDraft,
-  SurfaceResolvedReference,
+  MarkupAttributeValue, StructuredElement, SurfaceAttributeVocabulary, SurfaceComponentDraft,
+  SurfaceRecordDraft, SurfaceResolvedReference,
 } from "@qflow/markup";
-import { narrativeTypes } from "@qflow/narrative";
-export * from "./space.js";
+import { sameType, type TypeRef } from "@qflow/protocol";
+import { temporalProducers, temporalTypes } from "@qflow/temporal";
+import type { TemporalDuration, TemporalInstantExpression } from "@qflow/temporal";
 import { timelineTypes } from "@qflow/timeline";
-import {
-  temporalProducers,
-  temporalTypes,
-} from "@qflow/temporal";
-import type {
-  TemporalDuration,
-  TemporalInstantAuthority,
-  TemporalInstantExpression,
-} from "@qflow/temporal";
+
+export * from "./context.js";
 
 type ResolveReference = (path: string) => SurfaceResolvedReference | undefined;
-type SourceKind = "program" | "selection" | "segment" | "moment";
+type InstantDraft =
+  | { readonly kind: "expression"; readonly expression: TemporalInstantExpression }
+  | { readonly kind: "reference"; readonly reference: SurfaceResolvedReference };
+type ExtentDraft =
+  | { readonly kind: "duration"; readonly duration: TemporalDuration }
+  | { readonly kind: "reference"; readonly reference: SurfaceResolvedReference };
 
-/** Complete author vocabulary for one Window consumer. Domain packages may only add non-time fields. */
+/** Absolute-only author vocabulary for a Window consumer. */
 export const temporalWindowAttributeVocabulary: readonly SurfaceAttributeVocabulary[] = [
-  { name: "during", kind: "expression", required: false, values: ["program"],
-    accepts: [narrativeTypes.selection, narrativeTypes.excerpt],
-    summary: "Uses the whole Program, or the exact window of a referenced Selection or Segment." },
-  { name: "at", kind: "expression", required: false, accepts: [narrativeTypes.moment],
-    summary: "Starts at a semantic Moment or authored time (2s, 60f); write it together with for." },
-  { name: "until", kind: "expression", required: false, accepts: [narrativeTypes.moment],
-    summary: "Ends at a semantic Moment or authored time; write it together with for." },
-  { name: "for", kind: "literal", required: false,
-    summary: "Sets the projected duration paired with at or until, such as 12f, 250ms or 1.5s." },
-  { name: "start", kind: "literal", required: false,
-    summary: "Sets a projected start expression; write it together with end." },
-  { name: "end", kind: "literal", required: false,
-    summary: "Sets a projected end expression; write it together with start." },
-  ...["start-source", "end-source"].map(name => ({ name, kind: "reference" as const, required: false,
-    accepts: [narrativeTypes.selection, narrativeTypes.excerpt, narrativeTypes.moment],
-    summary: "Binds this endpoint's semantic source independently; its expression determines the boundary." })),
-  { name: "selection", kind: "reference", required: false, accepts: [narrativeTypes.selection],
-    summary: "Resolves selection.start or selection.end used by a projected start/end expression." },
-  { name: "segment", kind: "reference", required: false, accepts: [narrativeTypes.excerpt],
-    summary: "Resolves segment.start or segment.end used by a projected start/end expression." },
-  { name: "moment", kind: "reference", required: false, accepts: [narrativeTypes.moment],
-    summary: "Resolves moment.cue used by a projected start/end expression." },
+  { name: "during", kind: "expression", required: false, values: ["timeline"], accepts: [temporalTypes.window],
+    summary: "Uses the whole Timeline or an already resolved Window." },
+  { name: "from", kind: "expression", required: false, accepts: [temporalTypes.instant],
+    summary: "Sets the inclusive absolute start boundary." },
+  { name: "until", kind: "expression", required: false, accepts: [temporalTypes.instant],
+    summary: "Sets the exclusive absolute end boundary." },
+  { name: "for", kind: "expression", required: false, accepts: [temporalTypes.extent],
+    summary: "Sets an exact duration or resolved Extent." },
 ];
 export const temporalWindowAttributeNames = temporalWindowAttributeVocabulary.map(({ name }) => name);
 
-/** Complete author vocabulary for a semantic or explicitly projected Instant. */
+/** Absolute-only author vocabulary for an Instant consumer. */
 export const temporalInstantAttributeVocabulary: readonly SurfaceAttributeVocabulary[] = [
-  { name: "at", kind: "expression", required: false,
-    accepts: [narrativeTypes.moment, narrativeTypes.selection, narrativeTypes.excerpt],
-    summary: "Uses a semantic Moment, a chosen Selection or Segment boundary, or an authored time such as 2s." },
-  { name: "instant", kind: "literal", required: false,
-    summary: "Uses a projected point expression, such as moment.cue + 12f or program.start + 2s." },
-  { name: "boundary", kind: "literal", required: false, values: ["start", "end"],
-    summary: "Chooses the start or end boundary when at references a Selection or Segment." },
-  { name: "selection", kind: "reference", required: false, accepts: [narrativeTypes.selection],
-    summary: "Resolves selection.start or selection.end used by an instant expression." },
-  { name: "segment", kind: "reference", required: false, accepts: [narrativeTypes.excerpt],
-    summary: "Resolves segment.start or segment.end used by an instant expression." },
-  { name: "moment", kind: "reference", required: false, accepts: [narrativeTypes.moment],
-    summary: "Resolves moment.cue used by an instant expression." },
+  { name: "at", kind: "expression", required: false, accepts: [temporalTypes.instant],
+    summary: "Uses an already resolved Instant or an absolute authored position." },
 ];
 export const temporalInstantAttributeNames = temporalInstantAttributeVocabulary.map(({ name }) => name);
 
-function rejectUnusedTemporalAttributes(
-  element: StructuredElement,
-  universe: readonly string[],
-  allowed: readonly string[],
-): void {
-  const accepted = new Set(allowed);
-  const unused = universe.filter((name) => element.attributes[name] !== undefined && !accepted.has(name));
-  if (unused.length > 0) {
-    throw new Error(`${element.name} timing form does not accept ${unused.join(", ")}.`);
-  }
-}
-
-type InstantDraft = {
-  readonly expression: TemporalInstantExpression;
-  readonly authority: TemporalInstantAuthority;
-  readonly source: SourceKind;
-  readonly reference?: SurfaceResolvedReference;
-};
-
-export type TemporalMarkupProjection = {
+export type TemporalMarkupConstruction = {
   readonly records: readonly SurfaceRecordDraft[];
   readonly components: readonly SurfaceComponentDraft[];
   readonly fragments: readonly GraphFragment[];
-  readonly ref: { readonly kind: "component-output"; readonly component: string; readonly output: string };
+  readonly ref: SurfaceResolvedReference["ref"];
+  readonly startRef?: SurfaceResolvedReference["ref"];
+  readonly endRef?: SurfaceResolvedReference["ref"];
 };
 
-function sameType(left: SurfaceResolvedReference["type"], right: SurfaceResolvedReference["type"]): boolean {
-  return left.module.name === right.module.name
-    && left.module.version === right.module.version
-    && left.name === right.name;
-}
-
-function resolve(
-  raw: MarkupAttributeValue | undefined,
-  label: string,
-  expected: SurfaceResolvedReference["type"],
-  resolveReference: ResolveReference,
-): SurfaceResolvedReference {
-  if (typeof raw !== "object" || raw.kind !== "reference") throw new Error(`${label} must be a reference.`);
-  const found = resolveReference(raw.path);
-  if (found === undefined || !sameType(found.type, expected)) throw new Error(`${label} has the wrong Type.`);
-  return found;
-}
-
-function resolveDuring(
-  raw: MarkupAttributeValue,
-  label: string,
-  resolveReference: ResolveReference,
-): { readonly kind: "selection" | "segment"; readonly reference: SurfaceResolvedReference } {
-  if (typeof raw !== "object" || raw.kind !== "reference") throw new Error(`${label} must be program or a reference.`);
-  const found = resolveReference(raw.path);
-  if (found !== undefined && sameType(found.type, narrativeTypes.selection)) {
-    return { kind: "selection", reference: found };
-  }
-  if (found !== undefined && sameType(found.type, narrativeTypes.excerpt)) {
-    return { kind: "segment", reference: found };
-  }
-  throw new Error(`${label} must reference a Selection or Segment.`);
-}
-
-function optionalText(element: StructuredElement, name: string): string | undefined {
-  const value = element.attributes[name];
-  if (value === undefined) return undefined;
-  if (typeof value !== "string" || value.trim().length === 0) {
-    throw new Error(`${element.name}.${name} must be text.`);
-  }
-  return value.trim();
-}
-
-function text(element: StructuredElement, name: string): string {
-  const found = optionalText(element, name);
-  if (found === undefined) throw new Error(`${element.name}.${name} is required.`);
-  return found;
-}
-
 function divisor(left: number, right: number): number {
-  let a = Math.abs(left);
-  let b = Math.abs(right);
+  let a = Math.abs(left), b = Math.abs(right);
   while (b !== 0) [a, b] = [b, a % b];
   return a;
 }
@@ -154,9 +57,7 @@ function divisor(left: number, right: number): number {
 export function parseTemporalDuration(value: string, label: string): TemporalDuration {
   const match = /^(\d+)(?:\.(\d+))?(f|ms|s)$/u.exec(value.trim());
   if (match === null) throw new Error(`${label} must be an exact duration such as 12f, 250ms or 1.5s.`);
-  const whole = Number(match[1]);
-  const fraction = match[2] ?? "";
-  const unit = match[3];
+  const whole = Number(match[1]), fraction = match[2] ?? "", unit = match[3];
   if (!Number.isSafeInteger(whole)) throw new Error(`${label} is outside safe arithmetic.`);
   if (unit === "f" || unit === "ms") {
     if (fraction.length > 0) throw new Error(`${label} ${unit} duration must be an integer.`);
@@ -164,28 +65,22 @@ export function parseTemporalDuration(value: string, label: string): TemporalDur
   }
   const scale = 10 ** fraction.length;
   const numerator = whole * scale + (fraction.length === 0 ? 0 : Number(fraction));
-  if (!Number.isSafeInteger(numerator) || !Number.isSafeInteger(scale)) {
-    throw new Error(`${label} is outside safe arithmetic.`);
-  }
+  if (!Number.isSafeInteger(numerator) || !Number.isSafeInteger(scale)) throw new Error(`${label} is outside safe arithmetic.`);
   const gcd = divisor(numerator, scale);
   return { unit: "seconds", numerator: numerator / gcd, denominator: scale / gcd };
 }
 
 function negate(value: TemporalDuration): TemporalDuration {
-  return value.unit === "seconds"
-    ? { ...value, numerator: -value.numerator }
-    : { ...value, value: -value.value };
+  return value.unit === "seconds" ? { ...value, numerator: -value.numerator } : { ...value, value: -value.value };
 }
 
 export function parseTemporalInstant(value: string, label: string): TemporalInstantExpression {
   const trimmed = value.trim();
-  const refs = [
-    "program.start", "program.end", "selection.start", "selection.end",
-    "segment.start", "segment.end", "moment.cue",
-  ] as const;
-  for (const ref of refs) {
-    if (trimmed === ref) return { ref };
-    const escaped = ref.replace(".", "\\.");
+  const aliases = [["start", "timeline.start"], ["end", "timeline.end"],
+    ["timeline.start", "timeline.start"], ["timeline.end", "timeline.end"]] as const;
+  for (const [spelling, ref] of aliases) {
+    if (trimmed === spelling) return { ref };
+    const escaped = spelling.replace(".", "\\.");
     const match = new RegExp(`^${escaped}\\s*([+-])\\s*(.+)$`, "u").exec(trimmed);
     if (match !== null) {
       const offset = parseTemporalDuration(match[2]!, `${label} offset`);
@@ -195,338 +90,180 @@ export function parseTemporalInstant(value: string, label: string): TemporalInst
   return { ref: "absolute", at: parseTemporalDuration(trimmed, label) };
 }
 
-function expressionSource(expression: TemporalInstantExpression): SourceKind {
-  if (expression.ref.startsWith("selection.")) return "selection";
-  if (expression.ref.startsWith("segment.")) return "segment";
-  if (expression.ref === "moment.cue") return "moment";
-  return "program";
+function resolvedReference(raw: MarkupAttributeValue, label: string, type: SurfaceResolvedReference["type"],
+  resolveReference: ResolveReference): SurfaceResolvedReference {
+  if (typeof raw !== "object" || raw.kind !== "reference") throw new Error(`${label} must be a reference.`);
+  const found = resolveReference(raw.path);
+  if (found === undefined || !sameType(found.type, type)) throw new Error(`${label} has the wrong Type.`);
+  return found;
 }
 
-function sourceReference(
-  element: StructuredElement,
-  kind: SourceKind,
-  resolveReference: ResolveReference,
-  attribute = kind as string,
-): SurfaceResolvedReference | undefined {
-  if (kind === "program") return undefined;
-  const expected = kind === "selection"
-    ? narrativeTypes.selection
-    : kind === "segment" ? narrativeTypes.excerpt : narrativeTypes.moment;
-  return resolve(element.attributes[attribute], `${element.name}.${attribute}`, expected, resolveReference);
+function instantDraft(raw: MarkupAttributeValue, label: string, resolveReference: ResolveReference): InstantDraft {
+  return typeof raw === "string"
+    ? { kind: "expression", expression: parseTemporalInstant(raw, label) }
+    : { kind: "reference", reference: resolvedReference(raw, label, temporalTypes.instant, resolveReference) };
 }
 
-function projectionFragment(input: {
-  readonly output: "instant" | "window";
-  readonly start: InstantDraft;
-  readonly end?: InstantDraft;
-}): GraphFragment {
-  const fragmentInput = (name: string) => ({ kind: "fragment-input" as const, name });
-  const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
-  const endpoints = input.end === undefined
-    ? [["instant", input.start] as const]
-    : [["start", input.start] as const, ["end", input.end] as const];
-  const inputs = [
-    { name: "timeline", type: timelineTypes.track },
-    ...endpoints.map(([name]) => ({ name: `${name}-spec`, type: temporalTypes.instantSpec })),
-    ...endpoints.flatMap(([name, endpoint]) => endpoint.source === "program" ? [] : [{
-      name: `${name}-${endpoint.source}`,
-      type: endpoint.source === "selection" ? narrativeTypes.selection
-        : endpoint.source === "segment" ? narrativeTypes.excerpt : narrativeTypes.moment,
-    }]),
-    ...(input.end === undefined ? [] : [{ name: "window-spec", type: temporalTypes.windowSpec }]),
+function extentDraft(raw: MarkupAttributeValue, label: string, resolveReference: ResolveReference): ExtentDraft {
+  return typeof raw === "string"
+    ? { kind: "duration", duration: parseTemporalDuration(raw, label) }
+    : { kind: "reference", reference: resolvedReference(raw, label, temporalTypes.extent, resolveReference) };
+}
+
+function rejectUnused(element: StructuredElement, allowed: readonly string[]): void {
+  const accepted = new Set(allowed);
+  const unused = temporalWindowAttributeNames.filter((name) => element.attributes[name] !== undefined && !accepted.has(name));
+  if (unused.length > 0) throw new Error(`${element.name} timing form does not accept ${unused.join(", ")}.`);
+}
+
+const fragmentInput = (name: string) => ({ kind: "fragment-input" as const, name });
+const operation = (id: string): FragmentOperationRef => ({ kind: "fragment-operation", operation: id });
+
+function constructWindow(value: {
+  readonly id: string; readonly subjectId: string; readonly element: StructuredElement;
+  readonly timeline: SurfaceResolvedReference; readonly start: InstantDraft; readonly end?: InstantDraft;
+  readonly extent?: ExtentDraft; readonly direction?: 1 | -1;
+}): TemporalMarkupConstruction {
+  const ports: Array<{ readonly name: string; readonly type: TypeRef }> = [
+    { name: "timeline", type: timelineTypes.track }, { name: "window-spec", type: temporalTypes.windowSpec },
   ];
-  const operations: FragmentOperation[] = endpoints.map(([name, endpoint]) => ({
-    id: `temporal:${name}`,
-    producer: endpoint.source === "program" ? temporalProducers.projectProgramInstant
-      : endpoint.source === "selection" ? temporalProducers.projectSelectionInstant
-        : endpoint.source === "segment" ? temporalProducers.projectSegmentInstant
-          : temporalProducers.projectMomentInstant,
-    inputs: {
-      timeline: fragmentInput("timeline"),
-      spec: fragmentInput(`${name}-spec`),
-      ...(endpoint.source === "program" ? {} : {
-        [endpoint.source]: fragmentInput(`${name}-${endpoint.source}`),
-      }),
-    },
-    result: { kind: "output" as const, name: "instant" },
-  }));
-  if (input.end !== undefined) operations.push({
-    id: "temporal:window",
-    producer: temporalProducers.composeWindow,
-    inputs: {
-      spec: fragmentInput("window-spec"),
-      start: operation("temporal:start"),
-      end: operation("temporal:end"),
-    },
-    result: { kind: "output" as const, name: "window" },
-  });
-  return sealGraphFragment({
-    inputs,
-    operations,
-    exports: [{
-      name: input.output,
-      type: input.output === "window" ? temporalTypes.window : temporalTypes.instant,
-      root: operation(input.output === "window" ? "temporal:window" : "temporal:instant"),
-    }],
-  });
-}
-
-function projectionDraft(input: {
-  readonly id: string;
-  readonly subjectId?: string;
-  readonly element: StructuredElement;
-  readonly timeline: SurfaceResolvedReference;
-  readonly start: InstantDraft;
-  readonly end?: InstantDraft;
-}): TemporalMarkupProjection {
-  const output = input.end === undefined ? "instant" : "window";
-  const subjectId = input.subjectId ?? input.id;
-  if (subjectId.length === 0) throw new Error("Temporal projection subjectId must not be empty.");
-  const fragment = projectionFragment({ output, start: input.start, ...(input.end === undefined ? {} : { end: input.end }) });
-  const componentId = `${input.id}.__temporal`;
-  const records: SurfaceRecordDraft[] = [];
-  const componentInputs: SurfaceComponentDraft["inputs"] extends infer _T
-    ? Record<string, SurfaceResolvedReference["ref"] | { readonly kind: "record"; readonly id: string }>
-    : never = { timeline: input.timeline.ref };
-  const endpoints = input.end === undefined
-    ? [["instant", input.start] as const]
-    : [["start", input.start] as const, ["end", input.end] as const];
-  for (const [name, endpoint] of endpoints) {
-    const recordId = `${input.id}.__temporal.${name}`;
-    records.push({
-      id: recordId,
-      type: temporalTypes.instantSpec,
-      value: { kind: "inline", value: {
-        id: `${input.id}.${name}`,
-        subjectId,
-        projection: endpoint.expression,
-        authority: endpoint.authority,
-      } },
-      range: input.element.range,
-    });
-    componentInputs[`${name}-spec`] = { kind: "record", id: recordId };
-    if (endpoint.source !== "program") {
-      if (endpoint.reference === undefined) throw new Error(`${input.id}.${name} has no ${endpoint.source} source.`);
-      componentInputs[`${name}-${endpoint.source}`] = endpoint.reference.ref;
-    }
-  }
-  if (input.end !== undefined) {
-    const windowSpecId = `${input.id}.__temporal.window`;
-    records.push({
-      id: windowSpecId,
-      type: temporalTypes.windowSpec,
-      value: { kind: "inline", value: { id: input.id, subjectId } },
-      range: input.element.range,
-    });
-    componentInputs["window-spec"] = { kind: "record", id: windowSpecId };
-  }
-  return {
-    records,
-    components: [{
-      id: componentId,
-      fragment: fragment.id,
-      inputs: componentInputs,
-      outputs: { [output]: `${input.id}.__temporal.${output}` },
-      range: input.element.range,
-    }],
-    fragments: [fragment],
-    ref: { kind: "component-output", component: componentId, output },
+  const bindings: Record<string, SurfaceResolvedReference["ref"] | { kind: "record"; id: string }> = {
+    timeline: value.timeline.ref, "window-spec": { kind: "record", id: `${value.id}.__temporal.window` },
   };
+  const records: SurfaceRecordDraft[] = [{ id: `${value.id}.__temporal.window`, type: temporalTypes.windowSpec,
+    value: { kind: "inline", value: { id: value.id, subjectId: value.subjectId } }, range: value.element.range }];
+  const operations: FragmentOperation[] = [];
+  const materialize = (name: "start" | "end", draft: InstantDraft): FragmentOperationRef => {
+    if (draft.kind === "reference") {
+      const port = `${name}-instant`;
+      ports.push({ name: port, type: temporalTypes.instant });
+      bindings[port] = draft.reference.ref;
+      const operationId = `reuse-${name}`;
+      operations.push({ id: operationId, producer: temporalProducers.reuseInstant,
+        inputs: { instant: fragmentInput(port) }, result: { kind: "output", name: "instant" } });
+      return operation(operationId);
+    }
+    const port = `${name}-spec`, recordId = `${value.id}.__temporal.${name}`;
+    ports.push({ name: port, type: temporalTypes.instantSpec });
+    bindings[port] = { kind: "record", id: recordId };
+    records.push({ id: recordId, type: temporalTypes.instantSpec, value: { kind: "inline", value: {
+      id: `${value.id}.${name}`, subjectId: value.subjectId, projection: draft.expression,
+    } }, range: value.element.range });
+    const operationId = `materialize-${name}`;
+    operations.push({ id: operationId, producer: temporalProducers.projectProgramInstant,
+      inputs: { timeline: fragmentInput("timeline"), spec: fragmentInput(port) }, result: { kind: "output", name: "instant" } });
+    return operation(operationId);
+  };
+  let start = materialize("start", value.start);
+  let end = value.end === undefined ? undefined : materialize("end", value.end);
+  if (value.extent !== undefined) {
+    let extentRef: FragmentOperationRef | ReturnType<typeof fragmentInput>;
+    if (value.extent.kind === "reference") {
+      ports.push({ name: "extent", type: temporalTypes.extent });
+      bindings.extent = value.extent.reference.ref;
+      extentRef = fragmentInput("extent");
+    } else {
+      ports.push({ name: "duration", type: temporalTypes.duration });
+      const durationId = `${value.id}.__temporal.duration`;
+      bindings.duration = { kind: "record", id: durationId };
+      records.push({ id: durationId, type: temporalTypes.duration,
+        value: { kind: "inline", value: value.extent.duration }, range: value.element.range });
+      operations.push({ id: "resolve-extent", producer: temporalProducers.extentFromDuration,
+        inputs: { timeline: fragmentInput("timeline"), duration: fragmentInput("duration") }, result: { kind: "output", name: "extent" } });
+      extentRef = operation("resolve-extent");
+    }
+    const direction = value.direction;
+    if (direction === undefined) throw new Error("Temporal Window shift has no direction.");
+    const base = direction === 1 ? start : end;
+    if (base === undefined) throw new Error("Temporal Window shift has no base Instant.");
+    ports.push({ name: "shift-spec", type: temporalTypes.shiftSpec });
+    const shiftId = `${value.id}.__temporal.shift`;
+    bindings["shift-spec"] = { kind: "record", id: shiftId };
+    records.push({ id: shiftId, type: temporalTypes.shiftSpec, value: { kind: "inline", value: {
+      id: `${value.id}.${direction === 1 ? "end" : "start"}`, subjectId: value.subjectId, direction,
+    } }, range: value.element.range });
+    operations.push({ id: "shift", producer: temporalProducers.shiftInstant,
+      inputs: { timeline: fragmentInput("timeline"), instant: base, extent: extentRef, spec: fragmentInput("shift-spec") },
+      result: { kind: "output", name: "instant" } });
+    if (direction === 1) end = operation("shift"); else start = operation("shift");
+  }
+  if (end === undefined) throw new Error("Temporal Window has no end Instant.");
+  operations.push({ id: "compose", producer: temporalProducers.composeWindow,
+    inputs: { spec: fragmentInput("window-spec"), start, end }, result: { kind: "output", name: "window" } });
+  const fragment = sealGraphFragment({ inputs: ports, operations, exports: [
+    { name: "window", type: temporalTypes.window, root: operation("compose") },
+    { name: "start", type: temporalTypes.instant, root: start },
+    { name: "end", type: temporalTypes.instant, root: end },
+  ] });
+  const componentId = `${value.id}.__temporal`;
+  return { records, components: [{ id: componentId, fragment: fragment.id, inputs: bindings,
+    outputs: { window: `${value.id}.__temporal.window.value`, start: `${value.id}.__temporal.start.value`,
+      end: `${value.id}.__temporal.end.value` }, range: value.element.range }], fragments: [fragment],
+    ref: { kind: "component-output", component: componentId, output: "window" },
+    startRef: { kind: "component-output", component: componentId, output: "start" },
+    endRef: { kind: "component-output", component: componentId, output: "end" } };
 }
 
-/** Decode exactly one of during, at/for, until/for, or start/end. */
-export function createTemporalWindowProjection(input: {
-  readonly id: string;
-  readonly subjectId?: string;
-  readonly element: StructuredElement;
-  readonly timeline: SurfaceResolvedReference;
-  readonly resolveReference: ResolveReference;
-}): TemporalMarkupProjection {
-  const { element, resolveReference } = input;
-  const during = element.attributes.during;
-  const at = element.attributes.at;
-  const until = element.attributes.until;
-  const start = optionalText(element, "start");
-  const end = optionalText(element, "end");
-  const forms = Number(during !== undefined) + Number(at !== undefined)
-    + Number(until !== undefined) + Number(start !== undefined || end !== undefined);
-  if (forms !== 1) {
-    throw new Error(`${element.name} requires exactly one of during, at/for, until/for, or start/end.`);
-  }
+/** Construct or pass through one absolute Window. */
+export function createTemporalWindowConstruction(value: {
+  readonly id: string; readonly subjectId?: string; readonly element: StructuredElement;
+  readonly timeline: SurfaceResolvedReference; readonly resolveReference: ResolveReference;
+}): TemporalMarkupConstruction {
+  const { element, resolveReference } = value;
+  const during = element.attributes.during, from = element.attributes.from;
+  const until = element.attributes.until, length = element.attributes.for;
   if (during !== undefined) {
-    rejectUnusedTemporalAttributes(element, temporalWindowAttributeNames, ["during"]);
-    if (typeof during === "string") {
-      if (during.trim() !== "program") throw new Error(`${element.name}.during text must be program.`);
-      return projectionDraft({
-        ...input,
-        start: { expression: { ref: "program.start" }, authority: { kind: "fixed" }, source: "program" },
-        end: { expression: { ref: "program.end" }, authority: { kind: "fixed" }, source: "program" },
-      });
+    rejectUnused(element, ["during"]);
+    if (typeof during !== "string") {
+      const found = resolvedReference(during, `${element.name}.during`, temporalTypes.window, resolveReference);
+      return { records: [], components: [], fragments: [], ref: found.ref };
     }
-    const bound = resolveDuring(during, `${element.name}.during`, resolveReference);
-    const semantic = bound.kind === "selection";
-    return projectionDraft({
-      ...input,
-      start: {
-        expression: { ref: `${bound.kind}.start` },
-        authority: semantic ? { kind: "semantic", boundary: "start" } : { kind: "fixed" },
-        source: bound.kind,
-        reference: bound.reference,
-      },
-      end: {
-        expression: { ref: `${bound.kind}.end` },
-        authority: semantic ? { kind: "semantic", boundary: "end" } : { kind: "fixed" },
-        source: bound.kind,
-        reference: bound.reference,
-      },
-    });
+    if (during.trim() !== "timeline") throw new Error(`${element.name}.during text must be timeline.`);
+    return constructWindow({ ...value, subjectId: value.subjectId ?? value.id,
+      start: { kind: "expression", expression: { ref: "timeline.start" } },
+      end: { kind: "expression", expression: { ref: "timeline.end" } } });
   }
-  if (at !== undefined || until !== undefined) {
-    const name = at !== undefined ? "at" : "until";
-    rejectUnusedTemporalAttributes(element, temporalWindowAttributeNames, [name, "for"]);
-    const raw = at ?? until;
-    const moment = typeof raw === "string" ? undefined : resolve(raw, `${element.name}.${name}`, narrativeTypes.moment, resolveReference);
-    const length = parseTemporalDuration(text(element, "for"), `${element.name}.for`);
-    const cue: InstantDraft = {
-      expression: typeof raw === "string" ? { ref: "absolute", at: parseTemporalDuration(raw, `${element.name}.${name}`) } : { ref: "moment.cue" },
-      authority: moment === undefined ? { kind: "parameter", binding: name, relation: "direct" } : { kind: "semantic", boundary: "cue" },
-      source: moment === undefined ? "program" : "moment",
-      ...(moment === undefined ? {} : { reference: moment }),
-    };
-    const derived: InstantDraft = {
-      expression: { ...cue.expression, offset: at !== undefined ? length : negate(length) },
-      authority: {
-        kind: "parameter",
-        binding: "for",
-        relation: at !== undefined ? "after-start" : "before-end",
-      },
-      source: cue.source,
-      ...(moment === undefined ? {} : { reference: moment }),
-    };
-    return projectionDraft({
-      ...input,
-      start: at !== undefined ? cue : derived,
-      end: at !== undefined ? derived : cue,
-    });
+  if (Number(from !== undefined) + Number(until !== undefined) + Number(length !== undefined) !== 2) {
+    throw new Error(`${element.name} requires during or exactly two of from, until and for.`);
   }
-  if (start === undefined || end === undefined) {
-    throw new Error(`${element.name} explicit timing requires both start and end.`);
-  }
-  const startExpression = parseTemporalInstant(start, `${element.name}.start`);
-  const endExpression = parseTemporalInstant(end, `${element.name}.end`);
-  const startSource = expressionSource(startExpression);
-  const endSource = expressionSource(endExpression);
-  const startBinding = element.attributes["start-source"] === undefined ? startSource : "start-source";
-  const endBinding = element.attributes["end-source"] === undefined ? endSource : "end-source";
-  rejectUnusedTemporalAttributes(element, temporalWindowAttributeNames, [
-    "start", "end",
-    ...(startSource === "program" ? [] : [startBinding]),
-    ...(endSource === "program" ? [] : [endBinding]),
-  ]);
-  const startReference = sourceReference(element, startSource, resolveReference, startBinding);
-  const endReference = sourceReference(element, endSource, resolveReference, endBinding);
-  return projectionDraft({
-    ...input,
-    start: {
-      expression: startExpression,
-      authority: { kind: "parameter", binding: "start", relation: "direct" },
-      source: startSource,
-      ...(startReference === undefined ? {} : { reference: startReference }),
-    },
-    end: {
-      expression: endExpression,
-      authority: { kind: "parameter", binding: "end", relation: "direct" },
-      source: endSource,
-      ...(endReference === undefined ? {} : { reference: endReference }),
-    },
-  });
+  rejectUnused(element, ["from", "until", "for"]);
+  const subjectId = value.subjectId ?? value.id;
+  if (from !== undefined && until !== undefined) return constructWindow({ ...value, subjectId,
+    start: instantDraft(from, `${element.name}.from`, resolveReference),
+    end: instantDraft(until, `${element.name}.until`, resolveReference) });
+  if (from !== undefined && length !== undefined) return constructWindow({ ...value, subjectId,
+    start: instantDraft(from, `${element.name}.from`, resolveReference),
+    extent: extentDraft(length, `${element.name}.for`, resolveReference), direction: 1 });
+  if (until === undefined || length === undefined) throw new Error(`${element.name} Window form is incomplete.`);
+  return constructWindow({ ...value, subjectId,
+    start: { kind: "expression", expression: { ref: "timeline.start" } },
+    end: instantDraft(until, `${element.name}.until`, resolveReference),
+    extent: extentDraft(length, `${element.name}.for`, resolveReference), direction: -1 });
 }
 
-/** Decode a semantic reference, an authored at time, or a projected instant expression. */
-export function createTemporalInstantProjection(input: {
-  readonly id: string;
-  readonly subjectId?: string;
-  readonly element: StructuredElement;
-  readonly timeline: SurfaceResolvedReference;
-  readonly resolveReference: ResolveReference;
-  readonly semanticAttribute?: string;
-  readonly boundaryAttribute?: string;
-  readonly boundaryFallback?: "start" | "end";
-  readonly projectedAttribute?: string | false;
-}): TemporalMarkupProjection {
-  const semanticAttribute = input.semanticAttribute ?? "at";
-  const boundaryAttribute = input.boundaryAttribute ?? "boundary";
-  const projectedAttribute = input.projectedAttribute === undefined ? "instant" : input.projectedAttribute;
-  const at = input.element.attributes[semanticAttribute];
-  const explicit = projectedAttribute === false ? undefined : optionalText(input.element, projectedAttribute);
-  const universe = [...new Set([
-    ...temporalInstantAttributeNames,
-    semanticAttribute,
-    boundaryAttribute,
-    ...(projectedAttribute === false ? [] : [projectedAttribute]),
-  ])];
-  if (Number(at !== undefined) + Number(explicit !== undefined) !== 1) {
-    throw new Error(`${input.element.name} requires exactly one of ${semanticAttribute}${projectedAttribute === false ? "" : ` or ${projectedAttribute}`}.`);
+/** Construct or pass through one absolute Instant. */
+export function createTemporalInstantConstruction(value: {
+  readonly id: string; readonly subjectId?: string; readonly element: StructuredElement;
+  readonly timeline: SurfaceResolvedReference; readonly resolveReference: ResolveReference; readonly attribute?: string;
+}): TemporalMarkupConstruction {
+  const attribute = value.attribute ?? "at", raw = value.element.attributes[attribute];
+  if (raw === undefined) throw new Error(`${value.element.name}.${attribute} is required.`);
+  if (typeof raw !== "string") {
+    const found = resolvedReference(raw, `${value.element.name}.${attribute}`, temporalTypes.instant, value.resolveReference);
+    return { records: [], components: [], fragments: [], ref: found.ref };
   }
-  if (at !== undefined) {
-    if (typeof at === "string") {
-      rejectUnusedTemporalAttributes(input.element, universe, [semanticAttribute]);
-      return projectionDraft({ ...input, start: {
-        expression: { ref: "absolute", at: parseTemporalDuration(at, `${input.element.name}.${semanticAttribute}`) },
-        authority: { kind: "parameter", binding: semanticAttribute, relation: "direct" }, source: "program",
-      } });
-    }
-    const found = input.resolveReference(at.path);
-    if (found === undefined) throw new Error(`${input.element.name}.${semanticAttribute} is unresolved.`);
-    if (sameType(found.type, narrativeTypes.moment)) {
-      if (input.element.attributes[boundaryAttribute] !== undefined) {
-        throw new Error(`${input.element.name}.${boundaryAttribute} is invalid for a Moment.`);
-      }
-      rejectUnusedTemporalAttributes(input.element, universe, [semanticAttribute]);
-      return projectionDraft({
-        ...input,
-        start: {
-          expression: { ref: "moment.cue" },
-          authority: { kind: "semantic", boundary: "cue" },
-          source: "moment",
-          reference: found,
-        },
-      });
-    }
-    const source = sameType(found.type, narrativeTypes.selection) ? "selection"
-      : sameType(found.type, narrativeTypes.excerpt) ? "segment" : undefined;
-    if (source === undefined) {
-      throw new Error(`${input.element.name}.${semanticAttribute} must reference a Moment, Selection or Segment.`);
-    }
-    const boundary = optionalText(input.element, boundaryAttribute) ?? input.boundaryFallback;
-    if (boundary !== "start" && boundary !== "end") {
-      throw new Error(`${input.element.name}.${boundaryAttribute} must be start or end.`);
-    }
-    rejectUnusedTemporalAttributes(input.element, universe, [semanticAttribute, boundaryAttribute]);
-    return projectionDraft({
-      ...input,
-      start: {
-        expression: { ref: `${source}.${boundary}` },
-        authority: source === "selection" ? { kind: "semantic", boundary } : { kind: "fixed" },
-        source,
-        reference: found,
-      },
-    });
-  }
-  const expression = parseTemporalInstant(explicit!, `${input.element.name}.${projectedAttribute || "instant"}`);
-  const source = expressionSource(expression);
-  rejectUnusedTemporalAttributes(input.element, universe, [
-    projectedAttribute || "instant",
-    ...(source === "program" ? [] : [source]),
-  ]);
-  const reference = source === "program" ? undefined : sourceReference(input.element, source, input.resolveReference);
-  return projectionDraft({
-    ...input,
-    start: {
-      expression,
-      authority: { kind: "parameter", binding: projectedAttribute || "instant", relation: "direct" },
-      source,
-      ...(reference === undefined ? {} : { reference }),
-    },
-  });
+  const specId = `${value.id}.__temporal.instant`;
+  const fragment = sealGraphFragment({ inputs: [
+    { name: "timeline", type: timelineTypes.track }, { name: "spec", type: temporalTypes.instantSpec },
+  ], operations: [{ id: "materialize", producer: temporalProducers.projectProgramInstant,
+    inputs: { timeline: fragmentInput("timeline"), spec: fragmentInput("spec") }, result: { kind: "output", name: "instant" } }],
+  exports: [{ name: "instant", type: temporalTypes.instant, root: operation("materialize") }] });
+  const componentId = `${value.id}.__temporal`;
+  return { records: [{ id: specId, type: temporalTypes.instantSpec, value: { kind: "inline", value: {
+    id: value.id, subjectId: value.subjectId ?? value.id,
+    projection: parseTemporalInstant(raw, `${value.element.name}.${attribute}`),
+  } }, range: value.element.range }], components: [{ id: componentId, fragment: fragment.id,
+    inputs: { timeline: value.timeline.ref, spec: { kind: "record", id: specId } },
+    outputs: { instant: `${value.id}.__temporal.instant.value` }, range: value.element.range }], fragments: [fragment],
+  ref: { kind: "component-output", component: componentId, output: "instant" } };
 }

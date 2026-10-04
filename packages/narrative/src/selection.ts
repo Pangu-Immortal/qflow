@@ -11,8 +11,6 @@ export type NarrativeTokenRange = {
 export function narrativeAnchorTokenBoundary(narrative: Narrative, anchorId: string): number {
   const anchor = narrative.semanticIndex.anchors.find((item) => item.id === anchorId);
   if (anchor === undefined) throw new Error(`Narrative ${narrative.id} has no anchor ${anchorId}.`);
-  if (anchor.kind === "program-start") return 0;
-  if (anchor.kind === "program-end") return narrative.tokens.length;
   const segment = narrative.segments.find((item) => item.id === anchor.segmentId);
   if (segment === undefined) throw new Error(`Anchor ${anchorId} has no authored Segment.`);
   if (anchor.kind === "segment-start") return segment.tokenStart;

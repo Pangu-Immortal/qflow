@@ -1,31 +1,34 @@
 # `@qflow/temporal`
 
-Runtime protocol for projected video time.
+Common absolute-time protocol for video graphs.
 
-The public values are `TemporalInstant` and `TemporalWindow`. An Instant retains its runtime source,
-exact projection expression, resolved ProgramSpace frame and author authority. A Window is composed
-from two independently traced Instants; it has no synthetic single source.
+The public coordinate values are:
 
-Every source names its exact `ProgramSpace`; semantic sources also name their `Narrative`. Every projection retains the
-consumer's public domain identity as `subjectId`. These are public provenance fields, not generated hashes
-or editor metadata. A graph-qualified projection `id` and its author-facing `subjectId` are separate
-on purpose.
+- `TemporalInstant`: one resolved frame boundary on one Timeline;
+- `TemporalWindow`: one non-empty half-open `[start, end)` interval; and
+- `TemporalExtent`: an unpositioned frame count on an exact frame rate.
 
-Author syntax does not live here. `@qflow/temporal-markup` lowers SVML timing forms into ordinary
-Instant projection and Window composition operations. The graph supplies one Timeline;
-domain components receive that Timeline plus the resulting Instant or Window and never locate a
-Selection, Segment or Moment themselves.
+These values contain the minimal facts needed by consumers. Their derivation—Narrative Moment,
+music beat, Timeline child, literal clock position, or another source—remains in the typed graph and
+the producing package. Temporal does not carry a closed source-kind union or a domain projector.
 
-Every official consumer verifies the projection at its public boundary: `subjectId` must name the
-domain object being built, both endpoints must retain one time-range identity, and that identity
-must equal the explicitly supplied Timeline. Timeline is therefore an ordinary graph input
-to the consumer, not ambient renderer state.
+`subjectId` identifies each authored value for inspection. A Window has its own identity while its
+endpoints retain the identities of the values from which it was composed; those three identities need
+not match. It is not an ownership lock on consumers: a named Window or Instant may deliberately feed
+several components. Consumers validate Timeline identity and bounds rather than requiring their own
+id to match the value.
 
-Temporal rejects Instants outside ProgramSpace and Windows that are reversed or empty. It does not
-clip or repair author time. The package also provides sibling-window validation and triggered-stage
-scheduling, but no renderer, Provider, media policy or Studio behavior.
+`TemporalExtent` lets an imported or generated result determine Timeline construction without making
+Timeline understand media, speech, or the operation that discovered the length. A domain projector
+may map one complete finite source-local domain onto an equal-length Window at native speed through
+the pure exact-projection helper. This total one-to-one operation keeps every local boundary
+projectable and produces no durable Placement value.
 
-All projection Producers receive Timeline. Program-bound projection uses its complete range;
-semantic-bound projection locates its Script anchors. Both produce the same Instant type; program-bound
-sources have no Narrative identity. A Window can combine a semantic endpoint with a program endpoint
-on the same time axis. `absolute` expressions may include a duration offset, as used by `at`/`for`.
+Author syntax does not live here. `@qflow/temporal-markup` constructs absolute literals and composes
+Windows. Domain packages such as `@qflow/narrative-temporal` project their own values into these
+common types. Visual, audio, caption, typography and project components receive only the completed
+Instant or Window plus the Timeline they already consume.
+
+Temporal rejects Instants outside Timeline, Windows whose endpoint Timelines or stored span disagree,
+reversed or empty Windows, non-exact local-domain projection, and incompatible frame rates. It does not
+clip, repair, infer meaning, perform rendering, or define Studio behavior.

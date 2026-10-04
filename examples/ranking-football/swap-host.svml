@@ -2,22 +2,22 @@
 
 <svml>
   <import from="@qflow/script@1"/>
-  <import as="sound" from="@qflow/sound@1"/>
+  <import as="audio" from="@qflow/audio-track@1"/>
   <import as="text" from="@qflow/text@1"/>
   <import as="asset" from="@qflow/media@1"/>
   <import as="gpt" from="@qflow/gpt-image@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
+  <import as="semantic" from="@qflow/narrative-temporal@1"/>
+  <import as="narrative-caption" from="@qflow/narrative-caption@1"/>
   <import as="time" from="@qflow/timeline-author@1"/>
-  <import as="media-track" from="@qflow/media-track@1"/>
-  <import as="performance" from="@qflow/performance@1"/>
+  <import as="visual" from="@qflow/visual-track@1"/>
   <import as="audio-track" from="@qflow/audio-track@1"/>
   <import as="caption" from="@qflow/caption@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
   <import as="fonts" from="@qflow/fonts-open@1"/>
   <import as="space" from="@qflow/spatial@1"/>
-  <import as="program" from="@qflow/program-space@1"/>
   <import as="ranking" from="@qflow/ranking@1"/>
   <import as="film" from="@qflow/film@1"/>
   <import as="render" from="@qflow/render-hyperframes@1"/>
@@ -144,16 +144,16 @@
   </seedance:ReferenceVideo>
 
   <space:Canvas id="vertical" width="720" height="1280"/>
-  <program:Clock id="clock" frame-rate="30"/>
+  <time:Clock id="clock" frame-rate="30"/>
   <pipeline:Normalize id="soundtrack-media" source={soundtrack}
     video="none" audio="default" span-authority="audio" clock={clock}/>
   <pipeline:Normalize id="ranking-appear-media" source={ranking-appear-sfx}
     video="none" audio="default" span-authority="audio" clock={clock}/>
   <pipeline:Normalize id="ranking-move-media" source={ranking-move-sfx}
     video="none" audio="default" span-authority="audio" clock={clock}/>
-  <space:Frame id="speech-frame" within={vertical}
+  <space:Frame id="speech-frame" within={vertical.bounds}
     left="0%" top="0%" right="100%" bottom="100%"/>
-  <space:Frame id="tier-frame" within={vertical}
+  <space:Frame id="tier-frame" within={vertical.bounds}
     left="0%" top="55%" right="100%" bottom="100%"/>
 
   <!-- B-roll lives inside the lower board region. Deliberately varied card
@@ -168,21 +168,21 @@
   <space:Extent id="walks-around-extent" width="2688" height="2016"/>
   <space:Extent id="hat-trick-extent" width="2048" height="2048"/>
 
-  <space:AspectFrame id="hair-gel-frame" within={vertical}
+  <space:AspectFrame id="hair-gel-frame" within={vertical.bounds}
     x="34%" y="78%" width="58%" aspect={hair-gel-extent} anchor="center"/>
-  <space:AspectFrame id="trophy-frame" within={vertical}
+  <space:AspectFrame id="trophy-frame" within={vertical.bounds}
     x="73%" y="82%" width="42%" aspect={trophy-extent} anchor="center"/>
-  <space:AspectFrame id="greek-god-frame" within={vertical}
+  <space:AspectFrame id="greek-god-frame" within={vertical.bounds}
     x="24%" y="78%" width="38%" aspect={greek-god-extent} anchor="center"/>
-  <space:AspectFrame id="greek-tragedy-frame" within={vertical}
+  <space:AspectFrame id="greek-tragedy-frame" within={vertical.bounds}
     x="63%" y="79%" width="66%" aspect={greek-tragedy-extent} anchor="center"/>
-  <space:AspectFrame id="penaldo-social-frame" within={vertical}
+  <space:AspectFrame id="penaldo-social-frame" within={vertical.bounds}
     x="50%" y="78%" width="94%" aspect={penaldo-social-extent} anchor="center"/>
-  <space:AspectFrame id="tired-dad-frame" within={vertical}
+  <space:AspectFrame id="tired-dad-frame" within={vertical.bounds}
     x="58%" y="79%" width="62%" aspect={tired-dad-extent} anchor="center"/>
-  <space:AspectFrame id="walks-around-frame" within={vertical}
+  <space:AspectFrame id="walks-around-frame" within={vertical.bounds}
     x="38%" y="79%" width="68%" aspect={walks-around-extent} anchor="center"/>
-  <space:AspectFrame id="hat-trick-frame" within={vertical}
+  <space:AspectFrame id="hat-trick-frame" within={vertical.bounds}
     x="72%" y="80%" width="46%" aspect={hat-trick-extent} anchor="center"/>
 
   <!-- Real Build path: generated video -> one shared normalization waist ->
@@ -191,27 +191,61 @@
     video="primary-moving" audio="default" span-authority="video" clock={clock}/>
   <pipeline:Normalize id="messi-media" source={messi-take.video}
     video="primary-moving" audio="default" span-authority="video" clock={clock}/>
-  <whisperx:SemanticTake id="ronaldo-semantic" narrative={story}
-    segment={story.segment.ronaldo} media={ronaldo-media.media} language="en"/>
-  <whisperx:SemanticTake id="messi-semantic" narrative={story}
-    segment={story.segment.messi} media={messi-media.media} language="en"/>
+  <whisperx:Alignment id="ronaldo-semantic" narrative={story}
+    segment={story.segment.ronaldo} media={ronaldo-media.media} domain={ronaldo-media.domain} language="en"/>
+  <whisperx:Alignment id="messi-semantic" narrative={story}
+    segment={story.segment.messi} media={messi-media.media} domain={messi-media.domain} language="en"/>
 
-  <time:Timeline id="speech" clock={clock}>
-    <time:Take source={ronaldo-semantic.take}/>
-    <time:Take source={messi-semantic.take}/>
+  <time:Timeline id="speech" clock={clock} end="messi-semantic.end">
+    <time:Window id="ronaldo-semantic" from="start" for={ronaldo-media.extent}/>
+    <time:Window id="messi-semantic" from="ronaldo-semantic.end" for={messi-media.extent}/>
   </time:Timeline>
 
-  <sound:Style id="speech-sound-style"/>
-  <sound:Track id="speech-sound" timeline={speech.timeline}>
-    <sound:Use style={speech-sound-style}/>
-  </sound:Track>
-  <performance:Style id="speech-picture-style" frame={speech-frame} appearance={recipes.media.performance}/>
-  <performance:Track id="speech-picture" timeline={speech.timeline} canvas={vertical}>
-    <performance:Use style={speech-picture-style} during="program"/>
-  </performance:Track>
+
+  <semantic:Projection id="story-time" narrative={story} timeline={speech.timeline}>
+    <semantic:Map alignment={ronaldo-semantic.alignment} domain={ronaldo-media.domain} window={speech.ronaldo-semantic}/>
+    <semantic:Map alignment={messi-semantic.alignment} domain={messi-media.domain} window={speech.messi-semantic}/>
+    <semantic:Window id="segment-ronaldo" segment={story.segment.ronaldo}/>
+    <semantic:Window id="segment-messi" segment={story.segment.messi}/>
+    <semantic:Window id="selection-hair-gel" selection={story.selection.hair-gel}/>
+    <semantic:Window id="selection-trophy" selection={story.selection.trophy}/>
+    <semantic:Window id="selection-greek-god" selection={story.selection.greek-god}/>
+    <semantic:Window id="selection-greek-tragedy" selection={story.selection.greek-tragedy}/>
+    <semantic:Window id="selection-penaldo-social" selection={story.selection.penaldo-social}/>
+    <semantic:Window id="selection-tired-dad" selection={story.selection.tired-dad}/>
+    <semantic:Window id="selection-walks-around" selection={story.selection.walks-around}/>
+    <semantic:Window id="selection-hat-trick" selection={story.selection.hat-trick}/>
+  </semantic:Projection>
+  <audio:Track id="speech-sound" timeline={speech.timeline}>
+    <audio:Clip id="ronaldo-semantic-source" source={ronaldo-media.media} during={speech.ronaldo-semantic}/>
+    <audio:Clip id="messi-semantic-source" source={messi-media.media} during={speech.messi-semantic}/>
+  </audio:Track>
+  <visual:Motion id="broll-left">
+    <visual:Pose at="start" scale="0.7" opacity="0" easing="ease-out"/>
+    <visual:Pose at="6f" scale="1" opacity="1"/>
+    <visual:Pose at="end-4f" scale="1" opacity="1" easing="ease-in"/>
+    <visual:Pose at="end" scale="1" opacity="0"/>
+  </visual:Motion>
+  <visual:Motion id="broll-right">
+    <visual:Pose at="start" y="80" scale="0.92" opacity="0" easing="ease-out"/>
+    <visual:Pose at="7f" y="0" scale="1" opacity="1"/>
+    <visual:Pose at="end-4f" y="0" scale="1" opacity="1" easing="ease-in"/>
+    <visual:Pose at="end" y="0" scale="0.94" opacity="1"/>
+  </visual:Motion>
+  <visual:Motion id="broll-wide">
+    <visual:Pose at="start" scale="0.9" opacity="1" easing="ease-out"/>
+    <visual:Pose at="6f" scale="1" opacity="1"/>
+    <visual:Pose at="end-4f" scale="1" opacity="1" easing="ease-in"/>
+    <visual:Pose at="end" scale="1" opacity="0"/>
+  </visual:Motion>
+
+  <visual:Track id="speech-picture" timeline={speech.timeline}>
+    <visual:Clip id="ronaldo-semantic-source" media={ronaldo-media.media} during={speech.ronaldo-semantic} frame={speech-frame} z="0" fit="cover"/>
+    <visual:Clip id="messi-semantic-source" media={messi-media.media} during={speech.messi-semantic} frame={speech-frame} z="0" fit="cover"/>
+  </visual:Track>
   <audio-track:Track id="music-bed" timeline={speech.timeline}>
-    <audio-track:Item source={soundtrack-media.media} during="program"
-      playback="once-start" gain="0.12" fade-in="300ms" fade-out="600ms"/>
+    <audio-track:Clip source={soundtrack-media.media} during="timeline"
+      gain="0.12" fade-in="300ms" fade-out="600ms"/>
   </audio-track:Track>
 
   <fonts:Stack id="display-font" family="montserrat" weight="900" style="normal"/>
@@ -219,8 +253,8 @@
   <ranking:TierBoardStyle id="tier-style" recipe={recipes.ranking.football}
     font={tier-font}/>
   <ranking:TierBoard id="football-tiers" timeline={speech.timeline}
-    canvas={vertical} frame={tier-frame}
-    during="program" style={tier-style}
+    within={vertical.bounds} frame={tier-frame}
+    during="timeline" style={tier-style}
     appear-sound={ranking-appear-media.media}
     move-sound={ranking-move-media.media}>
     <ranking:TierItem id="yamal" tier="s" preset="true" icon={yamal-icon.image}/>
@@ -233,64 +267,65 @@
     <ranking:TierItem id="neymar" tier="d" preset="true" icon={neymar-icon.image}/>
     <ranking:TierItem id="benzema" tier="d" preset="true" icon={benzema-icon.image}/>
     <ranking:TierItem id="ronaldo" tier="d" entry="drop"
-      icon={ronaldo-icon.image} during={story.segment.ronaldo}/>
+      icon={ronaldo-icon.image} during={story-time.segment-ronaldo}/>
     <ranking:TierItem id="messi" tier="s" entry="drop"
-      icon={messi-icon.image} during={story.segment.messi}/>
+      icon={messi-icon.image} during={story-time.segment-messi}/>
   </ranking:TierBoard>
 
   <!-- Every Item consumes a projected Selection window. Later overlapping
-       jokes use a higher stack order through their appearance Recipe. -->
-  <media-track:Track id="broll" timeline={speech.timeline} canvas={vertical}>
-    <media-track:Item id="hair-gel" image={broll-hair-gel.image}
-      extent={hair-gel-extent} during={story.selection.hair-gel}
-      frame={hair-gel-frame} appearance={recipes.media.hair-gel}
-      motion={recipes.motion.broll-left}/>
-    <media-track:Item id="trophy" image={broll-trophy.image}
-      extent={trophy-extent} during={story.selection.trophy}
-      frame={trophy-frame} appearance={recipes.media.trophy}
-      motion={recipes.motion.broll-right}/>
-    <media-track:Item id="greek-god" image={broll-greek-god.image}
-      extent={greek-god-extent} during={story.selection.greek-god}
-      frame={greek-god-frame} appearance={recipes.media.greek-god}
-      motion={recipes.motion.broll-left}/>
-    <media-track:Item id="greek-tragedy" image={broll-greek-tragedy.image}
-      extent={greek-tragedy-extent} during={story.selection.greek-tragedy}
-      frame={greek-tragedy-frame} appearance={recipes.media.greek-tragedy}
-      motion={recipes.motion.broll-right}/>
-    <media-track:Item id="penaldo-social" image={broll-penaldo-social.image}
-      extent={penaldo-social-extent} during={story.selection.penaldo-social}
-      frame={penaldo-social-frame} appearance={recipes.media.penaldo-social}
-      motion={recipes.motion.broll-wide}/>
-    <media-track:Item id="tired-dad" image={broll-tired-dad-trophy.image}
-      extent={tired-dad-extent} during={story.selection.tired-dad}
-      frame={tired-dad-frame} appearance={recipes.media.tired-dad}
-      motion={recipes.motion.broll-right}/>
-    <media-track:Item id="walks-around" image={broll-walks-around.image}
-      extent={walks-around-extent} during={story.selection.walks-around}
-      frame={walks-around-frame} appearance={recipes.media.walks-around}
-      motion={recipes.motion.broll-left}/>
-    <media-track:Item id="hat-trick" image={broll-hat-trick.image}
-      extent={hat-trick-extent} during={story.selection.hat-trick}
-      frame={hat-trick-frame} appearance={recipes.media.hat-trick}
-      motion={recipes.motion.broll-right}/>
-  </media-track:Track>
+       jokes use a higher explicit z on their own Clip occurrence. -->
+  <visual:Track id="broll" timeline={speech.timeline}>
+    <visual:Clip id="hair-gel" image={broll-hair-gel.image}
+      extent={hair-gel-extent} during={story-time.selection-hair-gel}
+      frame={hair-gel-frame} z="40" fit="cover" treatment={recipes.media.hair-gel}
+      motion={broll-left}/>
+    <visual:Clip id="trophy" image={broll-trophy.image}
+      extent={trophy-extent} during={story-time.selection-trophy}
+      frame={trophy-frame} z="41" fit="cover" treatment={recipes.media.trophy}
+      motion={broll-right}/>
+    <visual:Clip id="greek-god" image={broll-greek-god.image}
+      extent={greek-god-extent} during={story-time.selection-greek-god}
+      frame={greek-god-frame} z="42" fit="cover" treatment={recipes.media.greek-god}
+      motion={broll-left}/>
+    <visual:Clip id="greek-tragedy" image={broll-greek-tragedy.image}
+      extent={greek-tragedy-extent} during={story-time.selection-greek-tragedy}
+      frame={greek-tragedy-frame} z="43" fit="cover" treatment={recipes.media.greek-tragedy}
+      motion={broll-right}/>
+    <visual:Clip id="penaldo-social" image={broll-penaldo-social.image}
+      extent={penaldo-social-extent} during={story-time.selection-penaldo-social}
+      frame={penaldo-social-frame} z="44" fit="cover" treatment={recipes.media.penaldo-social}
+      motion={broll-wide}/>
+    <visual:Clip id="tired-dad" image={broll-tired-dad-trophy.image}
+      extent={tired-dad-extent} during={story-time.selection-tired-dad}
+      frame={tired-dad-frame} z="45" fit="cover" treatment={recipes.media.tired-dad}
+      motion={broll-right}/>
+    <visual:Clip id="walks-around" image={broll-walks-around.image}
+      extent={walks-around-extent} during={story-time.selection-walks-around}
+      frame={walks-around-frame} z="46" fit="cover" treatment={recipes.media.walks-around}
+      motion={broll-left}/>
+    <visual:Clip id="hat-trick" image={broll-hat-trick.image}
+      extent={hat-trick-extent} during={story-time.selection-hat-trick}
+      frame={hat-trick-frame} z="47" fit="cover" treatment={recipes.media.hat-trick}
+      motion={broll-right}/>
+  </visual:Track>
 
   <caption-fine:Style id="caption-style" recipe={recipes.caption.primary}
     font={display-font}/>
 
-  <caption-fine:Track id="captions" document={story.caption}
-    timeline={speech.timeline}>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
+    timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={caption-style}/>
-  </caption-fine:Track>
+  </caption-fine:Caption>
 
-  <film:Film id="main" canvas={vertical} timeline={speech.timeline}
+  <film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline}
     appearance={recipes.film.vertical}>
     <film:Track source={speech-picture.visual}/>
     <film:Track source={speech-sound.audio}/>
     <film:Track source={football-tiers.visual}/>
     <film:Track source={football-tiers.audio}/>
     <film:Track source={broll.visual}/>
-    <film:Track source={captions.track}/>
+    <film:Track source={captions.visual}/>
     <film:Track source={music-bed.audio}/>
   </film:Film>
   <render:Video id="final" composition={main.composition}

@@ -2,6 +2,7 @@ import { installPortraitTransition } from "./portrait-transition.js";
 import { installPortraitInset } from "./portrait-inset.js";
 import { installReframe } from "./reframe.js";
 import { installPullback } from "./pullback.js";
+import { installPresenter } from "./presenter.js";
 import {
   assertAttributes,
   assertEmptyElement,
@@ -16,9 +17,10 @@ import { mediaTypes } from "@qflow/qflow/media";
 import { timelineTypes } from "@qflow/qflow/timeline";
 import { spatialTypes } from "@qflow/qflow/spatial";
 import { temporalTypes } from "@qflow/qflow/temporal";
+import { visualTrackModuleRef } from "@qflow/qflow/visual-track";
 import {
-  createTemporalWindowProjection,
-  createTemporalInstantProjection,
+  createTemporalWindowConstruction,
+  createTemporalInstantConstruction,
   resolveTemporalContext,
   temporalWindowAttributeNames,
   temporalWindowAttributeVocabulary,
@@ -34,7 +36,7 @@ const producer = (name) => ({ module, name });
 const port = (name, type) => ({ name, type });
 const common = [
   port("timeline", timelineTypes.track),
-  port("canvas", spatialTypes.canvas),
+  port("within", spatialTypes.frame),
   port("window", temporalTypes.window),
   port("options", optionsType),
 ];
@@ -49,8 +51,10 @@ export const manifest = {
         mediaTypes.synchronized,
         mediaTypes.blobArtifact,
         timelineTypes.track,
-        spatialTypes.canvas,
+        spatialTypes.frame,
         temporalTypes.window,
+        temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec,
+        { module: visualTrackModuleRef, name: "VisualTrackProgram" },
       ].map((t) => [t.module.name, { module: t.module }]),
     ).values(),
   ],
@@ -118,7 +122,7 @@ const val = (v) => ({ kind: "inline", value: canonicalize(v) });
 const output = (name, v) => ({ outputs: { [name]: val(v) }, needs: {} });
 const component = {
   producers: [
-    { producer: producer("flag"), handler: ({inputs: i}) => output("track", renderFlag(inline(i.timeline), inline(i.canvas), inline(i.window), inline(i.options), i.logo.value)) },
+    { producer: producer("flag"), handler: ({inputs: i}) => output("track", renderFlag(inline(i.timeline), inline(i.within), inline(i.window), inline(i.options), i.logo.value)) },
     ...[
       ["title", renderTitle],
       ["timer", renderTimer],
@@ -129,7 +133,7 @@ const component = {
           "track",
           fn(
             inline(i.timeline),
-            inline(i.canvas),
+            inline(i.within),
             inline(i.window),
             inline(i.font),
             inline(i.options),
@@ -145,7 +149,7 @@ const component = {
           "track",
           renderVeil(
             inline(i.timeline),
-            inline(i.canvas),
+            inline(i.within),
             inline(i.window),
             inline(i.options),
           ),
@@ -172,7 +176,7 @@ const component = {
           "track",
           renderStage(
             inline(i.timeline),
-            inline(i.canvas),
+            inline(i.within),
             inline(i.window),
             inline(i.items),
             inline(i.options),
@@ -188,7 +192,7 @@ function decode(kind) {
     assertAttributes(element, [
       "id",
       "timeline",
-      "canvas",
+      "within",
       ...(kind === "Title" ? ["bounce-at"] : []),
       ...(kind === "Timer" ? ["stop-at"] : []),
       ...(["Title", "Timer"].includes(kind) ? ["font"] : []),
@@ -198,7 +202,7 @@ function decode(kind) {
     ]);
     const id = textAttribute(element, "id"),
       context = resolveTemporalContext({ element, resolveReference });
-    const win = createTemporalWindowProjection({
+    const win = createTemporalWindowConstruction({
       id: id + ".window",
       subjectId: id,
       element,
@@ -275,21 +279,21 @@ function decode(kind) {
     const inputs = [...common],
       bindings = {
         timeline: context.timeline.ref,
-        canvas: ref(element, "canvas", spatialTypes.canvas),
+        within: ref(element, "within", spatialTypes.frame),
         window: win.ref,
         options: { kind: "record", id: id + ".options" },
       };
     if (kind === "Title") {
-      const bounce = createTemporalInstantProjection({
+      const bounce = createTemporalInstantConstruction({
         id: id + ".bounce", subjectId: id + ".bounce",
-        element: { ...element, attributes: { at: element.attributes["bounce-at"] ?? "program.start" } },
+        element: { ...element, attributes: { at: element.attributes["bounce-at"] ?? "timeline.start" } },
         ...context, resolveReference,
       });
       records.push(...bounce.records); components.push(...bounce.components); fragments.push(...bounce.fragments);
       inputs.push(port("bounce", temporalTypes.instant)); bindings.bounce = bounce.ref;
     }
     if (kind === "Timer") {
-      const stop = createTemporalInstantProjection({id:id+".stop",subjectId:id+".stop",element:{...element,attributes:{at:element.attributes["stop-at"]??"program.end"}},...context,resolveReference});
+      const stop = createTemporalInstantConstruction({id:id+".stop",subjectId:id+".stop",element:{...element,attributes:{at:element.attributes["stop-at"]??"timeline.end"}},...context,resolveReference});
       records.push(...stop.records);components.push(...stop.components);fragments.push(...stop.fragments);
       inputs.push(port("stop",temporalTypes.instant));bindings.stop=stop.ref;
     }
@@ -324,7 +328,7 @@ function decode(kind) {
           isImage = child.attributes.image !== undefined;
         if (isImage === (child.attributes.video !== undefined))
           throw Error("Item needs exactly one image or normalized video");
-        const iw = createTemporalWindowProjection({
+        const iw = createTemporalWindowConstruction({
           id: `${id}.${cid}.window`,
           subjectId: cid,
           element: child,
@@ -406,7 +410,7 @@ function decode(kind) {
       operations,
       exports: [
         {
-          name: "track",
+          name: "visual",
           type: compositionTypes.visualTrack,
           root: operation("render"),
         },
@@ -421,11 +425,11 @@ function decode(kind) {
           id,
           fragment: fragment.id,
           inputs: bindings,
-          outputs: { track: id + ".track" },
+          outputs: { visual: id + ".visual" },
           range: element.range,
         },
       ],
-      exports: [id + ".track"],
+      exports: [id + ".visual"],
     };
   };
 }
@@ -442,6 +446,7 @@ const declarations = Object.keys(defaults).map((tag) => ({
     temporalTypes.instant,
     temporalTypes.windowSpec,
     temporalTypes.instantSpec,
+    temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec,
   ],
   vocabulary: {
     summary: {
@@ -461,7 +466,7 @@ const declarations = Object.keys(defaults).map((tag) => ({
       ...temporalWindowAttributeVocabulary,
       ...[
         "id",
-        "canvas",
+        "within",
         ...(["Title", "Timer"].includes(tag) ? ["font"] : []),
         ...(["Timer", "Flag"].includes(tag) ? ["logo"] : []),
       ].map((name) => ({
@@ -517,7 +522,7 @@ const declarations = Object.keys(defaults).map((tag) => ({
         : [],
     ports: [
       {
-        name: "track",
+        name: "visual",
         type: compositionTypes.visualTrack,
         summary: "Visual contribution, explicitly connected to Film",
       },
@@ -529,6 +534,7 @@ const fadeOut = installPullback(module, manifest, component, optionsType, "fade-
 const reframe = installReframe(module, manifest, component);
 const portraitTransition = installPortraitTransition(module, manifest, component);
 const portraitInset = installPortraitInset(module, manifest, component);
+const presenter = installPresenter(module, manifest, component);
 export const qflowPackage = {
   format: "qflow.node-package@1",
   modules: [{ manifest }],
@@ -546,6 +552,8 @@ export const qflowPackage = {
     reframe,
     portraitTransition,
     portraitInset,
+    presenter.styleFacet,
+    presenter.presenterFacet,
     studioFacet,
   ],
 };

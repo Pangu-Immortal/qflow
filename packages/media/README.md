@@ -18,6 +18,18 @@ normalization. It contains one common `frameRate`/`frameCount`, an optional visu
 intrinsic pixel extent, and an optional audio Artifact. Source stream indexes, selection authority,
 normalization ledgers and repeated codec/rate constants are not downstream media fields.
 
+## Normalized media stays neutral
+
+Normalization also publishes a complete `LocalTemporalDomain` and `TemporalExtent`. A Timeline may
+use the Extent to determine its end, and a semantic projector may use the Domain with an equal-length
+Window to publish absolute anchors. Neither operation changes the media's identity or wraps it in an
+A-roll-specific value.
+
+Visual and Audio Clips each accept the same ordinary `SynchronizedMedia` with an explicit
+absolute Window. They independently select the stream they need. A media value is therefore equally
+usable as foreground performance, B-roll, music, an effect or a model input; its earlier contribution
+to Timeline construction is not observable downstream.
+
 ## Font files
 
 `Font` takes an explicit source path and the selected face's real weight and style:

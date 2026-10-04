@@ -1,13 +1,11 @@
-import { timelineTypes } from "@qflow/timeline";
+import { timelineTypes, timelineDependency } from "@qflow/timeline";
 import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { readFile } from "node:fs/promises";
 
 import { artifactDependency, artifactTypes } from "@qflow/artifact";
 import { compositionDependency, compositionTypes } from "@qflow/composition";
-import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
 
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { timelineDependency } from "@qflow/timeline";
 import { spatialDependency, spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import { temporalDependency, temporalInstantSchema, temporalTypes, temporalWindowSchema } from "@qflow/temporal";
@@ -71,14 +69,14 @@ export const emojiRevealSetSchema: ValueSchema = object({
   items: { schema: { kind: "array", items: emojiRevealItemSchema } },
 });
 export const emojiRevealProgramSchema: ValueSchema = object({
-  id: { schema: string }, programSpaceId: { schema: string }, outer: { schema: temporalWindowSchema },
+  id: { schema: string }, timelineId: { schema: string }, outer: { schema: temporalWindowSchema },
   style: { schema: emojiRevealStyleSchema }, placeholder: { schema: blob },
   items: { schema: { kind: "array", minItems: 1, items: emojiRevealItemSchema } },
 });
 
 const recipe = [
-  ["center-x", "0.5", "Places the adaptive strip by its horizontal centre as a fraction of Canvas width."],
-  ["top-y", "0.07", "Places the strip's top edge as a fraction of Canvas height."],
+  ["center-x", "0.5", "Places the adaptive strip by its horizontal centre as a fraction of the selected Frame's width."],
+  ["top-y", "0.07", "Places the strip's top edge as a fraction of the selected Frame's height."],
   ["slot-size", "72", "Sets the fixed width and height of each SVG slot in pixels."],
   ["slot-gap", "10", "Sets the gap between adjacent slots in pixels."],
   ["padding-x", "18", "Insets the first and last slots from the board's horizontal edges."],
@@ -110,16 +108,16 @@ export const emojiRevealMarkupSurfaces = [
       example: `<emoji:Style id="emoji-strip" recipe={styles.emoji-strip}/>` ,
       notes: ["The Style owns appearance and placement, but never event timing."],
     } },
-  { name: "track", tag: "Track", mode: "structured",
-    outputs: [emojiRevealTypes.header, emojiRevealTypes.itemSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, emojiRevealTypes.program, compositionTypes.visualTrack],
+  { name: "emojiReveal", tag: "EmojiReveal", mode: "structured",
+    outputs: [emojiRevealTypes.header, emojiRevealTypes.itemSpec, temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, emojiRevealTypes.program, compositionTypes.visualTrack],
     vocabulary: {
       summary: "Draws one adaptive row of preset or progressively revealed icon slots.",
-      appearance: "A compact rounded rectangle centered near the top of the frame, with a dark outline and a hard lower-right shadow. Its width is computed from the number of fixed-size slots. Preset slots are settled from the first frame. Every other slot starts with the same supplied placeholder icon, then its semantic Moment replaces that slot with a brief overshoot and settle while earlier answers remain visible and later slots remain unanswered.",
+      appearance: "A compact rounded rectangle centered near the top of the frame, with a dark outline and a hard lower-right shadow. Its width is computed from the number of fixed-size slots. Preset slots are settled from the first frame. Every other slot starts with the same supplied placeholder icon, then its activation Instant replaces that slot with a brief overshoot and settle while earlier answers remain visible and later slots remain unanswered.",
       preview: previewImage("Track.png"),
       attributes: [
-        { name: "id", kind: "identifier", required: true, summary: "Names the reveal Program and Track." },
+        { name: "id", kind: "identifier", required: true, summary: "Names the reveal Program and its visual contribution." },
         ...temporalContextAttributeVocabulary,
-        { name: "canvas", kind: "reference", required: true, accepts: [spatialTypes.canvas], summary: "Chooses the Canvas used for normalized top placement." },
+        { name: "within", kind: "reference", required: true, accepts: [spatialTypes.frame], summary: "Chooses the Frame used for normalized placement." },
         { name: "style", kind: "reference", required: true, accepts: [emojiRevealTypes.style], summary: "Chooses the strip Style." },
         { name: "placeholder", kind: "reference", required: true, accepts: [artifactTypes.blob], summary: "Supplies the one image drawn in every unrevealed slot." },
         ...temporalWindowAttributeVocabulary,
@@ -127,29 +125,29 @@ export const emojiRevealMarkupSurfaces = [
       children: [{ tag: "Item", cardinality: "many", summary: "One answer slot, either settled from the start or revealed at one event.", attributes: [
         { name: "id", kind: "identifier", required: true, summary: "Names this answer slot and the timing subject it owns." },
         { name: "icon", kind: "reference", required: true, accepts: [artifactTypes.blob], summary: "Supplies this answer as an image Artifact from the same visual icon family as the placeholder." },
-        { name: "preset", kind: "literal", required: false, values: ["true", "false"], summary: "Settles this Item from the start of the Track Window; preset Items have no at." },
-        { name: "at", kind: "expression", required: false, accepts: [narrativeTypes.moment], summary: "Chooses this non-preset Item's reveal Moment or authored time, such as 2s or 12f; required unless preset is true." },
+        { name: "preset", kind: "literal", required: false, values: ["true", "false"], summary: "Settles this Item from the start of the EmojiReveal Window; preset Items have no at." },
+        { name: "at", kind: "expression", required: false, accepts: [temporalTypes.instant], summary: "Chooses this non-preset Item's resolved reveal Instant or authored absolute time; required unless preset is true." },
       ] }],
       ports: [
-        { name: "program", type: emojiRevealTypes.program, summary: "The adaptive strip with its projected outer Window and fully traced Moment activations." },
-        { name: "track", type: compositionTypes.visualTrack, summary: "That Program rendered as an ordinary VisualTrack." },
+        { name: "program", type: emojiRevealTypes.program, summary: "The adaptive strip with its outer Window and fully traced activation Instants." },
+        { name: "visual", type: compositionTypes.visualTrack, summary: "That Program rendered as an ordinary VisualTrack." },
       ],
-      example: `<emoji:Track id="rules" timeline={speech.timeline} canvas={vertical} style={emoji-strip} placeholder={question-icon} during="program">
+      example: `<emoji:EmojiReveal id="rules" timeline={speech.timeline} within={vertical.bounds} style={emoji-strip} placeholder={question-icon} during="timeline">
   <emoji:Item id="manifest" icon={manifest-icon} preset="true"/>
-  <emoji:Item id="real-estate" icon={real-estate-icon} at={story.moment.real-estate}/>
-  <emoji:Item id="bitcoin" icon={bitcoin-icon} at={story.moment.bitcoin}/>
-</emoji:Track>`,
+  <emoji:Item id="real-estate" icon={real-estate-icon} at={story-time.real-estate}/>
+  <emoji:Item id="bitcoin" icon={bitcoin-icon} at={story-time.bitcoin}/>
+</emoji:EmojiReveal>`,
       notes: [
         "Item order is display order: preset Items come first, then non-preset Items in strict chronological reveal order.",
-        "A non-preset Item.at chooses one reveal trigger: a Script Moment or an authored time. The answer then persists to the outer Window's end.",
-        "The outer Track Window is separate from the child reveal Moments and uses the shared temporal Window protocol.",
+        "A non-preset Item.at chooses one resolved Instant or an authored absolute time. The answer then persists to the outer Window's end.",
+        "The outer EmojiReveal Window is separate from child reveal Instants and uses the shared temporal Window protocol.",
       ],
     } },
 ] as const;
 
 export const emojiRevealManifest: ModuleManifest = {
   format: "qflow.module@1", name: emojiRevealModuleRef.name, version: emojiRevealModuleRef.version,
-  dependencies: [artifactDependency, narrativeDependency, timelineDependency, spatialDependency, temporalDependency, compositionDependency],
+  dependencies: [artifactDependency, timelineDependency, spatialDependency, temporalDependency, compositionDependency],
   types: [
     { name: emojiRevealTypes.header.name }, { name: emojiRevealTypes.style.name },
     { name: emojiRevealTypes.itemSpec.name }, { name: emojiRevealTypes.set.name }, { name: emojiRevealTypes.program.name },
@@ -167,7 +165,7 @@ export const emojiRevealManifest: ModuleManifest = {
       inputs: [{ name: "header", type: emojiRevealTypes.header }, { name: "timeline", type: timelineTypes.track }, { name: "outer", type: temporalTypes.window }, { name: "style", type: emojiRevealTypes.style }, { name: "placeholder", type: artifactTypes.blob }, { name: "set", type: emojiRevealTypes.set }],
       outputs: [{ name: "program", type: emojiRevealTypes.program }], needs: [] },
     { name: emojiRevealProducers.render.name,
-      inputs: [{ name: "canvas", type: spatialTypes.canvas }, { name: "timeline", type: timelineTypes.track }, { name: "program", type: emojiRevealTypes.program }],
+      inputs: [{ name: "within", type: spatialTypes.frame }, { name: "timeline", type: timelineTypes.track }, { name: "program", type: emojiRevealTypes.program }],
       outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };

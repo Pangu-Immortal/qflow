@@ -2,10 +2,11 @@ import { artifactManifest } from "@qflow/artifact";
 import { compositionComponent, compositionManifest } from "@qflow/composition";
 import { mediaComponent, mediaManifest } from "@qflow/media";
 import { narrativeManifest } from "@qflow/narrative";
-import { programSpaceManifest } from "@qflow/program-space";
+import { narrativeTemporalManifest } from "@qflow/narrative-temporal";
 import { timelineManifest } from "@qflow/timeline";
 import { spatialComponent, spatialManifest } from "@qflow/spatial";
 import { speechManifest } from "@qflow/speech";
+import { speechAlignmentManifest } from "@qflow/speech-alignment";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { svsManifest } from "@qflow/svs";
 import { temporalManifest } from "@qflow/temporal";
@@ -15,9 +16,10 @@ import { visualIrManifest } from "@qflow/visual-ir";
 export const videoContractManifests = [
   artifactManifest,
   narrativeManifest,
+  narrativeTemporalManifest,
   mediaManifest,
-  programSpaceManifest,
   speechManifest,
+  speechAlignmentManifest,
   speechEvidenceManifest,
   svsManifest,
   timelineManifest,

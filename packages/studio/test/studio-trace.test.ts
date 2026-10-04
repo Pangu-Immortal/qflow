@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compositionTypes } from "@qflow/composition";
-import { narrativeTypes } from "@qflow/narrative";
+import { captionTypes } from "@qflow/caption";
 
 import type { CompiledSource } from "../src/compile.js";
 import { traceFor } from "../src/studio-trace.js";
@@ -13,7 +13,7 @@ test("Track traces retain direct references to author Records", () => {
       program: {
         records: [{
           id: "source::record::story.caption",
-          type: narrativeTypes.captionDocument,
+          type: captionTypes.document,
           value: { kind: "inline", value: {} },
         }],
       },
@@ -25,7 +25,7 @@ test("Track traces retain direct references to author Records", () => {
     },
     observations: {
       placements: [{
-        tag: "caption-fine:Track",
+        tag: "caption-fine:Caption",
         surface: "track",
         module: { name: "@qflow/caption-fine", version: "1" },
         id: "captions",
@@ -47,7 +47,7 @@ test("Track traces retain direct references to author Records", () => {
     input: "document",
     name: "story.caption",
     ref: "source::record::story.caption",
-    type: narrativeTypes.captionDocument.name,
-    typeRef: narrativeTypes.captionDocument,
+    type: captionTypes.document.name,
+    typeRef: captionTypes.document,
   }]);
 });

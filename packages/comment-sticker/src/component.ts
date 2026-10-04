@@ -2,7 +2,7 @@ import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef, StoredValue } from "@qflow/protocol";
-import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 import type { Text } from "@qflow/text";
 
 import { commentStickerProducers, commentStickerTypes } from "./manifest.js";
@@ -84,7 +84,6 @@ export const commentStickerComponent = {
     {
       producer: commentStickerProducers.render,
       handler: ({ inputs }) => ({ outputs: { track: output(renderCommentSticker(
-        inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"),
         inline<Timeline>(inputs.timeline?.value, "Timeline"),
         inline<CommentStickerProgram>(inputs.program?.value, "CommentStickerProgram"),
       )) }, needs: {} }),

@@ -18,7 +18,6 @@ test("one exact Raster capability carries both closed deterministic request vari
   const compose = rasterComposeRequest({
     canvas: {
       widthPx: 100, heightPx: 200,
-      origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square",
     },
     background: "#00000000",
     layers: [{

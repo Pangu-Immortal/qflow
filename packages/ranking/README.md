@@ -1,12 +1,10 @@
 # `@qflow/ranking`
 
-The Track Surface accepts `timeline={program.timeline}`. The same Timeline supports authored
-positions and, where prepared Takes supply evidence, Script Selections and Moments. Shared `at`
-inputs accept a Moment or a time such as `2s`; `at` with `for` produces a Window where required.
+The Track Surface accepts one completed Timeline plus absolute Windows and Instants. Those values
+may be authored directly or published by a domain projector upstream.
 
-Ranking boards that follow the argument of a video: introduce an item, give its verdict, and retain
-its place while the next item is discussed. Its Surface binds the performance's semantic time or
-authored time; the board consumes projected timing, Frames, Styles, fonts, text and optional icons or sound.
+Ranking boards introduce an item, give its verdict, and retain its place while the next item is
+discussed. The board consumes absolute timing, Frames, Styles, fonts, text and optional icons or sound.
 
 | Form | Temporal behavior |
 | --- | --- |
@@ -18,24 +16,23 @@ The board's outer Window owns its lifetime. Item reveal Windows must fit within 
 where the selected schedule requires succession. Ending a reveal does not remove its settled result.
 `preset` supplies initial state and needs no reveal event.
 
-## Bind the ranking to the target Script
+## Bind the ranking to resolved time
 
 This excerpt assumes the Script, Timeline, Canvas, Frame and Style have been declared:
 
 ```svml
 <import as="ranking" from="@qflow/ranking@1"/>
 
-<ranking:Column id="priorities" timeline={speech.timeline} canvas={vertical}
-  frame={layout.ranking} during={story.segment.ranking} style={ranking-style}>
-  <ranking:ColumnItem rank="1" label="Winner" during={story.selection.winner}/>
+<ranking:Column id="priorities" timeline={speech.timeline} within={vertical.bounds}
+  frame={layout.ranking} during={story-time.ranking} style={ranking-style}>
+  <ranking:ColumnItem rank="1" label="Winner" during={story-time.winner}/>
   <ranking:ColumnItem rank="2" preset="true" label="Already placed"/>
 </ranking:Column>
 ```
 
-Choose `winner` to cover the phrase whose delivery stages this reveal. When that performance changes
-length, the projected Window follows the phrase. Style defines how the reveal and settling use that
-Window. TopThree instead accepts item `at` projections and a board `terminal` projection; a Moment
-can supply the intended trigger.
+An upstream Narrative projection can publish `ranking` and `winner` from the relevant Segment and
+Selection. When the performance changes, those projected Windows follow. Style defines how reveal
+and settling use the Window. TopThree instead accepts item `at` Instants and a terminal Instant.
 
 Each board publishes `.schedule`, `.program` and `.visual`. Optional normalized `appear-sound` or
 `move-sound` inputs add `.events` and `.audio` where that form supports them.
@@ -45,13 +42,13 @@ outputs as peers in Film. Labels can be literal or graph Text; Styles are typed 
 exact fonts. Use `qflow vocabulary @qflow/ranking --tag Column` (or another declared tag) for its
 attributes, children, outputs and configured example.
 
-## Read it as a semantic component example
+## Read it as a temporal component example
 
 The following files are included in the Distribution and show how the responsibilities connect:
 
 | File | What to learn from it |
 | --- | --- |
-| [surface.ts](src/surface.ts) | `rankingSurface` resolves author inputs, projects the outer and item times through `createTemporalWindowProjection` / `createTemporalInstantProjection`, and retains the returned drafts and references. |
+| [surface.ts](src/surface.ts) | `rankingSurface` resolves author inputs, projects the outer and item times through `createTemporalWindowConstruction` / `createTemporalInstantConstruction`, and retains the returned drafts and references. |
 | [fragment.ts](src/fragment.ts) | `createRankingFragment` receives Timeline and wires typed content, time, layout and Style inputs into finite operations. |
 | [schedule.ts](src/schedule.ts) | Compute reveal, activation and settled spans from the projected times. |
 | [component.ts](src/component.ts) and [render.ts](src/render.ts) | Build the ranking program and produce picture and optional sound from that schedule. |

@@ -10,7 +10,7 @@ Use it for a product, portrait or graphic that will be composited over another p
 
 `source` accepts an image BlobArtifact, including an ordinary image file declaration or a generated
 image Output. `{cutout.image}` publishes one image BlobArtifact with transparency. Keep its actual
-dimensions when placing it in Media Track, or use Image Compose when a flattened still is wanted.
+dimensions when placing it as a Visual Clip, or use Image Compose when a flattened still is wanted.
 
 The package declares the visual operation; a project Provider implements the capability
 `@qflow/background-removal@1#remove-background`, accepting `{ source: BlobRef }` and returning one

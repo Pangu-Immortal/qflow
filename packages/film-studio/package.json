@@ -4,13 +4,16 @@
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "qflow": { "activation": "./src/activation.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
   "dependencies": {
     "@qflow/composition": "workspace:*",
     "@qflow/film": "workspace:*",
     "@qflow/timeline": "workspace:*",
-    "@qflow/studio-adapter": "workspace:*",
-    "@qflow/program-space": "workspace:*"
+    "@qflow/studio-adapter": "workspace:*"
   }
 }

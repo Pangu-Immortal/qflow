@@ -24,11 +24,11 @@
     "@qflow/core": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/narrative": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/raster": "workspace:*",
     "@qflow/run": "workspace:*",
     "@qflow/seedance": "workspace:*",
     "@qflow/spatial": "workspace:*",
-    "@qflow/speech": "workspace:*"
+    "@qflow/speech": "workspace:*",
+    "@qflow/timeline": "workspace:*"
   }
 }

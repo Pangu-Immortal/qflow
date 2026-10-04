@@ -218,7 +218,7 @@ contain either Workspace or package-installation overrides.
 
 `check` is usable for an Author Source or a complete Run Source. `plan` and `build` require a Run
 Source because an Author Graph without execution intent is not a Build. The live example executes
-the Script-owned deterministic CaptionDocument alongside real local/remote Endpoints; the CLI never
+the deterministic CaptionDocument produced by Script alongside real local/remote Endpoints; the CLI never
 fabricates a Target, Candidate or missing fact.
 
 `build` compiles one immutable Build Definition and submits it to the configured Local Runtime with a

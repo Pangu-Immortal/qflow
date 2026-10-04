@@ -1,9 +1,5 @@
 import { artifactTypes } from "@qflow/artifact";
-import type {
-  StructuredElement,
-  StructuredSurfaceHandler,
-} from "@qflow/markup";
-
+import type { StructuredElement, StructuredSurfaceHandler } from "@qflow/markup";
 import { assertFontArtifactRef } from "./render.js";
 import { mediaTypes } from "./manifest.js";
 

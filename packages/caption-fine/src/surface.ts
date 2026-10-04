@@ -1,8 +1,8 @@
-import { captionTypes, captionProducers } from "@qflow/caption";
+import { captionProducers, captionTypes } from "@qflow/caption";
 import { assertFontArtifactRef, assertFontStackRef, mediaTypes } from "@qflow/media";
 import type { FontArtifactRef, FontStackRef } from "@qflow/media";
-import { narrativeTypes } from "@qflow/narrative";
 import { timelineTypes } from "@qflow/timeline";
+import { regionTrackTypes } from "@qflow/region-track";
 import { spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import type { SvsRecipe } from "@qflow/svs";
@@ -17,7 +17,7 @@ import { sealGraphFragment } from "@qflow/elaborator";
 import type { FragmentOperation } from "@qflow/elaborator";
 import type { SurfaceRecordDraft, SurfaceComponentDraft } from "@qflow/markup";
 import { assertEmptyElement, optionalTextAttribute } from "@qflow/markup";
-import { createTemporalWindowProjection, resolveTemporalContext, temporalWindowAttributeNames } from "@qflow/temporal-markup";
+import { createTemporalWindowConstruction, resolveTemporalContext, temporalWindowAttributeNames } from "@qflow/temporal-markup";
 import { temporalTypes } from "@qflow/temporal";
 import { compositionTypes } from "@qflow/composition";
 import { captionFineProducers, captionFineTypes } from "./manifest.js";
@@ -123,30 +123,32 @@ export const decodeFineCaptionStyleSurface: StructuredSurfaceHandler = ({ elemen
 };
 
 export const decodeFineCaptionTrackSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  attributes(element, ["id", "document", "timeline"], ["regions"]);
+  attributes(element, ["id", "document", "timing", "timeline", "within"], ["regions"]);
   const id = stringAttribute(element, "id");
-  const document = reference(element, "document", narrativeTypes.captionDocument, resolveReference);
+  const document = reference(element, "document", captionTypes.document, resolveReference);
+  const timing = reference(element, "timing", captionTypes.timing, resolveReference);
+  const within = reference(element, "within", spatialTypes.frame, resolveReference);
   const context = resolveTemporalContext({ element, resolveReference });
-  const regions = element.attributes.regions === undefined ? undefined : reference(element, "regions", spatialTypes.regionTimeline, resolveReference);
+  const regions = element.attributes.regions === undefined ? undefined : reference(element, "regions", regionTrackTypes.track, resolveReference);
   const records: SurfaceRecordDraft[] = [{ id: `${id}.header`, type: captionTypes.header,
     value: { kind: "inline", value: { id } }, range: element.range }];
   const components: SurfaceComponentDraft[] = [];
   const fragments: ReturnType<typeof sealGraphFragment>[] = [];
-  const inputs: { name: string; type: SurfaceResolvedReference["type"] }[] = [{ name: "document", type: narrativeTypes.captionDocument }, { name: "timeline", type: timelineTypes.track }, { name: "header", type: captionTypes.header }];
-  const bindings: Record<string, SurfaceResolvedReference["ref"]> = { document: document.ref, timeline: context.timeline.ref, header: { kind: "record", id: `${id}.header` } };
+  const inputs: { name: string; type: SurfaceResolvedReference["type"] }[] = [{ name: "document", type: captionTypes.document }, { name: "timing", type: captionTypes.timing }, { name: "timeline", type: timelineTypes.track }, { name: "within", type: spatialTypes.frame }, { name: "header", type: captionTypes.header }];
+  const bindings: Record<string, SurfaceResolvedReference["ref"]> = { document: document.ref, timing: timing.ref, timeline: context.timeline.ref, within: within.ref, header: { kind: "record", id: `${id}.header` } };
   const operations: FragmentOperation[] = [{ id: "create", producer: captionProducers.create,
     inputs: { document: input("document"), header: input("header") }, result: { kind: "output", name: "program" } }];
   let previous = "create", index = 0;
   for (const child of element.children) {
-    if (child.kind === "text") { if (child.value.trim()) throw new Error("Caption Track accepts Use children."); continue; }
-    if (localName(child.name) !== "Use") throw new Error("Caption Track accepts Use children.");
+    if (child.kind === "text") { if (child.value.trim()) throw new Error("Caption accepts Use children."); continue; }
+    if (localName(child.name) !== "Use") throw new Error("Caption accepts Use children.");
     attributes(child, ["style"], ["id", "role", ...temporalWindowAttributeNames]);
     assertEmptyElement(child);
     index += 1;
     const useId = optionalTextAttribute(child, "id") ?? `${id}.use.${index}`;
     const hasTime = temporalWindowAttributeNames.some(name => child.attributes[name] !== undefined);
-    const temporal = createTemporalWindowProjection({ id: useId, ...context, resolveReference,
-      element: hasTime ? child : { ...child, attributes: { ...child.attributes, during: "program" } } });
+    const temporal = createTemporalWindowConstruction({ id: useId, ...context, resolveReference,
+      element: hasTime ? child : { ...child, attributes: { ...child.attributes, during: "timeline" } } });
     records.push(...temporal.records); components.push(...temporal.components); fragments.push(...temporal.fragments);
     const style = reference(child, "style", captionTypes.style, resolveReference);
     const role = optionalTextAttribute(child, "role");
@@ -159,21 +161,18 @@ export const decodeFineCaptionTrackSurface: StructuredSurfaceHandler = ({ elemen
       inputs: { program: operation(previous), window: input(`${key}-window`), style: input(`${key}-style`), filter: input(`${key}-filter`) }, result: { kind: "output", name: "program" } });
     previous = key;
   }
-  operations.push({ id: "content", producer: captionProducers.temporalizeDocument,
-    inputs: { document: input("document"), timeline: input("timeline") }, result: { kind: "output", name: "caption" } });
   operations.push({ id: "schedule", producer: captionFineProducers.schedule,
-    inputs: { caption: operation("content"), document: input("document"), program: operation(previous) }, result: { kind: "output", name: "schedule" } });
-  if (regions !== undefined) { inputs.push({ name: "regions", type: spatialTypes.regionTimeline }); bindings.regions = regions.ref; }
+    inputs: { timing: input("timing"), document: input("document"), program: operation(previous) }, result: { kind: "output", name: "schedule" } });
+  if (regions !== undefined) { inputs.push({ name: "regions", type: regionTrackTypes.track }); bindings.regions = regions.ref; }
   operations.push({ id: "render", producer: regions === undefined ? captionFineProducers.render : captionFineProducers.renderWithRegions,
-    inputs: { schedule: operation("schedule"), document: input("document"), timeline: input("timeline"), program: operation(previous), ...(regions === undefined ? {} : { regions: input("regions") }) }, result: { kind: "output", name: "track" } });
+    inputs: { schedule: operation("schedule"), document: input("document"), timeline: input("timeline"), within: input("within"), program: operation(previous), ...(regions === undefined ? {} : { regions: input("regions") }) }, result: { kind: "output", name: "track" } });
   const collector = sealGraphFragment({ inputs, operations, exports: [
-    { name: "content", type: captionTypes.timedProjection, root: operation("content") },
     { name: "program", type: captionTypes.program, root: operation(previous) },
     { name: "schedule", type: captionFineTypes.schedule, root: operation("schedule") },
-    { name: "track", type: compositionTypes.visualTrack, root: operation("render") },
+    { name: "visual", type: compositionTypes.visualTrack, root: operation("render") },
   ] });
   fragments.push(collector);
   components.push({ id, fragment: collector.id, inputs: bindings,
-    outputs: { content: `${id}.content`, program: `${id}.program`, schedule: `${id}.schedule`, track: `${id}.track` }, range: element.range });
-  return { records, components, fragments, exports: [`${id}.content`, `${id}.program`, `${id}.schedule`, `${id}.track`] };
+    outputs: { program: `${id}.program`, schedule: `${id}.schedule`, visual: `${id}.visual` }, range: element.range });
+  return { records, components, fragments, exports: [`${id}.program`, `${id}.schedule`, `${id}.visual`] };
 };

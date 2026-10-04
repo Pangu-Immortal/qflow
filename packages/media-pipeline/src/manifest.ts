@@ -1,9 +1,11 @@
 import { artifactDependency } from "@qflow/artifact";
 import { mediaDependency, mediaTypes } from "@qflow/media";
-import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
+import { timelineDependency, timelineTypes } from "@qflow/timeline";
 import { svsModuleRef, svsRecipeType } from "@qflow/svs";
 import { speechDependency, speechTypes } from "@qflow/speech";
+import { speechEvidenceDependency, speechEvidenceTypes } from "@qflow/speech-evidence";
 import { compositionDependency, compositionTypes, audioSampleSpanSchema, audioGainEnvelopeSchema } from "@qflow/composition";
+import { temporalDependency, temporalTypes } from "@qflow/temporal";
 import { artifactTypes } from "@qflow/artifact";
 import type {
   CapabilityRef,
@@ -103,7 +105,6 @@ const retimeOperationSchema: ValueSchema = {
   fields: {
     kind: { schema: { kind: "literal", value: "retime" } },
     rate: { schema: { kind: "number", minimum: 0.000001, maximum: 100 } },
-    pitch: { schema: { kind: "literal", value: "preserve" } },
   },
 };
 export const mediaTransformProgramSchema: ValueSchema = {
@@ -232,8 +233,9 @@ export const audioProgramPlanSchema: ValueSchema = {
         sourceEndSampleExclusive: { schema: { kind: "number", integer: true, minimum: 1 } },
         sourceLoop: { schema: { kind: "boolean" } },
         sourcePhaseSample: { schema: integer },
-        playbackRate: { schema: { kind: "number", minimum: 0.000001, maximum: 100 } },
-        pitch: { schema: { kind: "literal", value: "preserve" } },
+        playbackRate: { schema: { kind: "number" } },
+        mixStartSample: { schema: integer },
+        mixEndSampleExclusive: { schema: { kind: "number", integer: true, minimum: 1 } },
         gain: { schema: { kind: "number", minimum: 0, maximum: 64 } },
         fadeInSamples: { schema: integer },
         fadeOutSamples: { schema: integer },
@@ -254,7 +256,8 @@ export const audioProgramPlanSchema: ValueSchema = {
 export const mediaPipelineMarkupSurfaces = [
     {
       name: "synchronized-media", tag: "Normalize", mode: "structured",
-      outputs: [mediaPipelineTypes.selectionRequest, mediaTypes.synchronized],
+      outputs: [mediaPipelineTypes.selectionRequest, mediaTypes.domainSpec, mediaTypes.synchronized,
+        temporalTypes.localDomain, temporalTypes.extent],
       vocabulary: {
         summary:
           "Inspects one BlobArtifact, selects its video and audio streams and normalizes them into SynchronizedMedia on one frame domain.",
@@ -273,21 +276,23 @@ export const mediaPipelineMarkupSurfaces = [
           { name: "span-authority", kind: "literal", required: false,
             values: ["video", "audio"],
             summary: "Decides which selected stream defines the extent the other is trimmed or padded to." },
-          { name: "clock", kind: "reference", required: false, accepts: [programSpaceTypes.clock],
+          { name: "clock", kind: "reference", required: true, accepts: [timelineTypes.clock],
             summary: "Selects the authored frame clock shared with the programme." },
-          { name: "frame-rate", kind: "literal", required: false,
-            summary: "Legacy inline frame rate; write exactly one of clock or frame-rate." },
         ],
         ports: [
           { name: "media", type: mediaTypes.synchronized,
             summary: "The normalized SynchronizedMedia, addressed as `<id>.media`." },
+          { name: "domain", type: temporalTypes.localDomain,
+            summary: "Its source-local frame domain, addressed as `<id>.domain`." },
+          { name: "extent", type: temporalTypes.extent,
+            summary: "Its unpositioned normalized length, addressed as `<id>.extent`." },
         ],
         example: `<pipeline:Normalize id="music-media" source={music}
   recipe={recipes.media.audio} clock={clock}/>`,
         notes: [
-          "Write exactly one of recipe or the direct video/audio/span-authority attributes, and exactly one of clock or frame-rate.",
+          "Write exactly one of recipe or the direct video/audio/span-authority attributes. Clock is always an explicit reference.",
           "`primary-moving` excludes attached-picture streams, prefers one declared default and fails closed on an ambiguous container; `stream:<index>` is for a container the author genuinely knows.",
-          "Selecting embedded audio is a media fact only and makes no SemanticTake, speaker or alignment claim.",
+          "Selecting embedded audio is a media fact only and makes no speaker or alignment claim.",
         ],
       },
     },
@@ -303,7 +308,7 @@ export const mediaPipelineMarkupSurfaces = [
             summary: "Selects the one authored image held for the full video; write Still children instead for several images." },
           { name: "duration", kind: "literal", required: true,
             summary: "Sets the video's length in seconds, such as 6 or 2.5s; choose it from the visual passage this held image is meant to carry." },
-          { name: "clock", kind: "reference", required: true, accepts: [programSpaceTypes.clock],
+          { name: "clock", kind: "reference", required: true, accepts: [timelineTypes.clock],
             summary: "Selects the frame clock used by the generated MP4." },
         ],
         children: [
@@ -326,7 +331,7 @@ export const mediaPipelineMarkupSurfaces = [
         notes: [
           "Write exactly one of source or Still children. Frames are whole: each image gets the floor of its share and the leftover frames go to the largest remainders, so the split is deterministic and every image holds at least one frame.",
           "Images of different sizes are fitted into the first image's frame, letterboxed on black.",
-          "The result is a normal video Blob, not SynchronizedMedia and not a SemanticTake.",
+          "The result is a normal video Blob, not SynchronizedMedia or semantic evidence.",
           "Use Normalize afterward exactly as for generated or imported moving video.",
           "Encoding is a render-still-video Need fulfilled by the selected media Provider; this Surface never invokes FFmpeg itself.",
         ],
@@ -357,13 +362,10 @@ export const mediaPipelineMarkupSurfaces = [
                 summary: "Decides how many seconds are removed from the current end." },
             ] },
           { tag: "Retime", cardinality: "many",
-            summary: "Changes playback speed by `rate` in the range (0, 100] while `pitch` holds the original pitch.",
+            summary: "Changes tempo by `rate` in the range (0, 100] while preserving pitch.",
             attributes: [
               { name: "rate", kind: "literal", required: true,
                 summary: "Decides the playback speed multiplier, above `0` and at most `100`." },
-              { name: "pitch", kind: "literal", required: true,
-                values: ["preserve"],
-                summary: "Decides how pitch follows the speed change, and the one spelling keeps the original pitch." },
             ] },
         ],
         ports: [
@@ -372,7 +374,7 @@ export const mediaPipelineMarkupSurfaces = [
         ],
         example: `<media:Transform id="prepared" source={shot-media.media}>
   <media:Trim tail="0.25s"/>
-  <media:Retime rate="1.05" pitch="preserve"/>
+  <media:Retime rate="1.05"/>
 </media:Transform>`,
         notes: [
           "At least one `Trim` or `Retime` child is required, and children run in the order they are written.",
@@ -403,7 +405,7 @@ export const mediaPipelineMarkupSurfaces = [
         example: '<media:ExtractAudio id="voice-reference" source={prepared.video} audio="default"/>',
         notes: [
           "The element accepts no children and no text content, and the output container, codec, sample rate and channel count are fixed.",
-          "The result makes no SemanticTake, speaker or alignment claim, so it can feed a model reference port directly.",
+          "The result makes no speaker or alignment claim, so it can feed a model reference port directly.",
         ],
       },
     },
@@ -445,8 +447,10 @@ export const mediaPipelineManifest: ModuleManifest = {
     artifactDependency,
     mediaDependency,
     speechDependency,
-    programSpaceDependency,
+    speechEvidenceDependency,
+    timelineDependency,
     compositionDependency,
+    temporalDependency,
     { module: svsModuleRef },
   ],
   types: [
@@ -479,7 +483,7 @@ export const mediaPipelineManifest: ModuleManifest = {
     { name: mediaPipelineCapabilities.extractAudio.name, returns: artifactTypes.blob },
     { name: mediaPipelineCapabilities.extractFrame.name, returns: artifactTypes.blob },
     { name: mediaPipelineCapabilities.renderStill.name, returns: artifactTypes.blob },
-    { name: mediaPipelineCapabilities.projectSpeechEvidenceAudio.name, returns: speechTypes.evidenceAudio },
+    { name: mediaPipelineCapabilities.projectSpeechEvidenceAudio.name, returns: speechEvidenceTypes.audio },
     { name: mediaPipelineCapabilities.renderAudio.name, returns: mediaTypes.timelineAudio },
     { name: mediaPipelineCapabilities.mux.name, returns: mediaTypes.muxed },
   ],
@@ -566,7 +570,7 @@ export const mediaPipelineManifest: ModuleManifest = {
       name: mediaPipelineProducers.planStill.name,
       inputs: [
         { name: "duration", type: speechTypes.duration },
-        { name: "clock", type: programSpaceTypes.clock },
+        { name: "clock", type: timelineTypes.clock },
         { name: "layout", type: mediaPipelineTypes.stillVideoLayout },
       ],
       outputs: [{ name: "request", type: mediaPipelineTypes.stillVideoRequest }],
@@ -595,19 +599,19 @@ export const mediaPipelineManifest: ModuleManifest = {
     },
     {
       name: mediaPipelineProducers.projectSpeechEvidenceAudio.name,
-      inputs: [{ name: "media", type: mediaTypes.synchronized }],
+      inputs: [{ name: "media", type: mediaTypes.synchronized }, { name: "domain", type: temporalTypes.localDomain }],
       outputs: [],
       needs: [{
         name: "evidenceAudio",
         capability: mediaPipelineCapabilities.projectSpeechEvidenceAudio,
-        returns: speechTypes.evidenceAudio,
+        returns: speechEvidenceTypes.audio,
       }],
     },
     {
       name: mediaPipelineProducers.planAudio.name,
       inputs: [
         { name: "composition", type: compositionTypes.composition },
-        { name: "space", type: programSpaceTypes.programSpace },
+        { name: "timeline", type: timelineTypes.track },
       ],
       outputs: [{ name: "plan", type: mediaPipelineTypes.audioProgramPlan }],
       needs: [],

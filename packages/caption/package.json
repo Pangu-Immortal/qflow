@@ -12,18 +12,9 @@
   },
   "dependencies": {
     "@qflow/component-kit": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/narrative": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/timeline": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/temporal": "workspace:*"
   },
-  "devDependencies": {
-    "@qflow/program-space": "workspace:*",
-    "@qflow/script": "workspace:*",
-    "@qflow/speech": "workspace:*",
-    "@qflow/speech-alignment": "workspace:*",
-    "@qflow/speech-evidence": "workspace:*"
-  }
+  "devDependencies": {}
 }

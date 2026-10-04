@@ -1,5 +1,5 @@
-import { assertAudioPresentation } from "./audio-presentation.js";
-import type { AudioPresentation } from "./audio-presentation.js";
+import { assertAudioLevelAutomation } from "./audio-level-automation.js";
+import type { AudioLevelAutomation, AudioSampleSpan } from "./audio-level-automation.js";
 import { canonicalStringify, isResourceId } from "@qflow/protocol";
 import type { BlobRef, CanonicalValue } from "@qflow/protocol";
 
@@ -7,12 +7,8 @@ import {
   assertVisualStyleV1,
   VISUAL_IR_V1,
 } from "@qflow/visual-ir";
-import {
-  assertProgramSpaceIdentity,
-  programSpaceFrameCount,
-  programSpaceSampleFrames,
-} from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
+import { assertTimelineIdentity, timelineFrameCount, timelineSampleFrames } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import { assertCompositableSurfaceRef, assertFontArtifactRef } from "@qflow/media";
 import type { CompositableSurfaceRef, FontArtifactRef } from "@qflow/media";
 
@@ -308,7 +304,7 @@ export type VisualPathTextElement = VisualElementBase & {
   };
 };
 
-export type VisualSamplingRational = {
+export type VisualSourceTimeRational = {
   readonly numerator: number;
   readonly denominator: number;
 };
@@ -317,34 +313,41 @@ export type VisualSamplingRational = {
  * One exact piece of a timed visual's source-time function. Target frames are
  * relative to the containing Present. A gap means the material is invisible.
  */
-export type VisualSamplingSegment = {
+export type VisualSourceTimePiece = {
   readonly target: FrameSpan;
   /** Absolute source-frame position at target.startFrame. */
-  readonly sourceFrame: VisualSamplingRational;
+  readonly sourceAtStart: VisualSourceTimeRational;
   /** Source frames advanced per Program frame; zero is an exact held frame. */
-  readonly rate: VisualSamplingRational;
-  readonly loop?: FrameSpan;
+  readonly rate: VisualSourceTimeRational;
+  /** Half-open source interval used for periodic evaluation. */
+  readonly wrap?: FrameSpan;
 };
 
-export type VisualTimedSampling = {
-  readonly sourceFrameRate: VisualSamplingRational;
+export type VisualSourceTimeMap = {
+  readonly sourceFrameRate: VisualSourceTimeRational;
   readonly sourceFrameCount: number;
-  readonly segments: readonly VisualSamplingSegment[];
+  readonly pieces: readonly VisualSourceTimePiece[];
 };
 
-export type VisualMediaElement = VisualElementBase & {
-  readonly kind: "image" | "video";
-  readonly artifact: BlobRef;
-  /** Exact frame-domain mapping for timed media. */
-  readonly sampling?: VisualTimedSampling;
-  readonly muted?: boolean;
-};
+export type VisualMediaElement =
+  | (VisualElementBase & {
+      readonly kind: "image";
+      readonly artifact: BlobRef;
+    })
+  | (VisualElementBase & {
+      readonly kind: "video";
+      readonly artifact: BlobRef;
+      /** Exact partial frame-domain function for this timed source. */
+      readonly sourceTime: VisualSourceTimeMap;
+      readonly muted?: boolean;
+    });
 
 /** A package-materialized visual surface with content-bound compositing metadata, not an untyped media guess. */
 export type VisualSurfaceElement = VisualElementBase & {
   readonly kind: "surface";
   readonly surface: CompositableSurfaceRef;
-  readonly sampling?: VisualTimedSampling;
+  /** Required exactly when surface.timing is frames; absent for a still Surface. */
+  readonly sourceTime?: VisualSourceTimeMap;
 };
 
 /**
@@ -360,23 +363,22 @@ export type VisualElement = VisualBoxElement | VisualProgramElement | VisualMask
 
 export type VisualPresent = {
   readonly id: string;
+  /** Stable order among Presents emitted by this owning Track. */
+  readonly order: number;
+  /** Author-owned absolute picture stacking position across Tracks. */
+  readonly z: number;
   /** Optional domain entity implemented by this renderer Present. */
   readonly subjectId?: string;
   readonly span: FrameSpan;
   /** Optional visible subranges in program frames; span remains the animation and sampling origin. */
   readonly visibility?: readonly FrameSpan[];
-  /** Absolute paint position for this Present, not for its authoring Track. */
-  readonly stacking: {
-    readonly order: number;
-    readonly tieBreak: string;
-  };
   readonly elements: readonly VisualElement[];
 };
 
 export type VisualTrack = {
   readonly kind: "visual";
-  /** ProgramSpace identity this terminal placement was rendered against. */
-  readonly programSpaceId: string;
+  /** Timeline identity this terminal placement was rendered against. */
+  readonly timelineId: string;
   /** The one terminal visual language shared by official video components. */
   readonly visualIr: typeof VISUAL_IR_V1;
   readonly id: string;
@@ -384,28 +386,38 @@ export type VisualTrack = {
   readonly presents: readonly VisualPresent[];
 };
 
-export type AudioClip = AudioPresentation & {
+export type AudioSourceTimeRational = {
+  readonly numerator: number;
+  readonly denominator: number;
+};
+
+export type AudioSourceTimePiece = {
+  /** Clip-local target samples. Uncovered samples are silent. */
+  readonly target: AudioSampleSpan;
+  readonly sourceAtStart: AudioSourceTimeRational;
+  /** Positive source samples advanced per target sample. */
+  readonly rate: AudioSourceTimeRational;
+  readonly wrap?: AudioSampleSpan;
+};
+
+export type AudioSourceTimeMap = {
+  readonly sourceSampleFrames: number;
+  readonly pieces: readonly AudioSourceTimePiece[];
+};
+
+export type AudioClip = AudioLevelAutomation & {
   readonly id: string;
   /** Optional domain entity implemented by this renderer Clip. */
   readonly subjectId?: string;
   /** Bytes only. Exact duration belongs to source.sampleFrames, not duplicated floating metadata. */
   readonly artifact: BlobRef;
-  /** Exact audible placement in the canonical 48 kHz ProgramSpace sample domain. */
+  /** Exact audible placement in the canonical 48 kHz Timeline sample domain. */
   readonly target: {
     readonly startSample: number;
     readonly endSampleExclusive: number;
   };
-  /** Exact sampling interval in one canonical 48 kHz stereo WAV Artifact. */
-  readonly source: {
-    readonly sampleFrames: number;
-    readonly startSample: number;
-    readonly endSampleExclusive: number;
-    readonly loop: boolean;
-    /** Offset inside the effective source interval used only when looping. */
-    readonly phaseSample: number;
-  };
-  readonly playbackRate: number;
-  readonly pitch: "preserve";
+  /** Partial Clip-local target-to-source relation for one canonical 48 kHz stereo WAV Artifact. */
+  readonly sourceTime: AudioSourceTimeMap;
   readonly gain: number;
   readonly fadeInSamples: number;
   readonly fadeOutSamples: number;
@@ -413,8 +425,8 @@ export type AudioClip = AudioPresentation & {
 
 export type AudioTrack = {
   readonly kind: "audio";
-  /** ProgramSpace identity this terminal placement was rendered against. */
-  readonly programSpaceId: string;
+  /** Timeline identity this terminal placement was rendered against. */
+  readonly timelineId: string;
   readonly id: string;
   readonly clips: readonly AudioClip[];
 };
@@ -464,7 +476,7 @@ function assertFrameSpan(span: FrameSpan, totalFrames: number, label: string): v
     || span.endFrameExclusive <= span.startFrame
     || span.endFrameExclusive > totalFrames
   ) {
-    throw new Error(`${label} is outside ProgramSpace.`);
+    throw new Error(`${label} is outside Timeline.`);
   }
 }
 
@@ -480,59 +492,62 @@ function assertMediaArtifact(artifact: BlobRef, label: string): void {
   }
 }
 
-function assertRational(value: VisualSamplingRational, label: string, allowZero: boolean): void {
-  if (!Number.isSafeInteger(value.numerator) || (!allowZero && value.numerator <= 0) || (allowZero && value.numerator < 0)
+function assertRational(value: VisualSourceTimeRational, label: string, sign: "positive" | "non-negative" | "signed"): void {
+  if (!Number.isSafeInteger(value.numerator)
+    || (sign === "positive" && value.numerator <= 0)
+    || (sign === "non-negative" && value.numerator < 0)
     || !Number.isSafeInteger(value.denominator) || value.denominator <= 0) {
-    throw new Error(`${label} must be a non-negative safe rational.`);
+    throw new Error(`${label} is not a safe ${sign} rational.`);
   }
 }
 
-function compareRationalToInteger(value: VisualSamplingRational, integer: number): number {
+function compareRationalToInteger(value: VisualSourceTimeRational, integer: number): number {
   const difference = BigInt(value.numerator) - BigInt(integer) * BigInt(value.denominator);
   return difference < 0n ? -1 : difference > 0n ? 1 : 0;
 }
 
-function sourceAt(segment: VisualSamplingSegment, targetOffset: number): VisualSamplingRational {
-  const denominator = BigInt(segment.sourceFrame.denominator) * BigInt(segment.rate.denominator);
-  const numerator = BigInt(segment.sourceFrame.numerator) * BigInt(segment.rate.denominator)
-    + BigInt(targetOffset) * BigInt(segment.rate.numerator) * BigInt(segment.sourceFrame.denominator);
-  if (numerator > BigInt(Number.MAX_SAFE_INTEGER) || denominator > BigInt(Number.MAX_SAFE_INTEGER)) {
-    throw new Error("Visual sampling arithmetic exceeds the safe wire domain.");
+function sourceAt(piece: VisualSourceTimePiece, targetOffset: number): VisualSourceTimeRational {
+  const denominator = BigInt(piece.sourceAtStart.denominator) * BigInt(piece.rate.denominator);
+  const numerator = BigInt(piece.sourceAtStart.numerator) * BigInt(piece.rate.denominator)
+    + BigInt(targetOffset) * BigInt(piece.rate.numerator) * BigInt(piece.sourceAtStart.denominator);
+  if (numerator > BigInt(Number.MAX_SAFE_INTEGER) || numerator < BigInt(Number.MIN_SAFE_INTEGER)
+    || denominator > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new Error("Visual source-time arithmetic exceeds the safe wire domain.");
   }
   return { numerator: Number(numerator), denominator: Number(denominator) };
 }
 
-function assertSampling(value: VisualTimedSampling, durationFrames: number, label: string): void {
-  assertRational(value.sourceFrameRate, `${label}.sourceFrameRate`, false);
-  if (!Number.isSafeInteger(value.sourceFrameCount) || value.sourceFrameCount <= 0 || value.segments.length === 0) {
+function assertSourceTime(value: VisualSourceTimeMap, durationFrames: number, label: string): void {
+  assertRational(value.sourceFrameRate, `${label}.sourceFrameRate`, "positive");
+  if (!Number.isSafeInteger(value.sourceFrameCount) || value.sourceFrameCount <= 0 || value.pieces.length === 0) {
     throw new Error(`${label} source frame domain is invalid.`);
   }
   let previousEnd = 0;
-  for (const [index, segment] of value.segments.entries()) {
-    const item = `${label}.segments.${index}`;
-    if (!Number.isSafeInteger(segment.target.startFrame) || !Number.isSafeInteger(segment.target.endFrameExclusive)
-      || segment.target.startFrame < previousEnd || segment.target.endFrameExclusive <= segment.target.startFrame
-      || segment.target.endFrameExclusive > durationFrames) throw new Error(`${item} target interval is invalid.`);
-    assertRational(segment.sourceFrame, `${item}.sourceFrame`, true);
-    assertRational(segment.rate, `${item}.rate`, true);
-    if (segment.loop !== undefined) {
-      if (!Number.isSafeInteger(segment.loop.startFrame) || !Number.isSafeInteger(segment.loop.endFrameExclusive)
-        || segment.loop.startFrame < 0 || segment.loop.endFrameExclusive <= segment.loop.startFrame
-        || segment.loop.endFrameExclusive > value.sourceFrameCount
-        || compareRationalToInteger(segment.sourceFrame, segment.loop.startFrame) < 0
-        || compareRationalToInteger(segment.sourceFrame, segment.loop.endFrameExclusive) >= 0) {
-        throw new Error(`${item} loop interval or phase is invalid.`);
+  for (const [index, piece] of value.pieces.entries()) {
+    const item = `${label}.pieces.${index}`;
+    if (!Number.isSafeInteger(piece.target.startFrame) || !Number.isSafeInteger(piece.target.endFrameExclusive)
+      || piece.target.startFrame < previousEnd || piece.target.endFrameExclusive <= piece.target.startFrame
+      || piece.target.endFrameExclusive > durationFrames) throw new Error(`${item} target interval is invalid.`);
+    assertRational(piece.sourceAtStart, `${item}.sourceAtStart`, "non-negative");
+    assertRational(piece.rate, `${item}.rate`, "signed");
+    if (piece.wrap !== undefined) {
+      if (!Number.isSafeInteger(piece.wrap.startFrame) || !Number.isSafeInteger(piece.wrap.endFrameExclusive)
+        || piece.wrap.startFrame < 0 || piece.wrap.endFrameExclusive <= piece.wrap.startFrame
+        || piece.wrap.endFrameExclusive > value.sourceFrameCount
+        || compareRationalToInteger(piece.sourceAtStart, piece.wrap.startFrame) < 0
+        || compareRationalToInteger(piece.sourceAtStart, piece.wrap.endFrameExclusive) >= 0) {
+        throw new Error(`${item} wrap interval or phase is invalid.`);
       }
     } else {
-      const last = sourceAt(segment, segment.target.endFrameExclusive - segment.target.startFrame - 1);
-      if (compareRationalToInteger(segment.sourceFrame, 0) < 0
-        || compareRationalToInteger(segment.sourceFrame, value.sourceFrameCount) >= 0
+      const last = sourceAt(piece, piece.target.endFrameExclusive - piece.target.startFrame - 1);
+      if (compareRationalToInteger(piece.sourceAtStart, 0) < 0
+        || compareRationalToInteger(piece.sourceAtStart, value.sourceFrameCount) >= 0
         || compareRationalToInteger(last, 0) < 0
         || compareRationalToInteger(last, value.sourceFrameCount) >= 0) {
         throw new Error(`${item} samples outside its source frame domain.`);
       }
     }
-    previousEnd = segment.target.endFrameExclusive;
+    previousEnd = piece.target.endFrameExclusive;
   }
 }
 
@@ -934,8 +949,8 @@ function assertAnimation(animation: VisualAnimation | undefined, _durationFrames
   }
 }
 
-function assertPresent(present: VisualPresent, programSpace: ProgramSpace | undefined, trackId: string): void {
-  const totalFrames = programSpace === undefined ? Number.MAX_SAFE_INTEGER : programSpaceFrameCount(programSpace);
+function assertPresent(present: VisualPresent, timeline: Timeline | undefined, trackId: string): void {
+  const totalFrames = timeline === undefined ? Number.MAX_SAFE_INTEGER : timelineFrameCount(timeline);
   assertNonEmpty(present.id, `${trackId} Present id`);
   if (present.subjectId !== undefined) assertNonEmpty(present.subjectId, `${trackId}.${present.id} subjectId`);
   assertFrameSpan(present.span, totalFrames, `${trackId}.${present.id}.span`);
@@ -945,10 +960,10 @@ function assertPresent(present: VisualPresent, programSpace: ProgramSpace | unde
     if (span.startFrame < previousEnd) throw new Error(`${trackId}.${present.id} visibility must be ordered within its span.`);
     previousEnd = span.endFrameExclusive;
   }
-  assertNonEmpty(present.stacking.tieBreak, `${trackId}.${present.id} stacking tieBreak`);
-  if (!Number.isSafeInteger(present.stacking.order)) {
-    throw new Error(`${trackId}.${present.id} has invalid stacking order.`);
+  if (!Number.isSafeInteger(present.order) || present.order < 0) {
+    throw new Error(`${trackId}.${present.id} has invalid local order.`);
   }
+  if (!Number.isSafeInteger(present.z)) throw new Error(`${trackId}.${present.id} has invalid z.`);
   if (present.elements.length === 0) throw new Error(`${trackId}.${present.id} must contain an element.`);
   const elements = new Map<string, VisualElement>();
   const roots: VisualElement[] = [];
@@ -980,15 +995,12 @@ function assertPresent(present: VisualPresent, programSpace: ProgramSpace | unde
       if (!element.artifact.mediaType.startsWith(`${element.kind}/`)) {
         throw new Error(`${trackId}.${present.id}.${element.id} media kind does not match its Artifact.`);
       }
-      if (element.kind === "image" && element.sampling !== undefined) {
-        throw new Error(`${trackId}.${present.id}.${element.id} cannot sample a durationless image.`);
-      }
-      if (element.sampling !== undefined) {
+      if (element.kind === "video") {
         if (element.animation !== undefined) {
-          throw new Error(`${trackId}.${present.id}.${element.id} sampling motion must live on an owned wrapper.`);
+          throw new Error(`${trackId}.${present.id}.${element.id} source time and animation must live on separate owned elements.`);
         }
-        assertSampling(element.sampling, present.span.endFrameExclusive - present.span.startFrame,
-          `${trackId}.${present.id}.${element.id}.sampling`);
+        assertSourceTime(element.sourceTime, present.span.endFrameExclusive - present.span.startFrame,
+          `${trackId}.${present.id}.${element.id}.sourceTime`);
       }
     }
     if (element.kind === "text") {
@@ -1051,31 +1063,24 @@ function assertPresent(present: VisualPresent, programSpace: ProgramSpace | unde
     }
     if (element.kind === "surface") {
       assertCompositableSurfaceRef(element.surface, `${trackId}.${present.id}.${element.id}.surface`);
-      if (element.surface.timing.kind === "still" && element.sampling !== undefined) {
-        throw new Error(`${trackId}.${present.id}.${element.id} cannot sample a still Surface.`);
+      if (element.surface.timing.kind === "still" && element.sourceTime !== undefined) {
+        throw new Error(`${trackId}.${present.id}.${element.id} still Surface cannot have source time.`);
       }
-      if (element.sampling !== undefined) {
+      if (element.sourceTime !== undefined) {
         if (element.animation !== undefined) {
-          throw new Error(`${trackId}.${present.id}.${element.id} sampling motion must live on an owned wrapper.`);
+          throw new Error(`${trackId}.${present.id}.${element.id} source time and animation must live on separate owned elements.`);
         }
         if (element.surface.timing.kind !== "frames"
-          || element.sampling.sourceFrameCount !== element.surface.timing.frameCount
-          || element.sampling.sourceFrameRate.numerator !== element.surface.timing.frameRate.numerator
-          || element.sampling.sourceFrameRate.denominator !== element.surface.timing.frameRate.denominator) {
-          throw new Error(`${trackId}.${present.id}.${element.id} Surface sampling differs from its typed timing.`);
+          || element.sourceTime.sourceFrameCount !== element.surface.timing.frameCount
+          || element.sourceTime.sourceFrameRate.numerator !== element.surface.timing.frameRate.numerator
+          || element.sourceTime.sourceFrameRate.denominator !== element.surface.timing.frameRate.denominator) {
+          throw new Error(`${trackId}.${present.id}.${element.id} Surface source time differs from its typed timing.`);
         }
-        assertSampling(element.sampling, present.span.endFrameExclusive - present.span.startFrame,
-          `${trackId}.${present.id}.${element.id}.sampling`);
+        assertSourceTime(element.sourceTime, present.span.endFrameExclusive - present.span.startFrame,
+          `${trackId}.${present.id}.${element.id}.sourceTime`);
       }
       if (element.surface.timing.kind === "frames") {
-        const durationFrames = present.span.endFrameExclusive - present.span.startFrame;
-        if (element.sampling === undefined && element.surface.timing.frameCount !== durationFrames) {
-          throw new Error(`${trackId}.${present.id}.${element.id} Surface must exactly match its Present frame domain.`);
-        }
-        if (element.sampling === undefined && programSpace !== undefined && (
-          element.surface.timing.frameRate.numerator !== programSpace.frameRate.numerator
-          || element.surface.timing.frameRate.denominator !== programSpace.frameRate.denominator
-        )) throw new Error(`${trackId}.${present.id}.${element.id} Surface must exactly match its Present frame domain.`);
+        if (element.sourceTime === undefined) throw new Error(`${trackId}.${present.id}.${element.id} timed Surface requires source time.`);
       }
     }
     if (element.kind === "mask") {
@@ -1203,12 +1208,12 @@ function normalizeElement(element: VisualElement): VisualElement {
           ? { kind: "still" }
           : { ...element.surface.timing, frameRate: { ...element.surface.timing.frameRate } },
       },
-      ...(element.sampling === undefined ? {} : { sampling: {
-        sourceFrameRate: { ...element.sampling.sourceFrameRate },
-        sourceFrameCount: element.sampling.sourceFrameCount,
-        segments: element.sampling.segments.map((segment) => ({
-          target: { ...segment.target }, sourceFrame: { ...segment.sourceFrame }, rate: { ...segment.rate },
-          ...(segment.loop === undefined ? {} : { loop: { ...segment.loop } }),
+      ...(element.sourceTime === undefined ? {} : { sourceTime: {
+        sourceFrameRate: { ...element.sourceTime.sourceFrameRate },
+        sourceFrameCount: element.sourceTime.sourceFrameCount,
+        pieces: element.sourceTime.pieces.map((piece) => ({
+          target: { ...piece.target }, sourceAtStart: { ...piece.sourceAtStart }, rate: { ...piece.rate },
+          ...(piece.wrap === undefined ? {} : { wrap: { ...piece.wrap } }),
         })),
       } }),
     };
@@ -1219,18 +1224,19 @@ function normalizeElement(element: VisualElement): VisualElement {
   if (element.artifact === undefined) {
     throw new Error(`${element.id} is a ${element.kind} element with no artifact.`);
   }
+  if (element.kind === "image") return { ...common, kind: "image", artifact: { ...element.artifact } };
   return {
     ...common,
-    kind: element.kind,
+    kind: "video",
     artifact: { ...element.artifact },
-    ...(element.sampling === undefined ? {} : { sampling: {
-      sourceFrameRate: { ...element.sampling.sourceFrameRate },
-      sourceFrameCount: element.sampling.sourceFrameCount,
-      segments: element.sampling.segments.map((segment) => ({
-        target: { ...segment.target }, sourceFrame: { ...segment.sourceFrame }, rate: { ...segment.rate },
-        ...(segment.loop === undefined ? {} : { loop: { ...segment.loop } }),
+    sourceTime: {
+      sourceFrameRate: { ...element.sourceTime.sourceFrameRate },
+      sourceFrameCount: element.sourceTime.sourceFrameCount,
+      pieces: element.sourceTime.pieces.map((piece) => ({
+        target: { ...piece.target }, sourceAtStart: { ...piece.sourceAtStart }, rate: { ...piece.rate },
+        ...(piece.wrap === undefined ? {} : { wrap: { ...piece.wrap } }),
       })),
-    } }),
+    },
     ...(element.muted === undefined ? {} : { muted: element.muted }),
   };
 }
@@ -1238,29 +1244,27 @@ function normalizeElement(element: VisualElement): VisualElement {
 function visualTrackContent(value: Omit<VisualTrack, "kind">): VisualTrack {
   return {
     kind: "visual",
-    programSpaceId: value.programSpaceId,
+    timelineId: value.timelineId,
     visualIr: value.visualIr,
     id: value.id,
     presents: [...value.presents]
       .map((present) => ({
         id: present.id,
+        order: present.order,
+        z: present.z,
         ...(present.subjectId === undefined ? {} : { subjectId: present.subjectId }),
         span: { ...present.span },
         ...(present.visibility === undefined ? {} : { visibility: present.visibility.map(span => ({ ...span })) }),
-        stacking: { ...present.stacking },
         elements: [...present.elements].map(normalizeElement).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id)),
       }))
-      .sort((a, b) => a.span.startFrame - b.span.startFrame
-        || a.stacking.order - b.stacking.order
-        || a.stacking.tieBreak.localeCompare(b.stacking.tieBreak)
-        || a.id.localeCompare(b.id)),
+      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id)),
   };
 }
 
 function audioTrackContent(value: Omit<AudioTrack, "kind">): AudioTrack {
   return {
     kind: "audio",
-    programSpaceId: value.programSpaceId,
+    timelineId: value.timelineId,
     id: value.id,
     clips: [...value.clips]
       .map((clip) => ({
@@ -1268,9 +1272,15 @@ function audioTrackContent(value: Omit<AudioTrack, "kind">): AudioTrack {
         ...(clip.subjectId === undefined ? {} : { subjectId: clip.subjectId }),
         artifact: { ...clip.artifact },
         target: { ...clip.target },
-        source: { ...clip.source },
-        playbackRate: clip.playbackRate,
-        pitch: clip.pitch,
+        sourceTime: {
+          sourceSampleFrames: clip.sourceTime.sourceSampleFrames,
+          pieces: clip.sourceTime.pieces.map((piece) => ({
+            target: { ...piece.target },
+            sourceAtStart: { ...piece.sourceAtStart },
+            rate: { ...piece.rate },
+            ...(piece.wrap === undefined ? {} : { wrap: { ...piece.wrap } }),
+          })),
+        },
         gain: clip.gain,
         fadeInSamples: clip.fadeInSamples,
         fadeOutSamples: clip.fadeOutSamples,
@@ -1289,34 +1299,34 @@ export function sealAudioTrack(value: Omit<AudioTrack, "kind">): AudioTrack {
   return audioTrackContent(value);
 }
 
-export function assertVisualTrackIdentity(track: VisualTrack, programSpace?: ProgramSpace): void {
-  if (programSpace !== undefined) assertProgramSpaceIdentity(programSpace);
+export function assertVisualTrackIdentity(track: VisualTrack, timeline?: Timeline): void {
+  if (timeline !== undefined) assertTimelineIdentity(timeline);
   if (track.kind !== "visual") throw new Error("VisualTrack kind is invalid.");
   if (track.visualIr !== VISUAL_IR_V1) throw new Error("Unsupported VisualTrack visual IR.");
-  assertNonEmpty(track.programSpaceId, "VisualTrack programSpaceId");
-  if (programSpace !== undefined && track.programSpaceId !== programSpace.id) {
-    throw new Error(`VisualTrack ${track.id} belongs to ProgramSpace ${track.programSpaceId}, not ${programSpace.id}.`);
+  assertNonEmpty(track.timelineId, "VisualTrack timelineId");
+  if (timeline !== undefined && track.timelineId !== timeline.id) {
+    throw new Error(`VisualTrack ${track.id} belongs to Timeline ${track.timelineId}, not ${timeline.id}.`);
   }
   assertNonEmpty(track.id, "VisualTrack id");
   const presentIds = new Set<string>();
   for (const present of track.presents) {
     if (presentIds.has(present.id)) throw new Error(`${track.id} has duplicate Present ${present.id}.`);
     presentIds.add(present.id);
-    assertPresent(present, programSpace, track.id);
+    assertPresent(present, timeline, track.id);
   }
 }
 
-export function assertAudioTrackIdentity(track: AudioTrack, programSpace?: ProgramSpace): void {
-  if (programSpace !== undefined) assertProgramSpaceIdentity(programSpace);
+export function assertAudioTrackIdentity(track: AudioTrack, timeline?: Timeline): void {
+  if (timeline !== undefined) assertTimelineIdentity(timeline);
   if (track.kind !== "audio") throw new Error("AudioTrack kind is invalid.");
-  assertNonEmpty(track.programSpaceId, "AudioTrack programSpaceId");
-  if (programSpace !== undefined && track.programSpaceId !== programSpace.id) {
-    throw new Error(`AudioTrack ${track.id} belongs to ProgramSpace ${track.programSpaceId}, not ${programSpace.id}.`);
+  assertNonEmpty(track.timelineId, "AudioTrack timelineId");
+  if (timeline !== undefined && track.timelineId !== timeline.id) {
+    throw new Error(`AudioTrack ${track.id} belongs to Timeline ${track.timelineId}, not ${timeline.id}.`);
   }
   assertNonEmpty(track.id, "AudioTrack id");
-  const totalSamples = programSpace === undefined
+  const totalSamples = timeline === undefined
     ? Number.MAX_SAFE_INTEGER
-    : programSpaceSampleFrames(programSpace, 48_000);
+    : timelineSampleFrames(timeline, 48_000);
   const clipIds = new Set<string>();
   for (const clip of track.clips) {
     if (clipIds.has(clip.id)) throw new Error(`${track.id} has duplicate clip ${clip.id}.`);
@@ -1328,35 +1338,80 @@ export function assertAudioTrackIdentity(track: AudioTrack, programSpace?: Progr
       || !Number.isSafeInteger(clip.target.endSampleExclusive)
       || clip.target.endSampleExclusive <= clip.target.startSample
       || clip.target.endSampleExclusive > totalSamples) {
-      throw new Error(`${track.id}.${clip.id} target sample interval is outside ProgramSpace.`);
+      throw new Error(`${track.id}.${clip.id} target sample interval is outside Timeline.`);
     }
-    if (!Number.isSafeInteger(clip.source.sampleFrames) || clip.source.sampleFrames <= 0
-      || !Number.isSafeInteger(clip.source.startSample) || clip.source.startSample < 0
-      || !Number.isSafeInteger(clip.source.endSampleExclusive)
-      || clip.source.endSampleExclusive <= clip.source.startSample
-      || clip.source.endSampleExclusive > clip.source.sampleFrames) {
-      throw new Error(`${track.id}.${clip.id} source sample interval is invalid.`);
-    }
-    const sourceLength = clip.source.endSampleExclusive - clip.source.startSample;
-    if (!Number.isSafeInteger(clip.source.phaseSample) || clip.source.phaseSample < 0
-      || clip.source.phaseSample >= sourceLength
-      || (!clip.source.loop && clip.source.phaseSample !== 0)) {
-      throw new Error(`${track.id}.${clip.id} source loop phase is invalid.`);
-    }
-    if (!Number.isFinite(clip.playbackRate) || clip.playbackRate <= 0 || clip.playbackRate > 100) {
-      throw new Error(`${track.id}.${clip.id} has invalid playbackRate.`);
-    }
-    if (clip.pitch !== "preserve") throw new Error(`${track.id}.${clip.id} pitch policy is invalid.`);
+    assertAudioSourceTime(clip.sourceTime, clip.target.endSampleExclusive - clip.target.startSample,
+      `${track.id}.${clip.id}.sourceTime`);
     if (!Number.isFinite(clip.gain) || clip.gain < 0 || clip.gain > 64) {
       throw new Error(`${track.id}.${clip.id} gain is invalid.`);
     }
-    assertAudioPresentation(clip, clip.target, totalSamples);
+    assertAudioLevelAutomation(clip, clip.target, totalSamples);
     const targetLength = clip.target.endSampleExclusive - clip.target.startSample;
     if (!Number.isSafeInteger(clip.fadeInSamples) || clip.fadeInSamples < 0 || clip.fadeInSamples > targetLength
       || !Number.isSafeInteger(clip.fadeOutSamples) || clip.fadeOutSamples < 0
       || clip.fadeOutSamples > targetLength) {
       throw new Error(`${track.id}.${clip.id} fades are invalid.`);
     }
+  }
+}
+
+function assertAudioSourceTimeRational(value: AudioSourceTimeRational, label: string, positive = false): void {
+  if (!Number.isSafeInteger(value.numerator) || (positive ? value.numerator <= 0 : value.numerator < 0)
+    || !Number.isSafeInteger(value.denominator) || value.denominator <= 0) {
+    throw new Error(`${label} is invalid.`);
+  }
+}
+
+function compareAudioRational(value: AudioSourceTimeRational, integer: number): number {
+  const difference = BigInt(value.numerator) - BigInt(integer) * BigInt(value.denominator);
+  return difference < 0n ? -1 : difference > 0n ? 1 : 0;
+}
+
+function compareAudioSourceAtEnd(piece: AudioSourceTimePiece, integer: number): number {
+  const length = piece.target.endSampleExclusive - piece.target.startSample;
+  const numerator = BigInt(piece.sourceAtStart.numerator) * BigInt(piece.rate.denominator)
+    + BigInt(length) * BigInt(piece.rate.numerator) * BigInt(piece.sourceAtStart.denominator);
+  const denominator = BigInt(piece.sourceAtStart.denominator) * BigInt(piece.rate.denominator);
+  const difference = numerator - BigInt(integer) * denominator;
+  return difference < 0n ? -1 : difference > 0n ? 1 : 0;
+}
+
+function assertAudioSourceTime(value: AudioSourceTimeMap, targetSamples: number, label: string): void {
+  if (!Number.isSafeInteger(value.sourceSampleFrames) || value.sourceSampleFrames <= 0
+    || !Array.isArray(value.pieces) || value.pieces.length === 0) throw new Error(`${label} is invalid.`);
+  let previousEnd = 0;
+  for (const [index, piece] of value.pieces.entries()) {
+    const item = `${label}.pieces.${index}`;
+    if (!Number.isSafeInteger(piece.target.startSample) || piece.target.startSample < previousEnd
+      || !Number.isSafeInteger(piece.target.endSampleExclusive)
+      || piece.target.endSampleExclusive <= piece.target.startSample
+      || piece.target.endSampleExclusive > targetSamples) throw new Error(`${item}.target is invalid.`);
+    assertAudioSourceTimeRational(piece.sourceAtStart, `${item}.sourceAtStart`);
+    assertAudioSourceTimeRational(piece.rate, `${item}.rate`, true);
+    if (piece.sourceAtStart.numerator % piece.sourceAtStart.denominator !== 0) {
+      throw new Error(`${item}.sourceAtStart must resolve to an exact source-sample boundary.`);
+    }
+    if (piece.wrap === undefined) {
+      const sourceEndNumerator = BigInt(piece.sourceAtStart.numerator) * BigInt(piece.rate.denominator)
+        + BigInt(piece.target.endSampleExclusive - piece.target.startSample)
+          * BigInt(piece.rate.numerator) * BigInt(piece.sourceAtStart.denominator);
+      const sourceEndDenominator = BigInt(piece.sourceAtStart.denominator) * BigInt(piece.rate.denominator);
+      if (sourceEndNumerator % sourceEndDenominator !== 0n) {
+        throw new Error(`${item} must end on an exact source-sample boundary.`);
+      }
+      if (compareAudioRational(piece.sourceAtStart, value.sourceSampleFrames) >= 0
+        || compareAudioSourceAtEnd(piece, value.sourceSampleFrames) > 0) {
+        throw new Error(`${item} leaves the source domain.`);
+      }
+    } else if (!Number.isSafeInteger(piece.wrap.startSample) || piece.wrap.startSample < 0
+      || !Number.isSafeInteger(piece.wrap.endSampleExclusive)
+      || piece.wrap.endSampleExclusive <= piece.wrap.startSample
+      || piece.wrap.endSampleExclusive > value.sourceSampleFrames
+      || compareAudioRational(piece.sourceAtStart, piece.wrap.startSample) < 0
+      || compareAudioRational(piece.sourceAtStart, piece.wrap.endSampleExclusive) >= 0) {
+      throw new Error(`${item}.wrap is invalid.`);
+    }
+    previousEnd = piece.target.endSampleExclusive;
   }
 }
 
@@ -1376,9 +1431,9 @@ export function sealComposition(value: Composition): Composition {
   return compositionContent(value);
 }
 
-export function assertCompositionIdentity(composition: Composition, programSpace?: ProgramSpace): void {
+export function assertCompositionIdentity(composition: Composition, timeline?: Timeline): void {
   assertNonEmpty(composition.id, "Composition id");
-  if (programSpace !== undefined) assertProgramSpaceIdentity(programSpace);
+  if (timeline !== undefined) assertTimelineIdentity(timeline);
   if (
     !Number.isSafeInteger(composition.canvas.width)
     || composition.canvas.width <= 0
@@ -1389,29 +1444,13 @@ export function assertCompositionIdentity(composition: Composition, programSpace
     throw new Error("Composition canvas is invalid.");
   }
   const ids = new Set<string>();
-  const stacking = new Map<string, Array<{ readonly trackId: string; readonly present: VisualPresent }>>();
   for (const track of composition.tracks) {
     if (ids.has(track.id)) throw new Error(`Composition contains duplicate Track id ${track.id}.`);
     ids.add(track.id);
     if (track.kind === "visual") {
-      assertVisualTrackIdentity(track, programSpace);
-      for (const present of track.presents) {
-        const key = `${present.stacking.order}\u0000${present.stacking.tieBreak}`;
-        const peers = stacking.get(key) ?? [];
-        for (const peer of peers) {
-          const overlaps = present.span.startFrame < peer.present.span.endFrameExclusive
-            && peer.present.span.startFrame < present.span.endFrameExclusive;
-          if (overlaps) {
-            throw new Error(
-              `Composition contains overlapping visual stacking key ${key} in ${peer.trackId}.${peer.present.id} and ${track.id}.${present.id}.`,
-            );
-          }
-        }
-        peers.push({ trackId: track.id, present });
-        stacking.set(key, peers);
-      }
+      assertVisualTrackIdentity(track, timeline);
     } else {
-      assertAudioTrackIdentity(track, programSpace);
+      assertAudioTrackIdentity(track, timeline);
     }
   }
 }

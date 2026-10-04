@@ -1,7 +1,7 @@
 # `@qflow/render-hyperframes`
 
-The Surface accepts `timeline={program.timeline}` and projects its complete ProgramSpace.
-Its Fragment receives that range as `space`; rendering works with partial, overlapping or absent
+The Surface accepts `timeline={program.timeline}` and passes that Timeline directly to rendering.
+Its Fragment receives it as `timeline`; rendering works with partial, overlapping or absent
 semantic coverage through the same frame and audio pipeline.
 
 Explicit author and capability boundary for final HyperFrames video rendering.
@@ -17,7 +17,7 @@ or video encoding in that observation path.
 
 The package owns `<render:Video composition={...}/>` and lowers it to ordinary Operations that:
 
-1. obtain the `ProgramSpace` from the Timeline input and compile the referenced `Composition` into a `HyperframesDocument`;
+1. compile the referenced `Composition` against the Timeline into a `HyperframesDocument`;
 2. request a silent, frame-exact `RenderedVisual`;
 3. compile every peer `AudioTrack` into one `AudioProgramPlan`;
 4. request an exact 48 kHz `TimelineAudio`;
@@ -28,7 +28,7 @@ The package is not a renderer and contains no queue, credentials or deployment c
 HyperFrames process, a hosted endpoint or another conforming execution package may register a
 Provider for the exact visual capability. Media Providers independently realize audio rendering and
 mux. None parses SVML or decides which Composition to render. Every result is bound to the same
-ProgramSpace and exact frame/sample domain before it can become a final video Record.
+Timeline and exact frame/sample domain before it can become a final video Record.
 
 The output does not carry copied duration or lineage metadata. It is an ordinary Resource-backed
 Blob and can therefore be connected directly to any later component that accepts Blob bytes. A

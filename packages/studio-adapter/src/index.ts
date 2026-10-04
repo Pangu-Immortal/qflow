@@ -39,17 +39,19 @@ export type StudioTimelinePresentation = {
 };
 
 export type StudioTemporalSource = {
-  readonly spaceId: string;
+  readonly timelineId: string;
   readonly narrativeId?: string;
-  readonly kind: "program" | "selection" | "segment" | "moment";
+  /** Domain-owned Type and role; Studio does not enumerate future time domains. */
+  readonly type: TypeRef;
+  readonly kind: string;
   readonly id: string;
 };
 
 export type StudioTemporalAuthority =
   | {
-      readonly kind: "semantic";
+      readonly kind: "domain";
       readonly source: StudioTemporalSource;
-      readonly boundary: "start" | "end" | "cue";
+      readonly boundary: string;
     }
   | {
       readonly kind: "parameter";
@@ -61,11 +63,8 @@ export type StudioTemporalAuthority =
 export type StudioTemporalInstantProjection = {
   readonly kind: "instant";
   readonly expression: string;
-  readonly reference:
-    | "program.start" | "program.end"
-    | "selection.start" | "selection.end"
-    | "segment.start" | "segment.end"
-    | "moment.cue" | "absolute";
+  /** Domain-owned reference spelling, or one of Timeline's common expressions. */
+  readonly reference: string;
   readonly frame: number;
   readonly source: StudioTemporalSource;
   readonly authority: StudioTemporalAuthority;
@@ -375,7 +374,7 @@ export type StudioCandidateProvenance = {
 
 export type StudioSemanticAnchor = {
   readonly id: string;
-  readonly kind: "program-start" | "segment-start" | "segment-end" | "token-start" | "token-end" | "program-end";
+  readonly kind: "segment-start" | "segment-end" | "token-start" | "token-end";
   readonly frame: number;
   readonly segmentId?: string;
   readonly tokenId?: string;
@@ -398,7 +397,7 @@ export type StudioSemanticToken = {
 };
 
 export type StudioSemanticTimeline = {
-  readonly spaceId: string;
+  readonly timelineId: string;
   readonly narrativeId: string;
   readonly presentation: {
     readonly family: StudioTrackFamily;
@@ -883,8 +882,50 @@ export function temporalLineageFor(
     throw new Error(`Studio Temporal lineage is ambiguous for ${subjectId}${input === undefined ? "" : ` at ${input}`}.`);
   }
   const binding = found[0];
+  const authored = context.placement?.id === subjectId
+    ? context.placement
+    : context.placement?.children.find((child) => child.id === subjectId);
+  const authority = (
+    endpoint: StudioTemporalInstantProjection,
+    role: "instant" | "start" | "end",
+  ): StudioTemporalInstantProjection => {
+    if (authored === undefined) return { ...endpoint, authority: { kind: "fixed" } };
+    const attributes = authored.attributes;
+    const references = authored.referenceAttributes;
+    const parameter = (binding: string, relation: "direct" | "after-start" | "before-end" = "direct") =>
+      ({ kind: "parameter" as const, binding, relation });
+    const domain = endpoint.authority.kind === "domain" ? endpoint.authority : undefined;
+    if (role === "instant") {
+      if (attributes.instant !== undefined) return { ...endpoint, authority: parameter("instant") };
+      if (references.at !== undefined && domain !== undefined && domain.source.kind !== "segment") return endpoint;
+      if (attributes.at !== undefined) return { ...endpoint, authority: parameter("at") };
+      return { ...endpoint, authority: { kind: "fixed" } };
+    }
+    if (attributes.start !== undefined || attributes.end !== undefined) {
+      return { ...endpoint, authority: parameter(role) };
+    }
+    if (attributes.for !== undefined && (attributes.at !== undefined || references.at !== undefined)) {
+      if (role === "end") return { ...endpoint, authority: parameter("for", "after-start") };
+      if (references.at !== undefined && domain !== undefined) return endpoint;
+      return { ...endpoint, authority: parameter("at") };
+    }
+    if (attributes.for !== undefined && (attributes.until !== undefined || references.until !== undefined)) {
+      if (role === "start") return { ...endpoint, authority: parameter("for", "before-end") };
+      if (references.until !== undefined && domain !== undefined) return endpoint;
+      return { ...endpoint, authority: parameter("until") };
+    }
+    if (references.during !== undefined && domain?.source.kind === "selection") return endpoint;
+    return { ...endpoint, authority: { kind: "fixed" } };
+  };
+  const projection = binding?.projection.kind === "instant"
+    ? authority(binding.projection, "instant")
+    : binding === undefined ? undefined : {
+      ...binding.projection,
+      start: authority(binding.projection.start, "start"),
+      end: authority(binding.projection.end, "end"),
+    };
   return binding === undefined ? undefined : {
-    projection: binding.projection,
+    projection: projection!,
     phases: [],
   };
 }
@@ -894,14 +935,14 @@ export function temporalSemanticSource(lineage: StudioTemporalLineage | undefine
   if (lineage === undefined) return undefined;
   const projection = lineage.projection;
   const endpoints = projection.kind === "instant" ? [projection] : [projection.start, projection.end];
-  const semantic = endpoints.flatMap((endpoint) => endpoint.authority.kind === "semantic"
+  const semantic = endpoints.flatMap((endpoint) => endpoint.authority.kind === "domain"
     ? [endpoint.authority.source]
     : []);
   const first = semantic[0];
   if (first === undefined) return undefined;
   return semantic.every((candidate) => candidate.kind === first.kind
     && candidate.id === first.id
-    && candidate.spaceId === first.spaceId
+    && candidate.timelineId === first.timelineId
     && candidate.narrativeId === first.narrativeId)
     ? first
     : undefined;

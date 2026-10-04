@@ -1,0 +1,16 @@
+{
+  "name": "@qflow/visual-track-studio",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "qflow": { "activation": "./src/activation.ts" },
+  "dependencies": {
+    "@qflow/visual-track": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/studio-adapter": "workspace:*",
+    "@qflow/temporal": "workspace:*"
+  }
+}

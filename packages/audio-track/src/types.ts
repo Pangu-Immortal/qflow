@@ -1,20 +1,44 @@
-import type { FrameSpan } from "@qflow/composition";
+import type { AudioSourceTimeMap, AudioSourceTimeRational, FrameSpan } from "@qflow/composition";
 import type { BlobRef } from "@qflow/protocol";
 import type {
   TemporalDuration,
 } from "@qflow/temporal";
 
-export type AudioOccupancy =
-  | { readonly mode: "once"; readonly align: "start" | "end" }
-  | { readonly mode: "loop"; readonly align: "start" | "end" }
-  | { readonly mode: "stretch"; readonly minRate: number; readonly maxRate: number; readonly pitch: "preserve" };
-
-export type AudioSourceTrim = {
-  readonly start?: TemporalDuration;
-  readonly end?: TemporalDuration;
+export type AudioSourceTimePoint = {
+  readonly edge: "start" | "end";
+  /** Non-negative distance inward from the named edge. */
+  readonly offset: TemporalDuration;
 };
 
-export type AudioItemMix = {
+export type AudioSourceTimeBounds = {
+  readonly from: AudioSourceTimePoint;
+  readonly until: AudioSourceTimePoint;
+};
+
+export type AudioSourceTimeRelation =
+  | {
+      readonly kind: "rate";
+      readonly target: AudioSourceTimeBounds;
+      readonly targetAt: AudioSourceTimePoint;
+      readonly sourceAt: AudioSourceTimePoint;
+      readonly rate: AudioSourceTimeRational;
+      readonly source: AudioSourceTimeBounds;
+      readonly wrap?: AudioSourceTimeBounds;
+    }
+  | {
+      readonly kind: "fit";
+      readonly target: AudioSourceTimeBounds;
+      readonly source: AudioSourceTimeBounds;
+      /** Audio-specific safety bounds for the pitch-preserving tempo ratio. */
+      readonly minRate?: number;
+      readonly maxRate?: number;
+    };
+
+export type AudioSourceTimeSpec = {
+  readonly relations: readonly AudioSourceTimeRelation[];
+};
+
+export type AudioClipMix = {
   readonly gain: number;
   readonly fadeIn: TemporalDuration;
   readonly fadeOut: TemporalDuration;
@@ -22,29 +46,25 @@ export type AudioItemMix = {
 
 export type AudioClipSpec = {
   readonly id: string;
-  readonly trim: AudioSourceTrim;
-  readonly occupancy: AudioOccupancy;
-  readonly mix: AudioItemMix;
+  /** Omission means bounded partial identity. */
+  readonly sourceTime?: AudioSourceTimeSpec;
+  readonly mix: AudioClipMix;
 };
 
 export type AudioTrackHeader = {
   readonly id: string;
 };
 
-export type AudioItemProgram = {
+export type AudioClipProgram = {
   readonly id: string;
-  /** Author-owned Item realized by this externally projected window. */
+  /** Author-owned Clip realized by this absolute destination Window. */
   readonly subjectId: string;
   readonly window: FrameSpan;
   readonly source: {
     readonly artifact: BlobRef;
     readonly sampleFrames: number;
   };
-  readonly trim: {
-    readonly startSample: number;
-    readonly endSampleExclusive: number;
-  };
-  readonly occupancy: AudioOccupancy;
+  readonly sourceTime: AudioSourceTimeSpec;
   readonly mix: {
     readonly gain: number;
     readonly fadeInSamples: number;
@@ -54,9 +74,9 @@ export type AudioItemProgram = {
 
 export type AudioTrackProgram = {
   readonly id: string;
-  readonly items: readonly AudioItemProgram[];
+  readonly clips: readonly AudioClipProgram[];
 };
 
 export type AudioTrackSet = {
-  readonly items: readonly AudioItemProgram[];
+  readonly clips: readonly AudioClipProgram[];
 };

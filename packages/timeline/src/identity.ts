@@ -1,60 +1,59 @@
-import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
-import { assertSemanticTakeIdentity } from "@qflow/speech";
+import type { Clock, Timeline } from "./types.js";
 
-import type { Timeline, TimelineSpan } from "./types.js";
-
-export function sealTimeline(value: Timeline): Timeline {
-  const track = structuredClone(value);
-  assertTimelineIdentity(track);
-  return track;
+export function sealClock(value: Clock): Clock {
+  assertClockIdentity(value);
+  return structuredClone(value);
 }
 
-export function assertTimelineIdentity(track: Timeline): void {
-  assertProgramSpaceIdentity(track);
-  const frameCount = programSpaceFrameCount(track);
-  if (track.items.length > 0 && !track.narrativeId?.trim()) throw new Error("A Timeline with Takes requires their Narrative identity.");
-  if (track.items.length === 0 && track.narrativeId !== undefined) throw new Error("An empty Timeline has no Narrative identity.");
-  const segmentIds = new Set<string>();
-  const tokenIds = new Set<string>();
-  const anchorIds = new Set<string>();
-  const frameRate = track.frameRate;
-  for (const item of track.items) {
-    assertSemanticTakeIdentity(item.take);
-    if (!Number.isSafeInteger(item.startFrame) || item.startFrame < 0
-      || item.startFrame + item.take.media.timeline.frameCount > frameCount) {
-      throw new Error(`Timeline placement for ${item.take.segment.segmentId} is outside its Program range.`);
-    }
-    if (item.take.narrativeId !== track.narrativeId) {
-      throw new Error(`Timeline ${track.id} mixes Narrative ${item.take.narrativeId} into ${track.narrativeId}.`);
-    }
-    const rate = item.take.media.timeline.frameRate;
-    if (frameRate.numerator !== rate.numerator || frameRate.denominator !== rate.denominator) {
-      throw new Error("Timeline items must use one frame rate.");
-    }
-    const segmentId = item.take.segment.segmentId;
-    if (segmentIds.has(segmentId)) throw new Error(`Timeline repeats Segment ${segmentId}.`);
-    segmentIds.add(segmentId);
-    for (const token of item.take.tokens) {
-      if (tokenIds.has(token.tokenId)) throw new Error(`Timeline repeats Token ${token.tokenId}.`);
-      tokenIds.add(token.tokenId);
-    }
-    for (const anchor of item.take.anchors) {
-      if (anchor.identity === "program:start" || anchor.identity === "program:end") {
-        throw new Error(`SemanticTake cannot declare reserved Program Anchor ${anchor.identity}.`);
-      }
-      if (anchorIds.has(anchor.identity)) throw new Error(`Timeline repeats Anchor ${anchor.identity}.`);
-      anchorIds.add(anchor.identity);
-    }
+export function assertClockIdentity(clock: Clock): void {
+  const { numerator, denominator } = clock.frameRate;
+  if (!Number.isSafeInteger(numerator) || numerator <= 0
+    || !Number.isSafeInteger(denominator) || denominator <= 0) {
+    throw new Error("Clock is invalid.");
   }
 }
 
-export function timelineSpans(track: Timeline): readonly TimelineSpan[] {
-  assertTimelineIdentity(track);
-  return track.items.map(item => ({ item, startFrame: item.startFrame,
-    endFrameExclusive: item.startFrame + item.take.media.timeline.frameCount }));
+export function sealTimeline(value: Timeline): Timeline {
+  assertTimelineIdentity(value);
+  return structuredClone(value);
 }
 
-export function timelineFrameCount(track: Timeline): number {
-  assertTimelineIdentity(track);
-  return programSpaceFrameCount(track);
+export function assertTimelineIdentity(timeline: Timeline): void {
+  assertClockIdentity(timeline);
+  if (!timeline.id.trim() || !Number.isSafeInteger(timeline.frameCount) || timeline.frameCount < 1) {
+    throw new Error("Timeline is invalid.");
+  }
+}
+
+export function timelineFrameCount(timeline: Timeline): number {
+  assertTimelineIdentity(timeline);
+  return timeline.frameCount;
+}
+
+export function timelineDurationSeconds(timeline: Timeline): number {
+  assertTimelineIdentity(timeline);
+  return timeline.frameCount * timeline.frameRate.denominator / timeline.frameRate.numerator;
+}
+
+export function timelineSampleFrames(timeline: Timeline, sampleRate: number): number {
+  return timelineFrameSampleBoundary(timeline, timelineFrameCount(timeline), sampleRate);
+}
+
+export function timelineFrameSampleBoundary(timeline: Timeline, frame: number, sampleRate: number): number {
+  const frames = timelineFrameCount(timeline);
+  if (!Number.isSafeInteger(frame) || frame < 0 || frame > frames) {
+    throw new Error("Timeline frame boundary is invalid.");
+  }
+  return clockFrameSampleBoundary(timeline, frame, sampleRate);
+}
+
+export function clockFrameSampleBoundary(clock: Clock, frame: number, sampleRate: number): number {
+  assertClockIdentity(clock);
+  if (!Number.isSafeInteger(frame) || frame < 0) throw new Error("Clock frame boundary is invalid.");
+  if (!Number.isSafeInteger(sampleRate) || sampleRate <= 0) throw new Error("Timeline sample rate is invalid.");
+  const numerator = BigInt(frame) * BigInt(sampleRate) * BigInt(clock.frameRate.denominator);
+  const denominator = BigInt(clock.frameRate.numerator);
+  const value = (numerator * 2n + denominator) / (denominator * 2n);
+  if (value < 0n || value > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("Timeline sample domain exceeds safe arithmetic.");
+  return Number(value);
 }

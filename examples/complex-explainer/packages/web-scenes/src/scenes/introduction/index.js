@@ -46,13 +46,14 @@ export function renderIntro(t, c, w, font, o, events, m) {
     )
     .join("");
   const terminal = `
-<time:Timeline id="program" clock="{clock}">
-  <time:Take source="{host.take}" />
+<time:Timeline id="program" clock="{clock}" end="host.end">
+  <time:Window id="host" from="start" for="{host.extent}" />
 </time:Timeline>
 
-<performance:Track timeline="{program.timeline}">
-  <performance:Use style="{portrait}" />
-</performance:Track>
+<visual:Track timeline="{program.timeline}">
+  <visual:Clip id="host" media="{host.media}" during="{program.host}"
+    frame="{portrait.frame}" z="10" fit="cover" />
+</visual:Track>
 
 <ranking:Board timeline="{program.timeline}">
   <ranking:Reveal at="{story.moment.first}" image="{product}" tier="S" />
@@ -64,7 +65,7 @@ export function renderIntro(t, c, w, font, o, events, m) {
 
 <film:Film timeline="{program.timeline}">
   <film:Track source="{presenter.visual}" />
-  <film:Track source="{board.track}" />
+  <film:Track source="{board.visual}" />
 </film:Film>`;
   return scene(
     t,

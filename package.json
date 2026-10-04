@@ -1,6 +1,6 @@
 {
   "name": "@qflow/qflow",
-  "version": "0.2.17",
+  "version": "0.3.0",
   "homepage": "https://qflow.ai",
   "repository": {
     "type": "git",
@@ -50,9 +50,13 @@
       "types": "./dist/public/narrative.d.ts",
       "import": "./packages/narrative/src/index.ts"
     },
-    "./program-space": {
-      "types": "./dist/public/program-space.d.ts",
-      "import": "./packages/program-space/src/index.ts"
+    "./narrative-caption": {
+      "types": "./dist/public/narrative-caption.d.ts",
+      "import": "./packages/narrative-caption/src/index.ts"
+    },
+    "./narrative-temporal": {
+      "types": "./dist/public/narrative-temporal.d.ts",
+      "import": "./packages/narrative-temporal/src/index.ts"
     },
     "./runtime-kit": {
       "types": "./dist/public/runtime-kit.d.ts",
@@ -66,9 +70,21 @@
       "types": "./dist/public/spatial.d.ts",
       "import": "./packages/spatial/src/index.ts"
     },
+    "./region-track": {
+      "types": "./dist/public/region-track.d.ts",
+      "import": "./packages/region-track/src/index.ts"
+    },
     "./speech": {
       "types": "./dist/public/speech.d.ts",
       "import": "./packages/speech/src/index.ts"
+    },
+    "./speech-evidence": {
+      "types": "./dist/public/speech-evidence.d.ts",
+      "import": "./packages/speech-evidence/src/index.ts"
+    },
+    "./speech-alignment": {
+      "types": "./dist/public/speech-alignment.d.ts",
+      "import": "./packages/speech-alignment/src/index.ts"
     },
     "./studio-adapter": {
       "types": "./dist/public/studio-adapter.d.ts",
@@ -98,13 +114,13 @@
       "types": "./dist/public/hyperframes.d.ts",
       "import": "./packages/hyperframes/src/index.ts"
     },
-    "./performance": {
-      "types": "./dist/public/performance.d.ts",
-      "import": "./packages/performance/src/index.ts"
+    "./visual-track": {
+      "types": "./dist/public/visual-track.d.ts",
+      "import": "./packages/visual-track/src/index.ts"
     },
-    "./sound": {
-      "types": "./dist/public/sound.d.ts",
-      "import": "./packages/sound/src/index.ts"
+    "./audio-track": {
+      "types": "./dist/public/audio-track.d.ts",
+      "import": "./packages/audio-track/src/index.ts"
     }
   },
   "bin": {
@@ -206,8 +222,8 @@
     "@qflow/credential-store-file": "workspace:*",
     "@qflow/credential-store-os": "workspace:*",
     "@qflow/credential-store-platform": "workspace:*",
-    "@qflow/deck-track": "workspace:*",
-    "@qflow/deck-track-studio": "workspace:*",
+    "@qflow/depth-stack": "workspace:*",
+    "@qflow/depth-stack-studio": "workspace:*",
     "@qflow/elevenlabs-speech": "workspace:*",
     "@qflow/estimate": "workspace:*",
     "@qflow/film": "workspace:*",
@@ -224,16 +240,15 @@
     "@qflow/interview-emoji-reveal": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/media-pipeline": "workspace:*",
-    "@qflow/media-track": "workspace:*",
-    "@qflow/media-track-studio": "workspace:*",
+    "@qflow/visual-track": "workspace:*",
+    "@qflow/visual-track-studio": "workspace:*",
     "@qflow/mimo-speech": "workspace:*",
     "@qflow/minimax-h3": "workspace:*",
     "@qflow/nano-banana": "workspace:*",
     "@qflow/narrative": "workspace:*",
-    "@qflow/performance": "workspace:*",
-    "@qflow/performance-studio": "workspace:*",
+    "@qflow/narrative-caption": "workspace:*",
+    "@qflow/narrative-temporal": "workspace:*",
     "@qflow/pixverse": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/project-context-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/provider-beatapi": "workspace:*",
@@ -248,6 +263,7 @@
     "@qflow/provider-whisperx-local": "workspace:*",
     "@qflow/ranking": "workspace:*",
     "@qflow/ranking-studio": "workspace:*",
+    "@qflow/region-track": "workspace:*",
     "@qflow/raster": "workspace:*",
     "@qflow/render-hyperframes": "workspace:*",
     "@qflow/resource-store-fs": "workspace:*",
@@ -263,8 +279,6 @@
     "@qflow/seedance": "workspace:*",
     "@qflow/seedance-kits": "workspace:*",
     "@qflow/seedream": "workspace:*",
-    "@qflow/sound": "workspace:*",
-    "@qflow/sound-studio": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/speech": "workspace:*",
     "@qflow/speech-alignment": "workspace:*",
@@ -277,8 +291,8 @@
     "@qflow/text": "workspace:*",
     "@qflow/timeline": "workspace:*",
     "@qflow/timeline-author": "workspace:*",
-    "@qflow/typography-track": "workspace:*",
-    "@qflow/typography-track-studio": "workspace:*",
+    "@qflow/text-fine": "workspace:*",
+    "@qflow/text-fine-studio": "workspace:*",
     "@qflow/visual-ir": "workspace:*",
     "@qflow/volcengine-matting": "workspace:*",
     "@qflow/wan": "workspace:*",

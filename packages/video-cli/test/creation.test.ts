@@ -48,6 +48,8 @@ function host(seen: Need[]): CreationHost {
       if (need.capability.name === "whisperx-alignment") {
         const request = need.constraints as unknown as WhisperXAlignmentRequest;
         return { value: { kind: "inline" as const, value: canonicalize(sealAlignedTranscriptEvidence({
+          domainId: request.domainId,
+          sampleFrames: request.sampleFrames,
           passages: interpretWhisperXTranscript({
             segments: [{ start: 0, end: 1.5, words: [{ text: "hello", start: 0.1, end: 0.5 }, { text: "world", start: 0.9, end: 1.4 }] }],
           }, request.sampleFrames),
@@ -185,7 +187,10 @@ test("Chinese transcription explicitly sends zh and retains individual character
       invoke: async (need) => {
         const request = need.constraints as unknown as WhisperXAlignmentRequest;
         assert.equal(request.language, "zh");
-        return { value: { kind: "inline", value: canonicalize({ passages: interpretWhisperXTranscript({
+        return { value: { kind: "inline", value: canonicalize({
+          domainId: request.domainId,
+          sampleFrames: request.sampleFrames,
+          passages: interpretWhisperXTranscript({
           segments: [{ words: [{ word: "你", start: 0.1, end: 0.24 }, { word: "好！", start: 0.5, end: 1.1 }] }],
         }, request.sampleFrames) }) } };
       },

@@ -1,11 +1,11 @@
 import { temporalTypes } from "@qflow/temporal";
-import type { CaptionProgram, TimedCaptionProjection } from "@qflow/caption";
+import type { CaptionProgram, CaptionTiming } from "@qflow/caption";
 import { openFontStudioFields } from "@qflow/fonts-open/studio";
 import { fineCaptionEditableDefaults, captionFineMarkupSurfaces, captionFineModuleRef } from "@qflow/caption-fine";
 import type { FineCaptionSchedule } from "@qflow/caption-fine";
 import { compositionTypes } from "@qflow/composition";
-import { narrativeTypes } from "@qflow/narrative";
-import type { CaptionDocument } from "@qflow/narrative";
+import { captionTypes } from "@qflow/caption";
+import type { CaptionDocument } from "@qflow/caption";
 import type {
   StudioTrackCompanion,
   StudioTrackCompanionContext,
@@ -119,9 +119,9 @@ function cueText(document: CaptionDocument | undefined, unitIds: readonly string
 }
 
 export function projectCaptionContents(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
-  const content = requiredSurfaceValue(context, "content") as TimedCaptionProjection;
+  const content = requiredReferencedValue(context, "timing", captionTypes.timing) as CaptionTiming;
   const schedule = requiredSurfaceValue(context, "schedule") as FineCaptionSchedule;
-  const document = requiredReferencedValue(context, "document", narrativeTypes.captionDocument) as CaptionDocument;
+  const document = requiredReferencedValue(context, "document", captionTypes.document) as CaptionDocument;
   if (document.id !== content.documentId) throw new Error("Caption content belongs to another CaptionDocument.");
   return content.cues.map((cue, index): StudioEntityDraft => ({
     id: `${context.track.outputRef}:cue:${cue.id}`, authoredId: cue.id,
@@ -157,7 +157,7 @@ export function projectCaption(context: StudioTrackCompanionContext): readonly S
 export const captionFineStudioTrackCompanions: readonly StudioTrackCompanion[] = [
   {
     id: "track", role: "track",
-    output: { type: compositionTypes.visualTrack, surface: "track", modules: [captionFineModuleRef] },
+    output: { type: compositionTypes.visualTrack, surface: "caption", modules: [captionFineModuleRef] },
     family: "caption", tone: "magenta", icon: "captions",
     lane: { heightPx: 36 },
     bands: [{
@@ -165,7 +165,7 @@ export const captionFineStudioTrackCompanions: readonly StudioTrackCompanion[] =
       bindings: [{ name: "style", companion: true }],
       inspector: [{ binding: "style", label: "Style", domain: "how", section: { id: "style", label: "Style" }, control: "text" }],
     }],
-    requiredValues: ["content", "schedule", "program"], project: projectCaption,
+    requiredValues: ["schedule", "program"], project: projectCaption,
 
   },
 ];

@@ -30,8 +30,9 @@ export function requestedFrameRanges(range: MediaFrameRange, frames?: readonly n
   return result;
 }
 
-function rational(value: string, label: string): Rational {
-  assert(/^\d+\/[1-9]\d*$/u.test(value), `HyperFrames ${label} must be a non-negative rational`);
+function rational(value: string, label: string, signed = false): Rational {
+  const pattern = signed ? /^-?\d+\/[1-9]\d*$/u : /^\d+\/[1-9]\d*$/u;
+  assert(pattern.test(value), `HyperFrames ${label} must be a ${signed ? "signed" : "non-negative"} rational`);
   const [a, b] = value.split("/");
   return { numerator: BigInt(a!), denominator: BigInt(b!) };
 }
@@ -54,7 +55,7 @@ export function videoSlots(html: string): VideoSlot[] {
       startFrame: Number(attribute("data-qflow-start-frame")),
       endFrameExclusive: Number(attribute("data-qflow-end-frame")),
       sourceFrame: rational(attribute("data-qflow-source-frame"), "source frame"),
-      sourceRate: rational(attribute("data-qflow-source-rate"), "source rate"),
+      sourceRate: rational(attribute("data-qflow-source-rate"), "source rate", true),
       sourceFps: { num: Number(sourceFps.numerator), den: Number(sourceFps.denominator) },
     };
     assert(Number.isSafeInteger(slot.startFrame) && slot.startFrame >= 0
@@ -90,7 +91,12 @@ export function sourceWindows(slots: readonly VideoSlot[], selection: MediaFrame
     }
     assert(source.fps.num * slot.sourceFps.den === slot.sourceFps.num * source.fps.den,
       "One HyperFrames source has conflicting frame rates");
-    source.windows.push({ startFrame: sourceFrameAt(slot, first), endFrameExclusive: sourceFrameAt(slot, last) + 1 });
+    const firstSource = sourceFrameAt(slot, first);
+    const lastSource = sourceFrameAt(slot, last);
+    source.windows.push({
+      startFrame: Math.min(firstSource, lastSource),
+      endFrameExclusive: Math.max(firstSource, lastSource) + 1,
+    });
   }
   return [...sources].map(([src, source]) => {
     const windows: MediaFrameRange[] = [];

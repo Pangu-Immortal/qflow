@@ -15,8 +15,6 @@
     "@qflow/composition": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/media": "workspace:*",
-    "@qflow/narrative": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/timeline": "workspace:*",
     "@qflow/temporal": "workspace:*",

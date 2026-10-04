@@ -1,13 +1,13 @@
 import { projectProgramWindow } from "../../../test/temporal-fixture.js";
 import { sealTimeline } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CaptionProgram, TimedCaptionProjection } from "@qflow/caption";
+import type { CaptionProgram, CaptionTiming } from "@qflow/caption";
 import type { FontArtifactRef } from "@qflow/media";
-import { sealProgramSpace } from "@qflow/program-space";
 import { captionDocument, parseScript } from "@qflow/script";
-import type { SpatialRegionTimeline } from "@qflow/spatial";
+import type { RegionTrack } from "@qflow/region-track";
 import type { SvsRecipe } from "@qflow/svs";
 
 import { fixtureResource } from "../../../test/fixture-resource.js";
@@ -17,6 +17,18 @@ import {
   renderFineCaption,
   scheduleFineCaption,
 } from "../src/index.js";
+
+const bounds = { xPx: 0, yPx: 0, widthPx: 1080, heightPx: 1920 } as const;
+
+function renderCaption(
+  schedule: Parameters<typeof renderFineCaption>[0],
+  program: CaptionProgram,
+  document: Parameters<typeof renderFineCaption>[2],
+  timeline: Timeline,
+  regions?: RegionTrack,
+) {
+  return renderFineCaption(schedule, program, document, timeline, bounds, regions);
+}
 
 const font: FontArtifactRef = {
   sources: [{ artifact: {
@@ -75,15 +87,14 @@ function fixture(script = "<line>one two || three four</line>") {
     documentId: document.id,
     styles: [style],
     uses: [{ styleId: style.id, window: projectProgramWindow({ itemId: "captions.use.1",
-      semantic: sealTimeline({ id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 }, items: [] }),
-      projection: { start: { ref: "program.start" }, end: { ref: "program.end" } },
+      semantic: sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }),
+      projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } },
     }) }],
   };
   const [first, second, third, fourth] = document.units;
   assert.ok(first && second && third && fourth);
-  const projection: TimedCaptionProjection = {
-    spaceId: "test-space",
-    narrativeId: "story",
+  const projection: CaptionTiming = {
+    timelineId: "test-space",
     documentId: document.id,
     cues: [
       {
@@ -122,15 +133,15 @@ test("Fine Caption schedules visibility outside semantic Word timing and cuts on
   const { document, program, projection } = fixture();
   const schedule = scheduleFineCaption(projection, program, document);
   assert.deepEqual(schedule.cues.map((cue) => ({
-    semantic: [cue.semanticStartFrame, cue.semanticEndFrameExclusive],
+    semantic: [cue.timedStartFrame, cue.timedEndFrameExclusive],
     visible: [cue.visibleStartFrame, cue.visibleEndFrameExclusive],
   })), [
     { semantic: [10, 30], visible: [6, 36] },
     { semantic: [36, 56], visible: [36, 62] },
   ]);
 
-  const track = renderFineCaption(schedule, program, document,
-    sealTimeline({ items: [], id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } }));
+  const track = renderCaption(schedule, program, document,
+    sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }));
   assert.deepEqual(track.presents.map((present) => present.span), [
     { startFrame: 6, endFrameExclusive: 36 },
     { startFrame: 36, endFrameExclusive: 62 },
@@ -156,12 +167,11 @@ test("Fine Caption uniformly springs the whole Cue through exact scales", () => 
     },
   }, [font]);
   const animatedProgram: CaptionProgram = { ...program, styles: [style] };
-  const track = renderFineCaption(
+  const track = renderCaption(
     scheduleFineCaption(projection, animatedProgram, document),
     animatedProgram,
     document,
-    sealTimeline({ items: [], id: "test-space", durationSec: 3,
-      frameRate: { numerator: 30, denominator: 1 } }),
+    sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }),
   );
   const cueMotion = track.presents[0]?.elements.find((element) => element.id === "cue-motion");
   const cueLoop = track.presents[0]?.elements.find((element) => element.id === "cue-loop");
@@ -192,19 +202,17 @@ test("Fine Caption follows measured Role regions and hides null Frames", () => {
   const { document, program, projection } = fixture(`<line>
   <BOY>one two || three four
 </line>`);
-  const space = sealTimeline({ items: [], id: "test-space", durationSec: 3,
-    frameRate: { numerator: 30, denominator: 1 } });
-  const regions: SpatialRegionTimeline = {
-    canvas: { widthPx: 1080, heightPx: 1920, origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square" },
-    frameCount: 90,
-    tracks: [{
+  const space = sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } });
+  const regions: RegionTrack = {
+    timelineId: space.id,
+    series: [{
       id: "BOY",
       frames: Array.from({ length: 90 }, (_, frame) => frame === 7 ? null : ({
         xPx: 100 + frame, yPx: 300 + frame, widthPx: 200, heightPx: 240,
       })),
     }],
   };
-  const track = renderFineCaption(scheduleFineCaption(projection, program, document), program, document, space, regions);
+  const track = renderCaption(scheduleFineCaption(projection, program, document), program, document, space, regions);
   const placement = track.presents[0]?.elements.find((element) => element.id === "placement");
   const declarationAt = (frame: number, name: string): string | number | undefined =>
     placement?.animation?.keyframes[frame]?.style.find((declaration) => declaration.name === name)?.value;
@@ -220,18 +228,30 @@ test("Fine Caption keeps authored placement when a Cue Role has no measured trac
   const { document, program, projection } = fixture(`<line>
   <BOY>one two || three four
 </line>`);
-  const space = sealTimeline({ items: [], id: "test-space", durationSec: 3,
-    frameRate: { numerator: 30, denominator: 1 } });
-  const regions: SpatialRegionTimeline = {
-    canvas: { widthPx: 1080, heightPx: 1920, origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square" },
-    frameCount: 90,
-    tracks: [{ id: "WIFE", frames: Array.from({ length: 90 }, () => null) }],
+  const space = sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } });
+  const regions: RegionTrack = {
+    timelineId: space.id,
+    series: [{ id: "WIFE", frames: Array.from({ length: 90 }, () => null) }],
   };
-  const track = renderFineCaption(scheduleFineCaption(projection, program, document), program, document, space, regions);
+  const track = renderCaption(scheduleFineCaption(projection, program, document), program, document, space, regions);
   const placement = track.presents[0]?.elements.find((element) => element.id === "placement");
-  assert.equal(placement?.style.find((declaration) => declaration.name === "left")?.value, "50%");
-  assert.equal(placement?.style.find((declaration) => declaration.name === "top")?.value, "90%");
+  assert.equal(placement?.style.find((declaration) => declaration.name === "left")?.value, "540px");
+  assert.equal(placement?.style.find((declaration) => declaration.name === "top")?.value, "1728px");
   assert.equal(placement?.animation, undefined);
+});
+
+test("Fine Caption resolves authored placement inside an arbitrary picture-plane Frame", () => {
+  const { document, program, projection } = fixture();
+  const timeline = sealTimeline({ id: "test-space", frameCount: 90,
+    frameRate: { numerator: 30, denominator: 1 } });
+  const track = renderFineCaption(scheduleFineCaption(projection, program, document), program, document, timeline,
+    { xPx: 100, yPx: 200, widthPx: 500, heightPx: 800 });
+  const placement = track.presents[0]?.elements.find((element) => element.id === "placement");
+  const value = (name: string) => placement?.style.find((declaration) => declaration.name === name)?.value;
+  assert.equal(value("left"), "350px");
+  assert.equal(value("top"), "920px");
+  assert.equal(value("width"), "400px");
+  assert.equal(value("height"), "192px");
 });
 
 test("Fine Caption rejects a Cue that exceeds its structural row budget instead of clipping Paint", () => {
@@ -243,9 +263,8 @@ test("Fine Caption rejects a Cue that exceeds its structural row budget instead 
   const constrainedProgram: CaptionProgram = { ...program, styles: [constrained] };
   const schedule = scheduleFineCaption(projection, constrainedProgram, document);
   assert.throws(
-    () => renderFineCaption(schedule, constrainedProgram, document,
-      sealTimeline({ items: [], id: "test-space", durationSec: 3,
-        frameRate: { numerator: 30, denominator: 1 } })),
+    () => renderCaption(schedule, constrainedProgram, document,
+      sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } })),
     /constructs 2 rows.+maximum is 1/u,
   );
 });
@@ -257,9 +276,8 @@ test("Fine Caption gives a hidden Style no Cue, background or decoration", () =>
     uses: program.uses.map(use => ({ ...use, styleId: hidden.id })) };
   const hiddenProjection = { ...projection, cues: [] };
   const schedule = scheduleFineCaption(hiddenProjection, hiddenProgram, document);
-  const visual = renderFineCaption(schedule, hiddenProgram, document,
-    sealTimeline({ items: [], id: "test-space", durationSec: 3,
-      frameRate: { numerator: 30, denominator: 1 } }));
+  const visual = renderCaption(schedule, hiddenProgram, document,
+    sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }));
   assert.deepEqual(schedule.cues, []);
   assert.deepEqual(visual.presents, []);
 });
@@ -272,7 +290,7 @@ test("Fine Caption gives overlapping acoustic Words one current Karaoke owner", 
   }, [font]);
   const karaokeProgram: CaptionProgram = { ...program, styles: [style] };
   const firstCue = projection.cues[0]!;
-  const overlapped: TimedCaptionProjection = {
+  const overlapped: CaptionTiming = {
     ...projection,
     cues: [{
       ...firstCue,
@@ -282,12 +300,11 @@ test("Fine Caption gives overlapping acoustic Words one current Karaoke owner", 
       ],
     }, projection.cues[1]!],
   };
-  const track = renderFineCaption(
+  const track = renderCaption(
     scheduleFineCaption(overlapped, karaokeProgram, document),
     karaokeProgram,
     document,
-    sealTimeline({ items: [], id: "test-space", durationSec: 3,
-      frameRate: { numerator: 30, denominator: 1 } }),
+    sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }),
   );
   const firstActive = track.presents[0]?.elements.find((element) => element.id === "atom-1-active");
   const secondActive = track.presents[0]?.elements.find((element) => element.id === "atom-2-active");
@@ -306,7 +323,7 @@ function unevenChineseCaption(properties: SvsRecipe["properties"] = {}) {
     ...recipe, properties: { ...flow, ...properties },
   }, [font]);
   const windows = [[10, 13], [13, 32], [36, 42], [42, 55]] as const;
-  const timed: TimedCaptionProjection = {
+  const timed: CaptionTiming = {
     ...projection,
     cues: [{ ...projection.cues[0]!, endFrameExclusive: 55,
       units: document.units.map((unit, index) => ({ unitId: unit.id,
@@ -314,8 +331,8 @@ function unevenChineseCaption(properties: SvsRecipe["properties"] = {}) {
     }],
   };
   const styled = { ...program, styles: [style] };
-  const track = renderFineCaption(scheduleFineCaption(timed, styled, document), styled, document,
-    sealTimeline({ items: [], id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } }));
+  const track = renderCaption(scheduleFineCaption(timed, styled, document), styled, document,
+    sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }));
   return { track, windows };
 }
 
@@ -335,8 +352,8 @@ for (const mode of ["current", "trail"] as const) test(`shared-text groups use e
       karaoke: mode, "karaoke-transition": "step", "active-box": mode, "active-underline": mode,
     } }, [font]);
     const styled = { ...program, styles: [style] };
-    return renderFineCaption(scheduleFineCaption(projection, styled, document), styled, document,
-      sealTimeline({ items: [], id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } }));
+    return renderCaption(scheduleFineCaption(projection, styled, document), styled, document,
+      sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }));
   };
   const track = make('<line><动效|><组件化|> || <直接|><复用|></line>');
   assert.deepEqual(track, make('<line><动效|动效><组件化|组件化> || <直接|直接><复用|复用></line>'));
@@ -410,8 +427,8 @@ test("Typewriter keeps combining graphemes whole and preserves unequal-width Lat
   const style = fineCaptionStyle("plain", { ...recipe,
     properties: { ...recipe.properties, "atom-reveal": "typewriter" } }, [font]);
   const styled = { ...program, styles: [style] };
-  const track = renderFineCaption(scheduleFineCaption(projection, styled, document), styled, document,
-    sealTimeline({ items: [], id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } }));
+  const track = renderCaption(scheduleFineCaption(projection, styled, document), styled, document,
+    sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }));
   const text = track.presents[0]!.elements.filter((element) => element.kind === "text");
   assert.deepEqual(text.map((element) => element.text), ["W", "i", "e\u0301"]);
   assert.equal(numericStyleAt(text[0]!, 4, "opacity"), 1);
@@ -429,10 +446,10 @@ test("Caption handoff follows placed time and retains simultaneous spoken envelo
       endFrameExclusive: unit.endFrameExclusive - 16 })) };
   // Reverse declaration order: placement decides temporal neighbors, not Script order.
   const schedule = scheduleFineCaption({ ...projection, cues: [overlapping, first] }, program, document);
-  assert.deepEqual(schedule.cues.map(cue => [cue.semanticStartFrame, cue.semanticEndFrameExclusive]), [[10, 30], [20, 40]]);
+  assert.deepEqual(schedule.cues.map(cue => [cue.timedStartFrame, cue.timedEndFrameExclusive]), [[10, 30], [20, 40]]);
   assert.deepEqual(schedule.cues.map(cue => [cue.visibleStartFrame, cue.visibleEndFrameExclusive]), [[6, 36], [16, 46]]);
-  const track = renderFineCaption(schedule, program, document,
-    sealTimeline({ items: [], id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } }));
+  const track = renderCaption(schedule, program, document,
+    sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }));
   assert.equal(track.presents.filter(present => present.span.startFrame <= 25 && present.span.endFrameExclusive > 25).length, 2);
 });
 
@@ -440,17 +457,17 @@ test("Caption handoff follows placed time and retains simultaneous spoken envelo
 test("Caption Surface wires one Timeline to both ordinary and tracked-region rendering", async () => {
   const { decodeFineCaptionTrackSurface } = await import("../src/surface.js");
   const { timelineTypes } = await import("@qflow/timeline");
-  const { narrativeTypes } = await import("@qflow/narrative");
   const { captionTypes } = await import("@qflow/caption");
+  const { regionTrackTypes } = await import("@qflow/region-track");
   const { spatialTypes } = await import("@qflow/spatial");
-  const types = { timeline: timelineTypes.track, document: narrativeTypes.captionDocument,
-    program: captionTypes.program, regions: spatialTypes.regionTimeline };
+  const types = { timeline: timelineTypes.track, document: captionTypes.document,
+    timing: captionTypes.timing, within: spatialTypes.frame, program: captionTypes.program, regions: regionTrackTypes.track };
   for (const tracking of [false, true]) {
-    const names = tracking ? ["timeline", "document", "regions"] as const
-      : ["timeline", "document"] as const;
+    const names = tracking ? ["timeline", "document", "timing", "within", "regions"] as const
+      : ["timeline", "document", "timing", "within"] as const;
     const attributes = Object.fromEntries(names.map(name => [name, { kind: "reference" as const, path: name }]));
     const result = await decodeFineCaptionTrackSurface({ sourceName: "caption.svml",
-      element: { kind: "element", name: "fine:Track", attributes: { id: "captions", ...attributes },
+      element: { kind: "element", name: "fine:Caption", attributes: { id: "captions", ...attributes },
         children: [], range: { start: 0, end: 1 } },
       resolveReference(path) {
         const type = types[path as keyof typeof types];
@@ -462,15 +479,14 @@ test("Caption Surface wires one Timeline to both ordinary and tracked-region ren
     const fragment = result.fragments!.find(fragment => fragment.id === component.fragment)!;
     assert.deepEqual(Object.keys(component.inputs).sort(), fragment.inputs.map(input => input.name).sort());
     assert.deepEqual(component.inputs.timeline, { kind: "record", id: "timeline" });
-    assert.equal(fragment.operations.some(operation => operation.producer.name === "project-program-space"), false);
   }
 });
 
 test("a Use beginning inside a Cue changes presentation without changing words or animation time", () => {
   const { document, program } = fixture("<line>test1 || test2 @{select} test3 || test4 @{/select}</line>");
-  const timeline = sealTimeline({ id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 }, items: [] });
+  const timeline = sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } });
   const unit = (index: number) => ({ unitId: document.units[index]!.id, startFrame: 10 + index * 10, endFrameExclusive: 20 + index * 10 });
-  const projection: TimedCaptionProjection = { spaceId: timeline.id, narrativeId: "story", documentId: document.id, cues: [
+  const projection: CaptionTiming = { timelineId: timeline.id, documentId: document.id, cues: [
     { id: "c1", startFrame: 10, endFrameExclusive: 20, units: [unit(0)] },
     { id: "c2", startFrame: 20, endFrameExclusive: 40, units: [unit(1), unit(2)] },
     { id: "c3", startFrame: 40, endFrameExclusive: 50, units: [unit(3)] },
@@ -484,13 +500,13 @@ test("a Use beginning inside a Cue changes presentation without changing words o
   assert.deepEqual(parts.map(cue=>cue.units), [[unit(1),unit(2)],[unit(1),unit(2)]]);
   assert.deepEqual(parts.map(cue=>cue.visibility), [[{startFrame:20,endFrameExclusive:30}],[{startFrame:30,endFrameExclusive:40}]]);
   assert.deepEqual(parts.map(cue=>cue.visibleStartFrame),[20,20]);
-  const track = renderFineCaption(schedule,changed,document,timeline);
+  const track = renderCaption(schedule,changed,document,timeline);
   const entered = track.presents.find(present=>present.id === parts[1]!.id)!;
   assert.equal(entered.span.startFrame,20);
   assert.deepEqual(entered.visibility,[{startFrame:30,endFrameExclusive:40}]);
   // Rendering the same Style over the whole timeline has identical animation data for this Cue.
   const whole: CaptionProgram = {...changed,uses:[{styleId:emphasis.id,window:window("whole",0,90)}]};
-  const original = renderFineCaption(scheduleFineCaption(projection,whole,document),whole,document,timeline).presents.find(p=>p.id.endsWith(":c2"))!;
+  const original = renderCaption(scheduleFineCaption(projection,whole,document),whole,document,timeline).presents.find(p=>p.id.endsWith(":c2"))!;
   assert.deepEqual(entered.elements,original.elements);
 
   const hidden: CaptionProgram = {...changed,styles:[...changed.styles,{id:"hidden",rendering:null}],uses:[...changed.uses,{styleId:"hidden",window:window("hide",32,35)}]};
@@ -502,13 +518,13 @@ test("a Use beginning inside a Cue changes presentation without changing words o
 
 test("Caption time windows select presentation, while Role filters preserve simultaneous speakers", () => {
   const { document, program, projection } = fixture("<line><A>one two || <B>three four</line>");
-  const timeline = sealTimeline({id:"test-space",durationSec:3,frameRate:{numerator:30,denominator:1},items:[]});
-  const overlap: TimedCaptionProjection = {...projection,cues:[projection.cues[0]!,{
+  const timeline = sealTimeline({id:"test-space",frameCount: 90, frameRate: { numerator: 30, denominator: 1 }});
+  const overlap: CaptionTiming = {...projection,cues:[projection.cues[0]!,{
     ...projection.cues[1]!,startFrame:15,endFrameExclusive:35,
     units:projection.cues[1]!.units.map((u,i)=>({...u,startFrame:15+i*10,endFrameExclusive:25+i*10})),
   }]};
   const hidden: CaptionProgram = {...program,styles:[...program.styles,{id:"hidden",rendering:null}],uses:[...program.uses,{
-    role:"A",styleId:"hidden",window:projectProgramWindow({itemId:"hideA",semantic:timeline,projection:{start:{ref:"program.start"},end:{ref:"program.end"}}}),
+    role:"A",styleId:"hidden",window:projectProgramWindow({itemId:"hideA",semantic:timeline,projection:{start:{ref:"timeline.start"},end:{ref:"timeline.end"}}}),
   }]};
   const schedule = scheduleFineCaption(overlap,hidden,document);
   assert.equal(schedule.cues.length,1);
@@ -518,30 +534,33 @@ test("Caption time windows select presentation, while Role filters preserve simu
   assert.deepEqual(scheduleFineCaption(projection,{...program,uses:[],styles:[]},document).cues,[]);
 });
 
-test("Caption Track Uses share the temporal author language and reject the removed Program edge", async () => {
+test("Caption Uses share the temporal author language and reject the removed Program edge", async () => {
   const { decodeFineCaptionTrackSurface } = await import("../src/surface.js");
   const { parseStructuredElement } = await import("@qflow/markup");
   const { timelineTypes } = await import("@qflow/timeline");
-  const { narrativeTypes } = await import("@qflow/narrative");
   const { captionTypes } = await import("@qflow/caption");
-  const refs: Record<string, import("@qflow/protocol").TypeRef> = { timeline: timelineTypes.track, document: narrativeTypes.captionDocument, style: captionTypes.style, selection:narrativeTypes.selection, moment:narrativeTypes.moment };
+  const { temporalTypes } = await import("@qflow/temporal");
+  const { spatialTypes } = await import("@qflow/spatial");
+  const refs: Record<string, import("@qflow/protocol").TypeRef> = { timeline: timelineTypes.track, document: captionTypes.document,
+    timing: captionTypes.timing, within: spatialTypes.frame,
+    style: captionTypes.style, window: temporalTypes.window, instant: temporalTypes.instant };
   const decode = async (body:string,extra="") => decodeFineCaptionTrackSurface({sourceName:"caption.svml",
-    element:parseStructuredElement({name:"caption.svml",text:`<fine:Track id="captions" document={document} timeline={timeline} ${extra}>${body}</fine:Track>`},0).element,
+    element:parseStructuredElement({name:"caption.svml",text:`<fine:Caption id="captions" document={document} timing={timing} timeline={timeline} within={within} ${extra}>${body}</fine:Caption>`},0).element,
     resolveReference(path){const type=refs[path];return type===undefined?undefined:{path,type,ref:{kind:"record" as const,id:path}};},
     resolveAsset(){throw new Error("No assets");},
   });
-  for (const time of ['', 'during={selection}', 'at={moment} for="2s"', 'until={moment} for="12f"', 'start="2s" end="5s"']) {
+  for (const time of ['', 'during={window}', 'from="2s" for="2s"', 'until="3s" for="12f"', 'from="2s" until="5s"']) {
     const result=await decode(`<fine:Use style={style} ${time}/>`);
     const track=result.components.find(component=>component.id==="captions")!;
     assert.ok(track.outputs.program);
-    assert.ok(track.outputs.content);
     const fragment=result.fragments!.find(fragment=>fragment.id===track.fragment)!;
-    assert.equal(fragment.operations.find(op=>op.id==="content")?.result.name,"caption");
+    assert.equal(fragment.inputs.find(port=>port.name==="timing")?.type.name,"CaptionTiming");
     assert.ok(fragment.inputs.some(port=>port.name.endsWith("-window")));
     assert.equal(fragment.inputs.some(port=>port.name==="program"),false);
   }
-  await assert.rejects(()=>decode('', 'program={old}'),/requires id, document, timeline/);
-  await assert.rejects(()=>decode('<fine:Use style={style} selection={selection}/>'),/requires exactly one/);
+  await assert.rejects(()=>decode('<fine:Use style={style}/>', 'semantic={window}'));
+  await assert.rejects(()=>decode('', 'program={old}'),/requires id, document, timing, timeline, within/);
+  await assert.rejects(()=>decode('<fine:Use style={style} selection={window}/>'),/optional id, role, during, from, until, for/);
 });
 
 test("Fine uses author separators in ordinary text, shared groups, active copies and joined boxes", () => {
@@ -553,12 +572,12 @@ test("Fine uses author separators in ordinary text, shared groups, active copies
   const styled = { ...program, styles: [style] };
   const render = (source: string) => {
     const document = captionDocument(parseScript("spacing", `<line>${source}</line>`), "story.caption", "story");
-    const timed: TimedCaptionProjection = { ...projection, cues: [{ ...projection.cues[0]!,
+    const timed: CaptionTiming = { ...projection, cues: [{ ...projection.cues[0]!,
       startFrame: 10, endFrameExclusive: 70,
       units: document.units.map((unit, index) => ({ unitId: unit.id, startFrame: 10 + index * 5, endFrameExclusive: 15 + index * 5 })),
     }] };
-    return renderFineCaption(scheduleFineCaption(timed, styled, document), styled, document,
-      sealTimeline({ items: [], id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } })).presents[0]!.elements;
+    return renderCaption(scheduleFineCaption(timed, styled, document), styled, document,
+      sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } })).presents[0]!.elements;
   };
   const grouped = render("<3개월 만에|> 완료했습니다");
   for (const id of ["atom-1-base-2", "atom-1-active-2", "atom-1-underline-2"]) {

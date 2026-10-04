@@ -60,7 +60,8 @@ export type ScreenOverlayItemProgram = {
   readonly subjectId: string;
   readonly span: FrameSpan;
   readonly content: ScreenOverlayComponent;
-  readonly stacking: { readonly order: number; readonly tieBreak: string };
+  readonly order: number;
+  readonly z: number;
 };
 export type ScreenOverlaySet = { readonly items: readonly ScreenOverlayItemProgram[] };
 export type ScreenOverlayProgram = {

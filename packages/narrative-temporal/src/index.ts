@@ -1,0 +1,10 @@
+export { narrativeTemporalComponent } from "./component.js";
+export { assertNarrativeAlignmentIdentity, sealNarrativeAlignment } from "./identity.js";
+export { materializeSegmentBoundaryAlignment } from "./materialize.js";
+export { narrativeTemporalDependency, narrativeTemporalManifest, narrativeTemporalModuleRef,
+  narrativeTemporalProducers, narrativeTemporalTypes } from "./manifest.js";
+export { createNarrativeProjection, momentFrame, narrativeBoundaryFrame, projectNarrativeAlignment, projectNarrativeInstant,
+  segmentFrameSpan, selectionFrameSpan, tokenFrameSpan } from "./projection.js";
+export { narrativeAlignmentSchema } from "./schema.js";
+export { decodeNarrativeProjectionSurface, narrativeProjectionMarkupSurface } from "./surface.js";
+export type * from "./types.js";

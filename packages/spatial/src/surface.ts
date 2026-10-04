@@ -1,9 +1,6 @@
-import type { AuthorValueRef, GraphFragment } from "@qflow/elaborator";
 import type { CanonicalValue } from "@qflow/protocol";
-import { svsRecipeType } from "@qflow/svs";
-import type { SvsRecipe } from "@qflow/svs";
+import type { AuthorValueRef } from "@qflow/elaborator";
 import type {
-  SurfaceComponentDraft,
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
@@ -13,12 +10,10 @@ import type {
 import {
   anchoredFrameFragment,
   aspectFrameFragment,
-  canvasFrameFragment,
   frameEdgesFragment,
 } from "./fragment.js";
 import { spatialTypes } from "./manifest.js";
-import { spatialRegionTimeline } from "./region-timeline.js";
-import { assertSpatialPath, sealCanvasSpace, sealIntrinsicExtent, sealSpatialPoint } from "./geometry.js";
+import { assertSpatialPath, canvasFrame, sealCanvas, sealIntrinsicExtent, sealSpatialMap2D, sealSpatialPoint } from "./geometry.js";
 import type {
   AnchoredFrameProgram,
   AspectFrameProgram,
@@ -27,7 +22,6 @@ import type {
   SpatialLength,
   SpatialPath,
   SpatialPathCommand,
-  CanvasSpace,
 } from "./types.js";
 
 function sameType(left: SurfaceResolvedReference["type"], right: SurfaceResolvedReference["type"]): boolean {
@@ -92,44 +86,28 @@ function reference(
   return result;
 }
 
-function inline<T>(value: SurfaceResolvedReference, label: string): T {
-  if (value.record?.value.kind !== "inline") throw new Error(`${label} must reference an authored inline Record.`);
-  return value.record.value.value as unknown as T;
-}
-
-type ParentFrame = {
-  readonly ref: AuthorValueRef;
-  readonly components: readonly SurfaceComponentDraft[];
-  readonly fragments: readonly GraphFragment[];
-};
-
 function parentFrame(
-  id: string,
   element: StructuredElement,
   parent: SurfaceResolvedReference,
-): ParentFrame {
-  if (sameType(parent.type, spatialTypes.frame)) return { ref: parent.ref, components: [], fragments: [] };
-  if (!sameType(parent.type, spatialTypes.canvas)) throw new Error(`${element.name}.within must reference CanvasSpace or SpatialFrame.`);
-  const output = `${id}.__canvas-frame`;
-  const component = `${id}.__canvas-frame-component`;
-  return {
-    ref: { kind: "component-output", component, output: "frame" },
-    components: [{
-      id: component, fragment: canvasFrameFragment.id,
-      inputs: { canvas: parent.ref }, outputs: { frame: output }, range: element.range,
-    }],
-    fragments: [canvasFrameFragment],
-  };
+): SurfaceResolvedReference["ref"] {
+  if (!sameType(parent.type, spatialTypes.frame)) throw new Error(`${element.name}.within must reference SpatialFrame.`);
+  return parent.ref;
 }
 
 export const decodeCanvasSurface: StructuredSurfaceHandler = ({ element }) => {
   exact(element, ["id", "width", "height"], ["id", "width", "height"]);
   const id = text(element, "id");
-  const canvas = sealCanvasSpace({
+  const canvas = sealCanvas({
     widthPx: positiveInteger(element, "width"), heightPx: positiveInteger(element, "height"),
-    origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square",
   });
-  return { records: [{ id, type: spatialTypes.canvas, value: { kind: "inline", value: canvas as unknown as CanonicalValue }, range: element.range }], components: [], fragments: [] };
+  const bounds = canvasFrame(canvas);
+  return {
+    records: [
+      { id: `${id}.canvas`, type: spatialTypes.canvas, value: { kind: "inline" as const, value: canvas as unknown as CanonicalValue }, range: element.range },
+      { id: `${id}.bounds`, type: spatialTypes.frame, value: { kind: "inline" as const, value: bounds as unknown as CanonicalValue }, range: element.range },
+    ],
+    components: [], fragments: [],
+  };
 };
 
 export const decodePointSurface: StructuredSurfaceHandler = ({ element }) => {
@@ -216,21 +194,15 @@ export const decodeExtentSurface: StructuredSurfaceHandler = ({ element }) => {
   return { records: [{ id, type: spatialTypes.extent, value: { kind: "inline", value: extent as unknown as CanonicalValue }, range: element.range }], components: [], fragments: [] };
 };
 
-export const decodeRegionTimelineSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  exact(element, ["id", "within", "recipe"], ["id", "within", "recipe"]);
+export const decodeMapSurface: StructuredSurfaceHandler = ({ element }) => {
+  exact(element, ["id", "xx", "xy", "yx", "yy", "tx", "ty"], ["id", "xx", "xy", "yx", "yy", "tx", "ty"]);
   const id = text(element, "id");
-  const canvasReference = reference(element, "within", resolveReference);
-  if (!sameType(canvasReference.type, spatialTypes.canvas)) throw new Error(`${element.name}.within must reference CanvasSpace.`);
-  const recipeReference = reference(element, "recipe", resolveReference);
-  if (!sameType(recipeReference.type, svsRecipeType)) throw new Error(`${element.name}.recipe must reference an SVS Recipe.`);
-  const timeline = spatialRegionTimeline(
-    inline<SvsRecipe>(recipeReference, `${element.name}.recipe`),
-    inline<CanvasSpace>(canvasReference, `${element.name}.within`),
-  );
-  return {
-    records: [{ id, type: spatialTypes.regionTimeline, value: { kind: "inline", value: timeline as unknown as CanonicalValue }, range: element.range }],
-    components: [], fragments: [],
-  };
+  const mapping = sealSpatialMap2D({
+    xx: number(element, "xx"), xy: number(element, "xy"),
+    yx: number(element, "yx"), yy: number(element, "yy"),
+    tx: number(element, "tx"), ty: number(element, "ty"),
+  });
+  return { records: [{ id, type: spatialTypes.map2D, value: { kind: "inline", value: mapping as unknown as CanonicalValue }, range: element.range }], components: [], fragments: [] };
 };
 
 function frameSurface(
@@ -241,15 +213,14 @@ function frameSurface(
   fragment: typeof frameEdgesFragment | typeof anchoredFrameFragment,
 ) {
   const id = text(element, "id");
-  const parent = parentFrame(id, element, reference(element, "within", resolveReference));
+  const parent = parentFrame(element, reference(element, "within", resolveReference));
   const programId = `${id}.__program`;
   return {
     records: [{ id: programId, type: programType, value: { kind: "inline" as const, value: program as unknown as CanonicalValue }, range: element.range }],
     components: [
-      ...parent.components,
-      { id, fragment: fragment.id, inputs: { parent: parent.ref, program: { kind: "record" as const, id: programId } }, outputs: { frame: id }, range: element.range },
+      { id, fragment: fragment.id, inputs: { parent, program: { kind: "record" as const, id: programId } }, outputs: { frame: id }, range: element.range },
     ],
-    fragments: [...parent.fragments, fragment],
+    fragments: [fragment],
     exports: [id],
   };
 }
@@ -296,7 +267,7 @@ export const decodeAspectFrameSurface: StructuredSurfaceHandler = ({ element, re
   const hasHeight = element.attributes.height !== undefined;
   if (hasWidth === hasHeight) throw new Error(`${element.name} requires exactly one of width or height.`);
   const id = text(element, "id");
-  const parent = parentFrame(id, element, reference(element, "within", resolveReference));
+  const parent = parentFrame(element, reference(element, "within", resolveReference));
   const extent = aspectExtent(id, element, resolveReference);
   const program: AspectFrameProgram = {
     x: length(element, "x"), y: length(element, "y"),
@@ -310,10 +281,9 @@ export const decodeAspectFrameSurface: StructuredSurfaceHandler = ({ element, re
       { id: programId, type: spatialTypes.aspectFrameProgram, value: { kind: "inline" as const, value: program as unknown as CanonicalValue }, range: element.range },
     ],
     components: [
-      ...parent.components,
-      { id, fragment: aspectFrameFragment.id, inputs: { parent: parent.ref, extent: extent.ref, program: { kind: "record" as const, id: programId } }, outputs: { frame: id }, range: element.range },
+      { id, fragment: aspectFrameFragment.id, inputs: { parent, extent: extent.ref, program: { kind: "record" as const, id: programId } }, outputs: { frame: id }, range: element.range },
     ],
-    fragments: [...parent.fragments, aspectFrameFragment],
+    fragments: [aspectFrameFragment],
     exports: [id],
   };
 };

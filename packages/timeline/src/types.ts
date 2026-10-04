@@ -1,21 +1,14 @@
-import type { ProgramSpace } from "@qflow/program-space";
-import type { SemanticTake } from "@qflow/speech";
-
-export type TimelineItem = {
-  readonly take: SemanticTake;
-  readonly startFrame: number;
+/** The discrete sampling clock shared by one authored Timeline and its material. */
+export type Clock = {
+  readonly frameRate: { readonly numerator: number; readonly denominator: number };
 };
 
-/** One complete film time range, with prepared material placed where it belongs. */
-export type Timeline = ProgramSpace & {
-  readonly narrativeId?: string;
-  readonly items: readonly TimelineItem[];
-};
-
-export type TimelineSpan = {
-  readonly item: TimelineItem;
-  readonly startFrame: number;
-  readonly endFrameExclusive: number;
+/** One complete, content-independent absolute frame domain. */
+export type Timeline = Clock & {
+  /** Author-visible identity of this film time axis. */
+  readonly id: string;
+  /** Boundary after the final rendered frame. */
+  readonly frameCount: number;
 };
 
 export type LocatedFrameSpan = {

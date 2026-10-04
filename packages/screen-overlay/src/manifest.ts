@@ -1,12 +1,10 @@
-import { timelineTypes } from "@qflow/timeline";
+import { timelineTypes, timelineDependency } from "@qflow/timeline";
 import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { readFile } from "node:fs/promises";
 
 import { compositionDependency, compositionTypes } from "@qflow/composition";
-import { narrativeDependency } from "@qflow/narrative";
 
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { timelineDependency } from "@qflow/timeline";
 import { spatialDependency, spatialTypes } from "@qflow/spatial";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
 import { temporalWindowAttributeVocabulary } from "@qflow/temporal-markup";
@@ -60,7 +58,7 @@ const itemSpec = object({
 const frameSpan = object({ startFrame: { schema: unsignedInteger }, endFrameExclusive: { schema: unsignedInteger } });
 const item = object({
   id: { schema: string }, span: { schema: frameSpan }, content: { schema: component },
-  stacking: { schema: object({ order: { schema: integer }, tieBreak: { schema: string } }) },
+  order: { schema: unsignedInteger }, z: { schema: integer },
 });
 export const screenOverlayHeaderSchema: ValueSchema = object({ id: { schema: string } });
 export const screenOverlayItemSpecSchema: ValueSchema = itemSpec;
@@ -77,25 +75,25 @@ const itemAttributes = [
 ] as const;
 
 export const screenOverlayMarkupSurfaces = [
-  { name: "track", tag: "Track", mode: "structured", outputs: [screenOverlayTypes.header, screenOverlayTypes.itemSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, screenOverlayTypes.program, compositionTypes.visualTrack],
+  { name: "track", tag: "Track", mode: "structured", outputs: [screenOverlayTypes.header, screenOverlayTypes.itemSpec, temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, screenOverlayTypes.program, compositionTypes.visualTrack],
     vocabulary: {
-      summary: "Paints self-contained screen treatments across the whole Canvas and publishes the overlay Program and the VisualTrack it renders to.",
-      appearance: "Treatments laid edge to edge over the whole Canvas, never a panel, a card or text, each item covering the frame for its own span only and painted over its siblings in `z` order. Flash pulses one color up to full and back down across the frame, ColorWash holds that same flat color still, and Vignette leaves the middle clear and darkens outwards to one color in an ellipse around a chosen centre. Four items cross the frame as travelling geometry: ScanLines rule it with evenly spaced white stripes at an angle, DirectionalMatte sweeps a feathered wall of color over it, WhipVeil slides a single soft-edged white band left, right, up or down, and LightLeak drags a heavily blurred angled gradient of colors from one side to the other. The remaining four scatter many small shapes from a seed: GlitchVeil throws wide colored horizontal bars that jump sideways, Grain sprinkles fine specks that crawl diagonally, Bokeh floats blurred round discs of one color that drift apart, and TVStatic fills the frame with grey noise cells beneath fine horizontal scan lines.",
+      summary: "Paints self-contained screen treatments across an explicit Frame and publishes the overlay Program and the VisualTrack it renders to.",
+      appearance: "Treatments laid edge to edge over the selected Frame, never a card or text, each item covering it for its own span only and painted over its siblings in `z` order. Flash pulses one color up to full and back down across the frame, ColorWash holds that same flat color still, and Vignette leaves the middle clear and darkens outwards to one color in an ellipse around a chosen centre. Four items cross the frame as travelling geometry: ScanLines rule it with evenly spaced white stripes at an angle, DirectionalMatte sweeps a feathered wall of color over it, WhipVeil slides a single soft-edged white band left, right, up or down, and LightLeak drags a heavily blurred angled gradient of colors from one side to the other. The remaining four scatter many small shapes from a seed: GlitchVeil throws wide colored horizontal bars that jump sideways, Grain sprinkles fine specks that crawl diagonally, Bokeh floats blurred round discs of one color that drift apart, and TVStatic fills the frame with grey noise cells beneath fine horizontal scan lines.",
       preview: previewImage("Track.png"),
       attributes: [
         { name: "id", kind: "identifier", required: true,
           summary: "Names this overlay so its Program and Track can be referenced elsewhere in the Source." },
-        { name: "canvas", kind: "reference", required: true, accepts: [spatialTypes.canvas],
-          summary: "Chooses the Canvas every item is painted across." },
+        { name: "within", kind: "reference", required: true, accepts: [spatialTypes.frame],
+          summary: "Chooses the Frame every item is painted across." },
         ...temporalContextAttributeVocabulary,
       ],
       children: [
         { tag: "Flash", cardinality: "many",
-          summary: "A full-Canvas flash of one color with its own attack, hold and decay in frames.",
+          summary: "A full-Frame flash of one color with its own attack, hold and decay in frames.",
           attributes: [
             ...itemAttributes,
             { name: "color", kind: "literal", required: true,
-              summary: "Sets the hexadecimal color the Canvas flashes." },
+              summary: "Sets the hexadecimal color the selected Frame flashes." },
             { name: "intensity", kind: "literal", required: true,
               summary: "Sets how strong the flash is, from 0 to 1." },
             { name: "attack", kind: "literal", required: true,
@@ -106,11 +104,11 @@ export const screenOverlayMarkupSurfaces = [
               summary: "Sets how many frames the flash takes to fade away." },
           ] },
         { tag: "ColorWash", cardinality: "many",
-          summary: "One flat color held over the whole Canvas at a fixed opacity.",
+          summary: "One flat color held over the whole selected Frame at a fixed opacity.",
           attributes: [
             ...itemAttributes,
             { name: "color", kind: "literal", required: true,
-              summary: "Sets the hexadecimal color held over the Canvas." },
+              summary: "Sets the hexadecimal color held over the selected Frame." },
             { name: "opacity", kind: "literal", required: true,
               summary: "Sets how opaque the wash is, from 0 to 1." },
           ] },
@@ -119,13 +117,13 @@ export const screenOverlayMarkupSurfaces = [
           attributes: [
             ...itemAttributes,
             { name: "center-x", kind: "literal", required: true,
-              summary: "Sets the horizontal centre of the falloff as a fraction of the Canvas width." },
+              summary: "Sets the horizontal centre of the falloff as a fraction of the selected Frame width." },
             { name: "center-y", kind: "literal", required: true,
-              summary: "Sets the vertical centre of the falloff as a fraction of the Canvas height." },
+              summary: "Sets the vertical centre of the falloff as a fraction of the selected Frame height." },
             { name: "radius-x", kind: "literal", required: true,
-              summary: "Sets the horizontal radius of the falloff as a fraction of the Canvas width." },
+              summary: "Sets the horizontal radius of the falloff as a fraction of the selected Frame width." },
             { name: "radius-y", kind: "literal", required: true,
-              summary: "Sets the vertical radius of the falloff as a fraction of the Canvas height." },
+              summary: "Sets the vertical radius of the falloff as a fraction of the selected Frame height." },
             { name: "softness", kind: "literal", required: true,
               summary: "Sets how gradually the falloff fades outwards, from 0 to 1." },
             { name: "color", kind: "literal", required: true,
@@ -134,7 +132,7 @@ export const screenOverlayMarkupSurfaces = [
               summary: "Sets how opaque the vignette is, from 0 to 1." },
           ] },
         { tag: "ScanLines", cardinality: "many",
-          summary: "Repeating lines at a fixed spacing, thickness and angle, travelling across the Canvas.",
+          summary: "Repeating lines at a fixed spacing, thickness and angle, travelling across the selected Frame.",
           attributes: [
             ...itemAttributes,
             { name: "spacing", kind: "literal", required: true,
@@ -149,13 +147,13 @@ export const screenOverlayMarkupSurfaces = [
               summary: "Sets how many pixels the lines travel across the item's span." },
           ] },
         { tag: "DirectionalMatte", cardinality: "many",
-          summary: "A feathered matte of one color crossing the Canvas at an angle over an explicit progress range.",
+          summary: "A feathered matte of one color crossing the selected Frame at an angle over an explicit progress range.",
           attributes: [
             ...itemAttributes,
             { name: "angle", kind: "literal", required: true,
-              summary: "Sets the angle in degrees the matte edge crosses the Canvas at." },
+              summary: "Sets the angle in degrees the matte edge crosses the selected Frame at." },
             { name: "coverage", kind: "literal", required: true,
-              summary: "Sets how much of the Canvas the matte covers, from 0 to 1." },
+              summary: "Sets how much of the selected Frame the matte covers, from 0 to 1." },
             { name: "feather", kind: "literal", required: true,
               summary: "Sets how soft the matte edge is, from 0 to 1." },
             { name: "color", kind: "literal", required: true,
@@ -168,11 +166,11 @@ export const screenOverlayMarkupSurfaces = [
               summary: "Sets the progress the matte ends its crossing at, from -1 to 2." },
           ] },
         { tag: "WhipVeil", cardinality: "many",
-          summary: "A soft band that travels across the Canvas in one of four directions.",
+          summary: "A soft band that travels across the selected Frame in one of four directions.",
           attributes: [
             ...itemAttributes,
             { name: "direction", kind: "literal", required: true, values: ["left", "right", "up", "down"],
-              summary: "Chooses which way the band travels across the Canvas." },
+              summary: "Chooses which way the band travels across the selected Frame." },
             { name: "width", kind: "literal", required: true,
               summary: "Sets how many pixels wide the band is." },
             { name: "softness", kind: "literal", required: true,
@@ -183,11 +181,11 @@ export const screenOverlayMarkupSurfaces = [
               summary: "Sets how opaque the band is, from 0 to 1." },
           ] },
         { tag: "GlitchVeil", cardinality: "many",
-          summary: "Colored bars laid across the Canvas and displaced from an explicit seed.",
+          summary: "Colored bars laid across the selected Frame and displaced from an explicit seed.",
           attributes: [
             ...itemAttributes,
             { name: "bars", kind: "literal", required: true,
-              summary: "Sets how many bars are laid across the Canvas, up to 256." },
+              summary: "Sets how many bars are laid across the selected Frame, up to 256." },
             { name: "colors", kind: "literal", required: true,
               summary: "Lists the hexadecimal colors the bars are drawn in, separated by commas." },
             { name: "opacity", kind: "literal", required: true,
@@ -202,7 +200,7 @@ export const screenOverlayMarkupSurfaces = [
           attributes: [
             ...itemAttributes,
             { name: "amount", kind: "literal", required: true,
-              summary: "Sets how much grain is laid over the Canvas, from 0 to 1." },
+              summary: "Sets how much grain is laid over the selected Frame, from 0 to 1." },
             { name: "size", kind: "literal", required: true,
               summary: "Sets how many pixels across one grain particle is." },
             { name: "chroma", kind: "literal", required: true, values: ["monochrome", "color"],
@@ -213,13 +211,13 @@ export const screenOverlayMarkupSurfaces = [
               summary: "Sets the seed the grain pattern is drawn from." },
           ] },
         { tag: "LightLeak", cardinality: "many",
-          summary: "Colored light angled across the Canvas and moving from an explicit seed.",
+          summary: "Colored light angled across the selected Frame and moving from an explicit seed.",
           attributes: [
             ...itemAttributes,
             { name: "colors", kind: "literal", required: true,
               summary: "Lists the hexadecimal colors the leak is drawn in, separated by commas." },
             { name: "angle", kind: "literal", required: true,
-              summary: "Sets the angle in degrees the light crosses the Canvas at." },
+              summary: "Sets the angle in degrees the light crosses the selected Frame at." },
             { name: "softness", kind: "literal", required: true,
               summary: "Sets how soft the leak's edges are, from 0 to 1." },
             { name: "travel", kind: "literal", required: true,
@@ -234,7 +232,7 @@ export const screenOverlayMarkupSurfaces = [
           attributes: [
             ...itemAttributes,
             { name: "amount", kind: "literal", required: true,
-              summary: "Sets how many highlights are scattered over the Canvas, from 0 to 1." },
+              summary: "Sets how many highlights are scattered over the selected Frame, from 0 to 1." },
             { name: "min-size", kind: "literal", required: true,
               summary: "Sets how many pixels across the smallest highlight is." },
             { name: "max-size", kind: "literal", required: true,
@@ -253,7 +251,7 @@ export const screenOverlayMarkupSurfaces = [
           attributes: [
             ...itemAttributes,
             { name: "amount", kind: "literal", required: true,
-              summary: "Sets how much noise covers the Canvas, from 0 to 1." },
+              summary: "Sets how much noise covers the selected Frame, from 0 to 1." },
             { name: "size", kind: "literal", required: true,
               summary: "Sets how many pixels across one noise cell is." },
             { name: "scan-lines", kind: "literal", required: true,
@@ -267,19 +265,18 @@ export const screenOverlayMarkupSurfaces = [
       ports: [
         { name: "program", type: screenOverlayTypes.program,
           summary: "The resolved overlay: every item with its frame span, its content and its stacking." },
-        { name: "track", type: compositionTypes.visualTrack,
+        { name: "visual", type: compositionTypes.visualTrack,
           summary: "The rendered overlay, an ordinary peer VisualTrack." },
       ],
-      example: `<screen:Track id="effects" timeline={speech.timeline} canvas={vertical}>
-  <screen:Flash during={story.selection.overlay} z="80"
+      example: `<screen:Track id="effects" timeline={speech.timeline} within={vertical.bounds}>
+  <screen:Flash during={story-time.overlay} z="80"
     color="#ffffff" intensity="0.6" attack="2" hold="2" decay="6"/>
 </screen:Track>`,
       notes: [
         "The overlay requires at least one component child, and a component child is empty.",
-        "A component child writes exactly one temporal form, `during`, `at`, or `start` with `end`; none of them or more than one is refused.",
-        "`during` takes the literal `program` for the whole programme, or a Selection reference.",
-        "`at` requires `for`.",
-        "`start` and `end` each take `program.start`, `program.end`, `selection.start`, `selection.end` or `moment.cue` with an optional `+` or `-` offset, or a bare duration read as an absolute point.",
+        "A component child writes `during`, or exactly two of `from`, `until` and `for`.",
+        "`during` takes `timeline` for the whole programme or an already resolved Window.",
+        "`from` and `until` accept resolved Instants or absolute Timeline expressions.",
         "Explicit `start` and `end` timing binds a Selection through `selection` or a Moment through `moment`, never both.",
         "A duration is written as an integral `f` or `ms` count, or as an `s` count that may carry a decimal fraction.",
       ],
@@ -289,7 +286,7 @@ export const screenOverlayMarkupSurfaces = [
 
 export const screenOverlayManifest: ModuleManifest = {
   format: "qflow.module@1", name: screenOverlayModuleRef.name, version: screenOverlayModuleRef.version,
-  dependencies: [narrativeDependency, timelineDependency, spatialDependency, temporalDependency, compositionDependency],
+  dependencies: [timelineDependency, spatialDependency, temporalDependency, compositionDependency],
   types: [
     { name: screenOverlayTypes.header.name },
     { name: screenOverlayTypes.itemSpec.name },
@@ -300,7 +297,7 @@ export const screenOverlayManifest: ModuleManifest = {
     { name: screenOverlayProducers.createSet.name, inputs: [], outputs: [{ name: "set", type: screenOverlayTypes.set }], needs: [] },
     { name: screenOverlayProducers.appendItem.name, inputs: [...appendInputs], outputs: [{ name: "set", type: screenOverlayTypes.set }], needs: [] },
     { name: screenOverlayProducers.finalize.name, inputs: [{ name: "set", type: screenOverlayTypes.set }, { name: "header", type: screenOverlayTypes.header }], outputs: [{ name: "program", type: screenOverlayTypes.program }], needs: [] },
-    { name: screenOverlayProducers.render.name, inputs: [{ name: "canvas", type: spatialTypes.canvas }, { name: "timeline", type: timelineTypes.track }, { name: "program", type: screenOverlayTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+    { name: screenOverlayProducers.render.name, inputs: [{ name: "within", type: spatialTypes.frame }, { name: "timeline", type: timelineTypes.track }, { name: "program", type: screenOverlayTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };
 export const screenOverlayDependency = { module: screenOverlayModuleRef } as const;

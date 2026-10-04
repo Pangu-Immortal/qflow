@@ -9,12 +9,12 @@ The author graph supplies an explicit Canvas, an ordered list of image Layers, a
 <import as="compose" from="@qflow/image-compose@1"/>
 
 <space:Canvas id="comparison-canvas" width="2048" height="1024"/>
-<space:Frame id="before-panel" within={comparison-canvas}
+<space:Frame id="before-panel" within={comparison-canvas.bounds}
   left="0%" top="0%" right="50%" bottom="100%"/>
-<space:Frame id="after-panel" within={comparison-canvas}
+<space:Frame id="after-panel" within={comparison-canvas.bounds}
   left="50%" top="0%" right="100%" bottom="100%"/>
 
-<compose:Image id="comparison" canvas={comparison-canvas} background="#EEEAE2FF">
+<compose:Image id="comparison" canvas={comparison-canvas.canvas} background="#EEEAE2FF">
   <compose:Layer source={before.image} frame={before-panel} fit="contain"/>
   <compose:Layer source={after.image} frame={after-panel} fit="contain"/>
 </compose:Image>

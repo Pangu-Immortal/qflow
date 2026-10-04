@@ -17,29 +17,28 @@ const step = (id: string, owner: string, name: string, inputs: ProducerStep["inp
 
 test("Studio reads Instant lineage and author authority from executed graph edges", () => {
   const program = [
-    record("semantic", "@qflow/timeline", "Timeline", { id: "speech" }),
-    record("moment", "@qflow/narrative", "NarrativeMoment", { id: "cue", anchorId: "cue-anchor" }),
-    record("point-spec", "@qflow/temporal", "TemporalInstantSpec", {
-      id: "deck.card", subjectId: "card", projection: { ref: "moment.cue" }, authority: { kind: "semantic", boundary: "cue" },
+    record("timeline", "@qflow/timeline", "Timeline", { id: "speech", frameRate: { numerator: 30, denominator: 1 }, frameCount: 100 }),
+    record("projection", "@qflow/narrative-temporal", "NarrativeProjection", { id: "story-on-speech", narrativeId: "story", timelineId: "speech", segments: [], tokens: [], boundaries: [] }),
+    record("moment", "@qflow/narrative", "NarrativeMoment", { narrativeId: "story", id: "cue", anchorId: "cue-anchor" }),
+    record("point-spec", "@qflow/narrative-temporal", "NarrativeInstantSpec", {
+      id: "deck.card::cue", subjectId: "card", boundary: "cue",
     }),
-    record("card-spec", "@qflow/deck-track", "DepthStackCardSpec", { id: "card" }),
+    record("card-spec", "@qflow/depth-stack", "DepthStackCardSpec", { id: "card" }),
   ];
   const executed = [
     record("point", "@qflow/temporal", "TemporalInstant", {
-      id: "deck.card::cue", subjectId: "card", source: { spaceId: "speech", narrativeId: "story", kind: "moment", id: "cue" }, projection: { ref: "moment.cue" },
-      authority: { kind: "semantic", boundary: "cue" }, frame: 42,
+      id: "deck.card::cue", subjectId: "card", timelineId: "speech", frame: 42,
     }),
-    record("cards", "@qflow/deck-track", "DepthStackCardSet", { cards: [{ id: "card", activationFrame: 42 }] }),
+    record("cards", "@qflow/depth-stack", "DepthStackCardSet", { cards: [{ id: "card", activationFrame: 42 }] }),
     record("track", "@qflow/composition", "VisualTrack", { presents: [] }),
     record("unused-point", "@qflow/temporal", "TemporalInstant", {
-      id: "unused::cue", subjectId: "unused", source: { spaceId: "speech", narrativeId: "story", kind: "moment", id: "cue" }, projection: { ref: "moment.cue" },
-      authority: { kind: "semantic", boundary: "cue" }, frame: 7,
+      id: "unused::cue", subjectId: "unused", timelineId: "speech", frame: 7,
     }),
   ];
   const steps = [
-    step("project", "@qflow/temporal", "project-moment-instant", { semantic: "semantic", moment: "moment", spec: "point-spec" }, { instant: "point" }),
-    step("append", "@qflow/deck-track", "append-depth-stack-card", { set: "empty", spec: "card-spec", activation: "point" }, { set: "cards" }),
-    step("render", "@qflow/deck-track", "render-depth-stack", { program: "cards" }, { track: "track" }),
+    step("project", "@qflow/narrative-temporal", "project-moment-instant", { timeline: "timeline", projection: "projection", moment: "moment", spec: "point-spec" }, { instant: "point" }),
+    step("append", "@qflow/depth-stack", "append-depth-stack-card", { set: "empty", spec: "card-spec", activation: "point" }, { set: "cards" }),
+    step("render", "@qflow/depth-stack", "render-depth-stack", { program: "cards" }, { track: "track" }),
   ];
   const state = {
     format: "qflow.build@1",
@@ -61,17 +60,17 @@ test("Studio reads Instant lineage and author authority from executed graph edge
     id: "deck.card::cue",
     projection: {
       kind: "instant", expression: "moment.cue", reference: "moment.cue", frame: 42,
-      source: { spaceId: "speech", narrativeId: "story", kind: "moment", id: "cue" },
-      authority: { kind: "semantic", source: { spaceId: "speech", narrativeId: "story", kind: "moment", id: "cue" }, boundary: "cue" },
+      source: { timelineId: "speech", narrativeId: "story", type: type("@qflow/narrative", "NarrativeMoment"), kind: "moment", id: "cue" },
+      authority: { kind: "domain", source: { timelineId: "speech", narrativeId: "story", type: type("@qflow/narrative", "NarrativeMoment"), kind: "moment", id: "cue" }, boundary: "cue" },
     },
     consumers: [{
       step: "append",
-      producer: producer("@qflow/deck-track", "append-depth-stack-card"),
+      producer: producer("@qflow/depth-stack", "append-depth-stack-card"),
       input: "activation",
       role: "domain",
       inputs: [
         { name: "activation", record: "point", type: type("@qflow/temporal", "TemporalInstant"), value: executed[0]!.value.kind === "inline" ? executed[0]!.value.value : undefined },
-        { name: "spec", record: "card-spec", type: type("@qflow/deck-track", "DepthStackCardSpec"), value: { id: "card" } },
+        { name: "spec", record: "card-spec", type: type("@qflow/depth-stack", "DepthStackCardSpec"), value: { id: "card" } },
       ],
     }],
   });

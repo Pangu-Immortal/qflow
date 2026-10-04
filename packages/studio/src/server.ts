@@ -338,7 +338,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       handle.sources?.find((candidate) => candidate.role === role)?.source;
     const frame = (value: number): string => `${value}f`;
     const semanticFrame = (endpoint: StudioTemporalInstantProjection): number | undefined => {
-      if (endpoint.authority.kind !== "semantic" || semanticTarget === undefined || handle.semantic === undefined) return undefined;
+      if (endpoint.authority.kind !== "domain" || semanticTarget === undefined || handle.semantic === undefined) return undefined;
       if (endpoint.source.kind === "selection" && semanticTarget.kind === "selection"
         && endpoint.source.id === handle.semantic.id) {
         const anchorId = endpoint.authority.boundary === "start"
@@ -354,8 +354,8 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
     };
     const projectionBaseFrame = (endpoint: StudioTemporalInstantProjection): number | undefined => {
       if (endpoint.reference === "absolute") return undefined;
-      if (endpoint.reference === "program.start") return 0;
-      if (endpoint.reference === "program.end") return snapshot?.space.frameCount;
+      if (endpoint.reference === "timeline.start") return 0;
+      if (endpoint.reference === "timeline.end") return snapshot?.timeline.frameCount;
       const id = endpoint.source.id;
       if (id === undefined) return undefined;
       if (endpoint.reference === "selection.start" || endpoint.reference === "selection.end") {
@@ -377,7 +377,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
     ): void => {
       if (desired === endpoint.frame) return;
       if (endpoint.authority.kind === "fixed") throw new Error(`The ${role} endpoint has no timeline write target.`);
-      if (endpoint.authority.kind === "semantic") {
+      if (endpoint.authority.kind === "domain") {
         if (semanticFrame(endpoint) !== desired) throw new Error(`The ${role} endpoint does not match its semantic Anchor.`);
         return;
       }

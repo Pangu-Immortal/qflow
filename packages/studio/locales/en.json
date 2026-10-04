@@ -53,8 +53,6 @@
     "common.waiting": "Waiting",
     "inspector.add-color": "Add color",
     "inspector.add-item": "Add item",
-    "inspector.anchor.program-end": "Timeline end{detail}",
-    "inspector.anchor.program-start": "Timeline start{detail}",
     "inspector.anchor.segment-end": "Segment end{detail}",
     "inspector.anchor.segment-start": "Segment start{detail}",
     "inspector.anchor.token-end": "Word end{detail}",

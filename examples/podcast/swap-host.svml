@@ -2,21 +2,21 @@
 
 <svml>
   <import from="@qflow/script@1"/>
-  <import as="sound" from="@qflow/sound@1"/>
+  <import as="audio" from="@qflow/audio-track@1"/>
   <import as="asset" from="@qflow/media@1"/>
   <import as="text" from="@qflow/text@1"/>
   <import as="gpt" from="@qflow/gpt-image@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
-  <import as="program" from="@qflow/program-space@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
+  <import as="semantic" from="@qflow/narrative-temporal@1"/>
+  <import as="narrative-caption" from="@qflow/narrative-caption@1"/>
   <import as="time" from="@qflow/timeline-author@1"/>
   <import as="audio-track" from="@qflow/audio-track@1"/>
   <import as="caption" from="@qflow/caption@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
   <import as="fonts" from="@qflow/fonts-open@1"/>
-  <import as="media-track" from="@qflow/media-track@1"/>
-  <import as="performance" from="@qflow/performance@1"/>
+  <import as="visual" from="@qflow/visual-track@1"/>
   <import as="space" from="@qflow/spatial@1"/>
   <import as="film" from="@qflow/film@1"/>
   <import as="render" from="@qflow/render-hyperframes@1"/>
@@ -174,9 +174,9 @@
   </seedance:ReferenceVideo>
 
   <space:Canvas id="vertical" width="720" height="1280"/>
-  <space:Frame id="full-frame" within={vertical}
+  <space:Frame id="full-frame" within={vertical.bounds}
     left="0%" top="0%" right="100%" bottom="100%"/>
-  <program:Clock id="clock" frame-rate="30"/>
+  <time:Clock id="clock" frame-rate="30"/>
 
   <pipeline:Normalize id="soundtrack-media" source={soundtrack}
     video="none" audio="default" span-authority="audio" clock={clock}/>
@@ -190,38 +190,49 @@
   <pipeline:Normalize id="lifestyle-media" source={lifestyle-montage.video}
     video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 
-  <whisperx:SemanticTake id="opening-semantic" narrative={story}
-    segment={story.segment.opening-question} media={opening-media.media} language="en"/>
-  <whisperx:SemanticTake id="daily-creatine-semantic" narrative={story}
-    segment={story.segment.daily-creatine} media={daily-creatine-media.media} language="en"/>
-  <whisperx:SemanticTake id="arms-are-asking-semantic" narrative={story}
-    segment={story.segment.arms-are-asking} media={arms-are-asking-media.media} language="en"/>
+  <whisperx:Alignment id="opening-semantic" narrative={story}
+    segment={story.segment.opening-question} media={opening-media.media} domain={opening-media.domain} language="en"/>
+  <whisperx:Alignment id="daily-creatine-semantic" narrative={story}
+    segment={story.segment.daily-creatine} media={daily-creatine-media.media} domain={daily-creatine-media.domain} language="en"/>
+  <whisperx:Alignment id="arms-are-asking-semantic" narrative={story}
+    segment={story.segment.arms-are-asking} media={arms-are-asking-media.media} domain={arms-are-asking-media.domain} language="en"/>
 
-  <time:Timeline id="speech" clock={clock}>
-    <time:Take source={opening-semantic.take}/>
-    <time:Take source={daily-creatine-semantic.take}/>
-    <time:Take source={arms-are-asking-semantic.take}/>
+  <time:Timeline id="speech" clock={clock} end="arms-are-asking-semantic.end">
+    <time:Window id="opening-semantic" from="start" for={opening-media.extent}/>
+    <time:Window id="daily-creatine-semantic" from="opening-semantic.end" for={daily-creatine-media.extent}/>
+    <time:Window id="arms-are-asking-semantic" from="daily-creatine-semantic.end" for={arms-are-asking-media.extent}/>
   </time:Timeline>
 
-  <sound:Style id="speech-sound-style"/>
-  <sound:Track id="speech-sound" timeline={speech.timeline}>
-    <sound:Use style={speech-sound-style}/>
-  </sound:Track>
-  <performance:Style id="speech-picture-style" frame={full-frame} appearance={recipes.media.performance}/>
-  <performance:Track id="speech-picture" timeline={speech.timeline} canvas={vertical}>
-    <performance:Use style={speech-picture-style} during="program"/>
-  </performance:Track>
+
+  <semantic:Projection id="story-time" narrative={story} timeline={speech.timeline}>
+    <semantic:Map alignment={opening-semantic.alignment} domain={opening-media.domain} window={speech.opening-semantic}/>
+    <semantic:Map alignment={daily-creatine-semantic.alignment} domain={daily-creatine-media.domain} window={speech.daily-creatine-semantic}/>
+    <semantic:Map alignment={arms-are-asking-semantic.alignment} domain={arms-are-asking-media.domain} window={speech.arms-are-asking-semantic}/>
+    <semantic:Window id="selection-lifestyle" selection={story.selection.lifestyle}/>
+  </semantic:Projection>
+  <audio:Track id="speech-sound" timeline={speech.timeline}>
+    <audio:Clip id="opening-semantic-source" source={opening-media.media} during={speech.opening-semantic}/>
+    <audio:Clip id="daily-creatine-semantic-source" source={daily-creatine-media.media} during={speech.daily-creatine-semantic}/>
+    <audio:Clip id="arms-are-asking-semantic-source" source={arms-are-asking-media.media} during={speech.arms-are-asking-semantic}/>
+  </audio:Track>
+  <visual:Track id="speech-picture" timeline={speech.timeline}>
+    <visual:Clip id="opening-semantic-source" media={opening-media.media} during={speech.opening-semantic} frame={full-frame} z="10" fit="cover"/>
+    <visual:Clip id="daily-creatine-semantic-source" media={daily-creatine-media.media} during={speech.daily-creatine-semantic} frame={full-frame} z="10" fit="cover"/>
+    <visual:Clip id="arms-are-asking-semantic-source" media={arms-are-asking-media.media} during={speech.arms-are-asking-semantic} frame={full-frame} z="10" fit="cover"/>
+  </visual:Track>
 
   <audio-track:Track id="music-bed" timeline={speech.timeline}>
-    <audio-track:Item source={soundtrack-media.media} during="program"
-      playback="once-start" gain="0.12" fade-in="300ms" fade-out="600ms"/>
+    <audio-track:Clip source={soundtrack-media.media} during="timeline"
+      gain="0.12" fade-in="300ms" fade-out="600ms"/>
   </audio-track:Track>
 
-  <media-track:Track id="lifestyle" timeline={speech.timeline} canvas={vertical}>
-    <media-track:Item id="lifestyle-cutaway" media={lifestyle-media.media}
-      frame={full-frame} during={story.selection.lifestyle}
-      appearance={recipes.media.lifestyle}/>
-  </media-track:Track>
+  <visual:Track id="lifestyle" timeline={speech.timeline}>
+    <visual:Clip id="lifestyle-cutaway" media={lifestyle-media.media}
+      frame={full-frame} during={story-time.selection-lifestyle}
+      z="40" fit="cover">
+      <visual:Map/>
+    </visual:Clip>
+  </visual:Track>
 
   <fonts:Stack id="caption-font" family="montserrat" weight="900" style="normal"/>
   <caption-fine:Style id="caption-style" recipe={recipes.caption.pepe}
@@ -229,18 +240,19 @@
   <caption-fine:Style id="caption-doge-style" recipe={recipes.caption.doge}
     font={caption-font}/>
 
-  <caption-fine:Track id="captions" document={story.caption}
-    timeline={speech.timeline}>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
+    timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={caption-style}/>
     <caption-fine:Use role="DOGE" style={caption-doge-style}/>
-  </caption-fine:Track>
+  </caption-fine:Caption>
 
-  <film:Film id="main" canvas={vertical} timeline={speech.timeline}
+  <film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline}
     appearance={recipes.film.vertical}>
     <film:Track source={speech-picture.visual}/>
     <film:Track source={speech-sound.audio}/>
     <film:Track source={lifestyle.visual}/>
-    <film:Track source={captions.track}/>
+    <film:Track source={captions.visual}/>
     <film:Track source={music-bed.audio}/>
   </film:Film>
 

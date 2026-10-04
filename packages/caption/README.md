@@ -3,31 +3,36 @@
 External components import `@qflow/qflow/caption`. Source uses the `@qflow/caption@1` Module
 identity for shared declarations such as `Hidden`.
 
-Caption has two independent structures: Script organizes displayed words into Cues, and timed Uses
+Caption has independent content, timing and presentation structures: CaptionDocument organizes
+displayed words into Cues, CaptionTiming locates those units, and timed Uses
 choose how those Cues appear. A Use may begin inside a Cue. It changes presentation without changing
 that Cue's text or restarting its word timing.
 
-`CaptionDocument` owns displayed words with authored separators, display/pronunciation associations, word attributes and `||`
-breaks. `Timeline` owns placed Takes and measured word times. `temporalizeCaptionDocument(document,
-timeline)` joins their identities and returns `TimedCaptionProjection`: complete Cues with original
-unit times. Segment, speaking-turn and explicit Cue boundaries organize this content. No Style is
-needed for this operation. Unplaced material contributes no Cue.
+`CaptionDocument` owns displayed words with authored separators, display units, word attributes and
+Cue breaks. It contains no Narrative identities or time. `CaptionTiming` independently owns complete
+Cues and absolute unit windows on one Timeline. A domain adapter can produce that timing from speech,
+SRT/VTT can publish it directly, and authored absolute timing can use the same renderer.
 
-A rendering family's Track accepts `document`, `timeline` and ordered `Use` children. Fine provides:
+A rendering family's Track accepts `document`, `timing`, `timeline`, the spatial inputs its renderer
+actually needs and ordered `Use` children. Fine takes one placement Frame:
 
 ```svml
 <caption:Hidden id="hidden"/>
-<caption-fine:Track id="captions" document={story.caption} timeline={film.timeline}>
+<narrative-caption:Timing id="story-captions" document={story.caption}
+  binding={story.caption-binding} projection={story-time.projection}/>
+<caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
+  timeline={film.timeline} within={vertical.bounds}>
   <caption-fine:Use style={plain}/>
   <caption-fine:Use role="GUEST" style={guest}/>
-  <caption-fine:Use during={story.selection.demo} style={hidden}/>
-  <caption-fine:Use at={story.moment.key} for="2s" style={impact}/>
-</caption-fine:Track>
+  <caption-fine:Use during={demo-window} style={hidden}/>
+  <caption-fine:Use from="12s" for="2s" style={impact}/>
+</caption-fine:Caption>
 ```
 
-Time attributes come from `@qflow/temporal-markup`: `during`, `at`/`for`, `until`/`for`, and
-`start`/`end`, including semantic references and explicit frame/second expressions. Omitted time
-attributes mean the whole Timeline. `role` filters content independently of time. Later matching
+Time attributes come from `@qflow/temporal-markup`: `during`, or exactly two of `from`, `until`, and
+`for`, including resolved temporal references and explicit frame/second expressions. Omitted time
+attributes mean the whole Timeline. Domain adapters must resolve semantic or other domain references
+to ordinary absolute Windows/Instants before a Caption family consumes them. `role` filters content independently of time. Later matching
 Uses replace earlier presentation inside their windows, including a Hidden Style. Separate Tracks
 remain independent and can intentionally display simultaneous captions.
 
@@ -41,11 +46,11 @@ The public helpers and Types are in [index.ts](src/index.ts):
 - `CaptionStyleIntent` carries a family identifier and parameters, or `rendering: null` for Hidden.
 - `CaptionProgram` is the Track's internal collection of ordered, resolved Uses and referenced Styles.
   It is not a separate author element. `create-caption-uses` and `append-caption-use` assemble it from
-  typed Windows. The Track may export it for its Companion, like Performance and Sound.
+  typed Windows. The Track may export it for its Companion, like Visual and Audio Clips.
 - `captionUseVisibility(program, index, role, envelope)` intersects a Cue envelope with a Use and
   subtracts later matching windows. Hidden participates even though it renders nothing.
-- `captionProducers.temporalizeDocument` takes only `document` and `timeline`. Its output retains
-  `spaceId`, `narrativeId`, `documentId`, Cue identities and measured alignment-unit boundaries.
+- `CaptionTiming` retains only `timelineId`, `documentId`, Cue identities and absolute unit windows.
+  Narrative-specific binding and projection belong to `@qflow/narrative-caption`.
 
 Derive layout and animation from complete Cue content and original timing. Apply Use coverage as a
 visibility mask. Fine keeps the original Present span and element animations, with separate
@@ -56,8 +61,8 @@ winning Use window. Empty content produces no drawing.
 Word attributes remain on `CaptionDocument.words`. A structural family can interpret an explicit
 attribute as a keyword role while retaining complete display/alignment units. Time selection does
 not split `<display|speech>` text, and elapsed Cue progress is not a replacement for word timing.
-The content query helpers for Role, Selection and attributes remain available for components that
-actually need authored word subsets; those queries do not define the Use time language.
+The content query helpers for Role and attributes remain here. Narrative Selection-to-unit queries
+belong to `@qflow/narrative-caption`; neither defines the Use time language.
 
 See Fine's [Surface](../caption-fine/src/surface.ts), [schedule](../caption-fine/src/schedule.ts) and
 [renderer](../caption-fine/src/render.ts) for a concrete implementation. New family behavior belongs

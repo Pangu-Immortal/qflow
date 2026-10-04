@@ -1,4 +1,4 @@
-import { performanceMedia } from "./performance-media.js";
+import { placedVisualMedia } from "./placed-visual-media.js";
 import {
   assertAttributes,
   assertEmptyElement,
@@ -7,11 +7,7 @@ import {
   sealGraphFragment,
   createMarkupSurfaceHostFacet,
 } from "@qflow/qflow/author-kit";
-import {
-  performanceStyle,
-  performanceTypes,
-  performanceModuleRef,
-} from "@qflow/qflow/performance";
+import { presenterStyle, presenterTypes } from "./presenter.js";
 import { sealVisualTrack, compositionTypes } from "@qflow/qflow/composition";
 import { timelineTypes } from "@qflow/qflow/timeline";
 import { spatialTypes } from "@qflow/qflow/spatial";
@@ -19,17 +15,18 @@ import { temporalTypes } from "@qflow/qflow/temporal";
 import { browserProgram } from "@qflow/qflow/hyperframes";
 const styles = (o) =>
   Object.entries(o).map(([name, value]) => ({ name, value }));
-// A local Use owns the pullback's clock; media continues at its placed source time.
+// A local Use owns the pullback's clock; media continues from its Source Window.
 export function installPullback(module, manifest, component, optionsType, mode="pullback") {
+  const types = presenterTypes(module);
   const isFade=mode==="fade-out",tag=isFade?"FadeOut":"Pullback";
   const inputs = [
     { name: "timeline", type: timelineTypes.track },
-    { name: "canvas", type: spatialTypes.canvas },
+    { name: "within", type: spatialTypes.frame },
     { name: "window", type: temporalTypes.window },
+    { name: "sources", type: types.sources },
     { name: "options", type: optionsType },
   ];
   const producer = { module, name: mode };
-  if (!manifest.dependencies.some(d=>d.module.name===performanceModuleRef.name)) manifest.dependencies.push({ module: performanceModuleRef });
   manifest.producers.push({
     name: mode,
     inputs,
@@ -59,14 +56,14 @@ export function installPullback(module, manifest, component, optionsType, mode="
   component.producers.push({
     producer,
     handler: ({ inputs }) => {
-      const { timeline, canvas, window, options } = Object.fromEntries(
+      const { timeline, within, window, sources, options } = Object.fromEntries(
         Object.entries(inputs).map(([k, r]) => {
           if (r.value.kind !== "inline")
             throw Error("Pullback needs inline inputs");
           return [k, r.value.value];
         }),
       );
-      const { clips, children } = performanceMedia(timeline, window);
+      const { clips, children } = placedVisualMedia(timeline, window, sources.sources);
       const duration = window.span.endFrameExclusive - window.span.startFrame;
       const program = browserProgram({
         html:
@@ -88,14 +85,15 @@ export function installPullback(module, manifest, component, optionsType, mode="
       const id = window.subjectId,
         visual = sealVisualTrack({
           id,
-          programSpaceId: timeline.id,
+          timelineId: timeline.id,
           visualIr: "qflow.visual-ir@1",
           presents: children.length
             ? [
                 {
                   id,
+                  order: 0,
+                  z: 0,
                   span: window.span,
-                  stacking: { order: 0, tieBreak: id },
                   elements: [
                     {
                       id: "scene",
@@ -104,9 +102,10 @@ export function installPullback(module, manifest, component, optionsType, mode="
                       program,
                       style: styles({
                         position: "absolute",
-                        inset: 0,
-                        width: canvas.widthPx + "px",
-                        height: canvas.heightPx + "px",
+                        left: within.xPx + "px",
+                        top: within.yPx + "px",
+                        width: within.widthPx + "px",
+                        height: within.heightPx + "px",
                       }),
                     },
                     ...children,
@@ -127,7 +126,7 @@ export function installPullback(module, manifest, component, optionsType, mode="
       name: mode,
       tag,
       mode: "structured",
-      outputs: [performanceTypes.style, optionsType],
+      outputs: [types.style, optionsType],
       vocabulary: {
         summary:
           isFade?"Fade placed footage to transparent across this Use.":"Fast-to-slow pullback of placed footage, settling at ordinary full-frame geometry.",
@@ -168,10 +167,10 @@ export function installPullback(module, manifest, component, optionsType, mode="
           },
           {
             id,
-            type: performanceTypes.style,
+            type: types.style,
             value: {
               kind: "inline",
-              value: canonicalize(performanceStyle(fragment, { options })),
+              value: canonicalize(presenterStyle(fragment, { options })),
             },
             range: element.range,
           },

@@ -1,7 +1,7 @@
 import { assertCompositableSurfaceRef } from "@qflow/media";
 import type { CompositableSurfaceRef, FontArtifactRef } from "@qflow/media";
-import { programSpaceFrameCount } from "@qflow/program-space";
-import type { ProgramSpace } from "@qflow/program-space";
+import { timelineFrameCount } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import { assertCompositionIdentity } from "@qflow/composition";
 import type {
   Composition,
@@ -10,8 +10,8 @@ import type {
   VisualAttribute,
   VisualElement,
   VisualPresent,
-  VisualSamplingRational,
-  VisualSamplingSegment,
+  VisualSourceTimeRational,
+  VisualSourceTimePiece,
   VisualStyleDeclaration,
   VisualTrack,
 } from "@qflow/composition";
@@ -80,30 +80,30 @@ function rationalDecimal(numerator: bigint, denominator: bigint): string {
   return `${whole}.${String(remainder).padStart(12, "0").replace(/0+$/u, "")}`;
 }
 
-function sourceSeconds(frame: VisualSamplingRational, frameRate: VisualSamplingRational): string {
+function sourceSeconds(frame: VisualSourceTimeRational, frameRate: VisualSourceTimeRational): string {
   return rationalDecimal(
     BigInt(frame.numerator) * BigInt(frameRate.denominator),
     BigInt(frame.denominator) * BigInt(frameRate.numerator),
   );
 }
 
-function sourcePosition(segment: VisualSamplingSegment, offset: number): {
-  readonly position: VisualSamplingRational;
+function sourcePosition(piece: VisualSourceTimePiece, offset: number): {
+  readonly position: VisualSourceTimeRational;
   readonly cycle: bigint;
 } {
-  const denominator = BigInt(segment.sourceFrame.denominator) * BigInt(segment.rate.denominator);
-  const raw = BigInt(segment.sourceFrame.numerator) * BigInt(segment.rate.denominator)
-    + BigInt(offset) * BigInt(segment.rate.numerator) * BigInt(segment.sourceFrame.denominator);
-  if (segment.loop === undefined) {
+  const denominator = BigInt(piece.sourceAtStart.denominator) * BigInt(piece.rate.denominator);
+  const raw = BigInt(piece.sourceAtStart.numerator) * BigInt(piece.rate.denominator)
+    + BigInt(offset) * BigInt(piece.rate.numerator) * BigInt(piece.sourceAtStart.denominator);
+  if (piece.wrap === undefined) {
     if (raw < 0n || raw > BigInt(Number.MAX_SAFE_INTEGER) || denominator > BigInt(Number.MAX_SAFE_INTEGER)) {
-      throw new Error("HyperFrames visual sampling exceeds safe arithmetic.");
+      throw new Error("HyperFrames visual source time exceeds safe arithmetic.");
     }
     return { position: { numerator: Number(raw), denominator: Number(denominator) }, cycle: 0n };
   }
-  const start = BigInt(segment.loop.startFrame) * denominator;
-  const length = BigInt(segment.loop.endFrameExclusive - segment.loop.startFrame) * denominator;
+  const start = BigInt(piece.wrap.startFrame) * denominator;
+  const length = BigInt(piece.wrap.endFrameExclusive - piece.wrap.startFrame) * denominator;
   const delta = raw - start;
-  const cycle = delta / length;
+  const cycle = delta >= 0n ? delta / length : -((-delta + length - 1n) / length);
   const wrapped = ((delta % length) + length) % length;
   const numerator = start + wrapped;
   if (numerator > BigInt(Number.MAX_SAFE_INTEGER) || denominator > BigInt(Number.MAX_SAFE_INTEGER)) {
@@ -112,56 +112,56 @@ function sourcePosition(segment: VisualSamplingSegment, offset: number): {
   return { position: { numerator: Number(numerator), denominator: Number(denominator) }, cycle };
 }
 
-function samplingRuns(segment: VisualSamplingSegment): Array<{
+function sourceTimeRuns(piece: VisualSourceTimePiece): Array<{
   readonly startFrame: number;
   readonly endFrameExclusive: number;
-  readonly sourceFrame: VisualSamplingRational;
+  readonly sourceFrame: VisualSourceTimeRational;
 }> {
-  const length = segment.target.endFrameExclusive - segment.target.startFrame;
-  const runs: Array<{ startFrame: number; endFrameExclusive: number; sourceFrame: VisualSamplingRational }> = [];
+  const length = piece.target.endFrameExclusive - piece.target.startFrame;
+  const runs: Array<{ startFrame: number; endFrameExclusive: number; sourceFrame: VisualSourceTimeRational }> = [];
   // Keep a hold as the interval it is. HTMLMediaElement cannot accept a zero
   // playbackRate, but that browser limitation belongs to the render/preview
   // adapters; expanding the shared sampling description here would turn one
   // authored relation into O(target frames) DOM and Provider work.
-  if (segment.rate.numerator === 0) {
+  if (piece.rate.numerator === 0 || piece.wrap === undefined) {
     return [{
-      startFrame: segment.target.startFrame,
-      endFrameExclusive: segment.target.endFrameExclusive,
-      sourceFrame: sourcePosition(segment, 0).position,
+      startFrame: piece.target.startFrame,
+      endFrameExclusive: piece.target.endFrameExclusive,
+      sourceFrame: sourcePosition(piece, 0).position,
     }];
   }
   let runStart = 0;
-  let runSource = sourcePosition(segment, 0);
-  for (let offset = 1; offset < length; offset += 1) {
-    const next = sourcePosition(segment, offset);
-    if (next.cycle !== runSource.cycle) {
-      runs.push({
-        startFrame: segment.target.startFrame + runStart,
-        endFrameExclusive: segment.target.startFrame + offset,
-        sourceFrame: runSource.position,
-      });
-      runStart = offset;
-      runSource = next;
+  while (runStart < length) {
+    const runSource = sourcePosition(piece, runStart);
+    let left = runStart + 1;
+    let right = length;
+    while (left < right) {
+      const middle = left + Math.floor((right - left) / 2);
+      const cycle = sourcePosition(piece, middle).cycle;
+      const crossed = piece.rate.numerator > 0 ? cycle > runSource.cycle : cycle < runSource.cycle;
+      if (crossed) right = middle;
+      else left = middle + 1;
     }
+    runs.push({
+      startFrame: piece.target.startFrame + runStart,
+      endFrameExclusive: piece.target.startFrame + left,
+      sourceFrame: runSource.position,
+    });
+    runStart = left;
   }
-  runs.push({
-    startFrame: segment.target.startFrame + runStart,
-    endFrameExclusive: segment.target.endFrameExclusive,
-    sourceFrame: runSource.position,
-  });
   return runs;
 }
 
 function sampledPlaybackRate(
-  rate: VisualSamplingRational,
-  sourceFrameRate: VisualSamplingRational,
+  rate: VisualSourceTimeRational,
+  sourceFrameRate: VisualSourceTimeRational,
   programNumerator: number,
   programDenominator: number,
 ): string {
   // The exact zero rate remains in data-qflow-source-rate for adapters that
   // place discrete frames. This positive fallback is only the legal native
   // HTMLMediaElement value; preview adapters pause and seek held elements.
-  if (rate.numerator === 0) return "1";
+  if (rate.numerator <= 0) return "1";
   return rationalDecimal(
     BigInt(rate.numerator) * BigInt(programNumerator) * BigInt(sourceFrameRate.denominator),
     BigInt(rate.denominator) * BigInt(programDenominator) * BigInt(sourceFrameRate.numerator),
@@ -373,10 +373,10 @@ function renderElement(
   if (element.kind === "text-flow" || element.kind === "path-text") {
     return renderTerminalTextElement(element, textContext);
   }
-  if ((element.kind === "video" || element.kind === "surface") && element.sampling !== undefined) {
+  if ((element.kind === "video" || element.kind === "surface") && element.sourceTime !== undefined) {
     const artifact = element.kind === "surface" ? element.surface.artifact : element.artifact;
     let part = 0;
-    return element.sampling.segments.flatMap((segment) => samplingRuns(segment).map((run) => {
+    return element.sourceTime.pieces.flatMap((piece) => sourceTimeRuns(piece).map((run) => {
       part += 1;
       const startFrame = context.presentStartFrame + run.startFrame;
       const durationFrames = run.endFrameExclusive - run.startFrame;
@@ -388,13 +388,13 @@ function renderElement(
         `data-start="${frameSeconds(startFrame, context.programNumerator, context.programDenominator)}"`,
         `data-duration="${frameSeconds(durationFrames, context.programNumerator, context.programDenominator)}"`,
         `data-track-index="${context.stackIndex}"`,
-        `data-media-start="${sourceSeconds(run.sourceFrame, element.sampling!.sourceFrameRate)}"`,
-        `data-playback-rate="${sampledPlaybackRate(segment.rate, element.sampling!.sourceFrameRate, context.programNumerator, context.programDenominator)}"`,
+        `data-media-start="${sourceSeconds(run.sourceFrame, element.sourceTime!.sourceFrameRate)}"`,
+        `data-playback-rate="${sampledPlaybackRate(piece.rate, element.sourceTime!.sourceFrameRate, context.programNumerator, context.programDenominator)}"`,
         `data-qflow-source-frame="${run.sourceFrame.numerator}/${run.sourceFrame.denominator}"`,
-        `data-qflow-source-rate="${segment.rate.numerator}/${segment.rate.denominator}"`,
+        `data-qflow-source-rate="${piece.rate.numerator}/${piece.rate.denominator}"`,
         `data-qflow-start-frame="${startFrame}"`,
         `data-qflow-end-frame="${startFrame + durationFrames}"`,
-        `data-qflow-source-fps="${element.sampling!.sourceFrameRate.numerator}/${element.sampling!.sourceFrameRate.denominator}"`,
+        `data-qflow-source-fps="${element.sourceTime!.sourceFrameRate.numerator}/${element.sourceTime!.sourceFrameRate.denominator}"`,
         `style="${escapeHtml(inlineStyle)}"`,
         attributes(element.attributes).trim(),
         "muted",
@@ -422,9 +422,7 @@ function renderElement(
       `height="${element.surface.height}"`,
     ].join(" ");
     if (element.surface.timing.kind === "still") return `<img ${common} ${surface} ${deferredResource("src", element.surface.artifact.resource)}/>`;
-    const timing = element.surface.timing;
-    const exact = `data-qflow-start-frame="${context.presentStartFrame}" data-qflow-end-frame="${context.presentStartFrame + timing.frameCount}" data-qflow-source-frame="0/1" data-qflow-source-rate="1/1" data-qflow-source-fps="${timing.frameRate.numerator}/${timing.frameRate.denominator}"`;
-    return `<video ${common} ${surface} ${exact} muted playsinline ${deferredResource("src", element.surface.artifact.resource)}></video>`;
+    throw new Error(`Timed Surface ${element.id} has no source-time map.`);
   }
 
   const media = [
@@ -435,8 +433,7 @@ function renderElement(
     element.kind === "video" ? "playsinline" : "",
   ].filter(Boolean).join(" ");
   if (element.kind === "image") return `<img ${common} ${media} ${deferredResource("src", element.artifact.resource)}/>`;
-  const exact = `data-qflow-start-frame="${context.presentStartFrame}" data-qflow-end-frame="${context.presentStartFrame + context.presentDurationFrames}" data-qflow-source-frame="0/1" data-qflow-source-rate="1/1" data-qflow-source-fps="${context.programNumerator}/${context.programDenominator}"`;
-  return `<video ${common} ${media} ${exact} ${deferredResource("src", element.artifact.resource)}>${descendants}</video>`;
+  throw new Error(`Timed visual element ${element.id} has no source-time map.`);
 }
 
 function renderVisualPresent(
@@ -474,7 +471,7 @@ function renderVisualPresent(
     sharedGlyphFilterDefinitions,
     stableId,
   });
-  return `<div class="clip qflow-visual-present" data-qflow-track-id="${escapeHtml(track.id)}" data-qflow-present-id="${escapeHtml(present.id)}" data-qflow-present-start-frame="${present.span.startFrame}" data-qflow-present-end-frame="${present.span.endFrameExclusive}" data-qflow-stack-order="${present.stacking.order}" data-qflow-stack-tie="${escapeHtml(present.stacking.tieBreak)}" data-track-index="${stackIndex}" data-start="${start}" data-duration="${duration}" style="position:absolute;inset:0;z-index:${stackIndex};overflow:hidden;pointer-events:none">${present.visibility === undefined ? contents : `<div data-qflow-visibility="${escapeHtml(JSON.stringify(present.visibility))}" style="position:absolute;inset:0">${contents}</div>`}</div>`;
+  return `<div class="clip qflow-visual-present" data-qflow-track-id="${escapeHtml(track.id)}" data-qflow-present-id="${escapeHtml(present.id)}" data-qflow-present-start-frame="${present.span.startFrame}" data-qflow-present-end-frame="${present.span.endFrameExclusive}" data-qflow-present-order="${present.order}" data-qflow-z="${present.z}" data-track-index="${stackIndex}" data-start="${start}" data-duration="${duration}" style="position:absolute;inset:0;z-index:${stackIndex};overflow:hidden;pointer-events:none">${present.visibility === undefined ? contents : `<div data-qflow-visibility="${escapeHtml(JSON.stringify(present.visibility))}" style="position:absolute;inset:0">${contents}</div>`}</div>`;
 }
 
 function renderAnimationRules(track: VisualTrack, present: VisualPresent, stableId: StableDomId): string[] {
@@ -501,10 +498,9 @@ function orderedVisualPresents(tracks: readonly Track[]): Array<{ readonly track
   return tracks
     .filter((track): track is VisualTrack => track.kind === "visual")
     .flatMap((track) => track.presents.map((present) => ({ track, present })))
-    .sort((left, right) => left.present.stacking.order - right.present.stacking.order
-      || left.present.stacking.tieBreak.localeCompare(right.present.stacking.tieBreak)
-      || left.present.span.startFrame - right.present.span.startFrame
+    .sort((left, right) => left.present.z - right.present.z
       || left.track.id.localeCompare(right.track.id)
+      || left.present.order - right.present.order
       || left.present.id.localeCompare(right.present.id));
 }
 
@@ -668,11 +664,18 @@ function frameAnimationRuntime(numerator: number, denominator: number): string {
     void element.getBoundingClientRect();
     const animation = element.getAnimations()[0];
     if (animation === undefined) throw new Error("Visual IR frame animation did not materialize.");
-    animation.pause();
-    animation.currentTime = 0;
-    // The authored keyframes are already the compact state function. Keep the
-    // browser's paused evaluator instead of expanding every Present frame into
-    // a second table of computed-style strings in every render Worker.
+    // The authored keyframes are already the compact state function. Keep them
+    // instead of expanding every Present frame into a second table of
+    // computed-style strings in every render Worker, but do not leave the CSS
+    // animation live: HyperFrames' css and waapi adapters seek every live
+    // document animation to absolute composition time, which replaces this
+    // Present-relative pose whenever the Present does not start at frame 0.
+    const keyframes = animation.effect.getKeyframes();
+    const timing = animation.effect.getTiming();
+    const properties = [...new Set(keyframes.flatMap((keyframe) => Object.keys(keyframe)))]
+      .filter((name) => name !== "offset" && name !== "computedOffset" && name !== "easing" && name !== "composite");
+    animation.cancel();
+    element.style.animationName = "none";
     const key = start + ":" + end;
     let work = groupsBySpan.get(key);
     if (work === undefined) {
@@ -684,20 +687,43 @@ function frameAnimationRuntime(numerator: number, denominator: number): string {
       };
       groupsBySpan.set(key, work);
     }
-    work.payload.animations.push(animation);
+    work.payload.animations.push({ element, keyframes, timing, properties });
   }
   // The shared index owns only frame-span lookup. Animation materialization and
   // absolute currentTime evaluation remain private to this adapter.
   const workIndex = hyperframesCreateFrameWorkIndex([...groupsBySpan.values()]);
+  const read = (style, name) => name.startsWith("--") ? style.getPropertyValue(name) : style[name];
+  const write = (style, name, value) => {
+    if (name.startsWith("--")) style.setProperty(name, value);
+    else style[name] = value;
+  };
   const applyFrame = (time) => {
     const programFrame = Math.max(0, Math.round(Number(time || 0) * numerator / denominator));
+    const active = [];
     for (const work of workIndex.at(programFrame)) {
       const localTime = (programFrame - work.startFrame) * millisecondsPerFrame;
       // Always derive the pose from the absolute requested frame. Worker
       // partitioning, seek order and the previously rendered frame are not
       // inputs to animation state.
-      for (const animation of work.payload.animations) animation.currentTime = localTime;
+      for (const item of work.payload.animations) active.push({ item, localTime });
     }
+    // Evaluate each pose with a transient Animation, read it and cancel it before
+    // this seek returns, so no adapter ever sees it. The Animation constructor,
+    // unlike Element.animate, is not tracked by HyperFrames' waapi adapter. Only
+    // the resulting inline style reaches the captured frame.
+    const probes = active.map(({ item, localTime }) => {
+      const probe = new Animation(new KeyframeEffect(item.element, item.keyframes, item.timing), document.timeline);
+      probe.currentTime = localTime;
+      return probe;
+    });
+    const poses = active.map(({ item }) => {
+      const style = getComputedStyle(item.element);
+      return item.properties.map((name) => read(style, name));
+    });
+    for (const probe of probes) probe.cancel();
+    active.forEach(({ item }, index) => {
+      item.properties.forEach((name, position) => write(item.element.style, name, poses[index][position]));
+    });
     void document.documentElement.getBoundingClientRect();
   };
   void document.documentElement.getBoundingClientRect();
@@ -705,8 +731,8 @@ function frameAnimationRuntime(numerator: number, denominator: number): string {
 })();`;
 }
 
-function emitHtml(composition: Composition, programSpace: ProgramSpace): string {
-  const { numerator, denominator } = programSpace.frameRate;
+function emitHtml(composition: Composition, timeline: Timeline): string {
+  const { numerator, denominator } = timeline.frameRate;
   const visuals = orderedVisualPresents(composition.tracks);
   // One document, one set of glyph filter definitions. Keep definitions outside
   // temporal Present roots so a render can make an unrelated Present inert
@@ -730,9 +756,9 @@ function emitHtml(composition: Composition, programSpace: ProgramSpace): string 
   const hasVisibility = visuals.some(({ present }) => present.visibility !== undefined);
   const programRuntime = programs.length === 0 ? "" : `<script>${browserProgramScript(programs, numerator, denominator)}</script>`;
   const visibilityRuntime = hasVisibility ? `<script>${presentationVisibilityScript(numerator, denominator)}</script>` : "";
-  const duration = frameSeconds(programSpaceFrameCount(programSpace), numerator, denominator);
+  const duration = frameSeconds(timelineFrameCount(timeline), numerator, denominator);
   const fps = fpsRational(numerator, denominator);
-  const frameCount = programSpaceFrameCount(programSpace);
+  const frameCount = timelineFrameCount(timeline);
   const needsFrameWork = hasFrameAnimations(composition) || hasTerminalText(composition) || programs.length > 0 || hasVisibility;
   const frameRuntime = `\n  <script>\n    ${needsFrameWork ? frameWorkIndexRuntime : frameSelectionRuntime}\n  </script>
   <script>${presentationCaptureScopeRuntime}</script>${hasFrameAnimations(composition) || hasTerminalText(composition)
@@ -780,19 +806,19 @@ function normalizedDocument(value: HyperframesDocument): HyperframesDocument {
   };
 }
 
-export function compileHyperframesDocument(composition: Composition, programSpace: ProgramSpace): HyperframesDocument {
-  assertCompositionIdentity(composition, programSpace);
+export function compileHyperframesDocument(composition: Composition, timeline: Timeline): HyperframesDocument {
+  assertCompositionIdentity(composition, timeline);
   const content = normalizedDocument({
     visualIr: VISUAL_IR_V1,
-    frameRate: { ...programSpace.frameRate },
-    frameCount: programSpaceFrameCount(programSpace),
+    frameRate: { ...timeline.frameRate },
+    frameCount: timelineFrameCount(timeline),
     canvas: {
       width: composition.canvas.width,
       height: composition.canvas.height,
     },
     artifacts: collectArtifacts(composition),
     surfaces: collectSurfaces(composition),
-    html: emitHtml(composition, programSpace),
+    html: emitHtml(composition, timeline),
   });
   return content;
 }

@@ -4,7 +4,7 @@ import type { BlobRef, CanonicalValue, StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 import { rasterComposeRequest } from "@qflow/raster";
 import { rasterCapabilities } from "@qflow/raster";
-import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
+import type { Canvas, SpatialFrame } from "@qflow/spatial";
 
 import { imageComposeProducers, imageComposeTypes } from "./manifest.js";
 import {
@@ -44,7 +44,7 @@ export const imageComposeComponent = {
   }, {
     producer: imageComposeProducers.request,
     handler: ({ inputs }: ProducerHandlerContext) => {
-      const canvas = inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace");
+      const canvas = inline<Canvas>(inputs.canvas?.value, "Canvas");
       const options = inline<ImageComposeOptions>(inputs.options?.value, "ImageComposeOptions");
       const set = inline<ImageComposeLayerSet>(inputs.layers?.value, "ImageComposeLayerSet");
       return { outputs: {}, needs: { image: rasterComposeRequest({

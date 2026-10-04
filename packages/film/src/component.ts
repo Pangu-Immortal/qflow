@@ -1,6 +1,6 @@
 import type { Timeline } from "@qflow/timeline";
 import type { ComponentPackage } from "@qflow/component-kit";
-import type { CanvasSpace } from "@qflow/spatial";
+import type { Canvas } from "@qflow/spatial";
 import type { AudioTrack, VisualTrack } from "@qflow/composition";
 import type { StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
@@ -50,7 +50,7 @@ export const filmComponent = {
       handler: ({ inputs }) => ({
         outputs: { composition: { kind: "inline", value: canonicalize(compileFilmComposition(
           inline<FilmProgram>(inputs.program?.value, "FilmProgram"),
-          inline<CanvasSpace>(inputs.canvas?.value, "CanvasSpace"),
+          inline<Canvas>(inputs.canvas?.value, "Canvas"),
           inline<Timeline>(inputs.timeline?.value, "Timeline"),
           inline<FilmTrackSet>(inputs.set?.value, "FilmTrackSet"),
         )) } },

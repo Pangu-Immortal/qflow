@@ -539,16 +539,16 @@ export function resolveTimelineEditHandles(
   const projection = temporal.projection;
 
   const semanticTarget = (endpoints: readonly StudioTemporalInstantProjection[]) => {
-    const sources = endpoints.flatMap((endpoint) => endpoint.authority.kind === "semantic"
+    const sources = endpoints.flatMap((endpoint) => endpoint.authority.kind === "domain"
       ? [endpoint.authority.source]
       : []);
     const first = sources[0];
     if (first === undefined || first.narrativeId === undefined
-      || first.spaceId !== semantic?.spaceId
+      || first.timelineId !== semantic?.timelineId
       || first.narrativeId !== semantic.narrativeId
       || !sources.every((candidate) => candidate.kind === first.kind
         && candidate.id === first.id
-        && candidate.spaceId === first.spaceId
+        && candidate.timelineId === first.timelineId
         && candidate.narrativeId === first.narrativeId)) return undefined;
     if (first.kind === "selection") {
       const selection = semantic?.selections.find((candidate) => candidate.id === first.id);
@@ -596,7 +596,7 @@ export function resolveTimelineEditHandles(
     if (missing !== undefined && "missing" in missing) {
       return disabled(gesture, `投影参数 ${missing.missing} 在当前作者源码中不可写。`);
     }
-    const semanticEndpoints = affected.filter(({ endpoint }) => endpoint.authority.kind === "semantic").map(({ endpoint }) => endpoint);
+    const semanticEndpoints = affected.filter(({ endpoint }) => endpoint.authority.kind === "domain").map(({ endpoint }) => endpoint);
     const target = semanticTarget(semanticEndpoints);
     if (semanticEndpoints.length > 0 && target === undefined) {
       return disabled(gesture, "语义端点在当前 Candidate 中没有可写的作者身份。");

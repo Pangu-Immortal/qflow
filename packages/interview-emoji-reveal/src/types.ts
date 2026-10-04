@@ -44,7 +44,7 @@ export type EmojiRevealSet = { readonly items: readonly EmojiRevealItem[] };
 
 export type EmojiRevealProgram = {
   readonly id: string;
-  readonly programSpaceId: string;
+  readonly timelineId: string;
   readonly outer: TemporalWindow;
   readonly style: EmojiRevealStyle;
   readonly placeholder: BlobRef;

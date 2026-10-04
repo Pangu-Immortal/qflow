@@ -43,7 +43,7 @@ For one concrete trace, [Script](authors/script.svml) places `road-fail` at the 
 is difficult. [Main Source](authors/main.svml) connects that meaning to the editor scene:
 
 ```svml
-<webscene:Beat name="fail" at={copy.story.moment.road-fail}/>
+<webscene:Beat name="fail" at={story-time.moment-road-fail-cue}/>
 ```
 
 The scene projects the event to a frame. Its

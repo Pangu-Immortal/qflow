@@ -1,4 +1,4 @@
-import type { SpeechEvidenceAudio } from "@qflow/speech";
+import type { SpeechEvidenceAudio } from "@qflow/speech-evidence";
 
 /** Explicit language code. Executable language support belongs to the selected service. */
 export type WhisperXLanguage = string;
@@ -11,6 +11,7 @@ export function parseWhisperXLanguage(value: unknown, subject = "WhisperX langua
 }
 
 export type WhisperXAlignmentRequest = {
+  readonly domainId: string;
   readonly audio: SpeechEvidenceAudio["artifact"];
   readonly sampleFrames: number;
   readonly language: WhisperXLanguage;

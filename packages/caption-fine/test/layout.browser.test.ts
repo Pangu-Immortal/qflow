@@ -16,19 +16,21 @@ const executablePath = process.env.QFLOW_CAPTURE_TEST_BROWSER ?? await captureBr
 
 function cueHtml(source: string, width: number, extra: SvsRecipe["properties"]): string {
   const document = captionDocument(parseScript("layout", `<line>${source}</line>`), "caption", "story");
-  const timeline = sealTimeline({ id: "timeline", items: [], durationSec: 4, frameRate: { numerator: 30, denominator: 1 } });
+  const timeline = sealTimeline({ id: "timeline", frameCount: 120, frameRate: { numerator: 30, denominator: 1 } });
   const style = fineCaptionStyle("plain", { path: "caption", properties: {
     align: "center", background: "#00000000", fill: "#000000", "line-height": 1.2,
     "anchor-x": "left", "anchor-y": "top", padding: "0", radius: 0, "stack-order": 1, size: 36, width: 1, x: 0, y: 0, "word-gap": 14, "inline-size": "fixed",
     karaoke: "trail", "active-box": "trail", "active-box-continuity": "joined", "active-box-padding": "0", "active-box-background": "#00800080", "active-box-radius": 0, ...extra,
   } }, [{ sources: [{ artifact: { kind: "blob", resource: fixtureResource("font"), size: 1, mediaType: "font/woff2" } }], weight: 400, style: "normal" }]);
   const program = { id: "p", documentId: document.id, styles: [style], uses: [{ styleId: "plain",
-    window: projectProgramWindow({ itemId: "use", semantic: timeline, projection: { start: { ref: "program.start" }, end: { ref: "program.end" } } }),
+    window: projectProgramWindow({ itemId: "use", semantic: timeline, projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } } }),
   }] };
-  const timed = { spaceId: timeline.id, narrativeId: "story", documentId: document.id, cues: [{ id: "cue", startFrame: 0, endFrameExclusive: 90,
+  const timed = { timelineId: timeline.id, documentId: document.id, cues: [{ id: "cue", startFrame: 0,
+    endFrameExclusive: document.units.length * 5,
     units: document.units.map((unit, index) => ({ unitId: unit.id, startFrame: index * 5, endFrameExclusive: index * 5 + 5 })),
   }] };
-  const track = renderFineCaption(scheduleFineCaption(timed, program, document), program, document, timeline);
+  const track = renderFineCaption(scheduleFineCaption(timed, program, document), program, document, timeline,
+    { xPx: 0, yPx: 0, widthPx: width, heightPx: 500 });
   const compiled = compileHyperframesDocument(sealComposition({ id: "test",
     canvas: { width, height: 500, clearColor: "#ffffff" }, tracks: [track] }), timeline);
   // Both copies use the same face. Exact-font loading is exercised by renderer integration.

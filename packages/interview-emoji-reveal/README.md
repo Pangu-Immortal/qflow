@@ -1,15 +1,14 @@
 # Emoji Reveal
 
-The Track Surface accepts `timeline={program.timeline}`. The same Timeline supports authored
-positions and, where prepared Takes supply evidence, Script Selections and Moments. Shared `at`
-inputs accept a Moment or a time such as `2s`; `at` with `for` produces a Window where required.
+The EmojiReveal Surface accepts one completed Timeline, an absolute outer Window and absolute reveal
+Instants. A Narrative or other domain projector may publish those values upstream.
 
 Reusable Qflow author vocabulary for a top-of-frame icon answer strip.
 
 The strip owns one outer projected `TemporalWindow`. An Item is either preset from the first frame or
-accepts one authored Script `Moment`, projected outside this package to a traced `TemporalInstant`.
+accepts one resolved `TemporalInstant`.
 Display order is source order: preset Items come first, then revealed Items in strict chronological
-order. The Track receives one placeholder image and every Item receives one answer image: `n` answers
+order. The EmojiReveal receives one placeholder image and every Item receives one answer image: `n` answers
 therefore have exactly `n + 1` explicit image inputs. A Moment replaces only its own slot, so earlier
 answers remain and later slots remain unanswered.
 
@@ -21,17 +20,17 @@ answers remain and later slots remain unanswered.
 
 <emoji:Style id="emoji-strip" recipe={styles.emoji-strip}/>
 
-<emoji:Track id="rules" timeline={speech.timeline} canvas={vertical}
-  style={emoji-strip} placeholder={question-icon} during="program">
+<emoji:EmojiReveal id="rules" timeline={speech.timeline} within={vertical.bounds}
+  style={emoji-strip} placeholder={question-icon} during="timeline">
   <emoji:Item id="manifest" icon={manifest-icon} preset="true"/>
-  <emoji:Item id="real-estate" icon={real-estate-icon} at={story.moment.real-estate}/>
-  <emoji:Item id="bitcoin" icon={bitcoin-icon} at={story.moment.bitcoin}/>
-</emoji:Track>
+  <emoji:Item id="real-estate" icon={real-estate-icon} at={story-time.real-estate}/>
+  <emoji:Item id="bitcoin" icon={bitcoin-icon} at={story-time.bitcoin}/>
+</emoji:EmojiReveal>
 ```
 
-`Selection`, `Segment`, numeric instants and a `boundary` fallback are deliberately not part of an
-Item's vocabulary. The component consumes the shared `Timeline`, the projected outer Window and the
-projected Instants; it does not interpret Script semantics itself and has no Studio dependency.
+`Selection`, `Segment` and a `boundary` fallback are deliberately not part of an Item's vocabulary.
+The component consumes the shared `Timeline`, the outer Window and resolved Instants; it does not
+interpret Script semantics itself and has no Studio dependency.
 
 The bundled preview icons come from [Tabler Icons](https://tabler.io/icons), distributed under the
 MIT license and retrieved through the Iconify API. Their SVG files are the design sources and are

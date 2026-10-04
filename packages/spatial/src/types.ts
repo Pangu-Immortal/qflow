@@ -1,10 +1,6 @@
-export type CanvasSpace = {
+export type Canvas = {
   readonly widthPx: number;
   readonly heightPx: number;
-  readonly origin: "top-left";
-  readonly xDirection: "right";
-  readonly yDirection: "down";
-  readonly pixelAspect: "square";
 };
 
 export type SpatialPoint = {
@@ -17,19 +13,6 @@ export type SpatialFrame = {
   readonly yPx: number;
   readonly widthPx: number;
   readonly heightPx: number;
-};
-
-/** One named, frame-exact sequence of measured regions in one Canvas. */
-export type SpatialRegionTrack = {
-  readonly id: string;
-  readonly frames: readonly (SpatialFrame | null)[];
-};
-
-/** External spatial evidence indexed directly by ProgramSpace Frame. */
-export type SpatialRegionTimeline = {
-  readonly canvas: CanvasSpace;
-  readonly frameCount: number;
-  readonly tracks: readonly SpatialRegionTrack[];
 };
 
 export type SpatialPathCommand =
@@ -48,6 +31,22 @@ export type IntrinsicExtent = {
   readonly heightPx: number;
 };
 
+/**
+ * An affine mapping from a local two-dimensional plane into the program picture
+ * plane. It applies as:
+ *
+ * x' = xx * x + xy * y + tx
+ * y' = yx * x + yy * y + ty
+ */
+export type SpatialMap2D = {
+  readonly xx: number;
+  readonly xy: number;
+  readonly yx: number;
+  readonly yy: number;
+  readonly tx: number;
+  readonly ty: number;
+};
+
 export type NormalizedPoint = {
   readonly x: number;
   readonly y: number;
@@ -59,10 +58,6 @@ export type ContentFit = {
   readonly contentPoint: NormalizedPoint;
   readonly offsetPx: { readonly x: number; readonly y: number };
   readonly constraint: "bounded" | "free";
-};
-
-export type FittedContent = {
-  readonly contentFrame: SpatialFrame;
 };
 
 export type SpatialLength = {

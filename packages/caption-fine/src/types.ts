@@ -1,4 +1,4 @@
-import type { TimedCaptionUnit } from "@qflow/caption";
+import type { CaptionTimingUnit } from "@qflow/caption";
 import type { FontArtifactRef } from "@qflow/media";
 
 export type FineCaptionGlyphPaint = {
@@ -161,7 +161,7 @@ export type FineCaptionParameters = {
     readonly loopIntensity: number;
   };
   /**
-   * Public rules for projecting semantic Cue time into its visible envelope.
+   * Public rules for expanding resolved Cue time into its visible envelope.
    * The renderer never expands a Cue on its own; the package's schedule
    * Producer resolves these rules before rendering.
    */
@@ -177,17 +177,16 @@ export type FineCaptionScheduledCue = {
   readonly visibility: readonly { readonly startFrame: number; readonly endFrameExclusive: number }[];
   readonly id: string;
   readonly styleId: string;
-  readonly semanticStartFrame: number;
-  readonly semanticEndFrameExclusive: number;
+  readonly timedStartFrame: number;
+  readonly timedEndFrameExclusive: number;
   readonly visibleStartFrame: number;
   readonly visibleEndFrameExclusive: number;
-  readonly units: readonly TimedCaptionUnit[];
+  readonly units: readonly CaptionTimingUnit[];
 };
 
-/** Explicit projection consumed by the Fine renderer. */
+/** Explicit presentation schedule consumed by the Fine renderer. */
 export type FineCaptionSchedule = {
-  readonly spaceId: string;
-  readonly narrativeId: string;
+  readonly timelineId: string;
   readonly documentId: string;
   readonly cues: readonly FineCaptionScheduledCue[];
 };

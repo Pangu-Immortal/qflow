@@ -1,63 +1,39 @@
-# @qflow/whisperx
+# `@qflow/whisperx`
 
-Explicit WhisperX model-family capability for the official speech program. Importing this package
-selects WhisperX; Runtime registration only binds the resulting alignment Need to a concrete
-execution endpoint. The default Qflow Skill path uses the QflowHub-hosted WhisperX endpoint; the
-trusted local worker remains an explicit deployment choice.
+Explicit WhisperX model-family capability for speech alignment. Importing this package selects
+WhisperX; Runtime registration binds the resulting evidence Need to a concrete Endpoint. The package
+contains no credentials, Python environment or queue.
 
-The package contains no credentials, Python environment or queue. Providers translate the typed
-request directly into provider-neutral `AlignedTranscriptEvidence`. There is no vendor-shaped
-Evidence wrapper or pass-through normalization node in the graph.
-
-`<whisperx:SemanticTake>` is the real-media semantic Surface. It consumes one normalized
-`SynchronizedMedia` and exactly one Script Segment. When that Segment contains Tokens, it also
-requires an explicit lowercase two- or three-letter language code, such as `language="ko"`.
-This package checks the code's form, not a cross-Provider support list. The language is passed directly to
-WhisperX; Script text and audio are not used to choose it implicitly. `@qflow/media-pipeline`
-projects the Take's audio to canonical 16 kHz mono `SpeechEvidenceAudio`; WhisperX sees only those
-bytes. A deterministic local alignment then combines the returned evidence with the Segment and
-emits one self-contained `SemanticTake`.
-
-For Chinese speech, select `zh` (also `qflow transcribe --language zh` for a reference). WhisperX's
-Chinese alignment emits character-sized words, including letters inside some Latin names. The
-evidence adapter preserves those windows; the local alignment maps them onto Script's units, so
-a complete Latin name can consume several evidence words while neighboring Han characters retain
-their own times. Caption gets its displayed wording and Cue breaks from Script, independently of
-the recognizer's punctuation or simplified/traditional spelling.
-
-When the authored Segment has no Tokens, write the same Surface without `language`. Its start and
-end Anchors map directly to the prepared media's first and final frame. There are no words to align,
-so this branch requests no evidence audio and no WhisperX capability:
+`<whisperx:Alignment>` consumes one normalized `SynchronizedMedia`, its `LocalTemporalDomain`, one
+authored Script Segment and the owning Narrative. For a Segment containing Tokens it also requires an
+explicit lowercase two- or three-letter language code. The provider receives canonical evidence audio
+tagged with the selected local domain identity and returns provider-neutral
+`AlignedTranscriptEvidence` preserving that identity and exact sample span; deterministic local alignment publishes one
+`NarrativeAlignment`:
 
 ```svml
-<whisperx:SemanticTake id="pause" narrative={story}
-  segment={story.segment.pause} media={pause-media.media}/>
+<whisperx:Alignment id="opening" narrative={story}
+  segment={story.segment.opening}
+  media={opening-media.media} domain={opening-media.domain}
+  language="ko"/>
 ```
 
-There is no whole-program WhisperX pass. Timeline assembly only receives already-semantic Takes and later
-translates their local frames when assembling the final ProgramSpace and complete semantic map.
+The result is `opening.alignment`. It contains semantic timing on the media-local domain, not media,
+not a Timeline and not presentation policy. `@qflow/narrative-temporal` Projection explicitly combines
+one or more `NarrativeAlignment + LocalTemporalDomain + equal-length Window` relations for a chosen
+Timeline and publishes absolute values without a durable Placement product.
 
-`@qflow/provider-qflowhub` is the default concrete adapter; it uploads the canonical evidence audio
-and requests verbose JSON with segment- and word-level timestamps. `@qflow/provider-whisperx-local`
-remains available as an explicit local deployment.
+When the Segment has no Tokens, omit `language`. Its start and end map directly to the local domain's
+first and final frame, no evidence audio or WhisperX capability is requested, and the same
+`NarrativeAlignment` type is published.
 
+For Chinese speech use `zh`. WhisperX may emit character-sized evidence units; local alignment maps
+them to Script's authored units while Caption continues to use Script's display wording and Cue breaks.
+The package validates only the language-code form; the selected Endpoint owns actual language support.
 
-## Language selection and local preparation
+## Local deployment
 
-```svml
-<whisperx:SemanticTake id="opening" narrative={story}
-  segment={story.segment.opening} media={opening-media.media} language="ko"/>
-```
-
-The selected service owns which languages it can align. The local service uses its pinned WhisperX
-version's default language-to-alignment-model mapping: the author does not choose weight URLs in
-SVML. ASR size and hardware are separate deployment choices (`expectedModel`, `expectedDevice`,
-`expectedCompute`). A multilingual ASR such as `small` can serve Korean; an English-only `.en`
-model cannot and is rejected explicitly. Unknown alignment languages fail in the service without
-switching language, model family or Provider. Locale aliases such as `zh-CN`, language names and
-`auto` are not interpreted by this Surface; use the service's explicit code.
-
-For local execution, merge this into the existing Runtime Profile:
+`@qflow/provider-qflowhub` is the normal hosted adapter. A local deployment may bind the same Need:
 
 ```json
 {
@@ -73,22 +49,12 @@ For local execution, merge this into the existing Runtime Profile:
 }
 ```
 
-`alignmentLanguages` declares resources to prepare on this machine. Each SVML `language` states
-what that particular Take uses; the preparation list never supplies an implicit author language.
-
 ```bash
 qflow programs prepare --runtime qflow.runtime.json --endpoint whisperx.local
 qflow runtime up --runtime qflow.runtime.json --endpoint whisperx.local
 qflow build video.svrun --runtime qflow.runtime.json --follow
 ```
 
-The Run references the authored SVML. Preparation downloads missing resources without starting the
-service; `runtime up` prepares if needed and starts the helper and Worker. Build only uses prepared
-resources. Adding a language to the same cache requires preparation, not a service restart.
-See the [local Provider README](../provider-whisperx-local/README.md) for cache and hardware choices.
-Other Endpoints needed by the Run must also be prepared and available.
-
-For reference analysis rather than an authored SemanticTake, use the same language code with
-`qflow transcribe source.mp4 --language ko --to transcript.json --runtime qflow.runtime.json`.
-Hosted execution uses the selected hosted deployment's models and preparation; the local
-`alignmentLanguages` option does not configure a remote service.
+The Provider README owns model cache and hardware choices. For reference analysis rather than an
+authored alignment, use `qflow transcribe source.mp4 --language ko --to transcript.json` with the
+selected Runtime.

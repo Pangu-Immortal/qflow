@@ -41,13 +41,13 @@ export function createEmojiRevealFragment(items: readonly EmojiRevealFragmentIte
       placeholder: input("placeholder"), set: operation(current),
     }, result: { kind: "output", name: "program" } },
     { id: "emoji:track", producer: emojiRevealProducers.render, inputs: {
-      canvas: input("canvas"), timeline: input("timeline"), program: operation("emoji:program"),
+      within: input("within"), timeline: input("timeline"), program: operation("emoji:program"),
     }, result: { kind: "output", name: "track" } },
   );
   return sealGraphFragment({
     inputs: [
       { name: "header", type: emojiRevealTypes.header }, { name: "timeline", type: timelineTypes.track },
-      { name: "canvas", type: spatialTypes.canvas }, { name: "outer", type: temporalTypes.window }, { name: "style", type: emojiRevealTypes.style },
+      { name: "within", type: spatialTypes.frame }, { name: "outer", type: temporalTypes.window }, { name: "style", type: emojiRevealTypes.style },
       { name: "placeholder", type: artifactTypes.blob },
       ...items.flatMap((item) => [
         { name: item.specName, type: emojiRevealTypes.itemSpec }, { name: item.iconName, type: artifactTypes.blob },
@@ -57,7 +57,7 @@ export function createEmojiRevealFragment(items: readonly EmojiRevealFragmentIte
     operations,
     exports: [
       { name: "program", type: emojiRevealTypes.program, root: operation("emoji:program") },
-      { name: "track", type: compositionTypes.visualTrack, root: operation("emoji:track") },
+      { name: "visual", type: compositionTypes.visualTrack, root: operation("emoji:track") },
     ],
   });
 }

@@ -125,7 +125,7 @@ identity merely because it currently lines up.
 
 Read [Ranking's Companion](../ranking-studio/src/index.ts) for board/reveal lanes,
 [Caption Fine's](../caption-fine-studio/src/index.ts) for Cue text and Style selection, and
-[Media Track's](../media-track-studio/src/index.ts) for material and occupancy.
+[Visual Track's](../visual-track-studio/src/index.ts) for material and occupancy.
 
 ## Preserve executed temporal lineage
 
@@ -285,12 +285,12 @@ Studio resolves the actual reference and matches its Module/Surface. It prefixes
 bindings and fields under the consumer reference; the example becomes `style.distance`.
 Nested `referenced` and `recipe` bindings use the same composition. The Use retains its own
 Window and time gestures. Several Uses referencing one Style edit the same source object.
-A project Style can therefore publish controls without replacing the Performance, Sound or
+A project Style can therefore publish controls without replacing the Visual, Audio or
 Caption Track Companion. No parameter Companion means the reference remains visible with only
 its consumer-declared fields.
 
 A source or Recipe binding may declare a typed `fallback`, or a function of the authored
-properties for a dependent default. For example, Sound's end gain follows its start gain until
+properties for a dependent default. For example, an Audio Style's end gain follows its start gain until
 authored explicitly. The field displays the fallback; the first edit inserts the attribute/property
 in its owning SVML/SVS file. Source recompilation remains the owner of current values.
 Only expose omitted defaults whose insertion preserves valid author semantics; geometry inputs

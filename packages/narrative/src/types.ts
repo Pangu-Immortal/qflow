@@ -48,71 +48,18 @@ export type NarrativeMomentRef = NarrativeMoment & {
   readonly narrativeId: string;
 };
 
-/** One author-visible word surface. Punctuation owned by the surface is preserved. */
-export type CaptionDisplayWord = {
-  /** Authored display separator from the preceding word; ignored at a displayed line start. */
-  readonly separatorBefore: "" | " ";
-  readonly id: string;
-  readonly unitId: string;
-  readonly segmentId: string;
-  readonly turnId: string;
-  readonly role?: string;
-  readonly text: string;
-  /** Reserved for Script-native word attributes; empty until an inline Mark is authored. */
-  readonly attributes: readonly CaptionWordAttribute[];
-};
-
-export type CaptionWordAttributeValue = string | number | boolean;
-
-export type CaptionWordAttribute = {
-  readonly name: string;
-  readonly value: CaptionWordAttributeValue;
-};
-
-/** The smallest author-declared N:M display-to-speech correspondence unit. */
-export type CaptionAlignmentUnit = {
-  readonly id: string;
-  readonly segmentId: string;
-  readonly turnId: string;
-  readonly role?: string;
-  readonly wordIds: readonly string[];
-  /** Speech tokens are retained here so Caption can project a Narrative Selection without frames. */
-  readonly sourceTokenIds: readonly string[];
-};
-
-export type CaptionCueBreak = {
-  /** The Cue boundary is after this complete Alignment Unit. */
-  readonly afterUnitId: string;
-};
-
-/** Complete Script-owned Caption truth. It contains no frame or measured timing facts. */
-export type CaptionDocument = {
-  /** Author-visible `<script id>` that owns this caption projection. */
-  readonly narrativeId: string;
-  readonly id: string;
-  readonly units: readonly CaptionAlignmentUnit[];
-  readonly words: readonly CaptionDisplayWord[];
-  readonly cueBreaks: readonly CaptionCueBreak[];
-};
-
 export type SemanticAnchor =
   | {
-      readonly id: "program:start";
-      readonly kind: "program-start";
-      readonly segmentId?: never;
-      readonly tokenId?: never;
-    }
-  | {
-      readonly id: "program:end";
-      readonly kind: "program-end";
-      readonly segmentId?: never;
+      readonly id: string;
+      readonly kind: "segment-start" | "segment-end";
+      readonly segmentId: string;
       readonly tokenId?: never;
     }
   | {
       readonly id: string;
-      readonly kind: "segment-start" | "token-start" | "token-end" | "segment-end";
+      readonly kind: "token-start" | "token-end";
       readonly segmentId: string;
-      readonly tokenId?: string;
+      readonly tokenId: string;
     };
 
 /** Complete authored content; local views are projections of this value. */
@@ -122,7 +69,6 @@ export type Narrative = {
   readonly segments: readonly NarrativeSegment[];
   readonly tokens: readonly NarrativeToken[];
   readonly turns: readonly NarrativeTurn[];
-  readonly caption: CaptionDocument;
   readonly selections: readonly NarrativeSelection[];
   readonly moments: readonly NarrativeMoment[];
   readonly semanticIndex: {

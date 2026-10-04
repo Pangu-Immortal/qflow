@@ -3,8 +3,7 @@ export { contentFitPropertyNames, decodeContentFitProperties } from "./author.js
 export {
   anchoredFrameFragment,
   aspectFrameFragment,
-  canvasFrameFragment,
-  fitContentFragment,
+  contentFitFragment,
   frameEdgesFragment,
 } from "./fragment.js";
 export * from "./geometry.js";
@@ -19,7 +18,7 @@ export {
   contentFitSchema,
   intrinsicExtentSchema,
   spatialFrameSchema,
-  spatialRegionTimelineSchema,
+  spatialMap2DSchema,
   spatialPathSchema,
   spatialPointSchema,
 } from "./schema.js";
@@ -29,9 +28,8 @@ export {
   decodeCanvasSurface,
   decodeExtentSurface,
   decodeFrameSurface,
+  decodeMapSurface,
   decodePathSurface,
   decodePointSurface,
-  decodeRegionTimelineSurface,
 } from "./surface.js";
-export { spatialRegionTimeline } from "./region-timeline.js";
 export type * from "./types.js";

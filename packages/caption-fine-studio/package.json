@@ -13,7 +13,7 @@
   "dependencies": {
     "@qflow/caption-fine": "workspace:*",
     "@qflow/composition": "workspace:*",
-    "@qflow/narrative": "workspace:*",
+    "@qflow/caption": "workspace:*",
     "@qflow/studio-adapter": "workspace:*",
     "@qflow/fonts-open": "workspace:*",
     "@qflow/caption": "workspace:*",

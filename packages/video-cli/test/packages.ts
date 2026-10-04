@@ -9,10 +9,11 @@ import generation from "../../generation/src/activation.js";
 import renderHyperframes from "../../render-hyperframes/src/activation.js";
 import hyperframes from "../../hyperframes/src/activation.js";
 import mediaPipeline from "../../media-pipeline/src/activation.js";
-import mediaTrack from "../../media-track/src/activation.js";
+import mediaTrack from "../../visual-track/src/activation.js";
 import media from "../../media/src/activation.js";
 import narrative from "../../narrative/src/activation.js";
-import programSpace from "../../program-space/src/activation.js";
+import narrativeCaption from "../../narrative-caption/src/activation.js";
+import narrativeTemporal from "../../narrative-temporal/src/activation.js";
 import text from "../../text/src/activation.js";
 import runMarkup from "../../run-markup/src/activation.js";
 import script from "../../script/src/activation.js";
@@ -26,7 +27,7 @@ import spatial from "../../spatial/src/activation.js";
 import temporal from "../../temporal/src/activation.js";
 import visualIr from "../../visual-ir/src/activation.js";
 import svs from "../../svs/src/activation.js";
-import typographyTrack from "../../typography-track/src/activation.js";
+import textFine from "../../text-fine/src/activation.js";
 import whisperX from "../../whisperx/src/activation.js";
 import type { NodePackageContribution } from "@qflow/package-loader-node";
 
@@ -39,8 +40,9 @@ const bind = (specifier: string, contribution: NodePackageContribution) => ({
 export const videoTestPackages = [
   bind("@qflow/artifact", artifact),
   bind("@qflow/narrative", narrative),
+  bind("@qflow/narrative-caption", narrativeCaption),
+  bind("@qflow/narrative-temporal", narrativeTemporal),
   bind("@qflow/media", media),
-  bind("@qflow/program-space", programSpace),
   bind("@qflow/speech", speech),
   bind("@qflow/speech-evidence", speechEvidence),
   bind("@qflow/timeline", timeline),
@@ -60,8 +62,8 @@ export const videoTestPackages = [
   bind("@qflow/whisperx", whisperX),
   bind("@qflow/spatial", spatial),
   bind("@qflow/temporal", temporal),
-  bind("@qflow/media-track", mediaTrack),
-  bind("@qflow/typography-track", typographyTrack),
+  bind("@qflow/visual-track", mediaTrack),
+  bind("@qflow/text-fine", textFine),
   bind("@qflow/film", film),
   bind("@qflow/hyperframes", hyperframes),
   bind("@qflow/media-pipeline", mediaPipeline),

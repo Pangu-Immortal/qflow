@@ -29,7 +29,8 @@ import { gptImageDenoiseV1, imageTransformManifest, imageTransformTypes } from "
 import { exactModelMediaInputNames } from "@qflow/model-kit";
 import { mediaManifest } from "@qflow/media";
 import { narrativeManifest } from "@qflow/narrative";
-import { programSpaceManifest } from "@qflow/program-space";
+import { timelineManifest } from "@qflow/timeline";
+import { temporalManifest } from "@qflow/temporal";
 import type { CanonicalValue, ResourceId, ModuleManifest, StoredValue, TypeRef } from "@qflow/protocol";
 import { rasterManifest } from "@qflow/raster";
 import { createProvidedCandidate } from "@qflow/run";
@@ -62,7 +63,8 @@ function fixture() {
     gptImageCleanManifest,
     narrativeManifest,
     mediaManifest,
-    programSpaceManifest,
+    temporalManifest,
+    timelineManifest,
     spatialManifest,
     svsManifest,
     speechManifest,

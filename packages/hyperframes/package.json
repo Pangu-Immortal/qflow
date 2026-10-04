@@ -16,21 +16,20 @@
     "@qflow/composition": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/media": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/visual-ir": "workspace:*"
+    "@qflow/visual-ir": "workspace:*",
+    "@qflow/timeline": "workspace:*"
   },
   "devDependencies": {
     "@qflow/caption": "workspace:*",
-    "@qflow/caption-fine": "workspace:*",
-    "@qflow/deck-track": "workspace:*",
+    "@qflow/depth-stack": "workspace:*",
     "@qflow/fonts-open": "workspace:*",
-    "@qflow/media-track": "workspace:*",
+    "@qflow/visual-track": "workspace:*",
     "@qflow/ranking": "workspace:*",
     "@qflow/screen-overlay": "workspace:*",
     "@qflow/script": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/svs": "workspace:*",
-    "@qflow/typography-track": "workspace:*"
+    "@qflow/text-fine": "workspace:*"
   }
 }

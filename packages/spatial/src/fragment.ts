@@ -1,15 +1,8 @@
 import { sealGraphFragment } from "@qflow/elaborator";
-
 import { spatialProducers, spatialTypes } from "./manifest.js";
 
 const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (name: string) => ({ kind: "fragment-operation" as const, operation: name });
-
-export const canvasFrameFragment = sealGraphFragment({
-  inputs: [{ name: "canvas", type: spatialTypes.canvas }],
-  operations: [{ id: "resolve", producer: spatialProducers.canvasFrame, inputs: { canvas: input("canvas") }, result: { kind: "output", name: "frame" } }],
-  exports: [{ name: "frame", type: spatialTypes.frame, root: operation("resolve") }],
-});
 
 export const frameEdgesFragment = sealGraphFragment({
   inputs: [{ name: "parent", type: spatialTypes.frame }, { name: "program", type: spatialTypes.frameEdgesProgram }],
@@ -29,8 +22,8 @@ export const aspectFrameFragment = sealGraphFragment({
   exports: [{ name: "frame", type: spatialTypes.frame, root: operation("resolve") }],
 });
 
-export const fitContentFragment = sealGraphFragment({
+export const contentFitFragment = sealGraphFragment({
   inputs: [{ name: "frame", type: spatialTypes.frame }, { name: "extent", type: spatialTypes.extent }, { name: "fit", type: spatialTypes.fit }],
-  operations: [{ id: "resolve", producer: spatialProducers.fitContent, inputs: { frame: input("frame"), extent: input("extent"), fit: input("fit") }, result: { kind: "output", name: "fitted" } }],
-  exports: [{ name: "fitted", type: spatialTypes.fitted, root: operation("resolve") }],
+  operations: [{ id: "resolve", producer: spatialProducers.resolveContentFit, inputs: { frame: input("frame"), extent: input("extent"), fit: input("fit") }, result: { kind: "output", name: "mapping" } }],
+  exports: [{ name: "mapping", type: spatialTypes.map2D, root: operation("resolve") }],
 });

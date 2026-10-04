@@ -1,18 +1,16 @@
 import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
 import { canonicalize } from "@qflow/protocol";
 import type { StoredValue } from "@qflow/protocol";
-import type { NarrativeExcerpt, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import type { Timeline } from "@qflow/timeline";
 
 import {
   composeTemporalWindow,
-  projectMomentInstant,
   projectProgramInstant,
-  projectSegmentInstant,
-  projectSelectionInstant,
 } from "./projection.js";
+import { temporalExtentFromDomain, temporalExtentFromDuration } from "./extent.js";
 import { temporalProducers } from "./index.js";
-import type { ProjectedInstant, TemporalInstantSpec, TemporalWindowSpec } from "./types.js";
+import type { LocalTemporalDomain, TemporalDuration, TemporalExtent, TemporalInstant, TemporalInstantSpec, TemporalShiftSpec, TemporalWindowSpec } from "./types.js";
+import { shiftTemporalInstant } from "./projection.js";
 
 function inline<T>(value: StoredValue | undefined, label: string): T {
   if (value?.kind !== "inline") throw new Error(`${label} must be inline.`);
@@ -27,41 +25,32 @@ function instantSpec(inputs: ProducerHandlerContext["inputs"]): TemporalInstantS
 
 export const temporalComponent = {
   producers: [
+    { producer: temporalProducers.extentFromDomain, handler: ({ inputs }) => ({ outputs: { extent: output(
+      temporalExtentFromDomain(inline<LocalTemporalDomain>(inputs.domain?.value, "LocalTemporalDomain")),
+    ) }, needs: {} }) },
+    { producer: temporalProducers.extentFromDuration, handler: ({ inputs }) => ({ outputs: { extent: output(
+      temporalExtentFromDuration(inline<TemporalDuration>(inputs.duration?.value, "TemporalDuration"),
+        inline<Timeline>(inputs.timeline?.value, "Timeline")),
+    ) }, needs: {} }) },
     { producer: temporalProducers.projectProgramInstant, handler: ({ inputs }) => ({ outputs: { instant: output(projectProgramInstant({
       itemId: instantSpec(inputs).id,
       subjectId: instantSpec(inputs).subjectId,
       timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
       projection: instantSpec(inputs).projection,
-      authority: instantSpec(inputs).authority,
     })) }, needs: {} }) },
-    { producer: temporalProducers.projectSelectionInstant, handler: ({ inputs }) => ({ outputs: { instant: output(projectSelectionInstant({
-      itemId: instantSpec(inputs).id,
-      subjectId: instantSpec(inputs).subjectId,
-      timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
-      selection: inline<NarrativeSelectionRef>(inputs.selection?.value, "NarrativeSelection"),
-      projection: instantSpec(inputs).projection,
-      authority: instantSpec(inputs).authority,
-    })) }, needs: {} }) },
-    { producer: temporalProducers.projectSegmentInstant, handler: ({ inputs }) => ({ outputs: { instant: output(projectSegmentInstant({
-      itemId: instantSpec(inputs).id,
-      subjectId: instantSpec(inputs).subjectId,
-      timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
-      segment: inline<NarrativeExcerpt>(inputs.segment?.value, "NarrativeExcerpt"),
-      projection: instantSpec(inputs).projection,
-      authority: instantSpec(inputs).authority,
-    })) }, needs: {} }) },
-    { producer: temporalProducers.projectMomentInstant, handler: ({ inputs }) => ({ outputs: { instant: output(projectMomentInstant({
-      itemId: instantSpec(inputs).id,
-      subjectId: instantSpec(inputs).subjectId,
-      timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
-      moment: inline<NarrativeMomentRef>(inputs.moment?.value, "NarrativeMoment"),
-      projection: instantSpec(inputs).projection,
-      authority: instantSpec(inputs).authority,
-    })) }, needs: {} }) },
+    { producer: temporalProducers.shiftInstant, handler: ({ inputs }) => ({ outputs: { instant: output(shiftTemporalInstant(
+      inline<TemporalShiftSpec>(inputs.spec?.value, "TemporalShiftSpec"),
+      inline<Timeline>(inputs.timeline?.value, "Timeline"),
+      inline<TemporalInstant>(inputs.instant?.value, "TemporalInstant"),
+      inline<TemporalExtent>(inputs.extent?.value, "TemporalExtent"),
+    )) }, needs: {} }) },
+    { producer: temporalProducers.reuseInstant, handler: ({ inputs }) => ({ outputs: { instant: output(
+      inline<TemporalInstant>(inputs.instant?.value, "TemporalInstant"),
+    ) }, needs: {} }) },
     { producer: temporalProducers.composeWindow, handler: ({ inputs }) => ({ outputs: { window: output(composeTemporalWindow(
       inline<TemporalWindowSpec>(inputs.spec?.value, "TemporalWindowSpec"),
-      inline<ProjectedInstant>(inputs.start?.value, "TemporalInstant start"),
-      inline<ProjectedInstant>(inputs.end?.value, "TemporalInstant end"),
+      inline<TemporalInstant>(inputs.start?.value, "TemporalInstant start"),
+      inline<TemporalInstant>(inputs.end?.value, "TemporalInstant end"),
     )) }, needs: {} }) },
   ],
 } satisfies ComponentPackage;

@@ -1,5 +1,7 @@
 import { ScriptSyntaxError } from "./error.js";
 import {
+  captionDocumentValue,
+  narrativeCaptionBinding,
   narrativeDialogueTextValue,
   narrativeSegmentExcerptValue,
   narrativeMomentValue,
@@ -9,11 +11,13 @@ import {
 } from "./narrative.js";
 import {
   captionDocumentType,
+  narrativeCaptionBindingType,
   narrativeExcerptType,
   narrativeMomentType,
   narrativeSelectionType,
   narrativeType,
 } from "./manifest.js";
+import { canonicalize } from "@qflow/protocol";
 import { textTypes } from "@qflow/text";
 import { parseScript } from "./parser.js";
 import type { ScriptSurfaceInput, ScriptSurfaceOutput } from "./types.js";
@@ -75,7 +79,13 @@ export function decodeScriptSurface(input: ScriptSurfaceInput): ScriptSurfaceOut
     input.contentStart,
   );
   const narrative = narrativeValue(parsed, rawId);
-  const caption = (narrative as { readonly caption: import("@qflow/protocol").CanonicalValue }).caption;
+  const caption = captionDocumentValue(parsed, `${rawId}.caption`, rawId);
+  const captionBinding = canonicalize(narrativeCaptionBinding(
+    parsed,
+    `${rawId}.caption`,
+    rawId,
+    `${rawId}.caption-binding`,
+  ));
   const captionId = `${rawId}.caption`;
   return {
     nextOffset: close.end,
@@ -110,6 +120,12 @@ export function decodeScriptSurface(input: ScriptSurfaceInput): ScriptSurfaceOut
         id: captionId,
         type: captionDocumentType,
         value: { kind: "inline" as const, value: caption },
+        range: { start: input.openingStart, end: close.end },
+      },
+      {
+        id: `${rawId}.caption-binding`,
+        type: narrativeCaptionBindingType,
+        value: { kind: "inline" as const, value: captionBinding },
         range: { start: input.openingStart, end: close.end },
       },
       ...parsed.selections.map((selection) => ({

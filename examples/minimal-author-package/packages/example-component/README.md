@@ -11,10 +11,15 @@ literal `fragment-input`, `fragment-operation` and `output` references. `src/tem
 Surface-side `@qflow/qflow/temporal-markup` Window/Moment projections; that package is distinct from the
 graph-side `@qflow/qflow/temporal` Producers.
 
-The Surfaces demonstrate a box, a text surface, a media slot and a Style decoder. The slot is a graph
+The Surfaces demonstrate a box, a text surface, an image slot and a Style decoder. The slot is a graph
 input; it is not a file bundled by the package. `preview/Box.png` is a real catalogue frame supplied
 by the package's vocabulary. `exampleAppendFragment` and `append-example-items` show a fixed-port
 append that can be chained once per child.
+
+`ImageSlot` deliberately accepts only an image Blob. A raw video Blob does not carry the frame
+domain or target-to-source sampling relation required by a Visual video element; a component that
+needs timed footage should consume normalized media or a typed Surface and author that relation
+explicitly. The fixture stays small by not pretending those facts can be inferred from a MIME type.
 
 While the component belongs to one project, keep this directory under that project's `packages/`
 and use its owner-scoped package name. If the owner chooses to share it, compile and publish the same

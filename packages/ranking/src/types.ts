@@ -4,7 +4,7 @@ import type {
   SynchronizedMedia,
 } from "@qflow/media";
 import type { BlobRef } from "@qflow/protocol";
-import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
 export type RankingVariant = "tier-board" | "column" | "top-three";
@@ -235,7 +235,7 @@ export type TopThreeItemSet = {
 
 export type TierBoardProgram = {
   readonly id: string;
-  readonly canvas: CanvasSpace;
+  readonly within: SpatialFrame;
   readonly frame: SpatialFrame;
   readonly schedule: TierBoardSchedule;
   readonly style: TierBoardStyle;
@@ -243,7 +243,7 @@ export type TierBoardProgram = {
 };
 export type ColumnProgram = {
   readonly id: string;
-  readonly canvas: CanvasSpace;
+  readonly within: SpatialFrame;
   readonly frame: SpatialFrame;
   readonly schedule: ColumnSchedule;
   readonly style: ColumnStyle;

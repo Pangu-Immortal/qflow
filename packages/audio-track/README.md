@@ -1,50 +1,53 @@
 # `@qflow/audio-track`
 
-The Track Surface accepts `timeline={program.timeline}`. The same Timeline supports authored
-positions and, where prepared Takes supply evidence, Script Selections and Moments. Shared `at`
-inputs accept a Moment or a time such as `2s`; `at` with `for` produces a Window where required.
+Audio Track is the plain sound-placement package:
 
-Place music, ambience and sound effects in the assembled video. A reveal sound can follow a Script
-Moment; music can occupy a Segment or the program; an explicitly timed sound can use clock placement.
-Performance audio is presented by [Sound](../sound/README.md) from the assembled Timeline and can continue
-under these independent sounds and [Media Track](../media-track/README.md) coverage.
+```text
+Audio Clip = normalized audio source + absolute Window + sampling + mix
+Audio Track = additive set of Audio Clips
+```
 
-Each Item consumes normalized audio-bearing media and a projected Window. Gain, fades, trim and
-playback express the mix. Normalization preserves the source level; choose the balance and any
-music ducking for the actual performance. The resulting `.audio` is a peer AudioTrack in Film.
-
-## Authoring items
-
-The Markup Track selects `timeline`; its Fragment receives the same Timeline.
-Each Item accepts one shared temporal Window form: `during="program"`, a Selection or Segment,
-a Moment paired with `for`, or explicit `start`/`end` expressions. The source must already contain
-normalized audio. This excerpt assumes imports, Script, Timeline, Clock and source media exist:
+Timeline supplies the program clock, not hidden audio. Each Clip names its own normalized source and
+destination Window. The Track publishes `.program` for declared tooling and `.audio` as an ordinary
+peer contribution to Film.
 
 ```svml
-<pipeline:Normalize id="hit-media" source={hit-source}
-  video="none" audio="default" span-authority="audio" clock={clock}/>
-<audio:Track id="effects" timeline={speech.timeline}>
-  <audio:Item source={hit-media.media} at={story.moment.reveal} for="600ms"
-    playback="once" gain="0.45" fade-in="0f" fade-out="3f"/>
+<audio:Track id="mix" timeline={program.timeline}>
+  <audio:Clip id="voice" source={speaker-media.media} during={program.speaker}/>
+  <audio:Clip id="music" source={music-media.media} during="timeline"
+    gain="0.18" fade-in="12f" fade-out="18f">
+    <audio:Map target-at="end" source-at="end" rate="1"
+      wrap-from="start" wrap-until="end"/>
+  </audio:Clip>
+  <audio:Clip id="reveal-hit" source={hit-media.media}
+    from={story-time.reveal} for="600ms" gain="0.45"/>
 </audio:Track>
 ```
 
-The Track publishes `.program` and `.audio`; include the latter as a peer Film Track. `gain` is a
-linear multiplier, defaulting to `1`; fade durations default to `0f`. Trim boundaries are source
-durations (`f`, integer `ms`, or fractional `s`), distinct from the Item's destination Window.
-`trim-end` is the exclusive source endpoint, not an amount to subtract from the tail. For example,
-`trim-start="1s" trim-end="3s"` selects the source interval from one to three seconds.
+`during` consumes a resolved Window or the whole Timeline. The alternative absolute form supplies
+exactly two of `from`, `until` and `for`. Semantic, beat or other domain coordinates are projected to
+Instants/Windows upstream; Audio Track does not recognize those domains.
 
-`once` / `once-start` plays once from the Window start; `once-end` aligns to its end. `loop` /
-`loop-start` and `loop-end` repeat with the corresponding alignment. `stretch` preserves pitch and
-requires authored `min-rate` and `max-rate` bounds. Other playback modes reject those rate bounds.
-Choose occupancy from the intended sound; the Track does not silently loop music or stretch a hit
-to fill a longer Window. Its source level is retained unless gain or another explicit audio operation
-changes it.
+`gain` is a linear multiplier and fades default to zero. Omitting Map means bounded partial identity:
+target start maps to source start at native rate, and excess Window time is silent. One `Map` relates
+target and source intervals through an exact positive rate; `wrap-from`/`wrap-until` makes a selected
+source interval periodic. A Map without rate, anchors or wrap fits its source interval across its
+target interval while preserving pitch; optional `min-rate`/`max-rate` bounds make that fit fail
+instead of silently exceeding an authored safety range. Multiple non-overlapping Maps form one
+partial function, and gaps are silence.
 
-Media Track and Audio Track both place independent Items on the same Timeline.
-Overlapping pictures compose by draw order; overlapping sounds mix together.
-Give an Item an `id` when it needs a recognizable author name. Studio otherwise
-displays its source reference; the generated internal identity still owns
-selection and writeback. Reusing a source in two Items keeps two independent
-placements, even when their displayed names match.
+Audio deliberately does not inherit visual-only laws such as a zero-rate held frame or reverse
+picture sampling. It owns positive, pitch-preserving tempo mapping in the same small algebraic shape,
+without placing an audiovisual policy in Core.
+
+Speech, music, ambience and effects are equal Audio Clips. A source that helped determine Timeline
+duration or anchors leaves no special marker in the audio-placement path. Reusing one normalized
+source in two Clips creates two independent occurrences.
+
+Audio Track has no generic `Presentation`, `Style` or `Use`. Ducking, crossfades, continuing speaker
+roles and other relationships spanning multiple Clips are ordinary components. They may calculate
+level automation—gain envelopes and audibility regions—and publish a normal terminal `AudioTrack`;
+the base package and Core do not acquire a catalogue of sound roles or effects.
+
+Using synchronized media here does not make its picture visible. Author picture independently with
+[`@qflow/visual-track`](../visual-track/README.md).

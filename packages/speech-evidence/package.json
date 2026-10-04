@@ -11,6 +11,10 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
+    "@qflow/component-kit": "workspace:*",
     "@qflow/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/timeline": "workspace:*"
   }
 }

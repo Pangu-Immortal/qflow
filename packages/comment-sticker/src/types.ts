@@ -96,7 +96,7 @@ export type CommentStickerItemProgram = {
   readonly style: CommentStickerStyle;
   readonly content: CommentStickerContent;
   readonly avatar?: BlobRef;
-  readonly tieBreak: string;
+  readonly order: number;
 };
 
 export type CommentStickerSet = {

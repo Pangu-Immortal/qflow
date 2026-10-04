@@ -2,22 +2,22 @@
 
 <svml>
   <import from="@qflow/script@1"/>
-  <import as="sound" from="@qflow/sound@1"/>
+  <import as="audio" from="@qflow/audio-track@1"/>
   <import as="text" from="@qflow/text@1"/>
   <import as="asset" from="@qflow/media@1"/>
   <import as="gpt" from="@qflow/gpt-image@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
+  <import as="semantic" from="@qflow/narrative-temporal@1"/>
+  <import as="narrative-caption" from="@qflow/narrative-caption@1"/>
   <import as="time" from="@qflow/timeline-author@1"/>
-  <import as="media-track" from="@qflow/media-track@1"/>
-  <import as="performance" from="@qflow/performance@1"/>
+  <import as="visual" from="@qflow/visual-track@1"/>
   <import as="audio-track" from="@qflow/audio-track@1"/>
   <import as="caption" from="@qflow/caption@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
   <import as="fonts" from="@qflow/fonts-open@1"/>
   <import as="space" from="@qflow/spatial@1"/>
-  <import as="program" from="@qflow/program-space@1"/>
   <import as="ranking" from="@qflow/ranking@1"/>
   <import as="film" from="@qflow/film@1"/>
   <import as="render" from="@qflow/render-hyperframes@1"/>
@@ -132,16 +132,16 @@
   </seedance:ReferenceVideo>
 
   <space:Canvas id="vertical" width="720" height="1280"/>
-  <program:Clock id="clock" frame-rate="30"/>
+  <time:Clock id="clock" frame-rate="30"/>
   <pipeline:Normalize id="soundtrack-media" source={soundtrack}
     video="none" audio="default" span-authority="audio" clock={clock}/>
   <pipeline:Normalize id="ranking-appear-media" source={ranking-appear-sfx}
     video="none" audio="default" span-authority="audio" clock={clock}/>
   <pipeline:Normalize id="ranking-move-media" source={ranking-move-sfx}
     video="none" audio="default" span-authority="audio" clock={clock}/>
-  <space:Frame id="speech-frame" within={vertical}
+  <space:Frame id="speech-frame" within={vertical.bounds}
     left="0%" top="0%" right="100%" bottom="100%"/>
-  <space:Frame id="column-frame" within={vertical}
+  <space:Frame id="column-frame" within={vertical.bounds}
     left="0%" top="10%" right="26%" bottom="67.5%"/>
 
   <space:Extent id="pitch-pov-extent" width="2688" height="2016"/>
@@ -154,46 +154,67 @@
 
   <!-- These straight-edged cards occupy the same right-side stage as the
        active Column item. They have no border, rounded mask or sustain motion. -->
-  <space:AspectFrame id="pitch-pov-frame" within={vertical}
+  <space:AspectFrame id="pitch-pov-frame" within={vertical.bounds}
     x="50%" y="72%" width="74%" aspect={pitch-pov-extent} anchor="center"/>
-  <space:AspectFrame id="ikea-sign-frame" within={vertical}
+  <space:AspectFrame id="ikea-sign-frame" within={vertical.bounds}
     x="75%" y="79%" width="50%" aspect={ikea-sign-extent} anchor="center"/>
-  <space:AspectFrame id="retirement-room-frame" within={vertical}
+  <space:AspectFrame id="retirement-room-frame" within={vertical.bounds}
     x="52%" y="75%" width="88%" aspect={retirement-room-extent} anchor="center"/>
-  <space:AspectFrame id="rent-jump-frame" within={vertical}
+  <space:AspectFrame id="rent-jump-frame" within={vertical.bounds}
     x="52%" y="75%" width="78%" aspect={rent-jump-extent} anchor="center"/>
-  <space:AspectFrame id="nine-hundred-frame" within={vertical}
+  <space:AspectFrame id="nine-hundred-frame" within={vertical.bounds}
     x="25%" y="72%" width="50%" aspect={nine-hundred-extent} anchor="center"/>
-  <space:AspectFrame id="laboratory-body-frame" within={vertical}
+  <space:AspectFrame id="laboratory-body-frame" within={vertical.bounds}
     x="50%" y="68%" width="46%" aspect={laboratory-body-extent} anchor="center"/>
-  <space:AspectFrame id="museum-jawline-frame" within={vertical}
+  <space:AspectFrame id="museum-jawline-frame" within={vertical.bounds}
     x="75%" y="78%" width="50%" aspect={museum-jawline-extent} anchor="center"/>
 
   <pipeline:Normalize id="messi-media" source={messi-take.video}
     video="primary-moving" audio="default" span-authority="video" clock={clock}/>
   <pipeline:Normalize id="ronaldo-media" source={ronaldo-take.video}
     video="primary-moving" audio="default" span-authority="video" clock={clock}/>
-  <whisperx:SemanticTake id="messi-semantic" narrative={story}
-    segment={story.segment.messi} media={messi-media.media} language="en"/>
-  <whisperx:SemanticTake id="ronaldo-semantic" narrative={story}
-    segment={story.segment.ronaldo} media={ronaldo-media.media} language="en"/>
+  <whisperx:Alignment id="messi-semantic" narrative={story}
+    segment={story.segment.messi} media={messi-media.media} domain={messi-media.domain} language="en"/>
+  <whisperx:Alignment id="ronaldo-semantic" narrative={story}
+    segment={story.segment.ronaldo} media={ronaldo-media.media} domain={ronaldo-media.domain} language="en"/>
 
-  <time:Timeline id="speech" clock={clock}>
-    <time:Take source={messi-semantic.take}/>
-    <time:Take source={ronaldo-semantic.take}/>
+  <time:Timeline id="speech" clock={clock} end="ronaldo-semantic.end">
+    <time:Window id="messi-semantic" from="start" for={messi-media.extent}/>
+    <time:Window id="ronaldo-semantic" from="messi-semantic.end" for={ronaldo-media.extent}/>
   </time:Timeline>
 
-  <sound:Style id="speech-sound-style"/>
-  <sound:Track id="speech-sound" timeline={speech.timeline}>
-    <sound:Use style={speech-sound-style}/>
-  </sound:Track>
-  <performance:Style id="speech-picture-style" frame={speech-frame} appearance={recipes.media.performance}/>
-  <performance:Track id="speech-picture" timeline={speech.timeline} canvas={vertical}>
-    <performance:Use style={speech-picture-style} during="program"/>
-  </performance:Track>
+
+  <semantic:Projection id="story-time" narrative={story} timeline={speech.timeline}>
+    <semantic:Map alignment={messi-semantic.alignment} domain={messi-media.domain} window={speech.messi-semantic}/>
+    <semantic:Map alignment={ronaldo-semantic.alignment} domain={ronaldo-media.domain} window={speech.ronaldo-semantic}/>
+    <semantic:Window id="segment-ronaldo" segment={story.segment.ronaldo}/>
+    <semantic:Window id="segment-messi" segment={story.segment.messi}/>
+    <semantic:Window id="selection-pitch-pov" selection={story.selection.pitch-pov}/>
+    <semantic:Window id="selection-ikea-sign" selection={story.selection.ikea-sign}/>
+    <semantic:Window id="selection-retirement-room" selection={story.selection.retirement-room}/>
+    <semantic:Window id="selection-rent-jump" selection={story.selection.rent-jump}/>
+    <semantic:Window id="selection-nine-hundred-goals" selection={story.selection.nine-hundred-goals}/>
+    <semantic:Window id="selection-laboratory-body" selection={story.selection.laboratory-body}/>
+    <semantic:Window id="selection-museum-jawline" selection={story.selection.museum-jawline}/>
+  </semantic:Projection>
+  <audio:Track id="speech-sound" timeline={speech.timeline}>
+    <audio:Clip id="messi-semantic-source" source={messi-media.media} during={speech.messi-semantic}/>
+    <audio:Clip id="ronaldo-semantic-source" source={ronaldo-media.media} during={speech.ronaldo-semantic}/>
+  </audio:Track>
+  <visual:Motion id="broll-motion">
+    <visual:Pose at="start" scale="0.7" opacity="0" easing="ease-out"/>
+    <visual:Pose at="6f" scale="1" opacity="1"/>
+    <visual:Pose at="end-4f" scale="1" opacity="1" easing="ease-in"/>
+    <visual:Pose at="end" scale="1" opacity="0"/>
+  </visual:Motion>
+
+  <visual:Track id="speech-picture" timeline={speech.timeline}>
+    <visual:Clip id="messi-semantic-source" media={messi-media.media} during={speech.messi-semantic} frame={speech-frame} z="0" fit="cover"/>
+    <visual:Clip id="ronaldo-semantic-source" media={ronaldo-media.media} during={speech.ronaldo-semantic} frame={speech-frame} z="0" fit="cover"/>
+  </visual:Track>
   <audio-track:Track id="music-bed" timeline={speech.timeline}>
-    <audio-track:Item source={soundtrack-media.media} during="program"
-      playback="once-start" gain="0.12" fade-in="300ms" fade-out="600ms"/>
+    <audio-track:Clip source={soundtrack-media.media} during="timeline"
+      gain="0.12" fade-in="300ms" fade-out="600ms"/>
   </audio-track:Track>
 
   <fonts:Stack id="display-font" family="montserrat" weight="900" style="normal"/>
@@ -201,11 +222,11 @@
   <ranking:ColumnStyle id="column-style" recipe={recipes.ranking.football-column}
     font={column-font}/>
   <ranking:Column id="football-column" timeline={speech.timeline}
-    canvas={vertical} frame={column-frame} during="program" style={column-style}
+    within={vertical.bounds} frame={column-frame} during="timeline" style={column-style}
     appear-sound={ranking-appear-media.media}
     move-sound={ranking-move-media.media}>
     <ranking:ColumnItem id="ronaldo" rank="1" label="Ronaldo"
-      icon={ronaldo-icon.image} during={story.segment.ronaldo}/>
+      icon={ronaldo-icon.image} during={story-time.segment-ronaldo}/>
     <ranking:ColumnItem id="mbappe" rank="2" label="Mbappe"
       preset="true" icon={mbappe-icon.image}/>
     <ranking:ColumnItem id="haaland" rank="3" label="Haaland"
@@ -223,56 +244,57 @@
     <ranking:ColumnItem id="neymar" rank="9" label="Neymar"
       preset="true" icon={neymar-icon.image}/>
     <ranking:ColumnItem id="messi" rank="10" label="Messi"
-      icon={messi-icon.image} during={story.segment.messi}/>
+      icon={messi-icon.image} during={story-time.segment-messi}/>
   </ranking:Column>
 
-  <media-track:Track id="broll" timeline={speech.timeline} canvas={vertical}>
-    <media-track:Item id="pitch-pov" image={broll-pitch-pov.image}
-      extent={pitch-pov-extent} during={story.selection.pitch-pov}
-      frame={pitch-pov-frame} appearance={recipes.media.pitch-pov}
-      motion={recipes.motion.broll}/>
-    <media-track:Item id="ikea-sign" image={broll-ikea-sign.image}
-      extent={ikea-sign-extent} during={story.selection.ikea-sign}
-      frame={ikea-sign-frame} appearance={recipes.media.ikea-sign}
-      motion={recipes.motion.broll}/>
-    <media-track:Item id="retirement-room" image={broll-retirement-room.image}
-      extent={retirement-room-extent} during={story.selection.retirement-room}
-      frame={retirement-room-frame} appearance={recipes.media.retirement-room}
-      motion={recipes.motion.broll}/>
-    <media-track:Item id="rent-jump" image={broll-rent-jump.image}
-      extent={rent-jump-extent} during={story.selection.rent-jump}
-      frame={rent-jump-frame} appearance={recipes.media.rent-jump}
-      motion={recipes.motion.broll}/>
-    <media-track:Item id="nine-hundred-goals" image={broll-nine-hundred.image}
-      extent={nine-hundred-extent} during={story.selection.nine-hundred-goals}
-      frame={nine-hundred-frame} appearance={recipes.media.nine-hundred}
-      motion={recipes.motion.broll}/>
-    <media-track:Item id="laboratory-body" image={broll-laboratory-body.image}
-      extent={laboratory-body-extent} during={story.selection.laboratory-body}
-      frame={laboratory-body-frame} appearance={recipes.media.laboratory-body}
-      motion={recipes.motion.broll}/>
-    <media-track:Item id="museum-jawline" image={broll-museum-jawline.image}
-      extent={museum-jawline-extent} during={story.selection.museum-jawline}
-      frame={museum-jawline-frame} appearance={recipes.media.museum-jawline}
-      motion={recipes.motion.broll}/>
-  </media-track:Track>
+  <visual:Track id="broll" timeline={speech.timeline}>
+    <visual:Clip id="pitch-pov" image={broll-pitch-pov.image}
+      extent={pitch-pov-extent} during={story-time.selection-pitch-pov}
+      frame={pitch-pov-frame} z="40" fit="cover" treatment={recipes.media.pitch-pov}
+      motion={broll-motion}/>
+    <visual:Clip id="ikea-sign" image={broll-ikea-sign.image}
+      extent={ikea-sign-extent} during={story-time.selection-ikea-sign}
+      frame={ikea-sign-frame} z="41" fit="cover" treatment={recipes.media.ikea-sign}
+      motion={broll-motion}/>
+    <visual:Clip id="retirement-room" image={broll-retirement-room.image}
+      extent={retirement-room-extent} during={story-time.selection-retirement-room}
+      frame={retirement-room-frame} z="42" fit="cover" treatment={recipes.media.retirement-room}
+      motion={broll-motion}/>
+    <visual:Clip id="rent-jump" image={broll-rent-jump.image}
+      extent={rent-jump-extent} during={story-time.selection-rent-jump}
+      frame={rent-jump-frame} z="43" fit="cover" treatment={recipes.media.rent-jump}
+      motion={broll-motion}/>
+    <visual:Clip id="nine-hundred-goals" image={broll-nine-hundred.image}
+      extent={nine-hundred-extent} during={story-time.selection-nine-hundred-goals}
+      frame={nine-hundred-frame} z="44" fit="cover" treatment={recipes.media.nine-hundred}
+      motion={broll-motion}/>
+    <visual:Clip id="laboratory-body" image={broll-laboratory-body.image}
+      extent={laboratory-body-extent} during={story-time.selection-laboratory-body}
+      frame={laboratory-body-frame} z="45" fit="cover" treatment={recipes.media.laboratory-body}
+      motion={broll-motion}/>
+    <visual:Clip id="museum-jawline" image={broll-museum-jawline.image}
+      extent={museum-jawline-extent} during={story-time.selection-museum-jawline}
+      frame={museum-jawline-frame} z="46" fit="cover" treatment={recipes.media.museum-jawline}
+      motion={broll-motion}/>
+  </visual:Track>
 
   <caption-fine:Style id="caption-style" recipe={recipes.caption.primary}
     font={display-font}/>
 
-  <caption-fine:Track id="captions" document={story.caption}
-    timeline={speech.timeline}>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
+    timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={caption-style}/>
-  </caption-fine:Track>
+  </caption-fine:Caption>
 
-  <film:Film id="main" canvas={vertical} timeline={speech.timeline}
+  <film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline}
     appearance={recipes.film.vertical}>
     <film:Track source={speech-picture.visual}/>
     <film:Track source={speech-sound.audio}/>
     <film:Track source={football-column.visual}/>
     <film:Track source={football-column.audio}/>
     <film:Track source={broll.visual}/>
-    <film:Track source={captions.track}/>
+    <film:Track source={captions.visual}/>
     <film:Track source={music-bed.audio}/>
   </film:Film>
   <render:Video id="final" composition={main.composition}

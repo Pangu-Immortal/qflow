@@ -11,7 +11,9 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
+    "@qflow/caption": "workspace:*",
     "@qflow/narrative": "workspace:*",
+    "@qflow/narrative-caption": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/text": "workspace:*",
     "@qflow/markup": "workspace:*"

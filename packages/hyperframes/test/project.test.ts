@@ -8,16 +8,15 @@ import { compileHyperframesDocument } from "../src/document.js";
 import { browserProgram } from "../src/browser-program.js";
 import { stageHyperframesHtmlProject, stageHyperframesProject } from "../src/project.js";
 import { sealComposition, sealVisualTrack } from "@qflow/composition";
-import { sealProgramSpace } from "@qflow/program-space";
+import { sealTimeline } from "@qflow/timeline";
 
 test("typed Surface inspection borrows the completed streamed file used by capture", async () => {
   const surface = { artifact: { kind: "blob" as const, resource: "res_streamed-surface" as const,
     size: 6, mediaType: "image/png" }, width: 1, height: 1, colorSpace: "srgb" as const,
     alphaMode: "straight" as const, timing: { kind: "still" as const } };
-  const space = sealProgramSpace({ id: "space", durationSec: 1,
-    frameRate: { numerator: 30, denominator: 1 } });
-  const track = sealVisualTrack({ id: "surface", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
-    presents: [{ id: "surface", span: { startFrame: 0, endFrameExclusive: 30 }, stacking: { order: 0, tieBreak: "surface" },
+  const space = sealTimeline({ id: "space", frameCount: 30, frameRate: { numerator: 30, denominator: 1 } });
+  const track = sealVisualTrack({ id: "surface", visualIr: "qflow.visual-ir@1", timelineId: space.id,
+    presents: [{ id: "surface", order: 0, z: 0, span: { startFrame: 0, endFrameExclusive: 30 },
       elements: [{ id: "surface", kind: "surface", surface, order: 0, style: [] }] }] });
   const document = compileHyperframesDocument(sealComposition({ id: "main",
     canvas: { width: 64, height: 64, clearColor: "#000000" }, tracks: [track] }), space);
@@ -46,10 +45,9 @@ test("typed Surface inspection borrows the completed streamed file used by captu
 });
 
 test("staging cancels and joins sibling reads before exposing a failure", async () => {
-  const space = sealProgramSpace({ id: "space", durationSec: 1,
-    frameRate: { numerator: 30, denominator: 1 } });
-  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
-    presents: ["a", "b", "c", "d"].map((id, order) => ({ id, span: { startFrame: 0, endFrameExclusive: 30 }, stacking: { order, tieBreak: id },
+  const space = sealTimeline({ id: "space", frameCount: 30, frameRate: { numerator: 30, denominator: 1 } });
+  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", timelineId: space.id,
+    presents: ["a", "b", "c", "d"].map((id, order) => ({ id, order, z: order, span: { startFrame: 0, endFrameExclusive: 30 },
       elements: [{ id, order: 0, kind: "image" as const, style: [],
         artifact: { kind: "blob" as const, resource: `res_${id}` as const, size: 1, mediaType: "image/png" } }],
     })) });
@@ -73,12 +71,11 @@ test("staging cancels and joins sibling reads before exposing a failure", async 
 });
 
 test("document staging bounds complete Artifact lifecycles without changing deterministic paths", async () => {
-  const space = sealProgramSpace({ id: "space", durationSec: 1,
-    frameRate: { numerator: 30, denominator: 1 } });
+  const space = sealTimeline({ id: "space", frameCount: 30, frameRate: { numerator: 30, denominator: 1 } });
   const ids = Array.from({ length: 12 }, (_, index) => String(index).padStart(2, "0"));
-  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
-    presents: ids.map((id, order) => ({ id, span: { startFrame: 0, endFrameExclusive: 30 },
-      stacking: { order, tieBreak: id }, elements: [{ id, order: 0, kind: "image" as const, style: [],
+  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", timelineId: space.id,
+    presents: ids.map((id, order) => ({ id, order, z: order, span: { startFrame: 0, endFrameExclusive: 30 },
+      elements: [{ id, order: 0, kind: "image" as const, style: [],
         artifact: { kind: "blob" as const, resource: `res_${id}` as const, size: 1, mediaType: "image/png" } }],
     })) });
   const document = compileHyperframesDocument(sealComposition({ id: "main",
@@ -107,19 +104,19 @@ test("document staging bounds complete Artifact lifecycles without changing dete
 });
 
 test("document staging reads only Artifacts whose compiler usage overlaps the whole render selection", async () => {
-  const space = sealProgramSpace({ id: "space", durationSec: 1, frameRate: { numerator: 30, denominator: 1 } });
+  const space = sealTimeline({ id: "space", frameCount: 30, frameRate: { numerator: 30, denominator: 1 } });
   const first = { kind: "blob" as const, resource: "res_first-selection" as const, size: 1, mediaType: "image/png" };
   const late = { kind: "blob" as const, resource: "res_late-selection" as const, size: 1, mediaType: "image/png" };
   const always = { kind: "blob" as const, resource: "res_always-selection" as const, size: 1, mediaType: "image/png" };
-  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
+  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", timelineId: space.id,
     presents: [
-      { id: "first-a", span: { startFrame: 0, endFrameExclusive: 5 }, stacking: { order: 0, tieBreak: "a" },
+      { id: "first-a", order: 0, z: 0, span: { startFrame: 0, endFrameExclusive: 5 },
         elements: [{ id: "first-a", order: 0, kind: "image" as const, style: [], artifact: first }] },
-      { id: "first-b", span: { startFrame: 5, endFrameExclusive: 10 }, stacking: { order: 1, tieBreak: "b" },
+      { id: "first-b", order: 1, z: 1, span: { startFrame: 5, endFrameExclusive: 10 },
         elements: [{ id: "first-b", order: 0, kind: "image" as const, style: [], artifact: first }] },
-      { id: "late", span: { startFrame: 20, endFrameExclusive: 30 }, stacking: { order: 2, tieBreak: "late" },
+      { id: "late", order: 2, z: 2, span: { startFrame: 20, endFrameExclusive: 30 },
         elements: [{ id: "late", order: 0, kind: "image" as const, style: [], artifact: late }] },
-      { id: "opaque", span: { startFrame: 20, endFrameExclusive: 30 }, stacking: { order: 3, tieBreak: "opaque" },
+      { id: "opaque", order: 3, z: 3, span: { startFrame: 20, endFrameExclusive: 30 },
         elements: [{ id: "opaque", order: 0, kind: "program" as const, style: [],
           program: browserProgram({ html: `<img src="qflow-resource://${always.resource}">` }, [always]) }] },
     ] });
@@ -143,25 +140,25 @@ test("document staging reads only Artifacts whose compiler usage overlaps the wh
 });
 
 test("document staging rejects an invalid concurrency bound", async () => {
-  const { composition, programSpace } = (() => {
-    const programSpace = sealProgramSpace({ id: "space", durationSec: 1, frameRate: { numerator: 30, denominator: 1 } });
-    return { programSpace, composition: sealComposition({ id: "empty",
+  const { composition, timeline } = (() => {
+    const timeline = sealTimeline({ id: "space", frameCount: 30, frameRate: { numerator: 30, denominator: 1 } });
+    return { timeline, composition: sealComposition({ id: "empty",
       canvas: { width: 64, height: 64, clearColor: "#000000" }, tracks: [] }) };
   })();
   const directory = await mkdtemp(join(tmpdir(), "qflow-stage-invalid-bound-"));
   try {
     await assert.rejects(stageHyperframesProject({
-      document: compileHyperframesDocument(composition, programSpace), directory,
+      document: compileHyperframesDocument(composition, timeline), directory,
       maxConcurrentArtifacts: 0, read: async () => new Uint8Array(),
     }), /concurrency must be a positive safe integer/u);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
 
 test("document staging drains readers and preserves an external cancellation reason", async () => {
-  const space = sealProgramSpace({ id: "space", durationSec: 1, frameRate: { numerator: 30, denominator: 1 } });
-  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
-    presents: ["a", "b"].map((id, order) => ({ id, span: { startFrame: 0, endFrameExclusive: 30 },
-      stacking: { order, tieBreak: id }, elements: [{ id, order: 0, kind: "image" as const, style: [],
+  const space = sealTimeline({ id: "space", frameCount: 30, frameRate: { numerator: 30, denominator: 1 } });
+  const track = sealVisualTrack({ id: "images", visualIr: "qflow.visual-ir@1", timelineId: space.id,
+    presents: ["a", "b"].map((id, order) => ({ id, order, z: order, span: { startFrame: 0, endFrameExclusive: 30 },
+      elements: [{ id, order: 0, kind: "image" as const, style: [],
         artifact: { kind: "blob" as const, resource: `res_${id}` as const, size: 1, mediaType: "image/png" } }],
     })) });
   const document = compileHyperframesDocument(sealComposition({ id: "main",
@@ -190,9 +187,9 @@ test("document staging drains readers and preserves an external cancellation rea
 
 test("staging gives opaque Resource identities portable local names and writes complete streams", async () => {
   const resource = `res_${"x".repeat(247)}:img` as const;
-  const space = sealProgramSpace({ id: "space", durationSec: 1, frameRate: { numerator: 30, denominator: 1 } });
-  const track = sealVisualTrack({ id: "image", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
-    presents: [{ id: "image", span: { startFrame: 0, endFrameExclusive: 30 }, stacking: { order: 0, tieBreak: "image" },
+  const space = sealTimeline({ id: "space", frameCount: 30, frameRate: { numerator: 30, denominator: 1 } });
+  const track = sealVisualTrack({ id: "image", visualIr: "qflow.visual-ir@1", timelineId: space.id,
+    presents: [{ id: "image", order: 0, z: 0, span: { startFrame: 0, endFrameExclusive: 30 },
       elements: [{ id: "image", kind: "image", order: 0, style: [],
         artifact: { kind: "blob", resource, size: 5, mediaType: "image/png" } }] }] });
   const document = compileHyperframesDocument(sealComposition({ id: "main", canvas: { width: 64, height: 64, clearColor: "#000000" }, tracks: [track] }), space);

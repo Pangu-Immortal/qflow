@@ -1,5 +1,5 @@
 import { canonicalize, isResourceId } from "@qflow/protocol";
-import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
+import { assertCanvas, assertSpatialFrame } from "@qflow/spatial";
 
 import type {
   RasterComposeRequest, RasterEncodeOperation, RasterLayer, RasterRequest,
@@ -98,7 +98,7 @@ export function assertRasterRequest(value: RasterRequest): void {
     return;
   }
   assert(value.kind === "compose", "RasterRequest.kind is invalid");
-  assertCanvasSpace(value.canvas); color(value.background, "Raster compose background", false);
+  assertCanvas(value.canvas); color(value.background, "Raster compose background", false);
   assert(value.layers.length > 0 && value.layers.length <= 64, "Raster compose requires one to 64 Layers");
   value.layers.forEach((layer, index) => {
     image(layer.source, `Raster Layer ${index + 1}.source`); assertSpatialFrame(layer.frame);

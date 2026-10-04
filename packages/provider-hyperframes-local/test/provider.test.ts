@@ -5,7 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { mediaTypes, verifyRenderedVisual } from "@qflow/media";
 import type { CompositableSurfaceRef, RenderedVisual } from "@qflow/media";
-import { sealProgramSpace } from "@qflow/program-space";
+import { sealTimeline } from "@qflow/timeline";
 import { sealComposition, sealVisualTrack } from "@qflow/composition";
 import assert from "node:assert/strict";
 import { MemoryResourceStore, EndpointRegistry } from "@qflow/driver-node";
@@ -53,16 +53,15 @@ test("an explicit browser renders without installing a managed replacement", { s
 });
 
 function documentFixture(surface?: CompositableSurfaceRef) {
-  const programSpace = sealProgramSpace({ id: "test-space", durationSec: 1,
-    frameRate: { numerator: 12, denominator: 1 },
+  const timeline = sealTimeline({ id: "test-space", frameCount: 12, frameRate: { numerator: 12, denominator: 1 },
   });
-  const track = sealVisualTrack({ programSpaceId: "test-space",
+  const track = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1",
     id: "provider-fixture",
     presents: [{
       id: "card",
       span: { startFrame: 0, endFrameExclusive: 12 },
-      stacking: { order: 10, tieBreak: "card" },
+      order: 0, z: 10,
       elements: [
         {
           id: "background",
@@ -95,7 +94,7 @@ function documentFixture(surface?: CompositableSurfaceRef) {
     id: "local-hyperframes-provider-fixture",
     canvas: { width: 160, height: 96, clearColor: "#000000" },
     tracks: [track],
-  }), programSpace);
+  }), timeline);
 }
 
 function requestNeed(document = documentFixture()): Need {

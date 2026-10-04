@@ -14,7 +14,7 @@ import {
 import type { MediaExecutionEnvironment, MediaOperationResult } from "@qflow/media-execution";
 import { mediaPipelineCapabilities } from "@qflow/media-pipeline";
 import { isStreamingResourceStore } from "@qflow/runtime";
-import { speechTypes } from "@qflow/speech";
+import { speechEvidenceTypes } from "@qflow/speech-evidence";
 import { defineEndpointPackage } from "@qflow/endpoint-kit";
 import type { EndpointFulfillment, EndpointInvocationContext } from "@qflow/endpoint-kit";
 
@@ -128,7 +128,7 @@ export function createLocalMediaProvider(config: CreateLocalMediaProviderOptions
       {
         lifecycle: "immediate" as const,
         capability: mediaPipelineCapabilities.projectSpeechEvidenceAudio,
-        returns: speechTypes.evidenceAudio,
+        returns: speechEvidenceTypes.audio,
         handler: operation(executeProjectSpeechEvidenceAudio),
       },
       {

@@ -1,0 +1,56 @@
+import { timelineTypes } from "@qflow/timeline";
+
+import { artifactTypes } from "@qflow/artifact";
+import { compositionTypes } from "@qflow/composition";
+import { sealGraphFragment } from "@qflow/elaborator";
+import { spatialTypes } from "@qflow/spatial";
+import { temporalTypes } from "@qflow/temporal";
+
+import { visualTrackProducers, visualTrackTypes } from "./manifest.js";
+
+const input = (name: string) => ({ kind: "fragment-input" as const, name });
+const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
+
+/** Minimal complete graph witness; richer Surfaces generate the same primitive operations dynamically. */
+export const stillVisualTrackFragment = sealGraphFragment({
+  inputs: [
+    { name: "header", type: visualTrackTypes.header },
+    { name: "timeline", type: timelineTypes.track },
+    { name: "source", type: artifactTypes.blob },
+    { name: "extent", type: spatialTypes.extent },
+    { name: "frame", type: spatialTypes.frame },
+    { name: "fit", type: spatialTypes.fit },
+    { name: "sample-spec", type: visualTrackTypes.sampleLayerSpec },
+    { name: "clip-spec", type: visualTrackTypes.clipSpec },
+    { name: "window", type: temporalTypes.window },
+  ],
+  operations: [
+    { id: "layers", producer: visualTrackProducers.createLayers, inputs: {}, result: { kind: "output", name: "layers" } },
+    { id: "sample", producer: visualTrackProducers.appendStillLayer, inputs: {
+      layers: operation("layers"), source: input("source"), extent: input("extent"), fit: input("fit"), spec: input("sample-spec"),
+    }, result: { kind: "output", name: "layers" } },
+    { id: "set", producer: visualTrackProducers.createSet, inputs: {}, result: { kind: "output", name: "set" } },
+    { id: "append", producer: visualTrackProducers.appendClip, inputs: {
+      set: operation("set"), header: input("header"), timeline: input("timeline"), layers: operation("sample"),
+      frame: input("frame"), spec: input("clip-spec"), window: input("window"),
+    }, result: { kind: "output", name: "set" } },
+    { id: "finalize", producer: visualTrackProducers.finalize, inputs: {
+      set: operation("append"), header: input("header"), timeline: input("timeline"),
+    }, result: { kind: "output", name: "program" } },
+    { id: "visual", producer: visualTrackProducers.projectVisual, inputs: {
+      timeline: input("timeline"), program: operation("finalize"),
+    }, result: { kind: "output", name: "track" } },
+  ],
+  exports: [
+    { name: "program", type: visualTrackTypes.program, root: operation("finalize") },
+    { name: "visual", type: compositionTypes.visualTrack, root: operation("visual") },
+  ],
+});
+
+export const renderVisualTrackFragment = sealGraphFragment({
+  inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: visualTrackTypes.program }],
+  operations: [
+    { id: "visual", producer: visualTrackProducers.projectVisual, inputs: { timeline: input("timeline"), program: input("program") }, result: { kind: "output", name: "track" } },
+  ],
+  exports: [{ name: "visual", type: compositionTypes.visualTrack, root: operation("visual") }],
+});

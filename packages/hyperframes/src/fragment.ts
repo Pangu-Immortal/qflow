@@ -1,7 +1,7 @@
-import { programSpaceTypes } from "@qflow/program-space";
 import { compositionTypes } from "@qflow/composition";
 import type { Composition } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/elaborator";
+import { timelineTypes } from "@qflow/timeline";
 
 import { hyperframesProducers, hyperframesTypes } from "./manifest.js";
 
@@ -16,12 +16,12 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 export const hyperframesDocumentFragment = sealGraphFragment({
   inputs: [
     { name: "composition", type: compositionTypes.composition },
-    { name: "space", type: programSpaceTypes.programSpace },
+    { name: "timeline", type: timelineTypes.track },
   ],
   operations: [{
     id: "compile-document",
     producer: hyperframesProducers.compile,
-    inputs: { composition: input("composition"), space: input("space") },
+    inputs: { composition: input("composition"), timeline: input("timeline") },
     result: { kind: "output", name: "document" },
   }],
   exports: [{

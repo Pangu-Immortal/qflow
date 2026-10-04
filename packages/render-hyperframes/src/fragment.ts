@@ -1,4 +1,4 @@
-import { timelineProducers, timelineTypes } from "@qflow/timeline";
+import { timelineTypes } from "@qflow/timeline";
 import { mediaTypes } from "@qflow/media";
 import { artifactTypes } from "@qflow/artifact";
 
@@ -22,12 +22,10 @@ export function createRenderHyperframesFragment(selectedRange = false) {
       ...(selectedRange ? [{ name: "range", type: mediaTypes.frameRange }] : []),
     ],
     operations: [
-      { id: "render-range", producer: timelineProducers.projectProgramSpace,
-        inputs: { track: input("timeline") }, result: { kind: "output", name: "space" } },
       {
         id: "compile-document",
         producer: hyperframesProducers.compile,
-        inputs: { composition: input("composition"), space: operation("render-range") },
+        inputs: { composition: input("composition"), timeline: input("timeline") },
         result: { kind: "output", name: "document" },
       },
       {
@@ -39,7 +37,7 @@ export function createRenderHyperframesFragment(selectedRange = false) {
       {
         id: "compile-audio-program",
         producer: mediaPipelineProducers.planAudio,
-        inputs: { composition: input("composition"), space: operation("render-range") },
+        inputs: { composition: input("composition"), timeline: input("timeline") },
         result: { kind: "output", name: "plan" },
       },
       {

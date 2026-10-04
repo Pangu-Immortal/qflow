@@ -1,0 +1,32 @@
+{
+  "name": "@qflow/text-fine",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "dependencies": {
+    "@qflow/component-kit": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/elaborator": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/timeline": "workspace:*",
+    "@qflow/spatial": "workspace:*",
+    "@qflow/svs": "workspace:*",
+    "@qflow/temporal": "workspace:*",
+    "@qflow/temporal-markup": "workspace:*",
+    "@qflow/text": "workspace:*",
+    "@qflow/visual-ir": "workspace:*",
+    "@qflow/markup": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/core": "workspace:*",
+    "@qflow/validation": "workspace:*"
+  }
+}

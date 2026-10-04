@@ -1,14 +1,12 @@
-import { timelineTypes } from "@qflow/timeline";
+import { timelineTypes, timelineDependency } from "@qflow/timeline";
 import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
 import { readFile } from "node:fs/promises";
 
 import { artifactDependency, artifactTypes } from "@qflow/artifact";
 import { compositionDependency, compositionTypes } from "@qflow/composition";
 import { fontArtifactSchema, mediaDependency, mediaTypes } from "@qflow/media";
-import { narrativeDependency } from "@qflow/narrative";
 
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { timelineDependency } from "@qflow/timeline";
 import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
@@ -118,7 +116,7 @@ const frameSpan = object({ startFrame: { schema: unsignedInteger }, endFrameExcl
 const item = object({
   id: { schema: string }, span: { schema: frameSpan },
   frame: { schema: spatialFrameSchema }, style: { schema: style }, content: { schema: content },
-  avatar: { schema: blobRef, optional: true }, tieBreak: { schema: string },
+  avatar: { schema: blobRef, optional: true }, order: { schema: unsignedInteger },
 });
 
 export const commentStickerHeaderSchema: ValueSchema = object({
@@ -268,16 +266,14 @@ export const commentStickerMarkupSurfaces = [
         ],
       },
     },
-    { name: "track", tag: "Track", mode: "structured", outputs: [textTypes.text, commentStickerTypes.header, commentStickerTypes.itemSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, commentStickerTypes.program, compositionTypes.visualTrack],
+    { name: "track", tag: "Track", mode: "structured", outputs: [textTypes.text, commentStickerTypes.header, commentStickerTypes.itemSpec, temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, commentStickerTypes.program, compositionTypes.visualTrack],
       vocabulary: {
         summary: "Places social comment cards over the Program and renders them as one self-contained VisualTrack.",
-        appearance: "One rounded card per Sticker, tilted a couple of degrees and lifted on a soft drop shadow, drawn at the place and size its Frame gives it on the Canvas, with a small triangular speech tail hanging from the card's lower edge. Inside the card a circular avatar sits at the left — the supplied image Artifact, or a filled disc bearing the author's initial — and a text column runs beside it from top to bottom: a small faint header line such as `Reply to @viewer's comment`, then the comment copy in large heavy type wrapped to a few lines and ellipsized, then a small faint metadata row pinned to the card's bottom edge when one is supplied. Each card keeps its own window rather than a shared one: it pops in scaling up and unwinding its tilt, rises and rocks gently while it holds, then fades upward as it leaves. Cards are placed by their Frames alone, so several stand on screen at once and none reflows around another.",
+        appearance: "One rounded card per Sticker, tilted a couple of degrees and lifted on a soft drop shadow, drawn at the place and size its picture-plane Frame gives it, with a small triangular speech tail hanging from the card's lower edge. Inside the card a circular avatar sits at the left — the supplied image Artifact, or a filled disc bearing the author's initial — and a text column runs beside it from top to bottom: a small faint header line such as `Reply to @viewer's comment`, then the comment copy in large heavy type wrapped to a few lines and ellipsized, then a small faint metadata row pinned to the card's bottom edge when one is supplied. Each card keeps its own window rather than a shared one: it pops in scaling up and unwinding its tilt, rises and rocks gently while it holds, then fades upward as it leaves. Cards are placed by their Frames alone, so several stand on screen at once and none reflows around another.",
         preview: previewImage("Track.png"),
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names the Track and prefixes every binding it publishes." },
-          { name: "canvas", kind: "reference", required: true, accepts: [spatialTypes.canvas],
-            summary: "Chooses the Canvas the cards are laid out on." },
           ...temporalContextAttributeVocabulary,
         ],
         children: [
@@ -287,7 +283,7 @@ export const commentStickerMarkupSurfaces = [
               { name: "id", kind: "identifier", required: true,
                 summary: "Names this card among the Track's items." },
               { name: "frame", kind: "reference", required: true, accepts: [spatialTypes.frame],
-                summary: "Chooses the Frame that places and sizes the card on the Canvas." },
+                summary: "Chooses the picture-plane Frame that places and sizes the card." },
               { name: "style", kind: "reference", required: true, accepts: [commentStickerTypes.style],
                 summary: "Chooses the Comment Sticker Style the card is drawn and animated in." },
               { name: "comment", kind: "expression", required: false, accepts: [textTypes.text],
@@ -308,20 +304,20 @@ export const commentStickerMarkupSurfaces = [
         ports: [
           { name: "program", type: commentStickerTypes.program,
             summary: "Every placed card, finalized as one Comment Sticker Program." },
-          { name: "track", type: compositionTypes.visualTrack,
+          { name: "visual", type: compositionTypes.visualTrack,
             summary: "That Program rendered as one VisualTrack." },
         ],
         example: `
-<comment:Track id="comments" canvas={vertical} timeline={speech.timeline}>
+<comment:Track id="comments" timeline={speech.timeline}>
   <comment:Sticker id="one" frame={comment-frame} style={social} avatar={viewer-avatar}
-    author="@viewer" meta="Featured" during={story.selection.reaction}>
+    author="@viewer" meta="Featured" during={story-time.reaction}>
     Wait, it pinned the caption to the word, not the second.
   </comment:Sticker>
 </comment:Track>
         `,
         notes: [
           "A Track requires at least one Sticker.",
-          "A Sticker states exactly one temporal form: `during`, `at` with `for`, or `start` with `end`.",
+          "A Sticker states one Window form: `during`, or exactly two of `from`, `until` and `for`.",
           "With `start` and `end`, `selection` or `moment` binds the point of reference; both together are refused.",
           "A Sticker's copy is either `comment` or the element's own text; stating both is refused, and one of the two is required.",
           "Stacking order comes from the Style's Recipe, so a Sticker has no `z`.",
@@ -335,7 +331,7 @@ export const commentStickerManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: commentStickerModuleRef.name,
   version: commentStickerModuleRef.version,
-  dependencies: [artifactDependency, narrativeDependency, timelineDependency, spatialDependency, temporalDependency, mediaDependency, compositionDependency, textDependency],
+  dependencies: [artifactDependency, timelineDependency, spatialDependency, temporalDependency, mediaDependency, compositionDependency, textDependency],
   types: [
     { name: commentStickerTypes.header.name },
     { name: commentStickerTypes.style.name },
@@ -367,7 +363,7 @@ export const commentStickerManifest: ModuleManifest = {
       needs: [],
     })),
     { name: commentStickerProducers.finalize.name, inputs: [{ name: "set", type: commentStickerTypes.set }, { name: "header", type: commentStickerTypes.header }], outputs: [{ name: "program", type: commentStickerTypes.program }], needs: [] },
-    { name: commentStickerProducers.render.name, inputs: [{ name: "canvas", type: spatialTypes.canvas }, { name: "timeline", type: timelineTypes.track }, { name: "program", type: commentStickerTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
+    { name: commentStickerProducers.render.name, inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "program", type: commentStickerTypes.program }], outputs: [{ name: "track", type: compositionTypes.visualTrack }], needs: [] },
   ],
 };
 

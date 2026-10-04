@@ -1,5 +1,5 @@
 import type { BlobRef } from "@qflow/protocol";
-import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
+import type { Canvas, SpatialFrame } from "@qflow/spatial";
 
 export type RasterInterpolation = "nearest" | "linear" | "cubic" | "area" | "lanczos";
 export type RasterFit = "contain" | "cover" | "stretch";
@@ -54,7 +54,7 @@ export type RasterTransformRequest = {
 };
 export type RasterComposeRequest = {
   readonly kind: "compose";
-  readonly canvas: CanvasSpace;
+  readonly canvas: Canvas;
   readonly background: string;
   readonly layers: readonly RasterLayer[];
 };

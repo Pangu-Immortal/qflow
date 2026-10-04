@@ -68,7 +68,7 @@ function shim(): string {
       phase: parseFloat(element.getAttribute('data-phase') || '0') || 0,
       rate: parseFloat(element.getAttribute('data-playback-rate') || '1') || 1,
       gain: Number(element.getAttribute('data-gain') ?? '1'),
-      presentation: JSON.parse(decodeURIComponent(element.getAttribute('data-presentation') || '%7B%7D'))
+      levelAutomation: JSON.parse(decodeURIComponent(element.getAttribute('data-level-automation') || '%7B%7D'))
     });
   }
 
@@ -93,8 +93,9 @@ function shim(): string {
     }
     var sample = seconds * 48000;
     var now = audioContext.currentTime;
-    var p = record.presentation;
-    var start = record.start * 48000, end = (record.start + record.duration) * 48000;
+    var p = record.levelAutomation;
+    var start = p.mixStartSample ?? record.start * 48000;
+    var end = p.mixEndSampleExclusive ?? (record.start + record.duration) * 48000;
     record.nodes[0].gain.setValueAtTime(record.gain, now);
     scheduleEnvelope(record.nodes[1].gain, p.gainEnvelope, sample, now);
     scheduleEnvelope(record.nodes[2].gain, p.fadeInSamples > 0
@@ -176,7 +177,10 @@ function shim(): string {
         continue;
       }
       var target = record.mediaStart + (local + frameSeconds / 2) * record.rate;
-      var discrete = scrubbing || programFrame === record.endFrame - 1;
+      // Browsers do not provide portable negative-rate playback. Reverse remains
+      // an ordinary source-time function: preview it through the same absolute
+      // frame seek used by scrubbing instead of weakening the author model.
+      var discrete = record.sourceRate[0] < 0n || scrubbing || programFrame === record.endFrame - 1;
       if (discrete) {
         // The renderer floors exact source-frame coordinates. The midpoint of a
         // programme frame can cross that source boundary at fractional speeds.

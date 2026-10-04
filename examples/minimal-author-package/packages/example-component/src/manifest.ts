@@ -6,6 +6,7 @@ import { temporalTypes } from "@qflow/qflow/temporal";
 import { mediaTypes } from "@qflow/qflow/media";
 import { svsRecipeType } from "@qflow/qflow/svs";
 import { artifactTypes } from "@qflow/qflow/artifact";
+import { spatialTypes } from "@qflow/qflow/spatial";
 
 const previewImage = (file: string) => ({
   mediaType: "image/png",
@@ -17,14 +18,14 @@ export const exampleModuleRef = { name: "@example/example-component", version: "
 export const exampleTypes = {
   box: { module: exampleModuleRef, name: "ExampleBox" },
   text: { module: exampleModuleRef, name: "ExampleText" },
-  mediaSlot: { module: exampleModuleRef, name: "ExampleMediaSlot" },
+  imageSlot: { module: exampleModuleRef, name: "ExampleImageSlot" },
   style: { module: exampleModuleRef, name: "ExampleStyle" },
   itemSet: { module: exampleModuleRef, name: "ExampleItemSet" },
 } satisfies Record<string, TypeRef>;
 export const exampleProducers = {
   renderBox: { module: exampleModuleRef, name: "render-example-box" },
   renderText: { module: exampleModuleRef, name: "render-example-text" },
-  renderMedia: { module: exampleModuleRef, name: "render-example-media-slot" },
+  renderImage: { module: exampleModuleRef, name: "render-example-image-slot" },
   appendItems: { module: exampleModuleRef, name: "append-example-items" },
 } satisfies Record<string, ProducerRef>;
 
@@ -34,6 +35,7 @@ export const exampleManifest: ModuleManifest = {
     { module: artifactTypes.blob.module },
     { module: compositionTypes.visualTrack.module },
     { module: mediaTypes.fontStack.module },
+    { module: spatialTypes.frame.module },
     { module: timelineTypes.track.module },
     { module: svsRecipeType.module },
     { module: temporalTypes.window.module },
@@ -44,10 +46,11 @@ export const exampleManifest: ModuleManifest = {
     name: producer.name,
     inputs: producer === exampleProducers.appendItems
       ? [{ name: "previous", type: exampleTypes.itemSet }, { name: "item", type: exampleTypes.itemSet }]
-      : [{ name: "timeline", type: timelineTypes.track }, ...(producer === exampleProducers.renderMedia ? [{ name: "media", type: artifactTypes.blob }] : [])],
+      : [{ name: "timeline", type: timelineTypes.track }, { name: "within", type: spatialTypes.frame },
+        ...(producer === exampleProducers.renderImage ? [{ name: "image", type: artifactTypes.blob }] : [])],
     outputs: producer === exampleProducers.appendItems
       ? [{ name: "set", type: exampleTypes.itemSet }]
-      : [{ name: "track", type: compositionTypes.visualTrack }],
+      : [{ name: "visual", type: compositionTypes.visualTrack }],
     needs: [],
   })),
 };
@@ -59,16 +62,17 @@ const vocabulary = (summary: string, example: string) => ({
   attributes: [
     { name: "id", kind: "identifier" as const, required: true, summary: "Names this instance." },
     { name: "timeline", kind: "reference" as const, required: true, accepts: [timelineTypes.track], summary: "Selects the complete Timeline." },
+    { name: "within", kind: "reference" as const, required: true, accepts: [spatialTypes.frame], summary: "Places the complete surface in this picture-plane Frame." },
   ],
-  ports: [{ name: "track", type: compositionTypes.visualTrack, summary: "The terminal VisualTrack." }],
+  ports: [{ name: "visual", type: compositionTypes.visualTrack, summary: "The terminal visual contribution." }],
   example,
-  notes: ["The same shape is used for box, text and media-slot surfaces; only the terminal Producer changes."],
+  notes: ["The same shape is used for box, text and image-slot surfaces; only the terminal Producer changes."],
 });
 
 export const exampleMarkupSurfaces = [
-  { name: "box", tag: "Box", mode: "structured", outputs: [exampleTypes.box, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A framed box surface.", "<example:Box id=\"box\" timeline={speech.timeline}/>") , preview: previewImage("Box.png") } },
-  { name: "text", tag: "Text", mode: "structured", outputs: [exampleTypes.text, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A text-bearing surface.", "<example:Text id=\"title\" timeline={speech.timeline}>Hello</example:Text>"), preview: previewImage("Box.png") } },
-  { name: "media-slot", tag: "MediaSlot", mode: "structured", outputs: [exampleTypes.mediaSlot, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A media slot whose content is a graph input.", "<example:MediaSlot id=\"shot\" timeline={speech.timeline} media={shot-media}/>") , attributes: [...vocabulary("", "").attributes, { name: "media", kind: "reference" as const, required: false, accepts: [artifactTypes.blob], summary: "Optional image or video Blob Artifact." }], preview: previewImage("Box.png") } },
+  { name: "box", tag: "Box", mode: "structured", outputs: [exampleTypes.box, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A framed box surface.", "<example:Box id=\"box\" timeline={speech.timeline} within={layout.card}/>") , preview: previewImage("Box.png") } },
+  { name: "text", tag: "Text", mode: "structured", outputs: [exampleTypes.text, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A text-bearing surface.", "<example:Text id=\"title\" timeline={speech.timeline} within={layout.title}>Hello</example:Text>"), preview: previewImage("Box.png") } },
+  { name: "image-slot", tag: "ImageSlot", mode: "structured", outputs: [exampleTypes.imageSlot, compositionTypes.visualTrack], vocabulary: { ...vocabulary("An image slot whose content is a graph input.", "<example:ImageSlot id=\"shot\" timeline={speech.timeline} within={layout.shot} image={shot-image}/>") , attributes: [...vocabulary("", "").attributes, { name: "image", kind: "reference" as const, required: false, accepts: [artifactTypes.blob], summary: "Optional image Blob Artifact." }], preview: previewImage("Box.png") } },
   { name: "style", tag: "Style", mode: "structured", outputs: [exampleTypes.style], vocabulary: {
     summary: "Decodes one SVS Recipe and exact FontStackRef into a Style value.",
     attributes: [

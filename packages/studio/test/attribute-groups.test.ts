@@ -17,29 +17,8 @@ function fields(text: string, companion: Pick<StudioTrackCompanion, "bindings" |
     placement, draft, declarations: companion.bindings! }), companion.inspector!);
 }
 
-test("a grouped mode edit adds and removes dependent attributes without changing other author facts", () => {
-  let text = '<a:Item id="music" source={song.media} gain="0.4"/>';
-  let field = fields(text).find(field => field.binding === "playback-settings")!;
-  assert.deepEqual(field.value, { playback: "once" });
-  const stretch = { playback: "stretch", "min-rate": 0.8, "max-rate": 1.2 };
-  validateParameterValue(stretch, field.schema!, "Playback");
-  assert.throws(() => validateParameterValue({ playback: "stretch" }, field.schema!, "Playback"));
-  text = serializeAttributeGroup(field, stretch);
-  field = fields(text).find(field => field.binding === "playback-settings")!;
-  assert.deepEqual(field.value, stretch);
-  text = serializeAttributeGroup(field, { playback: "loop" });
-  assert.equal(text, '<a:Item playback="loop" id="music" source={song.media} gain="0.4"/>');
-  for (let count = 0; count < 3; count++) {
-    field = fields(text).find(field => field.binding === "playback-settings")!;
-    text = serializeAttributeGroup(field, stretch);
-    field = fields(text).find(field => field.binding === "playback-settings")!;
-    text = serializeAttributeGroup(field, { playback: "loop" });
-  }
-  assert.equal(text, '<a:Item playback="loop" id="music" source={song.media} gain="0.4"/>');
-});
-
 test("ordinary Audio defaults have real first-edit endpoints", () => {
-  const held = fields('<a:Item id="music" source={song.media}/>');
+  const held = fields('<a:Clip id="music" source={song.media}/>');
   assert.deepEqual(held.filter(field => ["gain", "fade-in", "fade-out"].includes(field.binding!)).map(field => [field.binding, field.value, field.edit?.source.prefix]),
     [["gain", 1, ' gain="'], ["fade-in", "0f", ' fade-in="'], ["fade-out", "0f", ' fade-out="']]);
 });

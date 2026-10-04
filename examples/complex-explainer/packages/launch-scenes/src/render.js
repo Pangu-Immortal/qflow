@@ -7,17 +7,18 @@ const esc = (s) =>
     /[&<>"']/g,
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
   );
-function seal(t, c, w, o, html, css, setup, data, children = []) {
-  assertTemporalWindowFor(w, { subjectId: o.id, space: t });
+function seal(t, within, w, o, html, css, setup, data, children = []) {
+  assertTemporalWindowFor(w, { subjectId: o.id, timeline: t });
   return sealVisualTrack({
     id: o.id,
-    programSpaceId: t.id,
+    timelineId: t.id,
     visualIr: "qflow.visual-ir@1",
     presents: [
       {
         id: o.id,
+        order: 0,
+        z: o.z,
         span: w.span,
-        stacking: { order: o.z, tieBreak: o.id },
         elements: [
           {
             id: "scene",
@@ -35,9 +36,10 @@ function seal(t, c, w, o, html, css, setup, data, children = []) {
             }),
             style: sty({
               position: "absolute",
-              inset: 0,
-              width: c.widthPx + "px",
-              height: c.heightPx + "px",
+              left: within.xPx + "px",
+              top: within.yPx + "px",
+              width: within.widthPx + "px",
+              height: within.heightPx + "px",
             }),
           },
           {
@@ -55,10 +57,10 @@ function seal(t, c, w, o, html, css, setup, data, children = []) {
     ],
   });
 }
-export function renderPoster(t, c, w, font, o) {
+export function renderPoster(t, within, w, font, o) {
   return seal(
     t,
-    c,
+    within,
     w,
     o,
     `<div class="poster"><div class="poster-title">${esc(o.text)}</div><div class="poster-subtitle">${esc(o.subtitle)}</div></div>`,

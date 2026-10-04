@@ -1,3 +1,4 @@
+import { assertTimelineIdentity } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
 import {
   assertVisualTrackIdentity,
@@ -12,13 +13,12 @@ import type {
   VisualTrack,
 } from "@qflow/composition";
 import { assertFontArtifactRef } from "@qflow/media";
-import { assertProgramSpaceIdentity } from "@qflow/program-space";
 import { canonicalize, isResourceId } from "@qflow/protocol";
 import type { BlobRef } from "@qflow/protocol";
-import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
-import type { CanvasSpace, SpatialFrame } from "@qflow/spatial";
+import { assertSpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 import { assertTemporalWindowFor } from "@qflow/temporal";
-import type { ProjectedWindow } from "@qflow/temporal";
+import type { TemporalWindow } from "@qflow/temporal";
 import { verifyText } from "@qflow/text";
 import type { Text } from "@qflow/text";
 
@@ -200,7 +200,7 @@ function realized(
   style: CommentStickerStyle,
   spec: CommentStickerItemSpec,
   content: CommentStickerContent,
-  window: ProjectedWindow,
+  window: TemporalWindow,
   avatar?: BlobRef,
 ): CommentStickerSet {
   assertCommentStickerSet(set);
@@ -218,7 +218,7 @@ function realized(
     style: structuredClone(style),
     content: structuredClone(content),
     ...(avatar === undefined ? {} : { avatar: structuredClone(avatar) }),
-    tieBreak: `${header.id}:${spec.id}`,
+    order: set.items.length,
   };
   const ids = new Set(set.items.map((item) => item.id));
   assert(!ids.has(addition.id), `Comment Sticker already contains Item ${addition.id}.`);
@@ -234,10 +234,10 @@ export function appendProjectedCommentSticker(
   style: CommentStickerStyle,
   spec: CommentStickerItemSpec,
   content: CommentStickerContent,
-  window: ProjectedWindow,
+  window: TemporalWindow,
   avatar?: BlobRef,
 ): CommentStickerSet {
-  assertTemporalWindowFor(window, { subjectId: spec.id, space: timeline });
+  assertTemporalWindowFor(window, { subjectId: spec.id, timeline: timeline });
   return realized(set, header, timeline, frame, style, spec, content, window, avatar);
 }
 
@@ -256,7 +256,7 @@ export function assertCommentStickerProgram(value: CommentStickerProgram): void 
     assertCommentStickerStyle(item.style);
     assertCommentStickerContent(item.content);
     if (item.avatar !== undefined) assertAvatar(item.avatar);
-    assert(item.tieBreak.length > 0, `Comment Sticker Item ${item.id} tie break is empty.`);
+    assert(Number.isSafeInteger(item.order) && item.order >= 0, `Comment Sticker Item ${item.id} order is invalid.`);
   }
 }
 
@@ -589,19 +589,19 @@ function stickerElements(item: CommentStickerItemProgram): readonly VisualElemen
   return elements;
 }
 
-export function renderCommentSticker(canvas: CanvasSpace, timeline: Timeline, program: CommentStickerProgram): VisualTrack {
-  assertCanvasSpace(canvas);
-  assertProgramSpaceIdentity(timeline);
+export function renderCommentSticker(timeline: Timeline, program: CommentStickerProgram): VisualTrack {
+  assertTimelineIdentity(timeline);
   assertCommentStickerProgram(program);
   const track = sealVisualTrack({
-    programSpaceId: timeline.id,
+    timelineId: timeline.id,
     visualIr: "qflow.visual-ir@1",
     id: program.id,
     presents: program.items.map((item) => ({
       id: item.id,
+      order: item.order,
+      z: item.style.stackingOrder,
       subjectId: item.subjectId,
       span: { ...item.span },
-      stacking: { order: item.style.stackingOrder, tieBreak: item.tieBreak },
       elements: stickerElements(item),
     })),
   });

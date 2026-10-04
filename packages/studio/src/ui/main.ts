@@ -776,7 +776,7 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
 
   if (clip === undefined) {
     defaultWorkspaceHeading();
-    const fps = snapshot.space.frameRate.numerator / snapshot.space.frameRate.denominator;
+    const fps = snapshot.timeline.frameRate.numerator / snapshot.timeline.frameRate.denominator;
     inspector.replaceChildren(
       uiGroup("inspector.project", [
         property("inspector.author", snapshot.source.path, "property-code"),
@@ -785,13 +785,13 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
         property("inspector.tracks", String(snapshot.tracks.length), "property-number"),
       ]),
       uiGroup("inspector.canvas", [
-        property("inspector.resolution", `${snapshot.space.canvasWidth} × ${snapshot.space.canvasHeight}`, "property-number"),
-        property("inspector.aspect-ratio", aspectRatio(snapshot.space.canvasWidth, snapshot.space.canvasHeight), "property-number"),
+        property("inspector.resolution", `${snapshot.canvas.width} × ${snapshot.canvas.height}`, "property-number"),
+        property("inspector.aspect-ratio", aspectRatio(snapshot.canvas.width, snapshot.canvas.height), "property-number"),
       ]),
       uiGroup("inspector.timeline", [
-        property("inspector.duration", `${snapshot.space.durationSec.toFixed(2)} s`, "property-number"),
+        property("inspector.duration", `${snapshot.timeline.durationSec.toFixed(2)} s`, "property-number"),
         property("inspector.frame-rate", `${fps.toFixed(Number.isInteger(fps) ? 0 : 2)} fps`, "property-number"),
-        property("inspector.frames", String(snapshot.space.frameCount), "property-number"),
+        property("inspector.frames", String(snapshot.timeline.frameCount), "property-number"),
       ]),
       uiGroup("inspector.build", [
         property("inspector.targets", snapshot.run.targets
@@ -1094,7 +1094,7 @@ window.addEventListener("keydown", (event) => {
   if (event.key === "ArrowLeft" || event.key === ",") store.seek(state.playhead.frame - step, "timeline");
   else if (event.key === "ArrowRight" || event.key === ".") store.seek(state.playhead.frame + step, "timeline");
   else if (event.key === "Home") store.seek(0, "timeline");
-  else if (event.key === "End") store.seek(state.snapshot.space.frameCount - 1, "timeline");
+  else if (event.key === "End") store.seek(state.snapshot.timeline.frameCount - 1, "timeline");
   else if (event.key === "Escape") store.clearSelection();
   else return;
   event.preventDefault();

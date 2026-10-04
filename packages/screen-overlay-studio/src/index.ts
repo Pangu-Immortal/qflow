@@ -11,7 +11,7 @@ function projectOverlays(context: StudioTrackCompanionContext): readonly StudioE
     subjectId: item.subjectId,
     startFrame: item.span.startFrame,
     endFrameExclusive: item.span.endFrameExclusive,
-    stackOrder: item.stacking.order,
+    stackOrder: item.z,
     sourceTypes: [screenOverlayTypes.itemSpec],
   }));
   return childEntities(context, items, "screen-overlay", "standard").map((entity, index) => {

@@ -3,16 +3,18 @@
   "version": "0.0.0-dev",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "qflow": { "activation": "./src/activation.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
   "dependencies": {
     "@qflow/artifact": "workspace:*",
     "@qflow/component-kit": "workspace:*",
     "@qflow/composition": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/markup": "workspace:*",
-    "@qflow/narrative": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/timeline": "workspace:*",
     "@qflow/spatial": "workspace:*",

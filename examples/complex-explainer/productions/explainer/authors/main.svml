@@ -1,18 +1,21 @@
 <?svml using="@qflow/markup@1"?>
 <svml>
+
+  <import as="media" from="@qflow/media@1"/>
   <import as="copy" source="./script.svml"/>
   <import as="assets" source="./assets.svml"/>
   <import as="direction" source="./direction.svml"/>
   <import as="seedance" from="@qflow/seedance@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
+  <import as="semantic" from="@qflow/narrative-temporal@1"/>
   <import as="time" from="@qflow/timeline-author@1"/>
   <import as="webscene" from="@explainer/web-scenes@1"/>
   <import as="launch" from="@explainer/launch-scenes@1"/>
-  <import as="performance" from="@qflow/performance@1"/>
-  <import as="sound" from="@qflow/sound@1"/>
+  <import as="visual" from="@qflow/visual-track@1"/>
   <import as="audio" from="@qflow/audio-track@1"/>
   <import as="caption" from="@qflow/caption@1"/>
+  <import as="narrative-caption" from="@qflow/narrative-caption@1"/>
   <import as="linecaption" from="@explainer/single-line-captions@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
   <import as="film" from="@qflow/film@1"/>
@@ -31,103 +34,120 @@
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="opening-media" source={opening-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="opening" narrative={copy.story} segment={copy.story.segment.opening} media={opening-media.media} language="zh"/>
+  <whisperx:Alignment id="opening" narrative={copy.story}
+    segment={copy.story.segment.opening} media={opening-media.media} domain={opening-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="introduction-generation" model="mini" prompt={direction.introduction-prompt} duration="11" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="introduction-media" source={introduction-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="introduction" narrative={copy.story} segment={copy.story.segment.introduction} media={introduction-media.media} language="zh"/>
+  <whisperx:Alignment id="introduction" narrative={copy.story}
+    segment={copy.story.segment.introduction} media={introduction-media.media} domain={introduction-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="competitors-generation" model="mini" prompt={direction.competitors-prompt} duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="competitors-media" source={competitors-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="competitors" narrative={copy.story} segment={copy.story.segment.competitors} media={competitors-media.media} language="zh"/>
+  <whisperx:Alignment id="competitors" narrative={copy.story}
+    segment={copy.story.segment.competitors} media={competitors-media.media} domain={competitors-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="two-roads-generation" model="mini" prompt={direction.two-roads-prompt} duration="6" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="two-roads-media" source={two-roads-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="two-roads" narrative={copy.story} segment={copy.story.segment.two-roads} media={two-roads-media.media} language="zh"/>
+  <whisperx:Alignment id="two-roads" narrative={copy.story}
+    segment={copy.story.segment.two-roads} media={two-roads-media.media} domain={two-roads-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="editor-road-generation" model="mini" prompt={direction.editor-road-prompt} duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="editor-road-media" source={editor-road-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="editor-road" narrative={copy.story} segment={copy.story.segment.editor-road} media={editor-road-media.media} language="zh"/>
+  <whisperx:Alignment id="editor-road" narrative={copy.story}
+    segment={copy.story.segment.editor-road} media={editor-road-media.media} domain={editor-road-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="keyframe-cost-generation" model="mini" prompt={direction.keyframe-cost-prompt} duration="13" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="keyframe-cost-media" source={keyframe-cost-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="keyframe-cost" narrative={copy.story} segment={copy.story.segment.keyframe-cost} media={keyframe-cost-media.media} language="zh"/>
+  <whisperx:Alignment id="keyframe-cost" narrative={copy.story}
+    segment={copy.story.segment.keyframe-cost} media={keyframe-cost-media.media} domain={keyframe-cost-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="code-road-generation" model="mini" prompt={direction.code-road-prompt} duration="6" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="code-road-media" source={code-road-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="code-road" narrative={copy.story} segment={copy.story.segment.code-road} media={code-road-media.media} language="zh"/>
+  <whisperx:Alignment id="code-road" narrative={copy.story}
+    segment={copy.story.segment.code-road} media={code-road-media.media} domain={code-road-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="reuse-cost-generation" model="mini" prompt={direction.reuse-cost-prompt} duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="reuse-cost-media" source={reuse-cost-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="reuse-cost" narrative={copy.story} segment={copy.story.segment.reuse-cost} media={reuse-cost-media.media} language="zh"/>
+  <whisperx:Alignment id="reuse-cost" narrative={copy.story}
+    segment={copy.story.segment.reuse-cost} media={reuse-cost-media.media} domain={reuse-cost-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="timing-cost-generation" model="mini" prompt={direction.timing-cost-prompt} duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="timing-cost-media" source={timing-cost-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="timing-cost" narrative={copy.story} segment={copy.story.segment.timing-cost} media={timing-cost-media.media} language="zh"/>
+  <whisperx:Alignment id="timing-cost" narrative={copy.story}
+    segment={copy.story.segment.timing-cost} media={timing-cost-media.media} domain={timing-cost-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="water-break-generation" model="mini" prompt={direction.water-break-prompt} duration="4" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="water-break-media" source={water-break-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="water-break" narrative={copy.story} segment={copy.story.segment.water-break} media={water-break-media.media} language="zh"/>
+  <whisperx:Alignment id="water-break" narrative={copy.story}
+    segment={copy.story.segment.water-break} media={water-break-media.media} domain={water-break-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="synthesis-generation" model="mini" prompt={direction.synthesis-prompt} duration="5" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="synthesis-media" source={synthesis-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="synthesis" narrative={copy.story} segment={copy.story.segment.synthesis} media={synthesis-media.media} language="zh"/>
+  <whisperx:Alignment id="synthesis" narrative={copy.story}
+    segment={copy.story.segment.synthesis} media={synthesis-media.media} domain={synthesis-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="components-generation" model="mini" prompt={direction.components-prompt} duration="12" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="components-media" source={components-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="components" narrative={copy.story} segment={copy.story.segment.components} media={components-media.media} language="zh"/>
+  <whisperx:Alignment id="components" narrative={copy.story}
+    segment={copy.story.segment.components} media={components-media.media} domain={components-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="semantic-time-generation" model="mini" prompt={direction.semantic-time-prompt} duration="5" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="semantic-time-media" source={semantic-time-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="semantic-time" narrative={copy.story} segment={copy.story.segment.semantic-time} media={semantic-time-media.media} language="zh"/>
+  <whisperx:Alignment id="semantic-time" narrative={copy.story}
+    segment={copy.story.segment.semantic-time} media={semantic-time-media.media} domain={semantic-time-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="semantic-demo-generation" model="mini" prompt={direction.semantic-demo-prompt} duration="10" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="semantic-demo-media" source={semantic-demo-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="semantic-demo" narrative={copy.story} segment={copy.story.segment.semantic-demo} media={semantic-demo-media.media} language="zh"/>
+  <whisperx:Alignment id="semantic-demo" narrative={copy.story}
+    segment={copy.story.segment.semantic-demo} media={semantic-demo-media.media} domain={semantic-demo-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="result-generation" model="mini" prompt={direction.result-prompt} duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="result-media" source={result-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="result" narrative={copy.story} segment={copy.story.segment.result} media={result-media.media} language="zh"/>
+  <whisperx:Alignment id="result" narrative={copy.story}
+    segment={copy.story.segment.result} media={result-media.media} domain={result-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="reference-reveal-generation" model="mini" prompt={direction.reference-reveal-prompt} duration="5" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="reference-reveal-media" source={reference-reveal-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="reference-reveal" narrative={copy.story} segment={copy.story.segment.reference-reveal} media={reference-reveal-media.media} language="zh"/>
+  <whisperx:Alignment id="reference-reveal" narrative={copy.story}
+    segment={copy.story.segment.reference-reveal} media={reference-reveal-media.media} domain={reference-reveal-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="closing-generation" model="mini" prompt={direction.closing-prompt} duration="11" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
   <pipeline:Normalize id="closing-media" source={closing-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
-  <whisperx:SemanticTake id="closing" narrative={copy.story} segment={copy.story.segment.closing} media={closing-media.media} language="zh"/>
+  <whisperx:Alignment id="closing" narrative={copy.story}
+    segment={copy.story.segment.closing} media={closing-media.media} domain={closing-media.domain} language="zh"/>
   <pipeline:Normalize id="code-demo-media" source={assets.code-demo} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
   <pipeline:Normalize id="readme-demo-media" source={assets.readme-demo} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
   <pipeline:Normalize id="price-creatify-media" source={assets.price-creatify} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
@@ -144,25 +164,169 @@
   <pipeline:Normalize id="qflow-interview-media" source={assets.qflow-interview} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
 
   <!-- One Timeline: placed Takes, opening gap and silent ending -->
-  <time:Timeline id="program" clock={assets.clock} end="content.end+2s">
-    <time:Take source={opening.take}/>
-    <time:Take source={introduction.take} at="previous.end+1.5s"/>
-    <time:Take source={competitors.take}/>
-    <time:Take source={two-roads.take}/>
-    <time:Take source={editor-road.take}/>
-    <time:Take source={keyframe-cost.take}/>
-    <time:Take source={code-road.take}/>
-    <time:Take source={reuse-cost.take}/>
-    <time:Take source={timing-cost.take}/>
-    <time:Take source={water-break.take}/>
-    <time:Take source={synthesis.take}/>
-    <time:Take source={components.take}/>
-    <time:Take source={semantic-time.take}/>
-    <time:Take source={semantic-demo.take}/>
-    <time:Take source={result.take}/>
-    <time:Take source={reference-reveal.take}/>
-    <time:Take source={closing.take}/>
+  <time:Timeline id="program" clock={assets.clock} end="closing.end+2s">
+    <time:Window id="opening" from="start" for={opening-media.extent}/>
+    <time:Window id="introduction" from="opening.end+1.5s" for={introduction-media.extent}/>
+    <time:Window id="competitors" from="introduction.end" for={competitors-media.extent}/>
+    <time:Window id="two-roads" from="competitors.end" for={two-roads-media.extent}/>
+    <time:Window id="editor-road" from="two-roads.end" for={editor-road-media.extent}/>
+    <time:Window id="keyframe-cost" from="editor-road.end" for={keyframe-cost-media.extent}/>
+    <time:Window id="code-road" from="keyframe-cost.end" for={code-road-media.extent}/>
+    <time:Window id="reuse-cost" from="code-road.end" for={reuse-cost-media.extent}/>
+    <time:Window id="timing-cost" from="reuse-cost.end" for={timing-cost-media.extent}/>
+    <time:Window id="water-break" from="timing-cost.end" for={water-break-media.extent}/>
+    <time:Window id="synthesis" from="water-break.end" for={synthesis-media.extent}/>
+    <time:Window id="components" from="synthesis.end" for={components-media.extent}/>
+    <time:Window id="semantic-time" from="components.end" for={semantic-time-media.extent}/>
+    <time:Window id="semantic-demo" from="semantic-time.end" for={semantic-demo-media.extent}/>
+    <time:Window id="result" from="semantic-demo.end" for={result-media.extent}/>
+    <time:Window id="reference-reveal" from="result.end" for={reference-reveal-media.extent}/>
+    <time:Window id="closing" from="reference-reveal.end" for={closing-media.extent}/>
   </time:Timeline>
+
+
+  <semantic:Projection id="story-time" narrative={copy.story} timeline={program.timeline}>
+    <semantic:Map alignment={opening.alignment} domain={opening-media.domain} window={program.opening}/>
+    <semantic:Map alignment={introduction.alignment} domain={introduction-media.domain} window={program.introduction}/>
+    <semantic:Map alignment={competitors.alignment} domain={competitors-media.domain} window={program.competitors}/>
+    <semantic:Map alignment={two-roads.alignment} domain={two-roads-media.domain} window={program.two-roads}/>
+    <semantic:Map alignment={editor-road.alignment} domain={editor-road-media.domain} window={program.editor-road}/>
+    <semantic:Map alignment={keyframe-cost.alignment} domain={keyframe-cost-media.domain} window={program.keyframe-cost}/>
+    <semantic:Map alignment={code-road.alignment} domain={code-road-media.domain} window={program.code-road}/>
+    <semantic:Map alignment={reuse-cost.alignment} domain={reuse-cost-media.domain} window={program.reuse-cost}/>
+    <semantic:Map alignment={timing-cost.alignment} domain={timing-cost-media.domain} window={program.timing-cost}/>
+    <semantic:Map alignment={water-break.alignment} domain={water-break-media.domain} window={program.water-break}/>
+    <semantic:Map alignment={synthesis.alignment} domain={synthesis-media.domain} window={program.synthesis}/>
+    <semantic:Map alignment={components.alignment} domain={components-media.domain} window={program.components}/>
+    <semantic:Map alignment={semantic-time.alignment} domain={semantic-time-media.domain} window={program.semantic-time}/>
+    <semantic:Map alignment={semantic-demo.alignment} domain={semantic-demo-media.domain} window={program.semantic-demo}/>
+    <semantic:Map alignment={result.alignment} domain={result-media.domain} window={program.result}/>
+    <semantic:Map alignment={reference-reveal.alignment} domain={reference-reveal-media.domain} window={program.reference-reveal}/>
+    <semantic:Map alignment={closing.alignment} domain={closing-media.domain} window={program.closing}/>
+    <semantic:Instant id="moment-begin-cue" moment={copy.story.moment.begin}/>
+    <semantic:Instant id="moment-opening-brand-cue" moment={copy.story.moment.opening-brand}/>
+    <semantic:Instant id="moment-road-overview-cue" moment={copy.story.moment.road-overview}/>
+    <semantic:Instant id="segment-timing-cost-end" segment={copy.story.segment.timing-cost} boundary="end"/>
+    <semantic:Instant id="segment-synthesis-start" segment={copy.story.segment.synthesis} boundary="start"/>
+    <semantic:Instant id="segment-closing-start" segment={copy.story.segment.closing} boundary="start"/>
+    <semantic:Instant id="moment-outro-overtime-cue" moment={copy.story.moment.outro-overtime}/>
+    <semantic:Instant id="segment-opening-end" segment={copy.story.segment.opening} boundary="end"/>
+    <semantic:Instant id="segment-opening-end-plus-1-5s" segment={copy.story.segment.opening} boundary="end" offset="+1.5s"/>
+    <semantic:Instant id="segment-opening-end-plus-0f" segment={copy.story.segment.opening} boundary="end" offset="+0f"/>
+    <semantic:Instant id="segment-opening-end-plus-5f" segment={copy.story.segment.opening} boundary="end" offset="+5f"/>
+    <semantic:Instant id="segment-opening-end-plus-9f" segment={copy.story.segment.opening} boundary="end" offset="+9f"/>
+    <semantic:Instant id="segment-opening-end-plus-14f" segment={copy.story.segment.opening} boundary="end" offset="+14f"/>
+    <semantic:Instant id="segment-opening-end-plus-45f" segment={copy.story.segment.opening} boundary="end" offset="+45f"/>
+    <semantic:Instant id="segment-introduction-start" segment={copy.story.segment.introduction} boundary="start"/>
+    <semantic:Window id="segment-opening" segment={copy.story.segment.opening}/>
+    <semantic:Window id="segment-two-roads" segment={copy.story.segment.two-roads}/>
+    <semantic:Instant id="segment-two-roads-start" segment={copy.story.segment.two-roads} boundary="start"/>
+    <semantic:Instant id="segment-two-roads-start-plus-1s" segment={copy.story.segment.two-roads} boundary="start" offset="+1s"/>
+    <semantic:Instant id="moment-road-half-cue" moment={copy.story.moment.road-half}/>
+    <semantic:Instant id="segment-two-roads-end" segment={copy.story.segment.two-roads} boundary="end"/>
+    <semantic:Window id="segment-water-break" segment={copy.story.segment.water-break}/>
+    <semantic:Instant id="moment-resume-cue" moment={copy.story.moment.resume}/>
+    <semantic:Window id="segment-closing" segment={copy.story.segment.closing}/>
+    <semantic:Instant id="segment-closing-start-plus-1s" segment={copy.story.segment.closing} boundary="start" offset="+1s"/>
+    <semantic:Instant id="moment-outro-github-cue" moment={copy.story.moment.outro-github}/>
+    <semantic:Instant id="moment-outro-bye-cue" moment={copy.story.moment.outro-bye}/>
+    <semantic:Window id="segment-timing-cost" segment={copy.story.segment.timing-cost}/>
+    <semantic:Instant id="moment-result-guess-cue" moment={copy.story.moment.result-guess}/>
+    <semantic:Instant id="segment-reference-reveal-end" segment={copy.story.segment.reference-reveal} boundary="end"/>
+    <semantic:Instant id="segment-closing-end-minus-12f" segment={copy.story.segment.closing} boundary="end" offset="-12f"/>
+    <semantic:Instant id="segment-closing-end" segment={copy.story.segment.closing} boundary="end"/>
+    <semantic:Instant id="moment-intro-codex-cue" moment={copy.story.moment.intro-codex}/>
+    <semantic:Instant id="moment-intro-claude-cue" moment={copy.story.moment.intro-claude}/>
+    <semantic:Instant id="moment-intro-examples-cue" moment={copy.story.moment.intro-examples}/>
+    <semantic:Instant id="moment-intro-face-cue" moment={copy.story.moment.intro-face}/>
+    <semantic:Instant id="moment-competitor-monthly-cue" moment={copy.story.moment.competitor-monthly}/>
+    <semantic:Instant id="moment-competitor-watermark-cue" moment={copy.story.moment.competitor-watermark}/>
+    <semantic:Instant id="moment-roads-cue" moment={copy.story.moment.roads}/>
+    <semantic:Instant id="moment-road-assets-cue" moment={copy.story.moment.road-assets}/>
+    <semantic:Instant id="moment-road-drag-cue" moment={copy.story.moment.road-drag}/>
+    <semantic:Instant id="moment-road-fail-cue" moment={copy.story.moment.road-fail}/>
+    <semantic:Instant id="moment-road-number-cue" moment={copy.story.moment.road-number}/>
+    <semantic:Instant id="moment-road-image-cue" moment={copy.story.moment.road-image}/>
+    <semantic:Instant id="moment-road-keys-cue" moment={copy.story.moment.road-keys}/>
+    <semantic:Instant id="moment-road-tokens-cue" moment={copy.story.moment.road-tokens}/>
+    <semantic:Instant id="moment-code-play-cue" moment={copy.story.moment.code-play}/>
+    <semantic:Instant id="moment-code-duplicate-cue" moment={copy.story.moment.code-duplicate}/>
+    <semantic:Instant id="moment-solution-keep-cue" moment={copy.story.moment.solution-keep}/>
+    <semantic:Instant id="moment-solution-drop-cue" moment={copy.story.moment.solution-drop}/>
+    <semantic:Instant id="moment-part-caption-cue" moment={copy.story.moment.part-caption}/>
+    <semantic:Instant id="moment-part-ranking-cue" moment={copy.story.moment.part-ranking}/>
+    <semantic:Instant id="moment-part-chart-cue" moment={copy.story.moment.part-chart}/>
+    <semantic:Instant id="moment-part-card-cue" moment={copy.story.moment.part-card}/>
+    <semantic:Instant id="moment-parts-library-cue" moment={copy.story.moment.parts-library}/>
+    <semantic:Instant id="moment-parts-reuse-cue" moment={copy.story.moment.parts-reuse}/>
+    <semantic:Instant id="moment-parts-swap-cue" moment={copy.story.moment.parts-swap}/>
+    <semantic:Instant id="moment-rank-reveal-cue" moment={copy.story.moment.rank-reveal}/>
+    <semantic:Instant id="moment-product-reveal-cue" moment={copy.story.moment.product-reveal}/>
+    <semantic:Instant id="moment-sem-voice-cue" moment={copy.story.moment.sem-voice}/>
+    <semantic:Instant id="moment-sem-adapt-cue" moment={copy.story.moment.sem-adapt}/>
+    <semantic:Instant id="moment-result-assets-cue" moment={copy.story.moment.result-assets}/>
+    <semantic:Instant id="moment-result-meta-cue" moment={copy.story.moment.result-meta}/>
+    <semantic:Instant id="moment-outro-install-cue" moment={copy.story.moment.outro-install}/>
+    <semantic:Instant id="moment-outro-gift-cue" moment={copy.story.moment.outro-gift}/>
+    <semantic:Instant id="segment-opening-end-plus-4f" segment={copy.story.segment.opening} boundary="end" offset="+4f"/>
+    <semantic:Instant id="segment-opening-end-plus-13f" segment={copy.story.segment.opening} boundary="end" offset="+13f"/>
+    <semantic:Instant id="segment-opening-end-plus-28f" segment={copy.story.segment.opening} boundary="end" offset="+28f"/>
+    <semantic:Window id="segment-introduction" segment={copy.story.segment.introduction}/>
+    <semantic:Instant id="moment-intro-language-cue" moment={copy.story.moment.intro-language}/>
+    <semantic:Instant id="moment-intro-install-cue" moment={copy.story.moment.intro-install}/>
+    <semantic:Instant id="moment-intro-thirty-cue" moment={copy.story.moment.intro-thirty}/>
+    <semantic:Instant id="moment-intro-product-cue" moment={copy.story.moment.intro-product}/>
+    <semantic:Window id="segment-competitors" segment={copy.story.segment.competitors}/>
+    <semantic:Instant id="moment-competitor-other-cue" moment={copy.story.moment.competitor-other}/>
+    <semantic:Instant id="moment-competitor-templates-cue" moment={copy.story.moment.competitor-templates}/>
+    <semantic:Instant id="moment-competitor-cases-cue" moment={copy.story.moment.competitor-cases}/>
+    <semantic:Instant id="segment-keyframe-cost-end" segment={copy.story.segment.keyframe-cost} boundary="end"/>
+    <semantic:Instant id="moment-road-editor-cue" moment={copy.story.moment.road-editor}/>
+    <semantic:Instant id="moment-road-operate-cue" moment={copy.story.moment.road-operate}/>
+    <semantic:Instant id="moment-road-capcut-cue" moment={copy.story.moment.road-capcut}/>
+    <semantic:Instant id="moment-road-premiere-cue" moment={copy.story.moment.road-premiere}/>
+    <semantic:Instant id="moment-road-resolve-cue" moment={copy.story.moment.road-resolve}/>
+    <semantic:Instant id="moment-road-same-cue" moment={copy.story.moment.road-same}/>
+    <semantic:Instant id="moment-road-place-cue" moment={copy.story.moment.road-place}/>
+    <semantic:Instant id="moment-road-generated-cue" moment={copy.story.moment.road-generated}/>
+    <semantic:Instant id="moment-road-unstable-cue" moment={copy.story.moment.road-unstable}/>
+    <semantic:Instant id="moment-road-styles-cue" moment={copy.story.moment.road-styles}/>
+    <semantic:Instant id="segment-code-road-start" segment={copy.story.segment.code-road} boundary="start"/>
+    <semantic:Instant id="segment-synthesis-end" segment={copy.story.segment.synthesis} boundary="end"/>
+    <semantic:Instant id="moment-code-remotion-cue" moment={copy.story.moment.code-remotion}/>
+    <semantic:Instant id="moment-code-hyperframes-cue" moment={copy.story.moment.code-hyperframes}/>
+    <semantic:Instant id="moment-code-html-cue" moment={copy.story.moment.code-html}/>
+    <semantic:Instant id="moment-code-once-cue" moment={copy.story.moment.code-once}/>
+    <semantic:Instant id="moment-code-variant-cue" moment={copy.story.moment.code-variant}/>
+    <semantic:Instant id="moment-code-copy-cue" moment={copy.story.moment.code-copy}/>
+    <semantic:Instant id="moment-code-tokens-cue" moment={copy.story.moment.code-tokens}/>
+    <semantic:Instant id="moment-code-time-cue" moment={copy.story.moment.code-time}/>
+    <semantic:Instant id="moment-code-different-cue" moment={copy.story.moment.code-different}/>
+    <semantic:Instant id="moment-code-match-cue" moment={copy.story.moment.code-match}/>
+    <semantic:Instant id="moment-code-retime-cue" moment={copy.story.moment.code-retime}/>
+    <semantic:Instant id="segment-water-break-start" segment={copy.story.segment.water-break} boundary="start"/>
+    <semantic:Instant id="moment-solution-cue" moment={copy.story.moment.solution}/>
+    <semantic:Instant id="moment-solution-roads-cue" moment={copy.story.moment.solution-roads}/>
+    <semantic:Window id="segment-components" segment={copy.story.segment.components}/>
+    <semantic:Instant id="moment-parts-all-cue" moment={copy.story.moment.parts-all}/>
+    <semantic:Instant id="moment-parts-word-cue" moment={copy.story.moment.parts-word}/>
+    <semantic:Instant id="moment-parts-picture-cue" moment={copy.story.moment.parts-picture}/>
+    <semantic:Instant id="moment-parts-color-cue" moment={copy.story.moment.parts-color}/>
+    <semantic:Instant id="segment-semantic-time-start" segment={copy.story.segment.semantic-time} boundary="start"/>
+    <semantic:Instant id="segment-semantic-demo-end" segment={copy.story.segment.semantic-demo} boundary="end"/>
+    <semantic:Instant id="moment-sem-bind-cue" moment={copy.story.moment.sem-bind}/>
+    <semantic:Instant id="moment-sem-examples-cue" moment={copy.story.moment.sem-examples}/>
+    <semantic:Instant id="moment-sem-rewrite-scene-cue" moment={copy.story.moment.sem-rewrite-scene}/>
+    <semantic:Instant id="moment-sem-rewrite-cue" moment={copy.story.moment.sem-rewrite}/>
+    <semantic:Instant id="moment-sem-syntax-cue" moment={copy.story.moment.sem-syntax}/>
+    <semantic:Instant id="segment-result-start" segment={copy.story.segment.result} boundary="start"/>
+    <semantic:Instant id="moment-result-upload-cue" moment={copy.story.moment.result-upload}/>
+    <semantic:Instant id="moment-result-compare-cue" moment={copy.story.moment.result-compare}/>
+    <semantic:Instant id="moment-result-brand-cue" moment={copy.story.moment.result-brand}/>
+    <semantic:Instant id="moment-outro-copy-cue" moment={copy.story.moment.outro-copy}/>
+  </semantic:Projection>
+  <narrative-caption:Timing id="caption-timing" document={copy.story.caption}
+    binding={copy.story.caption-binding} projection={story-time.projection}/>
   <pipeline:Normalize id="ranking-clone-media" source={assets.ranking-clone} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
   <pipeline:Normalize id="swap-virtual-media" source={assets.swap-virtual} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
   <pipeline:Normalize id="swap-language-media" source={assets.swap-language} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
@@ -171,57 +335,88 @@
   <pipeline:Normalize id="swap-vehicle-media" source={assets.swap-vehicle} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
 
   <!-- Opening chrome and independent montage -->
-  <gfx:Title id="opening-title" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} start="program.start" end="moment.cue" moment={copy.story.moment.begin} bounce-at={copy.story.moment.opening-brand} color="#fa67aa" title-y="0.58" title="Qflow" subtitle="一分钟了解" seconds="60"/>
-  <gfx:Flag id="road-flag" x="0.035" width="0.93" height="0.21" y="0.752" timeline={program.timeline} canvas={assets.canvas} logo={assets.flag-logo} start="moment.cue" moment={copy.story.moment.road-overview} end-source={copy.story.segment.timing-cost} end="segment.end"/>
-  <gfx:Flag id="closing-road-flag" x="0.035" width="0.93" height="0.21" y="0.752" timeline={program.timeline} canvas={assets.canvas} logo={assets.flag-logo} start-source={copy.story.segment.synthesis} start="segment.start" end-source={copy.story.segment.closing} end="segment.start"/>
-  <gfx:Timer flag-amplitude="0.06" logo={assets.flag-logo} id="series-timer" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} start="moment.cue" end="program.end" moment={copy.story.moment.begin} stop-at={copy.story.moment.outro-overtime} flag-color="#fa67aa" title="Qflow" subtitle="VIDEO FRAMEWORK" seconds="60"/>
-  <gfx:Stage id="opening-montage" push-rate="0.025" timeline={program.timeline} canvas={assets.canvas} start="segment.end" end="segment.end+1.5s" segment={copy.story.segment.opening}>
-    <gfx:Item id="image-1" image={assets.montage-1} segment={copy.story.segment.opening} start="segment.end+0f" end="segment.end+5f"/>
-    <gfx:Item id="image-2" image={assets.montage-2} segment={copy.story.segment.opening} start="segment.end+5f" end="segment.end+9f"/>
-    <gfx:Item id="image-3" image={assets.montage-3} segment={copy.story.segment.opening} start="segment.end+9f" end="segment.end+14f"/>
-    <gfx:Item id="image-4" image={assets.montage-4} segment={copy.story.segment.opening} start="segment.end+14f" end="segment.end+45f"/>
+  <gfx:Title id="opening-title" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} from="start" until={story-time.moment-begin-cue} bounce-at={story-time.moment-opening-brand-cue} color="#fa67aa" title-y="0.58" title="Qflow" subtitle="一分钟了解" seconds="60"/>
+  <gfx:Flag id="road-flag" x="0.035" width="0.93" height="0.21" y="0.752" timeline={program.timeline} within={assets.canvas.bounds} logo={assets.flag-logo} from={story-time.moment-road-overview-cue} until={story-time.segment-timing-cost-end}/>
+  <gfx:Flag id="closing-road-flag" x="0.035" width="0.93" height="0.21" y="0.752" timeline={program.timeline} within={assets.canvas.bounds} logo={assets.flag-logo} from={story-time.segment-synthesis-start} until={story-time.segment-closing-start}/>
+  <gfx:Timer flag-amplitude="0.06" logo={assets.flag-logo} id="series-timer" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} from={story-time.moment-begin-cue} until="end" stop-at={story-time.moment-outro-overtime-cue} flag-color="#fa67aa" title="Qflow" subtitle="VIDEO FRAMEWORK" seconds="60"/>
+  <gfx:Stage id="opening-montage" push-rate="0.025" timeline={program.timeline} within={assets.canvas.bounds} from={story-time.segment-opening-end} until={story-time.segment-opening-end-plus-1-5s}>
+    <gfx:Item id="image-1" image={assets.montage-1} from={story-time.segment-opening-end-plus-0f} until={story-time.segment-opening-end-plus-5f}/>
+    <gfx:Item id="image-2" image={assets.montage-2} from={story-time.segment-opening-end-plus-5f} until={story-time.segment-opening-end-plus-9f}/>
+    <gfx:Item id="image-3" image={assets.montage-3} from={story-time.segment-opening-end-plus-9f} until={story-time.segment-opening-end-plus-14f}/>
+    <gfx:Item id="image-4" image={assets.montage-4} from={story-time.segment-opening-end-plus-14f} until={story-time.segment-opening-end-plus-45f}/>
   </gfx:Stage>
 
-  <!-- Presenter presentation: Uses select framing without changing playback -->
-  <spatial:Frame id="full-frame" within={assets.canvas} left="0%" top="0%" right="100%" bottom="100%"/>
-  <spatial:AnchoredFrame id="host-inset" within={assets.canvas} x="93%" y="13.5%" width="330px" height="330px" anchor="top-right"/>
-  <performance:Style id="host-hidden" frame={full-frame} appearance={look.media.hidden}/>
-  <performance:Style id="host-full" frame={full-frame} appearance={look.media.full}/>
+  <!-- Project Presenter: component-local Uses select framing without changing playback -->
+  <spatial:Frame id="full-frame" within={assets.canvas.bounds} left="0%" top="0%" right="100%" bottom="100%"/>
+  <spatial:AnchoredFrame id="host-inset" within={assets.canvas.bounds} x="93%" y="13.5%" width="330px" height="330px" anchor="top-right"/>
+  <gfx:PresenterFrame id="host-hidden" frame={full-frame} appearance={look.media.hidden}/>
+  <gfx:PresenterFrame id="host-full" frame={full-frame} appearance={look.media.full}/>
   <gfx:PortraitInset id="host-small" frame={host-inset}/>
   <gfx:Pullback id="opening-pullback" scale="1.5"/>
   <gfx:FadeOut id="host-fade"/>
-  <spatial:Frame id="upper-frame" within={assets.canvas} left="0%" top="0%" right="100%" bottom="48%"/>
-  <performance:Style id="host-upper" frame={upper-frame} appearance={look.media.upper}/>
+  <spatial:Frame id="upper-frame" within={assets.canvas.bounds} left="0%" top="0%" right="100%" bottom="48%"/>
+  <gfx:PresenterFrame id="host-upper" frame={upper-frame} appearance={look.media.upper}/>
   <gfx:Reframe id="host-rise" from={full-frame} to={upper-frame}/>
   <gfx:PortraitTransition id="host-resume" from={full-frame} to={host-inset}/>
-  <performance:Track id="presenter" timeline={program.timeline} canvas={assets.canvas}>
-    <performance:Use style={host-small} segment={copy.story.segment.introduction} start="segment.start" end="program.end"/>
-    <performance:Use during={copy.story.segment.opening} style={host-full}/>
-    <performance:Use start="0f" end="1s" style={opening-pullback}/>
-    <performance:Use during={copy.story.segment.two-roads} style={host-full}/>
-    <performance:Use segment={copy.story.segment.two-roads} start="segment.start" end="segment.start+1s" style={opening-pullback}/>
-    <performance:Use start-source={copy.story.moment.road-half} start="moment.cue" end-source={copy.story.moment.road-overview} end="moment.cue" style={host-upper}/>
-    <performance:Use at={copy.story.moment.road-half} for="14f" style={host-rise}/>
-    <performance:Use segment={copy.story.segment.two-roads} moment={copy.story.moment.road-overview} start="moment.cue" end="segment.end" style={host-small}/>
-    <performance:Use during={copy.story.segment.water-break} style={host-full}/>
-    <performance:Use moment={copy.story.moment.resume} start="moment.cue" end="program.end" style={host-small}/>
-    <performance:Use at={copy.story.moment.resume} for="18f" style={host-resume}/>
-    <performance:Use during={copy.story.segment.closing} style={host-full}/>
-    <performance:Use segment={copy.story.segment.closing} start="segment.start" end="segment.start+1s" style={opening-pullback}/>
-    <performance:Use start-source={copy.story.moment.outro-github} start="moment.cue" end-source={copy.story.moment.outro-bye} end="moment.cue" style={host-small}/>
-    <performance:Use during={copy.story.segment.timing-cost} style={host-hidden}/>
-    <performance:Use start-source={copy.story.moment.result-guess} start="moment.cue" end-source={copy.story.segment.reference-reveal} end="segment.end" style={host-hidden}/>
-    <performance:Use segment={copy.story.segment.closing} start="segment.end-12f" end="segment.end" style={host-fade}/>
-    <performance:Use segment={copy.story.segment.closing} start="segment.end" end="program.end" style={host-hidden}/>
-  </performance:Track>
-  <sound:Style id="normal-voice"/>
-
+  <gfx:Presenter id="presenter" timeline={program.timeline} within={assets.canvas.bounds}>
+    <gfx:Source id="opening-source" media={opening-media.media} window={program.opening}/>
+    <gfx:Source id="introduction-source" media={introduction-media.media} window={program.introduction}/>
+    <gfx:Source id="competitors-source" media={competitors-media.media} window={program.competitors}/>
+    <gfx:Source id="two-roads-source" media={two-roads-media.media} window={program.two-roads}/>
+    <gfx:Source id="editor-road-source" media={editor-road-media.media} window={program.editor-road}/>
+    <gfx:Source id="keyframe-cost-source" media={keyframe-cost-media.media} window={program.keyframe-cost}/>
+    <gfx:Source id="code-road-source" media={code-road-media.media} window={program.code-road}/>
+    <gfx:Source id="reuse-cost-source" media={reuse-cost-media.media} window={program.reuse-cost}/>
+    <gfx:Source id="timing-cost-source" media={timing-cost-media.media} window={program.timing-cost}/>
+    <gfx:Source id="water-break-source" media={water-break-media.media} window={program.water-break}/>
+    <gfx:Source id="synthesis-source" media={synthesis-media.media} window={program.synthesis}/>
+    <gfx:Source id="components-source" media={components-media.media} window={program.components}/>
+    <gfx:Source id="semantic-time-source" media={semantic-time-media.media} window={program.semantic-time}/>
+    <gfx:Source id="semantic-demo-source" media={semantic-demo-media.media} window={program.semantic-demo}/>
+    <gfx:Source id="result-source" media={result-media.media} window={program.result}/>
+    <gfx:Source id="reference-reveal-source" media={reference-reveal-media.media} window={program.reference-reveal}/>
+    <gfx:Source id="closing-source" media={closing-media.media} window={program.closing}/>
+    <gfx:Use style={host-small} from={story-time.segment-introduction-start} until="end"/>
+    <gfx:Use during={story-time.segment-opening} style={host-full}/>
+    <gfx:Use from="0f" until="1s" style={opening-pullback}/>
+    <gfx:Use during={story-time.segment-two-roads} style={host-full}/>
+    <gfx:Use from={story-time.segment-two-roads-start} until={story-time.segment-two-roads-start-plus-1s} style={opening-pullback}/>
+    <gfx:Use from={story-time.moment-road-half-cue} until={story-time.moment-road-overview-cue} style={host-upper}/>
+    <gfx:Use from={story-time.moment-road-half-cue} for="14f" style={host-rise}/>
+    <gfx:Use from={story-time.moment-road-overview-cue} until={story-time.segment-two-roads-end} style={host-small}/>
+    <gfx:Use during={story-time.segment-water-break} style={host-full}/>
+    <gfx:Use from={story-time.moment-resume-cue} until="end" style={host-small}/>
+    <gfx:Use from={story-time.moment-resume-cue} for="18f" style={host-resume}/>
+    <gfx:Use during={story-time.segment-closing} style={host-full}/>
+    <gfx:Use from={story-time.segment-closing-start} until={story-time.segment-closing-start-plus-1s} style={opening-pullback}/>
+    <gfx:Use from={story-time.moment-outro-github-cue} until={story-time.moment-outro-bye-cue} style={host-small}/>
+    <gfx:Use during={story-time.segment-timing-cost} style={host-hidden}/>
+    <gfx:Use from={story-time.moment-result-guess-cue} until={story-time.segment-reference-reveal-end} style={host-hidden}/>
+    <gfx:Use from={story-time.segment-closing-end-minus-12f} until={story-time.segment-closing-end} style={host-fade}/>
+    <gfx:Use from={story-time.segment-closing-end} until="end" style={host-hidden}/>
+  </gfx:Presenter>
   <!-- Voice, music and independently authored effects -->
-  <sound:Track id="voice" timeline={program.timeline}>
-    <sound:Use style={normal-voice}/>
-  </sound:Track>
+  <audio:Track id="voice" timeline={program.timeline}>
+    <audio:Clip id="opening-source" source={opening-media.media} during={program.opening}/>
+    <audio:Clip id="introduction-source" source={introduction-media.media} during={program.introduction}/>
+    <audio:Clip id="competitors-source" source={competitors-media.media} during={program.competitors}/>
+    <audio:Clip id="two-roads-source" source={two-roads-media.media} during={program.two-roads}/>
+    <audio:Clip id="editor-road-source" source={editor-road-media.media} during={program.editor-road}/>
+    <audio:Clip id="keyframe-cost-source" source={keyframe-cost-media.media} during={program.keyframe-cost}/>
+    <audio:Clip id="code-road-source" source={code-road-media.media} during={program.code-road}/>
+    <audio:Clip id="reuse-cost-source" source={reuse-cost-media.media} during={program.reuse-cost}/>
+    <audio:Clip id="timing-cost-source" source={timing-cost-media.media} during={program.timing-cost}/>
+    <audio:Clip id="water-break-source" source={water-break-media.media} during={program.water-break}/>
+    <audio:Clip id="synthesis-source" source={synthesis-media.media} during={program.synthesis}/>
+    <audio:Clip id="components-source" source={components-media.media} during={program.components}/>
+    <audio:Clip id="semantic-time-source" source={semantic-time-media.media} during={program.semantic-time}/>
+    <audio:Clip id="semantic-demo-source" source={semantic-demo-media.media} during={program.semantic-demo}/>
+    <audio:Clip id="result-source" source={result-media.media} during={program.result}/>
+    <audio:Clip id="reference-reveal-source" source={reference-reveal-media.media} during={program.reference-reveal}/>
+    <audio:Clip id="closing-source" source={closing-media.media} during={program.closing}/>
+  </audio:Track>
   <audio:Track id="music" timeline={program.timeline}>
-    <audio:Item id="bgm" source={bgm-media.media} during="program" playback="once" gain="0.09" fade-in="6f" fade-out="2s"/>
+    <audio:Clip id="bgm" source={bgm-media.media} during="timeline" gain="0.09" fade-in="6f" fade-out="2s"/>
   </audio:Track>
   <pipeline:Normalize id="sfx-tap-media" source={assets.sfx-tap} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
   <pipeline:Normalize id="sfx-pop-media" source={assets.sfx-pop} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
@@ -232,179 +427,180 @@
   <pipeline:Normalize id="sfx-spark-media" source={assets.sfx-spark} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
   <pipeline:Normalize id="sfx-finish-media" source={assets.sfx-finish} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
   <audio:Track id="pixel-effects" timeline={program.timeline}>
-    <audio:Item id="sfx-intro-codex" source={sfx-pop-media.media} at={copy.story.moment.intro-codex} for="0.24s" playback="once" gain="0.16" fade-out="1f"/>
-    <audio:Item id="sfx-intro-claude" source={sfx-pop-media.media} at={copy.story.moment.intro-claude} for="0.24s" playback="once" gain="0.16" fade-out="1f"/>
-    <audio:Item id="sfx-intro-examples" source={sfx-swipe-media.media} at={copy.story.moment.intro-examples} for="0.36s" playback="once" gain="0.2" fade-out="1f"/>
-    <audio:Item id="sfx-intro-face" source={sfx-spark-media.media} at={copy.story.moment.intro-face} for="0.48s" playback="once" gain="0.13" fade-out="1f"/>
-    <audio:Item id="sfx-competitor-monthly" source={sfx-tap-media.media} at={copy.story.moment.competitor-monthly} for="0.12s" playback="once" gain="0.16" fade-out="1f"/>
-    <audio:Item id="sfx-competitor-watermark" source={sfx-ticks-media.media} at={copy.story.moment.competitor-watermark} for="0.65s" playback="once" gain="0.13" fade-out="1f"/>
-    <audio:Item id="sfx-roads" source={sfx-land-media.media} at={copy.story.moment.roads} for="0.26s" playback="once" gain="0.22" fade-out="1f"/>
-    <audio:Item id="sfx-road-assets" source={sfx-pop-media.media} at={copy.story.moment.road-assets} for="0.24s" playback="once" gain="0.15" fade-out="1f"/>
-    <audio:Item id="sfx-road-drag" source={sfx-tap-media.media} at={copy.story.moment.road-drag} for="0.12s" playback="once" gain="0.13" fade-out="1f"/>
-    <audio:Item id="sfx-road-fail" source={sfx-reject-media.media} at={copy.story.moment.road-fail} for="0.4s" playback="once" gain="0.19" fade-out="1f"/>
-    <audio:Item id="sfx-road-number" source={sfx-pop-media.media} at={copy.story.moment.road-number} for="0.24s" playback="once" gain="0.2" fade-out="1f"/>
-    <audio:Item id="sfx-road-image" source={sfx-swipe-media.media} at={copy.story.moment.road-image} for="0.36s" playback="once" gain="0.18" fade-out="1f"/>
-    <audio:Item id="sfx-road-keys" source={sfx-ticks-media.media} at={copy.story.moment.road-keys} for="0.65s" playback="once" gain="0.13" fade-out="1f"/>
-    <audio:Item id="sfx-road-tokens" source={sfx-ticks-media.media} at={copy.story.moment.road-tokens} for="0.65s" playback="once" gain="0.12" fade-out="1f"/>
-    <audio:Item id="sfx-code-play" source={sfx-pop-media.media} at={copy.story.moment.code-play} for="0.24s" playback="once" gain="0.16" fade-out="1f"/>
-    <audio:Item id="sfx-code-duplicate" source={sfx-ticks-media.media} at={copy.story.moment.code-duplicate} for="0.65s" playback="once" gain="0.12" fade-out="1f"/>
-    <audio:Item id="sfx-solution-keep" source={sfx-spark-media.media} at={copy.story.moment.solution-keep} for="0.48s" playback="once" gain="0.19" fade-out="1f"/>
-    <audio:Item id="sfx-solution-drop" source={sfx-swipe-media.media} at={copy.story.moment.solution-drop} for="0.36s" playback="once" gain="0.18" fade-out="1f"/>
-    <audio:Item id="sfx-part-caption" source={sfx-tap-media.media} at={copy.story.moment.part-caption} for="0.12s" playback="once" gain="0.13" fade-out="1f"/>
-    <audio:Item id="sfx-part-ranking" source={sfx-tap-media.media} at={copy.story.moment.part-ranking} for="0.12s" playback="once" gain="0.13" fade-out="1f"/>
-    <audio:Item id="sfx-part-chart" source={sfx-tap-media.media} at={copy.story.moment.part-chart} for="0.12s" playback="once" gain="0.13" fade-out="1f"/>
-    <audio:Item id="sfx-part-card" source={sfx-tap-media.media} at={copy.story.moment.part-card} for="0.12s" playback="once" gain="0.13" fade-out="1f"/>
-    <audio:Item id="sfx-parts-library" source={sfx-land-media.media} at={copy.story.moment.parts-library} for="0.26s" playback="once" gain="0.18" fade-out="1f"/>
-    <audio:Item id="sfx-parts-reuse" source={sfx-spark-media.media} at={copy.story.moment.parts-reuse} for="0.48s" playback="once" gain="0.14" fade-out="1f"/>
-    <audio:Item id="sfx-parts-swap" source={sfx-swipe-media.media} at={copy.story.moment.parts-swap} for="0.36s" playback="once" gain="0.19" fade-out="1f"/>
-    <audio:Item id="sfx-rank-reveal" source={sfx-land-media.media} at={copy.story.moment.rank-reveal} for="0.26s" playback="once" gain="0.2" fade-out="1f"/>
-    <audio:Item id="sfx-product-reveal" source={sfx-pop-media.media} at={copy.story.moment.product-reveal} for="0.24s" playback="once" gain="0.2" fade-out="1f"/>
-    <audio:Item id="sfx-sem-voice" source={sfx-tap-media.media} at={copy.story.moment.sem-voice} for="0.12s" playback="once" gain="0.13" fade-out="1f"/>
-    <audio:Item id="sfx-sem-adapt" source={sfx-spark-media.media} at={copy.story.moment.sem-adapt} for="0.48s" playback="once" gain="0.14" fade-out="1f"/>
-    <audio:Item id="sfx-result-assets" source={sfx-finish-media.media} at={copy.story.moment.result-assets} for="0.72s" playback="once" gain="0.16" fade-out="1f"/>
-    <audio:Item id="sfx-result-meta" source={sfx-swipe-media.media} at={copy.story.moment.result-meta} for="0.36s" playback="once" gain="0.17" fade-out="1f"/>
-    <audio:Item id="sfx-outro-install" source={sfx-tap-media.media} at={copy.story.moment.outro-install} for="0.12s" playback="once" gain="0.15" fade-out="1f"/>
-    <audio:Item id="sfx-outro-gift" source={sfx-spark-media.media} at={copy.story.moment.outro-gift} for="0.48s" playback="once" gain="0.18" fade-out="1f"/>
-    <audio:Item id="sfx-outro-bye" source={sfx-finish-media.media} at={copy.story.moment.outro-bye} for="0.72s" playback="once" gain="0.18" fade-out="1f"/>
-    <audio:Item id="sfx-montage-1" source={sfx-tap-media.media} segment={copy.story.segment.opening} start="segment.end+0f" end="segment.end+4f" playback="once" gain="0.21"/>
-    <audio:Item id="sfx-montage-2" source={sfx-tap-media.media} segment={copy.story.segment.opening} start="segment.end+5f" end="segment.end+9f" playback="once" gain="0.21"/>
-    <audio:Item id="sfx-montage-3" source={sfx-tap-media.media} segment={copy.story.segment.opening} start="segment.end+9f" end="segment.end+13f" playback="once" gain="0.21"/>
-    <audio:Item id="sfx-montage-4" source={sfx-spark-media.media} segment={copy.story.segment.opening} start="segment.end+14f" end="segment.end+28f" playback="once" gain="0.27"/>
+    <audio:Clip id="sfx-intro-codex" source={sfx-pop-media.media} from={story-time.moment-intro-codex-cue} for="0.24s" gain="0.16" fade-out="1f"/>
+    <audio:Clip id="sfx-intro-claude" source={sfx-pop-media.media} from={story-time.moment-intro-claude-cue} for="0.24s" gain="0.16" fade-out="1f"/>
+    <audio:Clip id="sfx-intro-examples" source={sfx-swipe-media.media} from={story-time.moment-intro-examples-cue} for="0.36s" gain="0.2" fade-out="1f"/>
+    <audio:Clip id="sfx-intro-face" source={sfx-spark-media.media} from={story-time.moment-intro-face-cue} for="0.48s" gain="0.13" fade-out="1f"/>
+    <audio:Clip id="sfx-competitor-monthly" source={sfx-tap-media.media} from={story-time.moment-competitor-monthly-cue} for="0.12s" gain="0.16" fade-out="1f"/>
+    <audio:Clip id="sfx-competitor-watermark" source={sfx-ticks-media.media} from={story-time.moment-competitor-watermark-cue} for="0.65s" gain="0.13" fade-out="1f"/>
+    <audio:Clip id="sfx-roads" source={sfx-land-media.media} from={story-time.moment-roads-cue} for="0.26s" gain="0.22" fade-out="1f"/>
+    <audio:Clip id="sfx-road-assets" source={sfx-pop-media.media} from={story-time.moment-road-assets-cue} for="0.24s" gain="0.15" fade-out="1f"/>
+    <audio:Clip id="sfx-road-drag" source={sfx-tap-media.media} from={story-time.moment-road-drag-cue} for="0.12s" gain="0.13" fade-out="1f"/>
+    <audio:Clip id="sfx-road-fail" source={sfx-reject-media.media} from={story-time.moment-road-fail-cue} for="0.4s" gain="0.19" fade-out="1f"/>
+    <audio:Clip id="sfx-road-number" source={sfx-pop-media.media} from={story-time.moment-road-number-cue} for="0.24s" gain="0.2" fade-out="1f"/>
+    <audio:Clip id="sfx-road-image" source={sfx-swipe-media.media} from={story-time.moment-road-image-cue} for="0.36s" gain="0.18" fade-out="1f"/>
+    <audio:Clip id="sfx-road-keys" source={sfx-ticks-media.media} from={story-time.moment-road-keys-cue} for="0.65s" gain="0.13" fade-out="1f"/>
+    <audio:Clip id="sfx-road-tokens" source={sfx-ticks-media.media} from={story-time.moment-road-tokens-cue} for="0.65s" gain="0.12" fade-out="1f"/>
+    <audio:Clip id="sfx-code-play" source={sfx-pop-media.media} from={story-time.moment-code-play-cue} for="0.24s" gain="0.16" fade-out="1f"/>
+    <audio:Clip id="sfx-code-duplicate" source={sfx-ticks-media.media} from={story-time.moment-code-duplicate-cue} for="0.65s" gain="0.12" fade-out="1f"/>
+    <audio:Clip id="sfx-solution-keep" source={sfx-spark-media.media} from={story-time.moment-solution-keep-cue} for="0.48s" gain="0.19" fade-out="1f"/>
+    <audio:Clip id="sfx-solution-drop" source={sfx-swipe-media.media} from={story-time.moment-solution-drop-cue} for="0.36s" gain="0.18" fade-out="1f"/>
+    <audio:Clip id="sfx-part-caption" source={sfx-tap-media.media} from={story-time.moment-part-caption-cue} for="0.12s" gain="0.13" fade-out="1f"/>
+    <audio:Clip id="sfx-part-ranking" source={sfx-tap-media.media} from={story-time.moment-part-ranking-cue} for="0.12s" gain="0.13" fade-out="1f"/>
+    <audio:Clip id="sfx-part-chart" source={sfx-tap-media.media} from={story-time.moment-part-chart-cue} for="0.12s" gain="0.13" fade-out="1f"/>
+    <audio:Clip id="sfx-part-card" source={sfx-tap-media.media} from={story-time.moment-part-card-cue} for="0.12s" gain="0.13" fade-out="1f"/>
+    <audio:Clip id="sfx-parts-library" source={sfx-land-media.media} from={story-time.moment-parts-library-cue} for="0.26s" gain="0.18" fade-out="1f"/>
+    <audio:Clip id="sfx-parts-reuse" source={sfx-spark-media.media} from={story-time.moment-parts-reuse-cue} for="0.48s" gain="0.14" fade-out="1f"/>
+    <audio:Clip id="sfx-parts-swap" source={sfx-swipe-media.media} from={story-time.moment-parts-swap-cue} for="0.36s" gain="0.19" fade-out="1f"/>
+    <audio:Clip id="sfx-rank-reveal" source={sfx-land-media.media} from={story-time.moment-rank-reveal-cue} for="0.26s" gain="0.2" fade-out="1f"/>
+    <audio:Clip id="sfx-product-reveal" source={sfx-pop-media.media} from={story-time.moment-product-reveal-cue} for="0.24s" gain="0.2" fade-out="1f"/>
+    <audio:Clip id="sfx-sem-voice" source={sfx-tap-media.media} from={story-time.moment-sem-voice-cue} for="0.12s" gain="0.13" fade-out="1f"/>
+    <audio:Clip id="sfx-sem-adapt" source={sfx-spark-media.media} from={story-time.moment-sem-adapt-cue} for="0.48s" gain="0.14" fade-out="1f"/>
+    <audio:Clip id="sfx-result-assets" source={sfx-finish-media.media} from={story-time.moment-result-assets-cue} for="0.72s" gain="0.16" fade-out="1f"/>
+    <audio:Clip id="sfx-result-meta" source={sfx-swipe-media.media} from={story-time.moment-result-meta-cue} for="0.36s" gain="0.17" fade-out="1f"/>
+    <audio:Clip id="sfx-outro-install" source={sfx-tap-media.media} from={story-time.moment-outro-install-cue} for="0.12s" gain="0.15" fade-out="1f"/>
+    <audio:Clip id="sfx-outro-gift" source={sfx-spark-media.media} from={story-time.moment-outro-gift-cue} for="0.48s" gain="0.18" fade-out="1f"/>
+    <audio:Clip id="sfx-outro-bye" source={sfx-finish-media.media} from={story-time.moment-outro-bye-cue} for="0.72s" gain="0.18" fade-out="1f"/>
+    <audio:Clip id="sfx-montage-1" source={sfx-tap-media.media} from={story-time.segment-opening-end-plus-0f} until={story-time.segment-opening-end-plus-4f} gain="0.21"/>
+    <audio:Clip id="sfx-montage-2" source={sfx-tap-media.media} from={story-time.segment-opening-end-plus-5f} until={story-time.segment-opening-end-plus-9f} gain="0.21"/>
+    <audio:Clip id="sfx-montage-3" source={sfx-tap-media.media} from={story-time.segment-opening-end-plus-9f} until={story-time.segment-opening-end-plus-13f} gain="0.21"/>
+    <audio:Clip id="sfx-montage-4" source={sfx-spark-media.media} from={story-time.segment-opening-end-plus-14f} until={story-time.segment-opening-end-plus-28f} gain="0.27"/>
   </audio:Track>
 
   <!-- Caption: Script text, authored cues and presentation -->
   <caption:Hidden id="hidden-captions"/>
   <caption-fine:Style id="caption-base" recipe={look.caption.primary} font={assets.display-font}/>
-  <linecaption:Track id="captions" timeline={program.timeline} document={copy.story.caption}>
+  <linecaption:Track id="captions" timeline={program.timeline}
+    document={copy.story.caption} timing={caption-timing} within={assets.canvas.bounds}>
     <linecaption:Use style={caption-base}/>
-    <linecaption:Use during={copy.story.segment.opening} style={hidden-captions}/>
+    <linecaption:Use during={story-time.segment-opening} style={hidden-captions}/>
   </linecaption:Track>
-  <launch:PosterTitle id="montage-label" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} segment={copy.story.segment.opening} start="segment.end+14f" end="segment.end+45f" text="Qflow" subtitle="复刻任何爆款视频" y="0.165" size="180" subtitle-size="46" subtitle-gap="35"/>
+  <launch:PosterTitle id="montage-label" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} from={story-time.segment-opening-end-plus-14f} until={story-time.segment-opening-end-plus-45f} text="Qflow" subtitle="复刻任何爆款视频" y="0.165" size="180" subtitle-size="46" subtitle-gap="35"/>
 
   <!-- Coordinated scenes: supplied media plus semantic events -->
-  <webscene:Introduction id="intro-scene" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} during={copy.story.segment.introduction} page={web-qflow-media.media} code={code-demo-media.media} readme={readme-demo-media.media} codex={assets.icon-codex} claude={assets.icon-claude} reference-ranking={reference-ranking-media.media} reference-podcast={reference-podcast-media.media} reference-interview={reference-interview-media.media} qflow-ranking={qflow-ranking-media.media} qflow-podcast={qflow-podcast-media.media} qflow-interview={qflow-interview-media.media}>
-    <webscene:Beat name="language" at={copy.story.moment.intro-language}/>
-    <webscene:Beat name="install" at={copy.story.moment.intro-install}/>
-    <webscene:Beat name="codex" at={copy.story.moment.intro-codex}/>
-    <webscene:Beat name="claude" at={copy.story.moment.intro-claude}/>
-    <webscene:Beat name="examples" at={copy.story.moment.intro-examples}/>
-    <webscene:Beat name="thirty" at={copy.story.moment.intro-thirty}/>
-    <webscene:Beat name="face" at={copy.story.moment.intro-face}/>
-    <webscene:Beat name="product" at={copy.story.moment.intro-product}/>
+  <webscene:Introduction id="intro-scene" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={story-time.segment-introduction} page={web-qflow-media.media} code={code-demo-media.media} readme={readme-demo-media.media} codex={assets.icon-codex} claude={assets.icon-claude} reference-ranking={reference-ranking-media.media} reference-podcast={reference-podcast-media.media} reference-interview={reference-interview-media.media} qflow-ranking={qflow-ranking-media.media} qflow-podcast={qflow-podcast-media.media} qflow-interview={qflow-interview-media.media}>
+    <webscene:Beat name="language" at={story-time.moment-intro-language-cue}/>
+    <webscene:Beat name="install" at={story-time.moment-intro-install-cue}/>
+    <webscene:Beat name="codex" at={story-time.moment-intro-codex-cue}/>
+    <webscene:Beat name="claude" at={story-time.moment-intro-claude-cue}/>
+    <webscene:Beat name="examples" at={story-time.moment-intro-examples-cue}/>
+    <webscene:Beat name="thirty" at={story-time.moment-intro-thirty-cue}/>
+    <webscene:Beat name="face" at={story-time.moment-intro-face-cue}/>
+    <webscene:Beat name="product" at={story-time.moment-intro-product-cue}/>
   </webscene:Introduction>
-  <webscene:Comparison id="competitor-scene" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} during={copy.story.segment.competitors} left={web-creatify-media.media} right={web-higgsfield-media.media} price-a={price-creatify-media.media} price-b={price-higgsfield-media.media} templates-a={templates-creatify-media.media} templates-b={templates-higgsfield-media.media} case-a={case-creatify-media.media} case-b={case-higgsfield-media.media} logo-a={assets.logo-creatify} logo-b={assets.logo-higgsfield}>
-    <webscene:Beat name="other" at={copy.story.moment.competitor-other}/>
-    <webscene:Beat name="monthly" at={copy.story.moment.competitor-monthly}/>
-    <webscene:Beat name="templates" at={copy.story.moment.competitor-templates}/>
-    <webscene:Beat name="cases" at={copy.story.moment.competitor-cases}/>
-    <webscene:Beat name="watermark" at={copy.story.moment.competitor-watermark}/>
+  <webscene:Comparison id="competitor-scene" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={story-time.segment-competitors} left={web-creatify-media.media} right={web-higgsfield-media.media} price-a={price-creatify-media.media} price-b={price-higgsfield-media.media} templates-a={templates-creatify-media.media} templates-b={templates-higgsfield-media.media} case-a={case-creatify-media.media} case-b={case-higgsfield-media.media} logo-a={assets.logo-creatify} logo-b={assets.logo-higgsfield}>
+    <webscene:Beat name="other" at={story-time.moment-competitor-other-cue}/>
+    <webscene:Beat name="monthly" at={story-time.moment-competitor-monthly-cue}/>
+    <webscene:Beat name="templates" at={story-time.moment-competitor-templates-cue}/>
+    <webscene:Beat name="cases" at={story-time.moment-competitor-cases-cue}/>
+    <webscene:Beat name="watermark" at={story-time.moment-competitor-watermark-cue}/>
   </webscene:Comparison>
-  <webscene:Road id="editor-journey" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} start-source={copy.story.segment.two-roads} start="segment.start" end-source={copy.story.segment.keyframe-cost} end="segment.end" page={web-qflow-media.media} sample={case-higgsfield-media.media} codex={assets.icon-codex} capcut={assets.icon-capcut} premiere={assets.icon-premiere} resolve={assets.icon-resolve} logo={assets.road-logo} portrait={assets.presenter-reference} thumb-a={assets.gallery-ranking} thumb-b={assets.gallery-podcast} thumb-c={assets.gallery-interview} thumb-d={assets.gallery-original-ranking} thumb-e={assets.gallery-original-interview} thumb-f={assets.gallery-homepage} thumb-g={assets.gallery-code}>
-    <webscene:Beat name="half" at={copy.story.moment.road-half}/>
-    <webscene:Beat name="overview" at={copy.story.moment.road-overview}/>
-    <webscene:Beat name="editor" at={copy.story.moment.road-editor}/>
-    <webscene:Beat name="operate" at={copy.story.moment.road-operate}/>
-    <webscene:Beat name="capcut" at={copy.story.moment.road-capcut}/>
-    <webscene:Beat name="premiere" at={copy.story.moment.road-premiere}/>
-    <webscene:Beat name="resolve" at={copy.story.moment.road-resolve}/>
-    <webscene:Beat name="same" at={copy.story.moment.road-same}/>
-    <webscene:Beat name="assets" at={copy.story.moment.road-assets}/>
-    <webscene:Beat name="drag" at={copy.story.moment.road-drag}/>
-    <webscene:Beat name="place" at={copy.story.moment.road-place}/>
-    <webscene:Beat name="fail" at={copy.story.moment.road-fail}/>
-    <webscene:Beat name="number" at={copy.story.moment.road-number}/>
-    <webscene:Beat name="image" at={copy.story.moment.road-image}/>
-    <webscene:Beat name="keys" at={copy.story.moment.road-keys}/>
-    <webscene:Beat name="tokens" at={copy.story.moment.road-tokens}/>
-    <webscene:Beat name="generated" at={copy.story.moment.road-generated}/>
-    <webscene:Beat name="unstable" at={copy.story.moment.road-unstable}/>
-    <webscene:Beat name="styles" at={copy.story.moment.road-styles}/>
+  <webscene:Road id="editor-journey" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} from={story-time.segment-two-roads-start} until={story-time.segment-keyframe-cost-end} page={web-qflow-media.media} sample={case-higgsfield-media.media} codex={assets.icon-codex} capcut={assets.icon-capcut} premiere={assets.icon-premiere} resolve={assets.icon-resolve} logo={assets.road-logo} portrait={assets.presenter-reference} thumb-a={assets.gallery-ranking} thumb-b={assets.gallery-podcast} thumb-c={assets.gallery-interview} thumb-d={assets.gallery-original-ranking} thumb-e={assets.gallery-original-interview} thumb-f={assets.gallery-homepage} thumb-g={assets.gallery-code}>
+    <webscene:Beat name="half" at={story-time.moment-road-half-cue}/>
+    <webscene:Beat name="overview" at={story-time.moment-road-overview-cue}/>
+    <webscene:Beat name="editor" at={story-time.moment-road-editor-cue}/>
+    <webscene:Beat name="operate" at={story-time.moment-road-operate-cue}/>
+    <webscene:Beat name="capcut" at={story-time.moment-road-capcut-cue}/>
+    <webscene:Beat name="premiere" at={story-time.moment-road-premiere-cue}/>
+    <webscene:Beat name="resolve" at={story-time.moment-road-resolve-cue}/>
+    <webscene:Beat name="same" at={story-time.moment-road-same-cue}/>
+    <webscene:Beat name="assets" at={story-time.moment-road-assets-cue}/>
+    <webscene:Beat name="drag" at={story-time.moment-road-drag-cue}/>
+    <webscene:Beat name="place" at={story-time.moment-road-place-cue}/>
+    <webscene:Beat name="fail" at={story-time.moment-road-fail-cue}/>
+    <webscene:Beat name="number" at={story-time.moment-road-number-cue}/>
+    <webscene:Beat name="image" at={story-time.moment-road-image-cue}/>
+    <webscene:Beat name="keys" at={story-time.moment-road-keys-cue}/>
+    <webscene:Beat name="tokens" at={story-time.moment-road-tokens-cue}/>
+    <webscene:Beat name="generated" at={story-time.moment-road-generated-cue}/>
+    <webscene:Beat name="unstable" at={story-time.moment-road-unstable-cue}/>
+    <webscene:Beat name="styles" at={story-time.moment-road-styles-cue}/>
   </webscene:Road>
-  <webscene:CodeJourney id="code-journey" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} start-source={copy.story.segment.code-road} start="segment.start" end-source={copy.story.segment.synthesis} end="segment.end" codex={assets.icon-codex} remotion={assets.icon-remotion} hyperframes={assets.icon-hyperframes} ranking={reference-ranking-media.media} podcast={reference-podcast-media.media} interview={reference-interview-media.media} target={qflow-ranking-media.media}>
-    <webscene:Beat name="remotion" at={copy.story.moment.code-remotion}/>
-    <webscene:Beat name="hyperframes" at={copy.story.moment.code-hyperframes}/>
-    <webscene:Beat name="html" at={copy.story.moment.code-html}/>
-    <webscene:Beat name="play" at={copy.story.moment.code-play}/>
-    <webscene:Beat name="once" at={copy.story.moment.code-once}/>
-    <webscene:Beat name="variant" at={copy.story.moment.code-variant}/>
-    <webscene:Beat name="copy" at={copy.story.moment.code-copy}/>
-    <webscene:Beat name="duplicate" at={copy.story.moment.code-duplicate}/>
-    <webscene:Beat name="tokens" at={copy.story.moment.code-tokens}/>
-    <webscene:Beat name="time" at={copy.story.moment.code-time}/>
-    <webscene:Beat name="different" at={copy.story.moment.code-different}/>
-    <webscene:Beat name="match" at={copy.story.moment.code-match}/>
-    <webscene:Beat name="retime" at={copy.story.moment.code-retime}/>
-    <webscene:Beat name="water" at={copy.story.segment.water-break} boundary="start"/>
-    <webscene:Beat name="resume" at={copy.story.moment.resume}/>
-    <webscene:Beat name="solution" at={copy.story.moment.solution}/>
-    <webscene:Beat name="parts" at={copy.story.moment.solution-roads}/>
-    <webscene:Beat name="keep" at={copy.story.moment.solution-keep}/>
-    <webscene:Beat name="drop" at={copy.story.moment.solution-drop}/>
+  <webscene:CodeJourney id="code-journey" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} from={story-time.segment-code-road-start} until={story-time.segment-synthesis-end} codex={assets.icon-codex} remotion={assets.icon-remotion} hyperframes={assets.icon-hyperframes} ranking={reference-ranking-media.media} podcast={reference-podcast-media.media} interview={reference-interview-media.media} target={qflow-ranking-media.media}>
+    <webscene:Beat name="remotion" at={story-time.moment-code-remotion-cue}/>
+    <webscene:Beat name="hyperframes" at={story-time.moment-code-hyperframes-cue}/>
+    <webscene:Beat name="html" at={story-time.moment-code-html-cue}/>
+    <webscene:Beat name="play" at={story-time.moment-code-play-cue}/>
+    <webscene:Beat name="once" at={story-time.moment-code-once-cue}/>
+    <webscene:Beat name="variant" at={story-time.moment-code-variant-cue}/>
+    <webscene:Beat name="copy" at={story-time.moment-code-copy-cue}/>
+    <webscene:Beat name="duplicate" at={story-time.moment-code-duplicate-cue}/>
+    <webscene:Beat name="tokens" at={story-time.moment-code-tokens-cue}/>
+    <webscene:Beat name="time" at={story-time.moment-code-time-cue}/>
+    <webscene:Beat name="different" at={story-time.moment-code-different-cue}/>
+    <webscene:Beat name="match" at={story-time.moment-code-match-cue}/>
+    <webscene:Beat name="retime" at={story-time.moment-code-retime-cue}/>
+    <webscene:Beat name="water" at={story-time.segment-water-break-start}/>
+    <webscene:Beat name="resume" at={story-time.moment-resume-cue}/>
+    <webscene:Beat name="solution" at={story-time.moment-solution-cue}/>
+    <webscene:Beat name="parts" at={story-time.moment-solution-roads-cue}/>
+    <webscene:Beat name="keep" at={story-time.moment-solution-keep-cue}/>
+    <webscene:Beat name="drop" at={story-time.moment-solution-drop-cue}/>
   </webscene:CodeJourney>
-  <webscene:ComponentWorkshop id="component-workshop" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} during={copy.story.segment.components} v0={ranking-clone-media.media} v1={swap-virtual-media.media} v2={swap-language-media.media} v3={swap-topic-media.media} v4={swap-product-media.media} v5={swap-vehicle-media.media}>
-    <webscene:Beat name="all" at={copy.story.moment.parts-all}/>
-    <webscene:Beat name="caption" at={copy.story.moment.part-caption}/>
-    <webscene:Beat name="ranking" at={copy.story.moment.part-ranking}/>
-    <webscene:Beat name="chart" at={copy.story.moment.part-chart}/>
-    <webscene:Beat name="card" at={copy.story.moment.part-card}/>
-    <webscene:Beat name="library" at={copy.story.moment.parts-library}/>
-    <webscene:Beat name="reuse" at={copy.story.moment.parts-reuse}/>
-    <webscene:Beat name="variants" at={copy.story.moment.parts-word}/>
-    <webscene:Beat name="word" at={copy.story.moment.parts-word}/>
-    <webscene:Beat name="picture" at={copy.story.moment.parts-picture}/>
-    <webscene:Beat name="color" at={copy.story.moment.parts-color}/>
-    <webscene:Beat name="swap" at={copy.story.moment.parts-swap}/>
+  <webscene:ComponentWorkshop id="component-workshop" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={story-time.segment-components} v0={ranking-clone-media.media} v1={swap-virtual-media.media} v2={swap-language-media.media} v3={swap-topic-media.media} v4={swap-product-media.media} v5={swap-vehicle-media.media}>
+    <webscene:Beat name="all" at={story-time.moment-parts-all-cue}/>
+    <webscene:Beat name="caption" at={story-time.moment-part-caption-cue}/>
+    <webscene:Beat name="ranking" at={story-time.moment-part-ranking-cue}/>
+    <webscene:Beat name="chart" at={story-time.moment-part-chart-cue}/>
+    <webscene:Beat name="card" at={story-time.moment-part-card-cue}/>
+    <webscene:Beat name="library" at={story-time.moment-parts-library-cue}/>
+    <webscene:Beat name="reuse" at={story-time.moment-parts-reuse-cue}/>
+    <webscene:Beat name="variants" at={story-time.moment-parts-word-cue}/>
+    <webscene:Beat name="word" at={story-time.moment-parts-word-cue}/>
+    <webscene:Beat name="picture" at={story-time.moment-parts-picture-cue}/>
+    <webscene:Beat name="color" at={story-time.moment-parts-color-cue}/>
+    <webscene:Beat name="swap" at={story-time.moment-parts-swap-cue}/>
   </webscene:ComponentWorkshop>
-  <webscene:SemanticWorkshop id="semantic-workshop" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} creatify={assets.ranking-creatify} higgsfield={assets.ranking-higgsfield} start-source={copy.story.segment.semantic-time} start="segment.start" end-source={copy.story.segment.semantic-demo} end="segment.end">
-    <webscene:Beat name="bind" at={copy.story.moment.sem-bind}/>
-    <webscene:Beat name="examples" at={copy.story.moment.sem-examples}/>
-    <webscene:Beat name="rank" at={copy.story.moment.rank-reveal}/>
-    <webscene:Beat name="product" at={copy.story.moment.product-reveal}/>
-    <webscene:Beat name="rewrite-scene" at={copy.story.moment.sem-rewrite-scene}/>
-    <webscene:Beat name="rewrite" at={copy.story.moment.sem-rewrite}/>
-    <webscene:Beat name="voice" at={copy.story.moment.sem-voice}/>
-    <webscene:Beat name="adapt" at={copy.story.moment.sem-adapt}/>
-    <webscene:Beat name="syntax" at={copy.story.moment.sem-syntax}/>
+  <webscene:SemanticWorkshop id="semantic-workshop" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} creatify={assets.ranking-creatify} higgsfield={assets.ranking-higgsfield} from={story-time.segment-semantic-time-start} until={story-time.segment-semantic-demo-end}>
+    <webscene:Beat name="bind" at={story-time.moment-sem-bind-cue}/>
+    <webscene:Beat name="examples" at={story-time.moment-sem-examples-cue}/>
+    <webscene:Beat name="rank" at={story-time.moment-rank-reveal-cue}/>
+    <webscene:Beat name="product" at={story-time.moment-product-reveal-cue}/>
+    <webscene:Beat name="rewrite-scene" at={story-time.moment-sem-rewrite-scene-cue}/>
+    <webscene:Beat name="rewrite" at={story-time.moment-sem-rewrite-cue}/>
+    <webscene:Beat name="voice" at={story-time.moment-sem-voice-cue}/>
+    <webscene:Beat name="adapt" at={story-time.moment-sem-adapt-cue}/>
+    <webscene:Beat name="syntax" at={story-time.moment-sem-syntax-cue}/>
   </webscene:SemanticWorkshop>
-  <webscene:DeliveryWorkshop id="delivery-workshop" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} start-source={copy.story.segment.result} start="segment.start" end-source={copy.story.segment.reference-reveal} end="segment.end" film={qflow-ranking-media.media} clone={ranking-clone-media.media} water={water-break-media.media} reference={assets.reference-drink-illustration} host={assets.ranking-host} thumb1={assets.ranking-icon} thumb2={assets.ranking-creatify} thumb3={assets.ranking-higgsfield}>
-    <webscene:Beat name="assets" at={copy.story.moment.result-assets}/>
-    <webscene:Beat name="upload" at={copy.story.moment.result-upload}/>
-    <webscene:Beat name="compare" at={copy.story.moment.result-compare}/>
-    <webscene:Beat name="meta" at={copy.story.moment.result-meta}/>
-    <webscene:Beat name="brand" at={copy.story.moment.result-brand}/>
-    <webscene:Beat name="guess" at={copy.story.moment.result-guess}/>
+  <webscene:DeliveryWorkshop id="delivery-workshop" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} from={story-time.segment-result-start} until={story-time.segment-reference-reveal-end} film={qflow-ranking-media.media} clone={ranking-clone-media.media} water={water-break-media.media} reference={assets.reference-drink-illustration} host={assets.ranking-host} thumb1={assets.ranking-icon} thumb2={assets.ranking-creatify} thumb3={assets.ranking-higgsfield}>
+    <webscene:Beat name="assets" at={story-time.moment-result-assets-cue}/>
+    <webscene:Beat name="upload" at={story-time.moment-result-upload-cue}/>
+    <webscene:Beat name="compare" at={story-time.moment-result-compare-cue}/>
+    <webscene:Beat name="meta" at={story-time.moment-result-meta-cue}/>
+    <webscene:Beat name="brand" at={story-time.moment-result-brand-cue}/>
+    <webscene:Beat name="guess" at={story-time.moment-result-guess-cue}/>
   </webscene:DeliveryWorkshop>
-  <webscene:Outro id="outro-scene" timeline={program.timeline} canvas={assets.canvas} font={assets.display-font} segment={copy.story.segment.closing} start="segment.start" end="program.end" page={readme-demo-media.media} codex={assets.icon-codex} portraits-0={assets.portraits-0} portraits-1={assets.portraits-1} portraits-2={assets.portraits-2} portraits-3={assets.portraits-3} portraits-4={assets.portraits-4}>
-    <webscene:Beat name="overtime" at={copy.story.moment.outro-overtime}/>
-    <webscene:Beat name="github" at={copy.story.moment.outro-github}/>
-    <webscene:Beat name="copy" at={copy.story.moment.outro-copy}/>
-    <webscene:Beat name="install" at={copy.story.moment.outro-install}/>
-    <webscene:Beat name="gift" at={copy.story.moment.outro-gift}/>
-    <webscene:Beat name="bye" at={copy.story.moment.outro-bye}/>
-    <webscene:Beat name="end" at={copy.story.segment.closing} boundary="end"/>
+  <webscene:Outro id="outro-scene" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} from={story-time.segment-closing-start} until="end" page={readme-demo-media.media} codex={assets.icon-codex} portraits-0={assets.portraits-0} portraits-1={assets.portraits-1} portraits-2={assets.portraits-2} portraits-3={assets.portraits-3} portraits-4={assets.portraits-4}>
+    <webscene:Beat name="overtime" at={story-time.moment-outro-overtime-cue}/>
+    <webscene:Beat name="github" at={story-time.moment-outro-github-cue}/>
+    <webscene:Beat name="copy" at={story-time.moment-outro-copy-cue}/>
+    <webscene:Beat name="install" at={story-time.moment-outro-install-cue}/>
+    <webscene:Beat name="gift" at={story-time.moment-outro-gift-cue}/>
+    <webscene:Beat name="bye" at={story-time.moment-outro-bye-cue}/>
+    <webscene:Beat name="end" at={story-time.segment-closing-end}/>
   </webscene:Outro>
 
   <!-- Final assembly: contributions and render targets -->
-  <film:Film id="main" canvas={assets.canvas} timeline={program.timeline} appearance={look.film.main}>
+  <film:Film id="main" canvas={assets.canvas.canvas} timeline={program.timeline} appearance={look.film.main}>
     <film:Track source={presenter.visual}/>
     <film:Track source={voice.audio}/>
     <film:Track source={music.audio}/>
     <film:Track source={pixel-effects.audio}/>
-    <film:Track source={captions.track}/>
-    <film:Track source={opening-title.track}/>
-    <film:Track source={series-timer.track}/>
-    <film:Track source={road-flag.track}/>
-    <film:Track source={closing-road-flag.track}/>
-    <film:Track source={opening-montage.track}/>
-    <film:Track source={montage-label.track}/>
-    <film:Track source={intro-scene.track}/>
-    <film:Track source={competitor-scene.track}/>
-    <film:Track source={editor-journey.track}/>
-    <film:Track source={code-journey.track}/>
-    <film:Track source={component-workshop.track}/>
-    <film:Track source={semantic-workshop.track}/>
-    <film:Track source={delivery-workshop.track}/>
-    <film:Track source={outro-scene.track}/>
+    <film:Track source={captions.visual}/>
+    <film:Track source={opening-title.visual}/>
+    <film:Track source={series-timer.visual}/>
+    <film:Track source={road-flag.visual}/>
+    <film:Track source={closing-road-flag.visual}/>
+    <film:Track source={opening-montage.visual}/>
+    <film:Track source={montage-label.visual}/>
+    <film:Track source={intro-scene.visual}/>
+    <film:Track source={competitor-scene.visual}/>
+    <film:Track source={editor-journey.visual}/>
+    <film:Track source={code-journey.visual}/>
+    <film:Track source={component-workshop.visual}/>
+    <film:Track source={semantic-workshop.visual}/>
+    <film:Track source={delivery-workshop.visual}/>
+    <film:Track source={outro-scene.visual}/>
   </film:Film>
   <render:Video id="complete-film" composition={main.composition} timeline={program.timeline}/>
   <!-- Consecutive export ranges for limited temporary disk space. -->

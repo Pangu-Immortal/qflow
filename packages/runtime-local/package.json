@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@qflow/resource-store-fs": "workspace:*",
+    "@qflow/build-result": "workspace:*",
     "@qflow/build-result-fs": "workspace:*",
     "@qflow/build-result-kit": "workspace:*",
     "@qflow/component-kit": "workspace:*",
@@ -28,7 +29,6 @@
     "koffi": "3.2.1"
   },
   "devDependencies": {
-    "@qflow/build-result": "workspace:*",
     "@qflow/credential-store-env": "workspace:*"
   }
 }

@@ -1,6 +1,7 @@
 import { canonicalize } from "@qflow/protocol";
 import type { CanonicalValue } from "@qflow/protocol";
-import type { CaptionAlignmentUnit, CaptionDocument, CaptionDisplayWord } from "@qflow/narrative";
+import type { CaptionDocument, CaptionDisplayWord, CaptionUnit } from "@qflow/caption";
+import type { NarrativeCaptionBinding } from "@qflow/narrative-caption";
 import { sealText } from "@qflow/text";
 
 import type { ParsedCaptionRegion, ParsedNarrative } from "./types.js";
@@ -15,8 +16,16 @@ function turnForRegion(parsed: ParsedNarrative, region: ParsedCaptionRegion): Pa
   return turn;
 }
 
-function projectCaption(parsed: ParsedNarrative, id: string, narrativeId: string): CaptionDocument {
-  const units: CaptionAlignmentUnit[] = [];
+type CaptionViews = { readonly document: CaptionDocument; readonly binding: NarrativeCaptionBinding };
+
+function projectCaption(
+  parsed: ParsedNarrative,
+  documentId: string,
+  narrativeId: string,
+  bindingId = `${documentId}.binding`,
+): CaptionViews {
+  const units: CaptionUnit[] = [];
+  const bindings: Array<{ unitId: string; sourceTokenIds: readonly string[] }> = [];
   const words: CaptionDisplayWord[] = [];
   for (const region of parsed.captionProjection.regions) {
     if (region.kind === "hidden") continue;
@@ -36,16 +45,13 @@ function projectCaption(parsed: ParsedNarrative, id: string, narrativeId: string
     }
     let sourceCursor = region.startToken;
     for (const group of groups) {
-      const unitId = `${id}:unit:${units.length + 1}`;
+      const unitId = `${documentId}:unit:${units.length + 1}`;
       const unitWordIds = group.surfaces.map((surface, groupIndex) => {
         const wordId = `${unitId}:word:${groupIndex + 1}`;
         const attributes = region.marks.find((mark) => mark.displayIndex === group.indices[groupIndex])?.attributes ?? [];
         words.push({
           id: wordId,
           unitId,
-          segmentId: region.segmentId,
-          turnId: turn.id,
-          ...(turn.role === undefined ? {} : { role: turn.role }),
           text: surface,
           separatorBefore: group.indices[groupIndex] === 0 ? region.separatorBefore : display[group.indices[groupIndex]!]!.separatorBefore,
           attributes,
@@ -59,12 +65,11 @@ function projectCaption(parsed: ParsedNarrative, id: string, narrativeId: string
       if (sourceTokenIds.length === 0) throw new Error(`Caption Unit ${unitId} has no authored speech correspondence`);
       units.push({
         id: unitId,
-        segmentId: region.segmentId,
-        turnId: turn.id,
+        groupId: `${region.segmentId}:${turn.id}`,
         ...(turn.role === undefined ? {} : { role: turn.role }),
         wordIds: unitWordIds,
-        sourceTokenIds,
       });
+      bindings.push({ unitId, sourceTokenIds });
       sourceCursor = sourceEnd;
     }
     if (sourceCursor !== region.endTokenExclusive) {
@@ -75,7 +80,8 @@ function projectCaption(parsed: ParsedNarrative, id: string, narrativeId: string
   const tokenIndex = new Map(parsed.tokens.map((token) => [token.id, token.index]));
   const cueBreaks = parsed.captionProjection.breaks.map((breakPoint) => {
     const next = units.findIndex((unit) => {
-      const indexes = unit.sourceTokenIds.map((tokenId) => tokenIndex.get(tokenId));
+      const binding = bindings.find((candidate) => candidate.unitId === unit.id)!;
+      const indexes = binding.sourceTokenIds.map((tokenId) => tokenIndex.get(tokenId));
       return indexes.every((index): index is number => index !== undefined)
         && Math.min(...indexes) >= breakPoint.tokenIndex;
     });
@@ -83,7 +89,8 @@ function projectCaption(parsed: ParsedNarrative, id: string, narrativeId: string
       throw new Error("Caption Cue break must lie between two complete Alignment Units");
     }
     const previous = units[next - 1]!;
-    const previousIndexes = previous.sourceTokenIds.map((tokenId) => tokenIndex.get(tokenId));
+    const previousBinding = bindings.find((candidate) => candidate.unitId === previous.id)!;
+    const previousIndexes = previousBinding.sourceTokenIds.map((tokenId) => tokenIndex.get(tokenId));
     if (previousIndexes.some((index) => index === undefined)
       || Math.max(...previousIndexes as number[]) + 1 !== breakPoint.tokenIndex) {
       throw new Error("Caption Cue break cannot split an Alignment Unit");
@@ -96,20 +103,27 @@ function projectCaption(parsed: ParsedNarrative, id: string, narrativeId: string
   // immediately before `</segment>`.
   const breaks = new Set(cueBreaks.map((item) => item.afterUnitId));
   for (let index = 0; index < units.length - 1; index += 1) {
-    if (units[index]!.segmentId === units[index + 1]!.segmentId) continue;
+    if (units[index]!.groupId === units[index + 1]!.groupId) continue;
     breaks.add(units[index]!.id);
   }
   return {
-    narrativeId,
-    id,
-    units,
-    words,
-    cueBreaks: units.filter((unit) => breaks.has(unit.id)).map((unit) => ({ afterUnitId: unit.id })),
+    document: { id: documentId, units, words,
+      cueBreaks: units.filter((unit) => breaks.has(unit.id)).map((unit) => ({ afterUnitId: unit.id })) },
+    binding: { id: bindingId, narrativeId, documentId, units: bindings },
   };
 }
 
 export function captionDocument(parsed: ParsedNarrative, id: string, narrativeId: string): CaptionDocument {
-  return projectCaption(parsed, id, narrativeId);
+  return projectCaption(parsed, id, narrativeId).document;
+}
+
+export function narrativeCaptionBinding(
+  parsed: ParsedNarrative,
+  documentId: string,
+  narrativeId: string,
+  bindingId?: string,
+): NarrativeCaptionBinding {
+  return projectCaption(parsed, documentId, narrativeId, bindingId).binding;
 }
 
 export function captionDocumentValue(parsed: ParsedNarrative, id: string, narrativeId: string): CanonicalValue {
@@ -182,7 +196,6 @@ export function narrativeMomentValue(moment: ParsedNarrative["moments"][number],
 export function narrativeValue(parsed: ParsedNarrative, id: string): CanonicalValue {
   return canonicalize({
     id,
-    caption: captionDocument(parsed, `${id}.caption`, id),
     segments: parsed.segments.map((segment) => ({
       id: segment.id,
       startAnchorId: segment.startAnchorId,

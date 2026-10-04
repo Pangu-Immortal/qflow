@@ -78,7 +78,7 @@ export const imageComposeMarkupSurfaces = [{
         { name: "image", type: artifactTypes.blob,
           summary: "The composed picture, a PNG." },
       ],
-      example: `<compose:Image id="comparison" canvas={comparison-canvas} background="#EEEAE2FF">
+      example: `<compose:Image id="comparison" canvas={comparison-canvas.canvas} background="#EEEAE2FF">
   <compose:Layer source={before.image} frame={before-panel} fit="contain"/>
   <compose:Layer source={after.image} frame={after-panel} fit="contain"/>
 </compose:Image>`,

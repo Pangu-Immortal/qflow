@@ -68,3 +68,36 @@ test("preview keeps a compact zero-rate sampling interval paused on its source f
   assert.equal(plays, 0, "a held interval never hands its clock to native video playback");
   assert.ok(pauses >= 3);
 });
+
+test("preview evaluates reverse source time by absolute frame without assigning a negative browser rate", async () => {
+  const attrs: Record<string, string> = {
+    "data-start": "0", "data-duration": "1", "data-media-start": String(9.5 / 30), "data-playback-rate": "-1",
+    "data-qflow-start-frame": "0", "data-qflow-end-frame": "10", "data-qflow-source-frame": "9/1",
+    "data-qflow-source-rate": "-1/1", "data-qflow-source-fps": "30/1",
+  };
+  const listeners = new Map<string, () => void>();
+  let currentTime = 0;
+  let plays = 0;
+  let assignedRate: number | undefined;
+  const video = { style: {}, readyState: 4, duration: 10, paused: true,
+    getAttribute: (name: string) => attrs[name] ?? null, closest: () => null,
+    get currentTime() { return currentTime; },
+    set currentTime(value: number) { currentTime = value; queueMicrotask(() => listeners.get("seeked")?.()); },
+    set playbackRate(value: number) { assignedRate = value; },
+    pause() {}, play() { plays += 1; return Promise.resolve(); },
+    addEventListener(name: string, listener: () => void) { listeners.set(name, listener); },
+    removeEventListener(name: string) { listeners.delete(name); },
+  };
+  const root = { style: {}, getAttribute: (name: string) => ({ "data-fps": "30", "data-composition-id": "test" })[name] ?? null };
+  const window: Record<string, any> = { addEventListener() {}, dispatchEvent() {} };
+  const html = injectRuntimeShim("").trim();
+  vm.runInNewContext(html.slice("<script>".length, -"</script>".length), {
+    window, document: { querySelector: () => root,
+      querySelectorAll: (selector: string) => selector === ".qflow-visual-present video" ? [video] : [] },
+    CustomEvent: class {},
+  });
+  await window.__qflowPlayFrame(3);
+  assert.equal(currentTime, 6.5 / 30);
+  assert.equal(assignedRate, undefined);
+  assert.equal(plays, 0);
+});

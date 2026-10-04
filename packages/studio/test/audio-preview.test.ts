@@ -9,11 +9,11 @@ class Param {
   setValueAtTime(value: number, time: number) { this.events.push({ kind: "set", value, time }); }
   linearRampToValueAtTime(value: number, time: number) { this.events.push({ kind: "ramp", value, time }); }
 }
-function player(gain: number, presentation: object = {}) {
+function player(gain: number, levelAutomation: object = {}) {
   const nodes: { gain: Param; connect: () => void }[] = [];
   const attrs: Record<string,string> = {
     "data-start": "0", "data-duration": "4", "data-media-start": "0", "data-media-end": "4",
-    "data-gain": String(gain), "data-presentation": encodeURIComponent(JSON.stringify(presentation)),
+    "data-gain": String(gain), "data-level-automation": encodeURIComponent(JSON.stringify(levelAutomation)),
   };
   const audio = { getAttribute: (name: string) => attrs[name] ?? null, currentTime: 0, readyState: 4,
     paused: true, volume: 0, muted: false, pause() { this.paused = true; },

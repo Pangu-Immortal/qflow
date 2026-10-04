@@ -1,4 +1,4 @@
-import type { ProgramSpace } from "@qflow/program-space";
+import type { Timeline } from "@qflow/timeline";
 
 import type { TemporalDuration } from "./types.js";
 
@@ -19,7 +19,7 @@ function roundedRatio(numerator: bigint, denominator: bigint, label: string): nu
 /** Quantize one non-negative authored duration into the canonical sample domain exactly once. */
 export function temporalDurationInSamples(
   duration: TemporalDuration,
-  space: ProgramSpace,
+  timeline: Timeline,
   sampleRate = 48_000,
 ): number {
   const rate = integer(sampleRate, "Sample rate");
@@ -27,8 +27,8 @@ export function temporalDurationInSamples(
   switch (duration.unit) {
     case "frames":
       return roundedRatio(
-        integer(duration.value, "Frame duration") * rate * integer(space.frameRate.denominator, "Frame-rate denominator"),
-        integer(space.frameRate.numerator, "Frame-rate numerator"),
+        integer(duration.value, "Frame duration") * rate * integer(timeline.frameRate.denominator, "Frame-rate denominator"),
+        integer(timeline.frameRate.numerator, "Frame-rate numerator"),
         "Frame duration",
       );
     case "milliseconds":

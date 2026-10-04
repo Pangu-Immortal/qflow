@@ -12,9 +12,9 @@ const videoType: TypeRef = {
   module: { name: "example.media", version: "1" },
   name: "Video",
 };
-const takeType: TypeRef = {
+const compositeType: TypeRef = {
   module: { name: "example.speech", version: "1" },
-  name: "SemanticTake",
+  name: "CompositeValue",
 };
 
 function state(input: {
@@ -108,7 +108,7 @@ test("publishing and finishing preserve open readers of the previous Result file
   }
 });
 
-test("one same-Build resource backs a public video and a SemanticTake payload", async () => {
+test("one same-Build resource backs a public video and a CompositeValue payload", async () => {
   const root = await mkdtemp(join(tmpdir(), "qflow-build-result-"));
   const bytes = new Uint8Array([1, 2, 3, 4]);
   const video: BlobRef = {
@@ -143,7 +143,7 @@ test("one same-Build resource backs a public video and a SemanticTake payload", 
           { id: "record:video", type: videoType, value: video },
           {
             id: "record:take",
-            type: takeType,
+            type: compositeType,
             value: { kind: "inline", value: { media: { visual: { artifact: video } } } },
           },
         ],
@@ -340,7 +340,7 @@ test("describing a Composite Output reads only its manifest", async () => {
       targets: ["take"],
       outcome: "complete",
       finishedAt: 1,
-      outputs: { take: { type: takeType, value: { kind: "value", path: "values/missing.json" } } },
+      outputs: { take: { type: compositeType, value: { kind: "value", path: "values/missing.json" } } },
     }));
     const repository = new FileBuildResultRepository(root);
     const description = await repository.describeOutput(id, "take");

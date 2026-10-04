@@ -1,8 +1,8 @@
-import { sealTimeline } from "@qflow/timeline";
+import { sealTimeline, timelineDependency, timelineManifest, timelineTypes } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
-import { timelineFixture } from "../../../test/timeline-fixture.js";
+import { narrativeProjectionFixture, timelineFixture } from "../../../test/timeline-fixture.js";
 import { projectMomentWindow, projectProgramWindow, projectSelectionWindow } from "../../../test/temporal-fixture.js";
 import type { TemporalWindowProjection } from "../../../test/temporal-fixture.js";
 
@@ -11,7 +11,7 @@ import {
   audioTrackMarkupSurfaces,
   audioTrackModuleRef,
   audioTrackProducers,
-  appendProjectedAudioItem,
+  appendAudioClip,
   createAudioTrackSet,
   createAudioTrackFragment,
   finalizeAudioTrack,
@@ -20,7 +20,7 @@ import {
   sealAudioTrackHeader,
   decodeAudioTrackSurface,
 } from "@qflow/audio-track";
-import type { AudioClipSpec, AudioTrackSet } from "@qflow/audio-track";
+import type { AudioClipSpec, AudioSourceTimeSpec, AudioTrackSet } from "@qflow/audio-track";
 import { artifactManifest } from "@qflow/artifact";
 import { registerTypeValidatorFacets } from "@qflow/component-kit";
 import { sealComposition, compositionManifest, compositionTypes } from "@qflow/composition";
@@ -31,12 +31,12 @@ import { mediaComponent, mediaDependency, mediaManifest, mediaTypes } from "@qfl
 import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import { narrativeManifest } from "@qflow/narrative";
 import { compileAudioProgramPlan } from "@qflow/media-pipeline";
-import { programSpaceDependency, programSpaceManifest, programSpaceTypes, sealProgramSpace } from "@qflow/program-space";
 import type { ModuleManifest } from "@qflow/protocol";
-import { projectTimelineSpace, timelineDependency, timelineManifest, timelineProducers, timelineTypes } from "@qflow/timeline";
 import { temporalProducers } from "@qflow/temporal";
+import type { TemporalDuration } from "@qflow/temporal";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { speechManifest } from "@qflow/speech";
+import { narrativeTemporalManifest } from "@qflow/narrative-temporal";
 import { spatialManifest } from "@qflow/spatial";
 import { svsManifest } from "@qflow/svs";
 import { temporalManifest } from "@qflow/temporal";
@@ -44,19 +44,30 @@ import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup
 import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
 import { visualIrManifest } from "@qflow/visual-ir";
 
-const space = sealTimeline({ items: [], id: "test-space", durationSec: 10,
-  frameRate: { numerator: 30, denominator: 1 },
+const space = sealTimeline({ id: "test-space", frameCount: 300, frameRate: { numerator: 30, denominator: 1 },
 });
 const header = sealAudioTrackHeader({ id: "sound" });
-const semantic = timelineFixture(space, { narrativeId: "test-narrative", anchors: [
+const semanticOptions = { narrativeId: "test-narrative", segments: [{ id: "line", frameCount: 300 }], anchors: [
   { identity: "a", frame: 30 }, { identity: "b", frame: 60 },
   { identity: "c", frame: 90 }, { identity: "d", frame: 120 },
-] });
+] } as const;
+const semantic = timelineFixture(space, semanticOptions);
+const narrativeProjection = narrativeProjectionFixture(semantic, semanticOptions);
 const zero = { unit: "frames" as const, value: 0 };
+const duration = (value: number) => ({ unit: "milliseconds" as const, value });
+const startPoint = (offset: TemporalDuration = zero) => ({ edge: "start" as const, offset });
+const endPoint = (offset: TemporalDuration = zero) => ({ edge: "end" as const, offset });
+const fullBounds = () => ({ from: startPoint(), until: endPoint() });
+const rateSpec = (input: Partial<Extract<AudioSourceTimeSpec["relations"][number], { kind: "rate" }>> = {}): AudioSourceTimeSpec => ({
+  relations: [{
+    kind: "rate", target: fullBounds(), targetAt: startPoint(), sourceAt: startPoint(),
+    rate: { numerator: 1, denominator: 1 }, source: fullBounds(), ...input,
+  }],
+});
 
 function media(id: string, sampleFrames: number): SynchronizedMedia {
   return {
-    timeline: {
+    frameDomain: {
       frameRate: { numerator: 30, denominator: 1 },
       frameCount: Math.max(1, Math.round(sampleFrames / 1_600)),
     },
@@ -68,7 +79,7 @@ function media(id: string, sampleFrames: number): SynchronizedMedia {
 
 type TestAudioClipSpec = AudioClipSpec & { readonly projection: TemporalWindowProjection };
 const defaultProjection: TemporalWindowProjection = {
-  start: { ref: "program.start" },
+  start: { ref: "timeline.start" },
   end: { ref: "absolute", at: { unit: "seconds", numerator: 2, denominator: 1 } },
 };
 
@@ -78,8 +89,6 @@ function spec(overrides: Partial<TestAudioClipSpec> = {}): TestAudioClipSpec {
     ...sealAudioClipSpec({
 
     id: "clip",
-    trim: {},
-    occupancy: { mode: "once", align: "start" },
     mix: { gain: 1, fadeIn: zero, fadeOut: zero },
     ...clipOverrides,
     }),
@@ -92,7 +101,7 @@ function appendProgramAudioItem(
   source: SynchronizedMedia, authored: TestAudioClipSpec,
 ): AudioTrackSet {
   const { projection, ...clip } = authored;
-  return appendProjectedAudioItem(set, trackHeader, timeline, source, clip, projectProgramWindow({
+  return appendAudioClip(set, trackHeader, timeline, source, clip, projectProgramWindow({
     itemId: clip.id, semantic: timeline, projection,
   }));
 }
@@ -102,8 +111,9 @@ function appendSelectionAudioItem(
   source: SynchronizedMedia, selection: NarrativeSelectionRef, authored: TestAudioClipSpec,
 ): AudioTrackSet {
   const { projection, ...clip } = authored;
-  return appendProjectedAudioItem(set, trackHeader, timeline, source, clip, projectSelectionWindow({
-    itemId: clip.id, semantic: timeline, selection, projection,
+  return appendAudioClip(set, trackHeader, timeline, source, clip, projectSelectionWindow({
+    itemId: clip.id, semantic: timeline, narrative: narrativeProjection, selection,
+    projection: { start: { ref: "selection.start" }, end: { ref: "selection.end" } },
   }));
 }
 
@@ -112,8 +122,9 @@ function appendMomentAudioItem(
   source: SynchronizedMedia, moment: NarrativeMomentRef, authored: TestAudioClipSpec,
 ): AudioTrackSet {
   const { projection, ...clip } = authored;
-  return appendProjectedAudioItem(set, trackHeader, timeline, source, clip, projectMomentWindow({
-    itemId: clip.id, semantic: timeline, moment, projection,
+  return appendAudioClip(set, trackHeader, timeline, source, clip, projectMomentWindow({
+    itemId: clip.id, semantic: timeline, narrative: narrativeProjection, moment,
+    projection: { start: { ref: "moment.cue" }, end: { ref: "moment.cue", offset: { unit: "seconds", numerator: 1, denominator: 1 } } },
   }));
 }
 
@@ -122,73 +133,117 @@ function programTrack(source: SynchronizedMedia, clipSpec: TestAudioClipSpec) {
   return renderAudioTrack(space, finalizeAudioTrack(set, header));
 }
 
-test("once start/end preserve exact audible silence and source head/tail semantics", () => {
+test("partial identity and end alignment preserve exact silence and source head/tail semantics", () => {
   const short = media("short", 48_000);
   const start = programTrack(short, spec());
-  assert.deepEqual(start.clips[0]?.target, { startSample: 0, endSampleExclusive: 48_000 });
-  assert.deepEqual(start.clips[0]?.source, {
-    sampleFrames: 48_000, startSample: 0, endSampleExclusive: 48_000, loop: false, phaseSample: 0,
-  });
+  assert.deepEqual(start.clips[0]?.target, { startSample: 0, endSampleExclusive: 96_000 });
+  assert.deepEqual(start.clips[0]?.sourceTime, { sourceSampleFrames: 48_000, pieces: [{
+    target: { startSample: 0, endSampleExclusive: 48_000 },
+    sourceAtStart: { numerator: 0, denominator: 1 }, rate: { numerator: 1, denominator: 1 },
+  }] });
 
-  const end = programTrack(short, spec({ occupancy: { mode: "once", align: "end" } }));
-  assert.deepEqual(end.clips[0]?.target, { startSample: 48_000, endSampleExclusive: 96_000 });
+  const endAligned = rateSpec({ targetAt: endPoint(), sourceAt: endPoint() });
+  const end = programTrack(short, spec({ sourceTime: endAligned }));
+  assert.deepEqual(end.clips[0]?.sourceTime.pieces[0]?.target, { startSample: 48_000, endSampleExclusive: 96_000 });
 
-  const long = programTrack(media("long", 144_000), spec({ occupancy: { mode: "once", align: "end" } }));
+  const long = programTrack(media("long", 144_000), spec({ sourceTime: endAligned }));
   assert.deepEqual(long.clips[0]?.target, { startSample: 0, endSampleExclusive: 96_000 });
-  assert.deepEqual(long.clips[0]?.source, {
-    sampleFrames: 144_000, startSample: 48_000, endSampleExclusive: 144_000, loop: false, phaseSample: 0,
-  });
+  assert.deepEqual(long.clips[0]?.sourceTime.pieces[0]?.sourceAtStart, { numerator: 48_000, denominator: 1 });
 });
 
-test("loop alignment uses one source interval and an exact phase instead of duplicating clips", () => {
+test("periodic maps preserve one source interval and an exact phase", () => {
   const projection = {
-    start: { ref: "program.start" as const },
+    start: { ref: "timeline.start" as const },
     end: { ref: "absolute" as const, at: { unit: "seconds" as const, numerator: 5, denominator: 2 } },
   };
-  const start = programTrack(media("loop", 48_000), spec({ projection, occupancy: { mode: "loop", align: "start" } }));
-  assert.equal(start.clips[0]?.source.loop, true);
-  assert.equal(start.clips[0]?.source.phaseSample, 0);
+  const start = programTrack(media("loop", 48_000), spec({ projection,
+    sourceTime: rateSpec({ wrap: fullBounds() }) }));
+  assert.deepEqual(start.clips[0]?.sourceTime.pieces[0]?.wrap, { startSample: 0, endSampleExclusive: 48_000 });
+  assert.deepEqual(start.clips[0]?.sourceTime.pieces[0]?.sourceAtStart, { numerator: 0, denominator: 1 });
   assert.deepEqual(start.clips[0]?.target, { startSample: 0, endSampleExclusive: 120_000 });
-  const end = programTrack(media("loop", 48_000), spec({ projection, occupancy: { mode: "loop", align: "end" } }));
-  assert.equal(end.clips[0]?.source.phaseSample, 24_000);
+  const end = programTrack(media("loop", 48_000), spec({ projection,
+    sourceTime: rateSpec({ targetAt: endPoint(), sourceAt: endPoint(), wrap: fullBounds() }) }));
+  assert.deepEqual(end.clips[0]?.sourceTime.pieces[0]?.sourceAtStart, { numerator: 24_000, denominator: 1 });
 });
 
-test("bounded pitch-preserving stretch succeeds exactly or fails without truncation", () => {
-  const stretched = programTrack(media("stretch", 96_000), spec({
-    projection: { start: { ref: "program.start" }, end: { ref: "absolute", at: { unit: "seconds", numerator: 4, denominator: 1 } } },
-    occupancy: { mode: "stretch", minRate: 0.4, maxRate: 0.6, pitch: "preserve" },
+test("bounded pitch-preserving fit succeeds exactly or fails without truncation", () => {
+  const fitted = programTrack(media("fit", 96_000), spec({
+    projection: { start: { ref: "timeline.start" }, end: { ref: "absolute", at: { unit: "seconds", numerator: 4, denominator: 1 } } },
+    sourceTime: { relations: [{ kind: "fit", target: fullBounds(), source: fullBounds(), minRate: 0.4, maxRate: 0.6 }] },
   }));
-  assert.equal(stretched.clips[0]?.playbackRate, 0.5);
-  assert.equal(stretched.clips[0]?.pitch, "preserve");
-  assert.throws(() => programTrack(media("stretch-fail", 96_000), spec({
-    projection: { start: { ref: "program.start" }, end: { ref: "absolute", at: { unit: "seconds", numerator: 4, denominator: 1 } } },
-    occupancy: { mode: "stretch", minRate: 0.8, maxRate: 1.2, pitch: "preserve" },
-  })), /outside authored bounds/u);
+  assert.deepEqual(fitted.clips[0]?.sourceTime.pieces[0]?.rate, { numerator: 1, denominator: 2 });
+  assert.throws(() => programTrack(media("fit-fail", 96_000), spec({
+    projection: { start: { ref: "timeline.start" }, end: { ref: "absolute", at: { unit: "seconds", numerator: 4, denominator: 1 } } },
+    sourceTime: { relations: [{ kind: "fit", target: fullBounds(), source: fullBounds(), minRate: 0.8, maxRate: 1.2 }] },
+  })), /below authored minimum/u);
 });
 
-test("trim and fades quantize once into the same sample domain", () => {
+test("exact audio rates are not rejected by an arbitrary playback-mode ceiling", () => {
+  const track = programTrack(media("fast", 12_288_000), spec({
+    sourceTime: rateSpec({ rate: { numerator: 128, denominator: 1 } }),
+  }));
+  assert.deepEqual(track.clips[0]?.sourceTime.pieces[0]?.rate, { numerator: 128, denominator: 1 });
+  const plan = compileAudioProgramPlan(sealComposition({
+    id: "fast", canvas: { width: 1, height: 1, clearColor: "#000000" }, tracks: [track],
+  }), space);
+  assert.equal(plan.clips[0]?.playbackRate, 128);
+});
+
+test("source bounds and fades quantize once into the same sample domain", () => {
   const track = programTrack(media("trim", 144_000), spec({
-    trim: {
-      start: { unit: "milliseconds", value: 250 },
-      end: { unit: "seconds", numerator: 9, denominator: 4 },
-    },
+    sourceTime: rateSpec({
+      sourceAt: startPoint(duration(250)),
+      source: { from: startPoint(duration(250)), until: startPoint({ unit: "seconds", numerator: 9, denominator: 4 }) },
+    }),
     mix: {
       gain: 0.25,
       fadeIn: { unit: "milliseconds", value: 100 },
       fadeOut: { unit: "milliseconds", value: 200 },
     },
   }));
-  assert.equal(track.clips[0]?.source.startSample, 12_000);
-  assert.equal(track.clips[0]?.source.endSampleExclusive, 108_000);
+  assert.deepEqual(track.clips[0]?.sourceTime.pieces[0]?.sourceAtStart, { numerator: 12_000, denominator: 1 });
+  assert.deepEqual(track.clips[0]?.sourceTime.pieces[0]?.target, { startSample: 0, endSampleExclusive: 96_000 });
   assert.equal(track.clips[0]?.gain, 0.25);
   assert.equal(track.clips[0]?.fadeInSamples, 4_800);
   assert.equal(track.clips[0]?.fadeOutSamples, 9_600);
   assert.throws(() => programTrack(media("fade", 24_000), spec({
-    mix: { gain: 1, fadeIn: { unit: "seconds", numerator: 1, denominator: 1 }, fadeOut: zero },
-  })), /fade exceeds/u);
+    mix: { gain: 1, fadeIn: { unit: "seconds", numerator: 3, denominator: 1 }, fadeOut: zero },
+  })), /fade exceeds its Window/u);
 });
 
-test("Selection and Moment each place one independent item", () => {
+test("piecewise audio maps preserve silent gaps while execution keeps one Clip-global fade clock", () => {
+  const second = { unit: "seconds" as const, numerator: 1, denominator: 1 };
+  const seconds = (value: number): TemporalDuration => ({ unit: "seconds", numerator: value, denominator: 1 });
+  const track = programTrack(media("pieces", 96_000), spec({
+    projection: { start: { ref: "timeline.start" }, end: { ref: "absolute", at: seconds(4) } },
+    sourceTime: { relations: [
+      { kind: "rate", target: { from: startPoint(), until: startPoint(second) }, targetAt: startPoint(),
+        sourceAt: startPoint(), rate: { numerator: 1, denominator: 1 },
+        source: { from: startPoint(), until: startPoint(second) } },
+      { kind: "rate", target: { from: startPoint(seconds(2)), until: startPoint(seconds(3)) },
+        targetAt: startPoint(seconds(2)), sourceAt: startPoint(second), rate: { numerator: 1, denominator: 1 },
+        source: { from: startPoint(second), until: endPoint() } },
+    ] },
+    mix: { gain: 0.5, fadeIn: second, fadeOut: second },
+  }));
+  assert.deepEqual(track.clips[0]?.sourceTime.pieces.map((piece) => piece.target), [
+    { startSample: 0, endSampleExclusive: 48_000 },
+    { startSample: 96_000, endSampleExclusive: 144_000 },
+  ]);
+  const plan = compileAudioProgramPlan(sealComposition({
+    id: "piecewise", canvas: { width: 1, height: 1, clearColor: "#000000" }, tracks: [track],
+  }), space);
+  assert.deepEqual(plan.clips.map((clip) => ({
+    target: [clip.targetStartSample, clip.targetEndSampleExclusive],
+    mix: [clip.mixStartSample, clip.mixEndSampleExclusive],
+    fade: [clip.fadeInSamples, clip.fadeOutSamples],
+  })), [
+    { target: [0, 48_000], mix: [0, 192_000], fade: [48_000, 48_000] },
+    { target: [96_000, 144_000], mix: [0, 192_000], fade: [48_000, 48_000] },
+  ]);
+});
+
+test("resolved Windows place independent Clips regardless of their upstream source", () => {
   const selection: NarrativeSelectionRef = {
     narrativeId: "test-narrative",
     id: "mentions",
@@ -203,11 +258,9 @@ test("Selection and Moment each place one independent item", () => {
   let set: AudioTrackSet = createAudioTrackSet();
   set = appendSelectionAudioItem(set, header, semantic, media("selection", 48_000), selection, spec({
     id: "selected",
-    projection: { start: { ref: "selection.start" }, end: { ref: "selection.end" } },
   }));
   set = appendMomentAudioItem(set, header, semantic, media("moment", 48_000), moment, spec({
     id: "hit",
-    projection: { start: { ref: "moment.cue" }, end: { ref: "moment.cue", offset: { unit: "seconds", numerator: 1, denominator: 1 } } },
   }));
   const track = renderAudioTrack(space, finalizeAudioTrack(set, header));
   assert.equal(track.clips.length, 2);
@@ -222,7 +275,7 @@ test("one Track with overlaps and two peer Tracks compile to the same mix", () =
   const combined = {
     kind: "audio" as const,
     id: "combined",
-    programSpaceId: space.id,
+    timelineId: space.id,
     clips: [
       { ...first.clips[0]!, id: "a" },
       { ...second.clips[0]!, id: "b" },
@@ -274,12 +327,12 @@ test("the self-described Audio Surface parses into the same finite Producer grap
     artifactManifest,
     mediaManifest,
     narrativeManifest,
-    programSpaceManifest,
+    timelineManifest,
     speechManifest,
+    narrativeTemporalManifest,
     svsManifest,
     spatialManifest,
     speechEvidenceManifest,
-    timelineManifest,
     temporalManifest,
     visualIrManifest,
     compositionManifest,
@@ -317,7 +370,9 @@ test("the self-described Audio Surface parses into the same finite Producer grap
         <import as="audio" from="@qflow/audio-track@1"/>
         <fixture:Inputs/>
         <audio:Track id="sound" timeline={semantic}>
-          <audio:Item source={source} during="program" playback="loop-end" gain="0.5" fade-in="2f" fade-out="3f"/>
+          <audio:Clip source={source} during="timeline" gain="0.5" fade-in="2f" fade-out="3f">
+            <audio:Map target-at="end" source-at="end" rate="1" wrap-from="start" wrap-until="end"/>
+          </audio:Clip>
         </audio:Track>
       </svml>`,
     },
@@ -333,7 +388,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
   }));
   assert.deepEqual(build.plan.steps.map((step) => step.producer.name).sort(), [
     audioTrackProducers.createSet.name,
-    audioTrackProducers.appendItem.name,
+    audioTrackProducers.appendClip.name,
     audioTrackProducers.finalize.name,
     temporalProducers.projectProgramInstant.name,
     temporalProducers.projectProgramInstant.name,

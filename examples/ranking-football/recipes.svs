@@ -11,14 +11,6 @@
 
   film.vertical { background: #090A0F; }
 
-  media.performance { stack-order: 0;
-    fit: cover;
-    frame-x: 0.5;
-    frame-y: 0.5;
-    content-x: 0.5;
-    content-y: 0.5;
-  }
-
   ranking.football {
     rows: [
       { "id": "s", "label": "S", "color": "#EE5F52" },
@@ -51,49 +43,36 @@
   /* B-roll cards sit above the Ranking board and below captions. The later
      member of every overlapping joke pair receives the higher stack order. */
   media.hair-gel {
-    stack-order: 40; fit: cover;
+
     shadows: 0 18 34 -8 #000000D9;
   }
   media.trophy {
-    stack-order: 41; fit: cover;
+
     shadows: 0 18 34 -8 #000000D9;
   }
   media.greek-god {
-    stack-order: 42; fit: cover;
+
     shadows: 0 18 34 -8 #000000D9;
   }
   media.greek-tragedy {
-    stack-order: 43; fit: cover;
+
     shadows: 0 18 34 -8 #000000D9;
   }
   media.penaldo-social {
-    stack-order: 44; fit: cover;
+
     shadows: 0 18 34 -8 #000000D9;
   }
   media.tired-dad {
-    stack-order: 45; fit: cover;
+
     shadows: 0 18 34 -8 #000000D9;
   }
   media.walks-around {
-    stack-order: 46; fit: cover;
+
     shadows: 0 18 34 -8 #000000D9;
   }
   media.hat-trick {
-    stack-order: 47; fit: cover;
-    shadows: 0 18 34 -8 #000000E6;
-  }
 
-  motion.broll-left {
-    enter: pop; enter-frames: 6; enter-easing: ease-out;
-    exit: fade; exit-frames: 4; exit-easing: ease-in;
-  }
-  motion.broll-right {
-    enter: bounce; enter-frames: 7; enter-easing: ease-out;
-    exit: scale; exit-frames: 4; exit-amount: 0.94; exit-easing: ease-in;
-  }
-  motion.broll-wide {
-    enter: scale; enter-frames: 6; enter-amount: 0.9; enter-easing: ease-out;
-    exit: fade; exit-frames: 4; exit-easing: ease-in;
+    shadows: 0 18 34 -8 #000000E6;
   }
 
   caption.primary {

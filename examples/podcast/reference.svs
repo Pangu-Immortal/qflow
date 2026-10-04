@@ -27,17 +27,6 @@
     gesture: natural;
   }
 
-  media.performance { stack-order: 10;
-    fit: cover;
-  }
-
-  media.lifestyle {
-    stack-order: 40;
-    fit: cover;
-    playback: once-start;
-    clip: frame;
-  }
-
   caption.original-girl {
     stack-order: 70;
     x: 0.5;

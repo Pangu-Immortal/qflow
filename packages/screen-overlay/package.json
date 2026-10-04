@@ -4,15 +4,17 @@
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "qflow": { "activation": "./src/activation.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
   "dependencies": {
     "@qflow/component-kit": "workspace:*",
     "@qflow/composition": "workspace:*",
     "@qflow/elaborator": "workspace:*",
-    "@qflow/narrative": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/timeline": "workspace:*",
     "@qflow/spatial": "workspace:*",
     "@qflow/temporal": "workspace:*",

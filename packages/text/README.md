@@ -37,7 +37,7 @@ such as model or resolution are ignored by the text program. No prompt-specific 
 needed.
 
 `@qflow/markup` is the XML-like authoring Frontend and
-`@qflow/typography-track` renders text into video. They are deliberately
+`@qflow/text-fine` renders text into video. They are deliberately
 separate packages.
 
 ## Graph consumers
@@ -45,7 +45,7 @@ separate packages.
 `Text` is a small domain-neutral graph value, not a prompt-only type. Current consumers include:
 
 - exact model prompt ports;
-- `@qflow/typography-track` Point, Area and Path content;
+- `@qflow/text-fine` Point, Flow and Path occurrence content;
 - Ranking Column/TopThree labels;
 - Comment Sticker comment, author, header and metadata copy;
 - Deck Card labels.

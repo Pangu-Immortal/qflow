@@ -588,6 +588,8 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
         timestamp_granularities: ["segment", "word"],
       }, auth, async (message) => { await context.reportDiagnostic?.({ level: "info", message }); });
       const evidence = sealAlignedTranscriptEvidence({
+        domainId: request.domainId,
+        sampleFrames: request.sampleFrames,
         passages: interpretWhisperXTranscript(response as WhisperXTranscriptResponse, request.sampleFrames),
       });
       await context.reportProgress?.({ phase: "Word timing ready" });

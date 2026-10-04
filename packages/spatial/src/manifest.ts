@@ -1,39 +1,34 @@
 import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
-import { svsRecipeType } from "@qflow/svs";
 import {
   anchoredFrameProgramSchema,
   aspectFrameProgramSchema,
-  canvasSpaceSchema,
+  canvasSchema,
   contentFitSchema,
-  fittedContentSchema,
   frameEdgesProgramSchema,
   intrinsicExtentSchema,
   spatialFrameSchema,
   spatialPathSchema,
   spatialPointSchema,
-  spatialRegionTimelineSchema,
 } from "./schema.js";
 
 export const spatialModuleRef = { name: "@qflow/spatial", version: "1" } as const;
 export const spatialTypes = {
-  canvas: { module: spatialModuleRef, name: "CanvasSpace" },
+  canvas: { module: spatialModuleRef, name: "Canvas" },
   point: { module: spatialModuleRef, name: "SpatialPoint" },
   frame: { module: spatialModuleRef, name: "SpatialFrame" },
-  regionTimeline: { module: spatialModuleRef, name: "SpatialRegionTimeline" },
   path: { module: spatialModuleRef, name: "SpatialPath" },
   extent: { module: spatialModuleRef, name: "IntrinsicExtent" },
+  map2D: { module: spatialModuleRef, name: "SpatialMap2D" },
   fit: { module: spatialModuleRef, name: "ContentFit" },
-  fitted: { module: spatialModuleRef, name: "FittedContent" },
   frameEdgesProgram: { module: spatialModuleRef, name: "FrameEdgesProgram" },
   anchoredFrameProgram: { module: spatialModuleRef, name: "AnchoredFrameProgram" },
   aspectFrameProgram: { module: spatialModuleRef, name: "AspectFrameProgram" },
 } satisfies Record<string, TypeRef>;
 export const spatialProducers = {
-  canvasFrame: { module: spatialModuleRef, name: "canvas-frame" },
   frameEdges: { module: spatialModuleRef, name: "frame-edges" },
   anchoredFrame: { module: spatialModuleRef, name: "anchored-frame" },
   aspectFrame: { module: spatialModuleRef, name: "aspect-frame" },
-  fitContent: { module: spatialModuleRef, name: "fit-content" },
+  resolveContentFit: { module: spatialModuleRef, name: "resolve-content-fit" },
 } satisfies Record<string, ProducerRef>;
 
 const anchors = [
@@ -43,17 +38,17 @@ const anchors = [
 ] as const;
 
 const lengthNote = "A length is a number followed by `px` or `%`; a percentage resolves against the parent Frame's width on the x axis and its height on the y axis.";
-const withinNote = "A Canvas written in `within` is first resolved to its own full-Canvas Frame, so every Frame is placed inside a Frame.";
+const withinNote = "`within` accepts one resolved SpatialFrame. Use a Canvas declaration's `.bounds` port for the complete picture.";
 const emptyNote = "The element is empty; it accepts no children and no text.";
 
 export const spatialMarkupSurfaces = [
     {
-      name: "canvas", tag: "Canvas", mode: "structured", outputs: [spatialTypes.canvas],
+      name: "canvas", tag: "Canvas", mode: "structured", outputs: [spatialTypes.canvas, spatialTypes.frame],
       vocabulary: {
-        summary: "Declares one Canvas: the pixel extent every Frame is measured inside.",
+        summary: "Declares the final raster viewport and publishes its full-picture Frame.",
         attributes: [
           { name: "id", kind: "identifier", required: true,
-            summary: "Names the CanvasSpace Record this element publishes." },
+            summary: "Names the Canvas Record this element publishes." },
           { name: "width", kind: "literal", required: true,
             summary: "States how many pixels wide the Canvas is." },
           { name: "height", kind: "literal", required: true,
@@ -63,27 +58,33 @@ export const spatialMarkupSurfaces = [
         notes: [
           emptyNote,
           "`width` and `height` are positive whole numbers of pixels.",
-          "The coordinate system is fixed: the origin is top-left, x increases to the right, y increases downward and pixels are square.",
-          "The CanvasSpace is published under the bare `id`.",
+          "The @1 picture-plane convention is fixed: the origin is top-left, x increases to the right, y increases downward and pixels are square. These are protocol rules, not repeated Canvas fields.",
+          "The viewport is published as `.canvas`; its canonical full-picture Frame is published as `.bounds`.",
+        ],
+        ports: [
+          { name: "canvas", type: spatialTypes.canvas,
+            summary: "The final raster viewport and pixel basis." },
+          { name: "bounds", type: spatialTypes.frame,
+            summary: "The deterministic full-picture Frame `{0, 0, width, height}`." },
         ],
       },
     },
     {
       name: "point", tag: "Point", mode: "structured", outputs: [spatialTypes.point],
       vocabulary: {
-        summary: "Names one position on the Canvas in pixels.",
+        summary: "Names one position in the program picture plane, in pixels.",
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names the SpatialPoint Record this element publishes." },
           { name: "x", kind: "literal", required: true,
-            summary: "Places the Point this many pixels along the Canvas x axis." },
+            summary: "Places the Point this many pixels along the picture-plane x axis." },
           { name: "y", kind: "literal", required: true,
-            summary: "Places the Point this many pixels down the Canvas y axis." },
+            summary: "Places the Point this many pixels down the picture-plane y axis." },
         ],
         example: `<space:Point id="headline-origin" x="120" y="280"/>`,
         notes: [
           emptyNote,
-          "`x` and `y` are finite pixel numbers, so a Point may be fractional, negative or outside the Canvas.",
+          "`x` and `y` are finite pixel numbers, so a Point may be fractional, negative or outside the final viewport.",
           "The SpatialPoint is published under the bare `id`.",
         ],
       },
@@ -91,7 +92,7 @@ export const spatialMarkupSurfaces = [
     {
       name: "path", tag: "Path", mode: "structured", outputs: [spatialTypes.path],
       vocabulary: {
-        summary: "Draws one Path in Canvas pixels from an ordered list of commands.",
+        summary: "Draws one Path in program-picture pixels from an ordered list of commands.",
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names the SpatialPath Record this element publishes." },
@@ -100,42 +101,42 @@ export const spatialMarkupSurfaces = [
           { tag: "Move", cardinality: "many", summary: "Lifts the pen and starts a new subpath at a point.",
             attributes: [
               { name: "x", kind: "literal", required: true,
-                summary: "Starts the subpath this many pixels along the Canvas x axis." },
+                summary: "Starts the subpath this many pixels along the picture-plane x axis." },
               { name: "y", kind: "literal", required: true,
-                summary: "Starts the subpath this many pixels down the Canvas y axis." },
+                summary: "Starts the subpath this many pixels down the picture-plane y axis." },
             ] },
           { tag: "Line", cardinality: "many", summary: "Draws a straight segment to a point.",
             attributes: [
               { name: "x", kind: "literal", required: true,
-                summary: "Ends the segment this many pixels along the Canvas x axis." },
+                summary: "Ends the segment this many pixels along the picture-plane x axis." },
               { name: "y", kind: "literal", required: true,
-                summary: "Ends the segment this many pixels down the Canvas y axis." },
+                summary: "Ends the segment this many pixels down the picture-plane y axis." },
             ] },
           { tag: "Quadratic", cardinality: "many", summary: "Draws a quadratic curve to a point through one control point.",
             attributes: [
               { name: "control-x", kind: "literal", required: true,
-                summary: "Places the control point this many pixels along the Canvas x axis." },
+                summary: "Places the control point this many pixels along the picture-plane x axis." },
               { name: "control-y", kind: "literal", required: true,
-                summary: "Places the control point this many pixels down the Canvas y axis." },
+                summary: "Places the control point this many pixels down the picture-plane y axis." },
               { name: "x", kind: "literal", required: true,
-                summary: "Ends the curve this many pixels along the Canvas x axis." },
+                summary: "Ends the curve this many pixels along the picture-plane x axis." },
               { name: "y", kind: "literal", required: true,
-                summary: "Ends the curve this many pixels down the Canvas y axis." },
+                summary: "Ends the curve this many pixels down the picture-plane y axis." },
             ] },
           { tag: "Cubic", cardinality: "many", summary: "Draws a cubic curve to a point through two control points.",
             attributes: [
               { name: "control1-x", kind: "literal", required: true,
-                summary: "Places the control point leaving the current point this many pixels along the Canvas x axis." },
+                summary: "Places the control point leaving the current point this many pixels along the picture-plane x axis." },
               { name: "control1-y", kind: "literal", required: true,
-                summary: "Places the control point leaving the current point this many pixels down the Canvas y axis." },
+                summary: "Places the control point leaving the current point this many pixels down the picture-plane y axis." },
               { name: "control2-x", kind: "literal", required: true,
-                summary: "Places the control point entering the end point this many pixels along the Canvas x axis." },
+                summary: "Places the control point entering the end point this many pixels along the picture-plane x axis." },
               { name: "control2-y", kind: "literal", required: true,
-                summary: "Places the control point entering the end point this many pixels down the Canvas y axis." },
+                summary: "Places the control point entering the end point this many pixels down the picture-plane y axis." },
               { name: "x", kind: "literal", required: true,
-                summary: "Ends the curve this many pixels along the Canvas x axis." },
+                summary: "Ends the curve this many pixels along the picture-plane x axis." },
               { name: "y", kind: "literal", required: true,
-                summary: "Ends the curve this many pixels down the Canvas y axis." },
+                summary: "Ends the curve this many pixels down the picture-plane y axis." },
             ] },
           { tag: "Close", cardinality: "many", summary: "Closes the open subpath back to where it began.",
             attributes: [] },
@@ -173,42 +174,36 @@ export const spatialMarkupSurfaces = [
       },
     },
     {
-      name: "region-timeline", tag: "RegionTimeline", mode: "structured", outputs: [spatialTypes.regionTimeline],
+      name: "map", tag: "Map", mode: "structured", outputs: [spatialTypes.map2D],
       vocabulary: {
-        summary: "Resolves externally measured, normalized AABB sequences into one frame-exact set of named Canvas-space region tracks.",
+        summary: "Names one affine mapping from a local pixel plane into the program picture plane.",
         attributes: [
-          { name: "id", kind: "identifier", required: true,
-            summary: "Names the SpatialRegionTimeline Record this element publishes." },
-          { name: "within", kind: "reference", required: true, accepts: [spatialTypes.canvas],
-            summary: "Chooses the Canvas that normalized regions are measured inside." },
-          { name: "recipe", kind: "reference", required: true, accepts: [svsRecipeType],
-            summary: "Chooses the external frame-indexed region data.",
-            recipe: [
-              { name: "frame-count", required: true,
-                summary: "States the exact number of ProgramSpace Frames covered by every named track." },
-              { name: "tracks", required: true,
-                summary: "Lists objects shaped as {id, regions}; each regions array contains frame-count normalized [x, y, width, height] AABBs or null when the region is absent." },
-            ] },
+          { name: "id", kind: "identifier", required: true, summary: "Names the SpatialMap2D Record this element publishes." },
+          { name: "xx", kind: "literal", required: true, summary: "Maps source x into picture x." },
+          { name: "xy", kind: "literal", required: true, summary: "Maps source y into picture x." },
+          { name: "yx", kind: "literal", required: true, summary: "Maps source x into picture y." },
+          { name: "yy", kind: "literal", required: true, summary: "Maps source y into picture y." },
+          { name: "tx", kind: "literal", required: true, summary: "Translates the result along picture x in pixels." },
+          { name: "ty", kind: "literal", required: true, summary: "Translates the result along picture y in pixels." },
         ],
-        example: `<space:RegionTimeline id="heads" within={vertical} recipe={tracking.heads.default}/>` ,
+        ports: [{ name: "", type: spatialTypes.map2D, summary: "The resolved affine mapping, addressed by the element's own id." }],
+        example: `<space:Map id="turned" xx="0" xy="-0.5" yx="0.5" yy="0" tx="920" ty="180"/>`,
         notes: [
           emptyNote,
-          "Detection and tracking happen before authoring; this Surface consumes finished numeric evidence and never invokes them during a Build.",
-          "The array index is the ProgramSpace Frame; the Surface performs no timestamp conversion, interpolation, smoothing or identity inference.",
-          "Each normalized AABB lies inside [0, 1] and is resolved into Canvas pixels during author compilation; null remains explicit absence.",
-          "Track ids are ordinary external labels; a consumer may interpret them as Script Roles without Spatial knowing what a Role is.",
+          "The equations are `x' = xx*x + xy*y + tx` and `y' = yx*x + yy*y + ty`.",
+          "All six numbers are finite. The author is responsible for deliberate reflection, collapse or placement outside the Canvas.",
         ],
       },
     },
     {
       name: "frame", tag: "Frame", mode: "structured", outputs: [spatialTypes.frame, spatialTypes.frameEdgesProgram],
       vocabulary: {
-        summary: "Places one Frame by its four edges inside a Canvas or a parent Frame.",
+        summary: "Places one Frame by its four edges inside a parent Frame.",
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names the Frame this element publishes." },
-          { name: "within", kind: "reference", required: true, accepts: [spatialTypes.canvas, spatialTypes.frame],
-            summary: "Chooses the Canvas or parent Frame the four edges are measured against." },
+          { name: "within", kind: "reference", required: true, accepts: [spatialTypes.frame],
+            summary: "Chooses the parent Frame the four edges are measured against." },
           { name: "left", kind: "literal", required: true,
             summary: "Places the left edge, measured from the parent's left." },
           { name: "top", kind: "literal", required: true,
@@ -222,7 +217,7 @@ export const spatialMarkupSurfaces = [
           { name: "", type: spatialTypes.frame,
             summary: "The resolved Frame, addressed by the element's own id." },
         ],
-        example: `<space:Frame id="safe" within={vertical} left="6%" top="4%" right="94%" bottom="96%"/>`,
+        example: `<space:Frame id="safe" within={vertical.bounds} left="6%" top="4%" right="94%" bottom="96%"/>`,
         notes: [
           emptyNote,
           lengthNote,
@@ -238,8 +233,8 @@ export const spatialMarkupSurfaces = [
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names the Frame this element publishes." },
-          { name: "within", kind: "reference", required: true, accepts: [spatialTypes.canvas, spatialTypes.frame],
-            summary: "Chooses the Canvas or parent Frame the position and size are measured against." },
+          { name: "within", kind: "reference", required: true, accepts: [spatialTypes.frame],
+            summary: "Chooses the parent Frame the position and size are measured against." },
           { name: "x", kind: "literal", required: true,
             summary: "Places the anchor point along the parent's width." },
           { name: "y", kind: "literal", required: true,
@@ -275,8 +270,8 @@ export const spatialMarkupSurfaces = [
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names the Frame this element publishes." },
-          { name: "within", kind: "reference", required: true, accepts: [spatialTypes.canvas, spatialTypes.frame],
-            summary: "Chooses the Canvas or parent Frame the position and size are measured against." },
+          { name: "within", kind: "reference", required: true, accepts: [spatialTypes.frame],
+            summary: "Chooses the parent Frame the position and size are measured against." },
           { name: "x", kind: "literal", required: true,
             summary: "Places the anchor point along the parent's width." },
           { name: "y", kind: "literal", required: true,
@@ -315,27 +310,25 @@ export const spatialManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: spatialModuleRef.name,
   version: spatialModuleRef.version,
-  dependencies: [{ module: svsRecipeType.module }],
+  dependencies: [],
   types: [
     { name: spatialTypes.canvas.name },
     { name: spatialTypes.point.name },
     { name: spatialTypes.frame.name },
-    { name: spatialTypes.regionTimeline.name },
     { name: spatialTypes.path.name },
     { name: spatialTypes.extent.name },
+    { name: spatialTypes.map2D.name },
     { name: spatialTypes.fit.name },
-    { name: spatialTypes.fitted.name },
     { name: spatialTypes.frameEdgesProgram.name },
     { name: spatialTypes.anchoredFrameProgram.name },
     { name: spatialTypes.aspectFrameProgram.name },
   ],
   capabilities: [],
   producers: [
-    { name: spatialProducers.canvasFrame.name, inputs: [{ name: "canvas", type: spatialTypes.canvas }], outputs: [{ name: "frame", type: spatialTypes.frame }], needs: [] },
     { name: spatialProducers.frameEdges.name, inputs: [{ name: "parent", type: spatialTypes.frame }, { name: "program", type: spatialTypes.frameEdgesProgram }], outputs: [{ name: "frame", type: spatialTypes.frame }], needs: [] },
     { name: spatialProducers.anchoredFrame.name, inputs: [{ name: "parent", type: spatialTypes.frame }, { name: "program", type: spatialTypes.anchoredFrameProgram }], outputs: [{ name: "frame", type: spatialTypes.frame }], needs: [] },
     { name: spatialProducers.aspectFrame.name, inputs: [{ name: "parent", type: spatialTypes.frame }, { name: "extent", type: spatialTypes.extent }, { name: "program", type: spatialTypes.aspectFrameProgram }], outputs: [{ name: "frame", type: spatialTypes.frame }], needs: [] },
-    { name: spatialProducers.fitContent.name, inputs: [{ name: "frame", type: spatialTypes.frame }, { name: "extent", type: spatialTypes.extent }, { name: "fit", type: spatialTypes.fit }], outputs: [{ name: "fitted", type: spatialTypes.fitted }], needs: [] },
+    { name: spatialProducers.resolveContentFit.name, inputs: [{ name: "frame", type: spatialTypes.frame }, { name: "extent", type: spatialTypes.extent }, { name: "fit", type: spatialTypes.fit }], outputs: [{ name: "mapping", type: spatialTypes.map2D }], needs: [] },
   ],
 };
 export const spatialDependency = { module: spatialModuleRef } as const;

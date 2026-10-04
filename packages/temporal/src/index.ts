@@ -1,7 +1,5 @@
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
 import { timelineDependency, timelineTypes } from "@qflow/timeline";
-import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
 
 const string = { kind: "string", minLength: 1 } as const;
 const unsignedInteger = { kind: "number", integer: true, minimum: 0 } as const;
@@ -13,35 +11,18 @@ const duration: ValueSchema = { kind: "oneOf", variants: [
   object({ unit: { schema: { kind: "literal", value: "seconds" } }, numerator: { schema: integer }, denominator: { schema: { kind: "number", integer: true, minimum: 1 } } }),
 ] };
 const instant: ValueSchema = { kind: "oneOf", variants: [
-  ...["program.start", "program.end", "selection.start", "selection.end", "segment.start", "segment.end", "moment.cue"].map((ref) => object({
+  ...["timeline.start", "timeline.end"].map((ref) => object({
     ref: { schema: { kind: "literal", value: ref } }, offset: { schema: duration, optional: true },
   })),
   object({ ref: { schema: { kind: "literal", value: "absolute" } }, at: { schema: duration }, offset: { schema: duration, optional: true } }),
-] };
-const sourceSchema: ValueSchema = { kind: "oneOf", variants: [
-  ...["program", "selection", "segment", "moment"].map((kind) => object({
-    spaceId: { schema: string }, narrativeId: { schema: string, optional: true },
-    kind: { schema: { kind: "literal", value: kind } }, id: { schema: string },
-  })),
-] };
-const authoritySchema: ValueSchema = { kind: "oneOf", variants: [
-  object({
-    kind: { schema: { kind: "literal", value: "semantic" } },
-    boundary: { schema: { kind: "string", enum: ["start", "end", "cue"] } },
-  }),
-  object({
-    kind: { schema: { kind: "literal", value: "parameter" } },
-    binding: { schema: string },
-    relation: { schema: { kind: "string", enum: ["direct", "after-start", "before-end"] } },
-  }),
-  object({ kind: { schema: { kind: "literal", value: "fixed" } } }),
 ] };
 const frameSpanSchema: ValueSchema = object({
   startFrame: { schema: unsignedInteger },
   endFrameExclusive: { schema: { kind: "number", integer: true, minimum: 1 } },
 });
 
-export * from "./location.js";
+export * from "./domain.js";
+export * from "./extent.js";
 export * from "./projection.js";
 export * from "./schedule.js";
 export * from "./sample.js";
@@ -49,24 +30,33 @@ export type * from "./types.js";
 
 export const temporalModuleRef = { name: "@qflow/temporal", version: "1" } as const;
 export const temporalTypes = {
+  duration: { module: temporalModuleRef, name: "TemporalDuration" },
+  extent: { module: temporalModuleRef, name: "TemporalExtent" },
+  shiftSpec: { module: temporalModuleRef, name: "TemporalShiftSpec" },
+  localDomain: { module: temporalModuleRef, name: "LocalTemporalDomain" },
   instantSpec: { module: temporalModuleRef, name: "TemporalInstantSpec" },
   instant: { module: temporalModuleRef, name: "TemporalInstant" },
   windowSpec: { module: temporalModuleRef, name: "TemporalWindowSpec" },
   window: { module: temporalModuleRef, name: "TemporalWindow" },
 } satisfies Record<string, TypeRef>;
 export const temporalProducers = {
+  extentFromDomain: { module: temporalModuleRef, name: "extent-from-domain" },
+  extentFromDuration: { module: temporalModuleRef, name: "extent-from-duration" },
+  shiftInstant: { module: temporalModuleRef, name: "shift-instant" },
+  reuseInstant: { module: temporalModuleRef, name: "reuse-instant" },
   projectProgramInstant: { module: temporalModuleRef, name: "project-program-instant" },
-  projectSelectionInstant: { module: temporalModuleRef, name: "project-selection-instant" },
-  projectSegmentInstant: { module: temporalModuleRef, name: "project-segment-instant" },
-  projectMomentInstant: { module: temporalModuleRef, name: "project-moment-instant" },
   composeWindow: { module: temporalModuleRef, name: "compose-window" },
 } satisfies Record<string, ProducerRef>;
 export const temporalManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: temporalModuleRef.name,
   version: temporalModuleRef.version,
-  dependencies: [narrativeDependency, programSpaceDependency, timelineDependency],
+  dependencies: [timelineDependency],
   types: [
+    { name: temporalTypes.duration.name },
+    { name: temporalTypes.extent.name },
+    { name: temporalTypes.shiftSpec.name },
+    { name: temporalTypes.localDomain.name },
     { name: temporalTypes.instantSpec.name },
     { name: temporalTypes.instant.name },
     { name: temporalTypes.windowSpec.name },
@@ -74,17 +64,21 @@ export const temporalManifest: ModuleManifest = {
   ],
   capabilities: [],
   producers: [
+    { name: temporalProducers.extentFromDomain.name,
+      inputs: [{ name: "domain", type: temporalTypes.localDomain }],
+      outputs: [{ name: "extent", type: temporalTypes.extent }], needs: [] },
+    { name: temporalProducers.extentFromDuration.name,
+      inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "duration", type: temporalTypes.duration }],
+      outputs: [{ name: "extent", type: temporalTypes.extent }], needs: [] },
+    { name: temporalProducers.shiftInstant.name,
+      inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "instant", type: temporalTypes.instant },
+        { name: "extent", type: temporalTypes.extent }, { name: "spec", type: temporalTypes.shiftSpec }],
+      outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
+    { name: temporalProducers.reuseInstant.name,
+      inputs: [{ name: "instant", type: temporalTypes.instant }],
+      outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
     { name: temporalProducers.projectProgramInstant.name,
       inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "spec", type: temporalTypes.instantSpec }],
-      outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
-    { name: temporalProducers.projectSelectionInstant.name,
-      inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "selection", type: narrativeTypes.selection }, { name: "spec", type: temporalTypes.instantSpec }],
-      outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
-    { name: temporalProducers.projectSegmentInstant.name,
-      inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "segment", type: narrativeTypes.excerpt }, { name: "spec", type: temporalTypes.instantSpec }],
-      outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
-    { name: temporalProducers.projectMomentInstant.name,
-      inputs: [{ name: "timeline", type: timelineTypes.track }, { name: "moment", type: narrativeTypes.moment }, { name: "spec", type: temporalTypes.instantSpec }],
       outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [] },
     { name: temporalProducers.composeWindow.name,
       inputs: [{ name: "spec", type: temporalTypes.windowSpec }, { name: "start", type: temporalTypes.instant }, { name: "end", type: temporalTypes.instant }],
@@ -93,12 +87,33 @@ export const temporalManifest: ModuleManifest = {
 };
 export const temporalDependency = { module: temporalModuleRef } as const;
 
+export const localTemporalDomainSchema: ValueSchema = object({
+  id: { schema: string },
+  frameRate: { schema: object({
+    numerator: { schema: { kind: "number", integer: true, minimum: 1 } },
+    denominator: { schema: { kind: "number", integer: true, minimum: 1 } },
+  }) },
+  frameCount: { schema: { kind: "number", integer: true, minimum: 1 } },
+});
+export const temporalExtentSchema: ValueSchema = object({
+  frameRate: { schema: object({
+    numerator: { schema: { kind: "number", integer: true, minimum: 1 } },
+    denominator: { schema: { kind: "number", integer: true, minimum: 1 } },
+  }) },
+  frameCount: { schema: unsignedInteger },
+});
+export const temporalDurationSchema: ValueSchema = duration;
+export const temporalShiftSpecSchema: ValueSchema = object({
+  id: { schema: string }, subjectId: { schema: string },
+  direction: { schema: { kind: "oneOf", variants: [
+    { kind: "literal", value: 1 }, { kind: "literal", value: -1 },
+  ] } },
+});
 export const temporalInstantSpecSchema: ValueSchema = object({
-  id: { schema: string }, subjectId: { schema: string }, projection: { schema: instant }, authority: { schema: authoritySchema },
+  id: { schema: string }, subjectId: { schema: string }, projection: { schema: instant },
 });
 export const temporalInstantSchema: ValueSchema = object({
-  id: { schema: string }, subjectId: { schema: string }, source: { schema: sourceSchema }, projection: { schema: instant },
-  authority: { schema: authoritySchema }, frame: { schema: unsignedInteger },
+  id: { schema: string }, subjectId: { schema: string }, timelineId: { schema: string }, frame: { schema: unsignedInteger },
 });
 export const temporalWindowSpecSchema: ValueSchema = object({ id: { schema: string }, subjectId: { schema: string } });
 export const temporalWindowSchema: ValueSchema = object({

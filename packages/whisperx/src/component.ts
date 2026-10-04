@@ -1,6 +1,6 @@
 import { plannedNeedInputs } from "@qflow/component-kit";
 import type { ComponentPackage } from "@qflow/component-kit";
-import type { SpeechEvidenceAudio } from "@qflow/speech";
+import type { SpeechEvidenceAudio } from "@qflow/speech-evidence";
 import type { CanonicalValue, StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 

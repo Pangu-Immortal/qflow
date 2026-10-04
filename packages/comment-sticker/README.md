@@ -21,7 +21,7 @@ The author surface keeps the three independent concerns visible:
 
 <comment:Style id="social-comment" recipe={styles.comment} font={fonts.ui}/>
 
-<comment:Track id="comments" canvas={video.canvas} timeline={speech.timeline}>
+<comment:Track id="comments" timeline={speech.timeline}>
   <comment:Sticker
     id="opening-comment"
     comment={comment-copy}
@@ -29,7 +29,7 @@ The author surface keeps the three independent concerns visible:
     style={social-comment}
     author={comment-author}
     meta="Featured comment"
-    during="program"
+    during="timeline"
   />
 </comment:Track>
 ```

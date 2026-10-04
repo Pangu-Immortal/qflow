@@ -1,16 +1,14 @@
 import type { Narrative } from "@qflow/narrative";
-import { sealProgramSpace } from "@qflow/program-space";
-import { materializeSemanticTake } from "@qflow/speech";
 import { sealAlignedTranscriptEvidence } from "@qflow/speech-evidence";
 import type { AlignedTranscriptEvidence, SpeechCharacterEvidence, SpeechWordEvidence } from "@qflow/speech-evidence";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fixtureResource } from "../../../test/fixture-resource.js";
 
 import { narrativeValue, parseScript as parseScriptSource } from "@qflow/script";
 import {
   SpeechAlignmentError,
   alignWordGroups,
+  materializeNarrativeAlignment,
 } from "@qflow/speech-alignment";
 import { locateAlignedSegmentTiming } from "../src/locate.js";
 import type { AlignmentBasis } from "../src/locate.js";
@@ -60,7 +58,10 @@ function evidence(args: {
   readonly chars?: readonly SpeechCharacterEvidence[];
   readonly vad?: readonly { readonly startSec: number; readonly endSec: number }[];
 }): AlignedTranscriptEvidence {
+  const rate = args.basis.frameDomain.frameRate;
   return sealAlignedTranscriptEvidence({
+    domainId: args.basis.domainId,
+    sampleFrames: Math.round(args.basis.frameDomain.frameCount * 16_000 * rate.denominator / rate.numerator),
     passages: [
       {
         words: args.words.map(wordEvidence),
@@ -81,13 +82,10 @@ function speechBasis(
   durationSec = 2,
 ): AlignmentBasis {
   if (narrative.segments.length !== 1) throw new Error("Test alignment requires one Segment.");
-  const programSpace = sealProgramSpace({ id: "test-space", durationSec,
-    frameRate: { numerator: 1_000, denominator: 1 },
-  });
-  const audioDigest = fixtureResource(`fixture:audio:${narrative.segments.map((segment) => segment.id).join("+")}:${durationSec}`);
+  const frameDomain = { frameRate: { numerator: 1_000, denominator: 1 }, frameCount: Math.round(durationSec * 1_000) };
   return {
-    programSpace,
-    audio: { kind: "blob", resource: audioDigest, size: 1, mediaType: "audio/wav" },
+    domainId: "test-domain",
+    frameDomain,
     segments: [{
       segmentId: narrative.segments[0]!.id,
       startFrame: 0,
@@ -130,7 +128,7 @@ test("exact transcript words cover every Script and Segment anchor", () => {
   });
 
   assert.equal(map.tokens.length, 2);
-  assert.equal(map.anchors.length, 2 * narrative.tokens.length + 2 * narrative.segments.length);
+  assert.equal(map.boundaries.length, 2 * narrative.tokens.length + 2 * narrative.segments.length);
   assert.deepEqual(
     map.tokens.map((token) => [token.startFrame, token.endFrameExclusive]),
     [
@@ -138,10 +136,10 @@ test("exact transcript words cover every Script and Segment anchor", () => {
       [500, 900],
     ],
   );
-  assert.equal(new Set(map.anchors.map((anchor) => anchor.identity)).size, map.anchors.length);
+  assert.equal(new Set(map.boundaries.map((boundary) => boundary.id)).size, map.boundaries.length);
 });
 
-test("a measured Segment-local map becomes a self-contained SemanticTake", () => {
+test("a measured Segment-local map becomes a media-free NarrativeAlignment", () => {
   const narrative = parseScript("materialize.svml", "<line>Hello world.</line>");
   const basis = speechBasis(narrative, 2);
   const map = locate(narrative, {
@@ -151,22 +149,17 @@ test("a measured Segment-local map becomes a self-contained SemanticTake", () =>
     ],
   });
   const segment = narrative.segments[0]!;
-  const take = materializeSemanticTake(
+  const alignment = materializeNarrativeAlignment(
     narrative,
     { narrativeId: narrative.id, kind: "segment", id: segment.id, tokenStart: segment.tokenStart, tokenEndExclusive: segment.tokenEndExclusive },
-    {
-      timeline: { frameRate: { numerator: 1_000, denominator: 1 }, frameCount: 2_000 },
-      visual: { artifact: { kind: "blob", resource: fixtureResource("materialize:video"), size: 1, mediaType: "video/mp4" }, width: 720, height: 1280 },
-      audio: { artifact: { kind: "blob", resource: fixtureResource("materialize:audio"), size: 1, mediaType: "audio/wav" } },
-    },
+    { id: "speech-domain", frameRate: { numerator: 1_000, denominator: 1 }, frameCount: 2_000 },
     map,
   );
-  assert.deepEqual(take.tokens.map((token) => [token.text, token.startFrame, token.endFrameExclusive]), [
-    ["Hello", 100, 400],
-    ["world", 500, 900],
-  ]);
-  assert.equal(take.segment.startFrame, 0);
-  assert.equal(take.segment.endFrameExclusive, 2_000);
+  assert.deepEqual(alignment.tokens.map((token) => [token.text, token.startBoundaryId, token.endBoundaryId]),
+    narrative.tokens.map((token) => [token.text, token.startAnchorId, token.endAnchorId]));
+  assert.equal(alignment.boundaries.find((boundary) => boundary.id === segment.startAnchorId)?.frame, 0);
+  assert.equal(alignment.boundaries.find((boundary) => boundary.id === segment.endAnchorId)?.frame, 2_000);
+  assert.equal("media" in alignment, false);
 });
 
 test("M:1 uses evidence character times instead of dividing a merged word by length", () => {
@@ -326,12 +319,10 @@ test("a collapsed WhisperX word is assigned the available interval between its n
 test("three Script words may share the two video frames covered by one evidence word", () => {
   const narrative = parseScript("pigeonhole.svml", "<line>alpha beta gamma</line>");
   const original = speechBasis(narrative, 1);
-  const programSpace = sealProgramSpace({ id: "test-space", durationSec: 1,
-    frameRate: { numerator: 32, denominator: 1 },
-  });
+  const frameDomain = { frameRate: { numerator: 32, denominator: 1 }, frameCount: 32 };
   const basis: AlignmentBasis = {
     ...original,
-    programSpace,
+    frameDomain,
     segments: [{ segmentId: "line", startFrame: 0, endFrameExclusive: 32 }],
   };
   const map = locateAlignedSegmentTiming(narrative, basis, evidence({
@@ -345,34 +336,30 @@ test("three Script words may share the two video frames covered by one evidence 
   ]);
 });
 
-test("Evidence is interpreted only through the explicitly connected alignment clock", () => {
+test("Evidence cannot be reinterpreted through another local frame domain", () => {
   const narrative = parseScript("affinity.svml", "<line>Hello world.</line>");
   const basis = speechBasis(narrative, 2);
   const mismatched = evidence({
     basis,
     words: [{ text: "Hello", startSec: 0.1, endSec: 0.4 }, { text: "world", startSec: 0.5, endSec: 0.9 }],
   });
-  const anotherSpace = sealProgramSpace({ id: "test-space", durationSec: 2,
-    frameRate: { numerator: 30, denominator: 1 },
-  });
+  const anotherFrameDomain = { frameRate: { numerator: 30, denominator: 1 }, frameCount: 60 };
   const anotherBasis: AlignmentBasis = {
     ...basis,
-    programSpace: anotherSpace,
+    domainId: "another-domain",
+    frameDomain: anotherFrameDomain,
     segments: [{ segmentId: "line", startFrame: 0, endFrameExclusive: 60 }],
   };
-  const map = locateAlignedSegmentTiming(narrative, anotherBasis, mismatched);
-  assert.equal(map.tokens[0]?.startFrame, 3);
+  assert.throws(() => locateAlignedSegmentTiming(narrative, anotherBasis, mismatched), /another local domain/u);
 });
 
-test("the final map is quantized once into the selected ProgramSpace", () => {
+test("the final map is quantized once into the selected Timeline", () => {
   const narrative = parseScript("frames.svml", "<line>Hello.</line>");
   const original = speechBasis(narrative, 1);
-  const programSpace = sealProgramSpace({ id: "test-space", durationSec: 1,
-    frameRate: { numerator: 30, denominator: 1 },
-  });
+  const frameDomain = { frameRate: { numerator: 30, denominator: 1 }, frameCount: 30 };
   const basis: AlignmentBasis = {
     ...original,
-    programSpace,
+    frameDomain,
     segments: [{ segmentId: "line", startFrame: 0, endFrameExclusive: 30 }],
   };
   const map = locateAlignedSegmentTiming(narrative, basis, evidence({
@@ -385,7 +372,7 @@ test("the final map is quantized once into the selected ProgramSpace", () => {
     [map.tokens[0]?.startFrame, map.tokens[0]?.endFrameExclusive],
     [3, 9],
   );
-  assert.equal(map.anchors.every((anchor) => Number.isSafeInteger(anchor.frame)), true);
+  assert.equal(map.boundaries.every((boundary) => Number.isSafeInteger(boundary.frame)), true);
 });
 
 test("a backwards character measurement is treated as missing token timing", () => {

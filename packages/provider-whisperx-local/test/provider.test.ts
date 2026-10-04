@@ -1,10 +1,9 @@
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { sealSpeechEvidenceAudio, speechTypes } from "@qflow/speech";
+import { sealSpeechEvidenceAudio, speechEvidenceTypes } from "@qflow/speech-evidence";
 import assert from "node:assert/strict";
 import { MemoryResourceStore, EndpointRegistry } from "@qflow/driver-node";
 import type { Need } from "@qflow/protocol";
-import { speechEvidenceTypes } from "@qflow/speech-evidence";
 import {
   whisperXCapabilities,
   whisperXRequestForEvidenceAudio,
@@ -107,6 +106,7 @@ for (const language of ["en", "ko"]) test(`local Provider preserves ${language} 
     const resources = new MemoryResourceStore();
     const artifact = await resources.put(expected, "audio/wav");
     const evidenceAudio = sealSpeechEvidenceAudio({
+      domainId: "provider-test-domain",
       artifact,
       sampleFrames: 32_000,
     });
@@ -137,7 +137,9 @@ for (const language of ["en", "ko"]) test(`local Provider preserves ${language} 
     assert.equal(output.value.kind, "inline");
     const value = output.value.kind === "inline" ? output.value.value : null;
     assert.equal((value as { readonly passages?: readonly unknown[] }).passages?.length, 1);
-    assert.equal(speechTypes.evidenceAudio.name, "SpeechEvidenceAudio");
+    assert.equal((value as { readonly domainId?: string }).domainId, evidenceAudio.domainId);
+    assert.equal((value as { readonly sampleFrames?: number }).sampleFrames, evidenceAudio.sampleFrames);
+    assert.equal(speechEvidenceTypes.audio.name, "SpeechEvidenceAudio");
   } finally {
     globalThis.fetch = originalFetch;
   }

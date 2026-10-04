@@ -1,6 +1,6 @@
 import { createMarkupSurfaceHostFacet } from "@qflow/markup";
 import {
-  decodeWhisperXSemanticTakeSurface, whisperXComponent,
+  decodeWhisperXAlignmentSurface, whisperXComponent,
   whisperXManifest, whisperXModuleRef,
   whisperXMarkupSurfaces,
 } from "./index.js";
@@ -11,8 +11,8 @@ export const qflowPackage = {
   components: [whisperXComponent],
   hostFacets: [createMarkupSurfaceHostFacet({
     module: whisperXModuleRef,
-    declaration: whisperXMarkupSurfaces.find((item) => item.name === "semantic-take")!,
-    handler: decodeWhisperXSemanticTakeSurface,
+    declaration: whisperXMarkupSurfaces.find((item) => item.name === "alignment")!,
+    handler: decodeWhisperXAlignmentSurface,
   })],
 };
 export default qflowPackage;

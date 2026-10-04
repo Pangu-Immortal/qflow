@@ -12,15 +12,15 @@
   <time:Timeline id="animation" clock={animation-clock} end="8s"/>
   <spatial:Canvas id="canvas" width="540" height="960"/>
   <fonts:Stack id="font" family="inter" weight="600" style="normal"/>
-  <chat:Scene id="conversation" timeline={animation.timeline} canvas={canvas} font={font}
-    during="program" title="Launch crew">
+  <chat:Scene id="conversation" timeline={animation.timeline} within={canvas.bounds} font={font}
+    during="timeline" title="Launch crew">
     <chat:Message id="question" sender="Maya" side="left" at="0.5s" text="Are we ready to launch?"/>
     <chat:Message id="reply" sender="Leo" side="right" at="2s" text="The video is ready."/>
     <chat:Message id="turn" sender="Maya" side="left" at="3.5s" text="Great. One tiny change..."/>
     <chat:Message id="reveal" sender="Leo" side="right" at="5.2s" text="I left the whole scene editable."/>
   </chat:Scene>
-  <film:Film id="main" canvas={canvas} timeline={animation.timeline} appearance={style.film.main}>
-    <film:Track source={conversation.track}/>
+  <film:Film id="main" canvas={canvas.canvas} timeline={animation.timeline} appearance={style.film.main}>
+    <film:Track source={conversation.visual}/>
   </film:Film>
   <render:Video id="final" composition={main.composition} timeline={animation.timeline}/>
 </svml>

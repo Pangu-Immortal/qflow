@@ -28,7 +28,7 @@ export function semanticGestureSpan(
     const end = byId.get(target.endAnchorId);
     if (!start || !end || start.order > end.order) return undefined;
     if (temporal.kind === "instant") {
-      if (temporal.authority.kind !== "semantic") return undefined;
+      if (temporal.authority.kind !== "domain") return undefined;
       if (temporal.authority.boundary === "start" && target.endAnchorId !== semantic.endAnchorId
         || temporal.authority.boundary === "end" && target.startAnchorId !== semantic.startAnchorId) return undefined;
       const frame = temporal.authority.boundary === "start" ? start.frame : end.frame;
@@ -111,7 +111,7 @@ export function chooseSemanticGesture(input: {
     }
     return undefined;
   }
-  const boundary = temporal.kind === "instant" && temporal.authority.kind === "semantic"
+  const boundary = temporal.kind === "instant" && temporal.authority.kind === "domain"
     ? temporal.authority.boundary : handle.gesture === "trim-start" ? "start" : "end";
   const current = boundary === "start" ? start : end;
   const candidates = ranked(anchors, current).sort((a, b) =>

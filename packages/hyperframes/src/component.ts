@@ -1,6 +1,6 @@
 import type { ComponentPackage } from "@qflow/component-kit";
-import type { ProgramSpace } from "@qflow/program-space";
 import type { Composition } from "@qflow/composition";
+import type { Timeline } from "@qflow/timeline";
 import type { CanonicalValue, StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 
@@ -22,7 +22,7 @@ export const hyperframesComponent = {
           kind: "inline",
           value: canonicalize(compileHyperframesDocument(
             inline(inputs.composition!.value, "Composition") as unknown as Composition,
-            inline(inputs.space!.value, "ProgramSpace") as unknown as ProgramSpace,
+            inline(inputs.timeline!.value, "Timeline") as unknown as Timeline,
           )),
         },
       },

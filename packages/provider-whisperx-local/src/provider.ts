@@ -181,6 +181,8 @@ export function createLocalWhisperXProvider(config: CreateLocalWhisperXProviderO
           const response = raw.value as WhisperXServiceResponse;
           const passages = interpretWhisperXResponse(response, request.sampleFrames);
           const evidence: AlignedTranscriptEvidence = sealAlignedTranscriptEvidence({
+            domainId: request.domainId,
+            sampleFrames: request.sampleFrames,
             passages,
           });
           await context.reportProgress?.({ phase: "Word timing ready" });

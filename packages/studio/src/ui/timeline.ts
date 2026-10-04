@@ -174,7 +174,7 @@ export function createTimeline(store: Store): Timeline {
   const playheadFraction = (): number => {
     if (state === undefined) return 0.5;
     const shown = zoom.window();
-    const at = state.playhead.frame / Math.max(1, state.snapshot.space.frameCount);
+    const at = state.playhead.frame / Math.max(1, state.snapshot.timeline.frameCount);
     return Math.max(0, Math.min(1, (at - shown.start) / Math.max(1e-6, shown.end - shown.start)));
   };
   const zoomOut = (): void => zoom.pinch(playheadFraction(), 1.25);
@@ -185,13 +185,13 @@ export function createTimeline(store: Store): Timeline {
   element.querySelector<HTMLButtonElement>("[data-zoom-fit]")!.addEventListener("click", fit);
 
   const fps = (snapshot: StudioSnapshot): number =>
-    snapshot.space.frameRate.numerator / snapshot.space.frameRate.denominator;
+    snapshot.timeline.frameRate.numerator / snapshot.timeline.frameRate.denominator;
 
   const snapFrame = (frame: number): number => {
     if (state === undefined || lanes.clientWidth <= 0) return frame;
     const shown = zoom.window();
     const threshold = Math.max(1, Math.ceil(
-      (shown.end - shown.start) * state.snapshot.space.frameCount / lanes.clientWidth * 6,
+      (shown.end - shown.start) * state.snapshot.timeline.frameCount / lanes.clientWidth * 6,
     ));
     let nearest = frame;
     let distance = threshold + 1;
@@ -213,7 +213,7 @@ export function createTimeline(store: Store): Timeline {
     const across = Math.max(0, Math.min(1, (clientX - box.left) / box.width));
     const shown = zoom.window();
     return Math.floor(
-      (shown.start + across * (shown.end - shown.start)) * state.snapshot.space.frameCount,
+      (shown.start + across * (shown.end - shown.start)) * state.snapshot.timeline.frameCount,
     );
   };
   const frameAt = (clientX: number): number => snapFrame(rawFrameAt(clientX));
@@ -240,7 +240,7 @@ export function createTimeline(store: Store): Timeline {
   const semanticTarget = (edit: NonNullable<typeof activeEdit>, nextFrame: number) =>
     state === undefined ? undefined : chooseSemanticGesture({
       anchors: state.snapshot.semantic?.anchors ?? [], handle: edit.handle,
-      pointerStart: edit.startFrame, pointerNow: nextFrame, frameCount: state.snapshot.space.frameCount,
+      pointerStart: edit.startFrame, pointerNow: nextFrame, frameCount: state.snapshot.timeline.frameCount,
     });
 
   const absoluteWindowTarget = (
@@ -253,7 +253,7 @@ export function createTimeline(store: Store): Timeline {
     };
     const rawDelta = nextFrame - edit.startFrame;
     const delta = Math.max(-edit.clip.startFrame,
-      Math.min(state.snapshot.space.frameCount - edit.clip.endFrameExclusive, rawDelta));
+      Math.min(state.snapshot.timeline.frameCount - edit.clip.endFrameExclusive, rawDelta));
     if (edit.handle.gesture === "move") return {
       startFrame: edit.clip.startFrame + delta,
       endFrameExclusive: edit.clip.endFrameExclusive + delta,
@@ -298,7 +298,7 @@ export function createTimeline(store: Store): Timeline {
   });
   lanes.addEventListener("pointermove", (event) => {
     const frame = frameAt(event.clientX);
-    const at = place(frame, state?.snapshot.space.frameCount ?? 1, zoom.window()) * lanes.clientWidth;
+    const at = place(frame, state?.snapshot.timeline.frameCount ?? 1, zoom.window()) * lanes.clientWidth;
     hover.style.transform = `translate3d(${at}px,0,0)`;
     hoverTime.textContent = state === undefined ? "" : frameTimecode(state.snapshot, frame);
     hover.classList.add("visible");
@@ -308,8 +308,8 @@ export function createTimeline(store: Store): Timeline {
         : frameAt(event.clientX);
       const preview = previewWindow(activeEdit, nextFrame);
       if (preview !== undefined) {
-        const from = place(preview.startFrame, state.snapshot.space.frameCount, zoom.window());
-        const to = place(preview.endFrameExclusive, state.snapshot.space.frameCount, zoom.window());
+        const from = place(preview.startFrame, state.snapshot.timeline.frameCount, zoom.window());
+        const to = place(preview.endFrameExclusive, state.snapshot.timeline.frameCount, zoom.window());
         activeEdit.node.style.left = `${from * 100}%`;
         activeEdit.node.style.width = `max(2px, ${Math.max(0, to - from) * 100}%)`;
       }
@@ -388,7 +388,7 @@ export function createTimeline(store: Store): Timeline {
 
   const drawRuler = (snapshot: StudioSnapshot): void => {
     ruler.replaceChildren();
-    const frameCount = Math.max(1, snapshot.space.frameCount);
+    const frameCount = Math.max(1, snapshot.timeline.frameCount);
     const shown = zoom.window();
     const visibleFrames = Math.max(1, (shown.end - shown.start) * frameCount);
     const widthPx = Math.max(1, lanes.clientWidth);
@@ -410,7 +410,7 @@ export function createTimeline(store: Store): Timeline {
     const majorSeconds = secondCandidates.find((candidate) => candidate * pxPerSecond >= 112)
       ?? secondCandidates.at(-1)!;
     const firstSecond = Math.max(0, Math.ceil(startSecond - 1e-6));
-    const lastSecond = Math.min(Math.floor(snapshot.space.durationSec), Math.floor(endSecond + 1e-6));
+    const lastSecond = Math.min(Math.floor(snapshot.timeline.durationSec), Math.floor(endSecond + 1e-6));
     for (let seconds = firstSecond; seconds <= lastSecond; seconds += 1) {
       const frame = Math.min(frameCount, Math.round(seconds * exactRate));
       const at = place(frame, frameCount, shown);
@@ -541,8 +541,8 @@ export function createTimeline(store: Store): Timeline {
     const intentBand = lane.querySelector<HTMLElement>(".semantic-band-intent")!;
 
     for (const segment of snapshot.semantic.segments) {
-      const from = place(segment.startFrame, snapshot.space.frameCount, zoom.window());
-      const to = place(segment.endFrameExclusive, snapshot.space.frameCount, zoom.window());
+      const from = place(segment.startFrame, snapshot.timeline.frameCount, zoom.window());
+      const to = place(segment.endFrameExclusive, snapshot.timeline.frameCount, zoom.window());
       if (to <= 0 || from >= 1) continue;
       const node = document.createElement("button");
       node.type = "button";
@@ -571,8 +571,8 @@ export function createTimeline(store: Store): Timeline {
       node.addEventListener("dblclick", (event) => {
         event.stopPropagation();
         zoom.focus(
-          segment.startFrame / Math.max(1, snapshot.space.frameCount),
-          segment.endFrameExclusive / Math.max(1, snapshot.space.frameCount),
+          segment.startFrame / Math.max(1, snapshot.timeline.frameCount),
+          segment.endFrameExclusive / Math.max(1, snapshot.timeline.frameCount),
         );
       });
       node.addEventListener("keydown", (event) => {
@@ -584,8 +584,8 @@ export function createTimeline(store: Store): Timeline {
       segmentBand.append(node);
     }
     for (const token of snapshot.semantic.tokens) {
-      const wordFrom = place(token.startFrame, snapshot.space.frameCount, zoom.window());
-      const wordTo = place(token.endFrameExclusive, snapshot.space.frameCount, zoom.window());
+      const wordFrom = place(token.startFrame, snapshot.timeline.frameCount, zoom.window());
+      const wordTo = place(token.endFrameExclusive, snapshot.timeline.frameCount, zoom.window());
       if (wordTo <= 0 || wordFrom >= 1) continue;
       const word = document.createElement("span");
       word.className = "semantic-cell semantic-word";
@@ -622,8 +622,8 @@ export function createTimeline(store: Store): Timeline {
       wordBand.append(word);
     }
     for (const selection of snapshot.semantic.selections) {
-      const from = place(selection.startFrame, snapshot.space.frameCount, zoom.window());
-      const to = place(selection.endFrameExclusive, snapshot.space.frameCount, zoom.window());
+      const from = place(selection.startFrame, snapshot.timeline.frameCount, zoom.window());
+      const to = place(selection.endFrameExclusive, snapshot.timeline.frameCount, zoom.window());
       if (to <= 0 || from >= 1) continue;
       const node = document.createElement("button");
       node.type = "button";
@@ -649,7 +649,7 @@ export function createTimeline(store: Store): Timeline {
       nextSemanticNodes.push({ node, id: selection.id, start: selection.startFrame, end: selection.endFrameExclusive, kind: "selection" });
     }
     for (const moment of snapshot.semantic.moments) {
-      const at = place(moment.frame, snapshot.space.frameCount, zoom.window());
+      const at = place(moment.frame, snapshot.timeline.frameCount, zoom.window());
       if (at < 0 || at > 1) continue;
       const node = document.createElement("button");
       node.type = "button";
@@ -744,8 +744,8 @@ export function createTimeline(store: Store): Timeline {
       const laneWidth = lanes.clientWidth;
       // Stable order preserves Companion projection order when stack levels tie.
       for (const clip of track.clips.filter(clip => clip.band === band.id).sort((a, b) => a.stackOrder - b.stackOrder)) {
-        const from = place(clip.startFrame, snapshot.space.frameCount, zoom.window());
-        const to = place(clip.endFrameExclusive, snapshot.space.frameCount, zoom.window());
+        const from = place(clip.startFrame, snapshot.timeline.frameCount, zoom.window());
+        const to = place(clip.endFrameExclusive, snapshot.timeline.frameCount, zoom.window());
         if (to <= 0 || from >= 1) continue;
         const node = document.createElement("button");
         node.type = "button";
@@ -862,7 +862,7 @@ export function createTimeline(store: Store): Timeline {
   const paint = (): void => {
     if (state === undefined) return;
     const { snapshot, selection, playhead: head } = state;
-    const position = place(head.frame, snapshot.space.frameCount, zoom.window()) * lanes.clientWidth;
+    const position = place(head.frame, snapshot.timeline.frameCount, zoom.window()) * lanes.clientWidth;
     if (head.origin === "play" && position > lanes.clientWidth * 0.88 && zoom.window().end < 0.9999) {
       zoom.slide(Math.max(0.25, position / Math.max(1, lanes.clientWidth) - 0.18));
       return;

@@ -1,4 +1,6 @@
+import { captionDependency, captionTypes } from "@qflow/caption";
 import { narrativeDependency, narrativeSchema, narrativeTypes } from "@qflow/narrative";
+import { narrativeCaptionDependency, narrativeCaptionTypes } from "@qflow/narrative-caption";
 import { textDependency, textTypes } from "@qflow/text";
 import type { ModuleManifest, TypeRef } from "@qflow/protocol";
 
@@ -7,7 +9,8 @@ export const narrativeType: TypeRef = narrativeTypes.narrative;
 export const narrativeExcerptType: TypeRef = narrativeTypes.excerpt;
 export const narrativeSelectionType: TypeRef = narrativeTypes.selection;
 export const narrativeMomentType: TypeRef = narrativeTypes.moment;
-export const captionDocumentType: TypeRef = narrativeTypes.captionDocument;
+export const captionDocumentType: TypeRef = captionTypes.document;
+export const narrativeCaptionBindingType: TypeRef = narrativeCaptionTypes.binding;
 export { narrativeSchema };
 
 export const scriptMarkupSurfaces = [
@@ -22,6 +25,7 @@ export const scriptMarkupSurfaces = [
       narrativeSelectionType,
       narrativeMomentType,
       captionDocumentType,
+      narrativeCaptionBindingType,
     ],
     vocabulary: {
       summary: "Holds every spoken word as prose-first Segments and publishes the authored Narrative with the Selections, Moments and text projections the rest of the source reads.",
@@ -40,7 +44,9 @@ export const scriptMarkupSurfaces = [
         { name: "segment.<id>.speech", type: textTypes.text,
           summary: "One Segment as pronunciation only, with Role Cue labels dropped." },
         { name: "caption", type: captionDocumentType,
-          summary: "The Narrative's CaptionDocument exported as a narrow view: display Words, N:M Alignment Units, Cue breaks and speech correspondence." },
+          summary: "A source-neutral CaptionDocument: display Words, grouping units and Cue breaks." },
+        { name: "caption-binding", type: narrativeCaptionBindingType,
+          summary: "The explicit relation from Caption units to this Narrative's speech Tokens." },
         { name: "selection.<id>", type: narrativeSelectionType,
           summary: "One named range over the Narrative, reusable wherever a Selection is read." },
         { name: "moment.<id>", type: narrativeMomentType,
@@ -89,7 +95,7 @@ export const scriptManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: scriptModuleRef.name,
   version: scriptModuleRef.version,
-  dependencies: [narrativeDependency, textDependency],
+  dependencies: [captionDependency, narrativeDependency, narrativeCaptionDependency, textDependency],
   types: [],
   capabilities: [],
   producers: [],

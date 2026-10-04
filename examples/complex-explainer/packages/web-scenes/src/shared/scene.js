@@ -4,8 +4,8 @@ import { sealVisualTrack } from "@qflow/qflow/composition";
 import { browserProgram } from "@qflow/qflow/hyperframes";
 import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
 const styles = (o) => Object.entries(o).map(([name, value]) => ({ name, value }));
-export function scene(t, c, w, font, o, html, css, setup, events, entries, extra = {}) {
-  assertTemporalWindowFor(w, { subjectId: o.id, space: t });
+export function scene(t, within, w, font, o, html, css, setup, events, entries, extra = {}) {
+  assertTemporalWindowFor(w, { subjectId: o.id, timeline: t });
   const beats = Object.fromEntries(events.map((e) => [e.name, e.at.frame - w.span.startFrame]));
   const count = w.span.endFrameExclusive - w.span.startFrame;
   const backgrounds = [];
@@ -59,10 +59,10 @@ export function scene(t, c, w, font, o, html, css, setup, events, entries, extra
       kind: "video",
       artifact: m.visual.artifact,
       muted: true,
-      sampling: {
+      sourceTime: {
         sourceFrameRate: src,
         sourceFrameCount: m.timeline.frameCount,
-        segments: v.holdLast
+        pieces: v.holdLast
           ? (() => {
               const played = Math.min(
                   end - start,
@@ -71,14 +71,14 @@ export function scene(t, c, w, font, o, html, css, setup, events, entries, extra
                 segments = [
                   {
                     target: { startFrame: start, endFrameExclusive: start + played },
-                    sourceFrame: { numerator: 0, denominator: 1 },
+                    sourceAtStart: { numerator: 0, denominator: 1 },
                     rate,
                   },
                 ];
               if (start + played < end)
                 segments.push({
                   target: { startFrame: start + played, endFrameExclusive: end },
-                  sourceFrame: { numerator: m.timeline.frameCount - 1, denominator: 1 },
+                  sourceAtStart: { numerator: m.timeline.frameCount - 1, denominator: 1 },
                   rate: { numerator: 0, denominator: 1 },
                 });
               return segments;
@@ -96,7 +96,7 @@ export function scene(t, c, w, font, o, html, css, setup, events, entries, extra
                     a = start + i * n;
                   return {
                     target: { startFrame: a, endFrameExclusive: Math.min(end, a + n) },
-                    sourceFrame: { numerator: 0, denominator: 1 },
+                    sourceAtStart: { numerator: 0, denominator: 1 },
                     rate,
                   };
                 },
@@ -104,7 +104,7 @@ export function scene(t, c, w, font, o, html, css, setup, events, entries, extra
             : [
                 {
                   target: { startFrame: start, endFrameExclusive: end },
-                  sourceFrame: { numerator: 0, denominator: 1 },
+                  sourceAtStart: { numerator: 0, denominator: 1 },
                   rate,
                 },
               ],
@@ -113,13 +113,14 @@ export function scene(t, c, w, font, o, html, css, setup, events, entries, extra
   });
   return sealVisualTrack({
     id: o.id,
-    programSpaceId: t.id,
+    timelineId: t.id,
     visualIr: "qflow.visual-ir@1",
     presents: [
       {
         id: o.id,
+        order: 0,
+        z: o.z,
         span: w.span,
-        stacking: { order: o.z, tieBreak: o.id },
         elements: [
           {
             id: "scene",
@@ -142,9 +143,10 @@ export function scene(t, c, w, font, o, html, css, setup, events, entries, extra
             }),
             style: styles({
               position: "absolute",
-              inset: 0,
-              width: c.widthPx + "px",
-              height: c.heightPx + "px",
+              left: within.xPx + "px",
+              top: within.yPx + "px",
+              width: within.widthPx + "px",
+              height: within.heightPx + "px",
             }),
           },
           {

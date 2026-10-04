@@ -1,7 +1,9 @@
 import type { CanonicalValue, SourceRange, StoredValue, TypeRef } from "@qflow/protocol";
-import type { CaptionWordAttribute, Narrative, NarrativeMoment, NarrativeSegment, NarrativeSelection, NarrativeToken, NarrativeTurn } from "@qflow/narrative";
+import type { CaptionWordAttribute } from "@qflow/caption";
+import type { Narrative, NarrativeMoment, NarrativeSegment, NarrativeSelection, NarrativeToken, NarrativeTurn } from "@qflow/narrative";
 
-export type { CaptionWordAttribute, Narrative, SemanticAnchor } from "@qflow/narrative";
+export type { CaptionWordAttribute } from "@qflow/caption";
+export type { Narrative, SemanticAnchor } from "@qflow/narrative";
 
 export type Affinity = "left" | "right";
 
@@ -78,9 +80,9 @@ export type ParsedCaptionRegion = {
 
 export type ParsedNarrative = Omit<
   Narrative,
-  "id" | "segments" | "tokens" | "turns" | "selections" | "moments" | "caption"
+  "id" | "segments" | "tokens" | "turns" | "selections" | "moments"
 > & {
-  /** Exact Script body range, used only for source-preserving Program-boundary edits. */
+  /** Exact Script body range, used for source-preserving edits and comparisons. */
   readonly sourceRange: SourceRange;
   readonly segments: readonly ParsedSegment[];
   readonly tokens: readonly ParsedToken[];

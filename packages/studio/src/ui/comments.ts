@@ -61,7 +61,7 @@ export function createComments(store: Store, stage: Stage) {
     const state = store.current();
     if (state === undefined) return undefined;
     return {
-      at: state.playhead.frame * state.snapshot.space.frameRate.denominator / state.snapshot.space.frameRate.numerator,
+      at: state.playhead.frame * state.snapshot.timeline.frameRate.denominator / state.snapshot.timeline.frameRate.numerator,
     };
   };
   const renderAnchor = (): void => {
@@ -81,7 +81,7 @@ export function createComments(store: Store, stage: Stage) {
     stage.pause(); stage.showComposition();
     const state = store.current();
     if (state === undefined) return;
-    const frame = Math.round(comment.at * state.snapshot.space.frameRate.numerator / state.snapshot.space.frameRate.denominator);
+    const frame = Math.round(comment.at * state.snapshot.timeline.frameRate.numerator / state.snapshot.timeline.frameRate.denominator);
     store.seek(frame, "video");
     selected = comment.id;
     render();

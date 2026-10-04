@@ -9,6 +9,7 @@
   "dependencies": {
     "@qflow/audio-track": "workspace:*",
     "@qflow/composition": "workspace:*",
-    "@qflow/studio-adapter": "workspace:*"
+    "@qflow/studio-adapter": "workspace:*",
+    "@qflow/temporal": "workspace:*"
   }
 }

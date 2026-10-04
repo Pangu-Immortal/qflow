@@ -1,18 +1,18 @@
-export { CaptionTimingError } from "./error.js";
 export {
   assertCaptionDocument,
   assertCaptionUnitSubset,
   captionUnitsForRole,
-  captionUnitsForSelection,
 } from "./display.js";
 export type { CaptionUnitSubset } from "./display.js";
 export { captionWordsForAttribute } from "./display.js";
+export { assertCaptionDocumentIdentity } from "./identity.js";
 export { captionComponent } from "./component.js";
-export { captionTimingFragment } from "./fragment.js";
 export {
+  captionDocumentSchema,
+  captionDependency,
   captionProgramSchema,
   captionStyleSchema,
-  timedCaptionProjectionSchema,
+  captionTimingSchema,
   captionManifest,
   captionMarkupSurfaces,
   captionModuleRef,
@@ -28,7 +28,7 @@ export {
   sealCaptionProgram,
   sealCaptionStyle,
 } from "./style.js";
-export { assertTimedCaptionProjection, temporalizeCaptionDocument } from "./temporalize.js";
+export { assertCaptionTiming } from "./temporalize.js";
 export type * from "./types.js";
 
 export { captionUseVisibility } from "./visibility.js";

@@ -17,7 +17,7 @@ README shows its Source use and explains the timing and material boundaries.
 
 `chat.svml` is an eight-second composition drawn entirely in a project component. It needs no Script,
 WhisperX, image generation or source video. Four messages arrive on authored times; the same
-`@example/chat-scene` component accepts Script Moments when used beside a speaking performance.
+`@example/chat-scene` component accepts Script Moments when used beside ordinary speaking Clips.
 
 From the repository after installing its dependencies:
 
@@ -34,9 +34,3 @@ there is no hosted generation account in this example. The final Output is `fina
 Run can be opened in Studio, where its component lane and physical clock work without a Script lane.
 For an independent project, install `@qflow/qflow`, copy the component into `packages/`, replace its workspace
 dependency with the installed Qflow version, and build the package normally.
-
-## Sound presentation Styles
-
-`packages/sound-styles` defines a project crossfade with explicit outgoing and incoming Segments.
-It uses Sound Uses over the same Timeline and preserves original source playback through the blend.
-Its README explains authoring and the public fragment interface.

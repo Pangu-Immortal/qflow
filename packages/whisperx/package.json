@@ -16,13 +16,14 @@
     "@qflow/media-pipeline": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/narrative": "workspace:*",
+    "@qflow/narrative-temporal": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/speech": "workspace:*",
     "@qflow/speech-alignment": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",
-    "@qflow/markup": "workspace:*"
+    "@qflow/markup": "workspace:*",
+    "@qflow/temporal": "workspace:*"
   },
   "devDependencies": {
-    "@qflow/program-space": "workspace:*"
+    "@qflow/timeline": "workspace:*"
   }
 }

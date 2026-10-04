@@ -1,5 +1,5 @@
 import { videoContractManifests } from "../../../test/support/video-domain.js";
-import { speechDependency, speechTypes } from "@qflow/speech";
+import { narrativeTemporalDependency, narrativeTemporalTypes } from "@qflow/narrative-temporal";
 import { compositionDependency, compositionTypes } from "@qflow/composition";
 import { spatialTypes } from "@qflow/spatial";
 import assert from "node:assert/strict";
@@ -41,7 +41,7 @@ const manifest: ModuleManifest = {
   format: "qflow.module@1",
   name: testModule.name,
   version: testModule.version,
-  dependencies: [speechDependency, compositionDependency],
+  dependencies: [narrativeTemporalDependency, compositionDependency],
   types: [{ name: requestType.name }],
   capabilities: [],
   producers: [{
@@ -50,16 +50,16 @@ const manifest: ModuleManifest = {
       { name: "request", type: requestType },
       { name: "style", type: requestType },
     ],
-    outputs: [{ name: "take", type: speechTypes.semanticTake }],
+    outputs: [{ name: "take", type: narrativeTemporalTypes.narrativeAlignment }],
     needs: [],
   }, {
     name: projectVisualProducer.name,
-    inputs: [{ name: "take", type: speechTypes.semanticTake }],
+    inputs: [{ name: "take", type: narrativeTemporalTypes.narrativeAlignment }],
     outputs: [{ name: "visual", type: compositionTypes.visualTrack }],
     needs: [],
   }, {
     name: projectAudioProducer.name,
-    inputs: [{ name: "take", type: speechTypes.semanticTake }],
+    inputs: [{ name: "take", type: narrativeTemporalTypes.narrativeAlignment }],
     outputs: [{ name: "audio", type: compositionTypes.audioTrack }],
     needs: [],
   }],
@@ -73,7 +73,6 @@ function program(): LinkedProgram {
     type: spatialTypes.canvas,
     value: { kind: "inline", value: {
       widthPx: 1080, heightPx: 1920,
-      origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square",
     } },
   });
   const canvas = rawCanvas;
@@ -124,7 +123,7 @@ function speechFragment(): GraphFragment {
     exports: [
       {
         name: "take",
-        type: speechTypes.semanticTake,
+        type: narrativeTemporalTypes.narrativeAlignment,
         root: operation("generate"),
       },
       {

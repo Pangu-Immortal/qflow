@@ -11,14 +11,6 @@
 
   film.vertical { background: #090A0F; }
 
-  media.performance { stack-order: 0;
-    fit: cover;
-    frame-x: 0.5;
-    frame-y: 0.5;
-    content-x: 0.5;
-    content-y: 0.5;
-  }
-
   ranking.tech {
     rows: [
       { "id": "s", "label": "S", "color": "#EE5F52" },
@@ -48,32 +40,19 @@
     item-stack: 30;
   }
 
-  media.money-rain { stack-order: 40; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.twitter-x { stack-order: 41; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.mars-rocket { stack-order: 42; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.market-crash { stack-order: 43; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.richest-chair { stack-order: 44; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.haircut-x { stack-order: 45; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.fired-friday { stack-order: 46; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.company-quit { stack-order: 47; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.back-monday { stack-order: 48; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.elon-lawsuit { stack-order: 49; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.google-fears { stack-order: 50; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.congress-grilled { stack-order: 51; fit: cover; shadows: 0 18 34 -8 #000000D9; }
-  media.still-here { stack-order: 52; fit: cover; shadows: 0 18 34 -8 #000000E6; }
-
-  motion.broll-left {
-    enter: pop; enter-frames: 6; enter-easing: ease-out;
-    exit: fade; exit-frames: 4; exit-easing: ease-in;
-  }
-  motion.broll-right {
-    enter: bounce; enter-frames: 7; enter-easing: ease-out;
-    exit: scale; exit-frames: 4; exit-amount: 0.94; exit-easing: ease-in;
-  }
-  motion.broll-wide {
-    enter: scale; enter-frames: 6; enter-amount: 0.9; enter-easing: ease-out;
-    exit: fade; exit-frames: 4; exit-easing: ease-in;
-  }
+  media.money-rain {  shadows: 0 18 34 -8 #000000D9; }
+  media.twitter-x {  shadows: 0 18 34 -8 #000000D9; }
+  media.mars-rocket {  shadows: 0 18 34 -8 #000000D9; }
+  media.market-crash {  shadows: 0 18 34 -8 #000000D9; }
+  media.richest-chair {  shadows: 0 18 34 -8 #000000D9; }
+  media.haircut-x {  shadows: 0 18 34 -8 #000000D9; }
+  media.fired-friday {  shadows: 0 18 34 -8 #000000D9; }
+  media.company-quit {  shadows: 0 18 34 -8 #000000D9; }
+  media.back-monday {  shadows: 0 18 34 -8 #000000D9; }
+  media.elon-lawsuit {  shadows: 0 18 34 -8 #000000D9; }
+  media.google-fears {  shadows: 0 18 34 -8 #000000D9; }
+  media.congress-grilled {  shadows: 0 18 34 -8 #000000D9; }
+  media.still-here {  shadows: 0 18 34 -8 #000000E6; }
 
   caption.primary {
     stack-order: 70;

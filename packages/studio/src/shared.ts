@@ -268,10 +268,14 @@ export type StudioSnapshot = {
     readonly satisfactions: readonly { readonly output: string; readonly candidate: string }[];
   };
   readonly script?: ScriptMap;
-  readonly space: {
-    readonly canvasWidth: number;
-    readonly canvasHeight: number;
+  /** The resolved picture plane. It is a preview snapshot, not another authored Canvas. */
+  readonly canvas: {
+    readonly width: number;
+    readonly height: number;
     readonly clearColor: string;
+  };
+  /** The resolved playback domain. It is derived from the authored Timeline. */
+  readonly timeline: {
     readonly frameRate: { readonly numerator: number; readonly denominator: number };
     readonly frameCount: number;
     readonly durationSec: number;

@@ -3,10 +3,8 @@ import type { BuildState, ProducerStep, StoredValue, TypedRecord } from "@qflow/
 import { temporalModuleRef, temporalTypes } from "@qflow/temporal";
 import type {
   StudioTemporalBinding,
-  StudioTemporalAuthority,
   StudioTemporalInstantProjection,
   StudioTemporalProjection,
-  StudioTemporalSource,
 } from "@qflow/studio-adapter";
 
 type PointExpression = {
@@ -51,70 +49,88 @@ function expression(value: unknown): string {
   return point.offset === undefined ? point.ref : `${point.ref}${signed(point.offset)}`;
 }
 
-function source(value: unknown): StudioTemporalSource | undefined {
+function instant(
+  record: TypedRecord | undefined,
+  records: ReadonlyMap<string, TypedRecord>,
+  producers: ReadonlyMap<string, ProducerStep>,
+  fallback?: unknown,
+): StudioTemporalInstantProjection | undefined {
+  const value = record === undefined ? fallback : inline(record.value);
   const held = value as {
-    readonly spaceId?: unknown;
-    readonly narrativeId?: unknown;
-    readonly kind?: unknown;
     readonly id?: unknown;
-  } | undefined;
-  if (held?.kind !== "program" && held?.kind !== "selection"
-    && held?.kind !== "segment" && held?.kind !== "moment") return undefined;
-  if (typeof held.spaceId !== "string" || typeof held.id !== "string") {
-    return undefined;
-  }
-  return {
-    spaceId: held.spaceId,
-    ...(typeof held.narrativeId === "string" ? { narrativeId: held.narrativeId } : {}),
-    kind: held.kind,
-    id: held.id,
-  };
-}
-
-function instant(value: unknown): StudioTemporalInstantProjection | undefined {
-  const held = value as {
-    readonly source?: unknown;
-    readonly projection?: unknown;
-    readonly authority?: {
-      readonly kind?: unknown;
-      readonly boundary?: unknown;
-      readonly binding?: unknown;
-      readonly relation?: unknown;
-    };
+    readonly timelineId?: unknown;
     readonly frame?: unknown;
   } | undefined;
-  if (held === undefined) return undefined;
-  const temporalSource = source(held.source);
-  if (temporalSource === undefined || !Number.isSafeInteger(held.frame)) return undefined;
-  const point = held.projection as PointExpression | undefined;
-  const reference = point?.ref;
-  if (reference !== "program.start" && reference !== "program.end"
-    && reference !== "selection.start" && reference !== "selection.end"
-    && reference !== "segment.start" && reference !== "segment.end"
-    && reference !== "moment.cue" && reference !== "absolute") return undefined;
-  const authority = held?.authority;
-  let resolvedAuthority: StudioTemporalAuthority | undefined;
-  if (authority?.kind === "semantic"
-    && (authority.boundary === "start" || authority.boundary === "end" || authority.boundary === "cue")) {
-    resolvedAuthority = { kind: "semantic", source: temporalSource, boundary: authority.boundary };
-  } else if (authority?.kind === "parameter" && typeof authority.binding === "string"
-    && (authority.relation === "direct" || authority.relation === "after-start" || authority.relation === "before-end")) {
-    resolvedAuthority = { kind: "parameter", binding: authority.binding, relation: authority.relation };
-  } else if (authority?.kind === "fixed") {
-    resolvedAuthority = { kind: "fixed" };
+  if (typeof held?.id !== "string" || typeof held.timelineId !== "string" || !Number.isSafeInteger(held.frame)) return undefined;
+  const step = record === undefined ? undefined : producers.get(record.id);
+  const specRecord = step?.inputs.spec === undefined ? undefined : records.get(step.inputs.spec);
+  const spec = specRecord === undefined ? undefined : inline(specRecord.value) as {
+    readonly projection?: PointExpression;
+    readonly reference?: unknown;
+    readonly boundary?: unknown;
+    readonly offset?: unknown;
+  } | undefined;
+  if (step?.producer.module.name === temporalModuleRef.name
+    && step.producer.module.version === temporalModuleRef.version
+    && step.producer.name === "project-program-instant"
+    && spec?.projection !== undefined) {
+    const timelineRecord = step.inputs.timeline === undefined ? undefined : records.get(step.inputs.timeline);
+    const timeline = timelineRecord === undefined ? undefined : inline(timelineRecord.value) as { readonly id?: unknown } | undefined;
+    const reference = spec.projection.ref;
+    if (typeof reference !== "string") return undefined;
+    return {
+      kind: "instant",
+      expression: expression(spec.projection),
+      reference,
+      frame: held.frame as number,
+      source: { timelineId: held.timelineId, type: timelineRecord?.type ?? record!.type,
+        kind: "timeline", id: typeof timeline?.id === "string" ? timeline.id : held.timelineId },
+      authority: { kind: "fixed" },
+    };
   }
-  if (resolvedAuthority === undefined) return undefined;
+  if (step !== undefined) {
+    const domainInput = Object.entries(step.inputs).find(([name]) =>
+      name !== "timeline" && name !== "projection" && name !== "spec");
+    if (domainInput !== undefined) {
+      const [kind, sourceId] = domainInput;
+      const sourceRecord = records.get(sourceId);
+      const sourceValue = sourceRecord === undefined ? undefined : inline(sourceRecord.value) as {
+        readonly id?: unknown; readonly narrativeId?: unknown;
+      } | undefined;
+      const boundary = typeof spec?.boundary === "string" ? spec.boundary : "point";
+      const reference = typeof spec?.reference === "string"
+        ? spec.reference
+        : `${kind}.${boundary === "cue" ? "cue" : boundary}`;
+      const point = { ref: reference, ...(spec?.offset === undefined ? {} : { offset: spec.offset }) };
+      if (sourceRecord !== undefined && typeof sourceValue?.id === "string") return {
+        kind: "instant",
+        expression: expression(point),
+        reference,
+        frame: held.frame as number,
+        source: { timelineId: held.timelineId, type: sourceRecord.type, kind, id: sourceValue.id,
+          ...(typeof sourceValue.narrativeId === "string" ? { narrativeId: sourceValue.narrativeId } : {}) },
+        authority: { kind: "domain", source: { timelineId: held.timelineId, type: sourceRecord.type,
+          kind, id: sourceValue.id,
+          ...(typeof sourceValue.narrativeId === "string" ? { narrativeId: sourceValue.narrativeId } : {}) }, boundary },
+      };
+    }
+  }
+  const type = record?.type ?? temporalTypes.instant;
   return {
     kind: "instant",
-    expression: expression(held.projection),
-    reference,
+    expression: `${held.frame as number}f`,
+    reference: "absolute",
     frame: held.frame as number,
-    source: temporalSource,
-    authority: resolvedAuthority,
+    source: { timelineId: held.timelineId, type, kind: "resolved", id: held.id },
+    authority: { kind: "fixed" },
   };
 }
 
-function projection(record: TypedRecord): {
+function projection(
+  record: TypedRecord,
+  records: ReadonlyMap<string, TypedRecord>,
+  producers: ReadonlyMap<string, ProducerStep>,
+): {
   readonly id: string;
   readonly subjectId: string;
   readonly projection: StudioTemporalProjection;
@@ -128,11 +144,14 @@ function projection(record: TypedRecord): {
   } | undefined;
   if (typeof held?.id !== "string" || typeof held.subjectId !== "string") return undefined;
   if (sameType(record.type, temporalTypes.instant)) {
-    const projected = instant(inline(record.value));
+    const projected = instant(record, records, producers);
     return projected === undefined ? undefined : { id: held.id, subjectId: held.subjectId, projection: projected };
   }
-  const start = instant(held.start);
-  const end = instant(held.end);
+  const step = producers.get(record.id);
+  const startRecord = step?.inputs.start === undefined ? undefined : records.get(step.inputs.start);
+  const endRecord = step?.inputs.end === undefined ? undefined : records.get(step.inputs.end);
+  const start = instant(startRecord, records, producers, held.start);
+  const end = instant(endRecord, records, producers, held.end);
   if (start === undefined || end === undefined) return undefined;
   if (!Number.isSafeInteger(held.span?.startFrame) || !Number.isSafeInteger(held.span?.endFrameExclusive)) return undefined;
   return {
@@ -191,7 +210,7 @@ export function executedTemporalBindings(
   return [...records.values()]
     .filter((record) => sameType(record.type, temporalTypes.instant) || sameType(record.type, temporalTypes.window))
     .flatMap((record): readonly StudioTemporalBinding[] => {
-      const projected = projection(record);
+      const projected = projection(record, records, producers);
       if (projected === undefined) return [];
       const consumers = steps.flatMap((step) => Object.entries(step.inputs)
         .filter(([, input]) => input === record.id)

@@ -1,4 +1,4 @@
-import type { AudioPresentation } from "@qflow/composition";
+import type { AudioLevelAutomation } from "@qflow/composition";
 import type { BlobRef } from "@qflow/protocol";
 import type { MediaFrameRange, MediaInspection, MediaRational, MediaStreamSelection, RenderedVisual, TimelineAudio } from "@qflow/media";
 
@@ -38,9 +38,8 @@ export type MediaTransformOperation =
     }
   | {
       readonly kind: "retime";
-      /** 2 means twice as fast and therefore half as long. */
+      /** Pitch-preserving tempo ratio; 2 means twice as fast and therefore half as long. */
       readonly rate: number;
-      readonly pitch: "preserve";
     };
 
 /** Ordered, deterministic A/V operations over already synchronized media. */
@@ -130,12 +129,13 @@ export type NormalizeMediaNeed = {
 };
 
 export type ProjectSpeechEvidenceAudioNeed = {
+  readonly domainId: string;
   readonly source: BlobRef;
   readonly sourceSampleFrames: number;
   readonly evidenceSampleFrames: number;
 };
 
-export type AudioProgramClip = AudioPresentation & {
+export type AudioProgramClip = AudioLevelAutomation & {
   readonly id: string;
   readonly artifact: BlobRef;
   readonly targetStartSample: number;
@@ -145,8 +145,11 @@ export type AudioProgramClip = AudioPresentation & {
   readonly sourceEndSampleExclusive: number;
   readonly sourceLoop: boolean;
   readonly sourcePhaseSample: number;
+  /** Tempo ratio; Audio execution preserves pitch. */
   readonly playbackRate: number;
-  readonly pitch: "preserve";
+  /** Complete owning Clip Window; fades do not restart at source-time piece boundaries. */
+  readonly mixStartSample: number;
+  readonly mixEndSampleExclusive: number;
   readonly gain: number;
   readonly fadeInSamples: number;
   readonly fadeOutSamples: number;

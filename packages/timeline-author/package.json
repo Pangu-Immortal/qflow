@@ -14,10 +14,8 @@
     "@qflow/component-kit": "workspace:*",
     "@qflow/elaborator": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/speech": "workspace:*",
     "@qflow/timeline": "workspace:*",
     "@qflow/markup": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/temporal": "workspace:*",
     "@qflow/temporal-markup": "workspace:*"
   },

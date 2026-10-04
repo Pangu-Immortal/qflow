@@ -14,6 +14,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@explainer/visual-language": "file:../visual-language"
+    "@explainer/visual-language": "file:../visual-language",
+    "@qflow/qflow": "workspace:*"
   }
 }

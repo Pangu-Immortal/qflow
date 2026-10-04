@@ -18,7 +18,7 @@ for (const format of ["webm", "webm-vp8", "mov"] as const) {
       const source = await resources.put(fixture.bytes, fixture.mediaType);
       const media = await normalizeTestVideo(resources, source, true);
       assert.equal(media.visual!.artifact.mediaType, "video/webm");
-      assert.equal(media.timeline.frameCount, 12);
+      assert.equal(media.frameDomain.frameCount, 12);
       const visual = await writeTestArtifact(resources, media.visual!.artifact, join(directory, "normalized.webm"));
       const pixels = ffmpegBytes(["-c:v", "libvpx-vp9", "-i", visual, "-an", "-pix_fmt", "rgba", "-f", "rawvideo", "pipe:1"]);
       const stride = alphaSize.width * alphaSize.height * 4;

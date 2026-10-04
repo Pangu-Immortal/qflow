@@ -11,7 +11,10 @@ import type { MarkupSurfaceRegistryLike, RegisteredSurface } from "@qflow/markup
 import { inspectorFieldsForBindings, resolveTimelineEditHandles, sourceBindingsForDraft } from "../src/parameters.js";
 import { serializeParameterValue, validateParameterValue } from "../src/parameter-values.js";
 
-const temporalIdentity = { spaceId: "speech", narrativeId: "story" } as const;
+const temporalIdentity = { timelineId: "speech", narrativeId: "story" } as const;
+const narrativeSourceIdentity = { ...temporalIdentity,
+  type: { module: { name: "@qflow/narrative", version: "1" }, name: "NarrativeReference" } } as const;
+const timelineSourceType = { module: { name: "@qflow/timeline", version: "1" }, name: "Timeline" } as const;
 
 const semantic: StudioSemanticTimeline = {
   ...temporalIdentity,
@@ -53,13 +56,13 @@ test("timeline gestures resolve through the shared Selection identity", () => {
       kind: "window",
       start: {
         kind: "instant", expression: "selection.start", reference: "selection.start", frame: 0,
-        source: { ...temporalIdentity, kind: "selection", id: "claim" },
-        authority: { kind: "semantic", source: { ...temporalIdentity, kind: "selection", id: "claim" }, boundary: "start" },
+        source: { ...narrativeSourceIdentity, kind: "selection", id: "claim" },
+        authority: { kind: "domain", source: { ...narrativeSourceIdentity, kind: "selection", id: "claim" }, boundary: "start" },
       },
       end: {
         kind: "instant", expression: "selection.end", reference: "selection.end", frame: 12,
-        source: { ...temporalIdentity, kind: "selection", id: "claim" },
-        authority: { kind: "semantic", source: { ...temporalIdentity, kind: "selection", id: "claim" }, boundary: "end" },
+        source: { ...narrativeSourceIdentity, kind: "selection", id: "claim" },
+        authority: { kind: "domain", source: { ...narrativeSourceIdentity, kind: "selection", id: "claim" }, boundary: "end" },
       },
       startFrame: 0,
       endFrameExclusive: 12,
@@ -86,8 +89,8 @@ test("moving a Moment projection resolves to the shared Moment identity", () => 
   const handles = resolveTimelineEditHandles([], {
     projection: {
       kind: "instant", expression: "moment.cue", reference: "moment.cue", frame: 12,
-      source: { ...temporalIdentity, kind: "moment", id: "beat" },
-      authority: { kind: "semantic", source: { ...temporalIdentity, kind: "moment", id: "beat" }, boundary: "cue" },
+      source: { ...narrativeSourceIdentity, kind: "moment", id: "beat" },
+      authority: { kind: "domain", source: { ...narrativeSourceIdentity, kind: "moment", id: "beat" }, boundary: "cue" },
     },
     phases: [],
   }, {
@@ -115,17 +118,17 @@ test("at/for and until/for derive complementary semantic and duration inverses",
   };
   const moment = {
     kind: "instant" as const, expression: "moment.cue", reference: "moment.cue" as const, frame: 12,
-    source: { ...temporalIdentity, kind: "moment" as const, id: "beat" },
-    authority: { kind: "semantic" as const, source: { ...temporalIdentity, kind: "moment" as const, id: "beat" }, boundary: "cue" as const },
+    source: { ...narrativeSourceIdentity, kind: "moment" as const, id: "beat" },
+    authority: { kind: "domain" as const, source: { ...narrativeSourceIdentity, kind: "moment" as const, id: "beat" }, boundary: "cue" as const },
   };
   const after = {
     kind: "instant" as const, expression: "moment.cue+8f", reference: "moment.cue" as const, frame: 20,
-    source: { ...temporalIdentity, kind: "moment" as const, id: "beat" },
+    source: { ...narrativeSourceIdentity, kind: "moment" as const, id: "beat" },
     authority: { kind: "parameter" as const, binding: "for", relation: "after-start" as const },
   };
   const before = {
     kind: "instant" as const, expression: "moment.cue-8f", reference: "moment.cue" as const, frame: 4,
-    source: { ...temporalIdentity, kind: "moment" as const, id: "beat" },
+    source: { ...narrativeSourceIdentity, kind: "moment" as const, id: "beat" },
     authority: { kind: "parameter" as const, binding: "for", relation: "before-end" as const },
   };
   const atFor = resolveTimelineEditHandles([duration], {
@@ -168,11 +171,11 @@ test("absolute Window edits work without a semantic lane and use the Companion's
       projection: {
         kind: "window",
         start: {
-          kind: "instant", expression: "1f", reference: "absolute", frame: 1, source: { spaceId: "animation", kind: "program", id: "program" },
+          kind: "instant", expression: "1f", reference: "absolute", frame: 1, source: { timelineId: "animation", type: timelineSourceType, kind: "timeline", id: "animation" },
           authority: { kind: "parameter", binding: "from", relation: "direct" },
         },
         end: {
-          kind: "instant", expression: "20f", reference: "absolute", frame: 20, source: { spaceId: "animation", kind: "program", id: "program" },
+          kind: "instant", expression: "20f", reference: "absolute", frame: 20, source: { timelineId: "animation", type: timelineSourceType, kind: "timeline", id: "animation" },
           authority: { kind: "parameter", binding: "until", relation: "direct" },
         },
         startFrame: 1, endFrameExclusive: 20,
@@ -199,7 +202,7 @@ test("independent reference endpoints expose local edits without claiming their 
     kind: "instant" as const, expression: index === 0 ? "selection.start" : "moment.cue",
     reference: index === 0 ? "selection.start" as const : "moment.cue" as const,
     frame: index === 0 ? 2 : 20,
-    source: { ...temporalIdentity, kind: index === 0 ? "selection" as const : "moment" as const, id: index === 0 ? "claim" : "beat" },
+    source: { ...narrativeSourceIdentity, kind: index === 0 ? "selection" as const : "moment" as const, id: index === 0 ? "claim" : "beat" },
     authority: { kind: "parameter" as const, binding: name, relation: "direct" as const },
   }));
   const bindings = (["start", "end"] as const).map((name, index) => ({

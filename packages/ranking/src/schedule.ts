@@ -1,15 +1,15 @@
+import { assertTimelineIdentity, timelineFrameCount } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
 import {
   assertFontArtifactRef,
   verifySynchronizedMedia,
 } from "@qflow/media";
 import type { SynchronizedMedia } from "@qflow/media";
-import { assertProgramSpaceIdentity, programSpaceFrameCount } from "@qflow/program-space";
 import { canonicalize, isResourceId } from "@qflow/protocol";
 import { verifyText } from "@qflow/text";
 import type { Text } from "@qflow/text";
-import { assertCanvasSpace, assertSpatialFrame } from "@qflow/spatial";
-import type { CanvasSpace } from "@qflow/spatial";
+import { assertSpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 import {
   assertTemporalInstantFor,
   assertTemporalWindowFor,
@@ -342,10 +342,10 @@ export function buildTriggeredRankingSchedule(input: {
   assert(input.header.variant === "top-three", "Only TopThree uses the triggered Ranking schedule.");
   assert(input.items.items.length > 0, "Ranking requires at least one Item.");
   assertTriggeredRankingCandidateSet(input.candidates);
-  assertTemporalWindowFor(input.outer, { subjectId: input.header.id, space: input.timeline });
-  assertTemporalInstantFor(input.terminal, { subjectId: input.header.id, space: input.timeline });
+  assertTemporalWindowFor(input.outer, { subjectId: input.header.id, timeline: input.timeline });
+  assertTemporalInstantFor(input.terminal, { subjectId: input.header.id, timeline: input.timeline });
   for (const candidate of input.candidates.entries) {
-    assertTemporalInstantFor(candidate.activation, { subjectId: candidate.itemId, space: input.timeline });
+    assertTemporalInstantFor(candidate.activation, { subjectId: candidate.itemId, timeline: input.timeline });
   }
   const expected = new Set(input.items.items.map((item) => item.id));
   const received = new Set(input.candidates.entries.map((entry) => entry.itemId));
@@ -457,7 +457,7 @@ function buildWindowedRankingSchedule(input: {
   assert(input.items.variant === input.variant, `${label} Schedule requires ${label} Items.`);
   assert(input.items.items.length > 0, `${label} requires at least one Item.`);
   assertRankingWindowSet(input.windows, `${label}WindowSet`);
-  assertTemporalWindowFor(input.outer, { subjectId: input.header.id, space: input.timeline });
+  assertTemporalWindowFor(input.outer, { subjectId: input.header.id, timeline: input.timeline });
   frame(input.outer.span.startFrame, `${label} outer window start`);
   frame(input.outer.span.endFrameExclusive, `${label} outer window end`);
   assert(input.outer.span.endFrameExclusive > input.outer.span.startFrame, `${label} outer window is empty.`);
@@ -471,7 +471,7 @@ function buildWindowedRankingSchedule(input: {
     || left.window.span.endFrameExclusive - right.window.span.endFrameExclusive
     || left.itemId.localeCompare(right.itemId));
   for (const entry of orderedWindows) {
-    assertTemporalWindowFor(entry.window, { subjectId: entry.itemId, space: input.timeline });
+    assertTemporalWindowFor(entry.window, { subjectId: entry.itemId, timeline: input.timeline });
     assert(entry.window.span.startFrame >= input.outer.span.startFrame
       && entry.window.span.endFrameExclusive <= input.outer.span.endFrameExclusive,
     `${label} Item ${entry.itemId} window is outside the outer window.`);
@@ -627,8 +627,8 @@ export function assertRankingSchedule(value: RankingSchedule, timeline?: Timelin
   if (value.variant === "top-three") assertTriggeredRankingSchedule(value);
   else assertWindowedRankingSchedule(value);
   if (timeline !== undefined) {
-    assertProgramSpaceIdentity(timeline);
-    assert(value.outer.endFrameExclusive <= programSpaceFrameCount(timeline), "RankingSchedule exceeds Timeline.");
+    assertTimelineIdentity(timeline);
+    assert(value.outer.endFrameExclusive <= timelineFrameCount(timeline), "RankingSchedule exceeds Timeline.");
   }
 }
 
@@ -742,9 +742,9 @@ export function fitColumnRevealMotion(
   return { mode: "stage", appearFrames, moveFrames: durationFrames - appearFrames };
 }
 
-export function buildTierBoardProgram(header: RankingHeader, canvasValue: CanvasSpace, frameValue: import("@qflow/spatial").SpatialFrame, schedule: RankingSchedule, style: TierBoardStyle, set: TierBoardItemSet): TierBoardProgram {
+export function buildTierBoardProgram(header: RankingHeader, withinValue: SpatialFrame, frameValue: SpatialFrame, schedule: RankingSchedule, style: TierBoardStyle, set: TierBoardItemSet): TierBoardProgram {
   assert(header.variant === "tier-board" && schedule.variant === "tier-board", "TierBoard variant is inconsistent.");
-  assertCanvasSpace(canvasValue);
+  assertSpatialFrame(withinValue);
   assertSpatialFrame(frameValue);
   assertTierBoardStyle(style);
   windowedIdsEqual(schedule, set.items);
@@ -752,19 +752,19 @@ export function buildTierBoardProgram(header: RankingHeader, canvasValue: Canvas
   const items = schedule.entries.map((entry) => structuredClone(byId.get(entry.itemId)!));
   const rows = new Set(style.rows.map((row) => row.id));
   for (const item of items) assert(rows.has(item.tier), `TierBoard Item ${item.id} references unknown tier ${item.tier}.`);
-  const result: TierBoardProgram = { id: header.id, canvas: structuredClone(canvasValue), frame: structuredClone(frameValue), schedule: structuredClone(schedule), style: structuredClone(style), items };
+  const result: TierBoardProgram = { id: header.id, within: structuredClone(withinValue), frame: structuredClone(frameValue), schedule: structuredClone(schedule), style: structuredClone(style), items };
   assertTierBoardProgram(result);
   return canonicalize(result) as unknown as TierBoardProgram;
 }
 
-export function buildColumnProgram(header: RankingHeader, canvasValue: CanvasSpace, frameValue: import("@qflow/spatial").SpatialFrame, schedule: RankingSchedule, style: ColumnStyle, set: ColumnItemSet): ColumnProgram {
+export function buildColumnProgram(header: RankingHeader, withinValue: SpatialFrame, frameValue: SpatialFrame, schedule: RankingSchedule, style: ColumnStyle, set: ColumnItemSet): ColumnProgram {
   assert(header.variant === "column" && schedule.variant === "column", "Column variant is inconsistent.");
-  assertCanvasSpace(canvasValue);
+  assertSpatialFrame(withinValue);
   assertSpatialFrame(frameValue);
   assertColumnStyle(style);
   windowedIdsEqual(schedule, set.items);
   const items = [...set.items].map((item) => structuredClone(item)).sort((left, right) => left.rank - right.rank || left.id.localeCompare(right.id));
-  const result: ColumnProgram = { id: header.id, canvas: structuredClone(canvasValue), frame: structuredClone(frameValue), schedule: structuredClone(schedule), style: structuredClone(style), items };
+  const result: ColumnProgram = { id: header.id, within: structuredClone(withinValue), frame: structuredClone(frameValue), schedule: structuredClone(schedule), style: structuredClone(style), items };
   assertColumnProgram(result);
   return canonicalize(result) as unknown as ColumnProgram;
 }
@@ -783,7 +783,7 @@ export function buildTopThreeProgram(header: RankingHeader, frameValue: import("
 export function assertTierBoardProgram(value: TierBoardProgram): void {
   assertRankingSchedule(value.schedule);
   assert(value.schedule.variant === "tier-board", "TierBoardProgram Schedule variant is invalid.");
-  assertCanvasSpace(value.canvas);
+  assertSpatialFrame(value.within);
   assertSpatialFrame(value.frame);
   assertTierBoardStyle(value.style);
   windowedIdsEqual(value.schedule, value.items);
@@ -793,7 +793,7 @@ export function assertTierBoardProgram(value: TierBoardProgram): void {
 export function assertColumnProgram(value: ColumnProgram): void {
   assertRankingSchedule(value.schedule);
   assert(value.schedule.variant === "column", "ColumnProgram Schedule variant is invalid.");
-  assertCanvasSpace(value.canvas);
+  assertSpatialFrame(value.within);
   assertSpatialFrame(value.frame);
   assertColumnStyle(value.style);
   windowedIdsEqual(value.schedule, value.items);

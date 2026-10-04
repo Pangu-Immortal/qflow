@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { adjustScriptMoment, captionDocument, parseScript, serializeCaption, serializeSpeech } from "@qflow/script";
+import { adjustScriptMoment, captionDocument, narrativeCaptionBinding, parseScript, serializeCaption, serializeSpeech } from "@qflow/script";
 
 const parse = (text: string) => parseScript("boundary", `<line>${text}</line>`);
 const caption = (text: string) => {
@@ -71,7 +71,8 @@ test("explicit groups keep internal speech anchors while display separators stay
   const parsed = parse('<组@{beat!}件{emphasis}化|> 3D 한글');
   assert.equal(serializeCaption(parsed), '组件化 3D 한글');
   const document = captionDocument(parsed, 'caption', 'story');
-  assert.deepEqual(document.units[0]!.sourceTokenIds, parsed.tokens.slice(0, 3).map(token => token.id));
+  assert.deepEqual(narrativeCaptionBinding(parsed, "caption", "story").units[0]!.sourceTokenIds,
+    parsed.tokens.slice(0, 3).map(token => token.id));
   assert.equal(parsed.moments[0]!.anchorId, parsed.tokens[1]!.startAnchorId);
   assert.equal(document.words.map(word => word.separatorBefore + word.text).join(''), '组件化 3D 한글');
 });

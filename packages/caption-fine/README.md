@@ -8,27 +8,29 @@ does not carry a private visual role.
 ```xml
 <caption-fine:Style id="primary" recipe={recipes.caption.primary} font={caption-font}/>
 
-<caption-fine:Track id="captions-track" document={story.caption}
-  timeline={speech.timeline}>
+<caption-fine:Caption id="captions-track" document={story.caption} timing={story-captions}
+  timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={primary}/>
-  </caption-fine:Track>
+  </caption-fine:Caption>
 ```
 
-An optional Spatial Region Timeline supplies a moving placement point when the user's reference
+An optional Region Track supplies a moving placement point when the user's reference
 visibly uses head-following Caption or the user asks for that treatment. Ordinary Caption uses the
-Style's placement without regions. The Region Timeline is authored numeric input mapped from available picture
+Style's placement without regions. Region Track is authored numeric input mapped from available picture
 evidence to the composition that consumes it; it is not a face-tracking request:
 
 ```xml
-<space:RegionTimeline id="heads" within={vertical} recipe={tracking.heads.default}/>
-<caption-fine:Track id="captions-track" document={story.caption}
-  timeline={speech.timeline} regions={heads}>
+<import as="region" from="@qflow/region-track@1"/>
+<region:Track id="heads" within={vertical.bounds} timeline={speech.timeline}
+  recipe={tracking.heads.default}/>
+<caption-fine:Caption id="captions-track" document={story.caption} timing={story-captions}
+  timeline={speech.timeline} within={vertical.bounds} regions={heads}>
     <caption-fine:Use style={primary}/>
-  </caption-fine:Track>
+  </caption-fine:Caption>
 ```
 
-With `regions`, every Cue must carry one Script Role. When the Region Timeline contains a measured region for that
-Role and Frame, the Track places the Cue at the region's top center. When that Role has a Track but
+With `regions`, every Cue must carry one Script Role. When Region Track contains a measured region for that
+Role and Frame, Fine places the Cue at the region's top center. When that Role has a series but
 the current Frame is `null`, the Cue is not rendered: absence of evidence never becomes a guessed
 position. A Role with no Track uses the Style's authored `x` and `y`, so unrelated speakers remain
 ordinary fixed captions. The Style still owns its width and anchors, so `anchor-x: center;
@@ -38,7 +40,7 @@ missing Frames or invoke a Provider. Without `regions`, the ordinary Recipe `x` 
 unchanged.
 
 This keeps placement inspectable and editable. If a tracked face needs padding or an above-head anchor,
-transform the measured numbers while authoring the Region Timeline, then give Caption the result. Do
+transform the measured numbers while authoring Region Track, then give Caption the result. Do
 not hide that transformation in a Provider or ask the Build to rediscover the face.
 
 One SVS Recipe freezes three public dimensions:
@@ -47,14 +49,14 @@ One SVS Recipe freezes three public dimensions:
 - **How**: the exact font stack, typography, base/active glyph Paint, Cue box and decoration.
 - **When**: the visible lead/tail envelope, handoff, Cue/Atom motion, reveal, Karaoke and loops.
 
-Caption first projects authored Script units onto semantic Word timing. Fine then produces an
-explicit visible Schedule and renders that Schedule. Lead and tail never change the semantic Word
+An upstream adapter supplies absolute Caption unit timing. Fine then produces an explicit visible
+Schedule and renders that Schedule. Lead and tail never change the source timing
 times used by Karaoke. Later Uses mask earlier presentation, including Hidden. The final visibility
 is clipped to the winning Use Window while the original Cue envelope and animations are preserved.
 
-The Fine Schedule preserves the Caption projection's ProgramSpace, Narrative and document identities.
-The renderer rejects any mismatched Space or document. Studio may expose lead, tail and handoff as
-ordinary parameter edits, but Cue rectangles remain read-only semantic evidence.
+The Fine Schedule preserves the CaptionTiming's Timeline and document identities. It contains no
+Narrative identity. The renderer rejects any mismatched Timeline or document. Studio may expose
+lead, tail and handoff as ordinary parameter edits, but Cue rectangles remain read-only timing facts.
 
 Script segments, turns and `||` organize complete Cues. Timed Uses select presentation without
 changing that grouping. Fine applies uniform rules to the words of a Cue. A caption whose Cue contains structural roles or

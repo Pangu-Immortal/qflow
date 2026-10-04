@@ -14,11 +14,10 @@ import {
 } from "@qflow/image-compose";
 import { rasterCapabilities } from "@qflow/raster";
 import type { CanonicalValue, StoredValue, TypeRef, TypedRecord } from "@qflow/protocol";
-import { sealCanvasSpace, sealSpatialFrame, spatialTypes } from "@qflow/spatial";
+import { sealCanvas, sealSpatialFrame, spatialTypes } from "@qflow/spatial";
 
-const canvas = sealCanvasSpace({
+const canvas = sealCanvas({
   widthPx: 1080, heightPx: 1920,
-  origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square",
 });
 const frame = sealSpatialFrame({ xPx: -10, yPx: 20, widthPx: 500, heightPx: 400 });
 const options = sealImageComposeOptions({ background: "#11223344" });

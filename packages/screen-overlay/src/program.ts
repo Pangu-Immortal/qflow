@@ -1,12 +1,12 @@
+import { assertTimelineIdentity } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
 import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/composition";
 import type { VisualAnimation, VisualElement, VisualStyleDeclaration, VisualTrack } from "@qflow/composition";
-import { assertProgramSpaceIdentity } from "@qflow/program-space";
 import { canonicalize } from "@qflow/protocol";
-import { assertCanvasSpace } from "@qflow/spatial";
-import type { CanvasSpace } from "@qflow/spatial";
+import { assertSpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 import { assertTemporalWindowFor } from "@qflow/temporal";
-import type { ProjectedWindow } from "@qflow/temporal";
+import type { TemporalWindow } from "@qflow/temporal";
 
 import type {
   ScreenOverlayComponent,
@@ -108,16 +108,17 @@ export function assertScreenOverlaySet(value: ScreenOverlaySet): void {
 
 function realized(
   set: ScreenOverlaySet, header: ScreenOverlayHeader, timeline: Timeline, spec: ScreenOverlayItemSpec,
-  window: ProjectedWindow,
+  window: TemporalWindow,
 ): ScreenOverlaySet {
   assertScreenOverlaySet(set); assertScreenOverlayHeader(header); assertScreenOverlayItemSpec(spec);
-  assertTemporalWindowFor(window, { subjectId: spec.id, space: timeline });
+  assertTemporalWindowFor(window, { subjectId: spec.id, timeline: timeline });
   const addition = {
     id: window.id,
     subjectId: spec.id,
     span: { ...window.span },
     content: structuredClone(spec.content),
-    stacking: { order: spec.stackingOrder, tieBreak: `${header.id}:${spec.id}` },
+    order: set.items.length,
+    z: spec.stackingOrder,
   } satisfies ScreenOverlayItemProgram;
   const ids = new Set(set.items.map((item) => item.id));
   assert(!ids.has(addition.id), `Screen Overlay already contains Item ${addition.id}.`);
@@ -130,7 +131,7 @@ export function appendProjectedScreenOverlay(
   header: ScreenOverlayHeader,
   timeline: Timeline,
   spec: ScreenOverlayItemSpec,
-  window: ProjectedWindow,
+  window: TemporalWindow,
 ): ScreenOverlaySet {
   return realized(set, header, timeline, spec, window);
 }
@@ -151,8 +152,9 @@ export function assertScreenOverlayProgram(value: ScreenOverlayProgram): void {
     assert(!ids.has(item.id), `Duplicate Screen Overlay Item ${item.id}.`); ids.add(item.id);
     assert(item.span.startFrame >= 0 && item.span.endFrameExclusive > item.span.startFrame,
       `Screen Overlay Item ${item.id} timing is invalid.`);
-    assertScreenOverlayComponent(item.content); assert(Number.isSafeInteger(item.stacking.order) && item.stacking.tieBreak.length > 0,
-      `Screen Overlay Item ${item.id} stacking is invalid.`);
+    assertScreenOverlayComponent(item.content);
+    assert(Number.isSafeInteger(item.order) && item.order >= 0, `Screen Overlay Item ${item.id} order is invalid.`);
+    assert(Number.isSafeInteger(item.z), `Screen Overlay Item ${item.id} z is invalid.`);
   }
 }
 
@@ -169,8 +171,10 @@ function random(seed: number): Random {
 }
 function px(value: number): string { return `${Number(value.toFixed(6))}px`; }
 function percent(value: number): string { return `${Number((value * 100).toFixed(6))}%`; }
-function rootStyle(): VisualStyleDeclaration[] { return [
-  { name: "inset", value: "0" }, { name: "overflow", value: "hidden" }, { name: "position", value: "absolute" },
+function rootStyle(within: SpatialFrame): VisualStyleDeclaration[] { return [
+  { name: "height", value: px(within.heightPx) }, { name: "left", value: px(within.xPx) },
+  { name: "overflow", value: "hidden" }, { name: "position", value: "absolute" },
+  { name: "top", value: px(within.yPx) }, { name: "width", value: px(within.widthPx) },
 ]; }
 function fullChild(
   id: string,
@@ -188,22 +192,22 @@ function fullChild(
 function animation(duration: number, start: readonly VisualStyleDeclaration[], end: readonly VisualStyleDeclaration[]): VisualAnimation {
   return { keyframes: [{ atFrame: 0, style: start }, { atFrame: duration, style: end }] };
 }
-function flashElements(content: Extract<ScreenOverlayComponent, { kind: "flash" }>, duration: number): readonly VisualElement[] {
+function flashElements(content: Extract<ScreenOverlayComponent, { kind: "flash" }>, within: SpatialFrame, duration: number): readonly VisualElement[] {
   const total = content.attackFrames + content.holdFrames + content.decayFrames;
-  if (total === 0) return [{ id: "root", order: 0, kind: "box", style: [...rootStyle(), { name: "background-color", value: content.color }, { name: "opacity", value: content.intensity }] }];
+  if (total === 0) return [{ id: "root", order: 0, kind: "box", style: [...rootStyle(within), { name: "background-color", value: content.color }, { name: "opacity", value: content.intensity }] }];
   const marks = new Map<number, number>();
   marks.set(0, content.attackFrames === 0 ? content.intensity : 0);
   marks.set(content.attackFrames, content.intensity);
   marks.set(content.attackFrames + content.holdFrames, content.intensity);
   marks.set(total, 0);
   marks.set(duration, 0);
-  return [{ id: "root", order: 0, kind: "box", style: [...rootStyle(), { name: "background-color", value: content.color }],
+  return [{ id: "root", order: 0, kind: "box", style: [...rootStyle(within), { name: "background-color", value: content.color }],
     animation: { keyframes: [...marks].sort(([a], [b]) => a - b).map(([atFrame, opacity]) => ({ atFrame, style: [{ name: "opacity", value: opacity }] })) } }];
 }
 
-function overlayElements(content: ScreenOverlayComponent, canvas: CanvasSpace, duration: number): readonly VisualElement[] {
-  if (content.kind === "flash") return flashElements(content, duration);
-  const root: VisualElement = { id: "root", order: 0, kind: "box", style: rootStyle() };
+function overlayElements(content: ScreenOverlayComponent, within: SpatialFrame, duration: number): readonly VisualElement[] {
+  if (content.kind === "flash") return flashElements(content, within, duration);
+  const root: VisualElement = { id: "root", order: 0, kind: "box", style: rootStyle(within) };
   switch (content.kind) {
     case "color-wash": return [root, fullChild("wash", [{ name: "background-color", value: content.color }, { name: "opacity", value: content.opacity }])];
     case "vignette": {
@@ -218,7 +222,7 @@ function overlayElements(content: ScreenOverlayComponent, canvas: CanvasSpace, d
       ], animation(duration, [{ name: "transform", value: "translate3d(0px,0px,0)" }], [{ name: "transform", value: travel }]))];
     }
     case "directional-matte": {
-      const extent = Math.hypot(canvas.widthPx, canvas.heightPx) * 2;
+      const extent = Math.hypot(within.widthPx, within.heightPx) * 2;
       const move = (progress: number) => `rotate(${content.angleDeg}deg) translate3d(${px((progress - 0.5) * extent)},0px,0)`;
       const edge = Math.max(0.001, content.feather) * 100;
       return [root, fullChild("matte", [
@@ -289,8 +293,8 @@ function overlayElements(content: ScreenOverlayComponent, canvas: CanvasSpace, d
       })];
     }
     case "tv-static": {
-      const rng = random(content.seed); const columns = Math.ceil(canvas.widthPx / content.noiseSizePx);
-      const rows = Math.ceil(canvas.heightPx / content.noiseSizePx); const count = Math.min(512, Math.max(1, Math.round(columns * rows * content.amount)));
+      const rng = random(content.seed); const columns = Math.ceil(within.widthPx / content.noiseSizePx);
+      const rows = Math.ceil(within.heightPx / content.noiseSizePx); const count = Math.min(512, Math.max(1, Math.round(columns * rows * content.amount)));
       const cells = Array.from({ length: count }, (_, index): VisualElement => {
         const shade = Math.round(rng() * 255); const drift = content.motionRatePxPerFrame * duration;
         return { id: `static-${index + 1}`, parent: "root", order: index + 1, kind: "box", style: [
@@ -307,13 +311,13 @@ function overlayElements(content: ScreenOverlayComponent, canvas: CanvasSpace, d
   }
 }
 
-export function renderScreenOverlay(canvas: CanvasSpace, timeline: Timeline, program: ScreenOverlayProgram): VisualTrack {
-  assertCanvasSpace(canvas); assertProgramSpaceIdentity(timeline); assertScreenOverlayProgram(program);
+export function renderScreenOverlay(within: SpatialFrame, timeline: Timeline, program: ScreenOverlayProgram): VisualTrack {
+  assertSpatialFrame(within); assertTimelineIdentity(timeline); assertScreenOverlayProgram(program);
   const track = sealVisualTrack({
-    programSpaceId: timeline.id, visualIr: "qflow.visual-ir@1", id: program.id,
+    timelineId: timeline.id, visualIr: "qflow.visual-ir@1", id: program.id,
     presents: program.items.map((item) => ({
-      id: item.id, subjectId: item.subjectId, span: { ...item.span }, stacking: { ...item.stacking },
-      elements: overlayElements(item.content, canvas, item.span.endFrameExclusive - item.span.startFrame),
+      id: item.id, order: item.order, z: item.z, subjectId: item.subjectId, span: { ...item.span },
+      elements: overlayElements(item.content, within, item.span.endFrameExclusive - item.span.startFrame),
     })),
   });
   assertVisualTrackIdentity(track, timeline);

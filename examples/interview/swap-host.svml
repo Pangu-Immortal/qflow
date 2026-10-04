@@ -1,23 +1,24 @@
 <?svml using="@qflow/markup@1"?>
 
 <svml>
-  <import as="media-track" from="@qflow/media-track@1"/>
-  <import as="sound" from="@qflow/sound@1"/>
-  <import as="performance" from="@qflow/performance@1"/>
+  <import as="audio" from="@qflow/audio-track@1"/>
+  <import as="visual" from="@qflow/visual-track@1"/>
   <import from="@qflow/script@1"/>
   <import as="text" from="@qflow/text@1"/>
   <import as="media" from="@qflow/media@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
   <import as="gpt" from="@qflow/gpt-image@1"/>
-  <import as="program" from="@qflow/program-space@1"/>
   <import as="pipeline" from="@qflow/media-pipeline@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
+  <import as="semantic" from="@qflow/narrative-temporal@1"/>
+  <import as="narrative-caption" from="@qflow/narrative-caption@1"/>
   <import as="time" from="@qflow/timeline-author@1"/>
   <import as="audio-track" from="@qflow/audio-track@1"/>
   <import as="caption" from="@qflow/caption@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
   <import as="fonts" from="@qflow/fonts-open@1"/>
   <import as="space" from="@qflow/spatial@1"/>
+  <import as="region" from="@qflow/region-track@1"/>
   <import as="screen" from="@qflow/screen-overlay@1"/>
   <import as="film" from="@qflow/film@1"/>
   <import as="render" from="@qflow/render-hyperframes@1"/>
@@ -156,11 +157,9 @@
   </seedance:ReferenceVideo>
 
   <space:Canvas id="vertical" width="720" height="1280"/>
-  <space:RegionTimeline id="wojak-heads" within={vertical}
-    recipe={wojak-tracking.heads.wojak}/>
-  <space:Frame id="full-frame" within={vertical}
+  <space:Frame id="full-frame" within={vertical.bounds}
     left="0%" top="0%" right="100%" bottom="100%"/>
-  <program:Clock id="clock" frame-rate="30"/>
+  <time:Clock id="clock" frame-rate="30"/>
 
   <pipeline:Normalize id="soundtrack-media" source={soundtrack}
     video="none" audio="default" span-authority="audio" clock={clock}/>
@@ -174,40 +173,51 @@
   <pipeline:Normalize id="bitcoin-rule-media" source={bitcoin-rule-take.video}
     video="primary-moving" audio="default" span-authority="video" clock={clock}/>
 
-  <whisperx:SemanticTake id="manifest-rule-semantic" narrative={story}
-    segment={story.segment.manifest-rule} media={manifest-rule-media.media} language="en"/>
-  <whisperx:SemanticTake id="real-estate-rule-semantic" narrative={story}
-    segment={story.segment.real-estate-rule} media={real-estate-rule-media.media} language="en"/>
-  <whisperx:SemanticTake id="bitcoin-rule-semantic" narrative={story}
-    segment={story.segment.bitcoin-rule} media={bitcoin-rule-media.media} language="en"/>
+  <whisperx:Alignment id="manifest-rule-semantic" narrative={story}
+    segment={story.segment.manifest-rule} media={manifest-rule-media.media} domain={manifest-rule-media.domain} language="en"/>
+  <whisperx:Alignment id="real-estate-rule-semantic" narrative={story}
+    segment={story.segment.real-estate-rule} media={real-estate-rule-media.media} domain={real-estate-rule-media.domain} language="en"/>
+  <whisperx:Alignment id="bitcoin-rule-semantic" narrative={story}
+    segment={story.segment.bitcoin-rule} media={bitcoin-rule-media.media} domain={bitcoin-rule-media.domain} language="en"/>
 
-  <time:Timeline id="speech" clock={clock}>
-    <time:Take source={manifest-rule-semantic.take}/>
-    <time:Take source={real-estate-rule-semantic.take}/>
-    <time:Take source={bitcoin-rule-semantic.take}/>
+  <time:Timeline id="speech" clock={clock} end="bitcoin-rule-semantic.end">
+    <time:Window id="manifest-rule-semantic" from="start" for={manifest-rule-media.extent}/>
+    <time:Window id="real-estate-rule-semantic" from="manifest-rule-semantic.end" for={real-estate-rule-media.extent}/>
+    <time:Window id="bitcoin-rule-semantic" from="real-estate-rule-semantic.end" for={bitcoin-rule-media.extent}/>
   </time:Timeline>
 
-  <sound:Style id="speech-sound-style"/>
-  <sound:Track id="speech-sound" timeline={speech.timeline}>
-    <sound:Use style={speech-sound-style}/>
-  </sound:Track>
-  <performance:Style id="speech-picture-style" frame={full-frame} appearance={recipes.media.performance}/>
-  <performance:Track id="speech-picture" timeline={speech.timeline} canvas={vertical}>
-    <performance:Use style={speech-picture-style} during="program"/>
-  </performance:Track>
+
+  <semantic:Projection id="story-time" narrative={story} timeline={speech.timeline}>
+    <semantic:Map alignment={manifest-rule-semantic.alignment} domain={manifest-rule-media.domain} window={speech.manifest-rule-semantic}/>
+    <semantic:Map alignment={real-estate-rule-semantic.alignment} domain={real-estate-rule-media.domain} window={speech.real-estate-rule-semantic}/>
+    <semantic:Map alignment={bitcoin-rule-semantic.alignment} domain={bitcoin-rule-media.domain} window={speech.bitcoin-rule-semantic}/>
+    <semantic:Instant id="moment-manifest-cue" moment={story.moment.manifest}/>
+    <semantic:Instant id="moment-real-estate-cue" moment={story.moment.real-estate}/>
+    <semantic:Instant id="moment-bitcoin-cue" moment={story.moment.bitcoin}/>
+  </semantic:Projection>
+
+  <region:Track id="wojak-heads" within={vertical.bounds} timeline={speech.timeline}
+    recipe={wojak-tracking.heads.wojak}/>
+  <audio:Track id="speech-sound" timeline={speech.timeline}>
+    <audio:Clip id="manifest-rule-semantic-source" source={manifest-rule-media.media} during={speech.manifest-rule-semantic}/>
+    <audio:Clip id="real-estate-rule-semantic-source" source={real-estate-rule-media.media} during={speech.real-estate-rule-semantic}/>
+    <audio:Clip id="bitcoin-rule-semantic-source" source={bitcoin-rule-media.media} during={speech.bitcoin-rule-semantic}/>
+  </audio:Track>
+  <visual:Track id="speech-picture" timeline={speech.timeline}>
+    <visual:Clip id="manifest-rule-semantic-source" media={manifest-rule-media.media} during={speech.manifest-rule-semantic} frame={full-frame} z="10" fit="cover"/>
+    <visual:Clip id="real-estate-rule-semantic-source" media={real-estate-rule-media.media} during={speech.real-estate-rule-semantic} frame={full-frame} z="10" fit="cover"/>
+    <visual:Clip id="bitcoin-rule-semantic-source" media={bitcoin-rule-media.media} during={speech.bitcoin-rule-semantic} frame={full-frame} z="10" fit="cover"/>
+  </visual:Track>
 
   <audio-track:Track id="music-bed" timeline={speech.timeline}>
-    <audio-track:Item source={soundtrack-media.media} during="program"
-      playback="once-start" gain="0.12" fade-in="300ms" fade-out="600ms"/>
+    <audio-track:Clip source={soundtrack-media.media} during="timeline"
+      gain="0.12" fade-in="300ms" fade-out="600ms"/>
   </audio-track:Track>
 
   <audio-track:Track id="rule-reveal-sfx" timeline={speech.timeline}>
-    <audio-track:Item id="manifest-reveal-sfx" source={rule-reveal-sound-media.media}
-      at={story.moment.manifest} for="20f" playback="once-start" gain="0.20"/>
-    <audio-track:Item id="real-estate-reveal-sfx" source={rule-reveal-sound-media.media}
-      at={story.moment.real-estate} for="20f" playback="once-start" gain="0.20"/>
-    <audio-track:Item id="bitcoin-reveal-sfx" source={rule-reveal-sound-media.media}
-      at={story.moment.bitcoin} for="20f" playback="once-start" gain="0.20"/>
+    <audio-track:Clip id="manifest-reveal-sfx" source={rule-reveal-sound-media.media} from={story-time.moment-manifest-cue} for="20f" gain="0.20"/>
+    <audio-track:Clip id="real-estate-reveal-sfx" source={rule-reveal-sound-media.media} from={story-time.moment-real-estate-cue} for="20f" gain="0.20"/>
+    <audio-track:Clip id="bitcoin-reveal-sfx" source={rule-reveal-sound-media.media} from={story-time.moment-bitcoin-cue} for="20f" gain="0.20"/>
   </audio-track:Track>
 
   <fonts:Stack id="caption-font" family="league-spartan" weight="900" style="normal"/>
@@ -216,36 +226,37 @@
   <caption-fine:Style id="caption-wojak-style" recipe={recipes.caption.wojak}
     font={caption-font}/>
 
-  <caption-fine:Track id="captions" document={story.caption}
-    timeline={speech.timeline} regions={wojak-heads}>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
+    timeline={speech.timeline} within={vertical.bounds} regions={wojak-heads}>
     <caption-fine:Use style={caption-chad-style}/>
     <caption-fine:Use role="WOJAK" style={caption-wojak-style}/>
-  </caption-fine:Track>
+  </caption-fine:Caption>
 
   <emoji:Style id="rule-reveal-style" recipe={recipes.emoji.strip}/>
-  <emoji:Track id="rule-reveal" timeline={speech.timeline} canvas={vertical}
-    style={rule-reveal-style} placeholder={rule-placeholder.image} during="program">
-    <emoji:Item id="manifest" icon={manifest-icon.image} at={story.moment.manifest}/>
-    <emoji:Item id="real-estate" icon={real-estate-icon.image} at={story.moment.real-estate}/>
-    <emoji:Item id="bitcoin" icon={bitcoin-icon.image} at={story.moment.bitcoin}/>
-  </emoji:Track>
+  <emoji:EmojiReveal id="rule-reveal" timeline={speech.timeline} within={vertical.bounds}
+    style={rule-reveal-style} placeholder={rule-placeholder.image} during="timeline">
+    <emoji:Item id="manifest" icon={manifest-icon.image} at={story-time.moment-manifest-cue}/>
+    <emoji:Item id="real-estate" icon={real-estate-icon.image} at={story-time.moment-real-estate-cue}/>
+    <emoji:Item id="bitcoin" icon={bitcoin-icon.image} at={story-time.moment-bitcoin-cue}/>
+  </emoji:EmojiReveal>
 
-  <screen:Track id="rule-reveal-flashes" timeline={speech.timeline} canvas={vertical}>
-    <screen:Flash id="manifest-flash" at={story.moment.manifest} for="8f" z="80"
+  <screen:Track id="rule-reveal-flashes" timeline={speech.timeline} within={vertical.bounds}>
+    <screen:Flash id="manifest-flash" from={story-time.moment-manifest-cue} for="8f" z="80"
       color="#FF4D6D" intensity="0.28" attack="2" hold="1" decay="5"/>
-    <screen:Flash id="real-estate-flash" at={story.moment.real-estate} for="8f" z="80"
+    <screen:Flash id="real-estate-flash" from={story-time.moment-real-estate-cue} for="8f" z="80"
       color="#14A68A" intensity="0.28" attack="2" hold="1" decay="5"/>
-    <screen:Flash id="bitcoin-flash" at={story.moment.bitcoin} for="8f" z="80"
+    <screen:Flash id="bitcoin-flash" from={story-time.moment-bitcoin-cue} for="8f" z="80"
       color="#F59E0B" intensity="0.28" attack="2" hold="1" decay="5"/>
   </screen:Track>
 
-  <film:Film id="main" canvas={vertical} timeline={speech.timeline}
+  <film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline}
     appearance={recipes.film.vertical}>
     <film:Track source={speech-picture.visual}/>
     <film:Track source={speech-sound.audio}/>
-    <film:Track source={captions.track}/>
-    <film:Track source={rule-reveal.track}/>
-    <film:Track source={rule-reveal-flashes.track}/>
+    <film:Track source={captions.visual}/>
+    <film:Track source={rule-reveal.visual}/>
+    <film:Track source={rule-reveal-flashes.visual}/>
     <film:Track source={music-bed.audio}/>
     <film:Track source={rule-reveal-sfx.audio}/>
   </film:Film>

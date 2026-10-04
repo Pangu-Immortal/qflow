@@ -1,5 +1,4 @@
 import type {
-  CaptionDocument,
   Narrative,
   NarrativeExcerpt,
   NarrativeMomentRef,
@@ -25,27 +24,13 @@ export function assertNarrativeIdentity(value: Narrative): void {
   if (value.segments.length === 0) throw new Error("Narrative must contain at least one Segment.");
   const segmentIds = unique(value.segments.map((item) => item.id), "Narrative Segment id");
   const tokenIds = unique(value.tokens.map((item) => item.id), "Narrative Token id");
-  assertCaptionDocumentIdentity(value.caption);
-  if (value.caption.narrativeId !== value.id) throw new Error("Narrative CaptionDocument belongs to another Narrative.");
-  const turns = new Map(value.turns.map((turn) => [turn.id, turn]));
-  const tokens = new Map(value.tokens.map((token) => [token.id, token]));
-  for (const unit of value.caption.units) {
-    const turn = turns.get(unit.turnId);
-    if (turn === undefined || turn.segmentId !== unit.segmentId || turn.role !== unit.role
-      || unit.sourceTokenIds.some((id) => tokens.get(id)?.segmentId !== unit.segmentId)) {
-      throw new Error(`Caption unit ${unit.id} disagrees with its authored speech.`);
-    }
-  }
   unique(value.turns.map((item) => item.id), "Narrative Turn id");
   unique(value.selections.map((item) => item.id), "Narrative Selection id");
   unique(value.moments.map((item) => item.id), "Narrative Moment id");
   const anchorIds = unique(value.semanticIndex.anchors.map((item) => item.id), "Narrative Anchor id");
   const anchors = value.semanticIndex.anchors;
-  if (anchors[0]?.id !== "program:start" || anchors[0].kind !== "program-start"
-    || anchors.at(-1)?.id !== "program:end" || anchors.at(-1)?.kind !== "program-end") {
-    throw new Error("Narrative semantic anchors must begin and end with the Program boundaries.");
-  }
   const anchorOrder = new Map(anchors.map((anchor, index) => [anchor.id, index] as const));
+  let anchorCursor = 0;
   let tokenCursor = 0;
   for (const segment of value.segments) {
     if (!Number.isSafeInteger(segment.tokenStart) || !Number.isSafeInteger(segment.tokenEndExclusive)
@@ -54,6 +39,11 @@ export function assertNarrativeIdentity(value: Narrative): void {
       || !anchorIds.has(segment.startAnchorId) || !anchorIds.has(segment.endAnchorId)) {
       throw new Error(`Narrative Segment ${segment.id} has invalid token or Anchor boundaries.`);
     }
+    const segmentStart = anchors[anchorCursor++];
+    if (segmentStart?.id !== segment.startAnchorId || segmentStart.kind !== "segment-start"
+      || segmentStart.segmentId !== segment.id) {
+      throw new Error(`Narrative Segment ${segment.id} has no ordered start Anchor.`);
+    }
     for (let index = segment.tokenStart; index < segment.tokenEndExclusive; index += 1) {
       const token = value.tokens[index]!;
       if (token.segmentId !== segment.id || !tokenIds.has(token.id)
@@ -61,10 +51,26 @@ export function assertNarrativeIdentity(value: Narrative): void {
         || token.text.length === 0 || token.normalized.length === 0) {
         throw new Error(`Narrative Token ${token.id} disagrees with Segment ${segment.id}.`);
       }
+      const start = anchors[anchorCursor++];
+      const end = anchors[anchorCursor++];
+      if (start?.id !== token.startAnchorId || start.kind !== "token-start"
+        || start.segmentId !== segment.id || start.tokenId !== token.id
+        || end?.id !== token.endAnchorId || end.kind !== "token-end"
+        || end.segmentId !== segment.id || end.tokenId !== token.id) {
+        throw new Error(`Narrative Token ${token.id} has no ordered Anchor pair.`);
+      }
+    }
+    const segmentEnd = anchors[anchorCursor++];
+    if (segmentEnd?.id !== segment.endAnchorId || segmentEnd.kind !== "segment-end"
+      || segmentEnd.segmentId !== segment.id) {
+      throw new Error(`Narrative Segment ${segment.id} has no ordered end Anchor.`);
     }
     tokenCursor = segment.tokenEndExclusive;
   }
   if (tokenCursor !== value.tokens.length) throw new Error("Narrative Segments must partition Tokens in order.");
+  if (anchorCursor !== anchors.length) {
+    throw new Error("Narrative semantic anchors must be exactly the Segment and Token boundaries.");
+  }
   for (const turn of value.turns) {
     if (!segmentIds.has(turn.segmentId) || !Number.isSafeInteger(turn.tokenStart)
       || !Number.isSafeInteger(turn.tokenEndExclusive) || turn.tokenEndExclusive <= turn.tokenStart
@@ -106,37 +112,4 @@ export function assertNarrativeMomentRefIdentity(value: NarrativeMomentRef): voi
   nonempty(value.narrativeId, "NarrativeMoment narrativeId");
   nonempty(value.id, "NarrativeMoment id");
   nonempty(value.anchorId, "NarrativeMoment anchorId");
-}
-
-export function assertCaptionDocumentIdentity(value: CaptionDocument): void {
-  nonempty(value.narrativeId, "CaptionDocument narrativeId");
-  nonempty(value.id, "CaptionDocument id");
-  if ((value.units.length === 0) !== (value.words.length === 0)) {
-    throw new Error("CaptionDocument units and words must be empty together.");
-  }
-  const unitIds = unique(value.units.map((item) => item.id), "CaptionDocument unit id");
-  const wordIds = unique(value.words.map((item) => item.id), "CaptionDocument word id");
-  const words = new Map(value.words.map((word) => [word.id, word] as const));
-  const orderedWords: string[] = [];
-  for (const unit of value.units) {
-    if (unit.wordIds.length === 0 || unit.sourceTokenIds.length === 0) {
-      throw new Error(`Caption unit ${unit.id} is empty.`);
-    }
-    for (const wordId of unit.wordIds) {
-      const word = words.get(wordId);
-      if (word === undefined || word.unitId !== unit.id || word.segmentId !== unit.segmentId
-        || word.turnId !== unit.turnId || word.role !== unit.role) {
-        throw new Error(`Caption unit ${unit.id} references a foreign word.`);
-      }
-      orderedWords.push(wordId);
-    }
-  }
-  if (orderedWords.length !== wordIds.size
-    || orderedWords.some((id, index) => id !== value.words[index]?.id)) {
-    throw new Error("CaptionDocument units must partition words in order.");
-  }
-  unique(value.cueBreaks.map((item) => item.afterUnitId), "CaptionDocument Cue Break");
-  if (value.cueBreaks.some((item) => !unitIds.has(item.afterUnitId))) {
-    throw new Error("CaptionDocument Cue Break names an unknown unit.");
-  }
 }

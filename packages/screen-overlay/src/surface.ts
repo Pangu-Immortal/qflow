@@ -1,7 +1,7 @@
 import { resolveTemporalContext } from "@qflow/temporal-markup";
 import { spatialTypes } from "@qflow/spatial";
 import type { StructuredElement, StructuredSurfaceHandler, SurfaceComponentDraft, SurfaceRecordDraft, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/markup";
-import { createTemporalWindowProjection, temporalWindowAttributeNames } from "@qflow/temporal-markup";
+import { createTemporalWindowConstruction, temporalWindowAttributeNames } from "@qflow/temporal-markup";
 import { createScreenOverlayFragment } from "./fragment.js";
 import { screenOverlayTypes } from "./manifest.js";
 import { sealScreenOverlayHeader, sealScreenOverlayItemSpec } from "./program.js";
@@ -57,15 +57,15 @@ function content(element: StructuredElement): { readonly value: ScreenOverlayCom
 }
 
 export const decodeScreenOverlaySurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  allowed(element, ["id", "canvas", "timeline"]); const id = text(element, "id");
-  const canvas = ref(element.attributes.canvas, `${element.name}.canvas`, spatialTypes.canvas, resolveReference);
+  allowed(element, ["id", "within", "timeline"]); const id = text(element, "id");
+  const within = ref(element.attributes.within, `${element.name}.within`, spatialTypes.frame, resolveReference);
   const context = resolveTemporalContext({ element, resolveReference });
   const headerId = `${id}.header`; const records: SurfaceRecordDraft[] = [{ id: headerId, type: screenOverlayTypes.header,
     value: { kind: "inline", value: sealScreenOverlayHeader({ id }) }, range: element.range }];
   const temporalComponents: SurfaceComponentDraft[] = [];
-  const temporalFragments: ReturnType<typeof createTemporalWindowProjection>["fragments"][number][] = [];
+  const temporalFragments: ReturnType<typeof createTemporalWindowConstruction>["fragments"][number][] = [];
   const fragmentItems: Parameters<typeof createScreenOverlayFragment>[0][number][] = [];
-  const inputs: Record<string, typeof canvas.ref> = { canvas: canvas.ref, header: { kind: "record", id: headerId }, timeline: context.timeline.ref };
+  const inputs: Record<string, typeof within.ref> = { within: within.ref, header: { kind: "record", id: headerId }, timeline: context.timeline.ref };
   let index = 0;
   for (const child of element.children) {
     if (child.kind === "text") { if (child.value.trim()) throw new Error(`${element.name} accepts only component children.`); continue; }
@@ -75,7 +75,7 @@ export const decodeScreenOverlaySurface: StructuredSurfaceHandler = ({ element, 
     const itemSpec = sealScreenOverlayItemSpec({
       id: optionalText(child, "id") ?? `${id}.${decoded.value.kind}.${suffix}`, content: decoded.value,
       stackingOrder: integer(child, "z") });
-    const temporal = createTemporalWindowProjection({ id: itemSpec.id, element: child, ...context, resolveReference });
+    const temporal = createTemporalWindowConstruction({ id: itemSpec.id, element: child, ...context, resolveReference });
     records.push(...temporal.records); temporalComponents.push(...temporal.components); temporalFragments.push(...temporal.fragments);
     const specId = `${id}.item.${suffix}.spec`; const specName = `item-${suffix}-spec`;
     records.push({ id: specId, type: screenOverlayTypes.itemSpec, value: { kind: "inline", value: itemSpec }, range: child.range });
@@ -85,5 +85,5 @@ export const decodeScreenOverlaySurface: StructuredSurfaceHandler = ({ element, 
   }
   if (fragmentItems.length === 0) throw new Error(`${element.name} requires at least one component.`);
   const fragment = createScreenOverlayFragment(fragmentItems);
-  return { records, components: [...temporalComponents, { id, fragment: fragment.id, inputs, outputs: { program: `${id}.program`, track: `${id}.track` }, range: element.range }], fragments: [...temporalFragments, fragment], exports: [`${id}.program`, `${id}.track`] };
+  return { records, components: [...temporalComponents, { id, fragment: fragment.id, inputs, outputs: { program: `${id}.program`, visual: `${id}.visual` }, range: element.range }], fragments: [...temporalFragments, fragment], exports: [`${id}.program`, `${id}.visual`] };
 };

@@ -9,7 +9,7 @@ import { relative } from "node:path";
 
 import type { MarkupSurfaceRegistryLike } from "@qflow/markup";
 import { compositionTypes } from "@qflow/composition";
-import { programSpaceFrameCount } from "@qflow/program-space";
+import { timelineFrameCount } from "@qflow/timeline";
 import { sameModule, sameType } from "@qflow/protocol";
 
 import type {
@@ -35,7 +35,7 @@ type Present = {
   readonly id: string;
   readonly subjectId?: string;
   readonly span: { readonly startFrame: number; readonly endFrameExclusive: number };
-  readonly stacking: { readonly order: number };
+  readonly z: number;
 };
 
 /** Sound is placed in samples rather than frames, in the canonical 48 kHz. */
@@ -63,7 +63,7 @@ function spans(
       ...(present.subjectId === undefined ? {} : { subjectId: present.subjectId }),
       startFrame: present.span.startFrame,
       endFrameExclusive: present.span.endFrameExclusive,
-      stackOrder: present.stacking.order,
+      stackOrder: present.z,
     }));
   }
   const perSecond = frameRate.numerator / frameRate.denominator;
@@ -162,7 +162,7 @@ function semanticTimeline(
     errors: [],
   };
   return {
-    spaceId: built.space.id,
+    timelineId: built.timeline.id,
     narrativeId: built.narrativeId,
     // The generic ruler presentation is independent of the authored Timeline id.
     presentation: registry.semanticTimelinePresentation(),
@@ -304,7 +304,7 @@ export function snapshot(registry: StudioCompanionRegistry, built: Preview, inpu
   // root that produced them in this list.
   const rows = tracks.map((track, row) => ({ ...track, row }));
 
-  const frameCount = programSpaceFrameCount(built.space);
+  const frameCount = timelineFrameCount(built.timeline);
   return {
     revision: input.revision,
     source: {
@@ -320,10 +320,12 @@ export function snapshot(registry: StudioCompanionRegistry, built: Preview, inpu
     },
     run: input.run,
     ...(script === undefined ? {} : { script }),
-    space: {
-      canvasWidth: input.canvas.width,
-      canvasHeight: input.canvas.height,
+    canvas: {
+      width: input.canvas.width,
+      height: input.canvas.height,
       clearColor: input.canvas.clearColor,
+    },
+    timeline: {
       frameRate: input.frameRate,
       frameCount,
       durationSec: frameCount * input.frameRate.denominator / input.frameRate.numerator,

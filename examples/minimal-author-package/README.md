@@ -7,8 +7,9 @@ selecting a released Qflow development dependency, compiling it and sharing its 
 
 The fixture's Surface decoder also demonstrates the public value boundary: Style-like values consume
 a decoded recipe shaped as `{ path, properties }`, exact `FontStackRef` records and inline values
-only after checking `record.value.kind === "inline"`. Media slots remain graph inputs rather than
-package files.
+only after checking `record.value.kind === "inline"`. Image slots remain graph inputs rather than
+package files. Its visual Surfaces also receive an explicit `within` Frame; the example never relies
+on a renderer root implicitly meaning the whole Canvas.
 
 The package builds against one public Qflow framework dependency, `qflow`, and emits JavaScript.
 `pnpm --dir packages/example-component pack` produces a tarball with no Runtime dependencies of its

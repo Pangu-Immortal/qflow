@@ -1,6 +1,7 @@
-import { mediaTypes } from "@qflow/media";
+import { mediaProducers, mediaTypes } from "@qflow/media";
+import { temporalProducers, temporalTypes } from "@qflow/temporal";
 import { artifactTypes } from "@qflow/artifact";
-import { programSpaceTypes } from "@qflow/program-space";
+import { timelineTypes } from "@qflow/timeline";
 import { speechTypes } from "@qflow/speech";
 import { sealGraphFragment } from "@qflow/elaborator";
 
@@ -16,6 +17,7 @@ export const synchronizedMediaFragment = sealGraphFragment({
   inputs: [
     { name: "source", type: artifactTypes.blob },
     { name: "request", type: mediaPipelineTypes.selectionRequest },
+    { name: "domain", type: mediaTypes.domainSpec },
   ],
   operations: [
     {
@@ -41,11 +43,31 @@ export const synchronizedMediaFragment = sealGraphFragment({
       },
       result: { kind: "need", name: "media" },
     },
+    {
+      id: "domain",
+      producer: mediaProducers.localDomain,
+      inputs: { media: operation("normalize"), spec: input("domain") },
+      result: { kind: "output", name: "domain" },
+    },
+    {
+      id: "extent",
+      producer: temporalProducers.extentFromDomain,
+      inputs: { domain: operation("domain") },
+      result: { kind: "output", name: "extent" },
+    },
   ],
   exports: [{
     name: "media",
     type: mediaTypes.synchronized,
     root: operation("normalize"),
+  }, {
+    name: "domain",
+    type: temporalTypes.localDomain,
+    root: operation("domain"),
+  }, {
+    name: "extent",
+    type: temporalTypes.extent,
+    root: operation("extent"),
   }],
 });
 
@@ -132,7 +154,7 @@ export function createStillVideoFragment(count: number) {
   return sealGraphFragment({
     inputs: [
       { name: "duration", type: speechTypes.duration },
-      { name: "clock", type: programSpaceTypes.clock },
+      { name: "clock", type: timelineTypes.clock },
       { name: "layout", type: mediaPipelineTypes.stillVideoLayout },
       ...sources.map((name) => ({ name, type: artifactTypes.blob })),
     ],

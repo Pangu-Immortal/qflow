@@ -16,41 +16,51 @@ formats. The service's flat-background MP4 option is a different output treatmen
 ## Prepare the processed clip for its role
 
 ```svml
-<import as="program" from="@qflow/program-space@1"/>
 <import as="pipeline" from="@qflow/media-pipeline@1"/>
 <import as="whisperx" from="@qflow/whisperx@1"/>
+<import as="semantic" from="@qflow/narrative-temporal@1"/>
+<import as="media" from="@qflow/media@1"/>
 
-<program:Clock id="clock" frame-rate="30"/>
+<time:Clock id="clock" frame-rate="30"/>
 <pipeline:Normalize id="cutout-media" source={cutout.video} clock={clock}
   video="primary-moving" audio="default" span-authority="video"/>
-<whisperx:SemanticTake id="opening-semantic" narrative={story}
-  segment={story.segment.opening} media={cutout-media.media} language="en"/>
+<whisperx:Alignment id="opening-alignment" narrative={story}
+  segment={story.segment.opening} media={cutout-media.media}
+  domain={cutout-media.domain} language="en"/>
+<time:Timeline id="speech" clock={clock} end="opening.end">
+  <time:Window id="opening" from="start" for={cutout-media.extent}/>
+</time:Timeline>
+<semantic:Projection id="story-time" narrative={story} timeline={speech.timeline}>
+  <semantic:Map alignment={opening-alignment.alignment}
+    domain={cutout-media.domain} window={speech.opening}/>
+</semantic:Projection>
 ```
 
-This excerpt assumes the performance and Script exist. Normalize keeps the transparent picture
-and prepares the selected embedded audio on the program clock. WhisperX and semantic alignment
-associate that prepared performance with the Script. Use `opening-semantic.take` in
-[Timeline assembly](../timeline-author/README.md); its screen position and stack order are independent
-of its role as A-roll.
+This excerpt assumes the performance and Script exist. Normalize keeps the transparent picture and
+prepares the selected embedded audio. WhisperX associates the Script Segment with the media-local
+domain; Timeline uses its Extent while semantic projection consumes the equal-length domain/Window
+relation and then discards it. Use `cutout-media.media` with `during={speech.opening}` in independent
+Visual and Audio Clips. Screen position and stack order remain visual choices.
 
-For B-roll, normalize `cutout.video` with `audio="none"` when its sound is unwanted, then use
-`cutout-media.media` in [Media Track](../media-track/README.md). No SemanticTake is needed for
-that overlay. Existing transparency can enter Normalize directly.
+For independently timed footage, normalize `cutout.video` with `audio="none"` when its sound is
+unwanted, then use `cutout-media.media` in a [Visual Clip](../visual-track/README.md). No semantic
+alignment is needed for that overlay. Existing transparency can enter Normalize directly.
 
 For example, this alternative uses the existing program's Timeline and an authored Selection:
 
 ```svml
-<import as="media-track" from="@qflow/media-track@1"/>
+<import as="visual" from="@qflow/visual-track@1"/>
 <pipeline:Normalize id="overlay-media" source={cutout.video} clock={clock}
   video="primary-moving" audio="none" span-authority="video"/>
-<media-track:Track id="overlay" timeline={speech.timeline} canvas={canvas}>
-  <media-track:Item media={overlay-media.media} during={story.selection.example}
-    frame={overlay-frame} appearance={look.media.overlay}/>
-</media-track:Track>
+<visual:Track id="overlay" timeline={speech.timeline}>
+  <visual:Clip media={overlay-media.media} during={story-time.example}
+    frame={overlay-frame} z="30" fit="contain" treatment={look.visual.overlay}/>
+</visual:Track>
 ```
 
-The Frame, Recipe and Selection belong to the composition. Add `overlay.visual` to Film and set
-its stacking order in the Recipe. The performance underneath continues to supply semantic time.
+The Frame, treatment Recipe and Selection belong to the composition. Add `overlay.visual` to Film;
+the Clip's direct `z` sets its stacking order. The performance underneath continues to supply
+semantic time.
 
 The same processed clip can serve either role; matting does not choose its Track or timeline.
 The local media Provider's Transform currently emits opaque MP4. When a clip also needs trimming

@@ -43,11 +43,11 @@ The tub passes across a cut; the woman is empty-handed on the later return to he
 One five-second silent B-roll request combines the three lifestyle pictures into a montage. The
 second scene is strawberry bingsu, not a literal smoothie demonstration: the montage illustrates the
 whole routine. It covers part of the incoming man's response, creating a J-cut and giving the final
-cooking scene time to read. Its Recipe uses `once-start`: native-speed playback, truncation when the
-Selection is shorter, and an end to coverage when the clip finishes. It does not freeze the last
-frame or retime to fill the window. Inspect the newly aligned endpoint and adjust the Selection if
-the actual montage needs more reading time. Exact word-to-scene reconstruction would use separate
-media Items and adjoining Selections instead.
+cooking scene time to read. Its Clip omits `Map`, so the bounded partial identity plays at native
+speed, truncates when the Selection is shorter, and ends coverage when the source finishes. It does
+not freeze the last frame or retime to fill the Window. Inspect the newly aligned endpoint and adjust
+the Selection if the actual montage needs more reading time. Exact word-to-scene reconstruction
+would use separate Clips and adjoining Selections instead.
 
 `shared-soundtrack.m4a` is the only supplied media asset on the final route. Images, voices and Takes
 are generated; normalization, alignment, Caption and Film composition are explicit downstream work.

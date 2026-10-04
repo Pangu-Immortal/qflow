@@ -7,7 +7,7 @@ import {
   materializeHyperframesHtml,
 } from "@qflow/hyperframes";
 import type { FontArtifactRef } from "@qflow/media";
-import { sealProgramSpace } from "@qflow/program-space";
+import { sealTimeline } from "@qflow/timeline";
 import { sealAudioTrack, sealComposition, sealVisualTrack } from "@qflow/composition";
 import type { Track } from "@qflow/composition";
 import { VISUAL_IR_V1 } from "@qflow/visual-ir";
@@ -22,8 +22,7 @@ const fixtureFont: FontArtifactRef = {
 };
 
 function fixture() {
-  const programSpace = sealProgramSpace({ id: "test-space", durationSec: 1001 / 1000,
-    frameRate: { numerator: 30_000, denominator: 1_001 },
+  const timeline = sealTimeline({ id: "test-space", frameCount: 30, frameRate: { numerator: 30_000, denominator: 1_001 },
   });
   const picture = {
     kind: "blob" as const,
@@ -37,13 +36,14 @@ function fixture() {
     size: 20,
     mediaType: "audio/wav",
   };
-  const lower = sealVisualTrack({ programSpaceId: "test-space",
+  const lower = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1",
     id: "lower",
     presents: [{
       id: "picture",
+      order: 0,
+      z: 10,
       span: { startFrame: 0, endFrameExclusive: 30 },
-      stacking: { order: 10, tieBreak: "lower" },
       elements: [{
         id: "media",
         order: 0,
@@ -53,13 +53,14 @@ function fixture() {
       }],
     }],
   });
-  const upper = sealVisualTrack({ programSpaceId: "test-space",
+  const upper = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1",
     id: "upper",
     presents: [{
       id: "words",
+      order: 0,
+      z: 20,
       span: { startFrame: 3, endFrameExclusive: 20 },
-      stacking: { order: 20, tieBreak: "upper" },
       elements: [
         { id: "root", order: 0, kind: "box", style: [{ name: "position", value: "absolute" }] },
         { id: "text", parent: "root", order: 1, kind: "text", text: "Hello <world>", fonts: [fixtureFont], style: [],
@@ -72,15 +73,16 @@ function fixture() {
       ],
     }],
   });
-  const audio = sealAudioTrack({ programSpaceId: "test-space",
+  const audio = sealAudioTrack({ timelineId: "test-space",
     id: "sound",
     clips: [{
       id: "main",
       artifact: sound,
       target: { startSample: 0, endSampleExclusive: 48_000 },
-      source: { sampleFrames: 48_000, startSample: 0, endSampleExclusive: 48_000, loop: false, phaseSample: 0 },
-      playbackRate: 1,
-      pitch: "preserve",
+      sourceTime: { sourceSampleFrames: 48_000, pieces: [{
+        target: { startSample: 0, endSampleExclusive: 48_000 },
+        sourceAtStart: { numerator: 0, denominator: 1 }, rate: { numerator: 1, denominator: 1 },
+      }] },
       gain: 1,
       fadeInSamples: 0,
       fadeOutSamples: 0,
@@ -91,12 +93,12 @@ function fixture() {
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [upper, audio, lower],
   });
-  return { composition, picture, sound, programSpace };
+  return { composition, picture, sound, timeline };
 }
 
 test("HyperFrames flattens generic peer visual Track Presents without absorbing audio rendering", () => {
-  const { composition, picture, sound, programSpace } = fixture();
-  const document = compileHyperframesDocument(composition, programSpace);
+  const { composition, picture, sound, timeline } = fixture();
+  const document = compileHyperframesDocument(composition, timeline);
   assert.doesNotThrow(() => assertHyperframesDocument(document));
   assert.equal(document.visualIr, VISUAL_IR_V1);
   assert.deepEqual(new Set(document.artifacts.map(({ artifact }) => artifact.resource)),
@@ -121,8 +123,42 @@ test("HyperFrames flattens generic peer visual Track Presents without absorbing 
   assert.doesNotMatch(document.html, /speech-visual-track|caption-track/u);
 });
 
+test("equal-z Presents use stable Track identity and Track-local order", () => {
+  const timeline = sealTimeline({
+    id: "paint-order",
+    frameCount: 30,
+    frameRate: { numerator: 30, denominator: 1 },
+  });
+  const visualTrack = (id: string, presents: Array<{ id: string; order: number }>) => sealVisualTrack({
+    timelineId: timeline.id,
+    visualIr: VISUAL_IR_V1,
+    id,
+    presents: presents.map(present => ({
+      ...present,
+      z: 10,
+      span: { startFrame: 0, endFrameExclusive: 30 },
+      elements: [{ id: "root", order: 0, kind: "box", style: [] }],
+    })),
+  });
+  const composition = sealComposition({
+    id: "paint-order",
+    canvas: { width: 1920, height: 1080, clearColor: "#000000" },
+    tracks: [
+      visualTrack("track-b", [{ id: "b-second", order: 1 }, { id: "b-first", order: 0 }]),
+      visualTrack("track-a", [{ id: "a", order: 0 }]),
+    ],
+  });
+
+  const html = compileHyperframesDocument(composition, timeline).html;
+  const a = html.indexOf('data-qflow-present-id="a"');
+  const first = html.indexOf('data-qflow-present-id="b-first"');
+  const second = html.indexOf('data-qflow-present-id="b-second"');
+  assert.ok(a >= 0 && a < first && first < second);
+  assert.equal((html.match(/data-qflow-z="10"/gu) ?? []).length, 3);
+});
+
 test("shared glyph filter definitions live outside temporal Present capture roots", () => {
-  const { composition, programSpace } = fixture();
+  const { composition, timeline } = fixture();
   const changed = structuredClone(composition);
   const upper = changed.tracks.find(track => track.kind === "visual" && track.id === "upper");
   assert.ok(upper?.kind === "visual");
@@ -132,7 +168,7 @@ test("shared glyph filter definitions live outside temporal Present capture root
     { kind: "glow", paint: { kind: "solid", color: "#ff00ff" }, blurPx: 4, spreadPx: 1 },
     { kind: "fill", paint: { kind: "solid", color: "#ffffff" } },
   ] });
-  const html = compileHyperframesDocument(changed, programSpace).html;
+  const html = compileHyperframesDocument(changed, timeline).html;
   const definitions = html.indexOf("data-qflow-document-definitions");
   const present = html.indexOf('class="clip qflow-visual-present"');
   assert.ok(definitions >= 0 && definitions < present);
@@ -141,19 +177,19 @@ test("shared glyph filter definitions live outside temporal Present capture root
 });
 
 test("Text shrink preserves authored hug sizing and trims metrics inside the content box", () => {
-  const programSpace = sealProgramSpace({
+  const timeline = sealTimeline({
     id: "text-space",
-        durationSec: 1,
-    frameRate: { numerator: 30, denominator: 1 },
+        frameCount: 30, frameRate: { numerator: 30, denominator: 1 },
   });
   const track = sealVisualTrack({
-    programSpaceId: programSpace.id,
+    timelineId: timeline.id,
     visualIr: "qflow.visual-ir@1",
     id: "text",
     presents: [{
       id: "title",
+      order: 0,
+      z: 1,
       span: { startFrame: 0, endFrameExclusive: 30 },
-      stacking: { order: 1, tieBreak: "title" },
       elements: [
         { id: "root", order: 0, kind: "box", style: [{ name: "position", value: "absolute" }, { name: "inset", value: 0 }] },
         {
@@ -234,7 +270,7 @@ test("Text shrink preserves authored hug sizing and trims metrics inside the con
     id: "text-boxes",
     canvas: { width: 720, height: 1280, clearColor: "#000000" },
     tracks: [track],
-  }), programSpace);
+  }), timeline);
 
   assert.match(document.html, /data-qflow-text-flow data-qflow-text-overflow="shrink" data-qflow-text-inline-size="fixed" data-qflow-text-block-size="hug"/u);
   assert.match(document.html, /flex-shrink:0/u);
@@ -245,8 +281,8 @@ test("Text shrink preserves authored hug sizing and trims metrics inside the con
 });
 
 test("visual Artifact placeholders are materialized only by the Runtime boundary", () => {
-  const { composition, picture, sound, programSpace } = fixture();
-  const document = compileHyperframesDocument(composition, programSpace);
+  const { composition, picture, sound, timeline } = fixture();
+  const document = compileHyperframesDocument(composition, timeline);
   assert.match(document.html, /qflow-resource:\/\/res_/u);
   const resolved = materializeHyperframesHtml(document,
     (artifact) => `https://assets.example/${artifact.resource}?x=1&y=2`);
@@ -257,8 +293,8 @@ test("visual Artifact placeholders are materialized only by the Runtime boundary
 });
 
 test("HyperframesDocument carries render facts while its Record binds integrity", () => {
-  const { composition, programSpace } = fixture();
-  const document = compileHyperframesDocument(composition, programSpace);
+  const { composition, timeline } = fixture();
+  const document = compileHyperframesDocument(composition, timeline);
   assert.equal("digest" in document, false);
   assert.deepEqual(document.frameRate, { numerator: 30_000, denominator: 1_001 });
   assert.equal(document.frameCount, 30);
@@ -271,7 +307,7 @@ test("HyperframesDocument carries render facts while its Record binds integrity"
 
 test("any legal frame and Provider-owned chunk can be addressed without traversing earlier frames", () => {
   const fixtureValue = fixture();
-  const document = compileHyperframesDocument(fixtureValue.composition, fixtureValue.programSpace);
+  const document = compileHyperframesDocument(fixtureValue.composition, fixtureValue.timeline);
   assert.doesNotThrow(() => assertHyperframesFrameIndex(document, 0));
   assert.doesNotThrow(() => assertHyperframesFrameIndex(document, 17));
   assert.doesNotThrow(() => assertHyperframesFrameIndex(document, 29));
@@ -296,7 +332,7 @@ test("any legal frame and Provider-owned chunk can be addressed without traversi
 });
 
 test("HyperFrames emits compact absolute-frame animation without creating a Track stacking context", async () => {
-  const { composition, programSpace } = fixture();
+  const { composition, timeline } = fixture();
   const lower = composition.tracks.find((track) => track.id === "lower");
   assert(lower?.kind === "visual");
   const present = lower.presents[0]!;
@@ -319,14 +355,15 @@ test("HyperFrames emits compact absolute-frame animation without creating a Trac
   const document = compileHyperframesDocument(sealComposition({
     ...composition,
     tracks: composition.tracks.map((track) => track.id === "lower" ? animated : track),
-  }), programSpace);
+  }), timeline);
   assert.match(document.html, /@keyframes qflow-/u);
   assert.match(document.html, /33\.333333333%\{opacity:1;transform:translateY\(0%\)/u);
   assert.match(document.html, /animation-duration:1\.001s/u);
   assert.match(document.html, /100%\{opacity:1;transform:translateY\(0%\)\}/u);
   assert.match(document.html, /hyperframesCreateFrameWorkIndex/u);
-  assert.match(document.html, /for \(const animation of work\.payload\.animations\) animation\.currentTime = localTime/u);
-  assert.doesNotMatch(document.html, /const frames = \[\]|getComputedStyle\(element\)|animation\.cancel\(\)/u);
+  assert.match(document.html, /new Animation\(new KeyframeEffect\(/u);
+  assert.doesNotMatch(document.html, /const frames = \[\]/u, "poses are evaluated per seek, not tabulated per Present frame");
+  assert.doesNotMatch(document.html, /\.animate\(/u, "HyperFrames' waapi adapter tracks Element.animate");
   assert.doesNotMatch(document.html, /isolation:isolate/u);
 
   const marker = document.html.indexOf("const millisecondsPerFrame");
@@ -335,42 +372,102 @@ test("HyperFrames emits compact absolute-frame animation without creating a Trac
   const scriptEnd = document.html.indexOf("</script>", marker);
   const { frameWorkIndexRuntime, hyperframesFrameSelectionPrelude } = await import("../src/frame-work.js");
   const runtime = `${frameWorkIndexRuntime}\n${document.html.slice(scriptStart, scriptEnd)}`;
+  const toFrame = (milliseconds: number) => Math.round(milliseconds * 30 / 1_001);
+  // The fake engine advances every animation that remains live after Qflow's
+  // seek handler. This is the collision which made later Presents use absolute
+  // composition time even though Qflow had first applied a local pose.
   const evaluate = async (
     spans: readonly { readonly start: number; readonly duration: number }[],
     frames: readonly number[],
     selection?: readonly { readonly startFrame: number; readonly endFrameExclusive: number }[],
   ) => {
     const { runInNewContext } = await import("node:vm");
+    type FakeElement = { pose: number | undefined; readonly style: Record<string, unknown> };
+    type FakeAnimation = { readonly target: FakeElement; currentTime: number; pause(): void; cancel(): void };
     const positions = spans.map((): number[] => []);
-    let pauses = 0;
+    const live = new Set<FakeAnimation>();
+    let materialized = 0;
     let seek: (event: { detail: { time: number } }) => void = () => {};
-    const elements = spans.map((span, index) => ({
-      getBoundingClientRect() {},
-      getAnimations: () => [{
-        set currentTime(value: number) { positions[index]!.push(Math.round(value * 30 / 1_001)); },
-        pause() { pauses += 1; },
-      }],
-      getAttribute: (name: string) => String(name.endsWith("start-frame") ? span.start : span.duration),
-    }));
-    runInNewContext(`${selection === undefined ? "" : hyperframesFrameSelectionPrelude(selection)}\n${runtime}`, {
-      document: { querySelectorAll: () => elements, documentElement: { getBoundingClientRect() {} } },
-      window: { addEventListener(_name: string, callback: typeof seek) { seek = callback; } },
+    const animate = (target: FakeElement, record?: number[], effect?: object): FakeAnimation => {
+      const animation = {
+        target,
+        effect,
+        set currentTime(value: number) {
+          record?.push(toFrame(value));
+          target.pose = toFrame(value);
+        },
+        pause() {},
+        cancel() {
+          live.delete(animation);
+          target.pose = undefined;
+        },
+      };
+      live.add(animation);
+      return animation;
+    };
+    const elements = spans.map((span) => {
+      const element = {
+        pose: undefined as number | undefined,
+        style: {} as Record<string, unknown>,
+        getBoundingClientRect() {},
+        getAnimations: () => [...live].filter((animation) => animation.target === element),
+        getAttribute: (name: string) => String(name.endsWith("start-frame") ? span.start : span.duration),
+      };
+      animate(element, undefined, {
+        getKeyframes: () => {
+          materialized += 1;
+          return [
+            { offset: 0, computedOffset: 0, easing: "linear", composite: "auto", opacity: "0" },
+            { offset: 1, computedOffset: 1, easing: "linear", composite: "auto", opacity: String(span.duration) },
+          ];
+        },
+        getTiming: () => ({ duration: span.duration * 1_001 / 30, fill: "both" }),
+      });
+      return element;
     });
-    for (const frame of frames) seek({ detail: { time: frame * 1_001 / 30_000 } });
-    return { pauses, positions };
+    runInNewContext(`${selection === undefined ? "" : hyperframesFrameSelectionPrelude(selection)}\n${runtime}`, {
+      document: { querySelectorAll: () => elements, documentElement: { getBoundingClientRect() {} }, timeline: {} },
+      window: { addEventListener(_name: string, callback: typeof seek) { seek = callback; } },
+      KeyframeEffect: class {
+        readonly target: FakeElement;
+        constructor(target: FakeElement) { this.target = target; }
+      },
+      Animation: function (effect: { target: FakeElement }) {
+        return animate(effect.target, positions[elements.indexOf(effect.target as typeof elements[number])]);
+      },
+      getComputedStyle: (element: FakeElement) => ({ opacity: String(element.pose) }),
+    });
+    for (const frame of frames) {
+      seek({ detail: { time: frame * 1_001 / 30_000 } });
+      for (const animation of live) animation.currentTime = frame * 1_001 / 30;
+    }
+    const shown = elements.map((element) => element.pose === undefined ? element.style.opacity : String(element.pose));
+    return { materialized, live: live.size, positions, shown };
   };
   assert.deepEqual(await evaluate([{ start: 15, duration: 30 }], [30, 44, 15, 45, 60]), {
-    pauses: 1,
-    positions: [[0, 15, 29, 0]],
+    materialized: 1,
+    live: 0,
+    positions: [[15, 29, 0]],
+    shown: ["0"],
   });
-  assert.deepEqual(await evaluate([{ start: 15, duration: 30 }], [30]), { pauses: 1, positions: [[0, 15]] },
+  assert.deepEqual(await evaluate([{ start: 15, duration: 30 }], [30]), {
+    materialized: 1, live: 0, positions: [[15]], shown: ["15"],
+  },
     "a fresh worker derives the same middle pose without visiting preceding frames");
+  assert.deepEqual(await evaluate([{ start: 30, duration: 60 }], [33, 60, 86]), {
+    materialized: 1,
+    live: 0,
+    positions: [[3, 30, 56]],
+    shown: ["56"],
+  }, "a Present starting after frame 0 keeps its Present-relative pose when HyperFrames seeks live animations");
   assert.deepEqual(await evaluate([
     { start: 0, duration: 30 },
     { start: 90, duration: 30 },
   ], [100], [{ startFrame: 100, endFrameExclusive: 101 }]), {
-    pauses: 1,
-    positions: [[], [0, 10]],
+    materialized: 1,
+    live: 1,
+    positions: [[], [10]],
+    shown: ["100", "10"],
   }, "a selected render does not materialize animations from unrelated Presents");
   assert.deepEqual(await evaluate([
     { start: 0, duration: 5 },
@@ -378,18 +475,20 @@ test("HyperFrames emits compact absolute-frame animation without creating a Trac
     { start: 3, duration: 5 },
     { start: 100, duration: 2 },
   ], [0, 3, 4, 5, 7, 8, 100, 101, 102, 6]), {
-    pauses: 4,
+    materialized: 4,
+    live: 0,
     positions: [
-      [0, 0, 3, 4],
-      [0, 0, 2, 3, 1],
-      [0, 0, 1, 2, 4, 3],
-      [0, 0, 1],
+      [0, 3, 4],
+      [0, 2, 3, 1],
+      [0, 1, 2, 4, 3],
+      [0, 1],
     ],
+    shown: ["4", "1", "3", "1"],
   }, "the point index preserves overlap, half-open boundaries, distant spans and reverse seeks");
 });
 
 test("HyperFrames clips a long animation by Present visibility instead of rejecting it", () => {
-  const { composition, programSpace } = fixture();
+  const { composition, timeline } = fixture();
   const lower = composition.tracks.find((track) => track.id === "lower");
   assert(lower?.kind === "visual");
   const present = lower.presents[0]!;
@@ -403,7 +502,7 @@ test("HyperFrames clips a long animation by Present visibility instead of reject
   const document = compileHyperframesDocument(sealComposition({
     ...composition,
     tracks: composition.tracks.map((track) => track.id === "lower" ? animated : track),
-  }), programSpace);
+  }), timeline);
   assert.match(document.html, /animation-duration:1\.5015s/u);
   assert.match(document.html, /data-qflow-animation-sample-frames="30"/u);
   assert.doesNotMatch(document.html, /data-qflow-animation-properties|data-qflow-animation-duration-frames/u);
@@ -411,8 +510,7 @@ test("HyperFrames clips a long animation by Present visibility instead of reject
 });
 
 test("content-bound fonts and typed compositable Surfaces cross the same Artifact boundary", () => {
-  const space = sealProgramSpace({ id: "test-space", durationSec: 1,
-    frameRate: { numerator: 30, denominator: 1 },
+  const space = sealTimeline({ id: "test-space", frameCount: 30, frameRate: { numerator: 30, denominator: 1 },
   });
   const font: FontArtifactRef = {
     sources: [{ artifact: {
@@ -425,13 +523,14 @@ test("content-bound fonts and typed compositable Surfaces cross the same Artifac
     style: "normal",
   };
   const surfaceDigest = fixtureResource("hyperframes:alpha-surface");
-  const track = sealVisualTrack({ programSpaceId: "test-space",
+  const track = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1",
     id: "bound-render-dependencies",
     presents: [{
       id: "bound",
+      order: 0,
+      z: 1,
       span: { startFrame: 0, endFrameExclusive: 30 },
-      stacking: { order: 1, tieBreak: "bound" },
       elements: [
         { id: "root", order: 0, kind: "box", style: [] },
         {
@@ -459,6 +558,15 @@ test("content-bound fonts and typed compositable Surfaces cross the same Artifac
               frameRate: { numerator: 30, denominator: 1 },
               frameCount: 30,
             },
+          },
+          sourceTime: {
+            sourceFrameRate: { numerator: 30, denominator: 1 },
+            sourceFrameCount: 30,
+            pieces: [{
+              target: { startFrame: 0, endFrameExclusive: 30 },
+              sourceAtStart: { numerator: 0, denominator: 1 },
+              rate: { numerator: 1, denominator: 1 },
+            }],
           },
           style: [{ name: "position", value: "absolute" }, { name: "inset", value: 0 }],
         },
@@ -489,8 +597,7 @@ test("content-bound fonts and typed compositable Surfaces cross the same Artifac
 });
 
 test("exact timed sampling keeps a held frame as one compact interval without zero-rate browser media", () => {
-  const programSpace = sealProgramSpace({ id: "test-space", durationSec: 8 / 30,
-    frameRate: { numerator: 30, denominator: 1 },
+  const timeline = sealTimeline({ id: "test-space", frameCount: 8, frameRate: { numerator: 30, denominator: 1 },
   });
   const artifact = {
     kind: "blob" as const,
@@ -498,32 +605,33 @@ test("exact timed sampling keeps a held frame as one compact interval without ze
     size: 1_000,
     mediaType: "video/mp4",
   };
-  const track = sealVisualTrack({ programSpaceId: "test-space",
+  const track = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1",
     id: "sampled",
     presents: [{
       id: "sampled",
+      order: 0,
+      z: 1,
       span: { startFrame: 0, endFrameExclusive: 8 },
-      stacking: { order: 1, tieBreak: "sampled" },
       elements: [{
         id: "video",
         order: 0,
         kind: "video",
         artifact,
         muted: true,
-        sampling: {
+        sourceTime: {
           sourceFrameRate: { numerator: 30, denominator: 1 },
           sourceFrameCount: 4,
-          segments: [
+          pieces: [
             {
               target: { startFrame: 0, endFrameExclusive: 6 },
-              sourceFrame: { numerator: 2, denominator: 1 },
+              sourceAtStart: { numerator: 2, denominator: 1 },
               rate: { numerator: 1, denominator: 1 },
-              loop: { startFrame: 0, endFrameExclusive: 4 },
+              wrap: { startFrame: 0, endFrameExclusive: 4 },
             },
             {
               target: { startFrame: 6, endFrameExclusive: 8 },
-              sourceFrame: { numerator: 3, denominator: 1 },
+              sourceAtStart: { numerator: 3, denominator: 1 },
               rate: { numerator: 0, denominator: 1 },
             },
           ],
@@ -536,7 +644,7 @@ test("exact timed sampling keeps a held frame as one compact interval without ze
     id: "sampled",
     canvas: { width: 100, height: 100, clearColor: "#000000" },
     tracks: [track],
-  }), programSpace);
+  }), timeline);
   assert.equal((document.html.match(/data-qflow-sampling-part=/gu) ?? []).length, 3);
   assert.match(document.html, /data-media-start="0\.066666666666"/u);
   assert.match(document.html, /data-media-start="0"/u);
@@ -557,16 +665,16 @@ test("a Track naming five takes still lowers to DOM identities a Windows path ca
   const trackId = "speech-visual:opening-monologue-take-1+opening-monologue-take-2"
     + "+opening-monologue-take-3+opening-monologue-take-4+opening-monologue-take-5";
   const presentId = `${trackId}:clip-1`;
-  const programSpace = sealProgramSpace({ id: "test-space", durationSec: 8 / 30,
-    frameRate: { numerator: 30, denominator: 1 },
+  const timeline = sealTimeline({ id: "test-space", frameCount: 8, frameRate: { numerator: 30, denominator: 1 },
   });
-  const track = sealVisualTrack({ programSpaceId: "test-space",
+  const track = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1",
     id: trackId,
     presents: [{
       id: presentId,
+      order: 0,
+      z: 1,
       span: { startFrame: 0, endFrameExclusive: 8 },
-      stacking: { order: 1, tieBreak: presentId },
       elements: [{
         id: `${presentId}:foreground`,
         order: 0,
@@ -579,18 +687,18 @@ test("a Track naming five takes still lowers to DOM identities a Windows path ca
         },
         muted: true,
         // Sampling is what splits the element into parts, and each part appends its own suffix.
-        sampling: {
+        sourceTime: {
           sourceFrameRate: { numerator: 30, denominator: 1 },
           sourceFrameCount: 8,
-          segments: [
+          pieces: [
             {
               target: { startFrame: 0, endFrameExclusive: 4 },
-              sourceFrame: { numerator: 0, denominator: 1 },
+              sourceAtStart: { numerator: 0, denominator: 1 },
               rate: { numerator: 1, denominator: 1 },
             },
             {
               target: { startFrame: 4, endFrameExclusive: 8 },
-              sourceFrame: { numerator: 4, denominator: 1 },
+              sourceAtStart: { numerator: 4, denominator: 1 },
               rate: { numerator: 1, denominator: 1 },
             },
           ],
@@ -603,7 +711,7 @@ test("a Track naming five takes still lowers to DOM identities a Windows path ca
     id: "long-identity",
     canvas: { width: 100, height: 100, clearColor: "#000000" },
     tracks: [track],
-  }), programSpace);
+  }), timeline);
 
   // The `id` attribute only; `data-qflow-element-id` and friends are meant to stay readable.
   const identities = [...document.html.matchAll(/\sid="([^"]*)"/gu)].map((match) => match[1]!);
@@ -617,18 +725,18 @@ test("a Track naming five takes still lowers to DOM identities a Windows path ca
 
 test("browser programs own local HTML while retaining typed child resources and format boundaries", async () => {
   const { browserProgram } = await import("../src/browser-program.js");
-  const { programSpace, picture } = fixture();
+  const { timeline, picture } = fixture();
   const opaqueArtifact = { kind: "blob" as const, resource: fixtureResource("hyperframes:opaque-program"),
     size: 12, mediaType: "image/png" };
-  const visual = sealVisualTrack({ id: "scene", programSpaceId: programSpace.id, visualIr: VISUAL_IR_V1,
-    presents: [{ id: "scene", span: { startFrame: 0, endFrameExclusive: 30 }, stacking: { order: 0, tieBreak: "scene" },
+  const visual = sealVisualTrack({ id: "scene", timelineId: timeline.id, visualIr: VISUAL_IR_V1,
+    presents: [{ id: "scene", order: 0, z: 0, span: { startFrame: 0, endFrameExclusive: 30 },
       elements: [{ id: "root", kind: "program", order: 0, style: [], program: browserProgram({
         html: `<section class="viewport">{{photo}}<img class="opaque" src="qflow-resource://${opaqueArtifact.resource}"><svg><path d="M0 0H20"/></svg></section>`,
         css: '.viewport { backdrop-filter:blur(4px); display:grid; }',
         setup: 'return frame => { root.dataset.frame = String(frame); };',
       }, [opaqueArtifact]) }, { id: "photo", parent: "root", kind: "image", order: 1, artifact: picture, style: [] }] }] });
   const composition = sealComposition({ id: "scene", canvas: { width: 200, height: 200, clearColor: "#000000" }, tracks: [visual] });
-  const document = compileHyperframesDocument(composition, programSpace);
+  const document = compileHyperframesDocument(composition, timeline);
   assert.equal(document.artifacts.length, 2);
   assert.deepEqual(document.artifacts.find(({ artifact }) => artifact.resource === opaqueArtifact.resource)?.usage,
     { kind: "always" }, "opaque Browser Program dependencies remain conservative");
@@ -645,7 +753,7 @@ test("browser programs own local HTML while retaining typed child resources and 
   if (root.kind !== "visual" || root.presents[0]!.elements[0]!.kind !== "program") throw new Error("fixture");
   const program = root.presents[0]!.elements[0]!.program;
   (program as { format: string }).format = "another.renderer@1";
-  assert.throws(() => compileHyperframesDocument(missing, programSpace), /does not support visual program format/);
+  assert.throws(() => compileHyperframesDocument(missing, timeline), /does not support visual program format/);
 });
 
 test("browser program state follows direct seeks and reports authored evaluation failures", async () => {

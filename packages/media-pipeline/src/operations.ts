@@ -61,7 +61,6 @@ export function verifyMediaTransformProgram(value: unknown): asserts value is Me
     assert(typeof operation.rate === "number" && Number.isFinite(operation.rate) && operation.rate > 0
       && operation.rate <= 100,
     `MediaTransformProgram retime ${index}.rate must be in (0, 100]`);
-    assert(operation.pitch === "preserve", `MediaTransformProgram retime ${index}.pitch must be preserve`);
   }
 }
 

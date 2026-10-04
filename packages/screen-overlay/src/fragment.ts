@@ -28,14 +28,14 @@ export function createScreenOverlayFragment(items: readonly ScreenOverlayFragmen
   });
   operations.push(
     { id: "overlay:program", producer: screenOverlayProducers.finalize, inputs: { set: operation(current), header: input("header") }, result: { kind: "output", name: "program" } },
-    { id: "overlay:track", producer: screenOverlayProducers.render, inputs: { canvas: input("canvas"), timeline: input("timeline"), program: operation("overlay:program") }, result: { kind: "output", name: "track" } },
+    { id: "overlay:track", producer: screenOverlayProducers.render, inputs: { within: input("within"), timeline: input("timeline"), program: operation("overlay:program") }, result: { kind: "output", name: "track" } },
   );
   return sealGraphFragment({ inputs: [
-    { name: "canvas", type: spatialTypes.canvas }, { name: "header", type: screenOverlayTypes.header },
+    { name: "within", type: spatialTypes.frame }, { name: "header", type: screenOverlayTypes.header },
     { name: "timeline", type: timelineTypes.track }, ...[...types].map(([inputName, type]) => ({ name: inputName, type })),
   ], operations, exports: [
     { name: "program", type: screenOverlayTypes.program, root: operation("overlay:program") },
-    { name: "track", type: compositionTypes.visualTrack, root: operation("overlay:track") },
+    { name: "visual", type: compositionTypes.visualTrack, root: operation("overlay:track") },
   ] });
 }
 export const programScreenOverlayFragment = createScreenOverlayFragment([{ specName: "spec", windowName: "window" }]);

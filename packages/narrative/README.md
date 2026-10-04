@@ -6,11 +6,10 @@ owns the types and helpers below; Source imports retain the `@qflow/narrative@1`
 
 Public, provider-neutral values for complete authored content and its semantic references.
 
-A `Narrative` owns speech Tokens, Segments, Turns, semantic Anchors, Selections and Moments, plus
-its `caption: CaptionDocument`. The document supplies display Words, speech/display correspondence
-and Cue breaks. These are authored relationships; frame timing and visual Styles belong downstream.
-Script exports the complete value as `story` and the same document as the narrow `story.caption`
-Record. A third-party author package can produce the same values without importing the Script parser.
+A `Narrative` owns speech Tokens, Segments, Turns, semantic Anchors, Selections and Moments. It owns
+no Caption document, media or Timeline. Script may publish a peer `story.caption` Record and one
+explicit Narrative-to-Caption binding from the same parse, but neither is embedded in Narrative.
+A third-party author package can produce the same values without importing the Script parser.
 
 ## Query content through semantic references
 
@@ -23,9 +22,9 @@ Selection retains its Narrative identity; content lookup checks that identity. S
 remain distinct even when they resolve to the same token boundary, and an empty Segment can select
 no Tokens. Authored order is independent of gaps, overlap or placement order in a Timeline.
 
-Caption uses this content query and the Narrative's display correspondence to select complete
-subtitle units. Timeline projection uses the same semantic references to locate events in physical
-time. Neither operation substitutes for the other. Token lookup returns Tokens, not reconstructed
+`@qflow/narrative-caption` combines an explicit binding with these content queries to select complete
+subtitle units or project them into absolute Caption timing. Timeline projection uses the same
+semantic references to locate events in physical time. Neither operation substitutes for the other. Token lookup returns Tokens, not reconstructed
 source prose: comments and source-preserving edits remain the author language's concern. Caption
-Display Words separately carry `separatorBefore` (`""` or `" "`) so consumers can reconstruct the
-authored display spelling without guessing from Token boundaries or importing an author parser.
+Caption Display Words separately carry `separatorBefore` (`""` or `" "`) so consumers can reconstruct
+the authored display spelling without guessing from Token boundaries or importing an author parser.

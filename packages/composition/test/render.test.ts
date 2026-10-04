@@ -7,7 +7,7 @@ import {
   assertFontArtifactRef,
 } from "@qflow/media";
 import type { CompositableSurfaceRef, FontArtifactRef } from "@qflow/media";
-import { sealProgramSpace } from "@qflow/program-space";
+import { sealTimeline } from "@qflow/timeline";
 import {
   assertCompositionIdentity,
   sealComposition,
@@ -15,8 +15,7 @@ import {
 } from "../src/index.js";
 import type { VisualTrack } from "../src/index.js";
 
-const space = sealProgramSpace({ id: "test-space", durationSec: 2,
-  frameRate: { numerator: 30, denominator: 1 },
+const space = sealTimeline({ id: "test-space", frameCount: 60, frameRate: { numerator: 30, denominator: 1 },
 });
 
 const font: FontArtifactRef = {
@@ -79,13 +78,13 @@ test("CompositableSurfaceRef distinguishes a typed alpha surface from an ordinar
 });
 
 test("exact fonts own font selection and cannot conflict with raw CSS font facts", () => {
-  const invalid = sealVisualTrack({ programSpaceId: "test-space",
+  const invalid = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1",
     id: "invalid-font-track",
     presents: [{
       id: "title",
       span: { startFrame: 0, endFrameExclusive: 60 },
-      stacking: { order: 1, tieBreak: "title" },
+      order: 0, z: 1,
       elements: [{
         id: "title",
         order: 0,
@@ -106,15 +105,24 @@ test("exact fonts own font selection and cannot conflict with raw CSS font facts
   );
 });
 
-test("animated materialized Surfaces must exactly share the Present frame domain", () => {
-  const valid = sealVisualTrack({ programSpaceId: "test-space",
+test("animated materialized Surfaces carry an explicit partial source-time function", () => {
+  const sourceTime = {
+    sourceFrameRate: { numerator: 30, denominator: 1 },
+    sourceFrameCount: 60,
+    pieces: [{
+      target: { startFrame: 0, endFrameExclusive: 60 },
+      sourceAtStart: { numerator: 0, denominator: 1 },
+      rate: { numerator: 1, denominator: 1 },
+    }],
+  } as const;
+  const valid = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1",
     id: "surface-track",
     presents: [{
       id: "surface",
       span: { startFrame: 0, endFrameExclusive: 60 },
-      stacking: { order: 1, tieBreak: "surface" },
-      elements: [{ id: "surface", order: 0, kind: "surface", surface: animatedSurface, style: [] }],
+      order: 0, z: 1,
+      elements: [{ id: "surface", order: 0, kind: "surface", surface: animatedSurface, sourceTime, style: [] }],
     }],
   });
   assert.doesNotThrow(() => assertCompositionIdentity(sealComposition({
@@ -143,17 +151,17 @@ test("animated materialized Surfaces must exactly share the Present frame domain
     id: "invalid-surface-composition",
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [invalid],
-  }), space), /must exactly match its Present frame domain/u);
+  }), space), /target interval is invalid/u);
 });
 
 test("a local mask owns exactly one mask root and one content root inside its Present", () => {
-  const track = sealVisualTrack({ programSpaceId: "test-space",
+  const track = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1",
     id: "masked-text",
     presents: [{
       id: "mask",
       span: { startFrame: 0, endFrameExclusive: 60 },
-      stacking: { order: 4, tieBreak: "mask" },
+      order: 0, z: 4,
       elements: [
         {
           id: "local-mask", kind: "mask", order: 0, mode: "alpha",

@@ -12,8 +12,7 @@ import { elevenLabsSpeechEndpoints, sealElevenLabsSpeechRequest } from "@qflow/e
 import { generationTypes } from "@qflow/generation";
 import { gptImageEndpoints, sealGptImage2Request } from "@qflow/gpt-image";
 import { sealSeedanceRequest, seedanceEndpoints } from "@qflow/seedance";
-import { sealSpeechEvidenceAudio } from "@qflow/speech";
-import { speechEvidenceTypes } from "@qflow/speech-evidence";
+import { sealSpeechEvidenceAudio, speechEvidenceTypes } from "@qflow/speech-evidence";
 import { whisperXCapabilities, whisperXRequestForEvidenceAudio } from "@qflow/whisperx";
 import { portraitMattingEndpoint, sealPortraitMattingRequest } from "@qflow/volcengine-matting";
 
@@ -687,6 +686,7 @@ for (const language of ["en", "ko"]) test(`QflowHub forwards ${language} for the
     capability: whisperXCapabilities.alignment,
     returns: speechEvidenceTypes.alignedTranscript,
     constraints: whisperXRequestForEvidenceAudio(sealSpeechEvidenceAudio({
+      domainId: "qflowhub-test-domain",
       artifact,
       sampleFrames: 32_000,
     }), { language }) as unknown as CanonicalValue,
@@ -756,7 +756,10 @@ for (const language of ["en", "ko"]) test(`QflowHub forwards ${language} for the
     credentials: { apiKey: { secret: "test-key" } },
   });
   assert.equal(submitted, true);
-  assert.deepEqual(result.value, { kind: "inline", value: { passages: [{
+  assert.deepEqual(result.value, { kind: "inline", value: {
+    domainId: "qflowhub-test-domain",
+    sampleFrames: 32_000,
+    passages: [{
     startSample: 1_600,
     endSampleExclusive: 25_600,
     words: [
@@ -1094,7 +1097,7 @@ for (const mode of ['success', 'error', 'body-timeout'] as const) {
     const request: Need = {
       id: 'need:transcription-receipt', capability: whisperXCapabilities.alignment,
       returns: speechEvidenceTypes.alignedTranscript,
-      constraints: whisperXRequestForEvidenceAudio(sealSpeechEvidenceAudio({ artifact, sampleFrames: 32_000 }), { language: 'en' }) as unknown as CanonicalValue,
+      constraints: whisperXRequestForEvidenceAudio(sealSpeechEvidenceAudio({ domainId: "receipt-test-domain", artifact, sampleFrames: 32_000 }), { language: 'en' }) as unknown as CanonicalValue,
       result: 'record:transcription-receipt',
     };
     const messages: string[] = [];

@@ -19,7 +19,7 @@ import { spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import type { SvsRecipe } from "@qflow/svs";
 import { textTypes } from "@qflow/text";
-import { createTemporalInstantProjection, createTemporalWindowProjection, temporalInstantAttributeNames } from "@qflow/temporal-markup";
+import { createTemporalInstantConstruction, createTemporalWindowConstruction, temporalInstantAttributeNames } from "@qflow/temporal-markup";
 
 import { createRankingFragment } from "./fragment.js";
 import type { RankingFragmentItem, RankingFragmentSound } from "./fragment.js";
@@ -201,21 +201,21 @@ function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
   return ({ element, resolveReference }) => {
     const common = ["id", "timeline", "frame", "during", "terminal", "style", "appear-sound", "move-sound"];
     const attributes = variant === "column" || variant === "tier-board"
-      ? [...common.filter((name) => name !== "terminal"), "canvas"]
+      ? [...common.filter((name) => name !== "terminal"), "within"]
       : common;
     allowed(element, attributes);
     const id = text(element, "id");
     const selected = variantDefinition[variant];
     const context = resolveTemporalContext({ element, resolveReference });
-    const canvas = variant === "column" || variant === "tier-board"
-      ? reference(element.attributes.canvas, `${element.name}.canvas`, spatialTypes.canvas, resolveReference)
+    const within = variant === "column" || variant === "tier-board"
+      ? reference(element.attributes.within, `${element.name}.within`, spatialTypes.frame, resolveReference)
       : undefined;
     const frame = reference(element.attributes.frame, `${element.name}.frame`, spatialTypes.frame, resolveReference);
-    const outerTemporal = createTemporalWindowProjection({ id: `${id}.outer`, subjectId: id, element, ...context, resolveReference });
+    const outerTemporal = createTemporalWindowConstruction({ id: `${id}.outer`, subjectId: id, element, ...context, resolveReference });
     const terminalTemporal = variant === "top-three"
-      ? createTemporalInstantProjection({
+      ? createTemporalInstantConstruction({
           id: `${id}.terminal`, subjectId: id, element, ...context, resolveReference,
-          semanticAttribute: "terminal", projectedAttribute: false,
+          attribute: "terminal",
         })
       : undefined;
     const styleRaw = element.attributes.style;
@@ -232,7 +232,7 @@ function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
     const inputs: Record<string, typeof context.timeline.ref> = {
       header: { kind: "record", id: headerId }, timeline: context.timeline.ref, frame: frame.ref,
       outer: outerTemporal.ref, style: style.ref,
-      ...(canvas === undefined ? {} : { canvas: canvas.ref }),
+      ...(within === undefined ? {} : { within: within.ref }),
       ...(terminalTemporal === undefined ? {} : { terminal: terminalTemporal.ref }),
     };
     const items: RankingFragmentItem[] = [];
@@ -259,8 +259,8 @@ function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
       const contentName = authored.content === undefined ? undefined : `item-${suffix}-content`;
       if (authored.content !== undefined) inputs[contentName!] = authored.content.ref;
       const itemTemporal = !authored.timed ? undefined : variant === "top-three"
-        ? createTemporalInstantProjection({ id: `${id}.item.${suffix}`, subjectId: spec.id, element: child, ...context, resolveReference })
-        : createTemporalWindowProjection({ id: `${id}.item.${suffix}`, subjectId: spec.id, element: child, ...context, resolveReference });
+        ? createTemporalInstantConstruction({ id: `${id}.item.${suffix}`, subjectId: spec.id, element: child, ...context, resolveReference })
+        : createTemporalWindowConstruction({ id: `${id}.item.${suffix}`, subjectId: spec.id, element: child, ...context, resolveReference });
       if (itemTemporal !== undefined) {
         records.push(...itemTemporal.records);
         temporalComponents.push(...itemTemporal.components);

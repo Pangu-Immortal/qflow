@@ -12,5 +12,8 @@
   "files": [
     "src",
     "README.md"
-  ]
+  ],
+  "dependencies": {
+    "@qflow/qflow": "workspace:*"
+  }
 }

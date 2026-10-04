@@ -11,14 +11,6 @@
 
   film.vertical { background: #090A0F; }
 
-  media.performance { stack-order: 0;
-    fit: cover;
-    frame-x: 0.5;
-    frame-y: 0.5;
-    content-x: 0.5;
-    content-y: 0.5;
-  }
-
   /* Ten perceptually separated hues, balanced for the dark video background. */
   ranking.football-column {
     rank-colors: [
@@ -66,22 +58,13 @@
     item-stack: 30;
   }
 
-  media.pitch-pov { stack-order: 40; fit: cover; shadows: 0 16 32 -8 #000000D9; }
-  media.ikea-sign { stack-order: 41; fit: cover; shadows: 0 16 32 -8 #000000D9; }
-  media.retirement-room { stack-order: 42; fit: cover; shadows: 0 16 32 -8 #000000D9; }
-  media.rent-jump { stack-order: 43; fit: cover; shadows: 0 16 32 -8 #000000D9; }
-  media.nine-hundred { stack-order: 44; fit: cover; shadows: 0 16 32 -8 #000000D9; }
-  media.laboratory-body { stack-order: 45; fit: cover; shadows: 0 16 32 -8 #000000D9; }
-  media.museum-jawline { stack-order: 46; fit: cover; shadows: 0 16 32 -8 #000000D9; }
-
-  motion.broll {
-    enter: pop;
-    enter-frames: 6;
-    enter-easing: ease-out;
-    exit: fade;
-    exit-frames: 4;
-    exit-easing: ease-in;
-  }
+  media.pitch-pov {  shadows: 0 16 32 -8 #000000D9; }
+  media.ikea-sign {  shadows: 0 16 32 -8 #000000D9; }
+  media.retirement-room {  shadows: 0 16 32 -8 #000000D9; }
+  media.rent-jump {  shadows: 0 16 32 -8 #000000D9; }
+  media.nine-hundred {  shadows: 0 16 32 -8 #000000D9; }
+  media.laboratory-body {  shadows: 0 16 32 -8 #000000D9; }
+  media.museum-jawline {  shadows: 0 16 32 -8 #000000D9; }
 
   /* Caption and stage share one horizontal center line. The caption remains
      above the lower stage and wins every occasional overlap through z-order. */

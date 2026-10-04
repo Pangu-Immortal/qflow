@@ -159,8 +159,8 @@ export function sealSynchronizedMedia(value: SynchronizedMedia): SynchronizedMed
 
 /** Exact 48 kHz sample span implied by one normalized frame domain. */
 export function synchronizedMediaSampleFrames(value: SynchronizedMedia): number {
-  const numerator = BigInt(value.timeline.frameCount) * 48_000n * BigInt(value.timeline.frameRate.denominator);
-  const denominator = BigInt(value.timeline.frameRate.numerator);
+  const numerator = BigInt(value.frameDomain.frameCount) * 48_000n * BigInt(value.frameDomain.frameRate.denominator);
+  const denominator = BigInt(value.frameDomain.frameRate.numerator);
   const rounded = (numerator * 2n + denominator) / (denominator * 2n);
   assert(rounded > 0n && rounded <= BigInt(Number.MAX_SAFE_INTEGER),
     "SynchronizedMedia frame domain has an invalid sample span");
@@ -169,8 +169,8 @@ export function synchronizedMediaSampleFrames(value: SynchronizedMedia): number 
 
 export function verifySynchronizedMedia(value: unknown): asserts value is SynchronizedMedia {
   const item = object(value, "SynchronizedMedia") as unknown as SynchronizedMedia;
-  verifyRational(item.timeline.frameRate, "SynchronizedMedia.timeline.frameRate");
-  positiveInteger(item.timeline.frameCount, "SynchronizedMedia.timeline.frameCount");
+  verifyRational(item.frameDomain.frameRate, "SynchronizedMedia.frameDomain.frameRate");
+  positiveInteger(item.frameDomain.frameCount, "SynchronizedMedia.frameDomain.frameCount");
   synchronizedMediaSampleFrames(item);
   assert(item.visual !== undefined || item.audio !== undefined, "SynchronizedMedia contains no media projection");
   if (item.visual !== undefined) {

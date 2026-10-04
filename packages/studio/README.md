@@ -185,7 +185,7 @@ stops (distinct frame positions), so its duration may change. `at/for` moves its
 offers a trailing duration trim; `until/for` offers the corresponding leading trim.
 An Instant reference expression edits only its offset; a bare reference has an implicit zero offset.
 `start/end` trims edit the corresponding expression; moving the window shifts both by the same
-frame delta. Edited clock values and offsets are written in frames at the current ProgramSpace rate.
+frame delta. Edited clock values and offsets are written in frames at the current Timeline rate.
 The semantic marker Inspector exposes exact anchor identities and, where a
 declared handle supports it, offers choices among coincident anchors.
 See [temporal author forms](../temporal-markup/EDITING.md) for the complete behavior.

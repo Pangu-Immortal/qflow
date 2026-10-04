@@ -193,7 +193,7 @@ test("get exports Resource bytes and a self-contained Composite directory", asyn
   const root = await mkdtemp(join(tmpdir(), "qflow-cli-get-"));
   const build = "bld_20260902T110000010Z_0000000001";
   const videoType = { module: { name: "example.media", version: "1" }, name: "Video" } satisfies TypeRef;
-  const takeType = { module: { name: "example.speech", version: "1" }, name: "SemanticTake" } satisfies TypeRef;
+  const compositeType = { module: { name: "example.speech", version: "1" }, name: "CompositeValue" } satisfies TypeRef;
   const bytes = new TextEncoder().encode("video bytes");
   const video = {
     kind: "blob",
@@ -218,13 +218,13 @@ test("get exports Resource bytes and a self-contained Composite directory", asyn
           { id: "record:video", type: videoType, value: video },
           {
             id: "record:take",
-            type: takeType,
+            type: compositeType,
             value: { kind: "inline", value: { words: ["hello"], media: { artifact: video } } },
           },
         ],
         plan: { outputBindings: [
           { output: "logical:video", record: "record:video", type: videoType },
-          { output: "logical:take", record: "record:take", type: takeType },
+          { output: "logical:take", record: "record:take", type: compositeType },
         ] },
       } as unknown as BuildState,
       resources: {

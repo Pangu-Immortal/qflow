@@ -182,11 +182,11 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
   };
 
   const fps = (snapshot: StudioSnapshot): number =>
-    snapshot.space.frameRate.numerator / snapshot.space.frameRate.denominator;
+    snapshot.timeline.frameRate.numerator / snapshot.timeline.frameRate.denominator;
 
   const fit = (): void => {
     if (state === undefined) return;
-    const { canvasWidth, canvasHeight } = state.snapshot.space;
+    const { width: canvasWidth, height: canvasHeight } = state.snapshot.canvas;
     const room = viewport.getBoundingClientRect();
     const scale = Math.min(
       (room.width - 28) / canvasWidth,
@@ -221,7 +221,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     playing = true;
     setIcon(playIcon, "pause");
     uiAttr(play, "aria-label", "player.pause");
-    const total = state.snapshot.space.frameCount;
+    const total = state.snapshot.timeline.frameCount;
     const rate = fps(state.snapshot);
     fromFrame = state.playhead.frame >= total - 1 ? 0 : state.playhead.frame;
     if (ready) (iframe.contentWindow as SeekWindow | null)?.__qflowPlayFrame?.(fromFrame);
@@ -262,7 +262,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     const box = scrubber.getBoundingClientRect();
     // Native range thumbs travel between their centers, not the input edges.
     const fraction = Math.max(0, Math.min(1, (event.clientX - box.left - 6) / Math.max(1, box.width - 12)));
-    const frame = Math.round(fraction * Math.max(0, state.snapshot.space.frameCount - 1));
+    const frame = Math.round(fraction * Math.max(0, state.snapshot.timeline.frameCount - 1));
     scrubPreview.show(state.snapshot, frame, event.clientX);
   });
   scrubber.addEventListener("pointerleave", scrubPreview.hide);
@@ -301,10 +301,10 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     progress.hidden = scrubber.hidden = time.hidden = false;
     scrubber.disabled = !ready;
     scrubber.step = String(1 / rate);
-    scrubber.max = String(Math.max(0, state.snapshot.space.frameCount - 1) / rate);
+    scrubber.max = String(Math.max(0, state.snapshot.timeline.frameCount - 1) / rate);
     scrubber.value = String(state.playhead.frame / rate);
     uiAttr(scrubber, "aria-label", "player.composition-time");
-    time.textContent = `${clock(state.playhead.frame / rate)} / ${clock(state.snapshot.space.frameCount / rate)}`;
+    time.textContent = `${clock(state.playhead.frame / rate)} / ${clock(state.snapshot.timeline.frameCount / rate)}`;
   };
   scrubber.addEventListener("input", () => {
     if (artifactPreview.selected !== undefined) artifactPreview.seek(Number(scrubber.value));

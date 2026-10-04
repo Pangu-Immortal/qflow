@@ -11,7 +11,7 @@ import { artifactManifest } from "@qflow/artifact";
 import type { FontArtifactRef } from "@qflow/media";
 import { mediaManifest } from "@qflow/media";
 import { narrativeManifest } from "@qflow/narrative";
-import { programSpaceManifest, sealProgramSpace } from "@qflow/program-space";
+import { timelineManifest, sealTimeline } from "@qflow/timeline";
 import { speechManifest } from "@qflow/speech";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { spatialManifest } from "@qflow/spatial";
@@ -30,7 +30,7 @@ import {
 } from "../src/index.js";
 import type { VisualTrack } from "../src/index.js";
 
-const videoContractManifests = [artifactManifest, narrativeManifest, mediaManifest, programSpaceManifest,
+const videoContractManifests = [artifactManifest, narrativeManifest, mediaManifest, timelineManifest,
   speechManifest, speechEvidenceManifest, svsManifest, spatialManifest, visualIrManifest, compositionManifest] as const;
 
 const font: FontArtifactRef = {
@@ -46,63 +46,64 @@ const audio: BlobRef = {
 };
 
 function fixture() {
-  const programSpace = sealProgramSpace({ id: "test-space", durationSec: 4,
-    frameRate: { numerator: 30, denominator: 1 },
+  const timeline = sealTimeline({ id: "test-space", frameCount: 120, frameRate: { numerator: 30, denominator: 1 },
   });
-  const visual = sealVisualTrack({ programSpaceId: "test-space",
+  const visual = sealVisualTrack({ timelineId: "test-space",
     visualIr: "qflow.visual-ir@1",
     id: "caption",
     presents: [{
       id: "cue-1",
+      order: 0,
+      z: 100,
       span: { startFrame: 0, endFrameExclusive: 60 },
-      stacking: { order: 100, tieBreak: "caption" },
       elements: [
         { id: "root", order: 0, kind: "box", style: [{ name: "position", value: "absolute" }] },
         { id: "text", parent: "root", order: 1, kind: "text", text: "Hello", fonts: [font], style: [] },
       ],
     }],
   });
-  const sound = sealAudioTrack({ programSpaceId: "test-space",
+  const sound = sealAudioTrack({ timelineId: "test-space",
     id: "speech",
     clips: [{
       id: "speech",
       artifact: audio,
       target: { startSample: 0, endSampleExclusive: 192_000 },
-      source: { sampleFrames: 192_000, startSample: 0, endSampleExclusive: 192_000, loop: false, phaseSample: 0 },
-      playbackRate: 1,
-      pitch: "preserve",
+      sourceTime: { sourceSampleFrames: 192_000, pieces: [{
+        target: { startSample: 0, endSampleExclusive: 192_000 },
+        sourceAtStart: { numerator: 0, denominator: 1 }, rate: { numerator: 1, denominator: 1 },
+      }] },
       gain: 1,
       fadeInSamples: 0,
       fadeOutSamples: 0,
     }],
   });
-  return { programSpace, visual, sound };
+  return { timeline, visual, sound };
 }
 
 test("Composition accepts self-contained peer VisualTrack and AudioTrack values", () => {
-  const { programSpace, visual, sound } = fixture();
+  const { timeline, visual, sound } = fixture();
   assert.equal(visual.visualIr, VISUAL_IR_V1);
   const composition = sealComposition({
     id: "main",
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [sound, visual],
   });
-  assert.doesNotThrow(() => assertCompositionIdentity(composition, programSpace));
+  assert.doesNotThrow(() => assertCompositionIdentity(composition, timeline));
   assert.deepEqual(composition.tracks.map((track) => track.id), ["speech", "caption"]);
 });
 
 test("Composition accepts case-insensitive hexadecimal canvas colors", () => {
-  const { programSpace, visual } = fixture();
+  const { timeline, visual } = fixture();
   const composition = sealComposition({
     id: "uppercase-color",
     canvas: { width: 480, height: 854, clearColor: "#09090B" },
     tracks: [visual],
   });
-  assert.doesNotThrow(() => assertCompositionIdentity(composition, programSpace));
+  assert.doesNotThrow(() => assertCompositionIdentity(composition, timeline));
 });
 
 test("VisualTrack accepts authored backdrop compositing", () => {
-  const { programSpace, visual, sound } = fixture();
+  const { timeline, visual, sound } = fixture();
   const content = structuredClone(visual) as VisualTrack;
   const first = content.presents[0]!.elements[0]!;
   const invasive = sealVisualTrack({...content,
@@ -116,11 +117,11 @@ test("VisualTrack accepts authored backdrop compositing", () => {
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [sound, invasive],
   });
-  assert.doesNotThrow(() => assertCompositionIdentity(composition, programSpace));
+  assert.doesNotThrow(() => assertCompositionIdentity(composition, timeline));
 });
 
 test("VisualTrack style values cannot smuggle a second declaration", () => {
-  const { programSpace, visual } = fixture();
+  const { timeline, visual } = fixture();
   const content = structuredClone(visual) as VisualTrack;
   const first = content.presents[0]!.elements[0]!;
   const smuggled = sealVisualTrack({...content,
@@ -134,13 +135,13 @@ test("VisualTrack style values cannot smuggle a second declaration", () => {
       id: "smuggled",
       canvas: { width: 1080, height: 1920, clearColor: "#000000" },
       tracks: [smuggled],
-    }), programSpace),
+    }), timeline),
     /escapes its declaration/,
   );
 });
 
 test("VisualTrack cannot silently extend the versioned public Visual IR", () => {
-  const { programSpace, visual } = fixture();
+  const { timeline, visual } = fixture();
   const first = visual.presents[0]!.elements[0]!;
   const unknownStyle = sealVisualTrack({...visual,
     presents: [{
@@ -153,7 +154,7 @@ test("VisualTrack cannot silently extend the versioned public Visual IR", () => 
       id: "unknown-style",
       canvas: { width: 1080, height: 1920, clearColor: "#000000" },
       tracks: [unknownStyle],
-    }), programSpace),
+    }), timeline),
     /outside qflow\.visual-ir@1/u,
   );
 
@@ -164,7 +165,7 @@ test("VisualTrack cannot silently extend the versioned public Visual IR", () => 
     }],
   });
   assert.throws(
-    () => assertVisualTrackIdentity(fixedPosition, programSpace),
+    () => assertVisualTrackIdentity(fixedPosition, timeline),
     /position has unsupported value fixed/u,
   );
 
@@ -175,18 +176,18 @@ test("VisualTrack cannot silently extend the versioned public Visual IR", () => 
     }],
   });
   assert.throws(
-    () => assertVisualTrackIdentity(environmentBound, programSpace),
+    () => assertVisualTrackIdentity(environmentBound, timeline),
     /environment-dependent style value/u,
   );
 });
 
 test("VisualTrack explicitly binds the visual IR instead of trusting the Runtime", () => {
-  const { programSpace, visual } = fixture();
+  const { timeline, visual } = fixture();
   assert.throws(
     () => assertVisualTrackIdentity({
       ...visual,
       visualIr: "third-party.browser-css@1",
-    } as unknown as VisualTrack, programSpace),
+    } as unknown as VisualTrack, timeline),
     /Unsupported VisualTrack visual IR/u,
   );
 });
@@ -217,31 +218,31 @@ test("the Type owner rejects an invalid VisualTrack at the shared admission gate
   );
 });
 
-test("Composition validates Track frame ranges against the explicitly connected ProgramSpace", () => {
-  const { programSpace, visual } = fixture();
-  const foreign = sealProgramSpace({ id: "test-space", durationSec: 1,
-    frameRate: { numerator: 24, denominator: 1 },
+test("Composition validates Track frame ranges against the explicitly connected Timeline", () => {
+  const { timeline, visual } = fixture();
+  const foreign = sealTimeline({ id: "test-space", frameCount: 24, frameRate: { numerator: 24, denominator: 1 },
   });
   const composition = sealComposition({
     id: "foreign",
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [visual],
   });
-  assert.throws(() => assertCompositionIdentity(composition, foreign), /outside ProgramSpace/);
-  assert.notDeepEqual(programSpace, foreign);
+  assert.throws(() => assertCompositionIdentity(composition, foreign), /outside Timeline/);
+  assert.notDeepEqual(timeline, foreign);
 });
 
 test("one authoring Track may contribute independently stacked Presents", () => {
-  const { programSpace, visual } = fixture();
+  const { timeline, visual } = fixture();
   const content = structuredClone(visual) as VisualTrack;
   const second = {
     ...structuredClone(content.presents[0]!),
     id: "cue-2",
-    stacking: { order: 30, tieBreak: "board" },
+    order: 0,
+    z: 30,
   };
   const interleaved = sealVisualTrack({...content,
     presents: [
-      { ...content.presents[0]!, stacking: { order: 80, tieBreak: "icon" } },
+      { ...content.presents[0]!, order: 1, z: 80 },
       second,
     ],
   });
@@ -250,12 +251,12 @@ test("one authoring Track may contribute independently stacked Presents", () => 
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [interleaved],
   });
-  assert.doesNotThrow(() => assertCompositionIdentity(composition, programSpace));
-  assert.deepEqual(interleaved.presents.map((present) => present.stacking.order), [30, 80]);
+  assert.doesNotThrow(() => assertCompositionIdentity(composition, timeline));
+  assert.deepEqual(interleaved.presents.map((present) => present.z), [30, 80]);
 });
 
 test("Visual Present animations may finish before or after their visibility window without changing Track isolation", () => {
-  const { programSpace, visual } = fixture();
+  const { timeline, visual } = fixture();
   const present = visual.presents[0]!;
   const root = present.elements[0]!;
   const animated = sealVisualTrack({...visual,
@@ -276,7 +277,7 @@ test("Visual Present animations may finish before or after their visibility wind
     id: "animated",
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [animated],
-  }), programSpace));
+  }), timeline));
   const clipped = sealVisualTrack({...visual,
     presents: [{
       ...present,
@@ -295,7 +296,7 @@ test("Visual Present animations may finish before or after their visibility wind
     id: "clipped-animation",
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [clipped],
-  }), programSpace));
+  }), timeline));
   const invasive = sealVisualTrack({...visual,
     presents: [{
       ...present,
@@ -314,5 +315,5 @@ test("Visual Present animations may finish before or after their visibility wind
     id: "animated-invasive",
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [invasive],
-  }), programSpace));
+  }), timeline));
 });

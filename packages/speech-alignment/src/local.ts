@@ -1,72 +1,49 @@
-import type { SynchronizedMedia } from "@qflow/media";
 import type { Narrative, NarrativeExcerpt } from "@qflow/narrative";
-import { sealProgramSpace } from "@qflow/program-space";
-import { materializeSemanticTake } from "@qflow/speech";
-import type { SemanticTake } from "@qflow/speech";
+import type { NarrativeAlignment } from "@qflow/narrative-temporal";
 import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
+import type { LocalTemporalDomain } from "@qflow/temporal";
 
 import { locateAlignedSegmentTiming } from "./locate.js";
+import { materializeNarrativeAlignment } from "./materialize.js";
 import type { AlignmentBasis } from "./locate.js";
 
 function segmentNarrative(narrative: Narrative, excerpt: NarrativeExcerpt): Narrative {
-  if (excerpt.kind !== "segment") throw new Error("SemanticTake alignment requires a Segment excerpt.");
+  if (excerpt.kind !== "segment") throw new Error("Narrative alignment requires a Segment excerpt.");
   const segment = narrative.segments.find((candidate) => candidate.id === excerpt.id);
   if (segment === undefined) throw new Error(`Narrative does not contain Segment ${excerpt.id}.`);
   if (excerpt.tokenStart !== segment.tokenStart || excerpt.tokenEndExclusive !== segment.tokenEndExclusive) {
     throw new Error(`NarrativeExcerpt ${excerpt.id} does not describe its authored Segment.`);
   }
   const tokens = narrative.tokens.slice(segment.tokenStart, segment.tokenEndExclusive);
-  const units = narrative.caption.units.filter((unit) => unit.segmentId === segment.id);
-  const unitIds = new Set(units.map((unit) => unit.id));
   return {
     id: narrative.id,
-    caption: {
-      ...narrative.caption,
-      units,
-      words: narrative.caption.words.filter((word) => unitIds.has(word.unitId)),
-      cueBreaks: narrative.caption.cueBreaks.filter((cue) => unitIds.has(cue.afterUnitId)),
-    },
     segments: [{ ...segment, tokenStart: 0, tokenEndExclusive: tokens.length }],
     tokens,
-    turns: narrative.turns
-      .filter((turn) => turn.segmentId === segment.id)
-      .map((turn) => ({
-        ...turn,
-        tokenStart: turn.tokenStart - segment.tokenStart,
-        tokenEndExclusive: turn.tokenEndExclusive - segment.tokenStart,
-      })),
-    selections: [],
-    moments: [],
-    semanticIndex: {
-      anchors: narrative.semanticIndex.anchors.filter((anchor) => anchor.segmentId === segment.id),
-    },
+    turns: narrative.turns.filter((turn) => turn.segmentId === segment.id).map((turn) => ({ ...turn,
+      tokenStart: turn.tokenStart - segment.tokenStart, tokenEndExclusive: turn.tokenEndExclusive - segment.tokenStart })),
+    selections: [], moments: [],
+    semanticIndex: { anchors: narrative.semanticIndex.anchors.filter((anchor) => anchor.segmentId === segment.id) },
   };
 }
 
-/** Align one normalized Take independently, then materialize its local semantic product. */
-export function alignSemanticTake(
+/** Align one normalized source locally without turning media into a semantic aggregate. */
+export function alignNarrative(
   narrative: Narrative,
   excerpt: NarrativeExcerpt,
-  media: SynchronizedMedia,
+  domain: LocalTemporalDomain,
   evidence: AlignedTranscriptEvidence,
-): SemanticTake {
-  if (media.audio === undefined) throw new Error(`SemanticTake ${excerpt.id} has no normalized audio.`);
+): NarrativeAlignment {
   const localNarrative = segmentNarrative(narrative, excerpt);
-  const programSpace = sealProgramSpace({
-    id: `${excerpt.narrativeId}.segment.${excerpt.id}`,
-    durationSec: media.timeline.frameCount * media.timeline.frameRate.denominator
-      / media.timeline.frameRate.numerator,
-    frameRate: media.timeline.frameRate,
-  });
+  if (evidence.domainId !== domain.id) {
+    throw new Error(`Narrative alignment ${excerpt.id} evidence belongs to another local domain.`);
+  }
   const basis: AlignmentBasis = {
-    programSpace,
-    audio: media.audio.artifact,
-    segments: [{ segmentId: excerpt.id, startFrame: 0, endFrameExclusive: media.timeline.frameCount }],
+    domainId: domain.id,
+    frameDomain: { frameRate: domain.frameRate, frameCount: domain.frameCount },
+    segments: [{ segmentId: excerpt.id, startFrame: 0, endFrameExclusive: domain.frameCount }],
   };
   const timing = locateAlignedSegmentTiming(localNarrative, basis, evidence);
-  return materializeSemanticTake(localNarrative, {
-    ...excerpt,
-    tokenStart: 0,
-    tokenEndExclusive: localNarrative.tokens.length,
-  }, media, timing);
+  return materializeNarrativeAlignment(localNarrative, {
+    ...excerpt, tokenStart: 0, tokenEndExclusive: localNarrative.tokens.length,
+  }, domain, timing);
 }

@@ -2,27 +2,29 @@ import { compositionTypes } from "@qflow/qflow/composition";
 import { artifactTypes } from "@qflow/qflow/artifact";
 import { sealGraphFragment } from "@qflow/qflow/author-kit";
 import { timelineTypes } from "@qflow/qflow/timeline";
+import { spatialTypes } from "@qflow/qflow/spatial";
 import { exampleProducers } from "./manifest.js";
 import { exampleTypes } from "./manifest.js";
 
 const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
 
-export function createExampleFragment(producer: typeof exampleProducers[keyof typeof exampleProducers], id: string, media = false) {
-  const inputs = [{ name: "timeline", type: timelineTypes.track }, ...(media ? [{ name: "media", type: artifactTypes.blob }] : [])];
-  const renderInputs = { timeline: input("timeline"), ...(media ? { media: input("media") } : {}) };
+export function createExampleFragment(producer: typeof exampleProducers[keyof typeof exampleProducers], id: string, image = false) {
+  const inputs = [{ name: "timeline", type: timelineTypes.track }, { name: "within", type: spatialTypes.frame },
+    ...(image ? [{ name: "image", type: artifactTypes.blob }] : [])];
+  const renderInputs = { timeline: input("timeline"), within: input("within"), ...(image ? { image: input("image") } : {}) };
   return sealGraphFragment({
     inputs,
     operations: [
-      { id, producer, inputs: renderInputs, result: { kind: "output", name: "track" } },
+      { id, producer, inputs: renderInputs, result: { kind: "output", name: "visual" } },
     ],
-    exports: [{ name: "track", type: compositionTypes.visualTrack, root: operation(id) }],
+    exports: [{ name: "visual", type: compositionTypes.visualTrack, root: operation(id) }],
   });
 }
 
 export const exampleBoxFragment = createExampleFragment(exampleProducers.renderBox, "render-box");
 export const exampleTextFragment = createExampleFragment(exampleProducers.renderText, "render-text");
-export const exampleMediaFragment = createExampleFragment(exampleProducers.renderMedia, "render-media-slot", true);
+export const exampleImageFragment = createExampleFragment(exampleProducers.renderImage, "render-image-slot", true);
 export const exampleAppendFragment = sealGraphFragment({
   inputs: [{ name: "previous", type: exampleTypes.itemSet }, { name: "item", type: exampleTypes.itemSet }],
   operations: [{ id: "append-items", producer: exampleProducers.appendItems, inputs: { previous: input("previous"), item: input("item") }, result: { kind: "output", name: "set" } }],

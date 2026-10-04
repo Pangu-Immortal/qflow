@@ -1,5 +1,9 @@
 import type { ComponentPackage } from "@qflow/component-kit";
 import { verifyMediaInspection, verifyMediaStreamSelection, verifyMuxedMedia, verifyRenderedVisual, verifySynchronizedMedia, verifyTimelineAudio } from "./identity.js";
+import { mediaLocalTemporalDomain } from "./domain.js";
+import type { MediaDomainSpec, SynchronizedMedia } from "./types.js";
+import { canonicalize } from "@qflow/protocol";
+import { mediaProducers } from "./manifest.js";
 import { mediaTypes } from "./manifest.js";
 import { verifyMediaFrameRange } from "./frame-range.js";
 function inline(value: { readonly kind: string; readonly value?: unknown }, subject: string): unknown { if (value.kind !== "inline") throw new Error(`${subject} must be inline`); return value.value; }
@@ -12,5 +16,12 @@ export const mediaComponent = {
     { type: mediaTypes.renderedVisual, handler: ({ value }) => verifyRenderedVisual(inline(value, "RenderedVisual")) },
     { type: mediaTypes.timelineAudio, handler: ({ value }) => verifyTimelineAudio(inline(value, "TimelineAudio")) },
     { type: mediaTypes.muxed, handler: ({ value }) => verifyMuxedMedia(inline(value, "MuxedMedia")) },
+  ],
+  producers: [
+    { producer: mediaProducers.localDomain, handler: ({ inputs }) => {
+      const media = inline(inputs.media!.value, "SynchronizedMedia") as SynchronizedMedia;
+      const spec = inline(inputs.spec!.value, "MediaDomainSpec") as MediaDomainSpec;
+      return { outputs: { domain: { kind: "inline", value: canonicalize(mediaLocalTemporalDomain(spec.id, media)) } }, needs: {} };
+    } },
   ],
 } satisfies ComponentPackage;

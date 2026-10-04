@@ -43,7 +43,7 @@ test("source package selection follows Run and Author imports", async () => {
 test("provider-free example plans from installed Source packages", async () => {
   // The installed package preview exercises Timeline, composition and mux planning without
   // requiring a generation account or an authored project copy.
-  const fixture = join(process.cwd(), "packages", "media-track", "preview");
+  const fixture = join(process.cwd(), "packages", "visual-track", "preview");
   let output = "";
   await runCli([
     "plan",

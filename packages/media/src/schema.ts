@@ -38,13 +38,14 @@ export const mediaStreamSelectionSchema: ValueSchema = object({
   policy: { schema: { kind: "string", enum: ["primary-moving@1", "default-audio@1", "primary-moving-default-audio@1", "explicit-streams@1"] } },
 });
 export const synchronizedMediaSchema: ValueSchema = object({
-  timeline: { schema: object({ frameRate: { schema: rational },
+  frameDomain: { schema: object({ frameRate: { schema: rational },
     frameCount: { schema: { kind: "number", integer: true, minimum: 1 } } }) },
   visual: { schema: object({ artifact: { schema: blobArtifactSchema() },
     width: { schema: { kind: "number", integer: true, minimum: 1 } }, height: { schema: { kind: "number", integer: true, minimum: 1 } },
   }), optional: true },
   audio: { schema: object({ artifact: { schema: blobArtifactSchema(["audio/wav"]) } }), optional: true },
 });
+
 export const renderedVisualSchema: ValueSchema = object({ frameRate: { schema: rational }, frameCount: { schema: { kind: "number", integer: true, minimum: 1 } },
   canvas: { schema: object({ width: { schema: { kind: "number", integer: true, minimum: 1 } }, height: { schema: { kind: "number", integer: true, minimum: 1 } } }) },
   artifact: { schema: blobArtifactSchema() } });

@@ -1,4 +1,4 @@
-import { sealTimeline } from "@qflow/timeline";
+import { sealTimeline, timelineTypes } from "@qflow/timeline";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
@@ -9,8 +9,6 @@ import { artifactTypes } from "@qflow/artifact";
 import { compileHyperframesDocument } from "@qflow/hyperframes";
 import type { FontArtifactRef, FontStackRef } from "@qflow/media";
 import { mediaTypes } from "@qflow/media";
-import { sealProgramSpace } from "@qflow/program-space";
-import { timelineProducers, timelineTypes } from "@qflow/timeline";
 import { spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import type { SvsRecipe } from "@qflow/svs";
@@ -49,9 +47,8 @@ const recipe: SvsRecipe = {
 };
 const style = decodeCommentStickerStyle(recipe, fonts, "social-comment");
 const frame = { xPx: 80, yPx: 140, widthPx: 920, heightPx: 360 };
-const canvas = { widthPx: 1080, heightPx: 1920,
-  origin: "top-left" as const, xDirection: "right" as const, yDirection: "down" as const, pixelAspect: "square" as const };
-const space = sealTimeline({ items: [], id: "test-space", durationSec: 3, frameRate: { numerator: 30, denominator: 1 } });
+const canvas = { widthPx: 1080, heightPx: 1920 };
+const space = sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } });
 const header = sealCommentStickerHeader({ id: "comments" });
 const semantic = timelineFixture(space);
 
@@ -72,9 +69,9 @@ function content(meta?: string) {
 function track(meta?: string) {
   const spec = item("opening");
   const set = appendProjectedCommentSticker(createCommentStickerSet(), header, space, frame, style, spec, content(meta), projectProgramWindow({
-    itemId: spec.id, semantic, projection: { start: { ref: "program.start" }, end: { ref: "program.end" } },
+    itemId: spec.id, semantic, projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } },
   }));
-  return renderCommentSticker(canvas, space, finalizeCommentSticker(set, header));
+  return renderCommentSticker(space, finalizeCommentSticker(set, header));
 }
 
 test("Comment Sticker is one deterministic self-contained peer VisualTrack", () => {
@@ -123,10 +120,10 @@ test("short Sticker windows compose overlapping enter and exit motion instead of
   const spec = item("compressed");
   const set = appendProjectedCommentSticker(
     createCommentStickerSet(), header, space, frame, compressed, spec, content(), projectProgramWindow({
-      itemId: spec.id, semantic, projection: { start: { ref: "program.start" }, end: { ref: "program.end" } },
+      itemId: spec.id, semantic, projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } },
     }),
   );
-  const rendered = renderCommentSticker(canvas, space, finalizeCommentSticker(set, header));
+  const rendered = renderCommentSticker(space, finalizeCommentSticker(set, header));
   const animation = rendered.presents[0]?.elements.find((element) => element.animation !== undefined)?.animation;
   assert.ok(animation);
   const overlap = animation.keyframes.find((keyframe) => keyframe.atFrame === 45)!;
@@ -167,10 +164,9 @@ test("Style Surface consumes an explicit SVS Recipe and exact Font Stack", async
   assert.equal(result.components.length, 0);
 });
 
-test("Track Surface lowers mixed program and semantic Stickers to a finite explicit graph", async () => {
+test("Track Surface lowers mixed literal and resolved-Window Stickers to a finite explicit graph", async () => {
   const blob = { kind: "blob" as const, resource: fixtureResource("comment-avatar"), size: 128, mediaType: "image/png" };
   const refs = new Map<string, SurfaceResolvedReference>([
-    ["video.canvas", authored("video.canvas", spatialTypes.canvas, canvas)],
     ["video.timeline", authored("video.timeline", timelineTypes.track, semantic)],
     ["layout.comment", authored("layout.comment", spatialTypes.frame, frame)],
     ["social", authored("social", commentStickerTypes.style, style)],
@@ -179,13 +175,13 @@ test("Track Surface lowers mixed program and semantic Stickers to a finite expli
   ]);
   const result = await decodeCommentStickerTrackSurface({
     sourceName: "fixture.svml",
-    element: parsed(`<comment:Track id="comments" canvas={video.canvas} timeline={video.timeline}>
-      <comment:Sticker id="one" comment={copy} frame={layout.comment} style={social} avatar={avatar} author="@viewer" meta="Featured" during="program"/>
+    element: parsed(`<comment:Track id="comments" timeline={video.timeline}>
+      <comment:Sticker id="one" comment={copy} frame={layout.comment} style={social} avatar={avatar} author="@viewer" meta="Featured" during="timeline"/>
     </comment:Track>`),
     resolveReference: (path) => refs.get(path),
     resolveAsset: noAsset,
   });
-  assert.equal(result.components.filter((component) => component.outputs.track !== undefined).length, 1);
+  assert.equal(result.components.filter((component) => component.outputs.visual !== undefined).length, 1);
   assert.deepEqual(result.fragments.flatMap((fragment) => fragment.operations.map((operation) => operation.producer.name)).sort(), [
     commentStickerProducers.createSet.name,
     commentStickerProducers.createContent.name,
@@ -198,5 +194,5 @@ test("Track Surface lowers mixed program and semantic Stickers to a finite expli
     temporalProducers.composeWindow.name,
         commentStickerProducers.render.name,
   ].sort());
-  assert.equal(result.components.find((component) => component.outputs.track !== undefined)?.outputs.track, "comments.track");
+  assert.equal(result.components.find((component) => component.outputs.visual !== undefined)?.outputs.visual, "comments.visual");
 });

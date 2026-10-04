@@ -63,12 +63,13 @@ Once that real Recipe exists, add its import to the Source's opening prologue:
 After `vertical` is declared, add its measured timeline and connect it to the existing Caption Track:
 
 ```svml
-<space:RegionTimeline id="wife-heads" within={vertical} recipe={heads.heads.wife}/>
-<caption-fine:Track id="captions" document={story.caption}
-  timeline={speech.timeline} regions={wife-heads}>
+<region:Track id="wife-heads" within={vertical.bounds} timeline={speech.timeline}
+  recipe={heads.heads.wife}/>
+<caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
+  timeline={speech.timeline} within={vertical.bounds} regions={wife-heads}>
   <caption-fine:Use style={caption-boy-style}/>
   <caption-fine:Use role="WIFE" style={caption-wife-style}/>
-</caption-fine:Track>
+</caption-fine:Caption>
 ```
 
 Replace the existing `captions` declaration with the connected one. The Recipe contains a WIFE Role
@@ -76,16 +77,20 @@ track; `caption.wife` already uses center/bottom anchoring so its text sits abov
 The untracked BOY continues to use his fixed Style position. A null WIFE region hides her Caption
 on that frame; it does not guess a new location.
 
-In the Run, select the first Build's `manifest-rule-semantic.take`, `real-estate-rule-semantic.take`
-and `bitcoin-rule-semantic.take` outputs as Candidates. For example, fill the actual Build id in:
+In the Run, select the first Build's normalized media, local domains and alignment Outputs as
+Candidates. For example, fill the actual Build id in:
 
 ```svml
-<build-record id="reuse-manifest" build="ACTUAL_BUILD_ID" output="manifest-rule-semantic.take"/>
-<satisfy output="manifest-rule-semantic.take" candidate="reuse-manifest"/>
+<build-record id="reuse-manifest-media" build="ACTUAL_BUILD_ID" output="manifest-rule-media.media"/>
+<build-record id="reuse-manifest-domain" build="ACTUAL_BUILD_ID" output="manifest-rule-media.domain"/>
+<build-record id="reuse-manifest-alignment" build="ACTUAL_BUILD_ID" output="manifest-rule-semantic.alignment"/>
+<satisfy output="manifest-rule-media.media" candidate="reuse-manifest-media"/>
+<satisfy output="manifest-rule-media.domain" candidate="reuse-manifest-domain"/>
+<satisfy output="manifest-rule-semantic.alignment" candidate="reuse-manifest-alignment"/>
 ```
 
-Apply the same explicit selection to the other two SemanticTakes, which already contain their media
-and alignment. Check `qflow plan` to confirm that the second render contains no new image, voice,
+Apply the same explicit selection to the other two passages. Media, duration and alignment remain
+independent reusable facts. Check `qflow plan` to confirm that the second render contains no new image, voice,
 video or alignment requests. Inspect camera cuts and moving head placement in the result. Changing
 only Caption or MG needs no repeat generation; changing the footage requires matching measurements.
 

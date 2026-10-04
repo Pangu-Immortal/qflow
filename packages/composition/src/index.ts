@@ -1,7 +1,7 @@
 export { compositionComponent } from "./component.js";
 export { compositionDependency, compositionManifest, compositionModuleRef, compositionTypes } from "./manifest.js";
 export {
-  audioTrackSchema, visualTimedSamplingSchema,
+  audioTrackSchema, visualSourceTimeMapSchema,
   compositionSchema,
   visualColorPaintSchema,
   visualPathCommandSchema,
@@ -17,5 +17,5 @@ export { assertAudioTrackIdentity, assertCompositionIdentity, assertVisualTrackI
 export { animatableLocalStyles } from "./track.js";
 export type * from "./track.js";
 
-export * from "./audio-presentation.js";
+export * from "./audio-level-automation.js";
 export { audioSampleSpanSchema, audioGainEnvelopeSchema } from "./schema.js";

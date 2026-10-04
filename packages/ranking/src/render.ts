@@ -1,3 +1,4 @@
+import { assertTimelineIdentity, timelineFrameSampleBoundary, timelineSampleFrames } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
 import {
   assertAudioTrackIdentity,
@@ -15,7 +16,6 @@ import type {
   VisualTrack,
 } from "@qflow/composition";
 import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/media";
-import { assertProgramSpaceIdentity, programFrameSampleBoundary, programSpaceSampleFrames } from "@qflow/program-space";
 
 import {
   assertColumnProgram,
@@ -182,15 +182,16 @@ function present(input: {
   readonly subjectId: string;
   readonly start: number;
   readonly end: number;
-  readonly stacking: number;
-  readonly tieBreak: string;
+  readonly order: number;
+  readonly z: number;
   readonly elements: readonly VisualElement[];
 }): VisualPresent {
   return {
     id: input.id,
+    order: input.order,
+    z: input.z,
     subjectId: input.subjectId,
     span: { startFrame: input.start, endFrameExclusive: input.end },
-    stacking: { order: input.stacking, tieBreak: input.tieBreak },
     elements: input.elements,
   };
 }
@@ -250,17 +251,18 @@ function tierItemAnimation(
 }
 
 function sealTrack(timeline: Timeline, id: string, presents: readonly VisualPresent[]): VisualTrack {
-  const value = sealVisualTrack({ programSpaceId: timeline.id, visualIr: "qflow.visual-ir@1", id, presents });
+  const value = sealVisualTrack({ timelineId: timeline.id, visualIr: "qflow.visual-ir@1", id, presents });
   assertVisualTrackIdentity(value, timeline);
   return value;
 }
 
 export function renderTierBoard(timeline: Timeline, program: TierBoardProgram): VisualTrack {
-  assertProgramSpaceIdentity(timeline);
+  assertTimelineIdentity(timeline);
   assertTierBoardProgram(program);
-  const { canvas, frame, style, schedule } = program;
+  const { within, frame, style, schedule } = program;
   const geometry = tierBoardGeometry(frame.widthPx, frame.heightPx, style);
-  const stage = tierStageGeometry(canvas.widthPx, canvas.heightPx, style);
+  const localStage = tierStageGeometry(within.widthPx, within.heightPx, style);
+  const stage = { ...localStage, centerX: within.xPx + localStage.centerX, centerY: within.yPx + localStage.centerY };
   const presents: VisualPresent[] = [];
   const boardElements: VisualElement[] = [absoluteBox({
     id: "tier-board-root", order: 0,
@@ -306,7 +308,7 @@ export function renderTierBoard(timeline: Timeline, program: TierBoardProgram): 
   }
   presents.push(present({
     id: `${program.id}:board`, subjectId: program.id, start: schedule.outer.startFrame, end: schedule.outer.endFrameExclusive,
-    stacking: style.boardStackingOrder, tieBreak: `${program.id}:0000:board`, elements: boardElements,
+    order: 0, z: style.boardStackingOrder, elements: boardElements,
   }));
   const entries = new Map(schedule.entries.map((entry) => [entry.itemId, entry]));
   const rowCounts = new Map<string, number>();
@@ -352,8 +354,8 @@ export function renderTierBoard(timeline: Timeline, program: TierBoardProgram): 
         id: `${program.id}:item:${item.id}:reveal`, subjectId: item.id,
         start: entry.window.startFrame,
         end: entry.window.endFrameExclusive,
-        stacking: item.stackingOrder ?? (item.entry === "drop" ? style.stageStackingOrder : style.itemStackingOrder),
-        tieBreak: `${program.id}:item:${String(index).padStart(4, "0")}:${item.id}:reveal`,
+        order: index + 1,
+        z: item.stackingOrder ?? (item.entry === "drop" ? style.stageStackingOrder : style.itemStackingOrder),
         elements: itemElements(rootAnimation),
       }));
     }
@@ -361,8 +363,8 @@ export function renderTierBoard(timeline: Timeline, program: TierBoardProgram): 
       id: `${program.id}:item:${item.id}:settled`, subjectId: item.id,
       start: entry.settled.startFrame,
       end: entry.settled.endFrameExclusive,
-      stacking: item.stackingOrder ?? style.itemStackingOrder,
-      tieBreak: `${program.id}:item:${String(index).padStart(4, "0")}:${item.id}:settled`,
+      order: index + 1,
+      z: item.stackingOrder ?? style.itemStackingOrder,
       elements: itemElements(),
     }));
   }
@@ -460,9 +462,9 @@ function columnRevealAnimation(input: {
 }
 
 export function renderColumn(timeline: Timeline, program: ColumnProgram): VisualTrack {
-  assertProgramSpaceIdentity(timeline);
+  assertTimelineIdentity(timeline);
   assertColumnProgram(program);
-  const { canvas, frame, style, schedule } = program;
+  const { within, frame, style, schedule } = program;
   const presents: VisualPresent[] = [];
   const entries = new Map(schedule.entries.map((entry) => [entry.itemId, entry]));
   const cellSize = style.rowHeightPx;
@@ -505,16 +507,16 @@ export function renderColumn(timeline: Timeline, program: ColumnProgram): Visual
     }));
   }
   presents.push(present({ id: `${program.id}:board`, subjectId: program.id, start: schedule.outer.startFrame, end: schedule.outer.endFrameExclusive,
-    stacking: style.boardStackingOrder, tieBreak: `${program.id}:0000:board`, elements: boardElements }));
+    order: 0, z: style.boardStackingOrder, elements: boardElements }));
   for (const [index, item] of program.items.entries()) {
     const entry = entries.get(item.id)!;
     const x = frame.xPx + style.paddingPx + cellSize + columnGap;
     const y = frame.yPx + style.paddingPx + index * (cellSize + style.rowGapPx);
     const finalCenterX = x + contentSize / 2;
     const finalCenterY = y + contentSize / 2;
-    const stageCenterX = Math.round(canvas.widthPx * style.stagePoint.x);
-    const stageCenterY = Math.round(canvas.heightPx * style.stagePoint.y);
-    const entryCenterY = canvas.heightPx + style.stageSizePx * 0.25;
+    const stageCenterX = within.xPx + Math.round(within.widthPx * style.stagePoint.x);
+    const stageCenterY = within.yPx + Math.round(within.heightPx * style.stagePoint.y);
+    const entryCenterY = within.yPx + within.heightPx + style.stageSizePx * 0.25;
     const root = `column-item-${item.id}`;
     const itemElements = (animationValue?: VisualAnimation): VisualElement[] => {
       const iconSize = Math.min(style.iconSizePx, contentSize);
@@ -548,14 +550,12 @@ export function renderColumn(timeline: Timeline, program: ColumnProgram): Visual
       });
       presents.push(present({
         id: `${program.id}:item:${item.id}:stage`, subjectId: item.id, start: entry.window.startFrame, end: entry.window.endFrameExclusive,
-        stacking: item.stackingOrder ?? style.stageStackingOrder,
-        tieBreak: `${program.id}:item:${String(item.rank).padStart(4, "0")}:${item.id}:stage`, elements: itemElements(rootAnimation),
+        order: item.rank, z: item.stackingOrder ?? style.stageStackingOrder, elements: itemElements(rootAnimation),
       }));
     }
     if (entry.settled.endFrameExclusive > entry.settled.startFrame) presents.push(present({
       id: `${program.id}:item:${item.id}:settled`, subjectId: item.id, start: entry.settled.startFrame, end: entry.settled.endFrameExclusive,
-      stacking: item.stackingOrder ?? style.itemStackingOrder,
-      tieBreak: `${program.id}:item:${String(item.rank).padStart(4, "0")}:${item.id}:settled`, elements: itemElements(),
+      order: item.rank, z: item.stackingOrder ?? style.itemStackingOrder, elements: itemElements(),
     }));
   }
   return sealTrack(timeline, program.id, presents);
@@ -577,7 +577,7 @@ function activeAccentAnimation(duration: number, activeFrames: number): VisualAn
 }
 
 export function renderTopThree(timeline: Timeline, program: TopThreeProgram): VisualTrack {
-  assertProgramSpaceIdentity(timeline);
+  assertTimelineIdentity(timeline);
   assertTopThreeProgram(program);
   const { frame, style, schedule } = program;
   const boardElements: VisualElement[] = [absoluteBox({
@@ -598,7 +598,7 @@ export function renderTopThree(timeline: Timeline, program: TopThreeProgram): Vi
   }
   const presents: VisualPresent[] = [present({
     id: `${program.id}:slots`, subjectId: program.id, start: schedule.outer.startFrame, end: schedule.outer.endFrameExclusive,
-    stacking: style.boardStackingOrder, tieBreak: `${program.id}:0000:slots`, elements: boardElements,
+    order: 0, z: style.boardStackingOrder, elements: boardElements,
   })];
   for (const [index, item] of program.items.entries()) {
     const entry = schedule.entries[index]!;
@@ -639,13 +639,11 @@ export function renderTopThree(timeline: Timeline, program: TopThreeProgram): Vi
     };
     presents.push(present({
       id: `${program.id}:item:${item.id}:stage`, subjectId: item.id, start: entry.stage.startFrame, end: entry.stage.endFrameExclusive,
-      stacking: item.stackingOrder ?? style.itemStackingOrder,
-      tieBreak: `${program.id}:item:${String(index).padStart(4, "0")}:${item.id}:stage`, elements: itemElements(true),
+      order: index + 1, z: item.stackingOrder ?? style.itemStackingOrder, elements: itemElements(true),
     }));
     if (entry.settled.endFrameExclusive > entry.settled.startFrame) presents.push(present({
       id: `${program.id}:item:${item.id}:settled`, subjectId: item.id, start: entry.settled.startFrame, end: entry.settled.endFrameExclusive,
-      stacking: item.stackingOrder ?? style.itemStackingOrder,
-      tieBreak: `${program.id}:item:${String(index).padStart(4, "0")}:${item.id}:settled`, elements: itemElements(false),
+      order: index + 1, z: item.stackingOrder ?? style.itemStackingOrder, elements: itemElements(false),
     }));
   }
   return sealTrack(timeline, program.id, presents);
@@ -657,21 +655,21 @@ export function renderRankingAudio(
   style: RankingSoundStyle,
   sounds: RankingSoundSet,
 ): AudioTrack {
-  assertProgramSpaceIdentity(timeline);
+  assertTimelineIdentity(timeline);
   assertRankingSoundEventPlan(plan);
   assertRankingSoundStyle(style);
   assert(sounds.appear !== undefined || sounds.move !== undefined, "Ranking audio requires at least one authored sound.");
   if (sounds.appear !== undefined) verifySynchronizedMedia(sounds.appear);
   if (sounds.move !== undefined) verifySynchronizedMedia(sounds.move);
-  const totalSamples = programSpaceSampleFrames(timeline, 48_000);
-  const fadeSamples = programFrameSampleBoundary(timeline, style.fadeFrames, 48_000);
+  const totalSamples = timelineSampleFrames(timeline, 48_000);
+  const fadeSamples = timelineFrameSampleBoundary(timeline, style.fadeFrames, 48_000);
   const clips: AudioClip[] = [];
   for (const event of plan.events) {
     const media = sounds[event.kind];
     if (media === undefined) continue;
     const audio = media.audio;
     assert(audio !== undefined, `Ranking ${event.kind} sound has no normalized audio.`);
-    const startSample = programFrameSampleBoundary(timeline, event.frame, 48_000);
+    const startSample = timelineFrameSampleBoundary(timeline, event.frame, 48_000);
     const sourceSampleFrames = synchronizedMediaSampleFrames(media);
     const length = Math.min(sourceSampleFrames, totalSamples - startSample);
     assert(length > 0, `Ranking sound ${event.id} starts after Timeline.`);
@@ -680,8 +678,11 @@ export function renderRankingAudio(
       id: event.id,
       artifact: structuredClone(audio.artifact),
       target: { startSample, endSampleExclusive: startSample + length },
-      source: { sampleFrames: sourceSampleFrames, startSample: 0, endSampleExclusive: length, loop: false, phaseSample: 0 },
-      playbackRate: 1, pitch: "preserve",
+      sourceTime: { sourceSampleFrames, pieces: [{
+        target: { startSample: 0, endSampleExclusive: length },
+        sourceAtStart: { numerator: 0, denominator: 1 },
+        rate: { numerator: 1, denominator: 1 },
+      }] },
       gain: event.kind === "appear" ? style.appearGain : style.moveGain,
       fadeInSamples: fadeSamples, fadeOutSamples: 0,
     });
@@ -690,7 +691,7 @@ export function renderRankingAudio(
     if (sounds[kind] !== undefined) assert(clips.some((clip) => clip.id.endsWith(`:${kind}`)),
       `Ranking ${kind} sound has no matching visual event.`);
   }
-  const track = sealAudioTrack({ programSpaceId: timeline.id, id: `${plan.id}.audio`, clips });
+  const track = sealAudioTrack({ timelineId: timeline.id, id: `${plan.id}.audio`, clips });
   assertAudioTrackIdentity(track, timeline);
   return track;
 }

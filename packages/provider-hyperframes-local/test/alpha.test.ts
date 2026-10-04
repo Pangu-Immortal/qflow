@@ -1,4 +1,3 @@
-import { appendMediaPerformance } from "@qflow/performance";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
@@ -6,20 +5,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { sealComposition } from "@qflow/composition";
 import { compileHyperframesDocument } from "@qflow/hyperframes";
-import type { Narrative } from "@qflow/narrative";
-import { parseScript, narrativeValue } from "@qflow/script";
-import { materializeSemanticTake } from "@qflow/speech";
-import { appendTimelineAuthorTake, assembleTimelineAuthor, createTimelineAuthorSet,
-  sealTimelineAuthorHeader } from "@qflow/timeline-author";
-import { projectTimelineSpace } from "@qflow/timeline";
-import { appendMediaItem, appendTimedMediaLayer, createMediaLayerSet, createMediaSoundSet, createMediaTrackSet,
-  finalizeMediaTrack, projectMediaVisualTrack, sealMediaItemSpec, sealMediaSampleLayerSpec, sealMediaTrackHeader } from "@qflow/media-track";
+import { sealTimeline } from "@qflow/timeline";
+import { appendVisualClip, appendTimedMediaLayer, createMediaLayerSet, createVisualTrackSet,
+  finalizeVisualTrack, projectVisualTrack, sealVisualClipSpec, sealMediaSampleLayerSpec,
+  sealVisualTrackHeader } from "@qflow/visual-track";
 import { projectProgramWindow } from "../../../test/temporal-fixture.js";
 import { MemoryResourceStore, ffmpegBytes, normalizeTestVideo, transparentVideoFixture, writeTestArtifact } from "../../../test/alpha-video-fixture.js";
 import sharp from "sharp";
 import { renderHyperframesVisual, renderHyperframesFrames } from "../src/index.js";
 
-test("transparent normalized media composites through both SemanticTake/Timeline and Media Track in Chrome", {
+test("transparent normalized media composites through an explicit Visual Clip in Chrome", {
   skip: process.env.QFLOW_BROWSER_TESTS !== "1",
 }, async () => {
   const directory = process.env.QFLOW_ALPHA_PROOF_DIR ?? await mkdtemp(join(tmpdir(), "qflow-alpha-render-"));
@@ -30,48 +25,33 @@ test("transparent normalized media composites through both SemanticTake/Timeline
     const source = await resources.put(fixture.bytes, fixture.mediaType);
     const media = await normalizeTestVideo(resources, source, true);
     const broll = await normalizeTestVideo(resources, source, false);
-    const narrative = narrativeValue(parseScript("alpha.svml", "<opening>Hello</opening>"), "story") as unknown as Narrative;
-    const segment = narrative.segments[0]!;
-    const token = narrative.tokens[0]!;
-    // Known token timing isolates media preservation from remote speech recognition.
-    const take = materializeSemanticTake(narrative,
-      { narrativeId: narrative.id, kind: "segment", id: segment.id, tokenStart: 0, tokenEndExclusive: 1 }, media, {
-        tokens: [{ tokenId: token.id, segmentId: segment.id, startFrame: 2, endFrameExclusive: 10 }],
-        anchors: [
-          { identity: segment.startAnchorId, frame: 0 }, { identity: segment.endAnchorId, frame: 12 },
-          { identity: token.startAnchorId, frame: 2 }, { identity: token.endAnchorId, frame: 10 },
-        ],
-      });
-    assert.deepEqual(take.media, media);
     const fit = { sizing: "contain" as const, framePoint: { x: 0.5, y: 0.5 }, contentPoint: { x: 0.5, y: 0.5 },
       offsetPx: { x: 0, y: 0 }, constraint: "bounded" as const };
     const frame = { xPx: 0, yPx: 0, widthPx: 96, heightPx: 64 };
-    const set = appendTimelineAuthorTake(createTimelineAuthorSet(), take);
-    const semantic = assembleTimelineAuthor(sealTimelineAuthorHeader({ id: "speech" }), set, { frameRate: media.timeline.frameRate });
-    const space = semantic;
-    const header = sealMediaTrackHeader({ id: "broll" });
+    const space = sealTimeline({ id: "film", frameRate: media.frameDomain.frameRate, frameCount: media.frameDomain.frameCount });
+    const header = sealVisualTrackHeader({ id: "broll" });
     const layers = appendTimedMediaLayer(createMediaLayerSet(), broll, fit, sealMediaSampleLayerSpec({ id: "cutout",
-      occupancy: { mode: "once", align: "start" },
       appearance: { opacity: 1, filter: { blurPx: 0, brightness: 1, contrast: 1, saturation: 1 } },
     }));
-    const spec = sealMediaItemSpec({ id: "broll-cutout", stackingOrder: 2, motion: { sustain: [] },
-      presentation: { clip: { kind: "none" }, padding: { topPx: 0, rightPx: 0, bottomPx: 0, leftPx: 0 },
+    const spec = sealVisualClipSpec({ id: "broll-cutout", z: 2,
+      treatment: { clip: { kind: "none" }, padding: { topPx: 0, rightPx: 0, bottomPx: 0, leftPx: 0 },
         border: { widthPx: 0, style: "solid", color: "#000000" }, shadows: [] } });
-    const items = appendMediaItem(createMediaTrackSet(), header, space,
-      { widthPx: 192, heightPx: 64, origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square" },
-      layers, { ...frame, xPx: 96 }, spec, createMediaSoundSet(), projectProgramWindow({
-        itemId: spec.id, semantic, projection: { start: { ref: "program.start" }, end: { ref: "program.end" } },
+    const items = appendVisualClip(createVisualTrackSet(), header, space,
+      layers, { ...frame, xPx: 96 }, spec, projectProgramWindow({
+        itemId: spec.id, semantic: space, projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } },
       }));
-    const performanceHeader = sealMediaTrackHeader({ id: "performance" });
-    const performanceSpec = { ...spec, id: "performance", stackingOrder: 1 };
-    const performance = appendMediaPerformance({ set: createMediaTrackSet(), header: performanceHeader, timeline: semantic,
-      canvas: { widthPx: 192, heightPx: 64, origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square" },
-      layers: createMediaLayerSet(), frame, spec: performanceSpec, sounds: createMediaSoundSet(),
-      window: projectProgramWindow({ itemId: performanceSpec.id, semantic, projection: { start: { ref: "program.start" }, end: { ref: "program.end" } } }),
-    }, fit, sealMediaSampleLayerSpec({ id: "content", occupancy: { mode: "once", align: "start" },
-      appearance: { opacity: 1, filter: { blurPx: 0, brightness: 1, contrast: 1, saturation: 1 } } }));
-    const speechVisual = projectMediaVisualTrack(space, finalizeMediaTrack(performance, performanceHeader, space));
-    const brollVisual = projectMediaVisualTrack(space, finalizeMediaTrack(items, header, space));
+    const speechHeader = sealVisualTrackHeader({ id: "speech" });
+    const speechSpec = { ...spec, id: "speech", z: 1 };
+    const speechLayers = appendTimedMediaLayer(createMediaLayerSet(), media, fit, sealMediaSampleLayerSpec({
+      id: "content",
+      appearance: { opacity: 1, filter: { blurPx: 0, brightness: 1, contrast: 1, saturation: 1 } },
+    }));
+    const speechSet = appendVisualClip(createVisualTrackSet(), speechHeader, space,
+      speechLayers, frame, speechSpec,
+      projectProgramWindow({ itemId: speechSpec.id, semantic: space,
+        projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } } }));
+    const speechVisual = projectVisualTrack(space, finalizeVisualTrack(speechSet, speechHeader, space));
+    const brollVisual = projectVisualTrack(space, finalizeVisualTrack(items, header, space));
     const document = compileHyperframesDocument(sealComposition({ id: "alpha-proof",
       canvas: { width: 192, height: 64, clearColor: "#143cdc" }, tracks: [speechVisual, brollVisual] }), space);
     const rendered = await renderHyperframesVisual({ document }, { resources, workers: 2, quality: "high", processTimeoutMs: 120_000 });

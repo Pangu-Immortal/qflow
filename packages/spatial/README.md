@@ -1,21 +1,53 @@
 # `@qflow/spatial`
 
-Shared video-domain geometry: explicit Canvas coordinates, Points, Frames, Paths, externally measured
-Region Timelines, intrinsic extents and deterministic two-frame content fitting. It owns no semantic
-timing, Paint, motion, media decoding,
-renderer, Provider or Core behavior.
+Pure two-dimensional video geometry. The package owns the final raster viewport, resolved
+picture-plane geometry, source extents and affine mappings. It owns no layer tree, media, Paint,
+motion, Timeline, detector, Provider or renderer policy.
 
-The package exposes self-described `Canvas`, `Point`, `Path`, `Extent`, `RegionTimeline`, `Frame`,
-`AnchoredFrame` and `AspectFrame` author Surfaces plus pure geometry functions and fixed-port Producers.
+## The spatial values
 
-## Destination and fitted content
+- `Canvas` is the final raster viewport. A `<space:Canvas>` publishes `.canvas` for raster consumers
+  and `.bounds` for ordinary geometry consumers. Its runtime value contains only width and height;
+  the `@1` coordinate convention is a protocol rule rather than four repeated constants.
+- `SpatialPoint`, `SpatialFrame` and `SpatialPath` are plain resolved values in the program picture
+  plane: top-left origin, x right, y down, square pixels. They carry no Canvas id, parent pointer or
+  construction history.
+- `IntrinsicExtent` is the natural width and height of a source or local picture plane.
+- `ContentFit` is an authored mapping policy.
+- `SpatialMap2D` is an affine map from a local plane into the program picture plane.
 
-`SpatialFrame` is a destination rectangle in Canvas pixels. `IntrinsicExtent` supplies source
-dimensions. `fitContent(frame, extent, fit)` returns a `FittedContent.contentFrame`: the scaled
-source's rectangle in the same coordinates. The caller supplies the fitting area; Media Track
-derives that area by subtracting its border and padding from its outer Frame.
+Canvas is deliberately not a container. Visual components own clipping, Paint, draw order and
+motion. A Frame may extend outside the Canvas and may be reused anywhere its numbers mean the same
+thing.
 
-`ContentFit.sizing` selects the size before alignment:
+```svml
+<space:Canvas id="vertical" width="1080" height="1920"/>
+<space:Frame id="safe" within={vertical.bounds}
+  left="6%" top="5%" right="94%" bottom="92%"/>
+<space:AnchoredFrame id="portrait" within={safe}
+  x="100%" y="100%" width="320px" height="320px" anchor="bottom-right"/>
+```
+
+`Frame`, `AnchoredFrame` and `AspectFrame` are three constructors for the same runtime
+`SpatialFrame`. Other layout packages can publish that same Type without modifying this package.
+
+An author or project component that already knows an affine relation can publish it directly:
+
+```svml
+<space:Map id="turned" xx="0" xy="-0.5" yx="0.5" yy="0" tx="920" ty="180"/>
+```
+
+This is the open value below fitting conveniences, not a scene node. It carries no source, Frame,
+Canvas identity, clipping policy or time.
+
+## Content fitting resolves a mapping
+
+`resolveContentFit(frame, extent, fit)` returns a `SpatialMap2D`. It does not invent a second
+`FittedContent` model. Consumers may apply the map to source-local Points and Paths, and may derive
+the mapped source bounds when they need a rectangular optimization or diagnostic. That bounding
+rectangle is not the mapping and cannot replace it after rotation, skew or reflection.
+
+`ContentFit.sizing` selects the scale before alignment:
 
 | Sizing | Result |
 | --- | --- |
@@ -24,54 +56,20 @@ derives that area by subtracting its border and padding from its outer Frame.
 | `fit-width` / `fit-height` | Preserve aspect and match the named dimension |
 | `native` | Keep the source's pixel dimensions |
 | `scale-down` | Use `contain` while limiting scale to at most 1 |
-| `stretch` | Use the destination width and height independently |
+| `stretch` | Match destination width and height independently |
 
-`framePoint` and `contentPoint` are separate normalized points in `[0,1]`. The scaled source point
-is placed at the destination point, then `offsetPx` is added. Before any constraint, the horizontal
-position is `frame.xPx + frame.widthPx * framePoint.x - contentWidth * contentPoint.x + offsetPx.x`;
-the vertical position follows the same relationship.
+`framePoint` selects a normalized point in the destination and `contentPoint` selects the source
+point placed there. `offsetPx` adds an explicit displacement. `bounded` constrains the translation
+to the available placement range; `free` preserves the authored translation. Clipping is still the
+visual consumer's decision.
 
-`constraint: bounded` clamps each coordinate between `frameStart` and
-`frameStart + frameSize - contentSize`, whichever is lower or higher. Large content keeps the
-destination covered on that axis, and small content stays inside it. `free` leaves the calculated
-position unchanged. Fitting calculates rectangles; the consuming component owns clipping.
+The Recipe decoder exposes `fit`, `frame-x`, `frame-y`, `content-x`, `content-y`, `fit-offset-x`,
+`fit-offset-y` and `fit-constraint`. Visual Track uses it, and project components may use the same
+pure functions.
 
-`decodeContentFitProperties` exposes these through Recipe keys: `fit`, `frame-x`, `frame-y`,
-`content-x`, `content-y`, `fit-offset-x`, `fit-offset-y`, and `fit-constraint`. Defaults are `contain`,
-center points (`0.5`), zero pixel offsets and `bounded`. These alignment fractions place the source
-inside the supplied destination. Canvas placement remains the job of Frame / AnchoredFrame /
-AspectFrame. Media Track uses this decoder for Items, Performances and Sequence members; project
-components can use the same fitting functions where that presentation fits their role.
+## Evidence over time is a peer package
 
-## Measured regions
-
-`RegionTimeline` accepts already measured data rather than running a detector. Face detection and
-tracking can observe the footage produced by an earlier Build: keep useful boxes as ordinary numbers,
-then reuse that media while rendering Caption with the finished timeline. Measurement precedes the
-composition that consumes it; it need not precede the first media-producing Build. RegionTimeline
-does not start a detector to discover its own layout. One SVS Recipe holds the exact ProgramSpace
-frame count and named tracks whose array positions are Frames:
-
-```svs
-heads.default {
-  frame-count: 3;
-  tracks: [
-    {"id":"WIFE","regions":[[0.12,0.09,0.20,0.26],null,[0.13,0.10,0.20,0.26]]}
-  ];
-}
-```
-
-```svml
-<space:RegionTimeline id="heads" within={vertical} recipe={tracking.heads.default}/>
-```
-
-Every measured region is normalized `[x, y, width, height]`; `null` says that this track has no
-measured region on that Frame. The Surface converts measured regions to the selected Canvas's pixels
-at author time; it never fills missing Frames or interprets a track id.
-
-Prepare measurements against the exact edited media, clock and Canvas used by the composition.
-Individual Take measurements need their actual frame offsets in the program; boxes measured before
-a crop, resize or inset need that placement transform. Face-to-head expansion, identity association,
-cut handling and any interpolation are explicit external preparation decisions. The resulting
-Recipe records their output. Caption consumers can assign Role meaning to track ids without making
-Spatial aware of speakers, detector APIs or generated-media Providers.
+Frame-indexed observations do not belong to static geometry. `@qflow/region-track` relates prepared
+regions to a Timeline and resolves them into picture-plane Frames. Detection, identity association,
+interpolation and source-to-picture projection remain explicit preparation or project-package work.
+This keeps Spatial reusable and prevents a central scene or evidence registry.

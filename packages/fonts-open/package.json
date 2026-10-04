@@ -126,9 +126,7 @@
     "@qflow/media": "workspace:*",
     "@qflow/package-loader-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/markup": "workspace:*"
-  },
-  "devDependencies": {
+    "@qflow/markup": "workspace:*",
     "@qflow/studio-adapter": "workspace:*"
   }
 }

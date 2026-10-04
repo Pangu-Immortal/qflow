@@ -1,8 +1,6 @@
-import { sealTimeline } from "@qflow/timeline";
+import { sealTimeline, timelineDependency, timelineTypes } from "@qflow/timeline";
 import { compositionComponent, spatialComponent, videoContractManifests } from "../../../test/support/video-domain.js";
 import { registerTypeValidatorFacets } from "@qflow/component-kit";
-import { programSpaceDependency, programSpaceTypes, sealProgramSpace } from "@qflow/program-space";
-import { timelineDependency, timelineProducers, timelineTypes } from "@qflow/timeline";
 import { compositionDependency, compositionTypes, sealAudioTrack, sealVisualTrack } from "@qflow/composition";
 import type { Track } from "@qflow/composition";
 import assert from "node:assert/strict";
@@ -60,16 +58,15 @@ const fixtureManifest: ModuleManifest = {
   producers: [],
 };
 
-const space = sealTimeline({ items: [], id: "test-space", durationSec: 2,
-  frameRate: { numerator: 30, denominator: 1 },
+const space = sealTimeline({ id: "test-space", frameCount: 60, frameRate: { numerator: 30, denominator: 1 },
 });
 const semantic = timelineFixture(space);
-const visual = sealVisualTrack({ programSpaceId: "test-space",
+const visual = sealVisualTrack({ timelineId: "test-space",
   visualIr: "qflow.visual-ir@1",
   id: "visual",
   presents: [],
 });
-const audio = sealAudioTrack({ programSpaceId: "test-space",
+const audio = sealAudioTrack({ timelineId: "test-space",
   id: "audio",
   clips: [],
 });
@@ -142,7 +139,7 @@ async function compileFilm(options: { readonly styles?: string; readonly tracks?
       <import as="recipes" source="./recipes.svs"/>
       <fixture:Inputs/>
       <space:Canvas id="vertical" width="1080" height="1920"/>
-      <film:Film id="main" canvas={vertical} timeline={semantic} appearance={recipes.film.vertical}>
+      <film:Film id="main" canvas={vertical.canvas} timeline={semantic} appearance={recipes.film.vertical}>
         ${options.tracks ?? '<film:Track source={visual}/><film:Track source={audio}/>'}
       </film:Film>
     </svml>`),

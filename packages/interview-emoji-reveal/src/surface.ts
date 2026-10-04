@@ -4,12 +4,11 @@ import {
   type SurfaceComponentDraft, type SurfaceRecordDraft, type SurfaceResolvedReference,
 } from "@qflow/markup";
 import { artifactTypes } from "@qflow/artifact";
-import { narrativeTypes } from "@qflow/narrative";
 import { sameType, type CanonicalValue, type TypeRef } from "@qflow/protocol";
 import { spatialTypes } from "@qflow/spatial";
 import { svsRecipeType } from "@qflow/svs";
 import type { SvsRecipe } from "@qflow/svs";
-import { createTemporalInstantProjection, createTemporalWindowProjection, temporalWindowAttributeNames } from "@qflow/temporal-markup";
+import { createTemporalInstantConstruction, createTemporalWindowConstruction, temporalWindowAttributeNames } from "@qflow/temporal-markup";
 
 import { createEmojiRevealFragment } from "./fragment.js";
 import { emojiRevealTypes } from "./manifest.js";
@@ -48,13 +47,13 @@ export const decodeEmojiRevealStyleSurface: StructuredSurfaceHandler = ({ elemen
 };
 
 export const decodeEmojiRevealTrackSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  assertAttributes(element, ["id", "timeline", "canvas", "style", "placeholder", ...temporalWindowAttributeNames]);
+  assertAttributes(element, ["id", "timeline", "within", "style", "placeholder", ...temporalWindowAttributeNames]);
   const id = textAttribute(element, "id");
   const context = resolveTemporalContext({ element, resolveReference });
-  const canvas = reference(element.attributes.canvas, `${element.name}.canvas`, spatialTypes.canvas, resolveReference);
+  const within = reference(element.attributes.within, `${element.name}.within`, spatialTypes.frame, resolveReference);
   const style = reference(element.attributes.style, `${element.name}.style`, emojiRevealTypes.style, resolveReference);
   const placeholder = reference(element.attributes.placeholder, `${element.name}.placeholder`, artifactTypes.blob, resolveReference);
-  const outer = createTemporalWindowProjection({ id, subjectId: id, element, ...context, resolveReference });
+  const outer = createTemporalWindowConstruction({ id, subjectId: id, element, ...context, resolveReference });
   const headerId = `${id}.header`;
   const records: SurfaceRecordDraft[] = [...outer.records, {
     id: headerId, type: emojiRevealTypes.header,
@@ -64,7 +63,7 @@ export const decodeEmojiRevealTrackSurface: StructuredSurfaceHandler = ({ elemen
   const temporalFragments = [...outer.fragments];
   const items: { specName: string; iconName: string; activationName?: string }[] = [];
   const inputs: Record<string, typeof context.timeline.ref> = {
-    header: { kind: "record", id: headerId }, timeline: context.timeline.ref, canvas: canvas.ref, style: style.ref,
+    header: { kind: "record", id: headerId }, timeline: context.timeline.ref, within: within.ref, style: style.ref,
     placeholder: placeholder.ref, outer: outer.ref,
   };
   const ids = new Set<string>();
@@ -89,9 +88,9 @@ export const decodeEmojiRevealTrackSurface: StructuredSurfaceHandler = ({ elemen
     inputs[specName] = { kind: "record", id: specId }; inputs[iconName] = icon.ref;
     if (preset) items.push({ specName, iconName });
     else {
-      const activation = createTemporalInstantProjection({
+      const activation = createTemporalInstantConstruction({
         id: `${id}.item.${suffix}.activation`, subjectId: itemId,
-        element: child, ...context, resolveReference, semanticAttribute: "at", projectedAttribute: false,
+        element: child, ...context, resolveReference, attribute: "at",
       });
       records.push(...activation.records); temporalComponents.push(...activation.components); temporalFragments.push(...activation.fragments);
       const activationName = `item-${suffix}-activation`;
@@ -103,7 +102,7 @@ export const decodeEmojiRevealTrackSurface: StructuredSurfaceHandler = ({ elemen
   const fragment = createEmojiRevealFragment(items);
   return {
     records,
-    components: [...temporalComponents, { id, fragment: fragment.id, inputs, outputs: { program: `${id}.program`, track: `${id}.track` }, range: element.range }],
-    fragments: [...temporalFragments, fragment], exports: [`${id}.program`, `${id}.track`],
+    components: [...temporalComponents, { id, fragment: fragment.id, inputs, outputs: { program: `${id}.program`, visual: `${id}.visual` }, range: element.range }],
+    fragments: [...temporalFragments, fragment], exports: [`${id}.program`, `${id}.visual`],
   };
 };

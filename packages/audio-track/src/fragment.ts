@@ -17,25 +17,25 @@ export type AudioTrackFragmentItem = {
 const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
 
-export function createAudioTrackFragment(items: readonly AudioTrackFragmentItem[]) {
-  if (items.length === 0) throw new Error("Audio Track Fragment requires at least one Item.");
+export function createAudioTrackFragment(clips: readonly AudioTrackFragmentItem[]) {
+  if (clips.length === 0) throw new Error("Audio Track Fragment requires at least one Clip.");
   const inputTypes = new Map<string, (typeof audioTrackTypes.clipSpec | typeof mediaTypes.synchronized | typeof temporalTypes.window)>();
   const operations: FragmentOperation[] = [
     { id: "audio:set:empty", producer: audioTrackProducers.createSet, inputs: {}, result: { kind: "output", name: "set" } },
   ];
   let current = "audio:set:empty";
-  items.forEach((item, index) => {
-    inputTypes.set(item.mediaName, mediaTypes.synchronized);
-    inputTypes.set(item.specName, audioTrackTypes.clipSpec);
-    inputTypes.set(item.windowName, temporalTypes.window);
+  clips.forEach((clip, index) => {
+    inputTypes.set(clip.mediaName, mediaTypes.synchronized);
+    inputTypes.set(clip.specName, audioTrackTypes.clipSpec);
+    inputTypes.set(clip.windowName, temporalTypes.window);
     const id = `audio:set:append:${String(index + 1).padStart(4, "0")}`;
     operations.push({
       id,
-      producer: audioTrackProducers.appendItem,
+      producer: audioTrackProducers.appendClip,
       inputs: {
         set: operation(current), header: input("header"), timeline: input("timeline"),
-        media: input(item.mediaName), spec: input(item.specName),
-        window: input(item.windowName),
+        media: input(clip.mediaName), spec: input(clip.specName),
+        window: input(clip.windowName),
       },
       result: { kind: "output", name: "set" },
     });

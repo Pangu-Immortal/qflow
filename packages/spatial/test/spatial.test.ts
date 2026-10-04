@@ -10,7 +10,6 @@ import {
   createMarkupAuthorFrontend,
 } from "@qflow/markup";
 import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
-import { svsFrontend, svsManifest } from "@qflow/svs";
 
 import {
   anchoredFrame,
@@ -19,11 +18,16 @@ import {
   decodeAspectFrameSurface,
   decodeCanvasSurface,
   decodeFrameSurface,
+  decodeMapSurface,
   decodePathSurface,
   decodePointSurface,
-  decodeRegionTimelineSurface,
-  fitContent,
+  composeSpatialMaps,
+  mapIntrinsicExtentBounds,
+  mapSpatialFrameBounds,
+  mapSpatialFramePath,
+  mapSpatialPoint,
   frameFromEdges,
+  resolveContentFit,
   sealSpatialPath,
   spatialComponent,
   spatialManifest,
@@ -32,7 +36,7 @@ import {
   spatialProducers,
   spatialTypes,
 } from "../src/index.js";
-import type { ContentFit, IntrinsicExtent, SpatialAnchor, SpatialFrame, SpatialRegionTimeline } from "../src/index.js";
+import type { ContentFit, IntrinsicExtent, SpatialAnchor, SpatialFrame } from "../src/index.js";
 
 const parent: SpatialFrame = { xPx: 100, yPx: 200, widthPx: 800, heightPx: 1200 };
 const portrait: IntrinsicExtent = { widthPx: 600, heightPx: 1000 };
@@ -42,6 +46,8 @@ const centered = (sizing: ContentFit["sizing"], constraint: ContentFit["constrai
   framePoint: { x: 0.5, y: 0.5 }, contentPoint: { x: 0.5, y: 0.5 },
   offsetPx: { x: 0, y: 0 }, constraint,
 });
+const fittedBounds = (frame: SpatialFrame, extent: IntrinsicExtent, fit: ContentFit): SpatialFrame =>
+  mapIntrinsicExtentBounds(extent, resolveContentFit(frame, extent, fit));
 
 test("Frame edges and anchored Frames resolve percentages against the explicit parent", () => {
   assert.deepEqual(frameFromEdges(parent, {
@@ -79,19 +85,30 @@ test("AspectFrame preserves explicit or connected aspect without becoming Media"
   }), { xPx: 660, yPx: 1000, widthPx: 240, heightPx: 400 });
 });
 
-test("every ContentFit sizing mode resolves the independent Content Frame", () => {
+test("every ContentFit sizing mode resolves one source-to-picture mapping", () => {
   const frame: SpatialFrame = { xPx: 0, yPx: 0, widthPx: 400, heightPx: 400 };
-  assert.deepEqual(fitContent(frame, landscape, centered("contain")).contentFrame,
+  assert.deepEqual(fittedBounds(frame, landscape, centered("contain")),
     { xPx: 0, yPx: 87.5, widthPx: 400, heightPx: 225 });
-  assert.deepEqual(fitContent(frame, landscape, centered("cover")).contentFrame,
+  assert.deepEqual(fittedBounds(frame, landscape, centered("cover")),
     { xPx: -155.55555555555554, yPx: 0, widthPx: 711.1111111111111, heightPx: 400 });
-  assert.equal(fitContent(frame, portrait, centered("fit-width")).contentFrame.heightPx, 666.6666666666666);
-  assert.equal(fitContent(frame, portrait, centered("fit-height")).contentFrame.widthPx, 240);
-  assert.deepEqual(fitContent(frame, portrait, centered("native")).contentFrame,
+  assert.ok(Math.abs(fittedBounds(frame, portrait, centered("fit-width")).heightPx - 666.6666666666666) < 1e-9);
+  assert.equal(fittedBounds(frame, portrait, centered("fit-height")).widthPx, 240);
+  assert.deepEqual(fittedBounds(frame, portrait, centered("native")),
     { xPx: -100, yPx: -300, widthPx: 600, heightPx: 1000 });
-  assert.deepEqual(fitContent({ ...frame, widthPx: 800, heightPx: 1200 }, portrait, centered("scale-down")).contentFrame,
+  assert.deepEqual(fittedBounds({ ...frame, widthPx: 800, heightPx: 1200 }, portrait, centered("scale-down")),
     { xPx: 100, yPx: 100, widthPx: 600, heightPx: 1000 });
-  assert.deepEqual(fitContent(frame, portrait, centered("stretch")).contentFrame, frame);
+  assert.deepEqual(fittedBounds(frame, portrait, centered("stretch")), frame);
+});
+
+test("SpatialMap2D composes local geometry without attaching Canvas identity", () => {
+  const rotateQuarter = { xx: 0, xy: -1, yx: 1, yy: 0, tx: 0, ty: 0 };
+  const translate = { xx: 1, xy: 0, yx: 0, yy: 1, tx: 100, ty: 200 };
+  const mapping = composeSpatialMaps(rotateQuarter, translate);
+  assert.deepEqual(mapSpatialPoint({ xPx: 10, yPx: 20 }, mapping), { xPx: 80, yPx: 210 });
+  assert.deepEqual(mapSpatialFrameBounds({ xPx: 0, yPx: 0, widthPx: 30, heightPx: 20 }, mapping),
+    { xPx: 80, yPx: 200, widthPx: 20, heightPx: 30 });
+  assert.deepEqual(mapSpatialFramePath({ xPx: 0, yPx: 0, widthPx: 30, heightPx: 20 }, mapping).commands[1],
+    { kind: "line", xPx: 100, yPx: 230 });
 });
 
 test("the complete aspect, sizing and equal-point matrix preserves the two-frame equations", () => {
@@ -113,7 +130,7 @@ test("the complete aspect, sizing and equal-point matrix preserves the two-frame
   for (const frame of frames) {
     for (const extent of extents) {
       for (const sizing of sizings) {
-        const content = fitContent(frame, extent, centered(sizing)).contentFrame;
+        const content = fittedBounds(frame, extent, centered(sizing));
         close(content.xPx + content.widthPx / 2, frame.xPx + frame.widthPx / 2, `${sizing} center x`);
         close(content.yPx + content.heightPx / 2, frame.yPx + frame.heightPx / 2, `${sizing} center y`);
         if (sizing !== "stretch") {
@@ -148,10 +165,10 @@ test("the complete aspect, sizing and equal-point matrix preserves the two-frame
   const points = [0, 0.5, 1] as const;
   for (const x of points) {
     for (const y of points) {
-      const content = fitContent(frame, extent, {
+      const content = fittedBounds(frame, extent, {
         sizing: "native",
         framePoint: { x, y }, contentPoint: { x, y }, offsetPx: { x: 0, y: 0 }, constraint: "bounded",
-      }).contentFrame;
+      });
       close(content.xPx + content.widthPx * x, frame.xPx + frame.widthPx * x, `equal point ${x},${y} x`);
       close(content.yPx + content.heightPx * y, frame.yPx + frame.heightPx * y, `equal point ${x},${y} y`);
     }
@@ -165,8 +182,8 @@ test("unequal focal points and bounded/free policies remain explicit", () => {
     framePoint: { x: 0.5, y: 0.5 }, contentPoint: { x: 0.8, y: 0.35 },
     offsetPx: { x: 20, y: -10 }, constraint: "free",
   };
-  const free = fitContent(frame, landscape, fit).contentFrame;
-  const bounded = fitContent(frame, landscape, { ...fit, constraint: "bounded" }).contentFrame;
+  const free = fittedBounds(frame, landscape, fit);
+  const bounded = fittedBounds(frame, landscape, { ...fit, constraint: "bounded" });
   assert.ok(Math.abs(free.xPx - (-196.66666666666666)) < 1e-9);
   assert.ok(Math.abs(free.widthPx - 533.3333333333333) < 1e-9);
   assert.deepEqual([free.yPx, free.heightPx], [55, 300]);
@@ -195,8 +212,8 @@ function source(text: string): AuthorSourceUnit {
   return { id: "/project/main.svml", name: "main.svml", text: `<?svml using="@qflow/markup@1"?>\n${text}` };
 }
 
-test("self-described Spatial Surfaces produce explicit static geometry and measured Region data", async () => {
-  const closure = createResolvedClosure([spatialManifest, svsManifest]);
+test("self-described Spatial Surfaces produce explicit static geometry", async () => {
+  const closure = createResolvedClosure([spatialManifest]);
   const surfaces = new MarkupSurfaceRegistry();
   const register = (name: string, handler: Parameters<MarkupSurfaceRegistry["registerStructured"]>[0]["handler"]) => {
     const declaration = spatialMarkupSurfaces.find((item) => item.name === name);
@@ -206,67 +223,44 @@ test("self-described Spatial Surfaces produce explicit static geometry and measu
   register("canvas", decodeCanvasSurface);
   register("point", decodePointSurface);
   register("path", decodePathSurface);
-  register("region-timeline", decodeRegionTimelineSurface);
+  register("map", decodeMapSurface);
   register("frame", decodeFrameSurface);
   register("anchored-frame", decodeAnchoredFrameSurface);
   register("aspect-frame", decodeAspectFrameSurface);
   const frontends = new AuthorFrontendRegistry();
   frontends.register(createMarkupAuthorFrontend({ registry: surfaces, resolveModule: () => spatialModuleRef }));
-  frontends.register(svsFrontend);
   const validators = new TypeValidatorRegistry();
   registerTypeValidatorFacets(validators, spatialComponent.validators ?? []);
   const compiled = await compileSourceClosure({
     entry: source(`<svml>
       <import as="space" from="@qflow/spatial@1"/>
-      <import as="tracking" source="./tracking.svs"/>
       <space:Canvas id="vertical" width="1080" height="1920"/>
-      <space:RegionTimeline id="heads" within={vertical} recipe={tracking.heads.default}/>
       <space:Point id="headline-origin" x="120" y="280"/>
       <space:Path id="headline-path">
         <space:Move x="120" y="280"/>
         <space:Cubic control1-x="360" control1-y="180" control2-x="720" control2-y="380" x="960" y="280"/>
       </space:Path>
-      <space:Frame id="safe" within={vertical} left="6%" top="4%" right="94%" bottom="96%"/>
+      <space:Map id="turned" xx="0" xy="-0.5" yx="0.5" yy="0" tx="920" ty="180"/>
+      <space:Frame id="safe" within={vertical.bounds} left="6%" top="4%" right="94%" bottom="96%"/>
       <space:AnchoredFrame id="card" within={safe} x="50%" y="78%" width="82%" height="28%" anchor="center"/>
       <space:AspectFrame id="sticker" within={safe} x="100%" y="100%" width="32%" aspect="9/16" anchor="bottom-right"/>
     </svml>`),
     closure,
     frontends,
     admitRecord: createRecordAdmitter(validators),
-    resolveSource(_importer, request) {
-      if (request.from !== "./tracking.svs") throw new Error(`unknown Spatial fixture source ${request.from}`);
-      return {
-        id: "/project/tracking.svs",
-        name: "tracking.svs",
-        text: `<?svml using="@qflow/svs@1"?>
-<sheet version="1">
-heads.default {
-  frame-count: 3;
-  tracks: [{"id":"BOY","regions":[[0.5,0.1,0.2,0.3],null,[0.52,0.11,0.2,0.3]]}];
-}
-</sheet>`,
-      };
-    },
+    resolveSource() { throw new Error("Spatial fixture imports no Source files."); },
   });
-  assert.equal(resolveCompiledSourceExport(compiled, "vertical", spatialTypes.canvas).ref.kind, "record");
+  assert.equal(resolveCompiledSourceExport(compiled, "vertical.canvas", spatialTypes.canvas).ref.kind, "record");
+  assert.equal(resolveCompiledSourceExport(compiled, "vertical.bounds", spatialTypes.frame).ref.kind, "record");
   assert.equal(resolveCompiledSourceExport(compiled, "headline-origin", spatialTypes.point).ref.kind, "record");
   assert.equal(resolveCompiledSourceExport(compiled, "headline-path", spatialTypes.path).ref.kind, "record");
-  const regions = resolveCompiledSourceExport(compiled, "heads", spatialTypes.regionTimeline);
-  assert.equal(regions.ref.kind, "record");
-  const regionRecord = compiled.program.records.find((record) =>
-    regions.ref.kind === "record" && record.id === regions.ref.id);
-  const timeline = regionRecord?.value.kind === "inline"
-    ? regionRecord.value.value as unknown as SpatialRegionTimeline
-    : undefined;
-  assert.deepEqual(timeline?.tracks[0]?.frames[0], { xPx: 540, yPx: 192, widthPx: 216, heightPx: 576 });
-  assert.equal(timeline?.tracks[0]?.frames[1], null);
+  assert.equal(resolveCompiledSourceExport(compiled, "turned", spatialTypes.map2D).ref.kind, "record");
   const sticker = resolveCompiledSourceExport(compiled, "sticker", spatialTypes.frame);
   assert.equal(sticker.ref.kind, "logical-output");
   const build = start(compiled.program, compiled.graph, sealBuildRequest({
     targets: [{ output: sticker.ref.kind === "logical-output" ? sticker.ref.id : "" }],
   }));
   assert.deepEqual(build.plan.steps.map((step) => step.producer.name).sort(), [
-    spatialProducers.canvasFrame.name,
     spatialProducers.frameEdges.name,
     spatialProducers.aspectFrame.name,
   ].sort());

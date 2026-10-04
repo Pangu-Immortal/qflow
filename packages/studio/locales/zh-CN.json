@@ -53,8 +53,6 @@
     "common.waiting": "等待中",
     "inspector.add-color": "添加颜色",
     "inspector.add-item": "添加条目",
-    "inspector.anchor.program-end": "时间线终点{detail}",
-    "inspector.anchor.program-start": "时间线起点{detail}",
     "inspector.anchor.segment-end": "段尾{detail}",
     "inspector.anchor.segment-start": "段头{detail}",
     "inspector.anchor.token-end": "词尾{detail}",

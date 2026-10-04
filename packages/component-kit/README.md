@@ -78,7 +78,7 @@ rename the Fragment port. The Manifest's Producer ports, Fragment wiring and han
 must agree for that operation.
 
 Read the closest installed implementation for the behavior being authored: Emoji Reveal for a
-persistent event-driven strip, Media Track for sampling and transitions, Caption Fine for a
+persistent event-driven strip, Visual Track for sampling and transitions, Caption Fine for a
 schedule/render split. Their package-local files supply concrete patterns without requiring a
 monorepo checkout. A new component owns its own mechanics, not a fork of the framework loader or
 Runtime.

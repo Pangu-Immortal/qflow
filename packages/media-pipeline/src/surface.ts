@@ -11,7 +11,7 @@ import { sameType, type CanonicalValue } from "@qflow/protocol";
 import { artifactTypes } from "@qflow/artifact";
 import { mediaTypes } from "@qflow/media";
 import { speechTypes } from "@qflow/speech";
-import { programSpaceTypes, type ProgramClock } from "@qflow/program-space";
+import { timelineTypes, type Clock } from "@qflow/timeline";
 import { svsRecipeType, type SvsRecipe } from "@qflow/svs";
 
 import {
@@ -90,17 +90,6 @@ function stream(value: string, kind: "video" | "audio"): MediaSelectionRequest["
   return { mode: "stream-index", streamIndex: Number(match[1]) };
 }
 
-function frameRate(value: string): { readonly numerator: number; readonly denominator: number } {
-  const match = /^(\d+)(?:\/(\d+))?$/u.exec(value);
-  if (match === null) throw new Error("Normalize.frame-rate must be a positive rational such as 30 or 30000/1001.");
-  const numerator = Number(match[1]);
-  const denominator = Number(match[2] ?? "1");
-  if (!Number.isSafeInteger(numerator) || numerator < 1 || !Number.isSafeInteger(denominator) || denominator < 1) {
-    throw new Error("Normalize.frame-rate is invalid.");
-  }
-  return { numerator, denominator };
-}
-
 function exactAttributes(element: StructuredElement, required: readonly string[], optional: readonly string[] = []): void {
   const expected = new Set([...required, ...optional]);
   const unknown = Object.keys(element.attributes).filter((name) => !expected.has(name));
@@ -164,11 +153,10 @@ function transformOperations(element: StructuredElement): readonly MediaTransfor
       continue;
     }
     if (name === "Retime") {
-      exactAttributes(child, ["rate", "pitch"]);
+      exactAttributes(child, ["rate"]);
       const rate = Number(text(child, "rate"));
       if (!Number.isFinite(rate) || rate <= 0 || rate > 100) throw new Error(`${child.name}.rate must be in (0, 100].`);
-      if (text(child, "pitch") !== "preserve") throw new Error(`${child.name}.pitch must be preserve.`);
-      result.push({ kind: "retime", rate, pitch: "preserve" });
+      result.push({ kind: "retime", rate });
       continue;
     }
     throw new Error(`${element.name} accepts only Trim and Retime children.`);
@@ -178,12 +166,9 @@ function transformOperations(element: StructuredElement): readonly MediaTransfor
 }
 
 export const decodeSynchronizedMediaSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  const required = ["id", "source"];
-  const optional = ["audio", "clock", "frame-rate", "recipe", "span-authority", "video"];
+  const required = ["id", "source", "clock"];
+  const optional = ["audio", "recipe", "span-authority", "video"];
   exactAttributes(element, required, optional);
-  const hasClock = element.attributes.clock !== undefined;
-  const hasFrameRate = element.attributes["frame-rate"] !== undefined;
-  if (hasClock === hasFrameRate) throw new Error(`${element.name} requires exactly one of clock or frame-rate.`);
   const hasRecipe = element.attributes.recipe !== undefined;
   const policyCount = ["video", "audio", "span-authority"].filter((name) => element.attributes[name] !== undefined).length;
   if ((hasRecipe && policyCount !== 0) || (!hasRecipe && policyCount !== 3)) {
@@ -194,13 +179,11 @@ export const decodeSynchronizedMediaSurface: StructuredSurfaceHandler = ({ eleme
   }
   const id = text(element, "id");
   const source = ref(element.attributes.source, `${element.name}.source`, resolveReference);
-  const clock = hasClock
-    ? typedReference(element.attributes.clock, `${element.name}.clock`, programSpaceTypes.clock, resolveReference)
+  const clock = typedReference(element.attributes.clock, `${element.name}.clock`, timelineTypes.clock, resolveReference);
+  const clockValue = clock.record?.value.kind === "inline"
+    ? clock.record.value.value as unknown as Clock
     : undefined;
-  const clockValue = clock?.record?.value.kind === "inline"
-    ? clock.record.value.value as unknown as ProgramClock
-    : undefined;
-  if (clock !== undefined && clockValue === undefined) throw new Error(`${element.name}.clock must be an authored Clock record.`);
+  if (clockValue === undefined) throw new Error(`${element.name}.clock must be an authored Clock record.`);
   const normalizationRecipe = hasRecipe ? authoredRecipe(element.attributes.recipe, `${element.name}.recipe`, resolveReference) : undefined;
   const video = stream(normalizationRecipe === undefined ? text(element, "video") : recipeText(normalizationRecipe, "video", `${element.name}.recipe`), "video");
   const audio = stream(normalizationRecipe === undefined ? text(element, "audio") : recipeText(normalizationRecipe, "audio", `${element.name}.recipe`), "audio");
@@ -212,16 +195,20 @@ export const decodeSynchronizedMediaSurface: StructuredSurfaceHandler = ({ eleme
     video,
     audio,
     spanAuthority,
-    frameRate: clockValue?.frameRate ?? frameRate(text(element, "frame-rate")),
+    frameRate: clockValue.frameRate,
   });
   const requestId = `${id}.request`;
+  const domainId = `${id}.domain-spec`;
   return {
-    records: [{ id: requestId, type: mediaPipelineTypes.selectionRequest, value: { kind: "inline", value: request }, range: element.range }],
+    records: [
+      { id: requestId, type: mediaPipelineTypes.selectionRequest, value: { kind: "inline", value: request }, range: element.range },
+      { id: domainId, type: mediaTypes.domainSpec, value: { kind: "inline", value: { id } }, range: element.range },
+    ],
     components: [{
       id,
       fragment: synchronizedMediaFragment.id,
-      inputs: { source: source.ref, request: { kind: "record", id: requestId } },
-      outputs: { media: `${id}.media` },
+      inputs: { source: source.ref, request: { kind: "record", id: requestId }, domain: { kind: "record", id: domainId } },
+      outputs: { media: `${id}.media`, domain: `${id}.domain`, extent: `${id}.extent` },
       range: element.range,
     }],
     fragments: [synchronizedMediaFragment],
@@ -269,7 +256,7 @@ export const decodeStillVideoSurface: StructuredSurfaceHandler = ({ element, res
   const clock = typedReference(
     element.attributes.clock,
     `${element.name}.clock`,
-    programSpaceTypes.clock,
+    timelineTypes.clock,
     resolveReference,
   );
   const fragment = createStillVideoFragment(pictures.length);

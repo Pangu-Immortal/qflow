@@ -1,10 +1,9 @@
-import type { CaptionDocument } from "@qflow/narrative";
 import { canonicalStringify, canonicalize } from "@qflow/protocol";
 
 import { assertCaptionDocument } from "./display.js";
 import { assertTemporalWindowFor } from "@qflow/temporal";
 import type { TemporalWindow } from "@qflow/temporal";
-import type { CaptionProgram, CaptionStyleIntent } from "./types.js";
+import type { CaptionDocument, CaptionProgram, CaptionStyleIntent } from "./types.js";
 
 const ID = /^[A-Za-z][A-Za-z0-9_.-]{0,127}$/u;
 function assert(condition: unknown, message: string): asserts condition { if (!condition) throw new Error(message); }

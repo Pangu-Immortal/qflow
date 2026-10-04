@@ -1,4 +1,4 @@
-import { sealTimeline } from "@qflow/timeline";
+import { sealTimeline, timelineDependency, timelineTypes, timelineComponent } from "@qflow/timeline";
 import { compositionComponent, videoContractManifests } from "../../../test/support/video-domain.js";
 import { artifactTypes } from "@qflow/artifact";
 import {
@@ -6,7 +6,6 @@ import {
   registerTypeValidatorFacets,
 } from "@qflow/component-kit";
 import { mediaTypes, sealMuxedMedia, sealRenderedVisual, sealTimelineAudio } from "@qflow/media";
-import { programSpaceDependency, programSpaceTypes, sealProgramSpace } from "@qflow/program-space";
 import { compositionDependency, compositionTypes, sealComposition } from "@qflow/composition";
 import type { Composition } from "@qflow/composition";
 import assert from "node:assert/strict";
@@ -79,14 +78,8 @@ import {
   createMarkupAuthorFrontend,
   MarkupSurfaceRegistry,
 } from "@qflow/markup";
-import {
-  timelineComponent,
-  timelineDependency,
-  timelineTypes,
-} from "@qflow/timeline";
 
-const space = sealTimeline({ items: [], id: "test-space", durationSec: 2,
-  frameRate: { numerator: 30, denominator: 1 },
+const space = sealTimeline({ id: "test-space", frameCount: 60, frameRate: { numerator: 30, denominator: 1 },
 });
 const semantic = timelineFixture(space);
 const composition = sealComposition({
@@ -157,7 +150,6 @@ function validatorRegistry(): TypeValidatorRegistry {
 test("HyperFrames rendering is an explicit exact Need after ordinary document compilation", async () => {
   assert.deepEqual(build().plan.steps.map((step) => step.producer.name).sort(), [
     hyperframesProducers.compile.name,
-    "project-program-space",
     renderHyperframesProducers.requestVisual.name,
     mediaPipelineProducers.planAudio.name,
     mediaPipelineProducers.renderAudio.name,
@@ -392,7 +384,6 @@ test(`the ${selectedRange ? "selected" : "full"} rendered video remains an ordin
     targets: [{ output: target.ref.kind === "logical-output" ? target.ref.id : "" }],
   }));
   assert.deepEqual(state.plan.steps.map((step) => step.producer.name).sort(), [
-    "project-program-space",
     hyperframesProducers.compile.name,
     selectedRange ? renderHyperframesProducers.requestVisualRange.name : renderHyperframesProducers.requestVisual.name,
     mediaPipelineProducers.planAudio.name,

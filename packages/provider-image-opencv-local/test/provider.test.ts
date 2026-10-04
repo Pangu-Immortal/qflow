@@ -41,7 +41,6 @@ function composeNeed(source: BlobRef): Need {
     kind: "compose",
     canvas: {
       widthPx: 3, heightPx: 2,
-      origin: "top-left", xDirection: "right", yDirection: "down", pixelAspect: "square",
     },
     background: "#00000000",
     layers: [{

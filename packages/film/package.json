@@ -14,7 +14,6 @@
     "@qflow/component-kit": "workspace:*",
     "@qflow/composition": "workspace:*",
     "@qflow/elaborator": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/timeline": "workspace:*",
     "@qflow/spatial": "workspace:*",
@@ -28,7 +27,7 @@
     "@qflow/hyperframes": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/text": "workspace:*",
-    "@qflow/typography-track": "workspace:*",
+    "@qflow/text-fine": "workspace:*",
     "@qflow/validation": "workspace:*"
   }
 }

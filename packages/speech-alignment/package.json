@@ -12,12 +12,11 @@
   },
   "dependencies": {
     "@qflow/component-kit": "workspace:*",
-    "@qflow/media": "workspace:*",
     "@qflow/narrative": "workspace:*",
-    "@qflow/program-space": "workspace:*",
+    "@qflow/narrative-temporal": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/speech": "workspace:*",
-    "@qflow/speech-evidence": "workspace:*"
+    "@qflow/speech-evidence": "workspace:*",
+    "@qflow/temporal": "workspace:*"
   },
   "devDependencies": {
     "@qflow/script": "workspace:*"

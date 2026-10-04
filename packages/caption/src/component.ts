@@ -1,14 +1,13 @@
 import type { TemporalWindow } from "@qflow/temporal";
 import type { ComponentPackage } from "@qflow/component-kit";
-import type { CaptionDocument } from "@qflow/narrative";
-import type { Timeline } from "@qflow/timeline";
 import type { StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 
 import { captionProducers, captionTypes } from "./manifest.js";
 import { appendCaptionUse, assertCaptionProgram, assertCaptionStyle } from "./style.js";
-import { assertTimedCaptionProjection, temporalizeCaptionDocument } from "./temporalize.js";
-import type { CaptionProgram, CaptionStyleIntent, TimedCaptionProjection } from "./types.js";
+import { assertCaptionDocumentIdentity } from "./identity.js";
+import { assertCaptionTiming } from "./temporalize.js";
+import type { CaptionDocument, CaptionProgram, CaptionStyleIntent, CaptionTiming } from "./types.js";
 
 function inline<T>(value: StoredValue | undefined, subject: string): T {
   if (value?.kind !== "inline") throw new Error(`${subject} must be inline`);
@@ -31,23 +30,15 @@ export const captionComponent = {
       inline<CaptionStyleIntent>(inputs.style?.value, "CaptionStyle"),
       inline<{role?:string}>(inputs.filter?.value, "CaptionContentFilter").role,
     )) } }, needs: {} }),
-  }, {
-    producer: captionProducers.temporalizeDocument,
-    handler: ({ inputs }) => ({
-      outputs: { caption: { kind: "inline", value: canonicalize(temporalizeCaptionDocument(
-        inline<CaptionDocument>(inputs.document?.value, "CaptionDocument"),
-        inline<Timeline>(inputs.timeline?.value, "Timeline"),
-      )) } },
-      needs: {},
-    }),
   }],
   validators: [
+    { type: captionTypes.document, handler: ({ value }) => assertCaptionDocumentIdentity(inline<CaptionDocument>(value, "CaptionDocument")) },
     { type: captionTypes.style, handler: ({ value }) => {
       if (value.kind !== "inline") throw new Error("CaptionStyle must be inline");
       const style = value.value as CaptionStyleIntent;
       assertCaptionStyle(style);
     } },
     { type: captionTypes.program, handler: ({ value }) => assertCaptionProgram(inline<CaptionProgram>(value, "CaptionProgram")) },
-    { type: captionTypes.timedProjection, handler: ({ value }) => assertTimedCaptionProjection(inline<TimedCaptionProjection>(value, "TimedCaptionProjection")) },
+    { type: captionTypes.timing, handler: ({ value }) => assertCaptionTiming(inline<CaptionTiming>(value, "CaptionTiming")) },
   ],
 } satisfies ComponentPackage;

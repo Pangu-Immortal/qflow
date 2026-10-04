@@ -1,0 +1,51 @@
+# `@qflow/depth-stack`
+
+The DepthStack Surface accepts `timeline={program.timeline}` plus absolute reveal and terminal Instants.
+Those Instants may be authored directly or published by a domain projector upstream.
+
+The official, deliberately narrow depth-stack Deck author package.
+
+`DepthStack` owns ordered Cards, activation points, a finite visible neighborhood,
+relative-depth poses and one deterministic whole-collection reflow. Card pixels reuse Visual Track's
+focused material lowerer, but Deck is not a Visual Clip mode and exports only an ordinary peer
+`VisualTrack`.
+
+```xml
+<import as="copy" from="@qflow/text@1"/>
+
+<copy:Value id="proof-label">Evidence, not inference</copy:Value>
+<deck:Label id="proof-label-style" content={proof-label}
+  font={fonts.ui} size="34" color="#ffffff"/>
+
+<deck:DepthStack
+  id="proof-stack"
+  timeline={speech.timeline}
+  frame={layout.proof-stack}
+  until={story-time.proof-end}
+  appearance={recipes.deck.proof}
+>
+  <deck:Card id="proof-1" source={proof1.image} extent={proof1.extent}
+    at={story-time.proof1} label={proof-label-style}/>
+  <deck:Card id="proof-2" source={proof2.video} at={story-time.proof2}/>
+</deck:DepthStack>
+```
+
+The parent Recipe owns visibility, relative-depth pose progression, frame Paint and reflow. A Card
+Recipe may additionally select explicit future/past behavior. The Deck derives every held or
+continuing source-time map from the Card's declared activation and the current stage; it does not
+require a hidden looping mode on the material and never depends on renderer playback history.
+
+Optional labels are separate exact-font values and are referenced by Cards. Filenames, URLs and
+media metadata are never treated as label truth.
+
+The Surface constructs literal `at` values when needed or passes through resolved
+`TemporalInstant` references. Card append and completion consume those Instants directly; they never
+locate a Moment/Selection or manufacture a one-frame terminal Window internally.
+
+`deck:Label` accepts either literal body copy or `content={Text}`. It binds that copy to exact font
+and label appearance in a small explicit Fragment. The DepthStack receives the resulting label as
+one normal edge; it never reads filenames, URLs or hidden media metadata.
+
+The package has no Provider, Need, queue, credential, global z band or cross-Track input. Another
+Deck family can install independently and lower to the same terminal `VisualTrack` without changing
+this package, Core, Film, Composition or HyperFrames.

@@ -13,9 +13,9 @@
   "dependencies": {
     "@qflow/component-kit": "workspace:*",
     "@qflow/media": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/visual-ir": "workspace:*"
+    "@qflow/visual-ir": "workspace:*",
+    "@qflow/timeline": "workspace:*"
   },
   "devDependencies": {
     "@qflow/artifact": "workspace:*",

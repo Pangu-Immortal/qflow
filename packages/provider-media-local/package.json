@@ -20,7 +20,7 @@
     "@qflow/runtime": "workspace:*",
     "@qflow/runtime-kit": "workspace:*",
     "@qflow/runtime-host-node": "workspace:*",
-    "@qflow/speech": "workspace:*"
+    "@qflow/speech-evidence": "workspace:*"
   },
   "devDependencies": {
     "@qflow/driver-node": "workspace:*"

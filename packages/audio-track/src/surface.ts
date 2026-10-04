@@ -1,20 +1,28 @@
-import { resolveTemporalContext } from "@qflow/temporal-markup";
 import { mediaTypes } from "@qflow/media";
 import type {
+  MarkupAttributeValue,
   StructuredElement,
   StructuredSurfaceHandler,
-  SurfaceComponentDraft,
   SurfaceRecordDraft,
   SurfaceResolvedReference,
-  MarkupAttributeValue,
 } from "@qflow/markup";
 import type { TemporalDuration } from "@qflow/temporal";
-import { createTemporalWindowProjection, temporalWindowAttributeNames } from "@qflow/temporal-markup";
+import {
+  createTemporalWindowConstruction,
+  resolveTemporalContext,
+  temporalWindowAttributeNames,
+} from "@qflow/temporal-markup";
 
 import { createAudioTrackFragment } from "./fragment.js";
 import { audioTrackTypes } from "./manifest.js";
 import { sealAudioClipSpec, sealAudioTrackHeader } from "./program.js";
-import type { AudioOccupancy } from "./types.js";
+import { assertAudioSourceTimeSpec } from "./source-time.js";
+import type {
+  AudioSourceTimeBounds,
+  AudioSourceTimePoint,
+  AudioSourceTimeRelation,
+  AudioSourceTimeSpec,
+} from "./types.js";
 
 function sameType(left: SurfaceResolvedReference["type"], right: SurfaceResolvedReference["type"]): boolean {
   return left.module.name === right.module.name && left.module.version === right.module.version && left.name === right.name;
@@ -85,25 +93,118 @@ function numeric(element: StructuredElement, name: string, fallback?: number): n
   return value;
 }
 
-export const audioItemDefaults = { playback: "once", gain: 1, "fade-in": "0f", "fade-out": "0f" } as const;
+export const audioClipDefaults = { gain: 1, "fade-in": "0f", "fade-out": "0f" } as const;
 
-function occupancy(element: StructuredElement): AudioOccupancy {
-  switch (text(element, "playback", audioItemDefaults.playback)) {
-    case "once":
-    case "once-start": return { mode: "once", align: "start" };
-    case "once-end": return { mode: "once", align: "end" };
-    case "loop":
-    case "loop-start": return { mode: "loop", align: "start" };
-    case "loop-end": return { mode: "loop", align: "end" };
-    case "stretch": return {
-      mode: "stretch",
-      minRate: numeric(element, "min-rate"),
-      maxRate: numeric(element, "max-rate"),
-      pitch: "preserve",
-    };
-    default: throw new Error(`${element.name}.playback is unsupported.`);
+const MAP_ATTRIBUTES = [
+  "target-from", "target-until", "target-at", "source-at", "rate",
+  "source-from", "source-until", "wrap-from", "wrap-until", "min-rate", "max-rate",
+] as const;
+
+function sourceTimePoint(raw: string | undefined, fallback: "start" | "end", label: string): AudioSourceTimePoint {
+  const value = raw ?? fallback;
+  if (value === "start" || value === "end") return { edge: value, offset: duration("0f", label) };
+  const fromStart = /^(?:start\+)?(.+)$/u.exec(value);
+  if (fromStart !== null && !value.startsWith("end-")) {
+    return { edge: "start", offset: duration(fromStart[1]!, label) };
   }
+  const fromEnd = /^end-(.+)$/u.exec(value);
+  if (fromEnd !== null) return { edge: "end", offset: duration(fromEnd[1]!, label) };
+  throw new Error(`${label} must be start, end, a duration from start, start+duration or end-duration.`);
 }
+
+function sourceTimeBounds(element: StructuredElement, prefix: "target" | "source" | "wrap", required = false): AudioSourceTimeBounds | undefined {
+  const from = optionalText(element, `${prefix}-from`);
+  const until = optionalText(element, `${prefix}-until`);
+  if (!required && from === undefined && until === undefined) return undefined;
+  return {
+    from: sourceTimePoint(from, "start", `${element.name}.${prefix}-from`),
+    until: sourceTimePoint(until, "end", `${element.name}.${prefix}-until`),
+  };
+}
+
+function rate(raw: string, label: string): { readonly numerator: number; readonly denominator: number } {
+  const fraction = /^(\d+)\/([1-9]\d*)$/u.exec(raw);
+  if (fraction !== null) {
+    const numerator = Number(fraction[1]);
+    const denominator = Number(fraction[2]);
+    if (!Number.isSafeInteger(numerator) || numerator <= 0 || !Number.isSafeInteger(denominator)) {
+      throw new Error(`${label} is outside safe arithmetic.`);
+    }
+    const common = divisor(numerator, denominator);
+    return { numerator: numerator / common, denominator: denominator / common };
+  }
+  const decimal = /^(\d+)(?:\.(\d+))?$/u.exec(raw);
+  if (decimal === null) throw new Error(`${label} must be an exact positive integer, decimal or fraction.`);
+  const fractional = decimal[2] ?? "";
+  const denominator = 10 ** fractional.length;
+  const numerator = Number(decimal[1]) * denominator + (fractional.length === 0 ? 0 : Number(fractional));
+  if (!Number.isSafeInteger(numerator) || numerator <= 0 || !Number.isSafeInteger(denominator)) {
+    throw new Error(`${label} is outside safe arithmetic.`);
+  }
+  const common = divisor(numerator, denominator);
+  return { numerator: numerator / common, denominator: denominator / common };
+}
+
+export function decodeAudioSourceTimeRelation(element: StructuredElement): AudioSourceTimeRelation {
+  allowed(element, MAP_ATTRIBUTES);
+  if (element.children.some((child) => child.kind === "element" || child.value.trim())) throw new Error(`${element.name} must be empty.`);
+  const target = sourceTimeBounds(element, "target", true)!;
+  const source = sourceTimeBounds(element, "source", true)!;
+  const hasRate = element.attributes.rate !== undefined || element.attributes["target-at"] !== undefined
+    || element.attributes["source-at"] !== undefined || element.attributes["wrap-from"] !== undefined
+    || element.attributes["wrap-until"] !== undefined;
+  if (!hasRate) return {
+    kind: "fit", target, source,
+    ...(element.attributes["min-rate"] === undefined ? {} : { minRate: numeric(element, "min-rate") }),
+    ...(element.attributes["max-rate"] === undefined ? {} : { maxRate: numeric(element, "max-rate") }),
+  };
+  if (element.attributes["min-rate"] !== undefined || element.attributes["max-rate"] !== undefined) {
+    throw new Error(`${element.name} rate bounds belong to a fitted Map without rate, anchors or wrap.`);
+  }
+  const wrap = sourceTimeBounds(element, "wrap");
+  return {
+    kind: "rate",
+    target,
+    targetAt: sourceTimePoint(optionalText(element, "target-at"), "start", `${element.name}.target-at`),
+    sourceAt: sourceTimePoint(optionalText(element, "source-at"), "start", `${element.name}.source-at`),
+    rate: rate(optionalText(element, "rate") ?? "1", `${element.name}.rate`),
+    source,
+    ...(wrap === undefined ? {} : { wrap }),
+  };
+}
+
+function sourceTimeFrom(element: StructuredElement,
+  resolve: (path: string) => SurfaceResolvedReference | undefined): AudioSourceTimeSpec | undefined {
+  const relations = element.children.flatMap((child) => child.kind === "element"
+    && (child.name.endsWith(":Map") || child.name === "Map") ? [decodeAudioSourceTimeRelation(child)] : []);
+  const inline = relations.length === 0 ? undefined : { relations };
+  if (inline !== undefined) assertAudioSourceTimeSpec(inline);
+  if (element.attributes["source-time"] === undefined) return inline;
+  if (inline !== undefined) throw new Error(`${element.name} cannot combine source-time={AudioSourceTime} with inline Map children.`);
+  const value = resolved(element.attributes["source-time"], `${element.name}.source-time`, audioTrackTypes.sourceTime, resolve);
+  if (value.record?.value.kind !== "inline") throw new Error(`${element.name}.source-time must resolve to an inline value.`);
+  const spec = value.record.value.value as unknown as AudioSourceTimeSpec;
+  assertAudioSourceTimeSpec(spec);
+  return spec;
+}
+
+export const decodeAudioSourceTimeSurface: StructuredSurfaceHandler = ({ element }) => {
+  allowed(element, ["id"]);
+  const id = text(element, "id");
+  const relations: AudioSourceTimeRelation[] = [];
+  for (const child of element.children) {
+    if (child.kind === "text") {
+      if (child.value.trim()) throw new Error(`${element.name} accepts only Map children.`);
+      continue;
+    }
+    if (!child.name.endsWith(":Map") && child.name !== "Map") throw new Error(`${element.name} accepts only Map children.`);
+    relations.push(decodeAudioSourceTimeRelation(child));
+  }
+  const value = { relations };
+  assertAudioSourceTimeSpec(value);
+  return { records: [{ id, type: audioTrackTypes.sourceTime, value: { kind: "inline", value: value as never }, range: element.range }],
+    components: [], fragments: [], exports: [id] };
+};
 
 export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
   allowed(element, ["id", "timeline"]);
@@ -116,73 +217,70 @@ export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, res
     value: { kind: "inline", value: sealAudioTrackHeader({ id }) },
     range: element.range,
   }];
-  const temporalComponents: SurfaceComponentDraft[] = [];
-  const temporalFragments: ReturnType<typeof createTemporalWindowProjection>["fragments"][number][] = [];
-  const fragmentItems: Parameters<typeof createAudioTrackFragment>[0][number][] = [];
-  const inputs: Record<string, { kind: "record"; id: string } | { kind: "component-output"; component: string; output: string }> = {
+  const components = [] as ReturnType<typeof createTemporalWindowConstruction>["components"][number][];
+  const fragments = [] as ReturnType<typeof createTemporalWindowConstruction>["fragments"][number][];
+  const clips: Parameters<typeof createAudioTrackFragment>[0][number][] = [];
+  const inputs: Record<string, SurfaceResolvedReference["ref"] | { readonly kind: "record"; readonly id: string }> = {
     header: { kind: "record", id: headerId },
     timeline: context.timeline.ref,
   };
-  let itemIndex = 0;
+  let clipIndex = 0;
   for (const child of element.children) {
     if (child.kind === "text") {
-      if (child.value.trim()) throw new Error(`${element.name} accepts only Item children.`);
+      if (child.value.trim()) throw new Error(`${element.name} accepts only Clip children.`);
       continue;
     }
-    if (!child.name.endsWith(":Item") && child.name !== "Item") throw new Error(`${element.name} accepts only Item children.`);
-    if (child.children.some((node) => node.kind === "element" || node.value.trim())) throw new Error(`${child.name} must be empty.`);
-    allowed(child, [
-      "id", "source", ...temporalWindowAttributeNames,
-      "trim-start", "trim-end", "playback", "min-rate", "max-rate", "gain", "fade-in", "fade-out",
-    ]);
-    itemIndex += 1;
-    const suffix = String(itemIndex).padStart(4, "0");
-    const clipId = optionalText(child, "id") ?? `${id}.item.${suffix}`;
-    const source = resolved(child.attributes.source, `${child.name}.source`, mediaTypes.synchronized, resolveReference);
-    const temporal = createTemporalWindowProjection({ id: clipId, element: child, ...context, resolveReference });
-    records.push(...temporal.records);
-    temporalComponents.push(...temporal.components);
-    temporalFragments.push(...temporal.fragments);
-    const playback = occupancy(child);
-    if (playback.mode !== "stretch" && (child.attributes["min-rate"] !== undefined || child.attributes["max-rate"] !== undefined)) {
-      throw new Error(`${child.name} rate bounds require stretch playback.`);
+    if (!child.name.endsWith(":Clip") && child.name !== "Clip") {
+      throw new Error(`${element.name} accepts only Clip children.`);
     }
-    const clipSpec = sealAudioClipSpec({
-
+    for (const node of child.children) {
+      if (node.kind === "text") {
+        if (node.value.trim()) throw new Error(`${child.name} accepts only Map children.`);
+      } else if (!node.name.endsWith(":Map") && node.name !== "Map") throw new Error(`${child.name} accepts only Map children.`);
+    }
+    allowed(child, [
+      "id", "source", "source-time", ...temporalWindowAttributeNames, "gain", "fade-in", "fade-out",
+    ]);
+    clipIndex += 1;
+    const suffix = String(clipIndex).padStart(4, "0");
+    const clipId = optionalText(child, "id") ?? `${id}.clip.${suffix}`;
+    const source = resolved(child.attributes.source, `${child.name}.source`, mediaTypes.synchronized, resolveReference);
+    const temporal = createTemporalWindowConstruction({ id: clipId, element: child, ...context, resolveReference });
+    records.push(...temporal.records);
+    components.push(...temporal.components);
+    fragments.push(...temporal.fragments);
+    const sourceTime = sourceTimeFrom(child, resolveReference);
+    const spec = sealAudioClipSpec({
       id: clipId,
-      trim: {
-        ...(optionalText(child, "trim-start") === undefined ? {} : { start: duration(optionalText(child, "trim-start")!, `${child.name}.trim-start`) }),
-        ...(optionalText(child, "trim-end") === undefined ? {} : { end: duration(optionalText(child, "trim-end")!, `${child.name}.trim-end`) }),
-      },
-      occupancy: playback,
+      ...(sourceTime === undefined ? {} : { sourceTime }),
       mix: {
-        gain: numeric(child, "gain", audioItemDefaults.gain),
-        fadeIn: duration(text(child, "fade-in", audioItemDefaults["fade-in"]), `${child.name}.fade-in`),
-        fadeOut: duration(text(child, "fade-out", audioItemDefaults["fade-out"]), `${child.name}.fade-out`),
+        gain: numeric(child, "gain", audioClipDefaults.gain),
+        fadeIn: duration(text(child, "fade-in", audioClipDefaults["fade-in"]), `${child.name}.fade-in`),
+        fadeOut: duration(text(child, "fade-out", audioClipDefaults["fade-out"]), `${child.name}.fade-out`),
       },
     });
-    const windowName = `item-${suffix}-window`;
+    const windowName = `clip-${suffix}-window`;
+    const mediaName = `clip-${suffix}-media`;
+    const specName = `clip-${suffix}-spec`;
+    const specId = `${id}.clip.${suffix}.spec`;
+    records.push({ id: specId, type: audioTrackTypes.clipSpec, value: { kind: "inline", value: spec }, range: child.range });
     inputs[windowName] = temporal.ref;
-    const mediaName = `item-${suffix}-media`;
-    const specName = `item-${suffix}-spec`;
-    const specId = `${id}.item.${suffix}.spec`;
-    records.push({ id: specId, type: audioTrackTypes.clipSpec, value: { kind: "inline", value: clipSpec }, range: child.range });
     inputs[mediaName] = source.ref;
     inputs[specName] = { kind: "record", id: specId };
-    fragmentItems.push({ mediaName, specName, windowName });
+    clips.push({ mediaName, specName, windowName });
   }
-  if (fragmentItems.length === 0) throw new Error(`${element.name} requires at least one Item.`);
-  const fragment = createAudioTrackFragment(fragmentItems);
+  if (clips.length === 0) throw new Error(`${element.name} requires at least one Clip.`);
+  const fragment = createAudioTrackFragment(clips);
   return {
     records,
-    components: [...temporalComponents, {
+    components: [...components, {
       id,
       fragment: fragment.id,
       inputs,
       outputs: { program: `${id}.program`, audio: `${id}.audio` },
       range: element.range,
     }],
-    fragments: [...temporalFragments, fragment],
-    exports: [`${id}.program`, `${id}.audio`],
+    fragments: [...fragments, fragment],
+    exports: [`${id}.audio`, `${id}.program`],
   };
 };

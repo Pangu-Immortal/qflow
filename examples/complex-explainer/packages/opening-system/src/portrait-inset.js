@@ -1,5 +1,5 @@
 import { palette } from "@explainer/visual-language";
-import { performanceMedia } from "./performance-media.js";
+import { placedVisualMedia } from "./placed-visual-media.js";
 import {
   assertAttributes,
   assertEmptyElement,
@@ -9,7 +9,7 @@ import {
   createMarkupSurfaceHostFacet,
   sameType,
 } from "@qflow/qflow/author-kit";
-import { performanceStyle, performanceTypes } from "@qflow/qflow/performance";
+import { presenterStyle, presenterTypes } from "./presenter.js";
 import { sealVisualTrack, compositionTypes } from "@qflow/qflow/composition";
 import { timelineTypes } from "@qflow/qflow/timeline";
 import { spatialTypes } from "@qflow/qflow/spatial";
@@ -18,10 +18,12 @@ import { browserProgram } from "@qflow/qflow/hyperframes";
 const styles = (o) =>
   Object.entries(o).map(([name, value]) => ({ name, value }));
 export function installPortraitInset(module, manifest, component) {
+  const types = presenterTypes(module);
   const inputs = [
       { name: "timeline", type: timelineTypes.track },
-      { name: "canvas", type: spatialTypes.canvas },
+      { name: "within", type: spatialTypes.frame },
       { name: "window", type: temporalTypes.window },
+      { name: "sources", type: types.sources },
       { name: "frame", type: spatialTypes.frame },
     ],
     producer = { module, name: "portrait-inset" };
@@ -54,10 +56,10 @@ export function installPortraitInset(module, manifest, component) {
   component.producers.push({
     producer,
     handler: ({ inputs }) => {
-      const { timeline, canvas, window, frame } = Object.fromEntries(
+      const { timeline, within, window, sources, frame } = Object.fromEntries(
           Object.entries(inputs).map(([k, r]) => [k, r.value.value]),
         ),
-        { clips, children } = performanceMedia(timeline, window);
+        { clips, children } = placedVisualMedia(timeline, window, sources.sources);
       const program = browserProgram({
         html:
           '<div class="viewport"><div class="inner">' +
@@ -76,14 +78,15 @@ export function installPortraitInset(module, manifest, component) {
       const id = window.subjectId,
         visual = sealVisualTrack({
           id,
-          programSpaceId: timeline.id,
+          timelineId: timeline.id,
           visualIr: "qflow.visual-ir@1",
           presents: children.length
             ? [
                 {
                   id,
+                  order: 0,
+                  z: 60,
                   span: window.span,
-                  stacking: { order: 60, tieBreak: id },
                   elements: [
                     {
                       id: "scene",
@@ -92,9 +95,10 @@ export function installPortraitInset(module, manifest, component) {
                       program,
                       style: styles({
                         position: "absolute",
-                        inset: 0,
-                        width: canvas.widthPx + "px",
-                        height: canvas.heightPx + "px",
+                        left: within.xPx + "px",
+                        top: within.yPx + "px",
+                        width: within.widthPx + "px",
+                        height: within.heightPx + "px",
                       }),
                     },
                     ...children,
@@ -115,7 +119,7 @@ export function installPortraitInset(module, manifest, component) {
       name: "portrait-inset",
       tag: "PortraitInset",
       mode: "structured",
-      outputs: [performanceTypes.style],
+      outputs: [types.style],
       vocabulary: {
         summary: "Round speaking portrait with a tighter inner crop.",
         attributes: [
@@ -151,10 +155,10 @@ export function installPortraitInset(module, manifest, component) {
         records: [
           {
             id: textAttribute(element, "id"),
-            type: performanceTypes.style,
+            type: types.style,
             value: {
               kind: "inline",
-              value: canonicalize(performanceStyle(fragment, bindings)),
+              value: canonicalize(presenterStyle(fragment, bindings)),
             },
             range: element.range,
           },

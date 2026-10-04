@@ -39,6 +39,6 @@
   "devDependencies": {
     "@qflow/composition": "workspace:*",
     "@qflow/driver-node": "workspace:*",
-    "@qflow/program-space": "workspace:*"
+    "@qflow/timeline": "workspace:*"
   }
 }

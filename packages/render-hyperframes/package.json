@@ -18,7 +18,6 @@
     "@qflow/hyperframes": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/media-pipeline": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/timeline": "workspace:*",
     "@qflow/markup": "workspace:*",

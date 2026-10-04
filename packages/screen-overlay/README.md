@@ -6,7 +6,7 @@ inputs accept a Moment or a time such as `2s`; `at` with `for` produces a Window
 
 Official provider-free self-contained screen-paint package.
 
-Every item consumes its typed parameters, explicit Temporal source, CanvasSpace, Timeline,
+Every item consumes its typed parameters, explicit Temporal source, placement Frame, Timeline,
 seed and local frame. Flash, ColorWash, Vignette, ScanLines, DirectionalMatte, WhipVeil,
 GlitchVeil, Grain, LightLeak, Bokeh and TVStatic lower to ordinary absolute-stack `VisualTrack`
 Presents. These effects generate their own pixels over the selected interval.

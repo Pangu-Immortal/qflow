@@ -1,11 +1,11 @@
+import { assertTimelineIdentity } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
 import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/composition";
 import type { VisualAnimation, VisualElement, VisualTrack } from "@qflow/composition";
-import { assertProgramSpaceIdentity } from "@qflow/program-space";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef } from "@qflow/protocol";
-import { assertCanvasSpace } from "@qflow/spatial";
-import type { CanvasSpace } from "@qflow/spatial";
+import { assertSpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 import { assertTemporalInstantFor, assertTemporalWindowFor } from "@qflow/temporal";
 import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
@@ -68,10 +68,10 @@ export function assertEmojiRevealSet(value: EmojiRevealSet): void {
 }
 
 export function appendEmojiRevealItem(set: EmojiRevealSet, timeline: Timeline, spec: EmojiRevealItemSpec, icon: BlobRef, activation: TemporalInstant): EmojiRevealSet {
-  assertEmojiRevealSet(set); assertProgramSpaceIdentity(timeline); assertEmojiRevealItemSpec(spec);
+  assertEmojiRevealSet(set); assertTimelineIdentity(timeline); assertEmojiRevealItemSpec(spec);
   assert(!spec.preset, `Emoji Reveal Item ${spec.id} with preset=true cannot have an activation.`);
   assertIconImage(icon, `Emoji Reveal Item ${spec.id} icon`);
-  assertTemporalInstantFor(activation, { subjectId: spec.id, space: timeline });
+  assertTemporalInstantFor(activation, { subjectId: spec.id, timeline: timeline });
   assert(!set.items.some((item) => item.spec.id === spec.id), `Duplicate Emoji Reveal Item ${spec.id}.`);
   return { items: [...set.items, { spec: structuredClone(spec), icon: structuredClone(icon), activation: structuredClone(activation) }] };
 }
@@ -87,9 +87,9 @@ export function appendPresetEmojiRevealItem(set: EmojiRevealSet, spec: EmojiReve
 export function finalizeEmojiReveal(
   header: EmojiRevealHeader, timeline: Timeline, outer: TemporalWindow, style: EmojiRevealStyle, placeholder: BlobRef, set: EmojiRevealSet,
 ): EmojiRevealProgram {
-  assertEmojiRevealHeader(header); assertProgramSpaceIdentity(timeline); assertEmojiRevealStyle(style); assertEmojiRevealSet(set);
+  assertEmojiRevealHeader(header); assertTimelineIdentity(timeline); assertEmojiRevealStyle(style); assertEmojiRevealSet(set);
   assertIconImage(placeholder, "Emoji Reveal placeholder");
-  assertTemporalWindowFor(outer, { subjectId: header.id, space: timeline });
+  assertTemporalWindowFor(outer, { subjectId: header.id, timeline: timeline });
   assert(set.items.length > 0, "Emoji Reveal requires at least one Item.");
   let previous = outer.span.startFrame - 1;
   let revealStarted = false;
@@ -101,12 +101,12 @@ export function finalizeEmojiReveal(
     revealStarted = true;
     const frame = item.activation.frame;
     assert(frame >= outer.span.startFrame && frame < outer.span.endFrameExclusive,
-      `Emoji Reveal Item ${item.spec.id} must activate inside the Track Window.`);
+      `Emoji Reveal Item ${item.spec.id} must activate inside the EmojiReveal Window.`);
     assert(frame > previous, `Emoji Reveal Item ${item.spec.id} must activate after the previous Item.`);
     previous = frame;
   }
   const program: EmojiRevealProgram = {
-    id: header.id, programSpaceId: timeline.id, outer: structuredClone(outer), style: structuredClone(style),
+    id: header.id, timelineId: timeline.id, outer: structuredClone(outer), style: structuredClone(style),
     placeholder: structuredClone(placeholder), items: structuredClone(set.items),
   };
   assertEmojiRevealProgram(program);
@@ -114,7 +114,7 @@ export function finalizeEmojiReveal(
 }
 
 export function assertEmojiRevealProgram(value: EmojiRevealProgram): void {
-  identity(value.id, "EmojiRevealProgram.id"); identity(value.programSpaceId, "EmojiRevealProgram.programSpaceId");
+  identity(value.id, "EmojiRevealProgram.id"); identity(value.timelineId, "EmojiRevealProgram.timelineId");
   assertEmojiRevealStyle(value.style); assertEmojiRevealSet({ items: value.items });
   assertIconImage(value.placeholder, "EmojiRevealProgram.placeholder");
   assert(value.items.length > 0, "EmojiRevealProgram requires Items.");
@@ -183,20 +183,20 @@ function iconElement(input: {
   };
 }
 
-export function renderEmojiReveal(canvas: CanvasSpace, timeline: Timeline, program: EmojiRevealProgram): VisualTrack {
-  assertCanvasSpace(canvas); assertProgramSpaceIdentity(timeline); assertEmojiRevealProgram(program);
-  assert(program.programSpaceId === timeline.id, "EmojiRevealProgram belongs to another Timeline.");
-  assertTemporalWindowFor(program.outer, { subjectId: program.id, space: timeline });
+export function renderEmojiReveal(within: SpatialFrame, timeline: Timeline, program: EmojiRevealProgram): VisualTrack {
+  assertSpatialFrame(within); assertTimelineIdentity(timeline); assertEmojiRevealProgram(program);
+  assert(program.timelineId === timeline.id, "EmojiRevealProgram belongs to another Timeline.");
+  assertTemporalWindowFor(program.outer, { subjectId: program.id, timeline: timeline });
   const { style } = program;
   const count = program.items.length;
   const width = style.paddingXPx * 2 + style.slotSizePx * count + style.gapPx * (count - 1);
   const height = style.paddingYPx * 2 + style.slotSizePx;
-  const left = canvas.widthPx * style.centerX - width / 2;
-  const top = canvas.heightPx * style.topY;
-  assert(left - Math.max(0, -style.shadowXPx) >= 0 && left + width + Math.max(0, style.shadowXPx) <= canvas.widthPx,
-    "Emoji Reveal strip is wider than the Canvas at this placement.");
-  assert(top >= 0 && top + height + Math.max(0, style.shadowYPx) <= canvas.heightPx,
-    "Emoji Reveal strip is outside the Canvas at this placement.");
+  const left = within.xPx + within.widthPx * style.centerX - width / 2;
+  const top = within.yPx + within.heightPx * style.topY;
+  assert(left - Math.max(0, -style.shadowXPx) >= within.xPx && left + width + Math.max(0, style.shadowXPx) <= within.xPx + within.widthPx,
+    "Emoji Reveal strip is wider than its placement Frame.");
+  assert(top >= within.yPx && top + height + Math.max(0, style.shadowYPx) <= within.yPx + within.heightPx,
+    "Emoji Reveal strip is outside its placement Frame.");
   const duration = program.outer.span.endFrameExclusive - program.outer.span.startFrame;
   const elements: VisualElement[] = [{
     id: "root", order: 0, kind: "box", style: [
@@ -234,9 +234,9 @@ export function renderEmojiReveal(canvas: CanvasSpace, timeline: Timeline, progr
     );
   });
   const track = sealVisualTrack({
-    programSpaceId: timeline.id, visualIr: "qflow.visual-ir@1", id: program.id,
-    presents: [{ id: program.id, subjectId: program.id, span: { ...program.outer.span },
-      stacking: { order: style.stackingOrder, tieBreak: program.id }, elements }],
+    timelineId: timeline.id, visualIr: "qflow.visual-ir@1", id: program.id,
+    presents: [{ id: program.id, order: 0, z: style.stackingOrder, subjectId: program.id,
+      span: { ...program.outer.span }, elements }],
   });
   assertVisualTrackIdentity(track, timeline); return track;
 }

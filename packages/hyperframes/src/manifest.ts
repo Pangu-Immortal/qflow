@@ -1,8 +1,8 @@
-import { programSpaceDependency, programSpaceTypes } from "@qflow/program-space";
 import { compositionDependency, compositionTypes } from "@qflow/composition";
 import { compositableSurfaceSchema, mediaDependency } from "@qflow/media";
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
 import { VISUAL_IR_V1 } from "@qflow/visual-ir";
+import { timelineDependency, timelineTypes } from "@qflow/timeline";
 
 export const hyperframesModuleRef = { name: "@qflow/hyperframes", version: "1" } as const;
 export const hyperframesTypes = {
@@ -64,14 +64,14 @@ export const hyperframesManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: hyperframesModuleRef.name,
   version: hyperframesModuleRef.version,
-  dependencies: [compositionDependency, mediaDependency, programSpaceDependency],
+  dependencies: [compositionDependency, mediaDependency, timelineDependency],
   types: [{ name: hyperframesTypes.document.name }],
   capabilities: [],
   producers: [{
     name: hyperframesProducers.compile.name,
     inputs: [
       { name: "composition", type: compositionTypes.composition },
-      { name: "space", type: programSpaceTypes.programSpace },
+      { name: "timeline", type: timelineTypes.track },
     ],
     outputs: [{ name: "document", type: hyperframesTypes.document }],
     needs: [],

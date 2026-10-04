@@ -8,7 +8,7 @@ export const qflowPackage = {
   modules: [{ manifest: emojiRevealManifest }], components: [emojiRevealComponent],
   hostFacets: [
     createMarkupSurfaceHostFacet({ module: emojiRevealModuleRef, declaration: emojiRevealMarkupSurfaces.find((item) => item.name === "style")!, handler: decodeEmojiRevealStyleSurface }),
-    createMarkupSurfaceHostFacet({ module: emojiRevealModuleRef, declaration: emojiRevealMarkupSurfaces.find((item) => item.name === "track")!, handler: decodeEmojiRevealTrackSurface }),
+    createMarkupSurfaceHostFacet({ module: emojiRevealModuleRef, declaration: emojiRevealMarkupSurfaces.find((item) => item.name === "emojiReveal")!, handler: decodeEmojiRevealTrackSurface }),
   ],
 };
 export default qflowPackage;

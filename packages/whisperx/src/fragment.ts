@@ -1,76 +1,40 @@
 import { narrativeTypes } from "@qflow/narrative";
+import { narrativeTemporalProducers, narrativeTemporalTypes } from "@qflow/narrative-temporal";
 import { mediaTypes } from "@qflow/media";
-import { speechProducers, speechTypes } from "@qflow/speech";
 import { sealGraphFragment } from "@qflow/elaborator";
 import { mediaPipelineProducers } from "@qflow/media-pipeline";
 import { speechAlignmentProducers } from "@qflow/speech-alignment";
+import { temporalTypes } from "@qflow/temporal";
 
 import { whisperXProducers, whisperXTypes } from "./manifest.js";
 
 const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
 
-/** Normalize one Take's audio evidence, measure it, then project one Script Segment locally. */
-export const whisperXSemanticTakeFragment = sealGraphFragment({
-  inputs: [
-    { name: "narrative", type: narrativeTypes.narrative },
-    { name: "segment", type: narrativeTypes.excerpt },
-    { name: "media", type: mediaTypes.synchronized },
-    { name: "language", type: whisperXTypes.language },
-  ],
+export const whisperXAlignmentFragment = sealGraphFragment({
+  inputs: [{ name: "narrative", type: narrativeTypes.narrative }, { name: "segment", type: narrativeTypes.excerpt },
+    { name: "media", type: mediaTypes.synchronized }, { name: "domain", type: temporalTypes.localDomain },
+    { name: "language", type: whisperXTypes.language }],
   operations: [
-    {
-      id: "prepare-evidence-audio",
-      producer: mediaPipelineProducers.projectSpeechEvidenceAudio,
-      inputs: { media: input("media") },
-      result: { kind: "need", name: "evidenceAudio" },
-    },
-    {
-      id: "request-whisperx",
-      producer: whisperXProducers.request,
-      inputs: {
-        evidence: operation("prepare-evidence-audio"),
-        language: input("language"),
-      },
-      result: { kind: "need", name: "alignment" },
-    },
-    {
-      id: "align-semantic-take",
-      producer: speechAlignmentProducers.alignTake,
-      inputs: {
-        narrative: input("narrative"),
-        segment: input("segment"),
-        media: input("media"),
-        evidence: operation("request-whisperx"),
-      },
-      result: { kind: "output", name: "take" },
-    },
+    { id: "prepare-evidence-audio", producer: mediaPipelineProducers.projectSpeechEvidenceAudio,
+      inputs: { media: input("media"), domain: input("domain") }, result: { kind: "need", name: "evidenceAudio" } },
+    { id: "request-whisperx", producer: whisperXProducers.request,
+      inputs: { evidence: operation("prepare-evidence-audio"), language: input("language") }, result: { kind: "need", name: "alignment" } },
+    { id: "align-narrative", producer: speechAlignmentProducers.alignNarrative,
+      inputs: { narrative: input("narrative"), segment: input("segment"),
+        domain: input("domain"), evidence: operation("request-whisperx") },
+      result: { kind: "output", name: "alignment" } },
   ],
-  exports: [
-    {
-      name: "take",
-      type: speechTypes.semanticTake,
-      root: operation("align-semantic-take"),
-    },
-  ],
+  exports: [{ name: "alignment", type: narrativeTemporalTypes.narrativeAlignment, root: operation("align-narrative") }],
 });
 
-/** The zero-Token branch of the same real-media Surface; media boundaries need no acoustic Need. */
-export const whisperXBoundarySemanticTakeFragment = sealGraphFragment({
-  inputs: [
-    { name: "narrative", type: narrativeTypes.narrative },
-    { name: "segment", type: narrativeTypes.excerpt },
-    { name: "media", type: mediaTypes.synchronized },
+export const whisperXBoundaryAlignmentFragment = sealGraphFragment({
+  inputs: [{ name: "narrative", type: narrativeTypes.narrative }, { name: "segment", type: narrativeTypes.excerpt },
+    { name: "domain", type: temporalTypes.localDomain }],
+  operations: [
+    { id: "materialize-boundaries", producer: narrativeTemporalProducers.materializeSegmentBoundaries,
+      inputs: { narrative: input("narrative"), segment: input("segment"), domain: input("domain") },
+      result: { kind: "output", name: "alignment" } },
   ],
-  operations: [{
-    id: "materialize-boundaries",
-    producer: speechProducers.materializeSegmentBoundaries,
-    inputs: {
-      narrative: input("narrative"),
-      segment: input("segment"),
-      media: input("media"),
-    },
-    result: { kind: "output", name: "take" },
-  }],
-  exports: [{ name: "take", type: speechTypes.semanticTake, root: operation("materialize-boundaries") }],
+  exports: [{ name: "alignment", type: narrativeTemporalTypes.narrativeAlignment, root: operation("materialize-boundaries") }],
 });

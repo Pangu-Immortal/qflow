@@ -10,9 +10,7 @@
   "dependencies": {
     "@qflow/elaborator": "workspace:*",
     "@qflow/markup": "workspace:*",
-    "@qflow/narrative": "workspace:*",
     "@qflow/timeline": "workspace:*",
-    "@qflow/temporal": "workspace:*",
-    "@qflow/program-space": "workspace:*"
+    "@qflow/temporal": "workspace:*"
   }
 }

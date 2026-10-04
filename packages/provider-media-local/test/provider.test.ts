@@ -6,8 +6,8 @@ import test from "node:test";
 import { artifactTypes } from "@qflow/artifact";
 import { mediaTypes, sealRenderedVisual, sealTimelineAudio, synchronizedMediaSampleFrames, verifyMediaInspection, verifyMuxedMedia, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/media";
 import type { MediaAudioStream, MediaInspection, MuxedMedia, SynchronizedMedia, TimelineAudio } from "@qflow/media";
-import { assertSpeechEvidenceAudioIdentity, speechTypes } from "@qflow/speech";
-import type { SpeechEvidenceAudio } from "@qflow/speech";
+import { assertSpeechEvidenceAudioIdentity, speechEvidenceTypes } from "@qflow/speech-evidence";
+import type { SpeechEvidenceAudio } from "@qflow/speech-evidence";
 import assert from "node:assert/strict";
 import {
   MemoryResourceStore,
@@ -280,7 +280,7 @@ test("local media Provider enumerates attached pictures and jointly normalizes 3
     assert.equal(selection.audioStreamIndex, 1);
     const typed = await normalizeArtifact({ resources, source, inspection: typedInspection,
       selection, frameRate: selectionRequest.frameRate });
-    assert.equal(typed.timeline.frameCount, 30);
+    assert.equal(typed.frameDomain.frameCount, 30);
     assert.equal(synchronizedMediaSampleFrames(typed), 48_000);
     assert.equal("basisResourceId" in typed, false);
     assert.equal("narrativeDigest" in typed, false);
@@ -387,7 +387,7 @@ test("animated WebP keeps its authored frame timing before fixed-rate normalizat
   });
   const selection = selectMediaStreams(inspection, request);
   const normalized = await normalizeArtifact({ resources, source, inspection, selection, frameRate: request.frameRate });
-  assert.equal(normalized.timeline.frameCount, 10);
+  assert.equal(normalized.frameDomain.frameCount, 10);
   assert.equal(normalized.visual?.width, 64);
   assert.equal(normalized.visual?.height, 48);
   const output = await inspectArtifact(resources, normalized.visual!.artifact);
@@ -417,7 +417,7 @@ test("animated GIF keeps its authored frame timing before fixed-rate normalizati
     });
     const selection = selectMediaStreams(inspection, request);
     const normalized = await normalizeArtifact({ resources, source, inspection, selection, frameRate: request.frameRate });
-    assert.equal(normalized.timeline.frameCount, 10);
+    assert.equal(normalized.frameDomain.frameCount, 10);
     const output = await inspectArtifact(resources, normalized.visual!.artifact);
     assert.equal(output.streams[0]?.decodedUnitCount, 10);
   } finally {
@@ -440,6 +440,7 @@ test("local media Provider derives one exact 16 kHz mono WhisperX evidence artif
     const resources = new MemoryResourceStore();
     const source = await resources.put(await readFile(sourcePath), "audio/wav");
     const constraints = canonicalize({
+      domainId: "provider-media-test-domain",
       source,
       sourceSampleFrames: 48_001,
       evidenceSampleFrames: 16_000,
@@ -447,12 +448,13 @@ test("local media Provider derives one exact 16 kHz mono WhisperX evidence artif
     const request = need(
       "need:speech-evidence-audio",
       mediaPipelineCapabilities.projectSpeechEvidenceAudio,
-      speechTypes.evidenceAudio,
+      speechEvidenceTypes.audio,
       constraints,
     );
     const value = await fulfillInline(resources, request);
     assertSpeechEvidenceAudioIdentity(value as unknown as SpeechEvidenceAudio);
     const evidence = value as unknown as SpeechEvidenceAudio;
+    assert.equal(evidence.domainId, "provider-media-test-domain");
     assert.equal(evidence.sampleFrames, 16_000);
     const inspected = await inspectArtifact(resources, evidence.artifact);
     const audio = inspected.streams.find((stream) => stream.kind === "audio");
@@ -501,7 +503,7 @@ test("local media Provider preserves one source A/V origin when audio starts lat
     const expectedHead = Math.round((seconds(audio.startPts) - seconds(video.startPts)) * 48_000);
     const expectedEnd = Math.round((seconds(audio.endPts) - seconds(video.startPts)) * 48_000);
     const expectedTail = 48_000 - Math.min(48_000, expectedEnd);
-    assert.equal(normalized.timeline.frameCount, 30);
+    assert.equal(normalized.frameDomain.frameCount, 30);
     const bytes = await resources.get(normalized.audio!.artifact.resource);
     assert(bytes !== undefined);
     const audible = pcm16StereoAudibleSpan(bytes);
@@ -536,7 +538,7 @@ test("a video-only generated MP4 remains visual-only and cannot satisfy a reques
     });
     const selection = selectMediaStreams(inspection, request);
     const normalized = await normalizeArtifact({ resources, source, inspection, selection, frameRate: request.frameRate });
-    assert.equal(normalized.timeline.frameCount, 15);
+    assert.equal(normalized.frameDomain.frameCount, 15);
     assert.ok(normalized.visual);
     assert.equal(normalized.audio, undefined);
 
@@ -592,7 +594,7 @@ test("local media Provider transforms A/V and extracts ordinary audio and frame 
         program: {
           operations: [
             { kind: "trim", tailSec: 0.2 },
-            { kind: "retime", rate: 2, pitch: "preserve" },
+            { kind: "retime", rate: 2 },
           ],
         },
       }),
@@ -704,7 +706,7 @@ test("local media Provider transforms A/V and extracts ordinary audio and frame 
       selection: stillSelection,
       frameRate: { numerator: 30, denominator: 1 },
     });
-    assert.equal(stillNormalized.timeline.frameCount, 15);
+    assert.equal(stillNormalized.frameDomain.frameCount, 15);
     assert.equal(stillNormalized.audio, undefined);
   } finally {
     await rm(root, { recursive: true, force: true }).catch(() => {});
@@ -759,7 +761,8 @@ test("local media Provider renders one frame-domain audio plan and muxes exactly
           sourceLoop: false,
           sourcePhaseSample: 0,
           playbackRate: 1,
-          pitch: "preserve",
+          mixStartSample: 0,
+          mixEndSampleExclusive: 24_000,
           gain: 1,
           fadeInSamples: 0,
           fadeOutSamples: 0,
@@ -775,7 +778,8 @@ test("local media Provider renders one frame-domain audio plan and muxes exactly
           sourceLoop: false,
           sourcePhaseSample: 0,
           playbackRate: 1,
-          pitch: "preserve",
+          mixStartSample: 24_000,
+          mixEndSampleExclusive: 48_000,
           gain: 1,
           fadeInSamples: 0,
           fadeOutSamples: 0,
@@ -906,7 +910,8 @@ test("local media Provider executes an end-aligned loop from the exact authored 
         sourceLoop: true,
         sourcePhaseSample: 50,
         playbackRate: 1,
-        pitch: "preserve",
+        mixStartSample: 0,
+        mixEndSampleExclusive: 250,
         gain: 1,
         fadeInSamples: 0,
         fadeOutSamples: 0,
@@ -949,7 +954,8 @@ test("audio range preserves loop phase, tempo and intersected fades from the ful
       sampleRate: 48000, sampleFrames: 96000,
       clips: [{ id: "loop", artifact: source, targetStartSample: 0, targetEndSampleExclusive: 96000,
         sourceSampleFrames: 4800, sourceStartSample: 0, sourceEndSampleExclusive: 4800,
-        sourceLoop: true, sourcePhaseSample: 1700, playbackRate: 1.25, pitch: "preserve", gain: 0.8,
+        sourceLoop: true, sourcePhaseSample: 1700, playbackRate: 1.25,
+        mixStartSample: 0, mixEndSampleExclusive: 96000, gain: 0.8,
         fadeInSamples: 48000, fadeOutSamples: 30000 }], mix: { normalize: false, limiter: "none" },
     });
     const pcm = async (name: string, range?: { startFrame: number; endFrameExclusive: number }) => {
@@ -985,7 +991,8 @@ test("audio envelopes and audible regions preserve sample phase through gaps and
       frameRate: { numerator: 30, denominator: 1 }, frameCount: 12, sampleRate: 48000, sampleFrames: 19200,
       clips: [{ id: "voice", artifact: source, targetStartSample: 1600, targetEndSampleExclusive: 17600,
         sourceSampleFrames: 4800, sourceStartSample: 0, sourceEndSampleExclusive: 4800,
-        sourceLoop: true, sourcePhaseSample: 0, playbackRate: 1, pitch: "preserve", gain: 1,
+        sourceLoop: true, sourcePhaseSample: 0, playbackRate: 1,
+        mixStartSample: 1600, mixEndSampleExclusive: 17600, gain: 1,
         fadeInSamples: 0, fadeOutSamples: 0,
         gainEnvelope: [{ sample: 1600, gain: 0 }, { sample: 17600, gain: 1 }],
         audibility: [{ startSample: 1600, endSampleExclusive: 4800 }, { startSample: 8000, endSampleExclusive: 17600 }],

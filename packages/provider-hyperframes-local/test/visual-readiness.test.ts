@@ -8,7 +8,7 @@ import { MemoryResourceStore } from "@qflow/driver-node";
 import { sealComposition, sealVisualTrack } from "@qflow/composition";
 import type { VisualElement, VisualTextTypography } from "@qflow/composition";
 import { compileHyperframesDocument, materializeHyperframesHtml } from "@qflow/hyperframes";
-import { sealProgramSpace } from "@qflow/program-space";
+import { sealTimeline } from "@qflow/timeline";
 import { browserExecutablePath } from "../src/browser.js";
 import { createOpaqueFrameCapture } from "../src/opaque-capture.js";
 import { renderHyperframesFrames } from "../src/render.js";
@@ -188,15 +188,15 @@ test("compiled frame selection neither stages nor waits for unrelated image reso
   const broken = await resources.put(new TextEncoder().encode("not an image"), "image/png");
   const red = await resources.put(await sharp({ create: { width: 64, height: 64, channels: 3, background: "#ff0000" } })
     .png().toBuffer(), "image/png");
-  const space = sealProgramSpace({ id: "capture-scope", durationSec: 2, frameRate: { numerator: 30, denominator: 1 } });
-  const track = sealVisualTrack({ id: "visual", programSpaceId: space.id, visualIr: "qflow.visual-ir@1", presents: [
-    { id: "unavailable-early", span: { startFrame: 0, endFrameExclusive: 10 }, stacking: { order: 0, tieBreak: "unavailable" },
+  const space = sealTimeline({ id: "capture-scope", frameCount: 60, frameRate: { numerator: 30, denominator: 1 } });
+  const track = sealVisualTrack({ id: "visual", timelineId: space.id, visualIr: "qflow.visual-ir@1", presents: [
+    { id: "unavailable-early", order: 0, z: 0, span: { startFrame: 0, endFrameExclusive: 10 },
       elements: [{ id: "unavailable", order: 0, kind: "image", artifact: unavailable,
         style: [{ name: "width", value: "64px" }, { name: "height", value: "64px" }] }] },
-    { id: "broken-early", span: { startFrame: 10, endFrameExclusive: 30 }, stacking: { order: 1, tieBreak: "early" },
+    { id: "broken-early", order: 1, z: 1, span: { startFrame: 10, endFrameExclusive: 30 },
       elements: [{ id: "broken", order: 0, kind: "image", artifact: broken,
         style: [{ name: "width", value: "64px" }, { name: "height", value: "64px" }] }] },
-    { id: "red-late", span: { startFrame: 30, endFrameExclusive: 60 }, stacking: { order: 2, tieBreak: "late" },
+    { id: "red-late", order: 2, z: 2, span: { startFrame: 30, endFrameExclusive: 60 },
       elements: [{ id: "red", order: 0, kind: "image", artifact: red,
         style: [{ name: "width", value: "64px" }, { name: "height", value: "64px" }] }] },
   ] });
@@ -212,8 +212,46 @@ test("compiled frame selection neither stages nor waits for unrelated image reso
     { resources, workers: 1, processTimeoutMs: 120_000 }), /image could not be decoded/u);
 });
 
+test("real capture keeps later Present animation local with picture content and independent workers", live, async () => {
+  const resources = new MemoryResourceStore();
+  const black = await resources.put(await sharp({
+    create: { width: 64, height: 64, channels: 3, background: "#000000" },
+  }).png().toBuffer(), "image/png");
+  const timeline = sealTimeline({ id: "local-animation", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } });
+  const picture = sealVisualTrack({ id: "picture", timelineId: timeline.id, visualIr: "qflow.visual-ir@1", presents: [{
+    id: "picture", order: 0, z: 0, span: { startFrame: 0, endFrameExclusive: 90 },
+    elements: [{ id: "picture", order: 0, kind: "image", artifact: black,
+      style: [{ name: "position", value: "absolute" }, { name: "inset", value: 0 },
+        { name: "width", value: "64px" }, { name: "height", value: "64px" }] }],
+  }] });
+  const animated = sealVisualTrack({ id: "animated", timelineId: timeline.id, visualIr: "qflow.visual-ir@1",
+    presents: [0, 30, 60].map((startFrame, order) => ({
+      id: `pose-${order + 1}`, order, z: 1, span: { startFrame, endFrameExclusive: startFrame + 30 },
+      elements: [{ id: "pose", order: 0, kind: "box", style: [
+        { name: "position", value: "absolute" }, { name: "inset", value: 0 }, { name: "background", value: "#ffffff" },
+      ], animation: { keyframes: [
+        { atFrame: 0, style: [{ name: "opacity", value: 0 }] },
+        { atFrame: 30, style: [{ name: "opacity", value: 1 }] },
+      ] } }],
+    })),
+  });
+  const document = compileHyperframesDocument(sealComposition({ id: "local-animation", canvas: {
+    width: 64, height: 64, clearColor: "#000000",
+  }, tracks: [picture, animated] }), timeline);
+  const frames = await renderHyperframesFrames({ document, frames: [15, 45, 75] }, {
+    resources, workers: 2, processTimeoutMs: 120_000,
+  });
+  for (const [index, artifact] of frames.entries()) {
+    const pixels = await sharp((await resources.get(artifact.resource))!).removeAlpha().raw().toBuffer();
+    const center = (32 * 64 + 32) * 3;
+    const sample = [...pixels.subarray(center, center + 3)];
+    for (const channel of sample) assert.ok(Math.abs(channel - 128) <= 3,
+      `frame ${[15, 45, 75][index]} used a non-local animation pose: ${JSON.stringify(sample)}`);
+  }
+});
+
 test("terminal text and SVG mask sources retain their Present frame animations across direct seeks and fresh workers", live, async () => {
-  const space = sealProgramSpace({ id: "animations", durationSec: 2, frameRate: { numerator: 30, denominator: 1 } });
+  const space = sealTimeline({ id: "animations", frameCount: 60, frameRate: { numerator: 30, denominator: 1 } });
   const image = { kind: "blob", resource: "res_mask", size: 1, mediaType: "image/png" } as const;
   const font = { sources: [{ artifact: { kind: "blob", resource: "res_font", size: 1, mediaType: "font/woff2" } }],
     weight: 400, style: "normal" } as const;
@@ -248,8 +286,8 @@ test("terminal text and SVG mask sources retain their Present frame animations a
     { id: "mask-image", parent: "mask", order: 4, kind: "image", artifact: image, style: [], animation },
     { id: "content", parent: "mask", order: 5, kind: "box", style: [{ name: "background", value: "#ffffff" }] },
   ];
-  const track = sealVisualTrack({ id: "visual", programSpaceId: space.id, visualIr: "qflow.visual-ir@1",
-    presents: [{ id: "later", span: { startFrame: 15, endFrameExclusive: 60 }, stacking: { order: 0, tieBreak: "later" }, elements }] });
+  const track = sealVisualTrack({ id: "visual", timelineId: space.id, visualIr: "qflow.visual-ir@1",
+    presents: [{ id: "later", order: 0, z: 0, span: { startFrame: 15, endFrameExclusive: 60 }, elements }] });
   const compiled = compileHyperframesDocument(sealComposition({ id: "animation", canvas: { width: 128, height: 128, clearColor: "#000000" }, tracks: [track] }), space);
   const html = materializeHyperframesHtml(compiled, artifact => artifact.resource === "res_font"
     ? "data:font/woff2;base64,AA==" : "data:image/png;base64,AA==");

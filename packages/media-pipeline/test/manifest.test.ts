@@ -1,6 +1,6 @@
 import { artifactTypes } from "@qflow/artifact";
 import { mediaTypes } from "@qflow/media";
-import { programSpaceTypes } from "@qflow/program-space";
+import { timelineTypes } from "@qflow/timeline";
 import { speechTypes } from "@qflow/speech";
 import { svsRecipeType } from "@qflow/svs";
 import { installRunFragmentHostFacets, RunFragmentRegistry } from "@qflow/run";
@@ -51,7 +51,7 @@ test("the Normalize Surface makes inspection and normalization an explicit autho
     resolveReference: (path) => path === "generated"
       ? { path, ref: { kind: "record", id: path }, type: artifactTypes.blob }
       : path === "clock"
-        ? { path, ref: { kind: "record", id: path }, type: programSpaceTypes.clock,
+        ? { path, ref: { kind: "record", id: path }, type: timelineTypes.clock,
           record: { value: { kind: "inline", value: { frameRate: { numerator: 30_000, denominator: 1_001 } } } } as never }
         : path === "policy"
           ? { path, ref: { kind: "record", id: path }, type: svsRecipeType,
@@ -60,7 +60,9 @@ test("the Normalize Surface makes inspection and normalization an explicit autho
     resolveAsset: async () => { throw new Error("no asset resolution expected"); },
   });
   assert.equal(result.fragments[0]?.id, synchronizedMediaFragment.id);
-  assert.deepEqual(result.components[0]?.outputs, { media: "motion.media" });
+  assert.deepEqual(result.components[0]?.outputs, {
+    media: "motion.media", domain: "motion.domain", extent: "motion.extent",
+  });
   const request = result.records[0]?.value;
   assert.ok(request?.kind === "inline");
   assert.deepEqual(request.value, {
@@ -89,7 +91,7 @@ test("media operations are ordinary graph branches over BlobArtifact", async () 
       },
       children: [
         { kind: "element", name: "media:Trim", attributes: { tail: "0.25s" }, children: [], range },
-        { kind: "element", name: "media:Retime", attributes: { rate: "1.05", pitch: "preserve" }, children: [], range },
+        { kind: "element", name: "media:Retime", attributes: { rate: "1.05" }, children: [], range },
       ],
     },
   });
@@ -100,7 +102,7 @@ test("media operations are ordinary graph branches over BlobArtifact", async () 
   assert.deepEqual(program.value.value, {
     operations: [
       { kind: "trim", tailSec: 0.25 },
-      { kind: "retime", rate: 1.05, pitch: "preserve" },
+      { kind: "retime", rate: 1.05 },
     ],
   });
 
@@ -147,7 +149,7 @@ test("StillVideo stops at an ordinary MP4 branch before Normalize", async () => 
     resolveReference: (path) => path === "opening-head"
       ? { path, ref: { kind: "record", id: path }, type: artifactTypes.blob }
       : path === "clock"
-        ? { path, ref: { kind: "record", id: path }, type: programSpaceTypes.clock }
+        ? { path, ref: { kind: "record", id: path }, type: timelineTypes.clock }
         : undefined,
     resolveAsset: async () => { throw new Error("no asset resolution expected"); },
   });
@@ -165,7 +167,7 @@ test("StillVideo stops at an ordinary MP4 branch before Normalize", async () => 
 test("StillVideo spreads several pictures over one literal duration by weight, in authored order", async () => {
   const range = { source: "still.svml", start: 0, end: 1 };
   const resolveReference = (path: string) => path === "clock"
-    ? { path, ref: { kind: "record" as const, id: path }, type: programSpaceTypes.clock }
+    ? { path, ref: { kind: "record" as const, id: path }, type: timelineTypes.clock }
     : { path, ref: { kind: "record" as const, id: path }, type: artifactTypes.blob };
   const child = (source: string, weight?: string) => ({
     kind: "element" as const, name: "media:Still",

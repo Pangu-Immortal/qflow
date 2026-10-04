@@ -10,7 +10,7 @@ import { sealComposition, sealVisualTrack } from "@qflow/composition";
 import { mediaFrameRangeSamples } from "@qflow/media";
 import { EndpointRegistry, MemoryResourceStore } from "@qflow/driver-node";
 import { compileHyperframesDocument } from "@qflow/hyperframes";
-import { sealProgramSpace } from "@qflow/program-space";
+import { sealTimeline } from "@qflow/timeline";
 import type { BlobRef } from "@qflow/protocol";
 import sharp from "sharp";
 import { renderHyperframesVisual, renderHyperframesFrames } from "../src/index.js";
@@ -25,18 +25,18 @@ import type { HyperframesRenderProgress } from "../src/index.js";
 import { distributeFrameRange, requestedFrameRanges, sourceFrameAt, sourceWindows, videoSlots } from "../src/sampling.js";
 
 function documentFor(artifact: BlobRef) {
-  const space = sealProgramSpace({ id: "range-space", durationSec: 12 / 30, frameRate: { numerator: 30, denominator: 1 } });
-  const track = sealVisualTrack({ id: "video", visualIr: "qflow.visual-ir@1", programSpaceId: space.id,
+  const space = sealTimeline({ id: "range-space", frameCount: 12, frameRate: { numerator: 30, denominator: 1 } });
+  const track = sealVisualTrack({ id: "video", visualIr: "qflow.visual-ir@1", timelineId: space.id,
     presents: [{ id: "sample", span: { startFrame: 0, endFrameExclusive: 12 },
-      stacking: { order: 0, tieBreak: "sample" }, elements: [{ id: "video", order: 0, kind: "video", artifact,
+      order: 0, z: 0, elements: [{ id: "video", order: 0, kind: "video", artifact,
         style: [{ name: "position", value: "absolute" }, { name: "inset", value: 0 },
           { name: "width", value: "64px" }, { name: "height", value: "64px" }],
-        sampling: { sourceFrameRate: space.frameRate, sourceFrameCount: 4, segments: [
-          { target: { startFrame: 0, endFrameExclusive: 6 }, sourceFrame: { numerator: 2, denominator: 1 },
-            rate: { numerator: 1, denominator: 1 }, loop: { startFrame: 0, endFrameExclusive: 4 } },
-          { target: { startFrame: 6, endFrameExclusive: 8 }, sourceFrame: { numerator: 3, denominator: 1 },
+        sourceTime: { sourceFrameRate: space.frameRate, sourceFrameCount: 4, pieces: [
+          { target: { startFrame: 0, endFrameExclusive: 6 }, sourceAtStart: { numerator: 2, denominator: 1 },
+            rate: { numerator: 1, denominator: 1 }, wrap: { startFrame: 0, endFrameExclusive: 4 } },
+          { target: { startFrame: 6, endFrameExclusive: 8 }, sourceAtStart: { numerator: 3, denominator: 1 },
             rate: { numerator: 0, denominator: 1 } },
-          { target: { startFrame: 8, endFrameExclusive: 12 }, sourceFrame: { numerator: 0, denominator: 1 },
+          { target: { startFrame: 8, endFrameExclusive: 12 }, sourceAtStart: { numerator: 0, denominator: 1 },
             rate: { numerator: 1, denominator: 2 } },
         ] },
       }] }],
@@ -88,9 +88,9 @@ test("source selection retains loop, hold and fractional-speed sampling and shar
   const hold = slots.find((slot) => slot.sourceRate.numerator === 0n);
   assert.ok(hold !== undefined);
   assert.deepEqual({ startFrame: hold.startFrame, endFrameExclusive: hold.endFrameExclusive,
-    sourceFrame: hold.sourceFrame, sourceRate: hold.sourceRate }, {
+    sourceAtStart: hold.sourceFrame, sourceRate: hold.sourceRate }, {
     startFrame: 6, endFrameExclusive: 8,
-    sourceFrame: { numerator: 3n, denominator: 1n }, sourceRate: { numerator: 0n, denominator: 1n },
+    sourceAtStart: { numerator: 3n, denominator: 1n }, sourceRate: { numerator: 0n, denominator: 1n },
   });
   const range = { startFrame: 3, endFrameExclusive: 11 };
   const sampled = Array.from({ length: 8 }, (_, i) => {
@@ -118,6 +118,15 @@ test("video slot inspection accepts direct HTML sources without requiring compil
   });
 });
 
+test("reverse source time selects the same bounded decoded window without forward traversal", () => {
+  const [slot] = videoSlots('<video id="reverse" src="direct.mp4" data-qflow-start-frame="0" data-qflow-end-frame="4" data-qflow-source-frame="3/1" data-qflow-source-rate="-1/1" data-qflow-source-fps="30/1"></video>');
+  assert.ok(slot !== undefined);
+  assert.deepEqual(Array.from({ length: 4 }, (_, frame) => sourceFrameAt(slot, frame)), [3, 2, 1, 0]);
+  assert.deepEqual(sourceWindows([slot], { startFrame: 0, endFrameExclusive: 4 }), [{
+    src: "direct.mp4", fps: { num: 30, den: 1 }, windows: [{ startFrame: 0, endFrameExclusive: 4 }],
+  }]);
+});
+
 test("page selection compacts arbitrary requested frames without inventing coverage across gaps", () => {
   assert.deepEqual(requestedFrameRanges({ startFrame: 3, endFrameExclusive: 12 }), [
     { startFrame: 3, endFrameExclusive: 12 },
@@ -129,7 +138,7 @@ test("page selection compacts arbitrary requested frames without inventing cover
   ]);
 });
 
-test("real selected renders sample video correctly across loop, hold and stretch with independent browsers", {
+test("real selected renders sample video correctly across wrap, hold and fractional rates with independent browsers", {
   skip: process.env.QFLOW_BROWSER_TESTS !== "1",
 }, async (t) => {
   const root = await mkdtemp(join(tmpdir(), "qflow-render-range-test-"));

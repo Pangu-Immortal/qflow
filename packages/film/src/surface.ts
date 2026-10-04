@@ -97,7 +97,7 @@ export const decodeFilmSurface: StructuredSurfaceHandler = ({ element, resolveRe
   const id = stringAttribute(element, "id");
   const canvas = requiredReference(element, "canvas", resolveReference);
   if (!sameType(canvas.type, spatialTypes.canvas)) {
-    throw new Error(`${element.name}.canvas must reference CanvasSpace`);
+    throw new Error(`${element.name}.canvas must reference Canvas`);
   }
   const context = resolveTemporalContext({ element, resolveReference });
   const appearanceReference = requiredReference(element, "appearance", resolveReference);

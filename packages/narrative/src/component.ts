@@ -2,7 +2,6 @@ import type { ComponentPackage } from "@qflow/component-kit";
 import type { StoredValue } from "@qflow/protocol";
 
 import {
-  assertCaptionDocumentIdentity,
   assertNarrativeExcerptIdentity,
   assertNarrativeIdentity,
   assertNarrativeMomentRefIdentity,
@@ -10,7 +9,6 @@ import {
 } from "./identity.js";
 import { narrativeTypes } from "./manifest.js";
 import type {
-  CaptionDocument,
   Narrative,
   NarrativeExcerpt,
   NarrativeMomentRef,
@@ -28,6 +26,5 @@ export const narrativeComponent = {
     { type: narrativeTypes.excerpt, handler: ({ value }) => assertNarrativeExcerptIdentity(inline<NarrativeExcerpt>(value, "NarrativeExcerpt")) },
     { type: narrativeTypes.selection, handler: ({ value }) => assertNarrativeSelectionRefIdentity(inline<NarrativeSelectionRef>(value, "NarrativeSelection")) },
     { type: narrativeTypes.moment, handler: ({ value }) => assertNarrativeMomentRefIdentity(inline<NarrativeMomentRef>(value, "NarrativeMoment")) },
-    { type: narrativeTypes.captionDocument, handler: ({ value }) => assertCaptionDocumentIdentity(inline<CaptionDocument>(value, "CaptionDocument")) },
   ],
 } satisfies ComponentPackage;

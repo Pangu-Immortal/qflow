@@ -1,0 +1,19 @@
+{
+  "name": "@qflow/text-fine-studio",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "dependencies": {
+    "@qflow/composition": "workspace:*",
+    "@qflow/studio-adapter": "workspace:*",
+    "@qflow/text-fine": "workspace:*",
+    "@qflow/fonts-open": "workspace:*"
+  }
+}

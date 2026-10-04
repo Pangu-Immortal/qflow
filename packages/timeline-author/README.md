@@ -1,68 +1,125 @@
 # `@qflow/timeline-author`
 
-Declare one complete Timeline and place prepared Takes within it. Spoken work, mixed spoken/MG
-work and pure authored animation use the same declaration. The separate
-[Timeline value package](../timeline/README.md) owns the data and projections; this author package
-owns the markup and deterministic assembly.
+Construct one finite absolute Timeline from a small acyclic graph of named Instants and Windows.
+This package owns author syntax and lowering; [`@qflow/timeline`](../timeline/README.md) owns only the
+completed value `{ id, frameRate, frameCount }`.
+
+Timeline is not a media Track, clip list, semantic anchor registry or hidden schedule. Its author
+graph does only two jobs:
+
+1. resolve the program's exclusive `end`; and
+2. publish deliberately named absolute Instants and Windows for other graph nodes to consume.
 
 ```svml
 <import as="time" from="@qflow/timeline-author@1"/>
+
 <time:Clock id="clock" frame-rate="30"/>
-<time:Timeline id="program" clock={clock} end="content.end+2s">
-  <time:Take source={opening.take} at="2s"/>
-  <time:Take source={explanation.take} at="previous.end+3s"/>
-  <time:Take source={closing.take} at="previous.end-12f"/>
+<time:Timeline id="program" clock={clock}
+  end="latest(speech.end,outro.end)">
+  <time:Window id="speech" from="start" for={voice.extent}/>
+  <time:Instant id="claim" at="speech.end-12f"/>
+  <time:Window id="outro" from="claim" for="3s"/>
 </time:Timeline>
 ```
 
-The first Take begins at two seconds. The second starts three seconds after the preceding Take ends.
-The third overlaps its predecessor by twelve frames. The complete Timeline ends two seconds after
-all Takes have ended. Durations come from prepared material, so authoring these relations does not
-require knowing generated lengths beforehand or serializing generation.
+The Timeline declaration publishes:
 
-| Declaration | Meaning |
-| --- | --- |
-| `clock={clock}` | Required frame-rate input, also usable by upstream normalization. |
-| Take `source={clip.take}` | Complete normalized, semantically prepared local Take. A wordless Take is valid real media. |
-| First omitted `at` | `0f`. |
-| Later omitted `at` | `previous.end`. |
-| `at="20s"` | Absolute start. |
-| `at="previous.end+2s"` | Start relative to the preceding Take declaration's end. Negative offsets permit overlap. |
-| Omitted `end` | `content.end`, the maximum end across all placed Takes. |
-| `end="content.end+2s"` | Reserve a trailing interval after all Takes finish. |
-| `end="30s"` | Fixed complete extent, including every placed Take. |
+- `program.timeline`, the completed Timeline;
+- `program.window`, `program.start` and `program.end` for the complete range;
+- `program.speech`, plus `program.speech.start` and `program.speech.end`;
+- `program.claim`; and
+- `program.outro`, plus its boundaries.
 
-Positions and offsets accept seconds, milliseconds and frames, and must resolve to exact frame
-boundaries on the Clock. Negative placements, a missing predecessor, or a fixed end shorter than
-placed content produce an error. A positive predecessor offset does not promise globally empty
-time if another long Take remains active. Placement is translation at native speed; trimming or
-retiming material belongs before its semantic preparation.
+Every named child is naturally addressable. There is no author-facing `export` attribute. Internal
+construction points, spans and extents are compiler values and never become another public time
+model.
 
-For ordinary sequential assembly, omit all Take `at` attributes and Timeline `end`. For wholly
-authored animation, supply the extent and no Takes:
+## Timeline declarations
+
+| Form | Meaning | Published value |
+| --- | --- | --- |
+| `<time:Instant id="cue" at="…"/>` | Names one absolute boundary relationship. | `program.cue` |
+| `<time:Window id="tail" from="…" for="2s"/>` | Names one non-empty absolute interval relationship. | `program.tail`, `.start`, `.end` |
+
+A Window supplies exactly two of `from`, `until` and `for`. `for` accepts either an exact duration
+literal or a typed `TemporalExtent`. This gives forward placement, end alignment and intervals
+between existing boundaries without separate Block, Before, After or Place primitives:
 
 ```svml
-<time:Timeline id="animation" clock={clock} end="30s"/>
+<time:Timeline id="film" clock={clock} end="latest(voice.end,tail.end)">
+  <time:Window id="voice" from="start" for={voice-media.extent}/>
+  <time:Window id="last-three" until="end" for="3s"/>
+  <time:Window id="tail" from="voice.end" until="voice.end+3s"/>
+</time:Timeline>
 ```
 
-This produces no blank video or fabricated Script. Empty content cannot supply an implicit positive
-extent. Program boundaries remain available for MG, media, titles and sound.
+## Point expressions
 
-| Output | Use |
+`Instant.at`, Window boundaries and the required Timeline `end` share one restricted expression
+grammar:
+
+| Expression | Meaning |
 | --- | --- |
-| `.timeline` | Complete time range and placed material/evidence, consumed through `timeline={program.timeline}`. |
+| `start` | frame boundary zero |
+| `12f`, `250ms`, `1.5s` | absolute position from zero |
+| `speech.start`, `speech.end` | boundary of a named Window |
+| `claim` | a named Instant |
+| `claim+2s`, `speech.end-12f` | exact literal offset |
+| `earliest(a,b)`, `latest(a,b,c)` | earliest or latest of named boundaries |
 
-[Performance](../performance/README.md) presents footage already
-held by the Timeline. It can show it full-frame, in an inset or as a cutout; project components can
-own coordinated video and graphics. Sampling a new presentation Window preserves each Take's source
-position. Overlap supplies multiple sources, not an automatic dissolve. Independent Media Items
-still receive their own assets and may coexist. Caption reads the authored words and placed timing.
+Declarations may refer forward. Source order is not execution order; dependencies determine graph
+evaluation. `end` may also be referenced by a Window such as `last-three`. If `end` then depends on
+that same Window, the author graph contains a real cycle and is rejected. Unknown references,
+non-positive Timeline ends, non-exact frame durations, empty Windows and values outside the final
+range are errors.
 
-[Sound](../sound/README.md) presents existing Timeline audio through ordered Uses.
-[Audio Track](../audio-track/README.md) handles independent music and effects. Include the wanted
-presentation outputs explicitly in Film. Timeline itself exports only `.timeline`; holding material
-does not add a picture or sound contribution.
+The graph may have several roots, branches and leaves. It needs no clip ordering or single content
+root; it needs one resolvable `end`.
 
-Timeline placement is authored with `at` and `end`. Studio shows placed Takes and the complete range
-as reference information. Use-window and Script-marker controls edit presentation timing and semantic
-anchors respectively; they do not move Takes or change the Timeline extent.
+## Unknown generated duration
+
+`TemporalExtent` is an unpositioned frame count on one frame rate. Normalization publishes it only
+after an imported or generated asset is available. A Timeline Window can consume that ordinary graph
+value, so an unknown voice or video length may determine later boundaries and the final `end` without
+a phase state machine, callback or second Source run:
+
+```svml
+<time:Timeline id="film" clock={clock} end="outro.end">
+  <time:Window id="voice" from="start" for={voice-media.extent}/>
+  <time:Window id="outro" from="voice.end" for="3s"/>
+</time:Timeline>
+```
+
+If generation itself requests this Timeline's end while the end depends on the generated result,
+that is a genuine dependency cycle rather than a scheduling problem.
+
+## Local domains contribute, then disappear
+
+A prepared source may supply the `TemporalExtent` that determines a Window. That is its complete
+relationship with Timeline construction. The Timeline does not retain the source, its local domain,
+or a public Placement object.
+
+When a domain package must project local evidence, it consumes the complete local domain and the
+equal-length Window directly. The relation is exact native-speed translation: local frame zero maps
+to the Window start and the local exclusive end maps to the Window end. A length mismatch is an error;
+projection does not clip, loop, hold, stretch, resample or hide a source tail. The projector publishes
+ordinary absolute Instants and Windows and erases the construction relation. Visual and Audio then
+place ordinary normalized media independently.
+
+A one-off component Window can still be authored directly on that component or supplied by another
+domain projection. Put a named child in Timeline when it participates in the construction DAG. When
+the Timeline is already complete and several consumers deliberately share a newly composed absolute
+range, publish it independently:
+
+```svml
+<time:Window id="reveal-band" timeline={film.timeline}
+  from={story-time.reveal} until={story-time.answer-end}/>
+<time:Instant id="credits" timeline={film.timeline} at="timeline.end-2s"/>
+
+<visual:Clip during={reveal-band} .../>
+```
+
+The standalone Window publishes `reveal-band`, `reveal-band.start` and `reveal-band.end`. A standalone
+Instant authors an absolute expression; an already resolved Instant needs no renaming and should be
+referenced directly. Absolute value Types are the common waist; Timeline and Narrative projection are
+only two possible producers of them.

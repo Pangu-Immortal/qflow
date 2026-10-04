@@ -9,9 +9,9 @@ const videoType: TypeRef = {
   module: { name: "example.media", version: "1" },
   name: "Video",
 };
-const takeType: TypeRef = {
+const compositeType: TypeRef = {
   module: { name: "example.speech", version: "1" },
-  name: "SemanticTake",
+  name: "CompositeValue",
 };
 
 class MemoryS3 implements BuildResultS3Client {
@@ -164,7 +164,7 @@ test("S3 keeps the same Build Result model as the filesystem repository", async 
         { id: "record:video", type: videoType, value: video },
         {
           id: "record:take",
-          type: takeType,
+          type: compositeType,
           value: {
             kind: "inline",
             value: { media: { visual: { artifact: video } } },
@@ -469,7 +469,7 @@ test("S3 Composite values retain external and prior-Result Resource references",
       [photo.resource]: { kind: "external-file", uri: "asset://selected/photo", size: 3, mediaType: "image/png" },
       [video.resource]: { ...saved.value, build: originalId },
     } });
-  await writer.sync({ state: state({ records: [{ id: "r", type: takeType,
+  await writer.sync({ state: state({ records: [{ id: "r", type: compositeType,
     value: { kind: "inline", value: { layers: [{ parts: [photo, { clip: video, repeated: photo }] }] } } }],
     bindings: [{ output: "layout", record: "r" }] }),
     resources: { async open() { throw new Error("Referenced resources cannot be uploaded again"); } } });

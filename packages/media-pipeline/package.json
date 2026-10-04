@@ -17,11 +17,13 @@
     "@qflow/elaborator": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/narrative": "workspace:*",
-    "@qflow/program-space": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/run": "workspace:*",
     "@qflow/speech": "workspace:*",
+    "@qflow/speech-evidence": "workspace:*",
     "@qflow/svs": "workspace:*",
-    "@qflow/markup": "workspace:*"
+    "@qflow/markup": "workspace:*",
+    "@qflow/timeline": "workspace:*",
+    "@qflow/temporal": "workspace:*"
   }
 }

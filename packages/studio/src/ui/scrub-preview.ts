@@ -62,7 +62,7 @@ export function createScrubPreview(container: HTMLElement) {
       if (snapshot.revision !== revision) clear();
       if (iframe === undefined) {
         revision = snapshot.revision;
-        const { canvasWidth, canvasHeight } = snapshot.space;
+        const { width: canvasWidth, height: canvasHeight } = snapshot.canvas;
         const scale = Math.min(200 / canvasWidth, 170 / canvasHeight);
         picture.style.width = `${canvasWidth * scale}px`;
         picture.style.height = `${canvasHeight * scale}px`;
@@ -93,7 +93,7 @@ export function createScrubPreview(container: HTMLElement) {
       const room = container.getBoundingClientRect();
       const left = Math.max(0, Math.min(clientX - room.left - element.offsetWidth / 2, room.width - element.offsetWidth));
       element.style.left = `${left}px`;
-      time.textContent = feedbackClock(frame * snapshot.space.frameRate.denominator / snapshot.space.frameRate.numerator);
+      time.textContent = feedbackClock(frame * snapshot.timeline.frameRate.denominator / snapshot.timeline.frameRate.numerator);
       if (frame !== displayed) {
         iframe.style.visibility = "hidden";
         uiText(status, "player.frame-loading");
