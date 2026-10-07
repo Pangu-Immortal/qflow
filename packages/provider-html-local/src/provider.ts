@@ -1,0 +1,98 @@
+import { defineEndpoint } from "@qflow/qflow/endpoint";
+import { mediaTypes } from "@qflow/qflow/media";
+import { htmlProgramCapabilities, htmlProgramTypes, verifyHtmlFrameRequest, verifyHtmlRasterRequest } from "@qflow/qflow/html-program";
+import { canonicalize } from "@qflow/qflow/protocol";
+import { rasterizeHtmlProgram, rasterizeHtmlFrames, resolveExecutionOptions } from "./render.js";
+import { renderWorkerLimit } from "./concurrency.js";
+import type { HtmlExecutionOptions } from "./options.js";
+import { renderProgressReporter } from "./progress.js";
+
+export type * from "./options.js";
+export const localHtmlProviderModuleRef = { name: "@qflow/provider-html-local", version: "1" } as const;
+export type CreateLocalHtmlProviderOptions = HtmlExecutionOptions & {
+  readonly instance?: string;
+  readonly pool?: string;
+  /** Used by managed browser installation, not frame capture. */
+  readonly nodePath?: string;
+  /** Whole render requests admitted concurrently; independent of frame workers. */
+  readonly defaultConcurrency?: number;
+  /** Shared Chrome slots across Need executions using this pool. */
+  readonly browserCapacity?: number;
+};
+
+export function createLocalHtmlProvider(config: CreateLocalHtmlProviderOptions) {
+  const execution = resolveExecutionOptions(config);
+  const pool = config.pool ?? config.instance ?? "html.local";
+  const browsers = `capacity:${pool}/browsers`;
+  if (config.browserCapacity !== undefined && (!Number.isSafeInteger(config.browserCapacity) || config.browserCapacity < 1)) {
+    throw new Error("HTML renderer browserCapacity must be a positive integer");
+  }
+  const maxWorkers = execution.workers === "auto" ? Math.min(execution.maxWorkers, config.browserCapacity ?? Infinity) : execution.maxWorkers;
+  const reserved = { ...execution, maxWorkers };
+  return defineEndpoint({
+    instance: config.instance ?? "html.local",
+    pool,
+    pricing: { kind: "local" },
+    defaultConcurrency: config.defaultConcurrency ?? 1,
+    capabilities: [{
+      lifecycle: "immediate" as const,
+      capability: htmlProgramCapabilities.rasterizeVisual,
+      returns: mediaTypes.timelineVisual,
+      ...(config.browserCapacity === undefined ? {} : {
+        resources: [{ id: browsers, limit: config.browserCapacity }],
+        unitsForRequest: (request: import("@qflow/qflow/endpoint").EndpointRequest) => {
+          verifyHtmlRasterRequest(request.constraints);
+          const { program, range } = request.constraints;
+          return { [browsers]: renderWorkerLimit(reserved,
+            range === undefined ? program.frameCount : range.endFrameExclusive - range.startFrame,
+            program.frameRate.numerator / program.frameRate.denominator) };
+        },
+      }),
+      handler: async (context) => {
+        const request = context.need.constraints;
+        verifyHtmlRasterRequest(request);
+        const frameCount = request.range === undefined ? request.program.frameCount
+          : request.range.endFrameExclusive - request.range.startFrame;
+        const progress = renderProgressReporter(context.reportProgress, frameCount);
+        try {
+          const visual = await rasterizeHtmlProgram(request, { ...config,
+            ...(execution.chromePath === undefined ? { browserVersion: execution.browserVersion! } : { chromePath: execution.chromePath }),
+            browserCacheDirectory: execution.browserCacheDirectory,
+            workers: execution.workers, maxWorkers,
+            resources: context.resources, onProgress: progress.onProgress,
+            ...(context.reportDiagnostic === undefined ? {} : { onDiagnostic: context.reportDiagnostic }) });
+          return { value: { kind: "inline", value: canonicalize(visual) } };
+        } finally {
+          await progress.flush();
+        }
+      },
+    }, {
+      lifecycle: "immediate" as const,
+      capability: htmlProgramCapabilities.rasterizeFrames,
+      returns: htmlProgramTypes.frameImages,
+      ...(config.browserCapacity === undefined ? {} : {
+        resources: [{ id: browsers, limit: config.browserCapacity }],
+        unitsForRequest: (request: import("@qflow/qflow/endpoint").EndpointRequest) => {
+          verifyHtmlFrameRequest(request.constraints);
+          const document = request.constraints.program;
+          return { [browsers]: renderWorkerLimit(reserved, request.constraints.frames.length,
+            document.frameRate.numerator / document.frameRate.denominator) };
+        },
+      }),
+      handler: async context => {
+        const request = context.need.constraints;
+        verifyHtmlFrameRequest(request);
+        const progress = renderProgressReporter(context.reportProgress, request.frames.length);
+        try {
+          const frames = await rasterizeHtmlFrames(request, { ...config,
+            ...(execution.chromePath === undefined ? { browserVersion: execution.browserVersion! } : { chromePath: execution.chromePath }),
+            browserCacheDirectory: execution.browserCacheDirectory,
+            workers: execution.workers, maxWorkers,
+            resources: context.resources, onProgress: progress.onProgress,
+            ...(context.reportDiagnostic === undefined ? {} : { onDiagnostic: context.reportDiagnostic }) });
+          return { value: { kind: "inline", value: canonicalize(frames) } };
+        } finally { await progress.flush(); }
+      },
+    }],
+  });
+}

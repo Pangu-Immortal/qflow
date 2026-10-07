@@ -1,0 +1,80 @@
+import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+
+import type { ManagedProgram, ManagedProgramState } from "@qflow/runtime-local/extension";
+import { browserCacheDirectory, browserDownloadBaseUrl, browserDownloadUrl, browserExecutablePath, configuredBrowserPath, requireBrowserExecutable, selectedBrowserVersion } from "./browser.js";
+import type { BrowserOptions } from "./browser.js";
+import { runProcess } from "./process.js";
+
+type MediaToolVersion =
+  | { readonly state: "ready"; readonly version: string }
+  | { readonly state: "down" | "mismatch"; readonly detail: string };
+
+async function mediaToolVersion(path: string): Promise<MediaToolVersion> {
+  try {
+    const result = await runProcess({
+      executable: path,
+      argv: ["-version"],
+      timeoutMs: 15_000,
+      maxOutputBytes: 4 * 1024 * 1024,
+    });
+    const version = Buffer.from(result.stdout).toString("utf8").split(/\r?\n/u, 1)[0]?.trim() ?? "";
+    return version.length > 0
+      ? { state: "ready", version }
+      : { state: "mismatch", detail: `${path} returned no version` };
+  } catch (error) {
+    return { state: "down", detail: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+async function probeHtmlMediaTools(ffprobePath: string, ffmpegPath?: string): Promise<ManagedProgramState> {
+  const ffprobe = await mediaToolVersion(ffprobePath);
+  if (ffprobe.state !== "ready") return { state: ffprobe.state, detail: ffprobe.detail };
+  if (ffmpegPath === undefined) return { state: "ready" };
+  const ffmpeg = await mediaToolVersion(ffmpegPath);
+  return ffmpeg.state === "ready"
+    ? { state: "ready" }
+    : { state: ffmpeg.state, detail: ffmpeg.detail };
+}
+
+/**
+ * This Provider owns browser selection and preparation. Probes never install;
+ * rasterization receives the same selected executable instead of invoking browser discovery.
+ */
+export function localHtmlBrowserProgram(
+  input: BrowserOptions & {
+    readonly id: string;
+    readonly nodePath: string;
+    readonly ffprobePath: string;
+    readonly ffmpegPath?: string;
+  },
+): ManagedProgram {
+  const version = selectedBrowserVersion(input);
+  const selectedPath = browserExecutablePath(input);
+  const baseUrl = browserDownloadBaseUrl(input);
+  const probeBrowser = async (): Promise<ManagedProgramState> => {
+    try { await requireBrowserExecutable(selectedPath, version); }
+    catch (error) { return { state: "down", detail: error instanceof Error ? error.message : String(error) }; }
+    return { state: "ready" };
+  };
+  return {
+    id: input.id,
+    ...(configuredBrowserPath(input) === undefined ? {
+      // Projects sharing this installation also share the existing Program lifecycle lock/logs.
+      stateRoot: join(browserCacheDirectory(input), ".qflow-html-browser-program"),
+      installation: {
+        probe: probeBrowser,
+        commands: [{ label: `Install Chrome Headless Shell ${version} at ${selectedPath} from ${browserDownloadUrl(input)}`, command: input.nodePath, args: [
+          "--import", import.meta.resolve("tsx"),
+          fileURLToPath(new URL("./browser-install.js", import.meta.url)), browserCacheDirectory(input), version!,
+          ...(baseUrl === undefined ? [] : [baseUrl]),
+        ] }],
+      },
+    } : {}),
+    async probe(): Promise<ManagedProgramState> {
+      const browser = await probeBrowser();
+      if (browser.state !== "ready") return browser;
+      return await probeHtmlMediaTools(input.ffprobePath, input.ffmpegPath);
+    },
+  };
+}

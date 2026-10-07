@@ -1,0 +1,42 @@
+{
+  "name": "@qflow/html-video",
+  "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "dependencies": {
+    "@qflow/media-operations": "workspace:^"
+  },
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/compiler": "workspace:*",
+    "@qflow/blob": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/source": "workspace:*",
+    "@qflow/html-program": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/timeline": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/temporal": "workspace:*",
+    "@qflow/kernel": "workspace:*",
+    "@qflow/executor": "workspace:*",
+    "@qflow/recipe": "workspace:*",
+    "@qflow/admission": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/protocol": "workspace:*"
+  }
+}

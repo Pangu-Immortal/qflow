@@ -1,0 +1,34 @@
+{
+  "name": "@qflow/html-program",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "dependencies": {
+    "@qflow/producer": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/timeline": "workspace:*",
+    "@qflow/admission": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/caption": "workspace:*",
+    "@qflow/depth-stack": "workspace:*",
+    "@qflow/fontsource": "workspace:*",
+    "@qflow/visual-track": "workspace:*",
+    "@qflow/ranking": "workspace:*",
+    "@qflow/script": "workspace:*",
+    "@qflow/spatial": "workspace:*",
+    "@qflow/recipe": "workspace:*",
+    "@qflow/text-fine": "workspace:*",
+    "linkedom": "0.18.13"
+  }
+}
