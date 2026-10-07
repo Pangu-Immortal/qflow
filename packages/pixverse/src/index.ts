@@ -1,15 +1,15 @@
-import { artifactTypes } from "@qflow/artifact";
-import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/generation";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/qflow/generation";
 import type {
   GenerationPort,
   GenerationPortRequirement,
   GenerationPortTable,
   GenerationPortValue,
   GenerationRequest,
-} from "@qflow/generation";
-import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/markup";
-import { defineExactModelModule } from "@qflow/model-kit";
-import { textTypes } from "@qflow/text";
+} from "@qflow/qflow/generation";
+import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/qflow/markup";
+import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { textTypes } from "@qflow/qflow/text";
 
 import { pixverseRequestValidator } from "./validation.js";
 
@@ -138,7 +138,7 @@ const pixverseAspectRatio: SurfaceAttributeVocabulary = {
 
 const pixverseVideoPort: readonly SurfacePortVocabulary[] = [{
   name: "video",
-  type: artifactTypes.blob,
+  type: blobTypes.blob,
   summary: "The generated video, addressed as `<id>.video`.",
 }];
 
@@ -158,9 +158,9 @@ export const pixverseMarkupSurfaces = [
         ...pixverseCommonAttributes,
         { name: "duration", kind: "literal" as const, required: true,
           summary: "How many seconds of video to render, from 1 to 15." },
-        { name: "first-frame", kind: "reference" as const, required: false, accepts: [artifactTypes.blob],
+        { name: "first-frame", kind: "reference" as const, required: false, accepts: [blobTypes.blob],
           summary: "Starts the video from one image Artifact." },
-        { name: "last-frame", kind: "reference" as const, required: false, accepts: [artifactTypes.blob],
+        { name: "last-frame", kind: "reference" as const, required: false, accepts: [blobTypes.blob],
           summary: "Ends the video on one image Artifact, bridging from the first frame." },
         pixverseAspectRatio,
         { name: "multi-clip", kind: "literal" as const, required: false, values: ["true", "false"],
@@ -204,9 +204,9 @@ export const pixverseMarkupSurfaces = [
         cardinality: "many" as const,
         summary: "Attaches one subject Artifact the model generates from, chosen by an `image` or `video` reference.",
         attributes: [
-          { name: "image", kind: "reference" as const, required: false, accepts: [artifactTypes.blob],
+          { name: "image", kind: "reference" as const, required: false, accepts: [blobTypes.blob],
             summary: "Selects the image Artifact whose subject the generated video carries." },
-          { name: "video", kind: "reference" as const, required: false, accepts: [artifactTypes.blob],
+          { name: "video", kind: "reference" as const, required: false, accepts: [blobTypes.blob],
             summary: "Selects the video Artifact whose motion and subject the generated video carries." },
         ],
       }],

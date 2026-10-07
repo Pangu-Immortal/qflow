@@ -1,4 +1,6 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
 
 import {
   gptImageCleanManifest,
@@ -15,21 +17,21 @@ import {
   decodeGptImageSurface,
 } from "./surface.js";
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{
     manifest: gptImageManifest,
   }, {
     manifest: gptImageCleanManifest,
   }],
-  components: [gptImageComponent],
-  hostFacets: [
-    gptImageDefinition.hostFacet,
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[gptImageComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    gptImageDefinition.facet,
+    createMarkupSurfaceFacet({
       module: gptImageModuleRef,
     declaration: gptImageMarkupSurfaces.find((item) => item.name === "image")!,
       handler: decodeGptImageSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: gptImageCleanModuleRef,
     declaration: gptImageCleanMarkupSurfaces.find((item) => item.name === "image")!,
       handler: decodeCleanGptImageSurface,

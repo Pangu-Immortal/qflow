@@ -1,16 +1,11 @@
-import { artifactTypes } from "@qflow/artifact";
-import { generationPort, sealGenerationMediaBinding } from "@qflow/generation";
-import type { GenerationMediaPort } from "@qflow/generation";
-import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/model-kit";
-import type { ExactModelEndpoint, ExactModelMediaInput, ExactModelTextInput } from "@qflow/model-kit";
-import type { CanonicalValue } from "@qflow/protocol";
-import { textTypes, verifyText } from "@qflow/text";
-import type {
-  MarkupAttributeValue,
-  StructuredElement,
-  StructuredSurfaceHandler,
-  SurfaceResolvedReference,
-} from "@qflow/markup";
+import { blobTypes } from "@qflow/qflow/blob";
+import { generationPort, sealGenerationMediaBinding } from "@qflow/qflow/generation";
+import type { GenerationMediaPort } from "@qflow/qflow/generation";
+import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/qflow/generation/model";
+import type { ExactModelEndpoint, ExactModelMediaInput, ExactModelTextInput } from "@qflow/qflow/generation/model";
+import { textTypes, verifyText } from "@qflow/qflow/text";
+import type { CanonicalValue } from "@qflow/qflow/protocol";
+import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";
 
 import { createElevenLabsSpeechAudioFragment } from "./fragment.js";
 import { elevenLabsSpeechEndpoints, sealElevenLabsSpeechRequestDraft } from "./index.js";

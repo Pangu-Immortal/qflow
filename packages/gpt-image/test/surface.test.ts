@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { artifactTypes } from "@qflow/artifact";
+import { blobTypes } from "@qflow/blob";
 import { parseStructuredElement } from "@qflow/markup";
 import type { StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/markup";
 import { textTypes } from "@qflow/text";
@@ -20,7 +20,7 @@ const refs = new Map<string, SurfaceResolvedReference>([
   ...["person.image", "product.image"].map((path) => [path, {
     path,
     ref: { kind: "component-output" as const, component: path.split(".")[0]!, output: "image" },
-    type: artifactTypes.blob,
+    type: blobTypes.blob,
   }] as const),
 ]);
 
@@ -71,7 +71,7 @@ test("raw GPT Image Surface keeps Text and every reference image on explicit gra
   ]);
 });
 
-test("clean GPT Image Surface adds the official denoise as one visible downstream operation", async () => {
+test("clean GPT Image Surface adds its package-owned cleanup as one visible downstream operation", async () => {
   const result = await decode(authored, decodeCleanGptImageSurface);
   const component = result.components[0]!;
   assert.deepEqual(component.inputs.cleanup, { kind: "record", id: "holding.cleanup" });

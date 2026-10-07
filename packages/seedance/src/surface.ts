@@ -1,24 +1,19 @@
-import { artifactTypes } from "@qflow/artifact";
+import { blobTypes } from "@qflow/qflow/blob";
 import {
   generationPort,
   sealGenerationMediaBinding,
   sealGenerationRequestDraft,
-} from "@qflow/generation";
+} from "@qflow/qflow/generation";
 import type {
   GenerationMediaPort,
   GenerationMediaRole,
   GenerationPortTable,
-} from "@qflow/generation";
-import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/model-kit";
-import type { ExactModelEndpoint, ExactModelMediaInput } from "@qflow/model-kit";
-import type { CanonicalValue } from "@qflow/protocol";
-import { textTypes, verifyText } from "@qflow/text";
-import type {
-  MarkupAttributeValue,
-  StructuredElement,
-  StructuredSurfaceHandler,
-  SurfaceResolvedReference,
-} from "@qflow/markup";
+} from "@qflow/qflow/generation";
+import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/qflow/generation/model";
+import type { ExactModelEndpoint, ExactModelMediaInput } from "@qflow/qflow/generation/model";
+import { textTypes, verifyText } from "@qflow/qflow/text";
+import type { CanonicalValue } from "@qflow/qflow/protocol";
+import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";
 
 import { createSeedanceAssembledGenerationFragment } from "./fragment.js";
 import { seedanceEndpoints, seedancePorts } from "./index.js";
@@ -105,7 +100,7 @@ function mediaReference(
   role: GenerationMediaRole,
   subject: string,
 ): SurfaceResolvedReference {
-  if (!sameType(reference.type, artifactTypes.blob)) throw new Error(`${subject} must reference a BlobArtifact`);
+  if (!sameType(reference.type, blobTypes.blob)) throw new Error(`${subject} must reference a Blob`);
   const value = reference.record?.value;
   if (value !== undefined && (value.kind !== "blob" || !value.mediaType.startsWith(`${role}/`))) {
     throw new Error(`${subject} must reference ${role} media`);

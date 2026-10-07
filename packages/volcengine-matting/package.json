@@ -1,16 +1,27 @@
 {
   "name": "@qflow/volcengine-matting",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "qflow": { "activation": "./src/activation.ts" },
-  "dependencies": {
-    "@qflow/artifact": "workspace:*",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/blob": "workspace:*",
     "@qflow/generation": "workspace:*",
+    "@qflow/qflow": "workspace:*",
     "@qflow/markup": "workspace:*",
-    "@qflow/model-kit": "workspace:*",
     "@qflow/protocol": "workspace:*"
   }
 }

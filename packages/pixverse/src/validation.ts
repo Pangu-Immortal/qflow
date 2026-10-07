@@ -1,4 +1,4 @@
-import type { GenerationRequest } from "@qflow/generation";
+import type { GenerationRequest } from "@qflow/qflow/generation";
 import type { PixverseModel } from "./index.js";
 
 /**

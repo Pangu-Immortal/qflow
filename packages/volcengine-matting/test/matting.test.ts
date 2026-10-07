@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { artifactTypes } from "@qflow/artifact";
+import { blobTypes } from "@qflow/blob";
 import { parseStructuredElement } from "@qflow/markup";
 import { sealPortraitMattingRequest } from "../src/index.js";
 import { decodePortraitMattingSurface } from "../src/surface.js";
@@ -15,10 +15,10 @@ test("portrait matting binds a source video and publishes an ordinary video edge
     sourceName: "matting.svml",
     element: parseStructuredElement({ name: "matting.svml", text: '<matte:Portrait id="cutout" source={performance.video}/>' }, 0).element,
     resolveReference: () => ({ path: "performance.video", ref: { kind: "record", id: "performance.video" },
-      type: artifactTypes.blob, record: { id: "performance.video", type: artifactTypes.blob, value: source } }),
+      type: blobTypes.blob, record: { id: "performance.video", type: blobTypes.blob, value: source } }),
     resolveAsset: () => { throw new Error("No file literal in this Source"); },
   });
   assert.deepEqual(result.components[0]!.outputs, { video: "cutout.video" });
   assert.deepEqual(result.components[0]!.inputs["source:artifact"], { kind: "record", id: "performance.video" });
-  assert.deepEqual(result.fragments[0]!.exports.find((item) => item.name === "video")?.type, artifactTypes.blob);
+  assert.deepEqual(result.fragments[0]!.exports.find((item) => item.name === "video")?.type, blobTypes.blob);
 });

@@ -1,15 +1,15 @@
+import type { AdmissionPackage, TypeValidatorFacet } from "@qflow/admission";
 import type {
-  ComponentPackage,
+  ProducerPackage,
   PlannedNeedFacet,
   PlannedNeedPresentation,
   PlannedNeedSpecification,
   ProducerFacet,
   ProducerHandlerContext,
-  TypeValidatorFacet,
-} from "@qflow/component-kit";
-import { artifactDependency, artifactTypes } from "@qflow/artifact";
-import { sealGraphFragment } from "@qflow/elaborator";
-import type { HostFacet } from "@qflow/host";
+} from "@qflow/producer";
+import { blobDependency, blobTypes } from "@qflow/blob";
+import { sealGraphFragment } from "@qflow/author";
+import type { Facet } from "@qflow/facet";
 import {
   bindGenerationMedia,
   bindGenerationText,
@@ -130,53 +130,53 @@ export type ExactModelModule<Key extends string = string> = {
   readonly manifest: ModuleManifest;
   /** Keyed by the endpoint keys declared by the module. */
   readonly endpoints: Readonly<Record<Key, ExactModelEndpoint>>;
-  readonly component: ComponentPackage & {
+  readonly component: (ProducerPackage & AdmissionPackage) & {
     readonly validators: readonly TypeValidatorFacet[];
     readonly producers: readonly ProducerFacet[];
     readonly plannedNeeds: readonly PlannedNeedFacet[];
   };
-  /** Inert declaration of these exact models for Hosts that address one directly. */
-  readonly hostFacet: ExactModelHostFacet;
+  /** Inert declaration of these exact models for consumers that address one directly. */
+  readonly facet: ExactModelFacet;
 };
 
-export const exactModelHostAbi = "qflow.exact-model-host@1";
+export const exactModelFacetAbi = "qflow.exact-model@1";
 
 /**
- * What one installed package can generate, named exactly, for a Host that drives a
+ * What one installed package can generate, named exactly, for a caller that drives a
  * single model without a Build. It carries no Provider choice and no Runtime state;
  * the Host still resolves who fulfils the Capability.
  */
-export type ExactModelHostFacet = HostFacet & {
-  readonly abi: typeof exactModelHostAbi;
+export type ExactModelFacet = Facet & {
+  readonly abi: typeof exactModelFacetAbi;
   /** The exact model names this package declares, in declaration order. */
   readonly offers: readonly string[];
   readonly implementation: { readonly endpoints: readonly ExactModelEndpoint[] };
 };
 
-function createExactModelHostFacet(endpoints: readonly ExactModelEndpoint[]): ExactModelHostFacet {
-  assert(endpoints.length > 0, "an exact model Host facet declares no endpoint");
+function createExactModelFacet(endpoints: readonly ExactModelEndpoint[]): ExactModelFacet {
+  assert(endpoints.length > 0, "an exact model facet declares no endpoint");
   return {
-    abi: exactModelHostAbi,
+    abi: exactModelFacetAbi,
     offers: endpoints.map((item) => item.ports.model),
     implementation: { endpoints },
   };
 }
 
-/** Read every exact model declared by one selected package's Host facets. */
-export function exactModelsFromHostFacets(
-  facets: readonly HostFacet[],
+/** Read every exact model declared by one selected package's exact-model facets. */
+export function exactModelsFromFacets(
+  facets: readonly Facet[],
 ): readonly ExactModelEndpoint[] {
   const found: ExactModelEndpoint[] = [];
   for (const facet of facets) {
-    if (facet.abi !== exactModelHostAbi) continue;
+    if (facet.abi !== exactModelFacetAbi) continue;
     const implementation = facet.implementation as { readonly endpoints?: unknown } | null;
     const declared = implementation === null ? undefined : implementation.endpoints;
-    assert(Array.isArray(declared), `${exactModelHostAbi} facet has an invalid implementation`);
+    assert(Array.isArray(declared), `${exactModelFacetAbi} facet has an invalid implementation`);
     for (const item of declared as readonly unknown[]) {
       const endpoint = item as ExactModelEndpoint | null;
       assert(endpoint !== null && typeof endpoint === "object"
         && typeof endpoint.key === "string" && typeof endpoint.ports?.model === "string",
-        `${exactModelHostAbi} facet declares an invalid exact model`);
+        `${exactModelFacetAbi} facet declares an invalid exact model`);
       found.push(endpoint);
     }
   }
@@ -258,7 +258,7 @@ function sameReference(
 /**
  * Read one exact-model request from its declared assembly graph.
  *
- * This follows only the exact producers published by the model Host facet. It never searches for
+ * This follows only the exact producers published by the exact-model facet. It never searches for
  * object shapes or guesses which upstream record "looks like" a request. Missing media stays a
  * symbolic graph edge; scalar parameters and authored Text remain available before the file exists.
  */
@@ -457,7 +457,7 @@ export function defineExactModelModule<const Key extends string>(
     version: options.module.version,
     dependencies: [
       { module: generationModuleRef },
-      artifactDependency,
+      blobDependency,
       textDependency,
     ],
     types: endpointData.flatMap((item) => [
@@ -494,7 +494,7 @@ export function defineExactModelModule<const Key extends string>(
         inputs: [
           { name: "draft", type: item.draftType },
           { name: "binding", type: binding.type },
-          { name: "artifact", type: artifactTypes.blob },
+          { name: "artifact", type: blobTypes.blob },
         ],
         outputs: [{ name: "draft", type: item.draftType }],
         needs: [],
@@ -568,7 +568,7 @@ export function defineExactModelModule<const Key extends string>(
     module: { ...options.module },
     manifest,
     endpoints: endpoints as Readonly<Record<Key, ExactModelEndpoint>>,
-    hostFacet: createExactModelHostFacet(Object.values(endpoints) as readonly ExactModelEndpoint[]),
+    facet: createExactModelFacet(Object.values(endpoints) as readonly ExactModelEndpoint[]),
     component: {
       validators: endpointData.flatMap((item) => [{
         type: item.requestType,
@@ -714,7 +714,7 @@ export function createExactModelPrimaryGenerationFragment(
     assert(binding !== undefined, `${endpoint.ports.model} has no media port ${item.port}`);
     const inputNames = exactModelMediaInputNames(item.name);
     inputs.push({ name: inputNames.binding, type: binding.type });
-    inputs.push({ name: inputNames.artifact, type: artifactTypes.blob });
+    inputs.push({ name: inputNames.artifact, type: blobTypes.blob });
     const id = `bind:${String(index + 1).padStart(4, "0")}:${item.port}`;
     operations.push({
       id,
@@ -760,7 +760,7 @@ export function createExactModelPrimaryGenerationFragment(
     operations,
     exports: [{
       name: result,
-      type: artifactTypes.blob,
+      type: blobTypes.blob,
       root: operation(`select-primary-${result}`),
     }],
   });

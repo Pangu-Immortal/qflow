@@ -1,7 +1,7 @@
 import {
-  artifactDependency,
-  artifactTypes,
-} from "@qflow/artifact";
+  blobDependency,
+  blobTypes,
+} from "@qflow/blob";
 import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
 
 import { generatedAudioSetSchema, generatedImageSetSchema, generatedVideoSetSchema } from "./schema.js";
@@ -23,7 +23,7 @@ export const generationManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: generationModuleRef.name,
   version: generationModuleRef.version,
-  dependencies: [artifactDependency],
+  dependencies: [blobDependency],
   types: [
     {
       name: generationTypes.audioSet.name,
@@ -40,7 +40,7 @@ export const generationManifest: ModuleManifest = {
     {
       name: generationProducers.primaryAudio.name,
       inputs: [{ name: "set", type: generationTypes.audioSet }],
-      outputs: [{ name: "audio", type: artifactTypes.blob }],
+      outputs: [{ name: "audio", type: blobTypes.blob }],
       needs: [],
     },
     {
@@ -48,7 +48,7 @@ export const generationManifest: ModuleManifest = {
       inputs: [{ name: "set", type: generationTypes.imageSet }],
       outputs: [{
         name: "image",
-        type: artifactTypes.blob,
+        type: blobTypes.blob,
       }],
       needs: [],
     },
@@ -57,7 +57,7 @@ export const generationManifest: ModuleManifest = {
       inputs: [{ name: "set", type: generationTypes.videoSet }],
       outputs: [{
         name: "video",
-        type: artifactTypes.blob,
+        type: blobTypes.blob,
       }],
       needs: [],
     },

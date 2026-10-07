@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { registerTypeValidatorFacets } from "@qflow/component-kit";
-import { MemoryResourceStore } from "@qflow/driver-node";
+import { registerTypeValidatorFacets } from "@qflow/admission";
+import { MemoryResourceStore } from "@qflow/executor";
 import {
   generationComponent,
   generationProducers,
@@ -13,7 +13,7 @@ import {
   verifyGeneratedImageSet,
   verifyGeneratedAudioSet,
 } from "@qflow/generation";
-import { TypeValidatorRegistry } from "@qflow/validation";
+import { TypeValidatorRegistry } from "@qflow/admission";
 
 test("generated media validators bind artifacts and result contents", async () => {
   const store = new MemoryResourceStore();

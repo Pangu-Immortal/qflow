@@ -16,13 +16,13 @@ formats. The service's flat-background MP4 option is a different output treatmen
 ## Prepare the processed clip for its role
 
 ```svml
-<import as="pipeline" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 <import as="whisperx" from="@qflow/whisperx@1"/>
 <import as="semantic" from="@qflow/narrative-temporal@1"/>
 <import as="media" from="@qflow/media@1"/>
 
 <time:Clock id="clock" frame-rate="30"/>
-<pipeline:Normalize id="cutout-media" source={cutout.video} clock={clock}
+<mediaop:Normalize id="cutout-media" source={cutout.video} clock={clock}
   video="primary-moving" audio="default" span-authority="video"/>
 <whisperx:Alignment id="opening-alignment" narrative={story}
   segment={story.segment.opening} media={cutout-media.media}
@@ -50,7 +50,7 @@ For example, this alternative uses the existing program's Timeline and an author
 
 ```svml
 <import as="visual" from="@qflow/visual-track@1"/>
-<pipeline:Normalize id="overlay-media" source={cutout.video} clock={clock}
+<mediaop:Normalize id="overlay-media" source={cutout.video} clock={clock}
   video="primary-moving" audio="none" span-authority="video"/>
 <visual:Track id="overlay" timeline={speech.timeline}>
   <visual:Clip media={overlay-media.media} during={story-time.example}

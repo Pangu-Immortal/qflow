@@ -1,9 +1,9 @@
-import { artifactTypes } from "@qflow/artifact";
-import { sealGenerationPortRequest, sealGenerationRequestDraft, sealGenerationPortTable } from "@qflow/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
-import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/markup";
-import { defineExactModelModule } from "@qflow/model-kit";
-import { textTypes } from "@qflow/text";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sealGenerationPortRequest, sealGenerationRequestDraft, sealGenerationPortTable } from "@qflow/qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/qflow/generation";
+import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/qflow/markup";
+import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { textTypes } from "@qflow/qflow/text";
 
 export const elevenLabsSpeechModuleRef = { name: "@qflow/elevenlabs-speech", version: "1" } as const;
 export const elevenLabsSpeechModels = ["eleven_ttv_v3"] as const;
@@ -77,7 +77,7 @@ const spokenAttributes: readonly SurfaceAttributeVocabulary[] = [
 
 const referencePort: readonly SurfacePortVocabulary[] = [{
   name: "reference",
-  type: artifactTypes.blob,
+  type: blobTypes.blob,
   summary: "The designed voice reference, addressed as `<id>.reference`.",
 }];
 

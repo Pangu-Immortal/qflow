@@ -1,9 +1,9 @@
-import { artifactTypes } from "@qflow/artifact";
-import { sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/generation";
-import type { GenerationMediaPort } from "@qflow/generation";
-import type { StructuredSurfaceHandler } from "@qflow/markup";
-import { createExactModelPrimaryGenerationFragment, exactModelMediaInputNames } from "@qflow/model-kit";
-import { canonicalize } from "@qflow/protocol";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/qflow/generation";
+import type { GenerationMediaPort } from "@qflow/qflow/generation";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { StructuredSurfaceHandler } from "@qflow/qflow/markup";
+import { createExactModelPrimaryGenerationFragment, exactModelMediaInputNames } from "@qflow/qflow/generation/model";
 import { portraitMattingEndpoint as endpoint } from "./index.js";
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -19,9 +19,9 @@ export const decodePortraitMattingSurface: StructuredSurfaceHandler = ({ element
   assert(!element.children.some((item) => item.kind === "element" || item.value.trim()), `${element.name} must be empty`);
   assert(typeof source === "object" && source.kind === "reference", `${element.name}.source must be a video reference`);
   const resolved = resolveReference(source.path);
-  assert(resolved !== undefined && resolved.type.name === artifactTypes.blob.name
-    && resolved.type.module.name === artifactTypes.blob.module.name
-    && resolved.type.module.version === artifactTypes.blob.module.version, `${element.name}.source must be a Blob`);
+  assert(resolved !== undefined && resolved.type.name === blobTypes.blob.name
+    && resolved.type.module.name === blobTypes.blob.module.name
+    && resolved.type.module.version === blobTypes.blob.module.version, `${element.name}.source must be a Blob`);
   if (resolved.record !== undefined) {
     assert(resolved.record.value.kind === "blob" && resolved.record.value.mediaType.startsWith("video/"),
       `${element.name}.source must be video media`);

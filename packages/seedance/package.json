@@ -1,22 +1,26 @@
 {
   "name": "@qflow/seedance",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "qflow": {
     "activation": "./src/activation.ts"
   },
-  "dependencies": {
-    "@qflow/artifact": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/generation": "workspace:*",
-    "@qflow/model-kit": "workspace:*",
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/qflow": "workspace:*",
+    "@qflow/markup": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/text": "workspace:*",
-    "@qflow/markup": "workspace:*"
+    "typescript": "5.9.3"
   }
 }

@@ -1,20 +1,15 @@
-import { artifactTypes } from "@qflow/artifact";
-import { generationPort, sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/generation";
-import type { GenerationMediaPort, GenerationMediaRole, GenerationPortValue } from "@qflow/generation";
+import { blobTypes } from "@qflow/qflow/blob";
+import { generationPort, sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/qflow/generation";
+import type { GenerationMediaPort, GenerationMediaRole, GenerationPortValue } from "@qflow/qflow/generation";
 import {
   createExactModelPrimaryGenerationFragment,
   exactModelMediaInputNames,
   exactModelTextInputName,
-} from "@qflow/model-kit";
-import type { ExactModelEndpoint } from "@qflow/model-kit";
-import type {
-  MarkupAttributeValue,
-  StructuredElement,
-  StructuredSurfaceHandler,
-  SurfaceResolvedReference,
-} from "@qflow/markup";
-import type { CanonicalValue, TypeRef } from "@qflow/protocol";
-import { textTypes, verifyText } from "@qflow/text";
+} from "@qflow/qflow/generation/model";
+import type { ExactModelEndpoint } from "@qflow/qflow/generation/model";
+import type { CanonicalValue, TypeRef } from "@qflow/qflow/protocol";
+import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";
+import { textTypes, verifyText } from "@qflow/qflow/text";
 
 import { pixverseEndpointsByModel } from "./index.js";
 import type { PixverseModel } from "./index.js";
@@ -91,7 +86,7 @@ function media(
   role: GenerationMediaRole,
   resolve: (path: string) => SurfaceResolvedReference | undefined,
 ): SurfaceResolvedReference {
-  const artifact = ref(element, name, artifactTypes.blob, resolve);
+  const artifact = ref(element, name, blobTypes.blob, resolve);
   if (artifact.record !== undefined) {
     assert(artifact.record.value.kind === "blob" && artifact.record.value.mediaType.startsWith(`${role}/`),
       `${element.name}.${name} must reference ${role} media`);

@@ -3,6 +3,17 @@
 Exact Seedance author model module. It owns the request schema and exactly three invocation Surfaces;
 it does not contain service credentials, HTTP code, queues, runtime routing or usage-specific Prompt assembly.
 
+Its implementation imports only the public `@qflow/qflow/*` author and model APIs. The repository keeps
+TypeScript source entry points for joint development; `npm run pack:independent -- packages/seedance`
+builds the owner package into a temporary release directory whose exports and activation point at compiled
+JavaScript. The resulting tarball contains no private Qflow workspace dependency or second copy of the Host.
+The npm version selects those package bytes; Source continues to address the logical Module as
+`@qflow/seedance@1`.
+
+The official Qflow Distribution currently declares this package as a default npm dependency rather
+than embedding its source. A project may explicitly install another compatible version; the ordinary
+project lockfile records the actual selection.
+
 The three model invocation shapes are deliberately separate:
 
 - `TextVideo`: Prompt only; this is the only shape that exposes Web Search.
@@ -10,12 +21,12 @@ The three model invocation shapes are deliberately separate:
 - `ReferenceVideo`: one or more image, video or audio references within the model's port limits.
 
 All three preserve the remote result as one atomic `GeneratedVideoSet`, then expose its first ordered
-member as an ordinary `BlobArtifact`. Their prompt ports consume ordinary `Text`, so a Script projection,
+member as an ordinary `Blob`. Their prompt ports consume ordinary `Text`, so a Script projection,
 generic Text Template or third-party author module can feed them without becoming part of Seedance.
 
 `standard`, `fast`, `mini` and `2.5` select model variants independently of the invocation shape. Duration is
 the author's literal, in whole seconds inside the model's declared range; measure the spoken line first
-with `qflow measure` and write the number here. Nothing in the graph computes it, so a Build plan is
+with `qflow estimate` and write the number here. Nothing in the graph computes it, so a Build plan is
 complete before it starts.
 
 ## Reference audio

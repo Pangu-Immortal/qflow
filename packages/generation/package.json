@@ -5,19 +5,23 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./model": "./src/model.ts"
   },
   "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/artifact": "workspace:*",
-    "@qflow/component-kit": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/blob": "workspace:*",
+    "@qflow/facet": "workspace:*",
+    "@qflow/producer": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/text": "workspace:*"
+    "@qflow/text": "workspace:*",
+    "@qflow/admission": "workspace:*"
   },
   "devDependencies": {
-    "@qflow/driver-node": "workspace:*",
-    "@qflow/validation": "workspace:*"
+    "@qflow/executor": "workspace:*",
+    "@qflow/admission": "workspace:*"
   }
 }

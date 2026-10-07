@@ -1,4 +1,6 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
 
 import {
   decodeMimoVoiceCloneSurface,
@@ -11,17 +13,17 @@ import {
 } from "./index.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: mimoSpeechManifest }],
-  components: [mimoSpeechComponent],
-  hostFacets: [
-    mimoSpeechDefinition.hostFacet,
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[mimoSpeechComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    mimoSpeechDefinition.facet,
+    createMarkupSurfaceFacet({
       module: mimoSpeechModuleRef,
       declaration: mimoSpeechMarkupSurfaces.find((item) => item.name === "voiceDesign")!,
       handler: decodeMimoVoiceDesignSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: mimoSpeechModuleRef,
       declaration: mimoSpeechMarkupSurfaces.find((item) => item.name === "voiceClone")!,
       handler: decodeMimoVoiceCloneSurface,

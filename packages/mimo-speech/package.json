@@ -1,6 +1,6 @@
 {
   "name": "@qflow/mimo-speech",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -10,10 +10,17 @@
   "qflow": {
     "activation": "./src/activation.ts"
   },
-  "dependencies": {
-    "@qflow/artifact": "workspace:*",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/blob": "workspace:*",
     "@qflow/generation": "workspace:*",
-    "@qflow/model-kit": "workspace:*",
+    "@qflow/qflow": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/text": "workspace:*",
     "@qflow/markup": "workspace:*"

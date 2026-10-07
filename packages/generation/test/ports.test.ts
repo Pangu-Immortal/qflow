@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MemoryResourceStore } from "@qflow/driver-node";
+import { MemoryResourceStore } from "@qflow/executor";
 import {
   assertMappingCoversPorts,
   bindGenerationMedia,

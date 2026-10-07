@@ -1,11 +1,11 @@
-import { artifactTypes } from "@qflow/artifact";
-import { sealGraphFragment } from "@qflow/elaborator";
-import { generationProducers } from "@qflow/generation";
-import { imageTransformProducers, imageTransformTypes } from "@qflow/image-transform";
-import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/model-kit";
-import type { ExactModelMediaInput, ExactModelTextInput } from "@qflow/model-kit";
-import type { FragmentOperation } from "@qflow/elaborator";
-import { textTypes } from "@qflow/text";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import { generationProducers } from "@qflow/qflow/generation";
+import { imageTransformProducers, imageTransformTypes } from "@qflow/image-operations";
+import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/qflow/generation/model";
+import type { ExactModelMediaInput, ExactModelTextInput } from "@qflow/qflow/generation/model";
+import type { FragmentOperation } from "@qflow/qflow/author";
+import { textTypes } from "@qflow/qflow/text";
 
 import { gptImageEndpoints } from "./index.js";
 
@@ -49,7 +49,7 @@ export function createGptImageCleanFragment(
     if (binding === undefined) throw new Error(`gpt-image-2 has no media port ${item.port}`);
     const inputNames = exactModelMediaInputNames(item.name);
     inputs.push({ name: inputNames.binding, type: binding.type });
-    inputs.push({ name: inputNames.artifact, type: artifactTypes.blob });
+    inputs.push({ name: inputNames.artifact, type: blobTypes.blob });
     const id = `bind:${String(index + 1).padStart(4, "0")}:${item.port}`;
     operations.push({
       id,
@@ -94,7 +94,7 @@ export function createGptImageCleanFragment(
     operations,
     exports: [{
       name: "image",
-      type: artifactTypes.blob,
+      type: blobTypes.blob,
       root: operation("clean-image"),
     }],
   });

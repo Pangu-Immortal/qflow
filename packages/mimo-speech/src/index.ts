@@ -1,9 +1,9 @@
-import { artifactTypes } from "@qflow/artifact";
-import { sealGenerationPortRequest, sealGenerationRequestDraft, sealGenerationPortTable } from "@qflow/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
-import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/markup";
-import { defineExactModelModule } from "@qflow/model-kit";
-import { textTypes } from "@qflow/text";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sealGenerationPortRequest, sealGenerationRequestDraft, sealGenerationPortTable } from "@qflow/qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/qflow/generation";
+import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/qflow/markup";
+import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { textTypes } from "@qflow/qflow/text";
 
 export const mimoSpeechModuleRef = { name: "@qflow/mimo-speech", version: "1" } as const;
 export const mimoSpeechModels = [
@@ -93,13 +93,13 @@ const spokenAttributes: readonly SurfaceAttributeVocabulary[] = [
 
 const referencePort: readonly SurfacePortVocabulary[] = [{
   name: "reference",
-  type: artifactTypes.blob,
+  type: blobTypes.blob,
   summary: "The designed voice reference, addressed as `<id>.reference`.",
 }];
 
 const audioPort: readonly SurfacePortVocabulary[] = [{
   name: "audio",
-  type: artifactTypes.blob,
+  type: blobTypes.blob,
   summary: "The independent speech, addressed as `<id>.audio`.",
 }];
 
@@ -136,7 +136,7 @@ export const mimoSpeechMarkupSurfaces = [
           kind: "reference",
           required: true,
           summary: "The audio Resource carrying the voice identity to reproduce.",
-          accepts: [artifactTypes.blob],
+          accepts: [blobTypes.blob],
         },
       ],
       ports: audioPort,

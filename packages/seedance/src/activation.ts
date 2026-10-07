@@ -1,4 +1,6 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
 
 import {
   decodeSeedanceFrameVideoSurface,
@@ -12,22 +14,22 @@ import {
 } from "./index.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: seedanceManifest }],
-  components: [seedanceComponent],
-  hostFacets: [
-    seedanceDefinition.hostFacet,
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[seedanceComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    seedanceDefinition.facet,
+    createMarkupSurfaceFacet({
       module: seedanceModuleRef,
     declaration: seedanceMarkupSurfaces.find((item) => item.name === "text-video")!,
       handler: decodeSeedanceTextVideoSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: seedanceModuleRef,
     declaration: seedanceMarkupSurfaces.find((item) => item.name === "frame-video")!,
       handler: decodeSeedanceFrameVideoSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: seedanceModuleRef,
     declaration: seedanceMarkupSurfaces.find((item) => item.name === "reference-video")!,
       handler: decodeSeedanceReferenceVideoSurface,

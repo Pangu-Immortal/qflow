@@ -1,6 +1,6 @@
 {
   "name": "@qflow/gpt-image-kits",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
   },
   "files": ["kits", "README.md"],
   "devDependencies": {
-    "@qflow/svs": "workspace:*",
+    "@qflow/recipe": "workspace:*",
     "@qflow/text": "workspace:*"
   }
 }

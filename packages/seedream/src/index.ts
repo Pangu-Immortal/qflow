@@ -1,9 +1,9 @@
-import { artifactTypes } from "@qflow/artifact";
-import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
-import type { SurfaceAttributeVocabulary } from "@qflow/markup";
-import { defineExactModelModule } from "@qflow/model-kit";
-import { textTypes } from "@qflow/text";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/qflow/generation";
+import type { SurfaceAttributeVocabulary } from "@qflow/qflow/markup";
+import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { textTypes } from "@qflow/qflow/text";
 
 export const seedreamModuleRef = { name: "@qflow/seedream", version: "1" } as const;
 
@@ -94,7 +94,7 @@ const seedreamAttributes: readonly SurfaceAttributeVocabulary[] = [
 
 const seedreamImagePort = {
   name: "image",
-  type: artifactTypes.blob,
+  type: blobTypes.blob,
   summary: "The primary generated image, addressed as `<id>.image`.",
 } as const;
 
@@ -133,7 +133,7 @@ export const seedreamMarkupSurfaces = [{
           kind: "reference",
           required: true,
           summary: "The Artifact supplied as a reference picture, which must carry image media.",
-          accepts: [artifactTypes.blob],
+          accepts: [blobTypes.blob],
         }],
       }],
       ports: [seedreamImagePort],

@@ -11,7 +11,7 @@ import {
   createExactModelPrimaryGenerationFragment,
   defineExactModelModule,
   plannedExactModelRequest,
-} from "@qflow/model-kit";
+} from "@qflow/generation/model";
 import type { BuildState } from "@qflow/protocol";
 import { sealText } from "@qflow/text";
 

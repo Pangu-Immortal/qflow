@@ -1,4 +1,6 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
 import {
   grokImagineComponent,
   grokImagineDefinition,
@@ -9,17 +11,17 @@ import {
 import { decodeGrokImaginePreviewVideoSurface, decodeGrokImagineVideoSurface } from "./surface.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: grokImagineManifest }],
-  components: [grokImagineComponent],
-  hostFacets: [
-    grokImagineDefinition.hostFacet,
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[grokImagineComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    grokImagineDefinition.facet,
+    createMarkupSurfaceFacet({
       module: grokImagineModuleRef,
     declaration: grokImagineMarkupSurfaces.find((item) => item.name === "video")!,
       handler: decodeGrokImagineVideoSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: grokImagineModuleRef,
     declaration: grokImagineMarkupSurfaces.find((item) => item.name === "preview-video")!,
       handler: decodeGrokImaginePreviewVideoSurface,

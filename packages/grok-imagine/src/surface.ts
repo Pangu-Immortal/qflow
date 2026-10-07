@@ -1,20 +1,15 @@
-import { artifactTypes } from "@qflow/artifact";
-import { generationPort, sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/generation";
-import type { GenerationMediaPort, GenerationPortValue } from "@qflow/generation";
+import { blobTypes } from "@qflow/qflow/blob";
+import { generationPort, sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/qflow/generation";
+import type { GenerationMediaPort, GenerationPortValue } from "@qflow/qflow/generation";
 import {
   createExactModelPrimaryGenerationFragment,
   exactModelMediaInputNames,
   exactModelTextInputName,
-} from "@qflow/model-kit";
-import type { ExactModelEndpoint } from "@qflow/model-kit";
-import type {
-  MarkupAttributeValue,
-  StructuredElement,
-  StructuredSurfaceHandler,
-  SurfaceResolvedReference,
-} from "@qflow/markup";
-import type { CanonicalValue, TypeRef } from "@qflow/protocol";
-import { textTypes, verifyText } from "@qflow/text";
+} from "@qflow/qflow/generation/model";
+import type { ExactModelEndpoint } from "@qflow/qflow/generation/model";
+import type { CanonicalValue, TypeRef } from "@qflow/qflow/protocol";
+import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";
+import { textTypes, verifyText } from "@qflow/qflow/text";
 
 import { grokImagineEndpoints } from "./index.js";
 
@@ -84,7 +79,7 @@ function decoder(endpoint: ExactModelEndpoint): StructuredSurfaceHandler {
       assert(localName(child.name) === "Reference", `${element.name} accepts only Reference children`);
       exact(child, ["image"]);
       assert(!child.children.some((item) => item.kind === "element" || item.value.trim()), `${child.name} must be empty`);
-      const image = ref(child, "image", artifactTypes.blob, resolveReference);
+      const image = ref(child, "image", blobTypes.blob, resolveReference);
       if (image.record !== undefined) {
         assert(image.record.value.kind === "blob" && image.record.value.mediaType.startsWith("image/"),
           `${child.name}.image must be image media`);

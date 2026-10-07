@@ -13,7 +13,7 @@ do not narrow this model-owned vocabulary or leak into author source.
 The one physical package exposes two independently importable logical modules:
 
 - `@qflow/gpt-image@1`: the raw exact model;
-- `@qflow/gpt-image/clean@1`: generation followed by the existing explicit image-transform
+- `@qflow/gpt-image/clean@1`: generation followed by an explicit shared image transform
   Program, exporting one cleaned image while retaining both operations in the graph.
 
 Both modules own an `Image` Markup Surface. They use the same author shape, so choosing the clean
@@ -46,8 +46,10 @@ Provider before generation.
 
 `prompt` is an ordinary `Text` graph edge. Every `Reference` is an ordinary image Artifact edge;
 the Surface does not copy runtime media into request metadata. The raw module expands to request
-assembly, generation and primary-image selection. The clean module then adds the official
-`gptImageDenoiseV1` Program and the shared image-transform Need as one further visible operation.
+assembly, generation and primary-image selection. The clean module then adds its package-owned
+`gptImageCleanupProgram` and the shared `Transform` Need as one further visible operation. The
+generic image-operations package owns the Program shape and operation semantics; this package owns
+the selected cleanup recipe.
 
 The Surface implementation belongs to this package. `model-kit` remains responsible only for the
 exact request and Fragment shell; it owns no author-Surface registry or model syntax.

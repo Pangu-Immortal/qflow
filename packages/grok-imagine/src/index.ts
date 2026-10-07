@@ -1,14 +1,9 @@
-import { artifactTypes } from "@qflow/artifact";
-import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
-import type {
-  SurfaceAttributeVocabulary,
-  SurfaceChildVocabulary,
-  SurfacePortVocabulary,
-  SurfaceVocabulary,
-} from "@qflow/markup";
-import { defineExactModelModule } from "@qflow/model-kit";
-import { textTypes } from "@qflow/text";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/qflow/generation";
+import type { SurfaceAttributeVocabulary, SurfaceChildVocabulary, SurfacePortVocabulary, SurfaceVocabulary } from "@qflow/qflow/markup";
+import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { textTypes } from "@qflow/qflow/text";
 
 export const grokImagineModuleRef = { name: "@qflow/grok-imagine", version: "1" } as const;
 export const grokImagineModels = ["grok-imagine-video", "grok-imagine-video-1.5-preview"] as const;
@@ -122,13 +117,13 @@ const grokImagineVideoChildren: readonly SurfaceChildVocabulary[] = [
   { tag: "Reference", cardinality: "many",
     summary: "Attaches one image Artifact the model generates from.",
     attributes: [
-      { name: "image", kind: "reference", required: true, accepts: [artifactTypes.blob],
+      { name: "image", kind: "reference", required: true, accepts: [blobTypes.blob],
         summary: "Selects the image Artifact this reference contributes." },
     ] },
 ];
 
 const grokImagineVideoPortVocabulary: readonly SurfacePortVocabulary[] = [
-  { name: "video", type: artifactTypes.blob,
+  { name: "video", type: blobTypes.blob,
     summary: "The generated video Artifact." },
 ];
 

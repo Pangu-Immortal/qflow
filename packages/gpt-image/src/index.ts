@@ -1,14 +1,14 @@
-import { artifactTypes } from "@qflow/artifact";
+import { blobTypes } from "@qflow/qflow/blob";
 import {
   sealGenerationPortRequest,
   sealGenerationRequestDraft,
   sealGenerationPortTable,
-} from "@qflow/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
-import type { SurfaceAttributeVocabulary, SurfaceChildVocabulary } from "@qflow/markup";
-import { defineExactModelModule } from "@qflow/model-kit";
-import { imageTransformModuleRef, imageTransformTypes } from "@qflow/image-transform";
-import { textTypes } from "@qflow/text";
+} from "@qflow/qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/qflow/generation";
+import type { SurfaceAttributeVocabulary, SurfaceChildVocabulary } from "@qflow/qflow/markup";
+import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { imageOperationsModuleRef, imageTransformTypes } from "@qflow/image-operations";
+import { textTypes } from "@qflow/qflow/text";
 
 export const gptImageModuleRef = { name: "@qflow/gpt-image", version: "1" } as const;
 
@@ -110,7 +110,7 @@ const gptImageChildren: readonly SurfaceChildVocabulary[] = [
   { tag: "Reference", cardinality: "many",
     summary: "Attaches one image Artifact as a reference picture.",
     attributes: [
-      { name: "image", kind: "reference", required: true, accepts: [artifactTypes.blob],
+      { name: "image", kind: "reference", required: true, accepts: [blobTypes.blob],
         summary: "Selects the image Artifact this reference contributes." },
     ] },
 ];
@@ -141,7 +141,7 @@ const gptImageSurfaceDeclaration = {
     children: gptImageChildren,
     ports: [{
       name: "image",
-      type: artifactTypes.blob,
+      type: blobTypes.blob,
       summary: "The primary generated image, addressed as `<id>.image`.",
     }],
     example: gptImageExample,
@@ -172,18 +172,18 @@ export const gptImageCleanMarkupSurfaces = [{
       imageTransformTypes.program,
     ],
     vocabulary: {
-      summary: "Generates one picture with the exact GPT Image 2 model and runs the official denoise Program over it.",
+      summary: "Generates one picture with the exact GPT Image 2 model and runs this package's cleanup Program over it.",
       attributes: gptImageAttributes,
       children: gptImageChildren,
       ports: [{
         name: "image",
-        type: artifactTypes.blob,
+        type: blobTypes.blob,
         summary: "The cleaned image, addressed as `<id>.image`.",
       }],
       example: gptImageExample,
       notes: [
         ...gptImageNotes,
-        "Generation and the image-transform Need stay two visible operations in the graph.",
+        "Generation and the shared Transform Need stay two visible operations in the graph.",
       ],
     },
   }] as const;
@@ -194,10 +194,11 @@ export const gptImageCleanManifest = {
   version: gptImageCleanModuleRef.version,
   dependencies: [
     { module: gptImageModuleRef },
-    { module: imageTransformModuleRef },
+    { module: imageOperationsModuleRef },
   ],
   types: [],
   capabilities: [],
   producers: [],
 };
+export { gptImageCleanupProgram } from "./cleanup-program.js";
 export { createGptImageCleanFragment } from "./fragment.js";

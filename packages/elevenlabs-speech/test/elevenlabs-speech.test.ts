@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { artifactTypes } from "@qflow/artifact";
+import { blobTypes } from "@qflow/blob";
 import { generationTypes } from "@qflow/generation";
 import { parseStructuredElement } from "@qflow/markup";
 import type { SurfaceResolvedReference } from "@qflow/markup";
@@ -49,7 +49,7 @@ test("ElevenLabs Speech declares the exact voice design request shape", () => {
     text: ["A voice sample with enough detail to make the test intent clear."],
     voiceDescription: ["a".repeat(1001)],
   }), /voiceDescription.+1000/u);
-  assert.equal(elevenLabsNodePackage.format, "qflow.node-package@1");
+  assert.equal(elevenLabsNodePackage.format, "qflow.package@1");
   assert.deepEqual(elevenLabsSpeechMarkupSurfaces.map((surface) => surface.name), ["voiceDesign"]);
 });
 
@@ -59,7 +59,7 @@ test("VoiceDesign publishes one reusable voice reference", async () => {
   </eleven:VoiceDesign>`));
   assert.deepEqual(result.components[0]!.outputs, { audio: "host.reference" });
   const exported = result.fragments[0]!.exports.find((item) => item.name === "audio");
-  assert.deepEqual(exported?.type, artifactTypes.blob);
+  assert.deepEqual(exported?.type, blobTypes.blob);
   assert.deepEqual(result.components[0]!.inputs["speech:text"], {
     kind: "record",
     id: "story.segment.opening.speech",

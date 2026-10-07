@@ -1,11 +1,15 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
 import { wanComponent, wanDefinition, wanManifest, wanModuleRef, wanMarkupSurfaces } from "./index.js";
 import { decodeWanImageSurface, decodeWanProImageSurface } from "./surface.js";
-export const qflowPackage = { format: "qflow.node-package@1" as const, modules: [{ manifest: wanManifest }], components: [wanComponent], hostFacets: [
-  wanDefinition.hostFacet,
-  createMarkupSurfaceHostFacet({ module: wanModuleRef,
+export const qflowPackage = { format: "qflow.package@1" as const, modules: [{ manifest: wanManifest }], facets: [
+  createProducerPackageFacet(wanComponent),
+  createAdmissionPackageFacet(wanComponent),
+  wanDefinition.facet,
+  createMarkupSurfaceFacet({ module: wanModuleRef,
     declaration: wanMarkupSurfaces.find((item) => item.name === "image")!, handler: decodeWanImageSurface }),
-  createMarkupSurfaceHostFacet({ module: wanModuleRef,
+  createMarkupSurfaceFacet({ module: wanModuleRef,
     declaration: wanMarkupSurfaces.find((item) => item.name === "pro-image")!, handler: decodeWanProImageSurface }),
 ] };
 export default qflowPackage;

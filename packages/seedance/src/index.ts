@@ -1,14 +1,14 @@
-import { sealGenerationPortTable } from "@qflow/generation";
+import { sealGenerationPortTable } from "@qflow/qflow/generation";
 import type {
   GenerationPortTable,
   GenerationPortValue,
   GenerationRequest,
-} from "@qflow/generation";
-import { artifactTypes } from "@qflow/artifact";
-import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/markup";
-import { defineExactModelModule } from "@qflow/model-kit";
-import { textTypes } from "@qflow/text";
-import type { ResourceId } from "@qflow/protocol";
+} from "@qflow/qflow/generation";
+import { blobTypes } from "@qflow/qflow/blob";
+import type { ResourceId } from "@qflow/qflow/protocol";
+import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/qflow/markup";
+import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { textTypes } from "@qflow/qflow/text";
 import { validateSeedanceInputs } from "./validation.js";
 
 export const seedanceModuleRef = { name: "@qflow/seedance", version: "1" } as const;
@@ -150,7 +150,7 @@ const seedanceCommonAttributes: readonly SurfaceAttributeVocabulary[] = [
     name: "duration",
     kind: "literal",
     required: true,
-    summary: "Sets the length of the video in whole seconds within the model's range; the author's decision, measured beforehand with qflow measure.",
+    summary: "Sets the length of the video in whole seconds within the model's range; the author's decision, estimated beforehand with qflow estimate.",
   },
   {
     name: "resolution",
@@ -182,7 +182,7 @@ const personReferenceAttribute = (name: string, required = false): SurfaceAttrib
 
 const seedanceVideoPort: readonly SurfacePortVocabulary[] = [{
   name: "video",
-  type: artifactTypes.blob,
+  type: blobTypes.blob,
   summary: "The first ordered member of the generated set, addressed as `<id>.video`.",
 }];
 
@@ -242,14 +242,14 @@ export const seedanceMarkupSurfaces = [
           kind: "reference",
           required: true,
           summary: "The image Artifact the generated video opens on.",
-          accepts: [artifactTypes.blob],
+          accepts: [blobTypes.blob],
         },
         {
           name: "last-frame",
           kind: "reference",
           required: false,
           summary: "The image Artifact the generated video closes on.",
-          accepts: [artifactTypes.blob],
+          accepts: [blobTypes.blob],
         },
       ],
       ports: seedanceVideoPort,
@@ -282,21 +282,21 @@ export const seedanceMarkupSurfaces = [
             kind: "reference",
             required: false,
             summary: "The image Artifact this reference contributes to the generation.",
-            accepts: [artifactTypes.blob],
+            accepts: [blobTypes.blob],
           },
           {
             name: "video",
             kind: "reference",
             required: false,
             summary: "The video Artifact this reference contributes to the generation.",
-            accepts: [artifactTypes.blob],
+            accepts: [blobTypes.blob],
           },
           {
             name: "audio",
             kind: "reference",
             required: false,
             summary: "The audio Artifact this reference contributes to the generation.",
-            accepts: [artifactTypes.blob],
+            accepts: [blobTypes.blob],
           },
         ],
       }],

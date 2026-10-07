@@ -1,5 +1,5 @@
-import type { GenerationRequestDraft } from "@qflow/generation";
-import type { BlobRef } from "@qflow/protocol";
+import type { GenerationRequestDraft } from "@qflow/qflow/generation";
+import type { BlobRef } from "@qflow/qflow/protocol";
 
 /** Seedance's reference-audio rule, shared by known imports and request assembly. */
 export function validateSeedanceAudio(artifact: BlobRef, subject = "Seedance reference audio"): void {

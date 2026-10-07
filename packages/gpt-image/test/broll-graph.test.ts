@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
 
-import { artifactManifest, artifactTypes } from "@qflow/artifact";
+import { blobManifest, blobTypes } from "@qflow/blob";
 import {
   createResolvedClosure,
   link,
@@ -10,8 +10,8 @@ import {
   sealCompiledGraph,
   sealRecord,
   start,
-} from "@qflow/core";
-import { elaborateAuthorGraph } from "@qflow/elaborator";
+} from "@qflow/kernel";
+import { elaborateAuthorGraph } from "@qflow/author";
 import {
   generationManifest,
   sealGenerationMediaBinding,
@@ -21,18 +21,18 @@ import {
   createGptImageCleanFragment,
   gptImage2Ports,
   gptImageCleanManifest,
+  gptImageCleanupProgram,
   gptImageEndpoints,
   gptImageManifest,
   sealGptImage2Draft,
 } from "@qflow/gpt-image";
-import { gptImageDenoiseV1, imageTransformManifest, imageTransformTypes } from "@qflow/image-transform";
-import { exactModelMediaInputNames } from "@qflow/model-kit";
+import { imageOperationsManifest, imageTransformTypes } from "@qflow/image-operations";
+import { exactModelMediaInputNames } from "@qflow/generation/model";
 import { mediaManifest } from "@qflow/media";
 import { narrativeManifest } from "@qflow/narrative";
 import { timelineManifest } from "@qflow/timeline";
 import { temporalManifest } from "@qflow/temporal";
 import type { CanonicalValue, ResourceId, ModuleManifest, StoredValue, TypeRef } from "@qflow/protocol";
-import { rasterManifest } from "@qflow/raster";
 import { createProvidedCandidate } from "@qflow/run";
 import {
   createSeedanceAssembledGenerationFragment,
@@ -40,9 +40,8 @@ import {
   seedanceManifest,
   seedancePorts,
 } from "@qflow/seedance";
-import { speechManifest } from "@qflow/speech";
 import { spatialManifest } from "@qflow/spatial";
-import { svsManifest } from "@qflow/svs";
+import { recipeManifest } from "@qflow/recipe";
 import { textManifest } from "@qflow/text";
 
 const image = (name: string) => ({
@@ -54,11 +53,10 @@ const image = (name: string) => ({
 
 function fixture() {
   const manifests: ModuleManifest[] = [
-    artifactManifest,
+    blobManifest,
     textManifest,
     generationManifest,
-    rasterManifest,
-    imageTransformManifest,
+    imageOperationsManifest,
     gptImageManifest,
     gptImageCleanManifest,
     narrativeManifest,
@@ -66,8 +64,7 @@ function fixture() {
     temporalManifest,
     timelineManifest,
     spatialManifest,
-    svsManifest,
-    speechManifest,
+    recipeManifest,
     seedanceManifest,
   ];
   const closure = createResolvedClosure(manifests);
@@ -83,10 +80,10 @@ function fixture() {
     readonly value: StoredValue;
   }> = [];
   const add = (id: string, type: TypeRef, value: StoredValue) => records.push({ id, type, value });
-  add("person", artifactTypes.blob, image("person"));
-  add("product", artifactTypes.blob, image("product"));
+  add("person", blobTypes.blob, image("person"));
+  add("product", blobTypes.blob, image("product"));
   add("cleanup", imageTransformTypes.program, {
-    kind: "inline", value: gptImageDenoiseV1 as unknown as CanonicalValue,
+    kind: "inline", value: gptImageCleanupProgram as unknown as CanonicalValue,
   });
 
   const gptFragments = {
@@ -206,7 +203,7 @@ test("an explicitly selected holding-image Candidate prunes only that branch", (
   const { program, graph } = fixture();
   const candidate = createProvidedCandidate({
     id: "approved-holding",
-    type: artifactTypes.blob,
+    type: blobTypes.blob,
     value: image("approved-holding"),
   });
   const realized = sealCompiledGraph({

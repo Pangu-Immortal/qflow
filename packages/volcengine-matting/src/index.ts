@@ -1,7 +1,7 @@
-import { artifactTypes } from "@qflow/artifact";
-import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/generation";
-import type { GenerationPortValue } from "@qflow/generation";
-import { defineExactModelModule } from "@qflow/model-kit";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/qflow/generation";
+import type { GenerationPortValue } from "@qflow/qflow/generation";
+import { defineExactModelModule } from "@qflow/qflow/generation/model";
 
 export const volcengineMattingModuleRef = { name: "@qflow/volcengine-matting", version: "1" } as const;
 
@@ -33,12 +33,12 @@ export const portraitMattingSurface = {
     summary: "Removes a video's background with Volcengine portrait matting and returns transparent video.",
     attributes: [
       { name: "id", kind: "identifier" as const, required: true, summary: "Names the processed video." },
-      { name: "source", kind: "reference" as const, required: true, accepts: [artifactTypes.blob],
+      { name: "source", kind: "reference" as const, required: true, accepts: [blobTypes.blob],
         summary: "The source video Artifact whose people remain visible." },
       { name: "format", kind: "literal" as const, required: false, values: ["WEBM", "MOV"],
         summary: "Transparent output container; defaults to WEBM." },
     ],
-    ports: [{ name: "video", type: artifactTypes.blob, summary: "The processed video Artifact, before normalization." }],
+    ports: [{ name: "video", type: blobTypes.blob, summary: "The processed video Artifact, before normalization." }],
     example: '<matte:Portrait id="cutout" source={performance.video}/>',
     notes: ["The source determines duration and dimensions. Normalize the output before using it in a track."],
   },

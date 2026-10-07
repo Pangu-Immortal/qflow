@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { parseSvs } from "@qflow/svs";
-import { renderText, sealTextBindings, textTemplateFromSvsRecipes } from "@qflow/text";
+import { parseRecipe } from "@qflow/recipe";
+import { renderText, sealTextBindings, textTemplateFromRecipes } from "@qflow/text";
 
 const cases = [
   { file: "speaker-v1.svs", id: "speaker-v1", bindings: { dialogue: "HOST: Meaning comes first." }, marker: "@audio1 is the speaker's voice-timbre reference" },
@@ -17,8 +17,8 @@ const cases = [
 test("Seedance Kits are finite data programs with distinct rendered semantics", () => {
   for (const item of cases) {
     const source = readFileSync(new URL(`../kits/${item.file}`, import.meta.url), "utf8");
-    const recipes = parseSvs(item.file, source.slice(source.indexOf("<sheet"))).recipes.map((recipe) => recipe.value);
-    const template = textTemplateFromSvsRecipes(recipes, item.id);
+    const recipes = parseRecipe(item.file, source.slice(source.indexOf("<sheet"))).recipes.map((recipe) => recipe.value);
+    const template = textTemplateFromRecipes(recipes, item.id);
     const output = renderText(template, sealTextBindings(item.bindings));
     assert.match(output.value, new RegExp(item.marker, "u"), item.file);
   }
