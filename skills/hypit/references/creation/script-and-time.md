@@ -1,7 +1,7 @@
 # Script and semantic time
 
 Read this when deciding the target wording, pronunciation, performable passages and the meanings
-that picture and sound should follow. It also covers measured delivery and wordless passages.
+that picture and sound should follow. It also covers estimated delivery duration and wordless passages.
 [Script syntax](../production/script-syntax.md) owns the authoring forms;
 [Timing](../production/timing.md) owns their projection into the work.
 
@@ -87,7 +87,7 @@ the whole expression rather than inserting artificial pauses between every lette
 
 Phonetic notation, including IPA, can guide a model that understands it. Script forwards the written
 form literally; it does not interpret IPA or expose a phoneme-control API. The spoken projection also
-feeds measurement and semantic preparation, so choose a representation usable by that production's
+feeds duration estimation and semantic preparation, so choose a representation usable by that production's
 speech path. Any model-specific pronunciation feature belongs to that model's documented inputs.
 Keep a reading aid such as `ess` on the spoken side; prose instructions such as “pronounce this as”
 belong in performance direction when needed, not among the words the Script asks the character to say.
@@ -108,12 +108,12 @@ belong in performance direction when needed, not among the words the Script asks
 Each pair applies to that occurrence. Carry the chosen spoken form into every occurrence of the
 name, including other Segments, so separately generated performances receive the same direction.
 The right-hand wording reaches the model through the Segment's `.dialogue`; Caption keeps the
-display spelling. Settle these readings before measuring the Script and requesting its performance.
+display spelling. Settle these readings before estimating the Script's duration and requesting its performance.
 
 The same distinction helps Chinese copy express numbers and names clearly. For example,
 `今年<2026|二零二六>年` displays the year compactly while specifying how it is said;
 `只要<¥19.9|十九块九>` chooses a conversational price reading. Choose the spoken form for this
-sentence's meaning and delivery. Measuring the Segment with `--language zh` then uses that spoken
+sentence's meaning and delivery. Estimating the Segment with `--language zh` then uses that spoken
 wording, including the syllables hidden behind its compact numeric display. Caption retains the
 authored simplified or traditional characters; transcription supplies timing rather than rewriting
 the displayed Script.
@@ -121,7 +121,7 @@ the displayed Script.
 ## Choose performable passages
 
 Supply the Segment's `.dialogue` to the speaking prompt; it includes Role labels and the chosen
-pronunciation. `.speech` supplies pronunciation without Role labels for measurement or speech-only
+pronunciation. `.speech` supplies pronunciation without Role labels for duration estimation or speech-only
 requests. The Caption view preserves the display wording. These are projections of one Script,
 so revising the words does not require maintaining another copy in a prompt or subtitle file.
 [Script projections](../production/script-syntax.md#use-the-scripts-deliberate-projections) shows the
@@ -175,27 +175,27 @@ Instant, optionally with an explicit offset, then pass the result to the compone
 trigger and its entrance duration are different choices: `at={story-time.answer}` locates the
 answer; ten frames can give its arrival a particular character.
 
-## Measure before choosing durations
+## Estimate before choosing durations
 
 For a new or revised A-roll performance, choose time from the target's words, delivery, and action.
 The reference timeline remains useful for understanding rhythm and relationships; the new performance
 establishes their actual timing. Even unchanged words may take a different amount of time with a new
 speaker or delivery.
 
-`qflow measure` is the creation-time command for `@qflow/estimate`. It counts pronunciation units and
+`qflow estimate` is the creation-time command for `@qflow/speech-estimate`. It counts pronunciation units and
 estimates how many seconds they need at the chosen language and pace, using local computation:
 
 ```bash
-qflow measure path/to/source.svml --segment opening --language en --pace normal
-qflow measure --text "You expect me to type every coffee?" --language en --pace normal --rounding ceil
-qflow measure path/to/source.svml --segment opening --language zh --pace fast --rounding round
+qflow estimate path/to/source.svml --segment opening --language en --pace normal
+qflow estimate --text "You expect me to type every coffee?" --language en --pace normal --rounding ceil
+qflow estimate path/to/source.svml --segment opening --language zh --pace fast --rounding round
 ```
 
 Choose `--pace slow|normal|fast` from the intended delivery: conversational explanation may suit
 `normal`, while brisk, tightly cut social delivery often suits `fast`. The CLI prints the actual
 units-per-second rate; `--rate` lets you choose it directly. Mandarin counts Han characters as
 approximate syllables and embedded English by syllable; English counts syllables rather than words.
-Set `--language zh` for Chinese copy, including copy with English product names, and measure the
+Set `--language zh` for Chinese copy, including copy with English product names, and estimate from the
 pronunciation side of Dual Text with `--segment`.
 
 The density includes ordinary phrasing pauses. `--padding` reserves additional time for an intended
@@ -213,11 +213,11 @@ and meaningful padding with the production's direction so later Segments follow 
 Let that estimate inform the shape of the passage. A short line may belong with the next response,
 benefit from a little fuller wording, or leave room for a meaningful action. A long passage may read
 better with tighter copy or a split at a natural change of thought. Preserve the intended meaning and
-energy while finding a performable shape, then measure the affected wording again. The
+energy while finding a performable shape, then estimate the affected wording again. The
 [Generated video direction](../playbooks/craft/video-direction.md#size-the-request-around-the-delivery)
 applies this judgment to the selected model's request range.
 
-Measurement balances the intended speaking density and sizes generation; it supplies no timeline
+The estimate balances the intended speaking density and sizes generation; it supplies no timeline
 anchors. Once a generated clip is accepted, normalize it, align its actual speech to its Script Segment,
 construct an equal-length Timeline Window and map the alignment through that domain/Window relation. The literal duration answers how much
 media to request. The aligned words answer where Caption, B-roll, MG, and Effects belong in that actual
@@ -225,7 +225,7 @@ media. Alignment measures real word positions inside that media envelope; it doe
 estimated distribution of words.
 
 For a wordless Segment, choose the requested duration from the action, music or visual rhythm.
-Speech-rate measurement has no role there; the resulting media still determines its Segment span.
+Speech-rate estimation has no role there; the resulting media still determines its Segment span.
 
 ## Bind meaning to Script identities
 

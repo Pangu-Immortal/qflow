@@ -186,14 +186,14 @@ Frame. Choose the crop and motion together for the intended coverage.
 
 [Visual Track](visual-clips.md) places explicit footage through Clips. A scene that
 coordinates the viewport with surrounding graphics can own the shared motion in its
-[component program](component-visuals.md#compose-video-and-graphics-in-one-browser-program).
+[component program](component-visuals.md#compose-video-and-graphics-in-one-html-visual).
 
 [Visual Track](visual-clips.md) owns its content and source-time inputs. Read its installed
 vocabulary for complete appearance and motion fields.
 
-## Carry measured regions through an explicit peer track
+## Carry measured regions through explicit peer evidence
 
-Region Track contains already prepared boxes indexed by Timeline Frame. It is not part of static
+Region Evidence contains already prepared boxes indexed by Timeline Frame. It is not part of static
 Spatial geometry. Its Recipe uses normalized `[x, y, width, height]` boxes and `null` for absent
 measurements, resolved inside an explicit Frame. Source-local measurements need their actual time
 placement and the source-to-picture mapping produced by the real presentation before they can

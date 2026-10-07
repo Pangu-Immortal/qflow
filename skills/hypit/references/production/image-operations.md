@@ -1,7 +1,7 @@
 # Preparing generated images
 
-Read this when a generated or supplied image needs to be combined, corrected, resized, cropped, or
-cut out before it becomes a model reference or a Track item. [Image direction](../playbooks/craft/image-direction.md)
+Read this when a generated or supplied image needs to be combined, corrected, resized or cropped
+before it becomes a model reference or a Track item. [Image direction](../playbooks/craft/image-direction.md)
 owns what the image should communicate; [spatial layout](spatial.md) owns Canvas, Frame and fit.
 
 An image operation publishes another ordinary image Output. The resulting image can feed Seedance,
@@ -18,7 +18,7 @@ Declare the Canvas and every rectangular destination explicitly:
 
 ```svml
 <import as="space" from="@qflow/spatial@1"/>
-<import as="compose" from="@qflow/image-compose@1"/>
+<import as="image" from="@qflow/image-operations@1"/>
 
 <space:Canvas id="comparison-canvas" width="2048" height="1024"/>
 <space:Frame id="before-panel" within={comparison-canvas.bounds}
@@ -26,10 +26,10 @@ Declare the Canvas and every rectangular destination explicitly:
 <space:Frame id="after-panel" within={comparison-canvas.bounds}
   left="50%" top="0%" right="100%" bottom="100%"/>
 
-<compose:Image id="comparison" canvas={comparison-canvas.canvas} background="#EEEAE2FF">
-  <compose:Layer source={before.image} frame={before-panel} fit="contain"/>
-  <compose:Layer source={after.image} frame={after-panel} fit="contain"/>
-</compose:Image>
+<image:Compose id="comparison" canvas={comparison-canvas.canvas} background="#EEEAE2FF">
+  <image:Layer source={before.image} frame={before-panel} fit="contain"/>
+  <image:Layer source={after.image} frame={after-panel} fit="contain"/>
+</image:Compose>
 ```
 
 Child order is paint order. Each Layer keeps the source image, destination Frame, fit and optional
@@ -47,7 +47,7 @@ must remain independently timed, clipped, moved or revised in the video, keep th
 Image Transform separates the ordered correction choices from the image they act on:
 
 ```svml
-<import as="image" from="@qflow/image-transform@1"/>
+<import as="image" from="@qflow/image-operations@1"/>
 
 <image:Program id="delivery-crop">
   <image:Crop x="0" y="0" width="1080" height="1920" unit="pixel"/>
@@ -60,36 +60,12 @@ Image Transform separates the ordered correction choices from the image they act
 
 Operations run in written order. A Program is authored data and produces no pixels until a
 Transform applies it. Crop, resize, rotate, flip, denoise, color, sharpen, blur, alpha handling and
-encoding are available; use `qflow vocabulary @qflow/image-transform --tag Program` for their
+encoding are available; use `qflow vocabulary @qflow/image-operations --tag Program` for their
 installed fields and limits. `{prepared-shot.image}` is the transformed image.
 
 Use correction to express a known production choice. A prompt problem remains owned by the image
 direction and its Prompt Kit; a different composition remains owned by the shot or reference
 relationship.
-
-## Remove a background
-
-Use Background Removal when the next composition needs a still subject without its original field:
-
-```svml
-<import as="remove" from="@qflow/background-removal@1"/>
-
-<remove:Background id="presenter-cutout" source={portrait.image}/>
-```
-
-`{presenter-cutout.image}` is an image with transparency, ready for a Visual Clip, image composition,
-or another compatible consumer. The Runtime Profile chooses the Endpoint that performs the removal;
-the Source records only the requested visual relationship.
-
-The installed `@qflow/background-removal` operation accepts one image and returns one image.
-Its package README names the implemented Provider binding; `qflow plan` with the selected Runtime
-checks which Endpoint will serve this Source. A service advertising background removal still needs
-a matching Provider capability in the installed Distribution.
-
-For a speaking video cutout, the moving silhouette must be removed across the clip. This image
-operation supplies neither video matting nor a moving mask. [Moving-media preparation](media.md#keep-original-and-processed-material-explicit)
-explains video matting, operation order, retained originals and the processed picture's subsequent use.
-[Spatial layout](spatial.md#shape-the-outer-frame) owns geometric clips such as circular insets.
 
 ## Keep operation and presentation distinct
 

@@ -78,7 +78,7 @@ location remains an open question.
 
 Use whichever view can answer the current question:
 
-- Once frame positions are known, use [snapshot](snapshots.md) to inspect the existing programme
+- Once frame positions are known, use [snapshot](snapshots.md) to inspect the existing `HtmlProgram`
   directly. Select individual states or continuous frames; keep the surrounding handoffs visible.
   The locations can come from semantic events, the playhead or authored clock time.
 - On an encoded Result, focused media operations such as frames, cut, and tile can expose exact

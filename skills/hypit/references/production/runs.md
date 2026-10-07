@@ -16,7 +16,7 @@ One Run uses these author-facing declarations:
 | Declaration | Role |
 | --- | --- |
 | `<author source="./main.svml"/>` | Select the Run's one Author entry. |
-| `<import as="media" from="@qflow/media-pipeline@1"/>` | Make one installed Run Fragment library available. |
+| `<import as="media" from="@qflow/media-operations@1"/>` | Make one installed Run Fragment library available. |
 | `<target output="final.video"/>` | Demand one public Author Output; several Targets may be declared. |
 | `<file .../>` | Admit one project file as a typed zero-input Candidate. |
 | `<build-record .../>` | Admit one exact public Output from one earlier Build Result. |
@@ -31,7 +31,7 @@ not Run declarations.
 ## Select the Output that the current work needs
 
 ```svrun
-<?svml using="@qflow/run-markup@1"?>
+<?svml using="@qflow/markup/run@1"?>
 <svrun version="1">
   <author source="./production.svml"/>
   <target output="final.video"/>
@@ -60,7 +60,7 @@ The selected graph includes the dependencies needed to complete those Outputs.
 A file can replace a byte-producing Output:
 
 ```svrun
-<file id="supplied-performance" type="@qflow/artifact@1#BlobArtifact"
+<file id="supplied-performance" type="@qflow/blob@1#Blob"
   from="./assets/performance.mp4" media-type="video/mp4"/>
 <satisfy output="performance.video" candidate="supplied-performance"/>
 ```
@@ -73,10 +73,10 @@ matches what should stay; the receiving Type identifies which kind of value fits
 ## Use a Fragment when a Candidate needs computation
 
 A Run Fragment connects computations that produce a Candidate. For example, an authored still image
-can become a timed video through Media Pipeline's ordinary `still-video` Fragment:
+can become a timed video through Media Operations's ordinary `still-video` Fragment:
 
 ```svrun
-<import as="media" from="@qflow/media-pipeline@1"/>
+<import as="media" from="@qflow/media-operations@1"/>
 <fragment id="product-hold" using="media:still-video">
   <input name="duration" value="5"/>
   <input name="clock" from="clock"/>
@@ -86,7 +86,7 @@ can become a timed video through Media Pipeline's ordinary `still-video` Fragmen
 <satisfy output="product-clip.video" candidate="product-hold.video"/>
 ```
 
-Here `product-layout` is an Author value of Type `@qflow/media-pipeline@1#StillVideoLayout`,
+Here `product-layout` is an Author value of Type `@qflow/media-operations@1#StillVideoLayout`,
 containing `{"weights":[1]}`; `product-image` is an authored image Blob. The package README owns the
 Fragment's exact inputs. [Media](media.md#give-a-still-a-duration-when-that-is-its-role) shows the
 simpler `StillVideo` Surface for authoring this directly in the Source.

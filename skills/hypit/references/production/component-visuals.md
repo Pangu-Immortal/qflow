@@ -91,10 +91,10 @@ For an effect that transforms an image, pass that image as an explicit input to 
 preparation. For a local mask, own the mask and content in the same element tree. These relationships
 make the required materials available both in Studio and in a render of any selected interval.
 
-## Compose video and graphics in one browser program
+## Compose video and graphics in one HTML visual
 
 When a scene's video viewport and graphics share motion or layout, one component can draw them
-together. `browserProgram` from `@qflow/qflow/hyperframes` creates a `program` element's payload. Its HTML
+together. `htmlVisual` from `@qflow/qflow/html-program` creates a `program` element's payload. Its HTML
 owns the local structure; CSS supplies layout, stacking, masks, filters and blending; optional
 `setup(root, data)` code returns `render(localFrame)`. This function sets the complete state at that
 frame synchronously. A range render may start in the middle, so compute state from the frame and authored inputs.
@@ -102,13 +102,13 @@ frame synchronously. A range render may start in the middle, so compute state fr
 Prepare stable structure in `setup`: locate elements, construct geometry and retain reusable drawing
 objects there. Paint static procedural textures once their resources are ready.
 Let `render(localFrame)` update the state that changes with time. This supports both
-fast repeated capture and direct seeking. A program is sampled within its Present's lifetime;
+fast repeated capture and direct seeking. An HTML visual is sampled within its Present's lifetime;
 outside it, the renderer may retain the boundary pose. Re-entry and repeated active seeks must
 produce the complete requested state, including when an image became ready since the last call.
 
-Repeated browser-program instances share one document's HTML/SVG ID space even though their CSS
+Repeated `HtmlVisual` instances share one document's HTML/SVG ID space even though their CSS
 is scoped. For SVG masks, gradients or filters, derive each required ID from `root.id` in `setup`
-and update its references together. The installed `@qflow/hyperframes` README owns the browser-program
+and update its references together. The installed `@qflow/html-program` README owns the `HtmlVisual`
 API and resource-loading behavior.
 
 For a depth or material effect, choose the representation that carries its visible behavior:
@@ -125,7 +125,7 @@ as peer Presents. These are ordinary composition choices within the same renderi
 Use ordinary typed children for prepared video, images and exact-font text. A `{{child-id}}` slot in
 the HTML places each direct child exactly once. These children retain their declared resources,
 video sampling and font handling while participating in the program's HTML layout. Extra artifacts
-used by the program belong in its `artifacts` list; `hyperframesResourceUri` supplies their resource
+used by the program belong in its `artifacts` list; `htmlProgramResourceUri` supplies their resource
 URLs. The rendering environment materializes those references.
 
 For time-bearing footage, give the component ordinary normalized media, the absolute Window it needs
@@ -146,6 +146,6 @@ these independently; the Producer receives a Window and an Instant. The installe
 `examples/semantic-composition/packages/responsive-explainer` shows this complete package: video
 moves from full screen to a side viewport while a diagram enters, with Caption available as a peer.
 
-The program format belongs to the renderer package. `qflow.browser-program@1` runs in the
-HyperFrames browser; another renderer implements the formats it supports. Core still schedules
+The HTML visual format belongs to the renderer package. `qflow.html-visual@1` runs in the
+HTML renderer browser; another renderer implements the formats it supports. Core still schedules
 ordinary Needs and has no knowledge of scenes, video windows or browser layout.

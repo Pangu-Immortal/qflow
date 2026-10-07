@@ -12,9 +12,12 @@ and its fit beside the rest of the video.
 ## Decide what is actually new
 
 Fine Caption already covers uniform flowing text with exact fonts, Paint, boxes, karaoke states,
-placement and motion. Different colors, Role styles, cue entrances or head tracking may only require
-Source and Recipe changes. A keyword occupying a separate oversized line, words playing different
-visual roles, or a recurring spatial relationship among speakers can justify a new family directly.
+placement and motion. A uniform treatment, or a treatment selected for a Role or Window, may only
+require Source and Recipe changes. A persistent visual role attached to selected display words does
+not: mark those words with Script attributes and let a project Caption family interpret the role.
+Never put keyword search, matching or content selection in a Recipe. A keyword occupying a separate
+oversized line, words playing different visual roles, or a recurring spatial relationship among
+speakers can justify a new family directly.
 Creating that family is normal video production. Name the family for the visual relationship it
 makes reusable, and name each Style for a particular treatment within it. A project can also own a
 single-use caption composition when that is what the video needs.
@@ -39,8 +42,8 @@ owns that interface decision.
 
 The output remains an ordinary VisualTrack. Its Presents can own trees of text, boxes, images and
 other visual elements. When words and graphics share layout or motion, they can live in the same
-component. [Component visuals](component-visuals.md#compose-video-and-graphics-in-one-browser-program)
-also describes HTML/CSS browser programs with typed media and text children. That drawing freedom
+component. [Component visuals](component-visuals.md#compose-video-and-graphics-in-one-html-visual)
+also describes HTML/CSS HTML visuals with typed media and text children. That drawing freedom
 applies to captions too: give the program the resolved caption schedule and explicit resources,
 and evaluate its state at the requested frame. Keep separately useful overlays as peers.
 
@@ -135,7 +138,7 @@ family handles its own layouts. Each Track is independent, so multiple Tracks ca
 show captions together or use complementary coverage. Mixed-family rendering, if useful, belongs
 to the component that implements it.
 
-If this family supports spatial tracking, take an explicit Region Track and map it into the actual
+If this family supports spatial tracking, take an explicit Region Evidence and map it into the actual
 composition. Define subject matching and absent-region behavior. Detection belongs to the measurement
 step described in [Caption tracking](../playbooks/craft/caption-tracking.md), not to this renderer.
 

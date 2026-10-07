@@ -122,8 +122,8 @@ JavaScript entry. Declare third-party runtime dependencies in `dependencies`. In
 an actual Source example, the public outputs, any companion or asset requirements, and the Qflow
 release used to check it. Inspect the tarball contents with `npm pack --dry-run`.
 
-An executable Author Package develops against `@qflow/qflow/author-kit` and the relevant `@qflow/qflow/*` domain
-subpaths, with `@qflow/qflow` as a development dependency. Its release contains its own code and assets;
+An executable Author Package develops against the narrow `@qflow/qflow/author`, `producer`, `admission`
+and `markup` owners it actually needs, plus relevant domain subpaths, with `@qflow/qflow` as a development dependency. Its release contains its own code and assets;
 the active Qflow Distribution supplies the framework APIs when loading it. Check the package from a
 separate consumer project so local source links do not conceal omitted files or dependencies.
 

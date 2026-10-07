@@ -16,10 +16,10 @@ can contain several people and cuts; several generated Takes can also reuse the 
 the passage is better produced in parts. Choose the shape that lets the intended action and exchange
 remain legible.
 
-Measure the Script to understand speaking density, then leave the time that the intended pause,
+Estimate the Script's duration to understand speaking density, then leave the time that the intended pause,
 reaction and action need. The selected video model's supported request lengths constrain what can be
-generated together without defining the story's scenes. [Script and time](../../creation/script-and-time.md#measure-before-choosing-durations)
-owns measurement, while [generated video direction](../craft/video-direction.md#size-the-request-around-the-delivery)
+generated together without defining the story's scenes. [Script and time](../../creation/script-and-time.md#estimate-before-choosing-durations)
+owns estimation, while [generated video direction](../craft/video-direction.md#size-the-request-around-the-delivery)
 owns how the selected model's request range informs the performable passage.
 
 ## Establish the story's useful camera views

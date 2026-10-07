@@ -128,7 +128,7 @@ retains an authored unit; it does not convert percentages to pixels.
 
 A Style can own its controls independently of the Track that consumes it. The Track declares
 `{ name: "style", companion: true }`; the Style's package contributes
-`createStudioCompanionHostFacet({ parameters: [{ id, match: { module, surface }, bindings, inspector }] })`.
+`createStudioCompanionFacet({ parameters: [{ id, match: { module, surface }, bindings, inspector }] })`.
 Its field names are local to that Style. Studio follows the reference and combines those fields
 with the Use's time controls. This works for a new project motion Style as well as a familiar
 framed presentation. Shared Style edits continue to affect its other Uses.
@@ -166,19 +166,20 @@ all through normal compilation. A separate offset remains a separate local decis
 ## Load it with the project package
 
 Keep the Companion separate from the component's Producers. External packages import
-`@qflow/qflow/studio-adapter` and relevant public `@qflow/qflow/*` APIs, with the Distribution as a
-development dependency. Add `createStudioTrackCompanionHostFacet(companions)` to the existing
-activation's `hostFacets`, retaining its author and producer contributions. Ship the compiled
+`@qflow/qflow/studio-companion` and relevant public `@qflow/qflow/*` APIs, with the Distribution as a
+development dependency. Add `createStudioTrackCompanionFacet(companions)` to the existing
+activation's `facets`, retaining its author and producer contributions. Ship the compiled
 Companion through the package's normal activation entry.
 
 The Source-selected package activates its Companion. Restart Studio after changing package code
 or activation. Ordinary Source and Recipe edits recompile within the current session.
 
-Use the installed `packages/studio-adapter/README.md` for the complete minimal Companion and
-activation example, `packages/studio/INSPECTOR.md` for field declarations, and
-`packages/temporal-markup/EDITING.md` for exact time-form behavior. These are package references
-inside the installed Distribution. Ranking, Caption Fine and Visual Track Companions demonstrate
-persistent events, Cue content with Style Uses, and ordinary visual Clip occurrences respectively.
+Use the installed `@qflow/studio-companion` package README for the complete minimal Companion and
+activation example. The Studio and Temporal package documentation own field declarations and exact
+time-form behavior. Caption Fine and Visual Track are default examples of Cue content with Style
+Uses and ordinary visual Clip occurrences. Ranking demonstrates persistent events only when that
+optional package has been deliberately selected and installed by the project; it is not part of the
+default Distribution.
 
 Try the component in its actual Run: select a meaningful picture part, inspect the corresponding
 timeline entity, change an exposed value and inspect the owning Source and resulting picture.

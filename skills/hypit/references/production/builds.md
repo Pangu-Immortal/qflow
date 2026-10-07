@@ -270,9 +270,8 @@ current Run. `get` exports one named Output to one explicit destination:
 - a Resource becomes one streamed file;
 - a Composite becomes a directory containing `value.json` and its referenced Resources.
 
-The destination remains a user-facing export. The original Result stays in the project's selected
-repository. The default filesystem repository lives under the project; `qflow.results.json` may
-select another adapter such as S3 without changing these commands or the Run.
+The destination remains a user-facing export. The original Result stays in the project's
+`.qflow/results` directory on the machine running Qflow.
 
 Give useful Results presentation metadata when it helps people and Studio find them:
 
@@ -286,22 +285,13 @@ The title, note, and highlights live in that Result manifest. They do not rename
 or create a project-wide history index. Reuse still names the exact Build id and Output through the
 Run mechanism in `authoring.md`.
 
-## Select the Result repository deliberately
+## Keep Results with the project
 
-Result storage belongs to the video project. The official default is the filesystem repository at
-`.qflow/results`. An explicit `qflow.results.json` selects an adapter with the envelope
-`format: "qflow.build-results@1"`, `use` and adapter-owned `config`. Read the installed
-`@qflow/build-result-fs` README for a custom filesystem path, or `@qflow/build-result-s3` for bucket,
-prefix, deployment options and its credential setup. `qflow.results.json` owns Result storage;
-the Runtime Profile owns execution, and the S3 adapter owns its credentials.
+Result storage belongs to the video project at `.qflow/results`. Result listing, export, history and
+Studio's finished library all read that directory. Moving or archiving completed Results is ordinary
+project/file management performed after a Build; it is not a live Runtime repository choice.
 
-`qflow paths` locates the project; `qflow doctor` checks its selected repository, even without a
-Runtime Profile. Result listing, export, history and Studio's finished library read that repository.
-If expected Results are absent, first check the selected project and Result repository.
-
-A submitted Build retains the repository destination captured at submission. Changing the project
-selection while it runs does not redirect its eventual Result. Use the original destination to
-find that Result; changing a selection does not migrate earlier history. Preserve any Result that
+A submitted Build retains its exact project Result directory. Preserve any Result that
 still supplies a Run Candidate: exported files are optional copies, and explicit reuse may still
 reference Resources in the original Result.
 

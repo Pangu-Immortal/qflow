@@ -14,7 +14,7 @@ With the named inputs already declared:
 
 ```svml
 <import as="film" from="@qflow/film@1"/>
-<import as="render" from="@qflow/render-hyperframes@1"/>
+<import as="html" from="@qflow/html-video@1"/>
 
 <film:Film id="main" canvas={canvas.canvas} timeline={speech.timeline}
   appearance={look.film.main}>
@@ -24,7 +24,7 @@ With the named inputs already declared:
   <film:Track source={captions.visual}/>
   <film:Track source={music.audio}/>
 </film:Film>
-<render:Video id="final" composition={main.composition} timeline={speech.timeline}/>
+<html:Video id="final" composition={main.composition} timeline={speech.timeline}/>
 ```
 
 An example Film Recipe is `film.main { background: #18212A; }`. Canvas supplies the picture dimensions;
@@ -60,7 +60,7 @@ explicit end and pass it to the components, Film and Render:
 <film:Film id="main" canvas={canvas.canvas} timeline={animation.timeline} appearance={look.film.main}>
   <film:Track source={conversation.visual}/>
 </film:Film>
-<render:Video id="final" composition={main.composition} timeline={animation.timeline}/>
+<html:Video id="final" composition={main.composition} timeline={animation.timeline}/>
 ```
 
 The example assumes the Canvas, font, Film Recipe and project package are declared. Timeline's `end`
@@ -78,7 +78,7 @@ code-only composition, including scrolling and arbitrary message arrivals.
 ## Choose a render interval in frames
 
 ```svml
-<render:Video id="detail" composition={main.composition} timeline={speech.timeline}
+<html:Video id="detail" composition={main.composition} timeline={speech.timeline}
   start-frame="240" end-frame-exclusive="360"/>
 ```
 
@@ -99,7 +99,7 @@ explains choosing the reuse boundary.
 
 ## Execution and capacity
 
-HyperFrames compiles the selected composition and renders its picture. Timeline audio is rendered
+The HTML program compiler lowers the selected Composition, and the selected rasterization Provider produces its picture. Timeline audio is prepared
 from the included AudioTracks, then picture and sound are muxed into the delivered file. A Runtime
 can bind these capabilities to different compatible Endpoints.
 
@@ -107,8 +107,8 @@ Before the first local render, or when browser startup reports a missing executa
 [browser preparation](../environment/local-tools.md#prepare-the-local-rendering-browser).
 That selected Provider owns browser installation and download configuration.
 
-The local HyperFrames Provider supports range requests and can capture different parts of one
-render with several browser workers. Browser selection, download settings and worker capacity
+The local HTML Provider supports range requests and can capture different parts of one
+program with several browser workers. Browser selection, download settings and worker capacity
 belong to that Provider's Profile configuration. [Runtime profiles](../environment/profile.md)
 and the selected Provider's README own those choices; the Source retains the same render declaration.
 Another Provider declares the request forms its deployment supports.
@@ -119,7 +119,7 @@ preparation and final encoding contribute separately. Reusing media through the 
 not preserve a previous render's temporary preparation.
 
 For a local composition change, use [snapshot](snapshots.md) first to inspect the changed
-relationship and its handoffs in the current Studio programme. Keep accepted material selected in
+relationship and its handoffs in Studio's current `HtmlProgram`. Keep accepted material selected in
 the Run. Range rendering supplies an encoded clip when that is needed; render the complete
 deliverable when the composition is ready.
 While rendering, communicate the current phase and meaningful progress. The Provider reports

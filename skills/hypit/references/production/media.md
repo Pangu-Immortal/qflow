@@ -32,7 +32,7 @@ the local domain with an equal-length Timeline Window. Neither operation changes
 
 ## Files and generated Outputs
 
-File declarations publish a **BlobArtifact**, a reference to the file's bytes, under their own id:
+File declarations publish a **Blob**, a reference to the file's bytes, under their own id:
 
 ```svml
 <import as="asset" from="@qflow/media@1"/>
@@ -42,7 +42,7 @@ File declarations publish a **BlobArtifact**, a reference to the file's bytes, u
 <asset:Audio id="music" src="./assets/music.wav"/>
 ```
 
-Use `{product}`, `{performance}` and `{music}` as inputs that accept these BlobArtifacts. A model
+Use `{product}`, `{performance}` and `{music}` as inputs that accept these Blobs. A model
 Surface can publish the same kind of value under an output path, such as `{portrait.image}` or
 `{opening.video}`. The package vocabulary gives that path. File paths are relative to their Source;
 [project setup](../creation/project-files.md#establish-the-project-boundary) explains the declared project boundaries.
@@ -82,12 +82,12 @@ so their lengths and later playback can be combined precisely.
 The following excerpt prepares a performance and an independent soundtrack:
 
 ```svml
-<import as="pipeline" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 
 <time:Clock id="clock" frame-rate="30"/>
-<pipeline:Normalize id="performance-media" source={performance} clock={clock}
+<mediaop:Normalize id="performance-media" source={performance} clock={clock}
   video="primary-moving" audio="default" span-authority="video"/>
-<pipeline:Normalize id="music-media" source={music} clock={clock}
+<mediaop:Normalize id="music-media" source={music} clock={clock}
   video="none" audio="default" span-authority="audio"/>
 ```
 
@@ -100,7 +100,7 @@ across Takes that will join one program.
 
 `primary-moving` excludes attached cover art. The default audio selection uses the default or
 unambiguous audio stream; select an explicit stream when the container has several intended choices.
-`qflow vocabulary @qflow/media-pipeline --tag Normalize` gives the supported selectors.
+`qflow vocabulary @qflow/media-operations --tag Normalize` gives the supported selectors.
 
 Normalization inspects the bytes and produces `{performance-media.media}`: a SynchronizedMedia value
 with an exact local frame count, optional picture and optional audio on the chosen Clock. Audio is
@@ -151,14 +151,14 @@ A still B-roll Clip already occupies an authored Window. To make one or several 
 time-bearing clip, use StillVideo:
 
 ```svml
-<import as="media" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 
-<media:StillVideo id="opening-still" source={product} duration="6" clock={clock}/>
-<pipeline:Normalize id="opening-media" source={opening-still.video}
+<mediaop:StillVideo id="opening-still" source={product} duration="6s" clock={clock}/>
+<mediaop:Normalize id="opening-media" source={opening-still.video}
   video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 ```
 
-StillVideo produces a video-only BlobArtifact. Multiple `media:Still` children divide the authored
+StillVideo produces a video-only Blob. Multiple `media:Still` children divide the authored
 duration by their optional weights. Normalization then makes that clip usable as prepared moving
 media. Choose it when one or more held images need to become a time-bearing video Artifact; its role
 is assigned by the downstream Source relationships just like any other video.
@@ -166,24 +166,24 @@ is assigned by the downstream Source relationships just like any other video.
 ## Edit bytes at an explicit point in the graph
 
 ```svml
-<media:Transform id="edited" source={performance-media.media}>
-  <media:Trim tail="0.25s"/>
-  <media:Retime rate="1.05"/>
-</media:Transform>
-<media:ExtractAudio id="voice-reference" source={edited.video} audio="default"/>
-<media:ExtractFrame id="frame-reference" source={edited.video}
+<mediaop:Transform id="edited" source={performance-media.media}>
+  <mediaop:Trim tail="0.25s"/>
+  <mediaop:Retime rate="1.05"/>
+</mediaop:Transform>
+<mediaop:ExtractAudio id="voice-reference" source={edited.video} audio="default"/>
+<mediaop:ExtractFrame id="frame-reference" source={edited.video}
   video="primary-moving" at="last"/>
 ```
 
-Transform applies its operations in order. These Outputs are BlobArtifacts; normalize an edited
+Transform applies its operations in order. These Outputs are Blobs; normalize an edited
 clip again when feeding it into a prepared-media input, and realign the edited performance when its
 timing changed. Extracted audio or a frame can directly feed a compatible model reference port.
 `ExtractFrame` also accepts `first`, `frame:<index>` and `time:<seconds>`.
 
 Use graph operations for repeatable preparation belonging to the production. `qflow media` commands
-are useful for inspection and deliberately exported evidence. Image geometry changes, compositing
-and cutouts have separate installed vocabulary in `@qflow/image-transform`, `@qflow/image-compose`
-and `@qflow/background-removal`; select the operation that matches the asset's intended use.
+are useful for inspection and deliberately exported evidence. Image geometry changes and compositing
+have one installed vocabulary in `@qflow/image-operations`; select
+the operation that matches the asset's intended use.
 
 ## Keep original and processed material explicit
 
@@ -202,8 +202,8 @@ For a moving portrait, the installed `@qflow/volcengine-matting` package exposes
 transparent formats and current Provider support. Existing transparent material can enter Normalize
 directly. Removing a still reference's background does not establish transparency in generated video.
 
-Choose an operation for the material it actually accepts: [image background removal](image-operations.md#remove-a-background)
-produces a still cutout; a moving silhouette needs a video matte or suitable keying operation.
+Choose an operation for the material it actually accepts: a moving silhouette needs a video matte
+or suitable keying operation; deterministic Image Operations do not silently turn it into one.
 [Video direction](../playbooks/craft/video-direction.md#prepare-footage-for-subject-isolation) explains
 preparing and judging footage for that use. A fixed flattened arrangement of still images can use
 [Image Compose](image-operations.md#flatten-a-fixed-still-image-arrangement) when that is the desired output.

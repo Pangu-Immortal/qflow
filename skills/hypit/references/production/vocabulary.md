@@ -19,7 +19,7 @@ Query the likely package owners:
 ```bash
 qflow vocabulary
 qflow vocabulary @qflow/caption-fine
-qflow vocabulary @qflow/media-pipeline --tag StillVideo
+qflow vocabulary @qflow/media-operations --tag StillVideo
 qflow vocabulary --visual text
 ```
 
@@ -79,12 +79,13 @@ Keep the boundary useful:
 - Runtime Profiles own external execution and credentials;
 - Provider packages implement media tools and external services.
 
-Read the installed `@qflow/qflow/author-kit` README for the public package boundary and a relevant component
+Read the installed `@qflow/qflow/producer`, `admission`, `author` and `markup` READMEs for the public package boundaries and a relevant component
 for an implementation example. Give the new package its own Module identity and use the project
-owner's scope; the selected Distribution owns the reserved `@qflow/*` namespace.
+owner's scope; `@qflow/*` is the Qflow project's publishing namespace, not a scope for project packages.
 
-TypeScript imports use public SDK paths such as `@qflow/qflow/author-kit`, `@qflow/qflow/composition`,
-`@qflow/qflow/text`, `@qflow/qflow/caption` or `@qflow/qflow/studio-adapter`. Source imports instead name logical Modules,
+TypeScript imports use public SDK paths such as `@qflow/qflow/author`, `@qflow/qflow/producer`,
+`@qflow/qflow/admission`, `@qflow/qflow/markup`, `@qflow/qflow/composition`,
+`@qflow/qflow/text`, `@qflow/qflow/caption` or `@qflow/qflow/studio-companion`. Source imports instead name logical Modules,
 such as `@qflow/caption@1`. When learning from installed official source, translate its internal
 workspace imports to the corresponding public SDK paths in the project package.
 
@@ -108,8 +109,9 @@ with a drawing example. [System relationships](system.md) places it in the compl
 
 The project's package manager installs and versions components. Qflow loads only packages selected
 by Source or Run imports and their declared dependencies. Project packages resolve from the project;
-reserved `@qflow/*` packages come from the selected Distribution. It does not scan the dependency
-tree for possible components.
+exact packages embedded in the selected Distribution come from that Distribution, while independently
+published packages—including `@qflow/*` packages—follow ordinary project-first package resolution.
+Qflow does not scan the dependency tree for possible components.
 
 Keep a new component project-local while it serves this work. If its owner later wants to use it
 across projects, send a versioned tarball or publish an npm/private-registry release and pin it in the

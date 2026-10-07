@@ -27,7 +27,7 @@ different one. Reuse an existing session when it serves the intended project and
 
 The startup output identifies the project, absolute Run path, Runtime Profile and selection source.
 An explicit `--runtime` applies to this session; the project's default comes from `.qflow/runtime`.
-When launching from another directory, use `--workspace` to select the project and supply the Run
+When launching from another directory, use `--project` to select the project and supply the Run
 path from the current directory, as shown in [project boundaries](../creation/project-files.md#establish-the-project-boundary).
 
 Studio watches the Run and its loaded Author/Recipe Sources and recompiles them after changes.
@@ -112,7 +112,7 @@ pass, read the latest file. [Composition review](review.md) explains the judgmen
 ## Review before export
 
 For visual inspection, use [snapshot](snapshots.md) on this session first. It reads the current
-compiled programme and selected resources, captures exact original frames, and writes PNGs with
+compiled `HtmlProgram` and selected resources, captures exact original frames, and writes PNGs with
 optional grids. Studio remains the interactive view for playback, sound and editing.
 
 
@@ -159,7 +159,7 @@ include when the user wants to continue editing on another machine.
 | View | What it shows and what it can change |
 | --- | --- |
 | Source | The exact Run, Author and imported Source/Recipe files. Select a file and use Edit source; changes save automatically, and Cmd/Ctrl+S saves immediately. Check save/error state. This is not a project filesystem browser. |
-| Preview | The selected Film composition rendered by HyperFrames in the browser. Play or seek with the transport or timeline. Selecting a component-declared visual part selects its corresponding timeline entity; adjust its exposed position in the Inspector. |
+| Preview | The selected Film composition evaluated from its compiled `HtmlProgram` in the browser. Play or seek with the transport or timeline. Selecting a component-declared visual part selects its corresponding timeline entity; adjust its exposed position in the Inspector. |
 | Timeline | Semantic Segments, Selections and Moments, plus the component-projected Track entities and their visible intervals, materials or event lanes. A rectangle may describe occupancy, activation or persistent visibility; read the component's meaning. |
 | Inspector | With nothing selected, project, Canvas, time and Run facts. For a selected entity, its declared read-only facts and adjustable fields, organized under Where, When and How where applicable. |
 | Tasks | One card per Build, grouped into ongoing and finished. Active status and progress come from the selected Runtime; completed, failed and cancelled Builds come from project Results. Cards retain the source Run, times and any failure or attention reason. |

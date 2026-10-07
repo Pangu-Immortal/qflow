@@ -122,7 +122,7 @@ in its code. Independence, parameterization and cross-project reuse remain separ
 Make frame evaluation describe the current state, including before and after each event. Then a
 direct seek, a nearby-frame inspection and a range render can show the same designed behavior.
 Derive connected motion from shared layout so moving a target also moves its pointer destination.
-[Drawing](../../production/component-visuals.md) explains the browser-program implementation.
+[Drawing](../../production/component-visuals.md) explains the html-visual implementation.
 
 ## Develop the work with visible feedback
 

@@ -2,7 +2,7 @@ import { sealVisualTrack } from "@qflow/qflow/composition";
 import type { FrameSpan } from "@qflow/qflow/composition";
 import type { FontArtifactRef } from "@qflow/qflow/media";
 import type { Timeline } from "@qflow/qflow/timeline";
-import { VISUAL_IR_V1 } from "@qflow/qflow/visual-ir";
+import { VISUAL_IR_V1 } from "@qflow/qflow/composition";
 
 // The caller supplies its projected Window, resolved Frame and selected font faces.
 export function renderCard(input: {

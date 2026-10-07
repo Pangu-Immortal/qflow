@@ -84,14 +84,14 @@ retain the chosen settings or merge this fragment if QflowHub is the newly selec
 ```json
 {
   "credentials": {
-    "platform": { "use": "@qflow/credential-store-platform" }
+    "local": { "use": "@qflow/credential-store-local" }
   },
   "endpoints": {
     "qflowhub.default": {
       "use": "@qflow/provider-qflowhub",
       "config": {
         "baseUrl": "https://qflow.ai",
-        "apiKey": { "store": "platform", "key": "qflowhub.oauth" }
+        "apiKey": { "store": "local", "key": "qflowhub.oauth" }
       }
     }
   }
@@ -176,14 +176,14 @@ its Profile fragment has this shape:
 ```json
 {
   "credentials": {
-    "platform": { "use": "@qflow/credential-store-platform" }
+    "local": { "use": "@qflow/credential-store-local" }
   },
   "endpoints": {
     "videos.personal": {
       "use": "@example/provider-videos",
       "config": {
         "baseUrl": "https://videos.example",
-        "apiKey": { "store": "platform", "key": "videos.personal" }
+        "apiKey": { "store": "local", "key": "videos.personal" }
       }
     }
   },
@@ -250,11 +250,11 @@ silently changing an author's request.
 
 | Public import | Accurate interface owner |
 | --- | --- |
-| `@qflow/qflow/model-kit` | Model ports and Producer/Need construction |
+| `@qflow/qflow/generation/model` | Model ports and Producer/Need construction |
 | `@qflow/qflow/generation` | Generated-media values and request/mapping helpers |
-| `@qflow/qflow/endpoint-kit` | Execution, resources, credentials, support, receipts and capacity |
-| `@qflow/qflow/runtime-kit` | Profile activation, diagnostics and Managed Programs |
-| `@qflow/qflow/author-kit` | Author Module, Surface and Fragment declarations |
+| `@qflow/qflow/endpoint` | Execution, resources, credentials, support, receipts and capacity |
+| `@qflow/runtime-local/extension` | Profile activation, diagnostics and Managed Programs for the official local Runtime |
+| `@qflow/qflow/author`, `producer`, `admission`, `markup` | Author graphs, deterministic Producers, Type admission and Markup Surfaces respectively |
 
 These packages' READMEs ship with the Distribution and own precise APIs. Use the selected
 `@qflow/qflow` release as the extension's development dependency; ship compiled JavaScript and normal

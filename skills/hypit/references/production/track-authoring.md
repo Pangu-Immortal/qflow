@@ -58,7 +58,7 @@ This separation lets one projected Instant drive an answer reveal, a short sound
 Consumers can share that one value. Changed speech moves the upstream event without asking each
 component to search for a word, carry a projector or inspect the Script parser.
 
-Use `resolveTemporalContext` from `@qflow/qflow/temporal-markup` to resolve the component's
+Use `resolveTemporalContext` from `@qflow/qflow/temporal/markup` to resolve the component's
 `timeline` input. Pass that same Timeline to its Fragment and Producers, alongside projected
 Instants/Windows. A component can combine literal times and domain-produced events without switching time
 models. The installed `examples/semantic-composition/packages/chat-scene` demonstrates repeated
@@ -106,7 +106,7 @@ and a material change establishes truthful local evidence.
 ## Make spatial decisions equally explicit
 
 Canvas identifies the final raster viewport. SpatialFrame, anchors, extents and fitting describe
-where content goes and how its intrinsic shape occupies that place. Region Track supplies authored
+where content goes and how its intrinsic shape occupies that place. Region Evidence supplies authored
 per-frame regions already resolved in the program picture plane. These are distinct from Timeline,
 which owns the complete time range.
 
@@ -119,17 +119,17 @@ and any detector in their own execution or measurement boundary.
 ## Write the smallest component that expresses the role
 
 Declare the new package in the project's `packages/` and ordinary package configuration. Read the
-installed `@qflow/qflow/author-kit` README for the public package boundary and inspect a close installed sibling for
+installed `@qflow/qflow/author`, `producer`, `admission` and `markup` READMEs for the public package boundaries and inspect a close installed sibling for
 the relevant implementation, rather than depending on a monorepo example directory being present.
-`@qflow/interview-emoji-reveal` demonstrates persistent Moment-driven state; `@qflow/ranking`
-demonstrates reveal Windows and settled rows; `@qflow/visual-track` demonstrates ordinary Clip
-occurrences with independent Window, Frame, fit and source-time relations.
+When already selected by a project, `@qflow/interview-emoji-reveal` demonstrates persistent
+Moment-driven state and `@qflow/ranking` demonstrates reveal Windows and settled rows.
+`@qflow/visual-track` is the default example for ordinary Clip occurrences with independent Window,
+Frame, fit and source-time relations. Optional examples are evidence, not prerequisites.
 
-Ranking provides a complete example in the installed Distribution. Its `packages/ranking/README.md`
-links the relevant files: `surface.ts` projects authored time, `fragment.ts` connects typed inputs,
-`schedule.ts` computes reveal and settled spans, `render.ts` draws them, and
-`packages/ranking-studio/src/index.ts` turns the same program into editor entities. Follow the part
-that answers the current question. A new component may use fewer operations or different state.
+Ranking's repository README links its implementation: `surface.ts` projects authored time,
+`fragment.ts` connects typed inputs, `schedule.ts` computes reveal and settled spans, `render.ts`
+draws them, and `studio.ts` turns the same program into editor entities. Read it only when that
+example is relevant and available; a new project component may use fewer operations or different state.
 
 The Surface exposes author intent and lowers absolute temporal forms through
 `createTemporalWindowConstruction` or `createTemporalInstantConstruction`. The Fragment wires the
@@ -154,7 +154,7 @@ The useful pieces of a project package are:
 | Surface | Validate authored attributes and children, resolve typed references, emit inert Records, Components and Fragments |
 | Fragment | Wire the finite computation graph and publish outputs |
 | Producer | Compute the immutable state or render program from declared inputs |
-| Activation | Register the Manifest, deterministic handlers and Markup facets with their matching Host ABI |
+| Activation | Register the Manifest, deterministic handlers and Markup facets with their matching Facet ABI |
 | Vocabulary and preview | Explain the role and show a recognizable, configured example |
 | Optional Studio Companion | Project meaningful editor entities, real parameter bindings and temporal lineage without changing video rendering |
 
@@ -173,7 +173,7 @@ or absolute expressions only. A Narrative package must publish its selected boun
 Keep each child's `subjectId` meaningful for inspection while qualifying graph ids by its owning
 Track, so multiple instances can coexist. Do not use it to reject a deliberately shared Window. A finite create/append/finalize graph supports any authored
 number of messages or cards with ordinary fixed Producer ports. The exact helpers and vocabulary
-live in `@qflow/qflow/temporal-markup`; the `@example/chat-scene` package demonstrates authored and semantic events on one Timeline.
+live in `@qflow/qflow/temporal/markup`; the `@example/chat-scene` package demonstrates authored and semantic events on one Timeline.
 
 A scene may publish computed event times when another component needs them, just as it publishes a
 Track. This shares pre-render data. When the author already specifies a common trigger, consumers
@@ -184,7 +184,7 @@ draw nothing; inside it, each slot shows its preset/activated answer or its plac
 entrance motion relative to that slot's activation frame. Deriving state directly from declared inputs
 and the requested frame keeps Studio scrubbing and partial or concurrent rendering deterministic.
 
-Emit the public VisualTrack representation through `@qflow/qflow/composition` and `@qflow/qflow/visual-ir`.
+Emit the public VisualTrack representation through `@qflow/qflow/composition` and `@qflow/qflow/composition`.
 [Component visuals](component-visuals.md) explains Presents, element trees, local animation,
 prepared surfaces and a complete drawing function. [Spatial layout](spatial.md) explains incoming
 Frames, and [Fonts and text](fonts-and-text.md) explains font resources.

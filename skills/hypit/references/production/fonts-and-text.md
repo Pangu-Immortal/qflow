@@ -11,25 +11,27 @@ the wording, placement and lifetime. Changing one of these can preserve the othe
 ## Select a face or a fallback stack
 
 ```svml
-<import as="fonts" from="@qflow/fonts-open@1"/>
+<import as="fonts" from="@qflow/fontsource@1"/>
+<import as="media" from="@qflow/media@1"/>
 
-<fonts:Face id="headline-font" family="archivo-black" weight="400" style="normal"/>
-<fonts:Stack id="body-font" family="inter" weight="700" style="normal" emoji="color">
-  <fonts:Fallback family="noto-sans-sc" weight="700" style="normal"/>
-</fonts:Stack>
+<fonts:Face id="headline-font" package="@fontsource/archivo-black" weight="400" style="normal"/>
+<fonts:Face id="body-latin" package="@fontsource-variable/inter" weight="700" style="normal"/>
+<fonts:Face id="body-han" package="@fontsource-variable/noto-sans-sc" weight="700" style="normal"/>
+<media:FontStack id="body-font" primary={body-latin}>
+  <media:Fallback font={body-han}/>
+</media:FontStack>
 ```
 
-The Face is one exact font resource. Stack preserves an ordered set: here Inter, Noto Sans SC,
-then a color Emoji face. Choose fallback faces for the actual writing systems in the video.
-Weight and style must exist in the chosen family. `qflow vocabulary @qflow/fonts-open` and that
-package's README describe the installed catalog and supported combinations.
+Each Face is one exact font resource. FontStack preserves an ordered set: here Inter followed by
+Noto Sans SC. Choose fallback faces for the actual writing systems in the video. Weight and style
+must exist in the selected, project-installed package. The project's `package.json` and lockfile,
+not a Qflow catalog, determine which families and versions exist.
 
-For Chinese-led speech, start with a face made for the intended script: the installed catalog
-includes `noto-sans-sc` and `noto-serif-sc` for Simplified Chinese, `noto-sans-tc` and `noto-serif-tc`
-for Traditional Chinese, and display faces such as `zcool-kuaile`. Choose their character to suit the
-piece. A compact, clear face is useful for running speech; an expressive display face can suit a
-playful caption or a short title. Inspect the real words at delivery size, including punctuation,
-numbers and any Latin names.
+For Chinese-led speech, start with a face made for the intended script. Fontsource publishes Noto
+families for Simplified and Traditional Chinese as independent packages, alongside more expressive
+display families. Choose their character to suit the piece. A compact, clear face is useful for
+running speech; an expressive display face can suit a playful caption or a short title. Inspect the
+real words at delivery size, including punctuation, numbers and any Latin names.
 
 Fallback order also directs the design. Inter first with Noto Sans SC after it gives Latin letters
 Inter's shapes and Chinese Noto's. A Chinese face first can supply both scripts for a more unified
@@ -45,7 +47,7 @@ machine. For example, a project can use a local brand face alongside an explicit
 ```svml
 <import as="asset" from="@qflow/media@1"/>
 <asset:Font id="brand-font" src="./assets/fonts/brand-semibold.woff2" weight="600" style="normal"/>
-<fonts:Face id="chinese-font" family="noto-sans-sc" weight="600" style="normal"/>
+<fonts:Face id="chinese-font" package="@fontsource-variable/noto-sans-sc" weight="600" style="normal"/>
 
 <caption-fine:Style id="caption-style" recipe={look.caption.primary} font={brand-font}>
   <caption-fine:Fallback font={chinese-font}/>
@@ -66,7 +68,7 @@ face, or export it with a font tool when permitted, before declaring it.
 
 ## Find a face when the available choices do not fit
 
-Start with the user's brand assets and the relevant local or bundled faces. If the work calls for
+Start with the user's brand assets and the relevant project-installed or local faces. If the work calls for
 another face, look at the foundry's or an open-font project's official specimen and download. Check
 the actual script coverage, available weight/style and intended use, then bring the chosen file into
 the project. Keep its source and license with it, especially when sharing the editable project.
@@ -78,9 +80,9 @@ English font-size, spacing or outline recipe suit Chinese text.
 
 ## Emoji presentation
 
-`emoji="color"` adds a color face; `emoji="mono"` chooses monochrome. Some symbols have both text
-and Emoji presentation. Write the intended Unicode sequence, such as `☎️`, when its color form is
-wanted.
+Emoji fonts follow the same rule: install or supply the exact face, then place it explicitly in a
+`media:FontStack`. Some symbols have both text and Emoji presentation. Write the intended Unicode
+sequence, such as `☎️`, when its Emoji form is wanted.
 
 ## Give independent text its own placement and lifetime
 

@@ -37,7 +37,7 @@ for this placement task. Use the installed tool or the provider's
 [face-detection example](https://docs.cloud.google.com/video-intelligence/docs/samples/video-detect-faces)
 for actual invocation and existing authorization for any paid request. Another suitable detector or
 manual measurement can supply the same authored data. The stable Qflow input is the resulting
-Region Track, so detector invocation can remain an external, project-side preparation step.
+Region Evidence, so detector invocation can remain an external, project-side preparation step.
 
 GVI's timestamped boxes are observations, not Script Roles or ready-to-use Qflow head tracks. Its
 [response schema](https://docs.cloud.google.com/video-intelligence/docs/reference/rest/v1/AnnotateVideoResponse#TimestampedObject)
@@ -85,7 +85,7 @@ Caption ends or uses an authored ordinary placement. Neither a detector track no
 of a listening face extends someone's speech.
 
 [Caption presentation](../../production/caption-presentation.md) owns Style coverage and hiding.
-A Role with no region track keeps ordinary Style placement; a `null` inside an existing track hides
+A Role with no region evidence keeps ordinary Style placement; a `null` inside an existing series hides
 the Cue rather than switching placement automatically. A deliberate tracked-to-ordinary change can
 use explicit Caption Uses or separate Tracks with the same Script and Timeline.
 
@@ -102,8 +102,8 @@ heads.default {
 ## Connect the placement to Caption
 
 ```svml
-<import as="region" from="@qflow/region-track@1"/>
-<region:Track id="heads" within={vertical.bounds} timeline={speech.timeline}
+<import as="region" from="@qflow/region-evidence@1"/>
+<region:Evidence id="heads" within={vertical.bounds} timeline={speech.timeline}
   recipe={tracking.heads.default}/>
 <caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
   timeline={speech.timeline} within={vertical.bounds} regions={heads}>
@@ -111,11 +111,11 @@ heads.default {
 </caption-fine:Caption>
 ```
 
-The Region Track series ids match Script Roles. Fine places a single-Role Cue at that region's top
+The Region Evidence series ids match Script Roles. Fine places a single-Role Cue at that region's top
 center; `anchor-x: center` and `anchor-y: bottom` put the Cue above it. The Style still owns its width,
 font and motion. Supplying `regions` requires every Cue on that Track to have one Script Role, even
 when that particular Role uses fixed placement. Author the relevant Role Cues in Script. The
-`@qflow/region-track` and `@qflow/caption-fine` READMEs own the exact data behavior.
+`@qflow/region-evidence` and `@qflow/caption-fine` READMEs own the exact data behavior.
 
 ## Inspect the actual placement
 

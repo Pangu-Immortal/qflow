@@ -64,7 +64,7 @@ their visual hierarchy, and [Spatial layout](../../production/spatial.md) owns g
 ## Let neighboring A-roll performances keep their time
 
 The usual A-roll assembly places Segment performances one after another without consuming either
-side of their duration. This fits how the work is authored: `qflow measure` helps size each request so
+side of their duration. This fits how the work is authored: `qflow estimate` helps size each request so
 its words, delivery and action belong naturally in that generated passage, and speaking video models
 normally use the requested clip to perform the line. Asking one Take to remain silent for a synthetic
 half-second handle at its beginning or end works against both that sizing and the model's performance.
@@ -212,7 +212,7 @@ other relationships.
 
 ## Give real performance real semantic time
 
-`../../creation/script-and-time.md` owns measurement, literal duration, and alignment. Once the
+`../../creation/script-and-time.md` owns duration estimation, literal duration, and alignment. Once the
 accepted performance has semantic time, its dependent layers follow the delivery that really
 happened.
 

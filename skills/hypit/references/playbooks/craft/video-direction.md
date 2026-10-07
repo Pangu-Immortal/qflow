@@ -173,7 +173,7 @@ encoder.
 
 ## Prepare footage for subject isolation
 
-When the work needs a moving silhouette, choose a background-removal method that can process the
+When the work needs an isolated moving silhouette, choose a matting method that can process the
 actual footage. For new generation, a continuous, evenly lit chroma backdrop can support a chosen
 keying workflow. Choose a color separated from the person's hair, clothing and carried objects;
 direct the visible body extent, performance and stable backdrop as facts of this recording. This
@@ -280,14 +280,14 @@ alignment remain separate facts.
 
 ## Size the request around the delivery
 
-Use `qflow measure` on a spoken Segment at its intended pace, including time for meaningful
-interaction, pauses and actions. [Script and time](../../creation/script-and-time.md#measure-before-choosing-durations)
+Use `qflow estimate` on a spoken Segment at its intended pace, including time for meaningful
+interaction, pauses and actions. [Script and time](../../creation/script-and-time.md#estimate-before-choosing-durations)
 owns the command, rounding and the relationship between estimated duration and real aligned time.
 Choose that pace from the intended performance and carry it into the voice and passage direction.
 For brisk social delivery with trim cuts, `fast` is a useful starting choice; the name `normal`
 does not make it the right rhythm for every piece. A shorter duration gives the words less room,
 while the direction still supplies the stresses, attitude and reactions that make them engaging.
-Measurement sizes the words; emphasis, attitude and motivated reactions give their delivery character.
+The estimate sizes the words; emphasis, attitude and motivated reactions give their delivery character.
 The target's delivery determines how much generated media the passage needs; the reference video's
 seconds help explain its rhythm without becoming the target duration automatically.
 

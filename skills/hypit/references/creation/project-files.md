@@ -43,26 +43,28 @@ can later hold the project's component dependencies:
   "name": "workshop-video",
   "version": "0.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "qflow": { "project": true }
 }
 ```
 
-The CLI uses the nearest `package.json` above the command's working directory, or that directory
-itself when none exists. Passing a Source or Runtime path does not select a different project.
+The CLI searches upward for a `package.json` whose `qflow.project` field is `true`. It does not turn
+the nearest component package or an arbitrary working directory into a project. Passing a Source or
+Runtime path does not select a different project.
 Sources can live below the root, with file and Source imports relative to the declaring file.
 
 | Boundary | When to set it explicitly |
 | --- | --- |
-| `--workspace <directory>` | Choose the project root for Sources, Runtime selection, project packages and Results when running from another directory |
+| `--project <directory>` | Choose the project root for Sources, Runtime selection, project packages and Results when running from another directory |
 | `--asset-root <directory>` | Admit assets stored elsewhere while keeping Source imports in their workspace |
 | `--package-root <directory>` | Resolve project packages from another installation location |
 
-Relative command-line paths start at the shell's current directory. `--workspace` selects the project
+Relative command-line paths start at the shell's current directory. `--project` selects the project
 without rebasing the Run, Source or `--runtime` argument. For example, from outside a project:
 
 ```bash
-qflow paths --workspace /path/to/video-project
-qflow studio --run /path/to/video-project/build.svrun --workspace /path/to/video-project
+qflow paths --project /path/to/video-project
+qflow studio --run /path/to/video-project/build.svrun --project /path/to/video-project
 ```
 
 `paths` shows the resolved project and where its Runtime selection came from. Source imports and asset
@@ -70,8 +72,9 @@ references inside files remain relative to their declaring file.
 
 For example, `qflow check authors/main.svml --asset-root /path/to/shared-media` admits intentionally
 referenced shared media. Keep the same relevant boundaries for subsequent commands. An ordinary
-project uses its own package installation; reserved `@qflow/*` packages come from the selected
-Distribution. [Distribution](../environment/distribution.md) explains locating that executable,
+project uses its own package installation. Exact packages embedded in the selected Distribution come
+from that Distribution; independently distributed packages, including `@qflow/*` packages, remain
+ordinary project dependencies. [Distribution](../environment/distribution.md) explains locating that executable,
 and [component vocabulary](../production/vocabulary.md#let-ordinary-package-management-own-distribution)
 explains installing project packages.
 
@@ -184,15 +187,15 @@ authored work and the produced values that its Runs select:
 - project component source or installed-release dependencies, `package.json`, its lockfile and any
   tarballs referenced by `file:` dependencies;
 - the completed Results used by `build-record` Candidates, including their media and Composite value
-  documents, plus the project Result repository selection;
+  documents;
 - the intended Runtime configuration, with account access configured on the receiving machine through
   its own Credential Store.
 
 For the default filesystem repository, preserving `.qflow/results/` intact with the project is the
 straightforward handoff. Include the hidden directory and keep its date/Build subdirectories. Some
 Results forward an Output to its original owning Build, so copying only the latest Build directory
-can omit media still in use. A custom filesystem or S3 repository needs the corresponding files or
-access and an explicit destination selection; changing `qflow.results.json` does not move them.
+can omit media still in use. Archive or migrate completed Results explicitly when they should live
+outside the project.
 
 External input files remain live dependencies, including when referenced inside structured Outputs.
 The Node workspace records their resolved file addresses. When moving to another machine, provide

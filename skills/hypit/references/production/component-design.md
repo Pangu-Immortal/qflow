@@ -213,6 +213,7 @@ adjustments the user needs, such as Caption position and color, through the exis
 An empty parameter panel alone is no reason to widen the component interface.
 [Companion authoring](studio-companions.md) owns those bindings.
 
-For an existing example, read the installed `@qflow/ranking` README and the part of its implementation
-that answers the current question. It connects semantic reveals, settled state, layout and editor
-entities. Carry the relevant relationship into the project component's own design.
+If the current project deliberately installed `@qflow/ranking`, its README is one example of
+semantic reveals, settled state, layout and editor entities. Do not assume that optional package is
+part of the Distribution or install it merely to begin a component. Carry only a relationship that
+answers the current video's need into the project component's own design.

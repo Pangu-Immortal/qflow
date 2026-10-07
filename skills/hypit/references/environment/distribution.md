@@ -166,10 +166,10 @@ the Distribution or the environment inherited by an active Worker concerns that 
 Use [configuration changes](profile.md#know-when-a-change-takes-effect) before restarting it, and
 preserve active work and accepted Outputs.
 
-Optional upstream npm tools live in the Host package home reported by `paths`, per exact package
-version, with npm's ordinary download cache. Explicit preparation may acquire these declared
-dependencies. `qflow packages install <package@version>` addresses a reported exact dependency;
-its `install.log` explains progress and failure. Installing a dependency does not start a service.
+Every npm package carries its ordinary code dependencies in its own manifest and lockfile context.
+The package manager installs them with the Distribution or project that owns the package. Runtime
+preparation is reserved for Provider-declared Programs and other runtime materials; it does not create
+a second npm installation plane.
 
 A contributor checkout is an explicit development choice. Use one when the user has selected it;
 ordinary production, project components and project Model/Provider extensions use the installed

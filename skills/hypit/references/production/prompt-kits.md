@@ -138,7 +138,7 @@ produced elsewhere remains a graph edge rather than being copied into a scalar b
 Save the template above as `phone-shot.svs`. For this example, `look.svs` can be:
 
 ```svs
-<?svml using="@qflow/svs@1"?>
+<?svml using="@qflow/recipe@1"?>
 <sheet version="1">
   prompt.main { camera: handheld; }
 </sheet>
