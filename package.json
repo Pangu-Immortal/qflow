@@ -10,152 +10,251 @@
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "exports": {
-    "./browser-capture": {
-      "types": "./dist/public/browser-capture.d.ts",
-      "import": "./packages/browser-capture/src/index.ts"
+    "./cli": {
+      "qflow-source": "./packages/cli/src/public.ts",
+      "types": "./dist/public/cli.d.ts",
+      "import": "./packages/cli/src/public.ts"
     },
-    "./artifact": {
-      "types": "./dist/public/artifact.d.ts",
-      "import": "./packages/artifact/src/index.ts"
+    "./compiler": {
+      "qflow-source": "./packages/compiler/src/index.ts",
+      "types": "./dist/public/compiler.d.ts",
+      "import": "./packages/compiler/src/index.ts"
     },
-    "./author-kit": {
-      "types": "./dist/public/author-kit.d.ts",
-      "import": "./packages/author-kit/src/index.ts"
+    "./executor": {
+      "qflow-source": "./packages/executor/src/index.ts",
+      "types": "./dist/public/executor.d.ts",
+      "import": "./packages/executor/src/index.ts"
+    },
+    "./kernel": {
+      "qflow-source": "./packages/kernel/src/index.ts",
+      "types": "./dist/public/kernel.d.ts",
+      "import": "./packages/kernel/src/index.ts"
+    },
+    "./project": {
+      "qflow-source": "./packages/project/src/index.ts",
+      "types": "./dist/public/project.d.ts",
+      "import": "./packages/project/src/index.ts"
+    },
+    "./runtime": {
+      "qflow-source": "./packages/runtime/src/index.ts",
+      "types": "./dist/public/runtime.d.ts",
+      "import": "./packages/runtime/src/index.ts"
+    },
+    "./source": {
+      "qflow-source": "./packages/source/src/index.ts",
+      "types": "./dist/public/source.d.ts",
+      "import": "./packages/source/src/index.ts"
+    },
+    "./source/text": {
+      "qflow-source": "./packages/source/src/header.ts",
+      "types": "./dist/public/source-text.d.ts",
+      "import": "./packages/source/src/header.ts"
+    },
+    "./workspace": {
+      "qflow-source": "./packages/workspace/src/index.ts",
+      "types": "./dist/public/workspace.d.ts",
+      "import": "./packages/workspace/src/index.ts"
+    },
+    "./workspace/node": {
+      "qflow-source": "./packages/workspace/src/node/index.ts",
+      "types": "./dist/public/workspace-node.d.ts",
+      "import": "./packages/workspace/src/node/index.ts"
+    },
+    "./blob": {
+      "qflow-source": "./packages/blob/src/index.ts",
+      "types": "./dist/public/blob.d.ts",
+      "import": "./packages/blob/src/index.ts"
+    },
+    "./admission": {
+      "qflow-source": "./packages/admission/src/index.ts",
+      "types": "./dist/public/admission.d.ts",
+      "import": "./packages/admission/src/index.ts"
+    },
+    "./producer": {
+      "qflow-source": "./packages/producer/src/index.ts",
+      "types": "./dist/public/producer.d.ts",
+      "import": "./packages/producer/src/index.ts"
+    },
+    "./facet": {
+      "qflow-source": "./packages/facet/src/index.ts",
+      "types": "./dist/public/facet.d.ts",
+      "import": "./packages/facet/src/index.ts"
+    },
+    "./protocol": {
+      "qflow-source": "./packages/protocol/src/index.ts",
+      "types": "./dist/public/protocol.d.ts",
+      "import": "./packages/protocol/src/index.ts"
+    },
+    "./author": {
+      "qflow-source": "./packages/author/src/index.ts",
+      "types": "./dist/public/author.d.ts",
+      "import": "./packages/author/src/index.ts"
+    },
+    "./markup": {
+      "qflow-source": "./packages/markup/src/index.ts",
+      "types": "./dist/public/markup.d.ts",
+      "import": "./packages/markup/src/index.ts"
+    },
+    "./markup/run": {
+      "qflow-source": "./packages/markup/src/run/index.ts",
+      "types": "./dist/public/markup-run.d.ts",
+      "import": "./packages/markup/src/run/index.ts"
+    },
+    "./run": {
+      "qflow-source": "./packages/run/src/index.ts",
+      "types": "./dist/public/run.d.ts",
+      "import": "./packages/run/src/index.ts"
+    },
+    "./result": {
+      "qflow-source": "./packages/result/src/index.ts",
+      "types": "./dist/public/result.d.ts",
+      "import": "./packages/result/src/index.ts"
+    },
+    "./result/node": {
+      "qflow-source": "./packages/result/src/node/index.ts",
+      "types": "./dist/public/result-node.d.ts",
+      "import": "./packages/result/src/node/index.ts"
     },
     "./caption": {
+      "qflow-source": "./packages/caption/src/index.ts",
       "types": "./dist/public/caption.d.ts",
       "import": "./packages/caption/src/index.ts"
     },
     "./composition": {
+      "qflow-source": "./packages/composition/src/index.ts",
       "types": "./dist/public/composition.d.ts",
       "import": "./packages/composition/src/index.ts"
     },
-    "./endpoint-kit": {
-      "types": "./dist/public/endpoint-kit.d.ts",
-      "import": "./packages/endpoint-kit/src/index.ts"
+    "./endpoint": {
+      "qflow-source": "./packages/endpoint/src/index.ts",
+      "types": "./dist/public/endpoint.d.ts",
+      "import": "./packages/endpoint/src/index.ts"
+    },
+    "./endpoint/http": {
+      "qflow-source": "./packages/endpoint/src/http.ts",
+      "types": "./dist/public/endpoint-http.d.ts",
+      "import": "./packages/endpoint/src/http.ts"
     },
     "./generation": {
+      "qflow-source": "./packages/generation/src/index.ts",
       "types": "./dist/public/generation.d.ts",
       "import": "./packages/generation/src/index.ts"
     },
     "./media": {
+      "qflow-source": "./packages/media/src/index.ts",
       "types": "./dist/public/media.d.ts",
       "import": "./packages/media/src/index.ts"
     },
-    "./model-kit": {
-      "types": "./dist/public/model-kit.d.ts",
-      "import": "./packages/model-kit/src/index.ts"
+    "./generation/model": {
+      "qflow-source": "./packages/generation/src/model.ts",
+      "types": "./dist/public/generation-model.d.ts",
+      "import": "./packages/generation/src/model.ts"
+    },
+    "./loader": {
+      "qflow-source": "./packages/loader/src/index.ts",
+      "types": "./dist/public/loader.d.ts",
+      "import": "./packages/loader/src/index.ts"
+    },
+    "./loader/node": {
+      "qflow-source": "./packages/loader/src/node/public.ts",
+      "types": "./dist/public/loader-node.d.ts",
+      "import": "./packages/loader/src/node/public.ts"
+    },
+    "./loader/node/module-scope": {
+      "qflow-source": "./packages/loader/src/node/module-scope.ts",
+      "types": "./dist/public/loader-node-module-scope.d.ts",
+      "import": "./packages/loader/src/node/module-scope.ts"
     },
     "./narrative": {
+      "qflow-source": "./packages/narrative/src/index.ts",
       "types": "./dist/public/narrative.d.ts",
       "import": "./packages/narrative/src/index.ts"
     },
     "./narrative-caption": {
+      "qflow-source": "./packages/narrative-caption/src/index.ts",
       "types": "./dist/public/narrative-caption.d.ts",
       "import": "./packages/narrative-caption/src/index.ts"
     },
     "./narrative-temporal": {
+      "qflow-source": "./packages/narrative-temporal/src/index.ts",
       "types": "./dist/public/narrative-temporal.d.ts",
       "import": "./packages/narrative-temporal/src/index.ts"
     },
-    "./runtime-kit": {
-      "types": "./dist/public/runtime-kit.d.ts",
-      "import": "./packages/runtime-kit/src/index.ts"
+    "./atomic-file": {
+      "qflow-source": "./packages/atomic-file/src/index.ts",
+      "types": "./dist/public/atomic-file.d.ts",
+      "import": "./packages/atomic-file/src/index.ts"
     },
     "./timeline": {
+      "qflow-source": "./packages/timeline/src/index.ts",
       "types": "./dist/public/timeline.d.ts",
       "import": "./packages/timeline/src/index.ts"
     },
     "./spatial": {
+      "qflow-source": "./packages/spatial/src/index.ts",
       "types": "./dist/public/spatial.d.ts",
       "import": "./packages/spatial/src/index.ts"
     },
-    "./region-track": {
-      "types": "./dist/public/region-track.d.ts",
-      "import": "./packages/region-track/src/index.ts"
-    },
-    "./speech": {
-      "types": "./dist/public/speech.d.ts",
-      "import": "./packages/speech/src/index.ts"
+    "./region-evidence": {
+      "qflow-source": "./packages/region-evidence/src/index.ts",
+      "types": "./dist/public/region-evidence.d.ts",
+      "import": "./packages/region-evidence/src/index.ts"
     },
     "./speech-evidence": {
+      "qflow-source": "./packages/speech-evidence/src/index.ts",
       "types": "./dist/public/speech-evidence.d.ts",
       "import": "./packages/speech-evidence/src/index.ts"
     },
-    "./speech-alignment": {
-      "types": "./dist/public/speech-alignment.d.ts",
-      "import": "./packages/speech-alignment/src/index.ts"
-    },
-    "./studio-adapter": {
-      "types": "./dist/public/studio-adapter.d.ts",
-      "import": "./packages/studio-adapter/src/index.ts"
-    },
-    "./svs": {
-      "types": "./dist/public/svs.d.ts",
-      "import": "./packages/svs/src/index.ts"
+    "./recipe": {
+      "qflow-source": "./packages/recipe/src/index.ts",
+      "types": "./dist/public/recipe.d.ts",
+      "import": "./packages/recipe/src/index.ts"
     },
     "./temporal": {
+      "qflow-source": "./packages/temporal/src/index.ts",
       "types": "./dist/public/temporal.d.ts",
       "import": "./packages/temporal/src/index.ts"
     },
-    "./temporal-markup": {
+    "./temporal/markup": {
+      "qflow-source": "./packages/temporal/src/markup/index.ts",
       "types": "./dist/public/temporal-markup.d.ts",
-      "import": "./packages/temporal-markup/src/index.ts"
+      "import": "./packages/temporal/src/markup/index.ts"
     },
     "./text": {
+      "qflow-source": "./packages/text/src/index.ts",
       "types": "./dist/public/text.d.ts",
       "import": "./packages/text/src/index.ts"
     },
-    "./visual-ir": {
-      "types": "./dist/public/visual-ir.d.ts",
-      "import": "./packages/visual-ir/src/index.ts"
-    },
-    "./hyperframes": {
-      "types": "./dist/public/hyperframes.d.ts",
-      "import": "./packages/hyperframes/src/index.ts"
-    },
-    "./visual-track": {
-      "types": "./dist/public/visual-track.d.ts",
-      "import": "./packages/visual-track/src/index.ts"
-    },
-    "./audio-track": {
-      "types": "./dist/public/audio-track.d.ts",
-      "import": "./packages/audio-track/src/index.ts"
+    "./html-program": {
+      "qflow-source": "./packages/html-program/src/index.ts",
+      "types": "./dist/public/html-program.d.ts",
+      "import": "./packages/html-program/src/index.ts"
     }
   },
   "bin": {
     "qflow": "./bin/qflow.mjs"
   },
+  "qflow": {
+    "cli": {
+      "use": [
+        "@qflow/runtime-local/cli",
+        "@qflow/browser-capture/cli",
+        "@qflow/yt-dlp/cli",
+        "@qflow/media-local/cli",
+        "@qflow/speech-estimate/cli",
+        "@qflow/whisperx/cli",
+        "@qflow/video/cli",
+        "@qflow/studio/cli"
+      ]
+    }
+  },
   "packageManager": "pnpm@10.33.0",
   "files": [
     "bin",
     "dist/public/**/*.d.ts",
-    "packages/*/src/**/*",
-    "packages/*/bin/**/*",
-    "packages/*/runtime/**/*",
-    "packages/*/preview/**/*",
-    "packages/*/kits/**/*",
-    "packages/*/*.ts",
-    "packages/*/*.html",
-    "packages/*/package.json",
-    "packages/*/README.md",
-    "packages/temporal-markup/EDITING.md",
-    "packages/studio/INSPECTOR.md",
-    "packages/studio/LOCALIZATION.md",
-    "packages/studio/locales/*.json",
-    "services/image-opencv/pyproject.toml",
-    "services/image-opencv/package.json",
-    "services/image-opencv/uv.lock",
-    "services/image-opencv/README.md",
-    "services/whisperx/pyproject.toml",
-    "services/whisperx/package.json",
-    "services/whisperx/uv.lock",
-    "services/whisperx/README.md",
-    "services/whisperx/src/**/*.py",
-    "services/yt-dlp/pyproject.toml",
-    "services/yt-dlp/package.json",
-    "services/yt-dlp/uv.lock",
-    "services/yt-dlp/README.md",
+    "packages/{blob,result,caption,cli,compiler,producer,composition,kernel,executor,author,endpoint,atomic-file,generation,facet,html-program,markup,media,narrative,narrative-caption,narrative-temporal,loader,project,protocol,region-evidence,run,runtime,source,spatial,speech-evidence,recipe,temporal,text,timeline,admission,workspace}/src/**/*",
+    "packages/{blob,result,caption,cli,compiler,producer,composition,kernel,executor,author,endpoint,atomic-file,generation,facet,html-program,markup,media,narrative,narrative-caption,narrative-temporal,loader,project,protocol,region-evidence,run,runtime,source,spatial,speech-evidence,recipe,temporal,text,timeline,admission,workspace}/package.json",
+    "packages/{blob,result,caption,cli,compiler,producer,composition,kernel,executor,author,endpoint,atomic-file,generation,facet,html-program,markup,media,narrative,narrative-caption,narrative-temporal,loader,project,protocol,region-evidence,run,runtime,source,spatial,speech-evidence,recipe,temporal,text,timeline,admission,workspace}/README.md",
     "docs/public/qflow-logo-dark.svg",
     "docs/public/qflow-logo-light.svg",
     "examples/minimal-author-package/README.md",
@@ -183,8 +282,20 @@
     "examples/provider-package/qflow.runtime.json"
   ],
   "scripts": {
+    "pack:independent": "node scripts/pack-independent-package.mjs",
+    "check:seedance-package": "node --import tsx scripts/check-independent-seedance.mjs",
+    "check:qflowhub-package": "node --import tsx scripts/check-independent-qflowhub.mjs",
+    "check:runtime-packages": "node --import tsx scripts/check-independent-runtime-packages.mjs",
+    "check:ranking-package": "node --import tsx scripts/check-independent-ranking.mjs",
+    "check:visual-track-package": "node --import tsx scripts/check-independent-visual-track.mjs",
+    "check:audio-track-package": "node --import tsx scripts/check-independent-audio-track.mjs",
+    "check:fine-packages": "node --import tsx scripts/check-independent-fine-packages.mjs",
+    "check:author-packages": "node --import tsx scripts/check-independent-author-packages.mjs",
+    "check:component-packages": "node --import tsx scripts/check-independent-components.mjs",
     "pack:distribution": "node scripts/pack-distribution.mjs",
     "check:distribution": "node scripts/check-distribution.mjs",
+    "pack:release-candidate": "node scripts/pack-release-candidate.mjs",
+    "check:release-candidate": "node scripts/check-release-candidate.mjs",
     "build:public-types": "node scripts/build-public-types.mjs",
     "check": "tsc -p tsconfig.json --noEmit",
     "docs:dev": "vitepress dev docs",
@@ -192,7 +303,7 @@
     "docs:preview": "vitepress preview docs",
     "test": "node test/run.mjs",
     "test:runtime-scale": "node test/run.mjs runtime-scale",
-    "test:whisperx-service": "uv run --project services/whisperx --frozen python -m unittest discover -s services/whisperx/tests -p \"test_*.py\"",
+    "test:whisperx-service": "uv run --project packages/provider-whisperx-local/runtime --frozen python -m unittest discover -s packages/provider-whisperx-local/test/service -p \"test_*.py\"",
     "test:image-opencv": "node test/run.mjs image-opencv",
     "qflow": "node bin/qflow.mjs",
     "studio": "node bin/qflow.mjs studio",
@@ -202,46 +313,29 @@
     "node": ">=22.15.0"
   },
   "devDependencies": {
-    "@qflow/artifact": "workspace:*",
-    "@qflow/audio-track": "workspace:*",
-    "@qflow/audio-track-studio": "workspace:*",
-    "@qflow/author-kit": "workspace:*",
-    "@qflow/background-removal": "workspace:*",
+    "@qflow/admission": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/blob": "workspace:*",
     "@qflow/browser-capture": "workspace:*",
-    "@qflow/build-result": "workspace:*",
-    "@qflow/build-result-fs": "workspace:*",
-    "@qflow/build-result-kit": "workspace:*",
-    "@qflow/build-result-s3": "workspace:*",
+    "@qflow/result": "workspace:*",
     "@qflow/caption": "workspace:*",
-    "@qflow/caption-fine": "workspace:*",
-    "@qflow/caption-fine-studio": "workspace:*",
     "@qflow/comment-sticker": "workspace:*",
-    "@qflow/comment-sticker-studio": "workspace:*",
     "@qflow/composition": "workspace:*",
     "@qflow/credential-store-env": "workspace:*",
-    "@qflow/credential-store-file": "workspace:*",
-    "@qflow/credential-store-os": "workspace:*",
-    "@qflow/credential-store-platform": "workspace:*",
+    "@qflow/credential-store-local": "workspace:*",
     "@qflow/depth-stack": "workspace:*",
-    "@qflow/depth-stack-studio": "workspace:*",
     "@qflow/elevenlabs-speech": "workspace:*",
-    "@qflow/estimate": "workspace:*",
-    "@qflow/film": "workspace:*",
-    "@qflow/film-studio": "workspace:*",
+    "@qflow/speech-estimate": "workspace:*",
     "@qflow/fishaudio-speech": "workspace:*",
-    "@qflow/fonts-open": "workspace:*",
     "@qflow/generation": "workspace:*",
     "@qflow/gpt-image": "workspace:*",
     "@qflow/gpt-image-kits": "workspace:*",
     "@qflow/grok-imagine": "workspace:*",
-    "@qflow/hyperframes": "workspace:*",
-    "@qflow/image-compose": "workspace:*",
-    "@qflow/image-transform": "workspace:*",
+    "@qflow/html-program": "workspace:*",
+    "@qflow/image-operations": "workspace:*",
     "@qflow/interview-emoji-reveal": "workspace:*",
     "@qflow/media": "workspace:*",
-    "@qflow/media-pipeline": "workspace:*",
-    "@qflow/visual-track": "workspace:*",
-    "@qflow/visual-track-studio": "workspace:*",
+    "@qflow/media-operations": "workspace:*",
     "@qflow/mimo-speech": "workspace:*",
     "@qflow/minimax-h3": "workspace:*",
     "@qflow/nano-banana": "workspace:*",
@@ -249,69 +343,93 @@
     "@qflow/narrative-caption": "workspace:*",
     "@qflow/narrative-temporal": "workspace:*",
     "@qflow/pixverse": "workspace:*",
-    "@qflow/project-context-node": "workspace:*",
+    "@qflow/project": "workspace:*",
+    "@qflow/producer": "workspace:*",
     "@qflow/protocol": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/run": "workspace:*",
     "@qflow/provider-beatapi": "workspace:*",
     "@qflow/provider-hiapi": "workspace:*",
-    "@qflow/provider-hyperframes-local": "workspace:*",
-    "@qflow/provider-qflowhub": "workspace:*",
+    "@qflow/provider-html-local": "workspace:*",
     "@qflow/provider-image-opencv-local": "workspace:*",
-    "@qflow/provider-media-local": "workspace:*",
+    "@qflow/media-local": "workspace:*",
     "@qflow/provider-monid": "workspace:*",
     "@qflow/provider-pollo": "workspace:*",
     "@qflow/provider-tokendance": "workspace:*",
     "@qflow/provider-whisperx-local": "workspace:*",
     "@qflow/ranking": "workspace:*",
-    "@qflow/ranking-studio": "workspace:*",
-    "@qflow/region-track": "workspace:*",
-    "@qflow/raster": "workspace:*",
-    "@qflow/render-hyperframes": "workspace:*",
-    "@qflow/resource-store-fs": "workspace:*",
-    "@qflow/resource-store-s3": "workspace:*",
-    "@qflow/run-markup": "workspace:*",
-    "@qflow/runtime-host-node": "workspace:*",
-    "@qflow/runtime-kit": "workspace:*",
+    "@qflow/region-evidence": "workspace:*",
+    "@qflow/html-video": "workspace:*",
     "@qflow/runtime-local": "workspace:*",
-    "@qflow/screen-overlay": "workspace:*",
-    "@qflow/screen-overlay-studio": "workspace:*",
-    "@qflow/script": "workspace:*",
-    "@qflow/script-studio": "workspace:*",
-    "@qflow/seedance": "workspace:*",
-    "@qflow/seedance-kits": "workspace:*",
+    "@qflow/video": "workspace:*",
+    "@qflow/studio": "workspace:*",
     "@qflow/seedream": "workspace:*",
     "@qflow/spatial": "workspace:*",
-    "@qflow/speech": "workspace:*",
-    "@qflow/speech-alignment": "workspace:*",
+    "@qflow/narrative-speech-alignment": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",
-    "@qflow/store-sqlite": "workspace:*",
-    "@qflow/studio-adapter": "workspace:*",
-    "@qflow/svs": "workspace:*",
+    "@qflow/studio-companion": "workspace:*",
+    "@qflow/recipe": "workspace:*",
     "@qflow/temporal": "workspace:*",
-    "@qflow/temporal-markup": "workspace:*",
     "@qflow/text": "workspace:*",
     "@qflow/timeline": "workspace:*",
-    "@qflow/timeline-author": "workspace:*",
-    "@qflow/text-fine": "workspace:*",
-    "@qflow/text-fine-studio": "workspace:*",
-    "@qflow/visual-ir": "workspace:*",
     "@qflow/volcengine-matting": "workspace:*",
     "@qflow/wan": "workspace:*",
-    "@qflow/whisperx": "workspace:*",
-    "@types/node": "24.10.1",
+    "@qflow/yt-dlp": "workspace:*",
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource-variable/league-spartan": "5.3.0",
+    "@fontsource-variable/montserrat": "5.3.0",
+    "@fontsource-variable/noto-sans-sc": "5.3.0",
+    "@fontsource/archivo-black": "5.3.0",
     "linkedom": "0.18.13",
     "rollup": "4.62.4",
     "rollup-plugin-dts": "6.2.3",
     "vitepress": "^1.6.4"
   },
   "dependencies": {
-    "@puppeteer/browsers": "3.2.2",
+    "@qflow/browser-capture": "workspace:^",
+    "@qflow/fontsource": "workspace:^",
+    "@qflow/audio-track": "workspace:^",
+    "@qflow/caption-fine": "workspace:^",
+    "@qflow/credential-store-env": "workspace:^",
+    "@qflow/credential-store-local": "workspace:^",
+    "@qflow/film": "workspace:^",
+    "@qflow/elevenlabs-speech": "workspace:^",
+    "@qflow/fishaudio-speech": "workspace:^",
+    "@qflow/gpt-image": "workspace:^",
+    "@qflow/gpt-image-kits": "workspace:^",
+    "@qflow/grok-imagine": "workspace:^",
+    "@qflow/html-video": "workspace:^",
+    "@qflow/image-operations": "workspace:^",
+    "@qflow/media-operations": "workspace:^",
+    "@qflow/speech-estimate": "workspace:^",
+    "@qflow/mimo-speech": "workspace:^",
+    "@qflow/minimax-h3": "workspace:^",
+    "@qflow/nano-banana": "workspace:^",
+    "@qflow/pixverse": "workspace:^",
+    "@qflow/provider-html-local": "workspace:^",
+    "@qflow/provider-image-opencv-local": "workspace:^",
+    "@qflow/provider-qflowhub": "workspace:^",
+    "@qflow/media-local": "workspace:^",
+    "@qflow/provider-whisperx-local": "workspace:^",
+    "@qflow/seedance": "workspace:^",
+    "@qflow/seedance-kits": "workspace:^",
+    "@qflow/seedream": "workspace:^",
+    "@qflow/script": "workspace:^",
+    "@qflow/studio-companion": "workspace:^",
+    "@qflow/runtime-local": "workspace:^",
+    "@qflow/video": "workspace:^",
+    "@qflow/studio": "workspace:^",
+    "@qflow/text-fine": "workspace:^",
+    "@qflow/timeline-author": "workspace:^",
+    "@qflow/volcengine-matting": "workspace:^",
+    "@qflow/visual-track": "workspace:^",
+    "@qflow/wan": "workspace:^",
+    "@qflow/whisperx": "workspace:^",
+    "@qflow/yt-dlp": "workspace:^",
+    "@types/node": "24.10.1",
     "koffi": "3.2.1",
-    "puppeteer-core": "25.10.0",
-    "sharp": "0.35.4",
-    "cmu-pronouncing-dictionary": "3.0.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vite": "8.2.2",
     "cjs-module-lexer": "2.2.1"
   }
 }

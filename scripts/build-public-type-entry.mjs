@@ -1,5 +1,6 @@
 import { rollup } from "rollup";
 import { dts } from "rollup-plugin-dts";
+import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -31,10 +32,14 @@ const bundle = await rollup({
     {
       name: "qflow-public-declarations",
       resolveId(source) {
-        const match = /^@qflow\/([^/]+)$/.exec(source);
-        return match === null
-          ? null
-          : resolve(declarationPackages, match[1], "src/index.d.ts");
+        const match = /^@qflow\/([^/]+)(?:\/(.+))?$/.exec(source);
+        if (match === null) return null;
+        const root = resolve(declarationPackages, match[1], "src");
+        if (match[2] === undefined) return resolve(root, "index.d.ts");
+        const file = resolve(root, `${match[2]}.d.ts`);
+        if (existsSync(file)) return file;
+        const index = resolve(root, match[2], "index.d.ts");
+        return existsSync(index) ? index : null;
       },
     },
     dts(),

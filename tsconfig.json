@@ -3,6 +3,9 @@
     "target": "ES2023",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "customConditions": [
+      "qflow-source"
+    ],
     "lib": [
       "ES2023",
       "DOM"

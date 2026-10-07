@@ -30,7 +30,7 @@ const suites = {
     files: ["packages/provider-image-opencv-local/test/provider.test.ts"],
     env: {
       QFLOW_OPENCV_TESTS: "1",
-      QFLOW_OPENCV_PYTHON: managedPython("services/image-opencv"),
+      QFLOW_OPENCV_PYTHON: managedPython("packages/provider-image-opencv-local/runtime"),
     },
   },
 };

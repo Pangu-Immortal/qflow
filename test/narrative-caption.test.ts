@@ -6,7 +6,7 @@ import type { Narrative } from "@qflow/narrative";
 import { captionUnitsForNarrativeSelection, projectNarrativeCaptionTiming } from "@qflow/narrative-caption";
 import { captionDocument, narrativeCaptionBinding, narrativeValue, parseScript } from "@qflow/script";
 import { createNarrativeProjection, projectNarrativeAlignment, selectionFrameSpan } from "@qflow/narrative-temporal";
-import { alignNarrative } from "@qflow/speech-alignment";
+import { alignNarrative } from "@qflow/narrative-speech-alignment";
 import type { Timeline } from "@qflow/timeline";
 import { interpretWhisperXTranscript } from "@qflow/whisperx";
 

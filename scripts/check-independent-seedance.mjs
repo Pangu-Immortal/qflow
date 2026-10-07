@@ -1,0 +1,108 @@
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { access, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import {
+  installDistributionPackageResolution,
+  loadNodePackageSelection,
+  resolveNodePackageSource,
+} from "../packages/loader/src/node/index.ts";
+
+import { packIndependentPackage } from "./pack-independent-package.mjs";
+
+const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const npmCli = process.env.npm_execpath;
+if (!npmCli?.endsWith("npm-cli.js")) {
+  throw new Error("Run npm run check:seedance-package.");
+}
+
+const root = await mkdtemp(join(tmpdir(), "qflow-seedance-consumer-"));
+const output = join(root, "packages");
+const consumer = join(root, "consumer");
+const distribution = join(root, "distribution");
+let passed = false;
+try {
+  const seedance = await packIndependentPackage("packages/seedance", output);
+  const kits = await packIndependentPackage("packages/seedance-kits", output, { buildPublicTypes: false });
+  await mkdir(consumer);
+  await writeFile(join(consumer, "package.json"), `${JSON.stringify({
+    name: "seedance-independent-consumer",
+    private: true,
+    type: "module",
+  }, null, 2)}\n`);
+  execFileSync(process.execPath, [
+    npmCli,
+    "install",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund",
+    "--legacy-peer-deps",
+    seedance,
+    kits,
+  ], {
+    cwd: consumer,
+    stdio: "inherit",
+    env: { ...process.env, npm_config_cache: join(root, "npm-cache") },
+  });
+
+  const installedManifest = JSON.parse(await readFile(
+    join(consumer, "node_modules", "@qflow", "seedance", "package.json"),
+    "utf8",
+  ));
+  assert.equal(installedManifest.private, undefined);
+  assert.equal(installedManifest.exports["."], "./dist/index.js");
+  assert.equal(installedManifest.qflow.activation, "./dist/activation.js");
+  assert.deepEqual(installedManifest.dependencies, {});
+  assert.deepEqual(installedManifest.peerDependencies, { "@qflow/qflow": "^0.3.0" });
+  const installedSeedanceRoot = join(consumer, "node_modules", "@qflow", "seedance");
+  await access(join(installedSeedanceRoot, "dist", "activation.js"));
+  await access(join(installedSeedanceRoot, "LICENSE"));
+  await assert.rejects(access(join(installedSeedanceRoot, "src", "activation.ts")));
+
+  const installedKitsRoot = join(consumer, "node_modules", "@qflow", "seedance-kits");
+  const installedKitsManifest = JSON.parse(await readFile(join(installedKitsRoot, "package.json"), "utf8"));
+  assert.equal(installedKitsManifest.private, undefined);
+  assert.equal(installedKitsManifest.qflow, undefined);
+  await access(join(installedKitsRoot, "kits", "speaker-v1.svs"));
+  await access(join(installedKitsRoot, "LICENSE"));
+
+  await mkdir(join(distribution, "packages"), { recursive: true });
+  await writeFile(join(distribution, "package.json"), await readFile(
+    join(repositoryRoot, "package.json"), "utf8",
+  ));
+  for (const entry of await readdir(join(repositoryRoot, "packages"), { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name === "seedance" || entry.name === "seedance-kits") continue;
+    await symlink(join(repositoryRoot, "packages", entry.name), join(distribution, "packages", entry.name),
+      process.platform === "win32" ? "junction" : "dir");
+  }
+
+  installDistributionPackageResolution([distribution]);
+  const loaded = await loadNodePackageSelection(["@qflow/seedance"], consumer, {
+    fallbackRoots: [distribution],
+  });
+  const installedSeedance = loaded.find((item) => item.specifier === "@qflow/seedance");
+  assert.ok(installedSeedance);
+  assert.deepEqual(installedSeedance.contribution.modules?.map((item) => [
+    item.manifest.name,
+    item.manifest.version,
+  ]), [["@qflow/seedance", "1"]]);
+
+  const source = resolveNodePackageSource("@qflow/seedance-kits/speaker", {
+    from: join(consumer, "package.json"),
+    workspaceRoots: [consumer],
+    distributionRoots: [],
+  });
+  assert.equal(source.package, "@qflow/seedance-kits");
+  assert.match(await readFile(source.source, "utf8"), /speaker-v1/u);
+  const lock = await readFile(join(consumer, "package-lock.json"), "utf8");
+  assert.match(lock, /qflow-seedance-0\.0\.0-dev\.tgz/u);
+  assert.match(lock, /qflow-seedance-kits-0\.0\.0-dev\.tgz/u);
+  passed = true;
+  console.log(`Independent Seedance consumer passed: ${seedance}, ${kits}`);
+} finally {
+  if (passed) await rm(root, { recursive: true, force: true });
+  else console.error(`Independent Seedance consumer retained at ${root}`);
+}

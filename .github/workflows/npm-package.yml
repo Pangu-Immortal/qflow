@@ -51,10 +51,10 @@ jobs:
       - name: Read the package version
         id: version
         run: node --input-type=module -e 'import { readFileSync, appendFileSync } from "node:fs"; const { version } = JSON.parse(readFileSync("package.json", "utf8")); appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);'
-      - name: Build the npm package and README
-        run: npm run pack:distribution
-      - name: Install, render and export outside the checkout
-        run: npm run check:distribution -- "dist/release/qflow-qflow-${{ steps.version.outputs.version }}.tgz"
+      - name: Build the release candidate without publishing
+        run: npm run pack:release-candidate
+      - name: Install the complete candidate, render and export outside the checkout
+        run: npm run check:release-candidate
       - uses: actions/upload-artifact@v4
         if: runner.os == 'Linux'
         with:
@@ -62,4 +62,5 @@ jobs:
           path: |
             dist/release/*.tgz
             dist/release/README.md
+            dist/release/release-plan.json
           if-no-files-found: error

@@ -1,0 +1,253 @@
+import { execFileSync } from "node:child_process";
+import { globSync } from "node:fs";
+import { cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const require = createRequire(import.meta.url);
+const typescript = require("typescript");
+const typescriptCli = require.resolve("typescript/bin/tsc");
+
+function npmCli() {
+  const value = process.env.npm_execpath;
+  if (!value?.endsWith("npm-cli.js")) {
+    throw new Error("Run this packer through npm run pack:independent.");
+  }
+  return value;
+}
+
+function runNpm(args, cwd, capture = false, env = {}) {
+  return execFileSync(process.execPath, [npmCli(), ...args], {
+    cwd,
+    encoding: "utf8",
+    stdio: capture ? ["ignore", "pipe", "inherit"] : "inherit",
+    env: { ...process.env, ...env },
+  });
+}
+
+function publishedTarget(value) {
+  if (typeof value === "string") {
+    return value.startsWith("./src/") && value.endsWith(".ts")
+      ? `./dist/${value.slice("./src/".length, -".ts".length)}.js`
+      : value;
+  }
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return value;
+  return Object.fromEntries(Object.entries(value).map(([key, target]) => [key, publishedTarget(target)]));
+}
+
+function inside(root, candidate) {
+  const relation = relative(root, candidate);
+  return relation === "" || (relation !== ".." && !relation.startsWith(`..${sep}`) && !isAbsolute(relation));
+}
+
+async function copyDeclaredEntry(packageRoot, stage, entry) {
+  const source = resolve(packageRoot, entry);
+  if (!inside(packageRoot, source)) throw new Error(`${entry} escapes ${packageRoot}`);
+  await stat(source);
+  await cp(source, resolve(stage, entry), { recursive: true });
+}
+
+async function compileSources(packageRoot, stage) {
+  const sources = globSync("src/**/*.ts", { cwd: packageRoot }).sort();
+  if (sources.length === 0) return false;
+  execFileSync(process.execPath, [
+    typescriptCli,
+    "--target", "ES2023",
+    "--module", "NodeNext",
+    "--moduleResolution", "NodeNext",
+    "--customConditions", "qflow-source",
+    "--lib", "ES2023,DOM",
+    "--strict",
+    "--noUncheckedIndexedAccess",
+    "--exactOptionalPropertyTypes",
+    "--verbatimModuleSyntax",
+    "--declaration",
+    "--skipLibCheck",
+    "--rootDir", resolve(packageRoot, "src"),
+    "--outDir", resolve(stage, "dist"),
+    ...sources.map((source) => resolve(packageRoot, source)),
+  ], { cwd: repositoryRoot, stdio: "inherit" });
+  await rewritePublishedDeclarationSpecifiers(stage);
+  return true;
+}
+
+function exportTargets(value) {
+  if (typeof value === "string") return [value];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return [];
+  return Object.values(value).flatMap(exportTargets);
+}
+
+async function embeddedPublicSpecifiers() {
+  const rootManifest = JSON.parse(await readFile(resolve(repositoryRoot, "package.json"), "utf8"));
+  const candidates = new Map();
+  for (const [exportName, value] of Object.entries(rootManifest.exports ?? {})) {
+    if (!exportName.startsWith("./")) continue;
+    for (const target of exportTargets(value)) {
+      const match = /^\.\/packages\/([^/]+)\//u.exec(target);
+      if (match === null) continue;
+      const list = candidates.get(match[1]) ?? [];
+      list.push(`${rootManifest.name}${exportName.slice(1)}`);
+      candidates.set(match[1], list);
+    }
+  }
+  const specifiers = new Map();
+  for (const [directory, values] of candidates) {
+    const manifest = JSON.parse(await readFile(resolve(repositoryRoot, "packages", directory, "package.json"), "utf8"));
+    const publicSpecifier = [...new Set(values)].sort((left, right) => {
+      const depth = left.split("/").length - right.split("/").length;
+      return depth === 0 ? left.localeCompare(right) : depth;
+    })[0];
+    if (typeof manifest.name === "string" && publicSpecifier !== undefined) {
+      specifiers.set(manifest.name, publicSpecifier);
+    }
+  }
+  return specifiers;
+}
+
+function referencedModuleSpecifiers(sourceFile) {
+  const references = [];
+  const visit = (node) => {
+    if ((typescript.isImportDeclaration(node) || typescript.isExportDeclaration(node))
+      && node.moduleSpecifier !== undefined && typescript.isStringLiteral(node.moduleSpecifier)) {
+      references.push(node.moduleSpecifier);
+    } else if (typescript.isImportTypeNode(node) && typescript.isLiteralTypeNode(node.argument)
+      && typescript.isStringLiteral(node.argument.literal)) {
+      references.push(node.argument.literal);
+    } else if (typescript.isCallExpression(node) && node.expression.kind === typescript.SyntaxKind.ImportKeyword
+      && node.arguments[0] !== undefined && typescript.isStringLiteral(node.arguments[0])) {
+      references.push(node.arguments[0]);
+    }
+    typescript.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return references;
+}
+
+/**
+ * Independent packages compile against the Distribution's source condition while the repository is
+ * under development. Declaration inference can consequently expose an embedded workspace identity
+ * such as `@qflow/protocol`, even though its npm owner is the public `@qflow/qflow/protocol` export.
+ * Translate only module specifiers, deriving the ownership map from the root's real exports rather
+ * than maintaining another package list.
+ */
+async function rewritePublishedDeclarationSpecifiers(stage) {
+  const publicSpecifiers = await embeddedPublicSpecifiers();
+  const rewrite = (value) => {
+    for (const [embedded, published] of publicSpecifiers) {
+      if (value === embedded || value.startsWith(`${embedded}/`)) {
+        return `${published}${value.slice(embedded.length)}`;
+      }
+    }
+    return value;
+  };
+  for (const declaration of globSync("dist/**/*.d.ts", { cwd: stage }).sort()) {
+    const path = resolve(stage, declaration);
+    let text = await readFile(path, "utf8");
+    const sourceFile = typescript.createSourceFile(path, text, typescript.ScriptTarget.Latest, true,
+      typescript.ScriptKind.TS);
+    const edits = referencedModuleSpecifiers(sourceFile).flatMap((literal) => {
+      const next = rewrite(literal.text);
+      return next === literal.text ? [] : [{ start: literal.getStart(sourceFile), end: literal.getEnd(), next }];
+    }).sort((left, right) => right.start - left.start);
+    for (const edit of edits) text = `${text.slice(0, edit.start)}${JSON.stringify(edit.next)}${text.slice(edit.end)}`;
+    if (edits.length > 0) await writeFile(path, text);
+
+    const rewritten = typescript.createSourceFile(path, text, typescript.ScriptTarget.Latest, true,
+      typescript.ScriptKind.TS);
+    const leaked = referencedModuleSpecifiers(rewritten)
+      .map((literal) => literal.text)
+      .filter((value) => rewrite(value) !== value);
+    if (leaked.length > 0) {
+      throw new Error(`${declaration} exposes embedded package specifiers: ${[...new Set(leaked)].join(", ")}`);
+    }
+  }
+}
+
+async function releasedDependencyVersion(owner, name, declared) {
+  if (!declared.startsWith("workspace:")) return declared;
+  if (declared !== "workspace:^") {
+    throw new Error(`${owner} still has private workspace dependency ${name}@${declared}`);
+  }
+  const manifests = [
+    "package.json",
+    ...globSync("packages/*/package.json", { cwd: repositoryRoot }),
+    ...globSync("services/*/package.json", { cwd: repositoryRoot }),
+  ];
+  for (const candidate of manifests) {
+    const dependency = JSON.parse(await readFile(resolve(repositoryRoot, candidate), "utf8"));
+    if (dependency.name !== name) continue;
+    if (typeof dependency.version !== "string" || dependency.version.length === 0) {
+      throw new Error(`${name} has no release version`);
+    }
+    // Development prereleases are local tarball evidence, not a Registry compatibility promise.
+    // A real published version keeps the workspace:^ declaration as an ordinary caret range.
+    return dependency.version.includes("-") ? dependency.version : `^${dependency.version}`;
+  }
+  throw new Error(`${owner} release dependency ${name} is not a workspace package`);
+}
+
+export async function packIndependentPackage(packageDirectory, outputDirectory, options = {}) {
+  const packageRoot = resolve(repositoryRoot, packageDirectory);
+  const output = resolve(repositoryRoot, outputDirectory);
+  const manifest = JSON.parse(await readFile(resolve(packageRoot, "package.json"), "utf8"));
+  if (typeof manifest.name !== "string" || typeof manifest.version !== "string") {
+    throw new Error(`${packageRoot}/package.json has no package identity`);
+  }
+  if (options.buildPublicTypes !== false) runNpm(["run", "build:public-types"], repositoryRoot);
+
+  const stage = await mkdtemp(resolve(tmpdir(), "qflow-independent-package-"));
+  try {
+    const compiled = await compileSources(packageRoot, stage);
+    for (const entry of manifest.files ?? []) {
+      if (entry === "dist" || entry === "LICENSE") continue;
+      await copyDeclaredEntry(packageRoot, stage, entry);
+    }
+    const localLicense = resolve(packageRoot, "LICENSE");
+    const license = await stat(localLicense).then(() => localLicense).catch(() => resolve(repositoryRoot, "LICENSE"));
+    await cp(license, resolve(stage, "LICENSE"));
+
+    const releaseVersions = async (values) => Object.fromEntries(await Promise.all(Object.entries(values ?? {}).map(async ([name, version]) => {
+      if (typeof version !== "string") throw new Error(`${manifest.name} dependency ${name} has no version`);
+      return [name, await releasedDependencyVersion(manifest.name, name, version)];
+    })));
+    const dependencies = await releaseVersions(manifest.dependencies);
+    const peerDependencies = await releaseVersions(manifest.peerDependencies);
+    const published = {
+      ...manifest,
+      exports: publishedTarget(manifest.exports),
+      ...(manifest.qflow === undefined ? {} : {
+        qflow: { ...manifest.qflow, activation: publishedTarget(manifest.qflow.activation) },
+      }),
+      files: [...new Set([...(compiled ? ["dist"] : []), ...(manifest.files ?? []), "LICENSE"])],
+      dependencies,
+      ...(Object.keys(peerDependencies).length === 0 ? {} : { peerDependencies }),
+    };
+    delete published.private;
+    delete published.devDependencies;
+    delete published.scripts;
+    await writeFile(resolve(stage, "package.json"), `${JSON.stringify(published, null, 2)}\n`);
+    await mkdir(output, { recursive: true });
+    const packed = JSON.parse(runNpm([
+      "pack", "--ignore-scripts", "--pack-destination", output, "--json",
+    ], stage, true, { npm_config_cache: resolve(stage, ".npm-cache") }));
+    const filename = packed[0]?.filename;
+    if (typeof filename !== "string") throw new Error(`${manifest.name} pack returned no filename`);
+    return resolve(output, filename);
+  } finally {
+    await rm(stage, { recursive: true, force: true });
+  }
+}
+
+const invokedDirectly = process.argv[1] !== undefined
+  && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
+if (invokedDirectly) {
+  const packageDirectory = process.argv[2];
+  const outputDirectory = process.argv[3] ?? "dist/independent";
+  if (packageDirectory === undefined) {
+    throw new Error("Usage: npm run pack:independent -- packages/<name> [output-directory]");
+  }
+  console.log(await packIndependentPackage(packageDirectory, outputDirectory));
+}

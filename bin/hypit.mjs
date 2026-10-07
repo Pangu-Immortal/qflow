@@ -23,25 +23,18 @@ process.emitWarning = function qflowWarning(warning, ...args) {
 const distributionRoot = realpathSync.native(resolve(dirname(fileURLToPath(import.meta.url)), ".."));
 const distributionUrl = pathToFileURL(distributionRoot + sep);
 register();
-const {
-  installDistributionPackageResolution,
-  installExternalPackageResolution,
-} = await import(new URL("packages/package-loader-node/src/distribution-resolution.ts", distributionUrl).href);
+const { installDistributionPackageResolution } =
+  await import(new URL("packages/loader/src/node/distribution-resolution.ts", distributionUrl).href);
 installDistributionPackageResolution([distributionRoot]);
-const { qflowHostPackageRoot } = await import(new URL("packages/runtime-host-node/src/index.ts", distributionUrl).href);
-installExternalPackageResolution([qflowHostPackageRoot()]);
 const args = process.argv.slice(2);
-if (args[0] === "studio" || (args[0] === "help" && args[1] === "studio")) {
-  const { runStudio } = await import(new URL("packages/studio/start.ts", distributionUrl).href);
-  try {
-    await runStudio(args[0] === "help" ? ["--help"] : args.slice(1).filter((arg) => arg !== "--debug"), {
-      write: (text) => process.stdout.write(text),
-    });
-  } catch (error) {
-    const { renderCliError } = await import(new URL("packages/cli/src/index.ts", distributionUrl).href);
-    process.stderr.write(renderCliError(error, { debug: args.includes("--debug") }));
-    process.exitCode = 1;
-  }
-} else {
-  await import(new URL("packages/video-cli/src/cli.ts", distributionUrl).href);
-}
+const { runInstalledCliApplication, runNodeCli } = await import(new URL("packages/cli/src/index.ts", distributionUrl).href);
+const { createVideoDistribution } = await import("@qflow/video");
+const videoDistribution = createVideoDistribution({
+  packageRoot: distributionRoot,
+  launcher: fileURLToPath(import.meta.url),
+});
+await runNodeCli(args, async (argv, io) => await runInstalledCliApplication(argv, io, {
+  distribution: videoDistribution,
+  distributionRoot,
+  launcher: fileURLToPath(import.meta.url),
+}));
