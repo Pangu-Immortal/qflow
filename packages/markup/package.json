@@ -5,12 +5,20 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./run": "./src/run/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/run/activation.ts"
   },
   "dependencies": {
-    "@qflow/core": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/host": "workspace:*",
-    "@qflow/protocol": "workspace:*"
+    "@qflow/source": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/facet": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/run": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/kernel": "workspace:*"
   }
 }

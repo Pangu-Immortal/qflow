@@ -1,4 +1,5 @@
 import { canonicalStringify } from "@qflow/protocol";
+import { decodeSourceText } from "@qflow/source";
 import type {
   ModuleRef,
   ResolvedModule,
@@ -11,7 +12,7 @@ import type {
   AuthorSourceIdentity,
   AuthorValueRef,
   GraphFragment,
-} from "@qflow/elaborator";
+} from "@qflow/author";
 
 import { MarkupFrontendError } from "./error.js";
 import {
@@ -203,7 +204,7 @@ export async function decodeMarkup(source: MarkupSource, context: MarkupDecodeCo
         name,
         id,
       }))),
-      inputs: Object.entries(element.attributes).flatMap(([name, value]): readonly import("@qflow/elaborator").AuthorInputProvenanceDraft[] => {
+      inputs: Object.entries(element.attributes).flatMap(([name, value]): readonly import("@qflow/author").AuthorInputProvenanceDraft[] => {
         const range = element.attributeValueRanges?.[name];
         if (range === undefined) return [];
         if (typeof value === "string") return [{ name, range: { ...range }, kind: "literal" as const }];
@@ -245,6 +246,7 @@ export async function decodeMarkup(source: MarkupSource, context: MarkupDecodeCo
       if (opening.selfClosing) fail(source, "MARKUP_RAW_SELF_CLOSING", `Raw Surface <${opening.name}> cannot be self-closing.`, cursor);
       const rawOutput = await (registered.handler as RawSurfaceHandler)({
         sourceName: source.name,
+        ...(source.id === undefined ? {} : { sourceId: source.id }),
         source: source.text,
         tag: opening.name,
         openingStart: opening.start,
@@ -267,6 +269,7 @@ export async function decodeMarkup(source: MarkupSource, context: MarkupDecodeCo
       structuredElement = parsed.element;
       output = await (registered.handler as StructuredSurfaceHandler)({
         sourceName: source.name,
+        ...(source.id === undefined ? {} : { sourceId: source.id }),
         element: parsed.element,
         resolveReference(path) {
           const imported = importedReferences.get(path);
@@ -481,7 +484,7 @@ export function createMarkupAuthorFrontend(options: MarkupAuthorFrontendOptions)
   return {
     id: markupAuthorFrontendId,
     discover(source) {
-      const discovery = discoverMarkup(source);
+      const discovery = discoverMarkup({ ...source, text: decodeSourceText(source) });
       return {
         modules: discovery.imports.filter((item) => item.kind === "module").map((item) => item.from),
         sources: discovery.imports
@@ -495,8 +498,9 @@ export function createMarkupAuthorFrontend(options: MarkupAuthorFrontendOptions)
       };
     },
     async decode(source, context) {
+      const text = decodeSourceText(source);
       const result = await decodeMarkup(
-        { name: source.name, text: source.text },
+        { id: source.id, name: source.name, text },
         {
           closure: context.closure,
           registry: options.registry,

@@ -79,3 +79,20 @@ export function maskSourceHeader(text: string, header: SourceHeader): string {
   const prefix = text.slice(0, header.end).replace(/[^\r\n]/g, " ");
   return `${prefix}${text.slice(header.end)}`;
 }
+
+/** Optional adapter for Qflow's self-described UTF-8 author-file convention. */
+export function resolveSelfDescribedTextSource(input: {
+  readonly id: string;
+  readonly name: string;
+  readonly text: string;
+}): import("./unit.js").ResolvedSource {
+  const header = parseSourceHeader(input.name, input.text);
+  return {
+    frontend: header.using,
+    unit: {
+      id: input.id,
+      name: input.name,
+      bytes: new TextEncoder().encode(maskSourceHeader(input.text, header)),
+    },
+  };
+}

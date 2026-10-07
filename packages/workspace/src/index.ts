@@ -2,12 +2,12 @@ import type {
   Awaitable,
   SourceAssetResolver,
   SourceResolver,
-  SourceUnit,
+  ResolvedSource,
 } from "@qflow/source";
 import type { BlobRef } from "@qflow/protocol";
 
 /** Repeatably openable transfer bytes admitted by the selected Workspace. */
-export type ArtifactAttachment = {
+export type BlobAttachment = {
   readonly artifact: BlobRef;
   /** Stable external address, when the Workspace supplies a file by reference. */
   readonly location?: string;
@@ -16,10 +16,10 @@ export type ArtifactAttachment = {
 
 /** One isolated, read-once definition session for exactly one compilation. */
 export interface WorkspaceSession {
-  readonly entry: SourceUnit;
+  readonly entry: ResolvedSource;
   readonly resolveSource: SourceResolver;
   readonly resolveAsset: SourceAssetResolver;
-  attachments(): Awaitable<readonly ArtifactAttachment[]>;
+  attachments(): Awaitable<readonly BlobAttachment[]>;
 }
 
 /** Replaceable definition environment: filesystem, browser, Git, memory or remote workspace. */

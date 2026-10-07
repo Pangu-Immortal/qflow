@@ -1,0 +1,13 @@
+{
+  "name": "@qflow/atomic-file",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "koffi": "3.2.1"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@qflow/author",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@qflow/kernel": "workspace:*",
+    "@qflow/facet": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/source": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/composition": "workspace:*",
+    "@qflow/narrative-temporal": "workspace:*",
+    "@qflow/spatial": "workspace:*"
+  }
+}

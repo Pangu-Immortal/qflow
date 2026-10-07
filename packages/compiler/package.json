@@ -1,0 +1,24 @@
+{
+  "name": "@qflow/compiler",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@qflow/kernel": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/workspace": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/run": "workspace:*",
+    "@qflow/source": "workspace:*",
+    "@qflow/admission": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/markup": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/workspace": "workspace:*"
+  }
+}

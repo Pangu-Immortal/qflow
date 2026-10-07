@@ -19,10 +19,11 @@ import type {
   Awaitable,
   GraphFragment,
   ResolvedAuthorSourceImport,
-} from "@qflow/elaborator";
+} from "@qflow/author";
 
 /** Decoder-local Markup text; Source identity and closure ownership stay outside the parser. */
 export type MarkupSource = {
+  readonly id?: string;
   readonly name: string;
   readonly text: string;
 };
@@ -92,12 +93,14 @@ export type SurfaceDecodeOutput = {
 
 export type RawSurfaceInput = {
   readonly sourceName: string;
+  /** Canonical identity of the declaring Source when the Host provides one. */
+  readonly sourceId?: string;
   readonly source: string;
   readonly tag: string;
   readonly openingStart: number;
   readonly contentStart: number;
   readonly attributes: Readonly<Record<string, MarkupAttributeValue>>;
-  readonly resolveAsset: (request: AuthorSourceAssetRequest) => Awaitable<import("@qflow/elaborator").ResolvedAuthorSourceAsset>;
+  readonly resolveAsset: (request: AuthorSourceAssetRequest) => Awaitable<import("@qflow/author").ResolvedAuthorSourceAsset>;
 };
 
 export type RawSurfaceOutput = SurfaceDecodeOutput & {
@@ -106,6 +109,8 @@ export type RawSurfaceOutput = SurfaceDecodeOutput & {
 
 export type StructuredSurfaceInput = {
   readonly sourceName: string;
+  /** Canonical identity of the declaring Source when the Host provides one. */
+  readonly sourceId?: string;
   readonly element: StructuredElement;
   /**
    * Resolve an explicitly written author reference. Imported record values are
@@ -113,7 +118,7 @@ export type StructuredSurfaceInput = {
    * A component output has a ref and Type but no compile-time Record value.
    */
   readonly resolveReference: (path: string) => SurfaceResolvedReference | undefined;
-  readonly resolveAsset: (request: AuthorSourceAssetRequest) => Awaitable<import("@qflow/elaborator").ResolvedAuthorSourceAsset>;
+  readonly resolveAsset: (request: AuthorSourceAssetRequest) => Awaitable<import("@qflow/author").ResolvedAuthorSourceAsset>;
 };
 
 export type SurfaceResolvedReference = {
@@ -221,7 +226,7 @@ export type MarkupDecodeContext = {
   readonly registry: MarkupSurfaceRegistryLike;
   readonly resolveModule: (request: MarkupImportRequest) => ModuleRef;
   readonly sourceImports?: readonly ResolvedAuthorSourceImport[];
-  readonly resolveAsset?: (request: AuthorSourceAssetRequest) => Awaitable<import("@qflow/elaborator").ResolvedAuthorSourceAsset>;
+  readonly resolveAsset?: (request: AuthorSourceAssetRequest) => Awaitable<import("@qflow/author").ResolvedAuthorSourceAsset>;
 };
 
 export type MarkupDecodeResult = {

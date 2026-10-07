@@ -1,13 +1,18 @@
 # `@qflow/source`
 
-The smallest source bootstrap shared by Author and Run compilation.
+The byte-oriented Source contract shared by Author and Run compilation.
 
-It recognizes exactly one mandatory bounded Header:
+`SourceUnit` contains opaque bytes and Workspace-canonical identity. `ResolvedSource` pairs those
+bytes with the exact trusted Frontend selected by the caller, Workspace mount or package Source
+export. Source itself never guesses from a suffix or body and has no default parser.
+
+`@qflow/source/text` is the optional adapter used by Qflow's self-described UTF-8 author files. It
+recognizes one bounded Header such as:
 
 ```xml
 <?svml using="@qflow/markup@1"?>
 ```
 
-The Header selects an exact trusted Frontend. There is no suffix dispatch and no default parser.
-The package masks the Header while preserving UTF-16 source offsets and line breaks, but does not recognize imports,
-XML, Script, Recipes, Run syntax or domain Types. Those belong to the selected Frontend.
+The adapter masks the Header while preserving UTF-16 offsets and line breaks. Other Workspaces can
+produce `ResolvedSource` directly and need not use text or a Header. Neither entry recognizes
+imports, XML, Script, Recipes, Run syntax or domain Types; those belong to the selected Frontend.

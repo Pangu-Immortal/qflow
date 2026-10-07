@@ -1,7 +1,7 @@
 import type {
   CompiledSourceClosure,
   GraphFragment,
-} from "@qflow/elaborator";
+} from "@qflow/author";
 import type {
   Candidate,
   CanonicalValue,
@@ -11,13 +11,11 @@ import type {
   TypeRef,
 } from "@qflow/protocol";
 export type { RunGraph } from "@qflow/protocol";
-import type { SourceHeader, SourceUnit } from "@qflow/source";
+import type { SourceUnit } from "@qflow/source";
 
 export type RunSourceUnit = SourceUnit;
 
-export type RunFrontendSourceUnit = RunSourceUnit & {
-  readonly header: SourceHeader;
-};
+export type RunFrontendSourceUnit = RunSourceUnit;
 
 export type RunAuthorSourceRequest = {
   readonly source: string;

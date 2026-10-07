@@ -1,7 +1,4 @@
-import {
-  maskSourceHeader,
-  parseSourceHeader,
-} from "@qflow/source";
+import type { ResolvedSource } from "@qflow/source";
 
 import type {
   RunDocument,
@@ -41,22 +38,12 @@ export class RunFrontendRegistry implements RunFrontendRegistryLike {
   }
 }
 
-export function prepareRunSource(source: RunSourceUnit): RunFrontendSourceUnit {
-  const header = parseSourceHeader(source.name, source.text);
-  return {
-    ...source,
-    text: maskSourceHeader(source.text, header),
-    header,
-  };
-}
-
 export async function compileRunSource(
-  source: RunSourceUnit,
+  source: ResolvedSource,
   frontends: RunFrontendRegistryLike,
 ): Promise<{ readonly document: RunDocument }> {
-  const prepared = prepareRunSource(source);
-  const frontend = frontends.resolve(prepared.header.using);
-  assert(frontend !== undefined, "UNKNOWN_RUN_FRONTEND", `Run Frontend ${prepared.header.using} is not registered`, prepared.header.using);
-  const decoded = await frontend.decode(prepared);
+  const frontend = frontends.resolve(source.frontend);
+  assert(frontend !== undefined, "UNKNOWN_RUN_FRONTEND", `Run Frontend ${source.frontend} is not registered`, source.frontend);
+  const decoded = await frontend.decode(source.unit);
   return { document: decoded.document };
 }

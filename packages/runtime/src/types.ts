@@ -4,7 +4,7 @@ import type {
   BuildFact,
   BuildState,
   CommandResult,
-  CoreCommand,
+  BuildCommand,
   ResourceId,
 } from "@qflow/protocol";
 import type { OperationSnapshot } from "./operations.js";
@@ -16,7 +16,7 @@ export type RuntimeBlockedCommand = {
 };
 
 export type RuntimeRunnableCommand = {
-  readonly command: CoreCommand;
+  readonly command: BuildCommand;
   /** Every resource is acquired atomically before the command can cause a side effect. */
   readonly resources: readonly RuntimeResourceClaim[];
   /** Asynchronous work retains one shared in-flight reservation while polling. */
@@ -60,7 +60,7 @@ export type RuntimeExecutionResult =
 /** Build-local indexed execution view. Definition + Facts remain the only durable representation. */
 export type RuntimeBuildExecution = {
   view(): BuildState;
-  commands(): readonly CoreCommand[];
+  commands(): readonly BuildCommand[];
   record(id: string): import("@qflow/protocol").TypedRecord | undefined;
 };
 
@@ -145,7 +145,7 @@ export type ScheduledBuild =
 
 export type SchedulerExecutionOutcome = {
   readonly command: string;
-  readonly kind: CoreCommand["kind"];
+  readonly kind: BuildCommand["kind"];
   readonly resources: readonly string[];
   readonly status: "completed" | "pending" | "deferred" | "error";
   readonly operation?: string;

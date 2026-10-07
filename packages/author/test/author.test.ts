@@ -1,0 +1,210 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  createResolvedClosure,
+  link,
+  sealBuildRequest,
+  sealRecord,
+  start,
+} from "@qflow/kernel";
+import {
+  AuthorGraphError,
+  elaborateAuthorGraph,
+  sealGraphFragment,
+} from "@qflow/author";
+import type { AuthorComponent, GraphFragment } from "@qflow/author";
+import type {
+  LinkedProgram,
+  ModuleManifest,
+  ProducerRef,
+  TypeRef,
+} from "@qflow/protocol";
+
+const laboratory = { name: "example.laboratory", version: "1" } as const;
+const sampleType = { module: laboratory, name: "Sample" } satisfies TypeRef;
+const measurementType = { module: laboratory, name: "Measurement" } satisfies TypeRef;
+const reportType = { module: laboratory, name: "Report" } satisfies TypeRef;
+const measureProducer = { module: laboratory, name: "measure" } satisfies ProducerRef;
+const reportProducer = { module: laboratory, name: "write-report" } satisfies ProducerRef;
+const echoProducer = { module: laboratory, name: "echo-sample" } satisfies ProducerRef;
+
+const manifest: ModuleManifest = {
+  format: "qflow.module@1",
+  name: laboratory.name,
+  version: laboratory.version,
+  dependencies: [],
+  types: [
+    { name: sampleType.name },
+    { name: measurementType.name },
+    { name: reportType.name },
+  ],
+  capabilities: [],
+  producers: [
+    {
+      name: measureProducer.name,
+      inputs: [{ name: "sample", type: sampleType }],
+      outputs: [{ name: "measurement", type: measurementType }],
+      needs: [],
+    },
+    {
+      name: reportProducer.name,
+      inputs: [{ name: "measurement", type: measurementType }],
+      outputs: [{ name: "report", type: reportType }],
+      needs: [],
+    },
+    {
+      name: echoProducer.name,
+      inputs: [{ name: "sample", type: sampleType }],
+      outputs: [{ name: "sample", type: sampleType }],
+      needs: [],
+    },
+  ],
+};
+
+const closure = createResolvedClosure([manifest]);
+
+function program(): LinkedProgram {
+  return link(closure, [sealRecord({
+      id: "sample:soil",
+      type: sampleType,
+      value: { kind: "inline", value: "soil" },
+  })]);
+}
+
+function singleOperationFragment(
+  inputName: string,
+  inputType: TypeRef,
+  producer: ProducerRef,
+  resultName: string,
+  resultType: TypeRef,
+): GraphFragment {
+  return sealGraphFragment({
+    inputs: [{ name: inputName, type: inputType }],
+    operations: [{
+      id: "produce",
+      producer,
+      inputs: { [inputName]: { kind: "fragment-input", name: inputName } },
+      result: { kind: "output", name: resultName },
+    }],
+    exports: [{
+      name: "result",
+      type: resultType,
+      root: { kind: "fragment-operation", operation: "produce" },
+    }],
+  });
+}
+
+const measureFragment = singleOperationFragment(
+  "sample",
+  sampleType,
+  measureProducer,
+  "measurement",
+  measurementType,
+);
+const reportFragment = singleOperationFragment(
+  "measurement",
+  measurementType,
+  reportProducer,
+  "report",
+  reportType,
+);
+const echoFragment = singleOperationFragment(
+  "sample",
+  sampleType,
+  echoProducer,
+  "sample",
+  sampleType,
+);
+const fragments = new Map([
+  [measureFragment.id, measureFragment],
+  [reportFragment.id, reportFragment],
+  [echoFragment.id, echoFragment],
+]);
+
+test("Author linking resolves forward component references without Text or video contracts", () => {
+  const linked = program();
+  const components = [
+      {
+        id: "final-report",
+        fragment: reportFragment.id,
+        inputs: {
+          measurement: {
+            kind: "component-output",
+            component: "measurement",
+            output: "result",
+          },
+        },
+        outputs: { result: "report:final" },
+      },
+      {
+        id: "measurement",
+        fragment: measureFragment.id,
+        inputs: { sample: { kind: "record", id: "sample:soil" } },
+        outputs: { result: "measurement:soil" },
+      },
+  ] satisfies readonly AuthorComponent[];
+
+  const elaborated = elaborateAuthorGraph(linked, components, (id) => fragments.get(id));
+  assert.equal(elaborated.outputs.length, 2);
+  assert.deepEqual(
+    elaborated.outputs.map((output) => output.id),
+    ["measurement:soil", "report:final"],
+  );
+  const reportOperation = elaborated.operations.find((operation) =>
+    operation.producer.name === reportProducer.name);
+  assert.deepEqual(reportOperation?.inputs.measurement, {
+    kind: "logical-output",
+    id: "measurement:soil",
+  });
+
+  const request = sealBuildRequest({
+    targets: [{ output: "report:final" }],
+  });
+  const state = start(linked, elaborated, request);
+  assert.deepEqual(
+    state.plan.steps.map((step) => step.producer.name).sort(),
+    [measureProducer.name, reportProducer.name].sort(),
+  );
+  const measurementStep = state.plan.steps.find((step) => step.producer.name === measureProducer.name);
+  const reportStep = state.plan.steps.find((step) => step.producer.name === reportProducer.name);
+  assert.equal(reportStep?.inputs.measurement, measurementStep?.outputs.measurement);
+});
+
+test("Author linking rejects cycles before producing a Core graph", () => {
+  const components = [
+      {
+        id: "left",
+        fragment: echoFragment.id,
+        inputs: {
+          sample: { kind: "component-output", component: "right", output: "result" },
+        },
+        outputs: { result: "sample:left" },
+      },
+      {
+        id: "right",
+        fragment: echoFragment.id,
+        inputs: {
+          sample: { kind: "component-output", component: "left", output: "result" },
+        },
+        outputs: { result: "sample:right" },
+      },
+  ] satisfies readonly AuthorComponent[];
+  assert.throws(
+    () => elaborateAuthorGraph(program(), components, (id) => fragments.get(id)),
+    (error: unknown) => error instanceof AuthorGraphError && error.code === "AUTHOR_COMPONENT_CYCLE",
+  );
+});
+
+test("Author linking checks symbolic input types before Graph verification", () => {
+  const components = [{
+      id: "final-report",
+      fragment: reportFragment.id,
+      inputs: { measurement: { kind: "record", id: "sample:soil" } },
+      outputs: { result: "report:invalid" },
+  }] satisfies readonly AuthorComponent[];
+  assert.throws(
+    () => elaborateAuthorGraph(program(), components, (id) => fragments.get(id)),
+    (error: unknown) => error instanceof AuthorGraphError && error.code === "AUTHOR_INPUT_TYPE_MISMATCH",
+  );
+});

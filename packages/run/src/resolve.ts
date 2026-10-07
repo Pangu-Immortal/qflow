@@ -2,7 +2,7 @@ import {
   elaborateGraphFragment,
   exportRunFragment,
   resolveCompiledSourceExport,
-} from "@qflow/elaborator";
+} from "@qflow/author";
 import { canonicalize, sameType } from "@qflow/protocol";
 import type {
   Candidate,

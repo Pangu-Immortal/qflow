@@ -1,17 +1,13 @@
-export {
-  maskSourceHeader,
-  parseSourceHeader,
-  SourceHeaderError,
-} from "./header.js";
-export type { SourceHeader } from "./header.js";
 export type {
   Awaitable,
   ResolvedSourceAsset,
+  ResolvedSource,
   SourceAssetRequest,
   SourceAssetResolver,
   SourceImportRequest,
   SourceResolver,
   SourceUnit,
 } from "./unit.js";
-/** Logical package address for Source Frontends selected by a Source Header. */
+export { decodeSourceText } from "./unit.js";
+/** Logical package address for Frontend facets selected by a ResolvedSource authority. */
 export const sourceFrontendPackageAbi = "qflow.source-frontend@1";

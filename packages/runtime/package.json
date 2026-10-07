@@ -8,8 +8,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@qflow/build-result-kit": "workspace:*",
-    "@qflow/core": "workspace:*",
+    "@qflow/kernel": "workspace:*",
     "@qflow/protocol": "workspace:*"
   }
 }

@@ -6,25 +6,24 @@ export type {
   ProvidedCandidateInput,
 } from "./candidate.js";
 export {
-  createRunFragmentHostFacet,
-  installRunFragmentHostFacets,
-  runFragmentHostAbi,
+  createRunFragmentFacet,
+  installRunFragmentFacets,
+  runFragmentFacetAbi,
 } from "./facet.js";
 export type {
-  RunFragmentHostFacet,
+  RunFragmentFacet,
 } from "./facet.js";
 export { collectRunModuleRequests, resolveRunDocument } from "./resolve.js";
 export {
   compileRunSource,
-  prepareRunSource,
   RunFrontendRegistry,
   RunSourceError,
 } from "./frontend.js";
 export {
-  createRunFrontendHostFacet,
-  runFrontendsFromHostFacets,
+  createRunFrontendFacet,
+  runFrontendsFromFacets,
 } from "./frontend-facet.js";
-export type { RunFrontendHostFacet } from "./frontend-facet.js";
+export type { RunFrontendFacet } from "./frontend-facet.js";
 export {
   RunGraphError,
   sealRunGraph,

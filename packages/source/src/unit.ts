@@ -1,10 +1,17 @@
 import type { BlobRef, SourceRange } from "@qflow/protocol";
 
 export type SourceUnit = {
-  /** Host-canonical identity used only for recursion and diagnostics. */
+  /** Workspace-canonical identity used only for recursion and diagnostics. */
   readonly id: string;
   readonly name: string;
-  readonly text: string;
+  /** Opaque source payload. Its selected Frontend alone decides how to decode it. */
+  readonly bytes: Uint8Array;
+};
+
+/** A Workspace resolution. The Frontend choice is explicit and never guessed by the compiler. */
+export type ResolvedSource = {
+  readonly unit: SourceUnit;
+  readonly frontend: string;
 };
 
 export type SourceImportRequest = {
@@ -16,7 +23,7 @@ export type SourceImportRequest = {
 export type SourceAssetRequest = {
   readonly from: string;
   readonly mediaType: string;
-  /** Package-owned bytes admitted by the compiler before a Workspace is consulted. */
+  /** Package-owned bytes handed to the Workspace for identity and attachment ownership. */
   readonly bytes?: Uint8Array;
   readonly range?: SourceRange;
 };
@@ -30,9 +37,16 @@ export type Awaitable<T> = T | Promise<T>;
 export type SourceResolver = (
   importer: SourceUnit,
   request: SourceImportRequest,
-) => Awaitable<SourceUnit>;
+) => Awaitable<ResolvedSource>;
 
 export type SourceAssetResolver = (
   importer: SourceUnit,
   request: SourceAssetRequest,
 ) => Awaitable<ResolvedSourceAsset>;
+
+const utf8 = new TextDecoder("utf-8", { fatal: true });
+
+/** Explicit adapter for textual Frontends; Source itself remains byte-oriented. */
+export function decodeSourceText(source: SourceUnit): string {
+  return utf8.decode(source.bytes);
+}

@@ -6,13 +6,13 @@ import {
   link,
   sealBuildRequest,
   start,
-} from "@qflow/core";
+} from "@qflow/kernel";
 import {
   AuthorGraphError,
   elaborateAuthorGraph,
   sealGraphFragment,
-} from "@qflow/elaborator";
-import type { GraphFragment } from "@qflow/elaborator";
+} from "@qflow/author";
+import type { GraphFragment } from "@qflow/author";
 import type {
   ModuleManifest,
   ProducerRef,

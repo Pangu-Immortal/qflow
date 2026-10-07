@@ -3,7 +3,7 @@
 Syntax-neutral Run Source and complete Run Graph compiler.
 
 This package is outside Core and knows no XML, filename suffix, video type, Provider or Runtime
-configuration. Given a self-described source unit, a registered `RunFrontend`, an already compiled
+configuration. Given a resolved Source, a registered `RunFrontend`, an already compiled
 Author Source and trusted Run Fragment registry, it produces:
 
 ```text
@@ -17,7 +17,7 @@ CLI flags.
 
 `RunSourceClosure` separately binds original source bytes, Frontend id/implementation and decoded
 semantic meaning. `RunFragmentRegistry` accepts trusted Fragment packages only through the
-`qflow.run-fragment-host@1` Host-facet installer. Package loading does not interpret Fragment code.
+`qflow.run-fragment@1` Facet installer. Package loading does not interpret Fragment code.
 
-The optional official XML-like syntax lives in `@qflow/run-markup`. Another trusted Frontend can emit
+The optional official XML-like syntax lives in `@qflow/markup/run`. Another trusted Frontend can emit
 the same `RunDocument` without changing this package or Core.

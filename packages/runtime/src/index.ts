@@ -1,5 +1,3 @@
-export { plannedNeeds } from "@qflow/core";
-export type * from "./catalog.js";
 export {
   CompositeCredentialStore,
   credentialRef,
@@ -12,11 +10,9 @@ export {
 export type * from "./credentials.js";
 export type * from "./capacity.js";
 export { capacityUnits } from "./capacity.js";
-export { buildExecutionActivity } from "./execution.js";
 export type * from "./execution.js";
 export type * from "./operations.js";
-export { LocalBuildScheduler } from "./scheduler.js";
-export type * from "./submission.js";
+export { InProcessBuildScheduler } from "./scheduler.js";
 export {
   isStreamingResourceStore,
 } from "./types.js";

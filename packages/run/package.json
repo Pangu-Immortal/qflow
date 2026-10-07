@@ -8,8 +8,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/host": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/facet": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/source": "workspace:*"
   }

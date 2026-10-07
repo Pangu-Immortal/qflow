@@ -180,7 +180,7 @@ export type FulfillNeedCommand = {
   readonly need: Need;
 };
 
-export type CoreCommand = InvokeProducerCommand | FulfillNeedCommand;
+export type BuildCommand = InvokeProducerCommand | FulfillNeedCommand;
 
 export type ProducerCompletedEvent = {
   readonly kind: "producer-completed";
@@ -260,6 +260,6 @@ export type BuildState = {
   readonly records: readonly TypedRecord[];
   readonly steps: readonly StepState[];
   readonly needs: readonly Need[];
-  readonly outstanding: readonly CoreCommand[];
+  readonly outstanding: readonly BuildCommand[];
   readonly diagnostics: readonly BuildDiagnostic[];
 };

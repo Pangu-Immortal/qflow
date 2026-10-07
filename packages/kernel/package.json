@@ -1,0 +1,13 @@
+{
+  "name": "@qflow/kernel",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@qflow/protocol": "workspace:*"
+  }
+}

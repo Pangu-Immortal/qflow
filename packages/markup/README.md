@@ -1,12 +1,13 @@
 # `@qflow/markup`
 
 Official XML-like Author Frontend normally used by `.svml` source units. The suffix has no parser
-authority; a mandatory `<?svml using="@qflow/markup@1"?>` Header selects this Frontend. It owns only the `<svml>` envelope,
+authority. Qflow's default self-described text adapter selects this Frontend with
+`<?svml using="@qflow/markup@1"?>`; another Workspace can bind it directly. Markup owns only the `<svml>` envelope,
 the leading Import Prologue, namespace binding, generic structured elements and dispatch to
-package-owned Markup Surface Host facets.
+package-owned Markup Surface facets.
 
 The package has no built-in Script, media or video vocabulary. `<script>` is accepted only when an
-imported package contributes that tag through a locked Markup Host facet. The semantic Module
+imported package contributes that tag through a locked Markup Surface facet. The semantic Module
 Manifest contains no XML or parser fact. The current registry is for trusted official/in-process use; it is not a security
 sandbox for third-party parser code.
 
@@ -50,7 +51,7 @@ Outputs.
 ## Frontend implementation
 
 Decoding has two passes. `discoverMarkup` reads only the root and complete leading Import Prologue.
-After Driver supplies one immutable resolved closure, `decodeMarkup` freezes the visible Surface
+After Compiler supplies one immutable resolved closure, `decodeMarkup` freezes the visible Surface
 scope and parses the body. A raw Surface receives the source cursor immediately after its opening
 tag and must return the cursor after its own close; a structured Surface receives Markup's generic
 element tree.
@@ -67,15 +68,15 @@ content-addressed `BlobRef`; Markup never exposes filesystem APIs or a resolved 
 Compiler Host, not the Surface, owns containment, read-once behavior and byte transfer. A handler
 that does not request assets remains unchanged apart from being awaitable.
 
-Markup validates source ranges, duplicate identities, Host-facet-declared Record types and complete
+Markup validates source ranges, duplicate identities, Facet-declared Record types and complete
 Fragment references. It strips diagnostic ranges before sealing one `qflow.author-module@1`, so
 source reflow does not change author semantics. It does not expand Fragments while reading the
 body. Surface handlers can resolve references through the scoped decoder context described above;
-after all drafts are collected, `@qflow/elaborator` resolves their graph wiring and emits the Core
+after all drafts are collected, `@qflow/author` resolves their graph wiring and emits the Core
 Graph. That later graph pass does not make future authored Records available to an earlier decoder.
 
 Direct `decodeMarkup()` calls require every source import to be supplied as an already resolved
-namespace. The reference `compileSourceClosure()` orchestration in `@qflow/elaborator` recursively
-discovers those SourceUnits. Each dependency's own Source Header selects its exact Frontend; Markup
-never chooses a dependency parser. The compiler decodes dependencies first and then calls Markup
+namespace. The reference `compileSourceClosure()` orchestration in `@qflow/compiler` recursively
+discovers those SourceUnits. Each dependency arrives with its own resolved Frontend; Markup never
+chooses a dependency parser. The compiler decodes dependencies first and then calls Markup
 with their locked public exports. Markup itself never reads a file or guesses a Frontend.
