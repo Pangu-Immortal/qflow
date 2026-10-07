@@ -48,8 +48,8 @@ chosen names and the accepted values in the component's own vocabulary and READM
 
 ## Implement and inspect the scene
 
-Use `@qflow/qflow/author-kit` for the author package API and public domain subpaths for the values you
-consume. [Component Anatomy](./component-anatomy.md) explains how the Manifest, Surface, Fragment and
+Use the narrow `author`, `producer`, `admission` and `markup` public subpaths for their respective
+responsibilities, and public domain subpaths for the values you consume. [Component Anatomy](./component-anatomy.md) explains how the Manifest, Surface, Fragment and
 Producer cooperate. Keep project copy and media as inputs; draw the component's own panels, frames
 and decoration in its implementation.
 
@@ -58,7 +58,7 @@ explain the behavior: entry, meaningful changes, held layout and exit. Check the
 actual composition too, where its content, space and timing have a purpose.
 
 For richer interactive editing, add a Studio Companion. The
-[Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-adapter/README.md)
+[Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md)
 shows how to expose timeline entities, properties and source bindings. The rendering code and
 Companion are separate contributions in the same package.
 

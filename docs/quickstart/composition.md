@@ -10,7 +10,7 @@ Composition into a video.
 ```svml
 <import as="space" from="@qflow/spatial@1"/>
 <import as="film" from="@qflow/film@1"/>
-<import as="render" from="@qflow/render-hyperframes@1"/>
+<import as="html" from="@qflow/html-video@1"/>
 ```
 
 ## Assemble the Film
@@ -68,22 +68,22 @@ caption.base { stack-order: 70; }
 ```
 
 Presents from different Tracks can interleave. A Present may also own an internal element tree or a
-browser program when several pictures, graphics and text share layout or motion. Put content together
+HTML visual when several pictures, graphics and text share layout or motion. Put content together
 when its behavior belongs together; keep independently useful contributions as peers.
 
 ## Render the complete video
 
 ```svml
-<render:Video id="final"
+<html:Video id="final"
   composition={main.composition} timeline={speech.timeline}/>
 ```
 
 The renderer compiles the visual contributions, captures requested frames, renders AudioTracks and
-muxes them into the delivered file. `{final.video}` is an ordinary Resource-backed `BlobArtifact` and
+muxes them into the delivered file. `{final.video}` is an ordinary Resource-backed `Blob` and
 the usual Run Target.
 
 ```svml
-<?svml using="@qflow/run-markup@1"?>
+<?svml using="@qflow/markup/run@1"?>
 <svrun version="1">
   <author source="./main.svml"/>
   <target output="final.video"/>
@@ -93,7 +93,7 @@ the usual Run Target.
 ## Render a frame interval
 
 ```svml
-<render:Video id="detail" composition={main.composition} timeline={speech.timeline}
+<html:Video id="detail" composition={main.composition} timeline={speech.timeline}
   start-frame="240" end-frame-exclusive="360"/>
 ```
 
@@ -122,7 +122,7 @@ Timeline does not require speech or media:
   appearance={recipes.film.main}>
   <film:Track source={conversation.visual}/>
 </film:Film>
-<render:Video id="final" composition={main.composition} timeline={animation.timeline}/>
+<html:Video id="final" composition={main.composition} timeline={animation.timeline}/>
 ```
 
 The component owns its reading rhythm through ordinary absolute time. With no selected AudioTrack,

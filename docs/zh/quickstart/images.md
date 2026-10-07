@@ -1,21 +1,21 @@
 ---
 title: 图片操作
-description: 在图片流向生成器或 Track 之前，对它做合成、校正与抠图。
+description: 在图片流向生成器或 Track 之前，对它做合成与校正。
 ---
 
-有三个包接收一张图片、交还一张图片。它们都不产出 Track：每个输出都是一张可供下游引用的图片——作为 Seedance 的参考帧、作为 Visual Clip，或作为下一次操作的来源。
+一个 Image Operations 包接收已有图片、交还一张图片。它不产出 Track：每个输出都是一张可供下游引用的图片——作为 Seedance 的参考帧、作为 Visual Clip，或作为下一次操作的来源。
 
-它们都需要 Endpoint。`image-compose` 与 `image-transform` 索取 raster 能力，由 `@qflow/provider-image-opencv-local` 在本机运行 OpenCV 来满足；`background-removal` 索取的是它自己声明的能力，由所选项目 Provider 实现。使用这些操作时，在 [Runtime Profile](../guide/runtime.md) 中选择支持它们的 Endpoint。
+Transform 与 Compose 索取两项不同的图像能力；默认的 `@qflow/provider-image-opencv-local` Endpoint 在本机通过有界 Python 进程同时实现二者。
 
 ## 合成图层
 
-`compose:Image` 按书写顺序把各图层画到同一张画布上，交还一张 PNG。
+`image:Compose` 按书写顺序把各图层画到同一张画布上，交还一张 PNG。
 
 ```svml
-<import as="compose" from="@qflow/image-compose@1"/>
+<import as="image" from="@qflow/image-operations@1"/>
 ```
 
-元素接受 `id` 与 `canvas`，以及可选的 `background`——它必须带 alpha，写作 `#RRGGBBAA`，默认为完全透明。子元素是 `compose:Layer`，至少一个、至多六十四个，各自为空：
+元素接受 `id` 与 `canvas`，以及可选的 `background`——它必须带 alpha，写作 `#RRGGBBAA`，默认为完全透明。子元素是 `image:Layer`，至少一个、至多六十四个，各自为空：
 
 | 属性 | 取值 |
 |---|---|
@@ -26,10 +26,10 @@ description: 在图片流向生成器或 Track 之前，对它做合成、校正
 | `opacity` | 可选——0 到 1，默认 1 |
 
 ```svml
-<compose:Image id="card" canvas={portrait.canvas} background="#00000000">
-  <compose:Layer source={background.image} frame={full} fit="cover"/>
-  <compose:Layer source={product.image} frame={product-frame} fit="contain"/>
-</compose:Image>
+<image:Compose id="card" canvas={portrait.canvas} background="#00000000">
+  <image:Layer source={background.image} frame={full} fit="cover"/>
+  <image:Layer source={product.image} frame={product-frame} fit="contain"/>
+</image:Compose>
 ```
 
 **输出：** `{card.image}`——一张图片，不是 Track。
@@ -39,7 +39,7 @@ description: 在图片流向生成器或 Track 之前，对它做合成、校正
 `image:Program` 是一份具名的操作清单，`image:Transform` 把它作用在某个来源上。这样拆开是有意的：一份写好的 program 可以套用到每一个需要同样处理的镜头上。
 
 ```svml
-<import as="image" from="@qflow/image-transform@1"/>
+<import as="image" from="@qflow/image-operations@1"/>
 ```
 
 `image:Program` 只接受 `id`，操作以子元素形式书写，按书写顺序依次施加：
@@ -71,20 +71,6 @@ description: 在图片流向生成器或 Track 之前，对它做合成、校正
 ```
 
 **输出：** `{clean-shot.image}`。program 本身不产出任何图片——它是一份配方，在 `Transform` 中指名它才会真正运行。
-
-## 去除背景
-
-```svml
-<import as="remove" from="@qflow/background-removal@1"/>
-```
-
-`remove:Background` 必须为空，接受 `id` 与 `source`。它不挑选模型、阈值或存储——那是 endpoint 的事，不是 Source 的事。
-
-```svml
-<remove:Background id="cutout" source={portrait.image}/>
-```
-
-**输出：** `{cutout.image}`——通常喂给一个 Visual Clip，好让出镜者叠在画面上，而不是待在一个方框里。
 
 ## 移动人物抠像
 

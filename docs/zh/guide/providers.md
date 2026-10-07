@@ -38,24 +38,24 @@ Model 定义生成请求，Provider 实现推理服务的 API，Endpoint 选择�
 
 ## 添加 Model
 
-项目包使用 `@qflow/qflow/model-kit`、`@qflow/qflow/generation` 和 `@qflow/qflow/author-kit`。声明准确的请求端口、参数取值、输出类型和能力。作者 Surface 把 Prompt Text 与参考素材连接到请求，再将生成素材作为普通图输出公开。
+项目包使用 `@qflow/qflow/generation/model`、`generation`、`author`、`producer`、`admission` 与 `markup` 等窄公共子路径。声明准确的请求端口、参数取值、输出类型和能力。作者 Surface 把 Prompt Text 与参考素材连接到请求，再将生成素材作为普通图输出公开。
 
-[Model SDK](https://github.com/qflow-ai/qflow/blob/main/packages/model-kit/README.md) 提供请求定义与 activation 示例。包拥有模型接口；凭据与 HTTP 映射由 Provider 负责。
+[Generation Model 作者 API](https://github.com/qflow-ai/qflow/blob/main/packages/generation/README.md#exact-model-authoring) 提供请求定义与 activation 示例。包拥有模型接口；凭据与 HTTP 映射由 Provider 负责。
 
 ## 添加 Provider
 
 将选定的 `@qflow/qflow` 版本作为开发依赖，使用公开 SDK：
 
 ```ts
-import { defineEndpointPackage } from "@qflow/qflow/endpoint-kit";
-import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow/endpoint-kit";
+import { defineEndpointPackage } from "@qflow/qflow/endpoint";
+import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow/endpoint";
 ```
 
 实现服务支持的准确能力与输出类型，将请求端口映射到服务 API，解析声明的凭据并返回结果。即时操作可以直接返回；远程任务可以先提交得到 ID，再轮询完成情况、收集输出文件。并发和动作限制由 Endpoint 的资源声明负责。
 
 真正的失败会结束本次执行尝试。Build Result 保留已完成的 Output 与公开任务回执。后续工作通过新的 Run 与 Build，选择仍适用的已有 Output 复用。
 
-[Endpoint SDK](https://github.com/qflow-ai/qflow/blob/main/packages/endpoint-kit/README.md) 维护处理接口、activation、资源声明和价格 API。将包编译为 JavaScript，由项目包管理器安装。在 [Runtime Profile](./runtime.md) 的 `endpoints` 中配置实例，并通过 `bindings` 选择它。
+[Endpoint SDK](https://github.com/qflow-ai/qflow/blob/main/packages/endpoint/README.md) 维护处理接口、activation、资源声明和价格 API。将包编译为 JavaScript，由项目包管理器安装。在 [Runtime Profile](./runtime.md) 的 `endpoints` 中配置实例，并通过 `bindings` 选择它。
 
 [完整项目 Provider 示例](https://github.com/qflow-ai/qflow/tree/main/examples/provider-package) 使用示意 API 展示参考上传、任务回执、结果收集与价格读取。示例随执行包分发，Agent 无需仓库 checkout 就能读取和改写。它包含两个包：`provider-images` 对应生成图像，`provider-videos` 对应生成视频——后者的服务接收更宽的参考词汇（图像、视频、音频以及首尾帧），并通过独立的结果收集步骤返回产物。
 

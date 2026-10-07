@@ -9,7 +9,7 @@ description: 声明媒体资源并使用 Seedance 生成视频。
 
 ```svml
 <import as="media" from="@qflow/media@1"/>
-<import as="mediaop" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 <import as="text" from="@qflow/text@1"/>
 <import as="seedance" from="@qflow/seedance@1"/>
 <import as="speaker-kit" source="@qflow/seedance-kits/speaker"/>
@@ -47,10 +47,10 @@ description: 声明媒体资源并使用 Seedance 生成视频。
 
 ## 时长是字面量
 
-生成片段的长度由作者决定，直接写在需要它的元素上。先量稿子，再写数字：
+生成片段的长度由作者决定，直接写在需要它的元素上。先估算稿子，再写数字：
 
 ```bash
-qflow measure main.svml --segment hook --language en --pace normal --rounding round
+qflow estimate main.svml --segment hook --language en --pace normal --rounding round
 # 7s
 ```
 
@@ -60,7 +60,7 @@ qflow measure main.svml --segment hook --language en --pace normal --rounding ro
 </seedance:ReferenceVideo>
 ```
 
-`qflow measure` 按口播策略——`language`、`pace`（英语 `slow = 4.2`、`normal = 4.6`、`fast = 5.0` 音节/秒）或数值 `rate`、`rounding`——统计 Segment 台词的读音单位，不调用任何外部服务。请求时长在 Build 开始前已经明确。用估时结果调整稿子并选择模型支持的时长；实际词时间由生成表演后的语义处理提供。
+`qflow estimate` 按口播策略——`language`、`pace`（英语 `slow = 4.2`、`normal = 4.6`、`fast = 5.6` 音节/秒）或数值 `rate`、`rounding`——统计 Segment 台词的读音单位，不调用任何外部服务。请求时长在 Build 开始前已经明确。用估时结果调整稿子并选择模型支持的时长；实际词时间由生成表演后的语义处理提供。
 
 ## text:Value
 
@@ -143,7 +143,7 @@ Seedance 2.5 复用同样的 Surface，而不是由 Runtime 把别的模型偷�
 
 这个低层组件并不知道它被用来做口播；用途只存在于传入的 Text 中。公共属性包括
 `id`、`model`、`prompt`、`duration`、`resolution`、
-`aspect-ratio`、`generate-audio`；`duration` 是模型范围内的整秒字面量，事先用 `qflow measure` 量好。
+`aspect-ratio`、`generate-audio`；`duration` 是模型范围内的整秒字面量，事先用 `qflow estimate` 估算。
 
 可以直接抽取前一段生成视频里的音频，并通过普通图边给后续片段当作参考。这个操作不会把音频提升成语音证据，也不会凭空附加说话人语义：
 

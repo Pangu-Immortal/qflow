@@ -21,7 +21,7 @@ Binding + NarrativeProjection → CaptionTiming → Use presentation
 <import as="caption" from="@qflow/caption@1"/>
 <import as="caption-fine" from="@qflow/caption-fine@1"/>
 <import as="media" from="@qflow/media@1"/>
-<import as="fonts" from="@qflow/fonts-open@1"/>
+<import as="fonts" from="@qflow/fontsource@1"/>
 ```
 
 `@qflow/caption` owns the common CaptionDocument contract, complete-unit Selection/Role projection,
@@ -68,9 +68,11 @@ caption.primary {
 ```
 
 ```svml
-<fonts:Stack id="caption-fonts" family="inter" weight="700" style="normal" emoji="color">
-  <fonts:Fallback family="noto-sans-sc" weight="700" style="normal"/>
-</fonts:Stack>
+<fonts:Face id="caption-latin" package="@fontsource-variable/inter" weight="700" style="normal"/>
+<fonts:Face id="caption-han" package="@fontsource-variable/noto-sans-sc" weight="700" style="normal"/>
+<media:FontStack id="caption-fonts" primary={caption-latin}>
+  <media:Fallback font={caption-han}/>
+</media:FontStack>
 <caption-fine:Style id="primary-caption" recipe={recipes.caption.primary}
   font={caption-fonts}/>
 ```
@@ -171,7 +173,7 @@ to the occurrence; reusable pixel treatment and typed Motion remain optional val
 <space:Frame id="product-frame" within={vertical.bounds}
   left="8%" top="20%" right="92%" bottom="68%"/>
 
-<pipeline:Normalize id="product-media" source={product-motion.video}
+<mediaop:Normalize id="product-media" source={product-motion.video}
   video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 
 <visual:Motion id="product-motion-in">
@@ -211,7 +213,7 @@ Every direct Clip or sample Layer declares exactly one visual input form:
 | `media={...}` | `SynchronizedMedia` | Connect an explicitly prepared timed source directly |
 | `surface={...}` | `CompositableSurfaceRef` | Connect an alpha-aware still or timed surface directly |
 
-A generated or imported video Blob reaches a Track through `<pipeline:Normalize>`, which inspects it,
+A generated or imported video Blob reaches a Track through `<mediaop:Normalize>`, which inspects it,
 selects its streams and puts them on one frame domain; its `.media` output is what `media=` connects
 to. `audio="none"` carries the picture alone, and `audio="default"` carries the source's own sound,
 which `audio-gain` then scales. These forms are explicit so a generic Blob is never guessed to be an
@@ -228,13 +230,13 @@ then choose its exact program Window and source-time relation:
 
 ```svml
 <import as="media" from="@qflow/media@1"/>
-<import as="pipeline" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 <import as="audio" from="@qflow/audio-track@1"/>
 <import as="time" from="@qflow/timeline-author@1"/>
 
 <time:Clock id="clock" frame-rate="30"/>
 <media:Audio id="music" src="./assets/music.wav"/>
-<pipeline:Normalize id="music-media" source={music}
+<mediaop:Normalize id="music-media" source={music}
   video="none" audio="default" span-authority="audio" clock={clock}/>
 
 <audio:Track id="music-bed" timeline={speech.timeline}>
@@ -277,7 +279,7 @@ piece of editorial copy is one occurrence and one ordinary VisualTrack contribut
 <space:Canvas id="vertical" width="1080" height="1920"/>
 <space:Frame id="title-frame" within={vertical.bounds}
   left="6%" top="6%" right="94%" bottom="16%"/>
-<fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
+<fonts:Face id="title-font" package="@fontsource-variable/inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
 <text:Flow id="title" timeline={speech.timeline} within={title-frame}
   style={title-style} z="90" align="center" during="timeline">
@@ -345,7 +347,9 @@ inputs; coordination between them belongs in a project component, not an acciden
 ## Ranking boards
 
 A ranking board animates an ordered list against the Script. The concrete container, item and Style
-vocabulary is package-owned; inspect the installed package before authoring it.
+vocabulary is package-owned. Ranking, Depth Stack and Comment Sticker are optional packages, not
+part of the default Qflow installation. Add the selected published version to the video's ordinary
+`package.json` and lockfile before importing it; inspect that installed package before authoring.
 
 | Container | Item | Style |
 |---|---|---|
@@ -450,45 +454,6 @@ give both and it is refused. `size`, `color`, `align`, `block` and `padding` are
 
 **Output:** `{deck.visual}` — a VisualTrack, an ordinary peer of every other Track in the Film.
 
-## Screen overlays
-
-Effects that cover the picture rather than sit in a Frame: a flash on a cut, a vignette that holds
-for a Selection, grain over the whole programme. One Track carries them all, and each child is one
-effect bound to its own window.
-
-```svml
-<import as="screen" from="@qflow/screen-overlay@1"/>
-```
-
-`screen:Track` takes `id`, `canvas` and `timeline`. Its children are the effects, at least one, each
-empty, each with a required `z` for stacking order and a window that is one of:
-
-| Window | Written |
-|---|---|
-| The whole programme | `during="timeline"` |
-| An already resolved Window | `during={story-time.overlay}` |
-| An absolute start and length | `from="2s" for="12f"` |
-| An explicit span | `from={story-time.start} until={story-time.end}` |
-
-Lengths are `12f`, `250ms` or `1.5s`. A Selection
-names one contiguous interval and a Moment names one point; author another item when an effect should
-appear again.
-
-Eleven effects are available — `Flash`, `ColorWash`, `Vignette`, `ScanLines`, `DirectionalMatte`,
-`WhipVeil`, `GlitchVeil`, `Grain`, `LightLeak`, `Bokeh` and `TVStatic` — and each carries its own
-required attributes, such as `color` / `intensity` / `attack` / `hold` / `decay` on a `Flash`, or
-`center-x` / `center-y` / `radius-x` / `radius-y` / `softness` / `color` / `opacity` on a `Vignette`.
-None have defaults: an effect states its whole shape or is refused.
-
-```svml
-<screen:Track id="effects" timeline={speech.timeline} within={vertical.bounds}>
-  <screen:Flash during={story-time.overlay} z="80"
-    color="#ffffff" intensity="0.6" attack="2" hold="2" decay="6"/>
-</screen:Track>
-```
-
-**Output:** `{effects.visual}` — a VisualTrack.
-
 ## Comment stickers
 
 Social-style comment cards placed in a Frame: an avatar, an author, the comment itself, and an
@@ -504,8 +469,8 @@ enter/hold/exit motion — and every key has a default, so a recipe may set only
 
 `comment:Track` takes `id`, `canvas` and `timeline` for the complete work.
 
-`comment:Sticker` requires `id`, `frame` and `style`, and takes the same windows as a screen overlay
-above. Its copy is either the `comment=` attribute or the element's own text — both is refused. The
+`comment:Sticker` requires `id`, `frame` and `style`. Its Window can use `during`, `from` + `for`, or
+`from` + `until`. Its copy is either the `comment=` attribute or the element's own text — both is refused. The
 optional `author`, `header` and `meta` each take a string or a Text reference, `avatar` takes an
 image, and there is no `z`: stacking order comes from the recipe's `stack-order`.
 
@@ -528,9 +493,9 @@ All four track families together in one source file:
 ```svml
 <import as="caption" from="@qflow/caption@1"/>
 <import as="caption-fine" from="@qflow/caption-fine@1"/>
-<import as="fonts" from="@qflow/fonts-open@1"/>
+<import as="fonts" from="@qflow/fontsource@1"/>
 <import as="media" from="@qflow/media@1"/>
-<import as="pipeline" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 <import as="visual" from="@qflow/visual-track@1"/>
 <import as="text" from="@qflow/text-fine@1"/>
 <import as="audio" from="@qflow/audio-track@1"/>
@@ -540,8 +505,8 @@ All four track families together in one source file:
 <time:Clock id="clock" frame-rate="30"/>
 
 <!-- Captions: primary style for all text -->
-<fonts:Stack id="caption-font" family="inter" weight="700" style="normal"/>
-<fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
+<fonts:Face id="caption-font" package="@fontsource-variable/inter" weight="700" style="normal"/>
+<fonts:Face id="title-font" package="@fontsource-variable/inter" weight="900" style="normal"/>
 <caption-fine:Style id="base-caption" recipe={recipes.caption.base} font={caption-font}/>
 <caption:Hidden id="hidden"/>
 
@@ -560,7 +525,7 @@ All four track families together in one source file:
   left="10%" top="20%" right="90%" bottom="70%"/>
 
 <!-- Media: one ordinary Clip used editorially as B-roll -->
-<pipeline:Normalize id="card-media" source={motion.video}
+<mediaop:Normalize id="card-media" source={motion.video}
   video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 <visual:Track id="cards" timeline={speech.timeline}>
   <visual:Clip media={card-media.media} frame={card-frame}
@@ -576,7 +541,7 @@ All four track families together in one source file:
 
 <!-- Audio: normalize one declared source, then place it for the complete program -->
 <media:Audio id="music" src="./assets/music.wav"/>
-<pipeline:Normalize id="music-media" source={music}
+<mediaop:Normalize id="music-media" source={music}
   video="none" audio="default" span-authority="audio" clock={clock}/>
 <audio:Track id="music-bed" timeline={speech.timeline}>
   <audio:Clip source={music-media.media} during="timeline"

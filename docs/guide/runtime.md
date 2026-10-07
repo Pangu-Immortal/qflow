@@ -19,9 +19,9 @@ Core plans and advances dependencies without knowing that they make a video. A n
 
 ## Select the project and Profile
 
-Run commands from the video project, or select it explicitly with `--workspace`. Otherwise the
-nearest `package.json` above the current directory establishes the project; when none exists, the
-current directory is the project. Source filenames and Runtime configuration do not choose this boundary.
+Run commands from a project whose `package.json` declares `"qflow": { "project": true }`, or select
+it explicitly with `--project`. Otherwise the CLI searches upward for that marker. An Author Package,
+arbitrary directory, Source filename or Runtime configuration does not choose this boundary.
 
 ```bash
 qflow paths
@@ -48,7 +48,7 @@ A small local-processing Profile looks like this:
   "dataRoot": ".qflow/runtimes/local",
   "credentials": {},
   "endpoints": {
-    "media.local": { "use": "@qflow/provider-media-local" }
+    "media.local": { "use": "@qflow/media-local" }
   },
   "bindings": {}
 }
@@ -145,21 +145,10 @@ of files a component reads later.
 
 ## Keep products with the project
 
-Without extra configuration, Results live in `.qflow/results`. A project can select another location
-or repository through `qflow.results.json`, independently of its Runtime Profile:
-
-```json
-{
-  "format": "qflow.build-results@1",
-  "use": "@qflow/build-result-fs",
-  "config": { "path": ".qflow/results" }
-}
-```
-
-The S3 adapter can instead store Results in a bucket and project prefix. The selected adapter owns
-access and credentials; changing Result storage does not move the active Runtime or upload external
-file references automatically. A submitted Build retains its chosen destination, and changing that
-selection does not migrate history.
+Results live with the project in `.qflow/results` on the machine running Qflow. A local workstation,
+an SSH Linux host and the official WebUI backend use the same rule: the whole Runtime moves to that
+host instead of splitting its queue, working files and Result storage across services. Archive or
+migrate completed Results explicitly after a Build when needed.
 
 Results publish completed public Outputs as they become available and retain the terminal outcome.
 A new Output can reference an existing file, including within a composite; it does not necessarily
@@ -168,5 +157,5 @@ future reuse. `get` creates a separate export when a person or another tool need
 
 `builds`, `history`, `inspect` and `get` read project Results without requiring the original Runtime.
 For exact storage and execution interfaces, see the
-[Result package](https://github.com/qflow-ai/qflow/blob/main/packages/build-result/README.md) and
+[Result package](https://github.com/qflow-ai/qflow/blob/main/packages/result/README.md) and
 [local Runtime package](https://github.com/qflow-ai/qflow/blob/main/packages/runtime-local/README.md).

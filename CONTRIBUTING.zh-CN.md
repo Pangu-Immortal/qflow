@@ -26,7 +26,7 @@ pnpm install --frozen-lockfile
 `qflow runtime up --runtime <profile>`，准备整个 Profile 并启动 Worker。
 这一步显式准备 Chrome，不依赖 pnpm 放行依赖安装脚本。
 `qflow doctor --runtime <profile>` 只诊断，不安装。
-浏览器路径配置见[本地渲染器 README](packages/provider-hyperframes-local/README.md)。
+浏览器路径配置见[本地渲染器 README](packages/provider-html-local/README.md)。
 
 ## 进行改动
 

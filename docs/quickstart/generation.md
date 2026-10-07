@@ -10,7 +10,7 @@ Every component shown here must be imported by its package specifier before use:
 
 ```svml
 <import as="media" from="@qflow/media@1"/>
-<import as="mediaop" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 <import as="text" from="@qflow/text@1"/>
 <import as="seedance" from="@qflow/seedance@1"/>
 <import as="speaker-kit" source="@qflow/seedance-kits/speaker"/>
@@ -50,10 +50,10 @@ Typically used as a voice-timbre reference for `seedance:ReferenceVideo`.
 ## Durations are literals
 
 A generated take's length is the author's decision, written as a literal on the element that needs
-it. Measure the line first, then write the number:
+it. Estimate the line first, then write the number:
 
 ```bash
-qflow measure main.svml --segment hook --language en --pace normal --rounding round
+qflow estimate main.svml --segment hook --language en --pace normal --rounding round
 # 7s
 ```
 
@@ -63,8 +63,8 @@ qflow measure main.svml --segment hook --language en --pace normal --rounding ro
 </seedance:ReferenceVideo>
 ```
 
-`qflow measure` counts pronunciation units of the Segment's speech at a delivery policy — `language`,
-`pace` (`slow = 4.2`, `normal = 4.6`, `fast = 5.0` syllables per second for English) or a numeric
+`qflow estimate` counts pronunciation units of the Segment's speech at a delivery policy — `language`,
+`pace` (`slow = 4.2`, `normal = 4.6`, `fast = 5.6` syllables per second for English) or a numeric
 `rate` and `rounding` — with no external call. Nothing in the graph computes a duration,
 so the requested durations are available before a Build starts. Use the estimate to shape the
 wording and choose a supported request duration; the produced performance supplies actual word timing.
@@ -163,8 +163,8 @@ service's input-duration limits; the requested output duration is a separate cho
 The component does not know that this is a talking head. That meaning lives in the supplied Text.
 
 Common attributes are `id`, `model`, `prompt`, `duration`, `resolution`, `aspect-ratio` and
-`generate-audio`. `duration` is a literal in whole seconds inside the model's range, measured
-beforehand with `qflow measure`.
+`generate-audio`. `duration` is a literal in whole seconds inside the model's range, estimated
+beforehand with `qflow estimate`.
 
 The audio generated in an earlier take can be reused as a later reference through an ordinary graph
 edge. Extraction does not turn it into speech evidence or attach speaker meaning:
@@ -321,7 +321,7 @@ reference media or generation endpoint.
 
 ## Combination example
 
-A two-take setup with measured durations written as literals, explicit Text assembly and Seedance
+A two-take setup with estimated durations written as literals, explicit Text assembly and Seedance
 generation:
 
 ```svml

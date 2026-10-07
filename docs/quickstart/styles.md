@@ -10,7 +10,7 @@ immutable typed Records that consuming components validate and interpret.
 ## Basic syntax
 
 ```svs
-<?svml using="@qflow/svs@1"?>
+<?svml using="@qflow/recipe@1"?>
 
 <sheet version="1" id="studio">
   film.vertical {
@@ -25,7 +25,7 @@ immutable typed Records that consuming components validate and interpret.
 </sheet>
 ```
 
-- The processing instruction `<?svml using="@qflow/svs@1"?>` selects the SVS parser.
+- The processing instruction `<?svml using="@qflow/recipe@1"?>` selects the SVS parser.
 - The `<sheet>` element wraps all declarations. The `id` attribute becomes the top-level namespace.
 - Each block is `namespace.name { ... }` with `;`-terminated key-value properties.
 - Comments use `/* ... */`.
@@ -100,7 +100,7 @@ For reproducible rendering, select an exact installed face in the `.svml` source
 Record to the Fine Style. Family, weight and style have one source of truth on this exact font edge:
 
 ```svml
-<fonts:Stack id="caption-font" family="inter" weight="600" style="normal"/>
+<fonts:Face id="caption-font" package="@fontsource-variable/inter" weight="600" style="normal"/>
 <caption-fine:Style id="primary-caption" recipe={recipes.caption.dialogue}
   font={caption-font}/>
 ```
@@ -136,7 +136,7 @@ caption.bob {
 Then select them with timed Uses in the Track:
 
 ```svml
-<fonts:Stack id="caption-font" family="inter" weight="600" style="normal"/>
+<fonts:Face id="caption-font" package="@fontsource-variable/inter" weight="600" style="normal"/>
 <caption-fine:Style id="default-caption" recipe={recipes.caption.dialogue} font={caption-font}/>
 <caption-fine:Style id="alice-caption" recipe={recipes.caption.alice} font={caption-font}/>
 <caption-fine:Style id="bob-caption" recipe={recipes.caption.bob} font={caption-font}/>
@@ -227,7 +227,7 @@ text.title {
 Compiled with exact font bytes into a `text:Style`, then referenced by a concrete placement form:
 
 ```svml
-<fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
+<fonts:Face id="title-font" package="@fontsource-variable/inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
 <text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
   style={title-style} z="90" align="center" during="timeline">
@@ -308,28 +308,30 @@ model Surface and graph edges.
 
 ## Exact font declarations
 
-SVS describes typography policy, but it does not choose or open font bytes. For common open fonts,
-import the private pre-release catalog and select only the faces the Author Graph uses:
+SVS describes typography policy, but it does not choose or open font bytes. The official Qflow
+Distribution supplies the Fontsource adapter; install the selected upstream font packages in the
+video project's `package.json`. The ordinary lockfile fixes their actual versions:
 
 ```svml
-<import as="fonts" from="@qflow/fonts-open@1"/>
+<import as="fonts" from="@qflow/fontsource@1"/>
+<import as="media" from="@qflow/media@1"/>
 
-<fonts:Stack id="caption-fonts" family="inter" weight="600" style="normal" emoji="color">
-  <fonts:Fallback family="noto-sans-sc" weight="600" style="normal"/>
-</fonts:Stack>
+<fonts:Face id="caption-latin" package="@fontsource-variable/inter" weight="600" style="normal"/>
+<fonts:Face id="caption-han" package="@fontsource-variable/noto-sans-sc" weight="600" style="normal"/>
+<media:FontStack id="caption-fonts" primary={caption-latin}>
+  <media:Fallback font={caption-han}/>
+</media:FontStack>
 ```
 
 | Property | Description |
 |---|---|
-| `family` | A family from the package's finite catalog |
+| `package` | One installed `@fontsource` or `@fontsource-variable` package |
 | `weight` | Exact selected face weight |
-| `style` | Selected style: `normal` or a family-supported `italic` |
-| `emoji` | Optional `color` (COLRv1) or `mono` fallback on `Stack` |
+| `style` | Selected style: `normal` or a package-supported `italic` |
 
-The catalog contains 109 open families across handwriting, script, display, sans, serif,
-monospace, CJK, world-script and Emoji categories. Fontsource dependencies are pinned to `5.3.0`;
-the Chromium-compatible COLRv1 Emoji package is pinned separately. The compiler hashes installed
-bytes into Resource-backed font values. It performs no download during a build, and the Runtime
+Qflow carries no finite font catalog and does not install a family during compilation. The adapter
+reads the selected package's metadata, CSS and font files as data, and the compiler turns those
+installed bytes into Resource-backed font values. A build performs no download and the Runtime
 never guesses a font:
 
 ```svml
@@ -337,14 +339,14 @@ never guesses a font:
   font={caption-fonts}/>
 ```
 
-`fonts:Stack` emits one generic `FontStackRef`; its primary and fallbacks preserve their own honest
+`media:FontStack` emits one generic `FontStackRef`; its primary and fallbacks preserve their own honest
 metadata. The Caption Recipe does not repeat family, weight or style. CJK and Emoji can be split into several
 Unicode-range files while remaining one logical graph edge. Terminal Text and Fine Caption reject
 an omitted stack; machine-font fallback is not part of Visual IR.
 For a symbol with both text and Emoji presentation, write the authored Unicode Emoji sequence
 (for example `☎️`, including VS16); no package rewrites display text to force color.
 
-Brand and custom fonts remain explicit author assets rather than additions to the shared catalog:
+Brand and custom fonts remain explicit author assets rather than additions to a central catalog:
 
 ```svml
 <import as="media" from="@qflow/media@1"/>
@@ -357,7 +359,7 @@ Brand and custom fonts remain explicit author assets rather than additions to th
 A complete `recipes.svs` file for a four-take talking-head project:
 
 ```svs
-<?svml using="@qflow/svs@1"?>
+<?svml using="@qflow/recipe@1"?>
 
 <sheet version="1" id="studio">
 

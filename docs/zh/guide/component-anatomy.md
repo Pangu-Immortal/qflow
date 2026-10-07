@@ -22,7 +22,7 @@ description: 将场景的创作接口变成可复用的图贡献。
 | Activation | 公开所选包提供的贡献 |
 | Studio Companion | 描述时间线实体与可编辑属性 |
 
-精确对象形状由 [Author SDK](https://github.com/qflow-ai/qflow/blob/main/packages/author-kit/README.md) 和随包示例维护。小组件可以把相关职责放在一起；大组件则可以分离可复用的调度、样式和绘制逻辑。
+精确对象形状由 [Author Package 指南](./author-packages.md) 和随包示例指向各自所有者。小组件可以把相关职责放在一起；大组件则可以分离可复用的调度、样式和绘制逻辑。
 
 ## 围绕关系设计
 

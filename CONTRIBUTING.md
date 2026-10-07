@@ -31,7 +31,7 @@ For a Profile selecting local rendering, run `qflow programs up --runtime <profi
 <render-instance>` before the first render (or `qflow runtime up --runtime <profile>` to prepare
 the Profile and start its Worker). This explicitly prepares Chrome even when pnpm skips dependency
 build scripts. `qflow doctor --runtime <profile>` diagnoses missing setup without installing it.
-See the [local renderer README](packages/provider-hyperframes-local/README.md) for browser overrides.
+See the [local renderer README](packages/provider-html-local/README.md) for browser overrides.
 
 ## Make the change
 

@@ -17,7 +17,7 @@ Qflow 只有一条节目时间轴：`Timeline`。它只是 `{ id, frameRate, fra
 只需要 Timeline，不需要媒体或 Script。
 
 ```svml
-<import as="pipeline" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 <import as="whisperx" from="@qflow/whisperx@1"/>
 <import as="semantic" from="@qflow/narrative-temporal@1"/>
 <import as="time" from="@qflow/timeline-author@1"/>
@@ -32,9 +32,9 @@ Clock 固定最终 Timeline 与所有局部时间域共享的帧率：
 
 ```svml
 <time:Clock id="clock" frame-rate="30"/>
-<pipeline:Normalize id="opening-media" source={opening-video.video}
+<mediaop:Normalize id="opening-media" source={opening-video.video}
   video="primary-moving" audio="default" span-authority="video" clock={clock}/>
-<pipeline:Normalize id="answer-media" source={answer-video.video}
+<mediaop:Normalize id="answer-media" source={answer-video.video}
   video="primary-moving" audio="default" span-authority="video" clock={clock}/>
 ```
 

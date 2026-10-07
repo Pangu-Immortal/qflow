@@ -9,8 +9,8 @@ description: 命名、模块边界、TypeScript 配置与 wire 数据。
 
 | 项目 | 约定 | 示例 |
 |---|---|---|
-| 包目录 | kebab-case | `packages/speech-alignment/` |
-| 包名 | `@qflow/` scope | `@qflow/speech-alignment` |
+| 包目录 | kebab-case | `packages/narrative-speech-alignment/` |
+| 包名 | `@qflow/` scope | `@qflow/narrative-speech-alignment` |
 | Provider 包 | `provider-` 前缀 | `@studio/provider-images` |
 | TypeScript 文件 | kebab-case | `align.ts` |
 | 导出类型 | PascalCase | `SpeechAlignment` |

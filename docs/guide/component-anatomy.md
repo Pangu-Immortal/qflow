@@ -26,8 +26,8 @@ These roles can be organized into files that suit the component's size:
 | Activation | Publish the contributions the selected package offers |
 | Studio Companion | Describe timeline entities and editable properties for Studio |
 
-The [Author SDK](https://github.com/qflow-ai/qflow/blob/main/packages/author-kit/README.md)
-and included example own the exact object shapes. A small component can keep related roles together;
+The [Author Package guide](./author-packages.md) and included example route each exact object shape to
+its owning API. A small component can keep related roles together;
 a larger component benefits from separating reusable scheduling, styling and drawing logic.
 
 ## Design around relationships

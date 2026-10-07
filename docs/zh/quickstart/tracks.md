@@ -21,7 +21,7 @@ Script → CaptionDocument + NarrativeCaptionBinding
 <import as="caption" from="@qflow/caption@1"/>
 <import as="caption-fine" from="@qflow/caption-fine@1"/>
 <import as="media" from="@qflow/media@1"/>
-<import as="fonts" from="@qflow/fonts-open@1"/>
+<import as="fonts" from="@qflow/fontsource@1"/>
 ```
 
 公共 Caption 负责 CaptionDocument、完整 Alignment Unit 的 Selection/Role 投影、样式分配与
@@ -52,9 +52,11 @@ caption.primary {
 ```
 
 ```svml
-<fonts:Stack id="caption-fonts" family="inter" weight="700" style="normal" emoji="color">
-  <fonts:Fallback family="noto-sans-sc" weight="700" style="normal"/>
-</fonts:Stack>
+<fonts:Face id="caption-latin" package="@fontsource-variable/inter" weight="700" style="normal"/>
+<fonts:Face id="caption-han" package="@fontsource-variable/noto-sans-sc" weight="700" style="normal"/>
+<media:FontStack id="caption-fonts" primary={caption-latin}>
+  <media:Fallback font={caption-han}/>
+</media:FontStack>
 <caption-fine:Style id="primary-caption" recipe={recipes.caption.primary}
   font={caption-fonts}/>
 ```
@@ -125,7 +127,7 @@ Recipe 与类型化 Motion 都只是可选的复用值：
 <space:Frame id="product-frame" within={vertical.bounds}
   left="8%" top="20%" right="92%" bottom="68%"/>
 
-<pipeline:Normalize id="product-media" source={product-motion.video}
+<mediaop:Normalize id="product-media" source={product-motion.video}
   video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 
 <visual:Motion id="product-motion-in">
@@ -160,7 +162,7 @@ Clip 模型也能表达全屏切换、分屏和角落小窗。公开 Clip 只有
 | `media={...}` | `SynchronizedMedia` | 直接连接显式准备好的含时素材 |
 | `surface={...}` | `CompositableSurfaceRef` | 直接连接带透明度语义的静态或含时 Surface |
 
-生成或导入的视频 Blob 经 `<pipeline:Normalize>` 进入 Track：它检查该 Blob、选出其中的流并放到同一个帧域上，输出的 `.media` 即 `media=` 所连接的值。`audio="none"` 只取画面，`audio="default"` 取源自带的声音，再由 `audio-gain` 调节。输入名必须显式，是为了绝不靠猜测把一个通用 Blob 当成图片或视频。
+生成或导入的视频 Blob 经 `<mediaop:Normalize>` 进入 Track：它检查该 Blob、选出其中的流并放到同一个帧域上，输出的 `.media` 即 `media=` 所连接的值。`audio="none"` 只取画面，`audio="default"` 取源自带的声音，再由 `audio-gain` 调节。输入名必须显式，是为了绝不靠猜测把一个通用 Blob 当成图片或视频。
 
 **输出：**`{product-broll.program}` 与 `{product-broll.visual}`。音频始终在 Audio Track
 中单独声明；这里连接 SynchronizedMedia 不会顺带选择它的音频成员。
@@ -172,13 +174,13 @@ Clip 模型也能表达全屏切换、分屏和角落小窗。公开 Clip 只有
 
 ```svml
 <import as="media" from="@qflow/media@1"/>
-<import as="pipeline" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 <import as="audio" from="@qflow/audio-track@1"/>
 <import as="time" from="@qflow/timeline-author@1"/>
 
 <time:Clock id="clock" frame-rate="30"/>
 <media:Audio id="music" src="./assets/music.wav"/>
-<pipeline:Normalize id="music-media" source={music}
+<mediaop:Normalize id="music-media" source={music}
   video="none" audio="default" span-authority="audio" clock={clock}/>
 
 <audio:Track id="music-bed" timeline={speech.timeline}>
@@ -220,7 +222,7 @@ Track 都会作为独立输入进入 Film。输出 `{music-bed.audio}` 是普通
 <space:Canvas id="vertical" width="1080" height="1920"/>
 <space:Frame id="title-frame" within={vertical.bounds}
   left="6%" top="6%" right="94%" bottom="16%"/>
-<fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
+<fonts:Face id="title-font" package="@fontsource-variable/inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
 <text:Flow id="title" timeline={speech.timeline} within={title-frame}
   style={title-style} z="90" align="center" during="timeline">
@@ -286,7 +288,9 @@ Run 时，继续使用内联 `P`/`Span`/`Break`。
 
 ## 榜单板
 
-榜单板让一份有序列表跟着 Script 动起来。具体的容器、条目和 Style 词汇由包声明；写作前先检查已安装包的词汇。
+榜单板让一份有序列表跟着 Script 动起来。Ranking、Depth Stack 与 Comment Sticker 是可选包，不随默认
+Qflow 安装。使用前先把所选发布版本写入视频项目的普通 `package.json` 与 lockfile，再检查已安装包的词汇。
+具体容器、条目和 Style 仍由各包自己声明。
 
 | 容器 | 条目 | 样式 |
 |---|---|---|
@@ -377,37 +381,6 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 
 **输出：** `{deck.visual}`——一条 VisualTrack，与 Film 中其它每一条 Track 平级。
 
-## 屏幕叠加层
-
-覆盖在整个画面之上、而非落在某个 Frame 里的效果：切点上的一次闪白、持续整个 Selection 的暗角、铺满全片的颗粒。一条 Track 承载全部，每个子元素是一个效果加它自己的时间窗。
-
-```svml
-<import as="screen" from="@qflow/screen-overlay@1"/>
-```
-
-`screen:Track` 接受 `id`、`canvas`，以及 统一的 `timeline` 时间来源。它的子元素就是各个效果，至少一个，各自为空，都必须带 `z` 决定层叠顺序，并且各有一个时间窗，形式是以下之一：
-
-| 时间窗 | 写法 |
-|---|---|
-| 整个节目 | `during="timeline"` |
-| 已解析的 Window | `during={story-time.overlay}` |
-| 绝对起点与时长 | `from="2s" for="12f"` |
-| 显式区间 | `from={story-time.start} until={story-time.end}` |
-
-时长写作 `12f`、`250ms` 或 `1.5s`。一个 Selection
-只表示一个连续区间，一个 Moment 只表示一个点；同一效果需要再次出现时，应再写一个 item。
-
-可用的效果有十一种——`Flash`、`ColorWash`、`Vignette`、`ScanLines`、`DirectionalMatte`、`WhipVeil`、`GlitchVeil`、`Grain`、`LightLeak`、`Bokeh` 与 `TVStatic`——每种各有自己的必填属性，例如 `Flash` 的 `color` / `intensity` / `attack` / `hold` / `decay`，或 `Vignette` 的 `center-x` / `center-y` / `radius-x` / `radius-y` / `softness` / `color` / `opacity`。它们都没有默认值：一个效果要么把自己的形状说全，要么被拒绝。
-
-```svml
-<screen:Track id="effects" timeline={speech.timeline} within={vertical.bounds}>
-  <screen:Flash during={story-time.overlay} z="80"
-    color="#ffffff" intensity="0.6" attack="2" hold="2" decay="6"/>
-</screen:Track>
-```
-
-**输出：** `{effects.visual}`——一条 VisualTrack。
-
 ## 评论贴纸
 
 放置在 Frame 中的社交风格评论卡：头像、作者、评论正文，以及可选的一行附注。
@@ -420,7 +393,7 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 
 `comment:Track` 接受 `id` 与 `timeline`，两者皆为必填。
 
-`comment:Sticker` 必填 `id`、`frame` 与 `style`，时间窗与上面的屏幕叠加层相同。它的文案来自 `comment=` 属性或元素自身的文字，两个都给会被拒绝。可选的 `author`、`header` 与 `meta` 各接受字符串或 Text 引用，`avatar` 接受一张图片；这里没有 `z`，层叠顺序来自 recipe 的 `stack-order`。
+`comment:Sticker` 必填 `id`、`frame` 与 `style`。它的 Window 可以使用 `during`、`from` + `for` 或 `from` + `until`。文案来自 `comment=` 属性或元素自身的文字，两个都给会被拒绝。可选的 `author`、`header` 与 `meta` 各接受字符串或 Text 引用，`avatar` 接受一张图片；这里没有 `z`，层叠顺序来自 recipe 的 `stack-order`。
 
 ```svml
 <comment:Style id="social" recipe={recipes.comment} font={ui-font}/>
@@ -441,9 +414,9 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 ```svml
 <import as="caption" from="@qflow/caption@1"/>
 <import as="caption-fine" from="@qflow/caption-fine@1"/>
-<import as="fonts" from="@qflow/fonts-open@1"/>
+<import as="fonts" from="@qflow/fontsource@1"/>
 <import as="media" from="@qflow/media@1"/>
-<import as="pipeline" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 <import as="visual" from="@qflow/visual-track@1"/>
 <import as="text" from="@qflow/text-fine@1"/>
 <import as="audio" from="@qflow/audio-track@1"/>
@@ -453,8 +426,8 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 <time:Clock id="clock" frame-rate="30"/>
 
 <!-- Captions: primary style for all text -->
-<fonts:Stack id="caption-font" family="inter" weight="700" style="normal"/>
-<fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
+<fonts:Face id="caption-font" package="@fontsource-variable/inter" weight="700" style="normal"/>
+<fonts:Face id="title-font" package="@fontsource-variable/inter" weight="900" style="normal"/>
 <caption-fine:Style id="base-caption" recipe={recipes.caption.base} font={caption-font}/>
 
 <caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
@@ -472,7 +445,7 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
   left="10%" top="20%" right="90%" bottom="70%"/>
 
 <!-- Media：Selection 期间显示一个普通 Clip -->
-<pipeline:Normalize id="card-media" source={motion.video}
+<mediaop:Normalize id="card-media" source={motion.video}
   video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 <visual:Track id="cards" timeline={speech.timeline}>
   <visual:Clip media={card-media.media} frame={card-frame}
@@ -488,7 +461,7 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 
 <!-- Audio：先规范化一份已声明素材，再把它放满整个节目 -->
 <media:Audio id="music" src="./assets/music.wav"/>
-<pipeline:Normalize id="music-media" source={music}
+<mediaop:Normalize id="music-media" source={music}
   video="none" audio="default" span-authority="audio" clock={clock}/>
 <audio:Track id="music-bed" timeline={speech.timeline}>
   <audio:Clip source={music-media.media} during="timeline"

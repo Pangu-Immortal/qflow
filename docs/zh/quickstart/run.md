@@ -44,7 +44,6 @@ my-video/
   packages/                 作品需要时创建的项目本地 Author 包
   output/                   显式导出给人或其他工具的副本
   qflow.runtime.json        执行环境
-  qflow.results.json        可选的 Result 仓库选择
   .qflow/                   自动产生的本地 Runtime 与 Result 数据
 ```
 
@@ -62,13 +61,13 @@ Run Source 与 Runtime Profile 不会悄悄改写视频。创作性的模型选�
 每个 `.svrun` 文件都以其处理指令开头：
 
 ```svml
-<?svml using="@qflow/run-markup@1"?>
+<?svml using="@qflow/markup/run@1"?>
 ```
 
 ### 最简 Run Source
 
 ```svml
-<?svml using="@qflow/run-markup@1"?>
+<?svml using="@qflow/markup/run@1"?>
 
 <svrun version="1">
   <author source="./main.svml"/>
@@ -104,7 +103,7 @@ Qflow 没有隐式缓存。复用结果是显式的运行图编写：把某个�
 生成图片或 Take 一完成，就能在下一份 `.svrun` 中用 `build-record` 与 `satisfy` 显式复用，并在启动付费下游工作前检查 plan。
 
 ```svml
-<?svml using="@qflow/run-markup@1"?>
+<?svml using="@qflow/markup/run@1"?>
 
 <svrun version="1">
   <author source="./main.svml"/>
@@ -180,7 +179,7 @@ Core 不再给 Candidate 标注 `exact` 或 `substitute`。选择 Candidate 本�
 本地文件就是最简单的零输入 Candidate：
 
 ```svml
-<file id="approved-opening" type="@qflow/artifact@1#BlobArtifact" from="./approved-opening.mp4" media-type="video/mp4"/>
+<file id="approved-opening" type="@qflow/blob@1#Blob" from="./approved-opening.mp4" media-type="video/mp4"/>
 <satisfy output="opening-shot.video" candidate="approved-opening"/>
 ```
 
@@ -203,8 +202,9 @@ qflow paths
 
 `runtime use` 只写入 `.qflow/runtime`，不会启动 Worker、创建 Runtime 数据或修改已安装
 包。Profile 结构和完整边界见 [Runtime](../guide/runtime.md)。
-CLI 必须先确定项目：显式 `--workspace` 直接给出边界；否则使用当前目录向上的最近
-`package.json`，普通创作目录没有该文件时就以当前目录为边界。随后只读取这个项目自己的
+CLI 必须先确定项目：显式 `--project` 直接给出边界；否则向上寻找
+`package.json` 中明确声明 `"qflow": { "project": true }` 的目录。组件包与任意当前目录不会
+静默成为项目。随后只读取这个项目自己的
 `.qflow/runtime`。它不会按约定文件名猜 Profile，也不会从父目录继承另一个项目的选择。
 ## 配置所选凭据
 
@@ -256,10 +256,11 @@ Runtime Profile，把其 Adapter 声明的上游 npm 包安装到机器共享目
 自己的组件和 Provider 仍是普通项目依赖，由项目的包管理器安装。只有 Profile 选择 WhisperX、
 OpenCV 等本地 Python 程序时，才需要先安装 [`uv`](https://docs.astral.sh/uv/)。
 
-作者侧缺少 Fontsource 等上游包时，`check`/`plan` 会给出精确命令，例如：
+官方 Distribution 提供 Fontsource 适配器；具体字体族是项目自己的普通依赖，应通过该项目的包
+管理器加入，例如：
 
 ```bash
-qflow packages install @fontsource-variable/inter@5.3.0
+npm install --save-exact @fontsource-variable/inter@5.3.0
 ```
 
 `qflow runtime up` 管理依赖、后台 Worker 和外部程序；`build` 不做部署准备。
@@ -276,7 +277,7 @@ qflow runtime use qflow.runtime.json
 qflow plan build.svrun
 ```
 
-Workspace 在 Runtime Profile 之前确定；显式 `--workspace` 可以覆盖它，入口 Source 路径和
+项目在 Runtime Profile 之前确定；显式 `--project` 可以覆盖它，入口 Source 路径和
 Runtime 选择都无权改变这条源码边界。`--package-root` 只定位已经安装的
 `node_modules`；`--asset-root` 只额外授权读取素材字节。
 
@@ -290,9 +291,9 @@ output/
 每次 Build 的权威结果位于 `.qflow/results/<UTC-date>/<build-id>/`：`result.json` 记录名字、状态、Target
 和公开 Output，媒体在 `files/`，结构化值在 `values/`。
 
-这是无需配置的默认 Result 仓库。项目根的 `qflow.results.json` 也可以选择 `@qflow/build-result-s3`；历史命令
-与 `.svrun` 中的 `build-record` 会使用同一个仓库。活跃 Build 的临时 Resource 仍由 Runtime 在本地
-私有管理。
+这个项目本地目录就是 Result 仓库；需要长期归档或迁移时，在 Build 完成后显式处理这些文件。
+历史命令与 `.svrun` 中的 `build-record` 使用同一目录。活跃 Build 的临时 Resource 仍由 Runtime
+在本机私有管理。
 
 `status`、`builds` 等只读归档命令不会在状态尚不存在时初始化 Runtime 数据库。
 
@@ -375,7 +376,7 @@ qflow status <build-id> --watch
 |---|---|
 | `--runtime` | 单次命令的 Runtime Profile 覆盖；通常用 `runtime use` 选择一次即可 |
 | `--package-root` | 存放已安装包的 Host 目录 |
-| `--workspace` | 显式 Source Workspace 覆盖项 |
+| `--project` | 显式项目边界，也是默认的 Source Workspace 根目录 |
 | `--title` | 给这次 Result 一个供人阅读的标题 |
 | `--follow` | 将 Build 进度流式输出到终端 |
 

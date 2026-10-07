@@ -9,7 +9,7 @@ Film 是普通作者组件。它把显式选择的 VisualTrack、AudioTrack 与�
 ```svml
 <import as="space" from="@qflow/spatial@1"/>
 <import as="film" from="@qflow/film@1"/>
-<import as="render" from="@qflow/render-hyperframes@1"/>
+<import as="html" from="@qflow/html-video@1"/>
 ```
 
 ## 装配 Film
@@ -71,15 +71,15 @@ caption.base { stack-order: 70; }
 ## 渲染完整视频
 
 ```svml
-<render:Video id="final"
+<html:Video id="final"
   composition={main.composition} timeline={speech.timeline}/>
 ```
 
 渲染器编译视觉贡献、捕获所需帧、渲染 AudioTrack，并复用封装为交付文件。
-`{final.video}` 是普通 Resource-backed `BlobArtifact`，通常也是 Run Target。
+`{final.video}` 是普通 Resource-backed `Blob`，通常也是 Run Target。
 
 ```svml
-<?svml using="@qflow/run-markup@1"?>
+<?svml using="@qflow/markup/run@1"?>
 <svrun version="1">
   <author source="./main.svml"/>
   <target output="final.video"/>
@@ -89,7 +89,7 @@ caption.base { stack-order: 70; }
 ## 渲染帧区间
 
 ```svml
-<render:Video id="detail" composition={main.composition} timeline={speech.timeline}
+<html:Video id="detail" composition={main.composition} timeline={speech.timeline}
   start-frame="240" end-frame-exclusive="360"/>
 ```
 
@@ -117,7 +117,7 @@ Timeline 不要求语音或媒体：
   appearance={recipes.film.main}>
   <film:Track source={conversation.visual}/>
 </film:Film>
-<render:Video id="final" composition={main.composition} timeline={animation.timeline}/>
+<html:Video id="final" composition={main.composition} timeline={animation.timeline}/>
 ```
 
 组件用普通绝对时间拥有自己的阅读节奏。没有选择 AudioTrack 时，结果是静音的。在语音作品

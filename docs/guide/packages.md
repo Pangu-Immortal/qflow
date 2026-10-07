@@ -42,9 +42,9 @@ The consumer installs a chosen version and keeps its lockfile with the project.
 
 The Skill, executable Distribution and video project are installed and updated separately. The
 `@qflow/qflow` Distribution includes the official author packages and public extension APIs. Its selected
-Runtime adapters can prepare additional service dependencies through `qflow runtime up`; optional
-author assets can be installed with the precise `qflow packages install` command reported by the CLI.
-A project's own component dependencies are managed in that project.
+Runtime adapters can prepare their declared services and other runtime materials through
+`qflow runtime up`. npm dependencies are installed with the package that owns them: Distribution
+dependencies with the Distribution, and project component dependencies with the project.
 
 Source uses a logical Module address such as `@your-studio/scoreboard@1`. npm's installed package
 version selects the implementation; the logical `@1` identifies its author interface. Building a
@@ -53,8 +53,10 @@ install them.
 
 ## Write and share an extension
 
-An external package develops against public subpaths such as `@qflow/qflow/author-kit`,
-`@qflow/qflow/composition`, `@qflow/qflow/model-kit` or `@qflow/qflow/endpoint-kit`. Use the selected `@qflow/qflow` release as a
+An external package develops against the narrow public owners it uses, such as
+`@qflow/qflow/author`, `@qflow/qflow/producer`, `@qflow/qflow/admission`,
+`@qflow/qflow/markup`, `@qflow/qflow/composition`, `@qflow/qflow/generation/model` or
+`@qflow/qflow/endpoint`. Use the selected `@qflow/qflow` release as a
 development dependency, compile the extension to JavaScript, and ship its own code and assets. Its
 `package.json` names an activation entry describing what it provides. The active Distribution
 supplies the public Qflow APIs when it loads the selected extension.

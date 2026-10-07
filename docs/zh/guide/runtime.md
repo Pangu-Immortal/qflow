@@ -19,8 +19,9 @@ Core 只规划和推进依赖，不需要知道作品是一条视频。新组件
 
 ## 先确定项目，再选择 Profile
 
-从视频项目运行命令，或用 `--workspace` 明确指定项目。否则使用当前目录向上最近的
-`package.json`；没有时，以当前目录为项目。Source 文件名和 Runtime 配置都不决定这个边界。
+从 `package.json` 明确声明 `"qflow": { "project": true }` 的视频项目运行命令，或用
+`--project` 明确指定项目。否则 CLI 向上寻找该标记。组件包、任意当前目录、Source 文件名和
+Runtime 配置都不决定这个边界。
 
 ```bash
 qflow paths
@@ -45,7 +46,7 @@ qflow runtime init
   "dataRoot": ".qflow/runtimes/local",
   "credentials": {},
   "endpoints": {
-    "media.local": { "use": "@qflow/provider-media-local" }
+    "media.local": { "use": "@qflow/media-local" }
   },
   "bindings": {}
 }
@@ -132,20 +133,9 @@ Provider 可以分别声明任务容量和 submit、poll、collect 的短调用�
 
 ## 产物留在项目里
 
-默认 Result 位于 `.qflow/results`。项目通过独立的 `qflow.results.json` 选择位置或仓库，
-不放进 Runtime Profile：
-
-```json
-{
-  "format": "qflow.build-results@1",
-  "use": "@qflow/build-result-fs",
-  "config": { "path": ".qflow/results" }
-}
-```
-
-S3 适配器可以把 Result 放进桶及项目专属前缀。适配器负责访问和凭据；更换 Result 存储不会
-搬走活跃 Runtime，也不会自动上传外部文件引用。已提交 Build 保留提交时的目标位置，
-修改选择不迁移历史。
+Result 位于运行 Qflow 的机器上、项目自己的 `.qflow/results`。本地电脑、SSH Linux 主机和
+官方 WebUI 后端遵循同一规则：整套 Runtime 部署到那个宿主，不把队列、工作文件和 Result
+存储拆到不同服务。需要长期归档或迁移时，在 Build 完成后显式处理这些文件。
 
 Result 在公开 Output 完成时发布它们，最后保留终态。新 Output 可以引用已有文件，复合值内部也一样，
 不意味着多一份素材。显式本地文件引用保持实时性；继续复用时需要保留它们的依赖。
@@ -153,5 +143,5 @@ Result 在公开 Output 完成时发布它们，最后保留终态。新 Output 
 
 `builds`、`history`、`inspect`、`get` 读取项目 Result，不依赖原 Runtime。
 精确存储和执行接口见
-[Result 包](https://github.com/qflow-ai/qflow/blob/main/packages/build-result/README.md) 与
+[Result 包](https://github.com/qflow-ai/qflow/blob/main/packages/result/README.md) 与
 [本地 Runtime 包](https://github.com/qflow-ai/qflow/blob/main/packages/runtime-local/README.md)。

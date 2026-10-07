@@ -8,7 +8,7 @@ SVS（`.svs`）文件使用类 CSS 语法定义可复用的类型化配置值。
 ## 基本语法
 
 ```svs
-<?svml using="@qflow/svs@1"?>
+<?svml using="@qflow/recipe@1"?>
 
 <sheet version="1" id="studio">
   film.vertical {
@@ -23,7 +23,7 @@ SVS（`.svs`）文件使用类 CSS 语法定义可复用的类型化配置值。
 </sheet>
 ```
 
-- 处理指令 `<?svml using="@qflow/svs@1"?>` 用于选择 SVS 解析器。
+- 处理指令 `<?svml using="@qflow/recipe@1"?>` 用于选择 SVS 解析器。
 - `<sheet>` 元素包裹所有声明。`id` 属性成为顶层命名空间。
 - 每个块的格式为 `namespace.name { ... }`，属性以 `;` 结尾的键值对形式书写。
 - 注释使用 `/* ... */`。
@@ -96,7 +96,7 @@ caption.dialogue {
 Style。字体家族、字重和字形只在这条精确字体边上声明一次：
 
 ```svml
-<fonts:Stack id="caption-font" family="inter" weight="600" style="normal"/>
+<fonts:Face id="caption-font" package="@fontsource-variable/inter" weight="600" style="normal"/>
 <caption-fine:Style id="primary-caption" recipe={recipes.caption.dialogue}
   font={caption-font}/>
 ```
@@ -132,7 +132,7 @@ caption.bob {
 然后在 Track 中通过 Use 选择呈现样式：
 
 ```svml
-<fonts:Stack id="caption-font" family="inter" weight="600" style="normal"/>
+<fonts:Face id="caption-font" package="@fontsource-variable/inter" weight="600" style="normal"/>
 <caption-fine:Style id="default-caption" recipe={recipes.caption.dialogue} font={caption-font}/>
 <caption-fine:Style id="alice-caption" recipe={recipes.caption.alice} font={caption-font}/>
 <caption-fine:Style id="bob-caption" recipe={recipes.caption.bob} font={caption-font}/>
@@ -220,7 +220,7 @@ text.title {
 先与精确字体字节一起编译为 `text:Style`，再由具体放置形式引用：
 
 ```svml
-<fonts:Stack id="title-font" family="inter" weight="900" style="normal"/>
+<fonts:Face id="title-font" package="@fontsource-variable/inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
 <text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
   style={title-style} z="90" align="center" during="timeline">
@@ -293,35 +293,38 @@ interview.street {
 
 ## 精确字体声明
 
-SVS 描述字体策略，但不选择或打开字体字节。常用开源字体由私有的预发布字体目录显式导入；只有作者图真正引用的字体会进入本次 Build：
+SVS 描述字体策略，但不选择或打开字体字节。官方 Qflow Distribution 已提供 Fontsource 适配器；
+在视频项目自己的 `package.json` 中安装实际选中的上游字体包，普通 lockfile 固定真实版本：
 
 ```svml
-<import as="fonts" from="@qflow/fonts-open@1"/>
+<import as="fonts" from="@qflow/fontsource@1"/>
+<import as="media" from="@qflow/media@1"/>
 
-<fonts:Stack id="caption-fonts" family="inter" weight="600" style="normal" emoji="color">
-  <fonts:Fallback family="noto-sans-sc" weight="600" style="normal"/>
-</fonts:Stack>
+<fonts:Face id="caption-latin" package="@fontsource-variable/inter" weight="600" style="normal"/>
+<fonts:Face id="caption-han" package="@fontsource-variable/noto-sans-sc" weight="600" style="normal"/>
+<media:FontStack id="caption-fonts" primary={caption-latin}>
+  <media:Fallback font={caption-han}/>
+</media:FontStack>
 ```
 
 | 属性 | 描述 |
 |---|---|
-| `family` | 字体包有限目录中的字体族 |
+| `package` | 一个已经安装的 `@fontsource` 或 `@fontsource-variable` 包 |
 | `weight` | 精确选择的字体粗细 |
-| `style` | `normal` 或该字体族支持的 `italic` |
-| `emoji` | `Stack` 可选的 `color`（COLRv1）或 `mono` 兜底 |
+| `style` | `normal` 或该字体包支持的 `italic` |
 
-目录现有 109 个开源字体族，覆盖手写、书法、展示、无衬线、衬线、等宽、CJK、其他文字系统与 Emoji。Fontsource 依赖固定为 `5.3.0`，Chromium 兼容的 COLRv1 Emoji 包另行锁定版本；编译器把已安装字节哈希成内容寻址的字体值，Build 过程不会下载字体，Runtime
-也不猜字体：
+Qflow 不维护有限字体目录，也不会在编译时安装字体族。适配器只把所选包的 metadata、CSS
+和字体文件作为数据读取；编译器把已安装字节变成 Resource-backed 字体值。Build 过程不会下载字体，Runtime 也不猜字体：
 
 ```svml
 <caption-fine:Style id="dialogue" recipe={recipes.caption.dialogue}
   font={caption-fonts}/>
 ```
 
-`fonts:Stack` 产出通用 `FontStackRef`，主字体与 Fallback 都保留自己的真实元数据；
+`media:FontStack` 产出通用 `FontStackRef`，主字体与 Fallback 都保留自己的真实元数据；
 Caption Recipe 不再重复家族、字重或字形。CJK 与 Emoji 即使由多个 Unicode-range 文件组成，在作者图中仍是一条逻辑边。终端 Text 与 Fine Caption 都拒绝省略字体栈；Visual IR 不接受机器字体兜底。对于同时具有文本与 Emoji 两种呈现的符号，作者应写真实的 Unicode Emoji 序列（例如包含 VS16 的 `☎️`）；任何包都不会为了强制彩色而改写显示稿。
 
-品牌字体与自定义字体仍是显式作者资产，不会被塞进共享目录：
+品牌字体与自定义字体仍是显式作者资产，不会被塞进中央目录：
 
 ```svml
 <import as="media" from="@qflow/media@1"/>
@@ -334,7 +337,7 @@ Caption Recipe 不再重复家族、字重或字形。CJK 与 Emoji 即使由多
 一个完整的 `recipes.svs` 文件，用于四段式说话人头像项目：
 
 ```svs
-<?svml using="@qflow/svs@1"?>
+<?svml using="@qflow/recipe@1"?>
 
 <sheet version="1" id="studio">
 

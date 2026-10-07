@@ -27,7 +27,7 @@ It changes the interface, while your Script, video captions and comments keep th
 | --- | --- |
 | `--run <file.svrun>` | Select the Run to open. |
 | `--runtime <profile.json>` | Select a Runtime Profile; otherwise use the project's saved Runtime selection. |
-| `--workspace <directory>` | Set the project boundary for Source access and edits. |
+| `--project <directory>` | Set the project boundary for Source access and edits. |
 | `--port <number>` | Request a browser-server port; the default is `5179`. |
 
 The selected target must lead to one Film and its Timeline. Placed Takes add their semantic anchors;
@@ -60,7 +60,7 @@ Candidate selection. This keeps the material choice in the editable project.
 
 ## Picture, timeline and Inspector
 
-The central Preview draws the composition with HyperFrames. It uses the same component layout,
+The central Preview evaluates the composition's compiled `HtmlProgram`. It uses the same component layout,
 media sampling and motion as an encoded render. Check the actual picture when adjusting caption
 placement, graphic emphasis or coverage.
 
@@ -94,7 +94,7 @@ ready for delivery, run its export Build to create the encoded video. Studio and
 available to explore the editable work and discuss further changes.
 
 For component authors, [Timing edits in Studio](../guide/studio-temporal-windows.md) explains semantic
-editing, and the [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-adapter/README.md)
+editing, and the [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md)
 explains how to expose component entities and controls.
 
 To add another interface language, load a local JSON translation with `--locale-pack ./language.json`.

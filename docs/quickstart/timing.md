@@ -18,7 +18,7 @@ word evidence; reframing picture does not change audio; a pure animation needs T
 or Script.
 
 ```svml
-<import as="pipeline" from="@qflow/media-pipeline@1"/>
+<import as="mediaop" from="@qflow/media-operations@1"/>
 <import as="whisperx" from="@qflow/whisperx@1"/>
 <import as="semantic" from="@qflow/narrative-temporal@1"/>
 <import as="time" from="@qflow/timeline-author@1"/>
@@ -33,9 +33,9 @@ The Clock fixes the frame rate shared by the final Timeline and every local doma
 
 ```svml
 <time:Clock id="clock" frame-rate="30"/>
-<pipeline:Normalize id="opening-media" source={opening-video.video}
+<mediaop:Normalize id="opening-media" source={opening-video.video}
   video="primary-moving" audio="default" span-authority="video" clock={clock}/>
-<pipeline:Normalize id="answer-media" source={answer-video.video}
+<mediaop:Normalize id="answer-media" source={answer-video.video}
   video="primary-moving" audio="default" span-authority="video" clock={clock}/>
 ```
 

@@ -20,7 +20,7 @@ qflow studio --run build.svrun
 | --- | --- |
 | `--run <file.svrun>` | 选择要打开的 Run。 |
 | `--runtime <profile.json>` | 选择 Runtime Profile；省略时使用项目保存的 Runtime 选择。 |
-| `--workspace <directory>` | 设置 Source 访问与修改的项目边界。 |
+| `--project <directory>` | 设置 Source 访问与修改的项目边界。 |
 | `--port <number>` | 指定浏览器服务端口，默认请求 `5179`。 |
 
 所选目标需要指向一个 Film 及其 Timeline。放入的 Take 带来对应的语义锚点；纯动画也使用 Timeline，声明结束时间、不放入 Take 即可。两者都支持视觉组件与属性编辑。显示编排所需的素材应已通过 Run 提供。Studio 可以完成所选 Runtime 支持的媒体准备；生成和编码渲染通过 `qflow build` 提交。
@@ -43,7 +43,7 @@ qflow studio --run build.svrun
 
 ## 画面、时间线与 Inspector
 
-中央 Preview 使用 HyperFrames 绘制编排，组件布局、素材采样和动作与编码渲染来自同一份编排。调整字幕位置、图形重点或覆盖画面时，可以对照真实素材查看。
+中央 Preview 求值编排生成的 `HtmlProgram`；组件布局、素材采样和动作与编码成片来自同一份编排。调整字幕位置、图形重点或覆盖画面时，可以对照真实素材查看。
 
 Timeline 把组件的出现放在同一时钟上。语义编排还会显示 Segment、Word、Selection 和 Moment。选择实体即可定位；播放、逐帧、缩放和滚动便于查看具体转场或版面。
 
@@ -59,6 +59,6 @@ Source 编辑修改所选 `.svml`、`.svs` 或 `.svrun` 文件。支持的 Inspe
 
 预览播放包含 Film 选中的 AudioTrack，例如口播、音乐与音效。导出视频的音频由渲染的媒体管线装配。作品准备好交付后，运行导出 Build 得到编码后的成片；Studio 与 Comments 仍可用于查看可编辑作品、沟通后续修改。
 
-组件作者可以阅读 [Studio 中的时间编辑](../guide/studio-temporal-windows.md) 了解语义编辑，以及 [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-adapter/README.md) 了解如何公开组件实体和控件。
+组件作者可以阅读 [Studio 中的时间编辑](../guide/studio-temporal-windows.md) 了解语义编辑，以及 [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md) 了解如何公开组件实体和控件。
 
 需要其他界面语言时，可以通过 `--locale-pack ./language.json` 加载本地 JSON 译文。[本地化指南](https://github.com/qflow-ai/qflow/blob/main/packages/studio/LOCALIZATION.md) 介绍译文格式、缺项检查和语言包分享方法。

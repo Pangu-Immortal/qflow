@@ -44,8 +44,8 @@ describe("someFunction", () => {
 ```typescript
 test("compiles the expected exports", async () => {
   const compiler = createCompiler({ root, packageContributions });
-  const workspace = await compiler.openFile("fixture.svml");
-  const result = await compiler.compileSource(workspace.entry, workspace);
+  const workspace = await compiler.openEntry("fixture.svml");
+  const result = await compiler.compileResolvedSource(workspace.entry, workspace);
   assert.equal(result.exports.length, 3);
 });
 ```
@@ -69,12 +69,12 @@ test("compiles the expected exports", async () => {
 | 命令 | 测试内容 | 前置条件 |
 |---|---|---|
 | `pnpm test:whisperx-service` | Python WhisperX 服务 | Python 3.13、uv、frozen sync |
-| `pnpm test:image-opencv` | OpenCV 图像变换 | 服务自带的解释器，位于 `services/image-opencv/.venv`；要用别的解释器就设 `QFLOW_OPENCV_PYTHON` |
+| `pnpm test:image-opencv` | OpenCV Transform 与 Compose | Provider 自带的解释器，位于 `packages/provider-image-opencv-local/runtime/.venv`；要用别的解释器就设 `QFLOW_OPENCV_PYTHON` |
 
-要运行本地 HyperFrames 浏览器渲染测试，先在当前 shell 环境中设置 `QFLOW_BROWSER_TESTS=1`，再从仓库根目录执行以下命令。需要可用的 Chrome、ffmpeg 和 ffprobe。
+要运行本地 HTML 光栅化测试，先在当前 shell 环境中设置 `QFLOW_BROWSER_TESTS=1`，再从仓库根目录执行以下命令。需要可用的 Chrome、ffmpeg 和 ffprobe。
 
 ```sh
-node --import tsx --test packages/provider-hyperframes-local/test/provider.test.ts
+node --import tsx --test packages/provider-html-local/test/provider.test.ts
 ```
 
 ## 测试 fixtures
