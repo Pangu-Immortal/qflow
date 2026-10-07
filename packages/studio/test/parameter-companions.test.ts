@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { StudioPlacement, StudioEntityDraft, StudioParameterCompanion } from "@qflow/studio-adapter";
-import { studioContributionFromPackage, createStudioCompanionHostFacet } from "@qflow/studio-adapter";
+import type { StudioPlacement, StudioEntityDraft, StudioParameterCompanion } from "@qflow/studio-companion";
+import { studioContributionFromPackage, createStudioCompanionFacet } from "@qflow/studio-companion";
 import { composeParameterDeclarations, sourceBindingsForDraft, inspectorFieldsForBindings } from "../src/parameters.js";
 import { StudioCompanionRegistry } from "../src/studio-registry.js";
 import { parameterAuthorValue, serializeParameterValue } from "../src/parameter-values.js";
@@ -20,7 +20,7 @@ function placement(id: string, start: number, end: number): StudioPlacement {
     attributes: { id }, attributeValueRanges: {}, references: [], referenceAttributes: {}, referenceTypes: {} };
 }
 test("a project object contributes its own parameters to a consumer and inserts an omitted scalar on first edit", () => {
-  const contribution = studioContributionFromPackage("@project/pan", [createStudioCompanionHostFacet({ parameters: [companion] })]);
+  const contribution = studioContributionFromPackage("@project/pan", [createStudioCompanionFacet({ parameters: [companion] })]);
   const registry = new StudioCompanionRegistry([], { parameters: contribution.parameters });
   const split = text.indexOf('<p:Pan');
   const owner = { ...placement("view", 0, split), referenceAttributes: { style: "pan" }, resolvedReferenceAttributes: { style: "pan" } };

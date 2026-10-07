@@ -1,8 +1,9 @@
-import { plannedNeedInputs } from "@qflow/component-kit";
-import type { ComponentPackage } from "@qflow/component-kit";
-import type { SpeechEvidenceAudio } from "@qflow/speech-evidence";
-import type { CanonicalValue, StoredValue } from "@qflow/protocol";
-import { canonicalize } from "@qflow/protocol";
+import { canonicalize } from "@qflow/qflow/protocol";
+import { plannedNeedInputs } from "@qflow/qflow/producer";
+import type { CanonicalValue, StoredValue } from "@qflow/qflow/protocol";
+import type { ProducerPackage } from "@qflow/qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { SpeechEvidenceAudio } from "@qflow/qflow/speech-evidence";
 
 import { whisperXRequestForEvidenceAudio } from "./evidence.js";
 import { whisperXCapabilities, whisperXProducers } from "./manifest.js";
@@ -58,4 +59,4 @@ export const whisperXComponent = {
       };
     },
   }],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

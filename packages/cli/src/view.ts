@@ -4,10 +4,10 @@ import type {
   BuildResultManifest,
   BuildResultRepository,
   RepositoryBuildResultOutputDescription,
-} from "@qflow/build-result";
+} from "@qflow/result";
 import { buildIdCreatedAt } from "@qflow/protocol";
 import type { TypeRef } from "@qflow/protocol";
-import type { BuildView } from "@qflow/runtime-host-node";
+import type { CliBuildView as BuildView } from "./runtime-port.js";
 import { commandHint } from "./command-hint.js";
 import type { CommandScope } from "./command-hint.js";
 
@@ -258,8 +258,8 @@ export async function buildResultView(
     createdAt: buildCreatedAtIso(manifest.id),
     ...(manifest.finishedAt === undefined ? {} : { finishedAt: new Date(manifest.finishedAt).toISOString() }),
     outcome: manifest.outcome ?? "open",
-    source: projectPath(manifest.source.path, options.projectRoot),
-    ...(manifest.run === undefined ? {} : { run: projectPath(manifest.run.path, options.projectRoot) }),
+    source: projectPath(manifest.source.id, options.projectRoot),
+    ...(manifest.run === undefined ? {} : { run: projectPath(manifest.run.id, options.projectRoot) }),
     targetCount: manifest.targets.length,
     targets: manifest.targets,
     outputCount: available.length,

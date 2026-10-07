@@ -1,8 +1,8 @@
-import type { Composition } from "@qflow/composition";
-import { compileHyperframesDocument, materializeHyperframesHtml } from "@qflow/hyperframes";
-import type { HyperframesDocument } from "@qflow/hyperframes";
-import { compileAudioProgramPlan } from "@qflow/media-pipeline";
-import type { Timeline } from "@qflow/timeline";
+import type { Composition } from "@qflow/qflow/composition";
+import { compileHtmlProgram, materializeHtmlProgram } from "@qflow/qflow/html-program";
+import type { HtmlProgram } from "@qflow/qflow/html-program";
+import { compileAudioProgramPlan } from "@qflow/media-operations";
+import type { Timeline } from "@qflow/qflow/timeline";
 
 import { injectRuntimeShim } from "./runtime-shim.js";
 
@@ -14,20 +14,20 @@ export type RenderInput = {
 };
 
 /**
- * Compile the interpreted Tracks into the same HyperFrames document the real
+ * Compile the interpreted Tracks into the same HTML renderer document the real
  * renderer photographs frame by frame, and hand it back as an `iframe` srcdoc.
  *
  * Nothing is approximated here: placement, stacking, clipping, motion and
  * material all come from the projection selected by the Run.
  */
 export function renderPreview(input: RenderInput): string {
-  return renderStudioProgramme(input).preview;
+  return renderStudioHtmlProgram(input).preview;
 }
 
 /** The same compiled picture serves immediate frame capture and interactive playback. */
-export function renderStudioProgramme(input: RenderInput): { readonly document: HyperframesDocument; readonly html: string; readonly preview: string } {
-  const document = compileHyperframesDocument(input.composition, input.timeline);
-  const html = materializeHyperframesHtml(document, (artifact) => {
+export function renderStudioHtmlProgram(input: RenderInput): { readonly document: HtmlProgram; readonly html: string; readonly preview: string } {
+  const document = compileHtmlProgram(input.composition, input.timeline);
+  const html = materializeHtmlProgram(document, (artifact) => {
     // The only Artifacts a preview can reference are files the author already
     // has. Anything else would be a Provider's output, which does not exist yet,
     // and failing loudly beats serving a picture with holes in it.

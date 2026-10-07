@@ -1,6 +1,6 @@
 import { userText, uiAttribute, uiText, uiAttr } from "./i18n.js";
 import type { StudioSnapshot } from "../shared.js";
-import type { StudioEditHandle } from "@qflow/studio-adapter";
+import type { StudioEditHandle } from "@qflow/studio-companion";
 import { icon, setIcon } from "./icons.js";
 import { mountMaterialPreview } from "./material-preview.js";
 import type { State, Store } from "./selection.js";
@@ -663,7 +663,7 @@ export function createTimeline(store: Store): Timeline {
         const visibleWidthPx = visibleItemWidth(from, to, laneWidth);
         node.classList.toggle("clip-preview-wide", visibleWidthPx >= 92);
         node.title = `${clip.display.title} · ${clip.startFrame}-${clip.endFrameExclusive}f`;
-        node.innerHTML = `<span class="clip-head"><span class="clip-name"></span><span class="clip-meta"></span></span><span class="clip-body"><span class="clip-layers" aria-hidden="true"></span><span class="clip-phases"></span></span><span class="clip-boundary" aria-hidden="true"></span><span class="clip-selection" aria-hidden="true"></span>`;
+        node.innerHTML = `<span class="clip-head"><span class="clip-name"></span><span class="clip-meta"></span></span><span class="clip-body"><span class="clip-layers" aria-hidden="true"></span></span><span class="clip-boundary" aria-hidden="true"></span><span class="clip-selection" aria-hidden="true"></span>`;
         const layers = node.querySelector<HTMLElement>(".clip-layers")!;
         clip.display.layers.forEach((layer, index) => {
           const layerNode = document.createElement("span");
@@ -677,15 +677,6 @@ export function createTimeline(store: Store): Timeline {
           }
           layers.append(layerNode);
         });
-        const phaseLayer = node.querySelector<HTMLElement>(".clip-phases")!;
-        for (const phase of clip.temporal?.phases ?? []) {
-          if (phase.endFrameExclusive <= clip.startFrame || phase.startFrame >= clip.endFrameExclusive) continue;
-          const phaseNode = document.createElement("span");
-          phaseNode.className = `clip-phase clip-phase-${phase.role}`;
-          phaseNode.style.left = `${(phase.startFrame - clip.startFrame) / Math.max(1, clip.endFrameExclusive - clip.startFrame) * 100}%`;
-          phaseNode.style.width = `${(phase.endFrameExclusive - phase.startFrame) / Math.max(1, clip.endFrameExclusive - clip.startFrame) * 100}%`;
-          phaseLayer.append(phaseNode);
-        }
         const metaText = clip.presentation.chrome === "point"
           ? `${(clip.startFrame / fps(snapshot)).toFixed(2)}s`
           : `${((clip.endFrameExclusive - clip.startFrame) / fps(snapshot)).toFixed(2)}s`;

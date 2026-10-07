@@ -20,7 +20,8 @@ test("preview scrubs to the same source frame as rendering at fractional sample 
     removeEventListener(name: string) { listeners.delete(name); },
   };
   const root = { style: {}, getAttribute: (name: string) => ({ "data-fps": "30", "data-composition-id": "test" })[name] ?? null };
-  const window: Record<string, any> = { addEventListener() {}, dispatchEvent() {} };
+  const window: Record<string, any> = { addEventListener() {}, dispatchEvent() {},
+    __qflowFrameProgram: { async applyFrame() {} } };
   const html = injectRuntimeShim("").trim();
   vm.runInNewContext(html.slice("<script>".length, -"</script>".length), {
     window, document: { querySelector: () => root,
@@ -54,7 +55,8 @@ test("preview keeps a compact zero-rate sampling interval paused on its source f
     removeEventListener(name: string) { listeners.delete(name); },
   };
   const root = { style: {}, getAttribute: (name: string) => ({ "data-fps": "30", "data-composition-id": "test" })[name] ?? null };
-  const window: Record<string, any> = { addEventListener() {}, dispatchEvent() {} };
+  const window: Record<string, any> = { addEventListener() {}, dispatchEvent() {},
+    __qflowFrameProgram: { async applyFrame() {} } };
   const html = injectRuntimeShim("").trim();
   vm.runInNewContext(html.slice("<script>".length, -"</script>".length), {
     window, document: { querySelector: () => root,
@@ -89,7 +91,8 @@ test("preview evaluates reverse source time by absolute frame without assigning 
     removeEventListener(name: string) { listeners.delete(name); },
   };
   const root = { style: {}, getAttribute: (name: string) => ({ "data-fps": "30", "data-composition-id": "test" })[name] ?? null };
-  const window: Record<string, any> = { addEventListener() {}, dispatchEvent() {} };
+  const window: Record<string, any> = { addEventListener() {}, dispatchEvent() {},
+    __qflowFrameProgram: { async applyFrame() {} } };
   const html = injectRuntimeShim("").trim();
   vm.runInNewContext(html.slice("<script>".length, -"</script>".length), {
     window, document: { querySelector: () => root,

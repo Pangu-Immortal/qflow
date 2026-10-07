@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 
-import type { BuildResultRepository, FinishedBuildResultManifest } from "@qflow/build-result";
+import type { BuildResultRepository, FinishedBuildResultManifest } from "@qflow/result";
 
 export type BuildOutputHistoryPage = {
   readonly results: readonly FinishedBuildResultManifest[];
@@ -32,7 +32,7 @@ export async function browseBuildOutputHistory(
     for (let index = 0; index < page.results.length; index += 1) {
       const manifest = page.results[index]!;
       const sameSource = source === undefined
-        || resolve(request.projectRoot, manifest.source.path) === source;
+        || resolve(request.projectRoot, manifest.source.id) === source;
       if (sameSource && manifest.outputs[request.output] !== undefined) matches.push(manifest);
       if (matches.length === request.limit) {
         const hasOlder = index < page.results.length - 1 || page.next !== undefined;

@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { StudioEditHandle, StudioTemporalDomainAnchor, StudioTemporalInstantProjection } from "@qflow/studio-adapter";
+import type { StudioEditHandle, StudioTemporalDomainAnchor, StudioTemporalInstantProjection } from "@qflow/studio-companion";
 import { adjustScriptSelection, parseScript } from "@qflow/script";
 import { projectProgramInstant } from "@qflow/temporal";
-import { parseTemporalInstant } from "@qflow/temporal-markup";
+import { parseTemporalInstant } from "@qflow/temporal/markup";
 import { chooseDomainGesture, formatTemporalPointEdit, domainGestureSpan } from "../src/temporal-edit.js";
 
 const source = '<one><HOST>@{proof} One two @{/proof} three.</one>';

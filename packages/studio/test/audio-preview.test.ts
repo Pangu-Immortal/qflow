@@ -19,7 +19,8 @@ function player(gain: number, levelAutomation: object = {}) {
     paused: true, volume: 0, muted: false, pause() { this.paused = true; },
     play() { this.paused = false; return Promise.resolve(); }, addEventListener() {}, removeEventListener() {} };
   const root = { style: {}, getAttribute: (name: string) => ({ "data-fps": "30", "data-composition-id": "test" })[name] ?? null };
-  const window: Record<string, any> = { addEventListener() {}, dispatchEvent() {} };
+  const window: Record<string, any> = { addEventListener() {}, dispatchEvent() {},
+    __qflowFrameProgram: { async applyFrame() {} } };
   const html = injectRuntimeShim("").trim();
   vm.runInNewContext(html.slice("<script>".length, -"</script>".length), {
     window, document: { querySelector: () => root, querySelectorAll: (selector: string) => selector === ".qflow-studio-audio" ? [audio] : [] },

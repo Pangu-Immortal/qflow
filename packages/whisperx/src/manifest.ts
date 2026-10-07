@@ -1,11 +1,10 @@
-import { mediaDependency, mediaTypes } from "@qflow/media";
-import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
-import { narrativeTemporalDependency, narrativeTemporalTypes } from "@qflow/narrative-temporal";
-import { speechEvidenceDependency, speechEvidenceTypes } from "@qflow/speech-evidence";
-import type { CapabilityRef, ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
-import { mediaPipelineManifest, mediaPipelineModuleRef } from "@qflow/media-pipeline";
-import { speechAlignmentModuleRef } from "@qflow/speech-alignment";
-import { temporalDependency, temporalTypes } from "@qflow/temporal";
+import { mediaDependency, mediaTypes } from "@qflow/qflow/media";
+import { narrativeDependency, narrativeTypes } from "@qflow/qflow/narrative";
+import { narrativeTemporalDependency, narrativeTemporalTypes } from "@qflow/qflow/narrative-temporal";
+import { speechEvidenceDependency, speechEvidenceTypes } from "@qflow/qflow/speech-evidence";
+import type { CapabilityRef, ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/protocol";
+import { speechAlignmentModuleRef } from "@qflow/narrative-speech-alignment";
+import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
 
 export const whisperXModuleRef = { name: "@qflow/whisperx", version: "1" } as const;
 export const whisperXTypes = {
@@ -70,7 +69,6 @@ export const whisperXManifest: ModuleManifest = {
     mediaDependency,
     narrativeDependency,
     narrativeTemporalDependency,
-    { module: mediaPipelineModuleRef },
     { module: speechAlignmentModuleRef },
     temporalDependency,
   ],

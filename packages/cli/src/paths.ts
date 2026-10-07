@@ -1,7 +1,30 @@
-import { resolve } from "node:path";
-
-export { qflowHostStateRoot } from "@qflow/runtime-host-node";
+import { homedir } from "node:os";
+import { join, resolve } from "node:path";
 
 export function qflowProjectStateRoot(projectRoot: string): string {
   return resolve(projectRoot, ".qflow");
+}
+
+/** Persistent state owned by the installed Host, outside every author project and Runtime Profile. */
+export function qflowHostStateRoot(options: {
+  readonly env?: NodeJS.ProcessEnv;
+  readonly platform?: NodeJS.Platform;
+  readonly home?: string;
+} = {}): string {
+  const env = options.env ?? process.env;
+  const override = env.QFLOW_STATE_HOME;
+  if (override !== undefined && override.trim().length > 0) return resolve(override);
+  const platform = options.platform ?? process.platform;
+  const home = options.home ?? homedir();
+  if (platform === "darwin") return join(home, "Library", "Application Support", "Qflow");
+  if (platform === "win32") {
+    const local = env.LOCALAPPDATA;
+    return join(local === undefined || local.trim().length === 0
+      ? join(home, "AppData", "Local")
+      : local, "Qflow");
+  }
+  const state = env.XDG_STATE_HOME;
+  return join(state === undefined || state.trim().length === 0
+    ? join(home, ".local", "state")
+    : state, "qflow");
 }

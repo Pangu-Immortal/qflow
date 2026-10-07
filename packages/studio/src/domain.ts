@@ -1,28 +1,28 @@
-import { loadDiscoveredSourcePackages } from "@qflow/cli";
-import { registerProducerFacets, registerTypeValidatorFacets } from "@qflow/component-kit";
-import { createResolvedClosure } from "@qflow/core";
-import { ProducerRegistry } from "@qflow/driver-node";
+import { loadDiscoveredSourcePackages } from "@qflow/qflow/cli";
+import type { CliDistribution } from "@qflow/qflow/cli";
+import { producerPackagesFromFacets, registerProducerFacets } from "@qflow/qflow/producer";
+import { createResolvedClosure } from "@qflow/qflow/kernel";
+import { ProducerRegistry } from "@qflow/qflow/executor";
 import {
   AuthorFrontendRegistry,
-  installAuthorFrontendHostFacets,
-} from "@qflow/elaborator";
+  installAuthorFrontendFacets,
+} from "@qflow/qflow/author";
 import {
   createMarkupAuthorFrontend,
-  installMarkupSurfaceHostFacets,
+  installMarkupSurfaceFacets,
   MarkupSurfaceRegistry,
-} from "@qflow/markup";
-import type { MarkupSurfaceRegistryLike } from "@qflow/markup";
-import type { LoadedPackage, NodePackageContribution } from "@qflow/package-loader-node";
-import { ModulePackageRegistry, NodeCompiler } from "@qflow/compiler-node";
-import type { ModuleRef, ResolvedModuleClosure } from "@qflow/protocol";
-import { TypeValidatorRegistry } from "@qflow/validation";
-import { createVideoCompiler, createVideoWorkspace, videoCliDistribution } from "@qflow/video-cli";
+} from "@qflow/qflow/markup";
+import type { MarkupSurfaceRegistryLike } from "@qflow/qflow/markup";
+import type { LoadedPackage, PackageContribution } from "@qflow/qflow/loader";
+import { ModulePackageRegistry, Compiler } from "@qflow/qflow/compiler";
+import type { ModuleRef, ResolvedModuleClosure } from "@qflow/qflow/protocol";
+import { admissionPackagesFromFacets, registerTypeValidatorFacets, TypeValidatorRegistry } from "@qflow/qflow/admission";
 
 export type StudioDomain = {
   readonly packages: readonly LoadedPackage[];
-  readonly contributions: readonly NodePackageContribution[];
-  readonly compiler: NodeCompiler;
-  readonly createCompiler: (surfaces?: MarkupSurfaceRegistryLike) => NodeCompiler;
+  readonly contributions: readonly PackageContribution[];
+  readonly compiler: Compiler;
+  readonly createCompiler: (surfaces?: MarkupSurfaceRegistryLike) => Compiler;
   readonly closure: ResolvedModuleClosure;
   readonly surfaces: MarkupSurfaceRegistry;
   readonly producers: ProducerRegistry;
@@ -33,20 +33,21 @@ export type StudioDomain = {
 
 /**
  * Assemble Studio from the same recursive package selection as the official CLI.
- * The application assembles the video-domain view; selected packages contribute Studio Companions through host facets.
+ * The application assembles the video-domain view; selected packages contribute Studio Companions through facets.
  */
 export async function loadStudioDomain(input: {
   readonly run: string;
   readonly workspaceRoot: string;
   readonly packageRoot: string;
+  readonly distribution: CliDistribution;
 }): Promise<StudioDomain> {
-  const packages = await loadDiscoveredSourcePackages(videoCliDistribution, {
+  const packages = await loadDiscoveredSourcePackages(input.distribution, {
     source: input.run,
     workspaceRoot: input.workspaceRoot,
     packageRoot: input.packageRoot,
-    ...(videoCliDistribution.packageRoot === undefined
+    ...(input.distribution.packageRoot === undefined
       ? {}
-      : { distributionPackageRoot: videoCliDistribution.packageRoot }),
+      : { distributionPackageRoot: input.distribution.packageRoot }),
   });
   const contributions = packages.map((item) => item.contribution);
   const manifests = contributions.flatMap((item) =>
@@ -67,9 +68,9 @@ export async function loadStudioDomain(input: {
     }
   }
   const resolveModule = (specifier: string): ModuleRef | undefined => modules.get(specifier);
-  const facets = contributions.flatMap((item) => item.hostFacets ?? []);
+  const facets = contributions.flatMap((item) => item.facets ?? []);
   const surfaces = new MarkupSurfaceRegistry();
-  installMarkupSurfaceHostFacets(facets, surfaces);
+  installMarkupSurfaceFacets(facets, surfaces);
   const domainFrontends = (registry: MarkupSurfaceRegistryLike): AuthorFrontendRegistry => {
     const frontends = new AuthorFrontendRegistry();
     frontends.register(createMarkupAuthorFrontend({
@@ -80,52 +81,51 @@ export async function loadStudioDomain(input: {
         return found;
       },
     }));
-    installAuthorFrontendHostFacets(facets, frontends);
+    installAuthorFrontendFacets(facets, frontends);
     return frontends;
   };
 
   const producers = new ProducerRegistry();
   const validators = new TypeValidatorRegistry();
   for (const contribution of contributions) {
-    for (const component of contribution.components ?? []) {
-      registerProducerFacets(producers, component.producers ?? []);
-      registerTypeValidatorFacets(validators, component.validators ?? []);
-    }
+    const facets = contribution.facets ?? [];
+    for (const item of producerPackagesFromFacets(facets)) registerProducerFacets(producers, item.producers ?? []);
+    for (const item of admissionPackagesFromFacets(facets)) registerTypeValidatorFacets(validators, item.validators ?? []);
   }
 
   return {
     packages,
     contributions,
-    compiler: createVideoCompiler({
+    compiler: input.distribution.createCompiler({
       workspaceRoot: input.workspaceRoot,
       packageRoot: input.packageRoot,
-      ...(videoCliDistribution.packageRoot === undefined
+      ...(input.distribution.packageRoot === undefined
         ? {}
-        : { distributionPackageRoot: videoCliDistribution.packageRoot }),
+        : { distributionPackageRoot: input.distribution.packageRoot }),
       packageContributions: contributions,
     }),
     createCompiler(registry) {
       if (registry === undefined) {
-        return createVideoCompiler({
+        return input.distribution.createCompiler({
           workspaceRoot: input.workspaceRoot,
           packageRoot: input.packageRoot,
-          ...(videoCliDistribution.packageRoot === undefined
+          ...(input.distribution.packageRoot === undefined
             ? {}
-            : { distributionPackageRoot: videoCliDistribution.packageRoot }),
+            : { distributionPackageRoot: input.distribution.packageRoot }),
           packageContributions: contributions,
         });
       }
       const frontends = domainFrontends(registry);
-      return new NodeCompiler({
+      return new Compiler({
         modules: moduleRegistry,
         frontends,
         validators,
-        workspace: createVideoWorkspace({
+        workspace: input.distribution.createWorkspace({
           workspaceRoot: input.workspaceRoot,
           packageRoot: input.packageRoot,
-          ...(videoCliDistribution.packageRoot === undefined
+          ...(input.distribution.packageRoot === undefined
             ? {}
-            : { distributionPackageRoot: videoCliDistribution.packageRoot }),
+            : { distributionPackageRoot: input.distribution.packageRoot }),
         }),
       });
     },

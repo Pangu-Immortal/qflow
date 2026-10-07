@@ -1,35 +1,35 @@
-import { fileReferenceIdentity, locateRepositoryBuildResultOutput, ownedFileReference } from "@qflow/build-result";
+import { fileReferenceIdentity, locateRepositoryBuildResultOutput, ownedFileReference } from "@qflow/result/node";
 import { randomUUID } from "node:crypto";
 import type {
   BuildResultRepository,
   BuildResultFileRef,
   BuildResultValuePath,
   RepositoryBuildResultOutput,
-} from "@qflow/build-result";
-import { NodeRunCompiler } from "@qflow/compiler-node";
+} from "@qflow/result/node";
+import { RunCompiler } from "@qflow/compiler";
 import type {
-  NodeCompiledRun,
-  NodeCompiler,
-} from "@qflow/compiler-node";
-import type { NodePackageContribution } from "@qflow/package-loader-node";
-import type { ArtifactAttachment, WorkspaceSession } from "@qflow/workspace";
+  CompiledRun,
+  Compiler,
+} from "@qflow/compiler";
+import type { PackageContribution } from "@qflow/loader";
+import type { BlobAttachment, WorkspaceSession } from "@qflow/workspace";
 import type { BlobRef, CanonicalValue, StoredValue } from "@qflow/protocol";
 import {
-  installRunFragmentHostFacets,
-  runFrontendsFromHostFacets,
+  installRunFragmentFacets,
+  runFrontendsFromFacets,
   RunFragmentRegistry,
   RunFrontendRegistry,
 } from "@qflow/run";
 import type { RunFrontend } from "@qflow/run";
 
-export type LoadedRunFile = NodeCompiledRun & {
+export type LoadedRunFile = CompiledRun & {
   readonly path: string;
-  readonly compiler: NodeRunCompiler;
+  readonly compiler: RunCompiler;
   readonly resultResourceReferences: Readonly<Record<string, BuildResultFileRef>>;
 };
 
 type BuildResultResolutionSession = {
-  readonly files: Map<string, ArtifactAttachment>;
+  readonly files: Map<string, BlobAttachment>;
   readonly references: Map<string, BuildResultFileRef>;
   readonly outputs: Map<string, Promise<RepositoryBuildResultOutput | undefined>>;
 };
@@ -40,12 +40,12 @@ function createBuildResultResolutionSession(): BuildResultResolutionSession {
 
 export async function checkRunFile(options: {
   readonly workspace: WorkspaceSession;
-  readonly authorCompiler: NodeCompiler;
+  readonly authorCompiler: Compiler;
   readonly frontends: readonly RunFrontend[];
-  readonly packageContributions: readonly NodePackageContribution[];
+  readonly packageContributions: readonly PackageContribution[];
 }) {
   const compiler = createRunCompiler(options);
-  return await compiler.checkSource(options.workspace.entry, options.workspace);
+  return await compiler.checkResolvedSource(options.workspace.entry, options.workspace);
 }
 
 type ResultValueBindingTree = {
@@ -117,11 +117,11 @@ export async function resolveBuildResultValue(
 ): Promise<{
   readonly type: RepositoryBuildResultOutput["type"];
   readonly value: StoredValue;
-  readonly attachments?: readonly ArtifactAttachment[];
+  readonly attachments?: readonly BlobAttachment[];
   } | undefined> {
   const manifest = await repository.read(build);
   if (manifest?.outcome === undefined) return undefined;
-  const resultAttachment = async (owner: string, file: BuildResultFileRef): Promise<ArtifactAttachment> => {
+  const resultAttachment = async (owner: string, file: BuildResultFileRef): Promise<BlobAttachment> => {
     const address = fileReferenceIdentity(owner, file);
     const existing = session.files.get(address);
     if (existing !== undefined) return existing;
@@ -144,7 +144,7 @@ export async function resolveBuildResultValue(
     session.references.set(artifact.resource, ownedFileReference(owner, file));
     return attachment;
   };
-  const attachments = new Map<string, ArtifactAttachment>();
+  const attachments = new Map<string, BlobAttachment>();
   const address = `${build}\u0000${output}`;
   let pending = session.outputs.get(address);
   if (pending === undefined) {
@@ -180,18 +180,18 @@ export async function resolveBuildResultValue(
 }
 
 function createRunCompiler(options: {
-  readonly authorCompiler: NodeCompiler;
+  readonly authorCompiler: Compiler;
   readonly frontends: readonly RunFrontend[];
-  readonly packageContributions: readonly NodePackageContribution[];
+  readonly packageContributions: readonly PackageContribution[];
   readonly results?: BuildResultRepository;
-}, resultSession = createBuildResultResolutionSession()): NodeRunCompiler {
+}, resultSession = createBuildResultResolutionSession()): RunCompiler {
   const fragments = new RunFragmentRegistry();
   for (const item of options.packageContributions) {
-    installRunFragmentHostFacets(item.hostFacets ?? [], fragments);
+    installRunFragmentFacets(item.facets ?? [], fragments);
   }
   const frontends = new RunFrontendRegistry();
   for (const frontend of options.frontends) frontends.register(frontend);
-  return new NodeRunCompiler({
+  return new RunCompiler({
     authorCompiler: options.authorCompiler,
     frontends,
     fragments,
@@ -207,26 +207,26 @@ function createRunCompiler(options: {
 }
 
 export function collectRunFrontends(
-  packages: readonly NodePackageContribution[],
+  packages: readonly PackageContribution[],
 ): readonly RunFrontend[] {
-  return packages.flatMap((item) => runFrontendsFromHostFacets(item.hostFacets ?? []));
+  return packages.flatMap((item) => runFrontendsFromFacets(item.facets ?? []));
 }
 
 export async function loadRunFile(options: {
   readonly workspace: WorkspaceSession;
-  readonly authorCompiler: NodeCompiler;
+  readonly authorCompiler: Compiler;
   readonly frontends: readonly RunFrontend[];
-  readonly packageContributions: readonly NodePackageContribution[];
+  readonly packageContributions: readonly PackageContribution[];
   readonly results?: BuildResultRepository;
 }): Promise<LoadedRunFile> {
   const resultSession = createBuildResultResolutionSession();
   const compiler = createRunCompiler(options, resultSession);
-  const compiled = await compiler.compileSource(options.workspace.entry, options.workspace);
+  const compiled = await compiler.compileResolvedSource(options.workspace.entry, options.workspace);
   const references = new Map<string, BuildResultFileRef>(compiled.attachments.flatMap((attachment) =>
     attachment.location === undefined ? [] : [[attachment.artifact.resource, {
       kind: "external-file" as const, uri: attachment.location,
       size: attachment.artifact.size, mediaType: attachment.artifact.mediaType,
     }]]));
   for (const [resource, file] of resultSession.references) references.set(resource, file);
-  return { path: options.workspace.entry.id, compiler, ...compiled, resultResourceReferences: Object.fromEntries(references) };
+  return { path: options.workspace.entry.unit.id, compiler, ...compiled, resultResourceReferences: Object.fromEntries(references) };
 }

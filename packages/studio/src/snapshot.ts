@@ -1,16 +1,16 @@
 import { composeParameterDeclarations } from "./parameters.js";
 /**
- * Turn a built programme into what the panels read.
+ * Turn the resolved Studio projection into what the panels read.
  *
  * The Timeline owns the work range. Companions project selectable entities onto
  * that range without extending it or requiring component-specific editor code.
  */
 import { relative } from "node:path";
 
-import type { MarkupSurfaceRegistryLike } from "@qflow/markup";
-import { compositionTypes } from "@qflow/composition";
-import { timelineFrameCount } from "@qflow/timeline";
-import { sameModule, sameType } from "@qflow/protocol";
+import type { MarkupSurfaceRegistryLike } from "@qflow/qflow/markup";
+import { compositionTypes } from "@qflow/qflow/composition";
+import { timelineFrameCount } from "@qflow/qflow/timeline";
+import { sameModule, sameType } from "@qflow/qflow/protocol";
 
 import type {
   CandidateProvenance,
@@ -21,7 +21,7 @@ import type {
   Track,
 } from "./shared.js";
 import type { Placement } from "./observe.js";
-import type { Preview } from "./programme.js";
+import type { StudioProjection } from "./projection.js";
 import {
   sealStudioClip,
 } from "./studio-registry.js";
@@ -96,7 +96,7 @@ function authored(placements: readonly Placement[]): readonly Located[] {
 /** Package Companions project their own temporal facts onto Studio's absolute ruler. */
 function temporalDomains(
   registry: StudioCompanionRegistry,
-  built: Preview,
+  built: StudioProjection,
 ): readonly TemporalDomainView[] {
   const provenance: CandidateProvenance = {
     output: built.timingOutput?.name ?? "Timeline",
@@ -115,7 +115,7 @@ function temporalDomains(
   });
 }
 
-export function snapshot(registry: StudioCompanionRegistry, built: Preview, input: {
+export function snapshot(registry: StudioCompanionRegistry, built: StudioProjection, input: {
   readonly revision: number;
   readonly path: string;
   readonly text: string;
@@ -268,6 +268,6 @@ export function snapshot(registry: StudioCompanionRegistry, built: Preview, inpu
   };
 }
 
-function note(_built: Preview): string {
+function note(_built: StudioProjection): string {
   return "Composition and timing are resolved from the selected Run Source.";
 }

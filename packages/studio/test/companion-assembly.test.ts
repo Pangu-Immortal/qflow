@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compositionTypes } from "@qflow/composition";
-import { createStudioTrackCompanionHostFacet } from "@qflow/studio-adapter";
+import { createStudioTrackCompanionFacet } from "@qflow/studio-companion";
 
 import { loadStudioCompanionRegistry } from "../src/companion-assembly.js";
 
@@ -10,12 +10,11 @@ test("a Source-selected package contributes its Companion without a second Studi
   const module = { name: "@project/cards", version: "1" } as const;
   const registry = await loadStudioCompanionRegistry({
     distributionPackageRoot: process.cwd(),
-    distributionPackages: [],
     sourcePackages: [{
       specifier: "@project/cards",
       contribution: {
-        format: "qflow.node-package@1",
-        hostFacets: [createStudioTrackCompanionHostFacet([{
+        format: "qflow.package@1",
+        facets: [createStudioTrackCompanionFacet([{
           id: "cards",
           role: "track",
           family: "cards",

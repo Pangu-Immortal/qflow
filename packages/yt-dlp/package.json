@@ -1,15 +1,25 @@
 {
   "name": "@qflow/yt-dlp",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./cli": "./src/cli.ts"
+  },
+  "files": [
+    "dist",
+    "runtime",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
   },
   "dependencies": {
-    "@qflow/package-loader-node": "workspace:*",
-    "@qflow/yt-dlp-service-runtime": "workspace:*",
-    "@qflow/runtime-host-node": "workspace:*"
+    "@qflow/media-local": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/qflow": "workspace:*"
   }
 }

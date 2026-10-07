@@ -1,7 +1,7 @@
 import { bindDropdown } from "./dropdown.js";
 import { uiLabel, uiAttribute, uiText, uiAttr, userText, languageMenu, initializeI18n, type Message } from "./i18n.js";
 import type { Clip, StudioFailure, StudioInspectorDomain, StudioSnapshot } from "../shared.js";
-import type { CanonicalValue, ValueSchema } from "@qflow/protocol";
+import type { CanonicalValue, ValueSchema } from "@qflow/qflow/protocol";
 import { parameterAuthorValue, parameterControlForSchema, parameterNumber, parameterOption, parameterRecordSchema, parameterRecordVariants, validateParameterValue } from "../parameter-values.js";
 import { createCodePane } from "./code.js";
 import { icon } from "./icons.js";

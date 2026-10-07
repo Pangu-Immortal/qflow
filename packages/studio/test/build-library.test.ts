@@ -5,12 +5,15 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import test from "node:test";
 
-import { buildResultDirectory, FileBuildResultRepository } from "@qflow/build-result";
-import type { BuildResultRepository } from "@qflow/build-result";
-import type { BuildView } from "@qflow/runtime-host-node";
+import { buildResultDirectory, FileBuildResultRepository } from "@qflow/result/node";
+import type { BuildResultRepository } from "@qflow/result/node";
+import type { CliBuildView as BuildView } from "@qflow/cli";
 import { buildIdCreatedAt } from "@qflow/protocol";
+import { createVideoDistribution } from "@qflow/video";
 
 import { openStudioBuildLibrary, readStudioLibrary } from "../src/build-library.js";
+
+const videoDistribution = createVideoDistribution();
 
 function activeBuild(id: string, root: string): BuildView {
   return {
@@ -34,8 +37,8 @@ test("Studio library joins this environment's Builds with project Build Result f
   const manifests = [relevant, unrelated].map((entry) => ({
     format: "qflow.build-result@1" as const,
     id: entry.id,
-    source: entry.source!,
-    ...(entry.run === undefined ? {} : { run: entry.run }),
+    source: { id: entry.source!.path },
+    ...(entry.run === undefined ? {} : { run: { id: entry.run.path } }),
     targets: ["final.video"],
     finishedAt: entry.createdAt,
     outcome: "complete" as const,
@@ -146,8 +149,8 @@ test("Studio opens project Build Results without a Runtime or ResourceStore", as
     await writeFile(join(directory, "result.json"), `${JSON.stringify({
       format: "qflow.build-result@1",
       title: "First cut",
-      source: { path: join(root, "main.svml") },
-      run: { path: join(root, "build.svrun") },
+      source: { id: join(root, "main.svml") },
+      run: { id: join(root, "build.svrun") },
       targets: ["final.video"],
       finishedAt: 200,
       outcome: "complete",
@@ -159,7 +162,7 @@ test("Studio opens project Build Results without a Runtime or ResourceStore", as
       },
     }, null, 2)}\n`, "utf8");
 
-    const buildLibrary = await openStudioBuildLibrary(undefined, root, root);
+    const buildLibrary = await openStudioBuildLibrary(videoDistribution, undefined, root, root);
     assert(buildLibrary !== undefined);
     const view = await buildLibrary.library({ section: "tasks" });
     assert.equal(view.runtime, undefined);
@@ -197,9 +200,9 @@ test("media listing includes active files, follows file references and leaves Co
   const owner = "bld_20260902T130000010Z_0000000001";
   const active = "bld_20260902T130000011Z_0000000001";
   const image = { type: mediaTypeRef, value: { kind: "build-file" as const, path: "files/portrait.png", mediaType: "image/png", size: 100 } };
-  const manifests: import("@qflow/build-result").BuildResultManifest[] = [{
-    format: "qflow.build-result@1", id: owner, source: { path: "/project/main.svml" },
-    run: { path: "/project/earlier.svrun" }, targets: ["portrait.image"], outcome: "failed", finishedAt: 300,
+  const manifests: import("@qflow/result").BuildResultManifest[] = [{
+    format: "qflow.build-result@1", id: owner, source: { id: "/project/main.svml" },
+    run: { id: "/project/earlier.svrun" }, targets: ["portrait.image"], outcome: "failed", finishedAt: 300,
     failure: "Rendering failed", highlightedOutputs: ["portrait.image"],
     outputs: {
       "portrait.image": image,
@@ -208,8 +211,8 @@ test("media listing includes active files, follows file references and leaves Co
       "semantic.take": { type: mediaTypeRef, value: { kind: "value", path: "values/semantic.json" } },
     },
   }, {
-    format: "qflow.build-result@1", id: active, source: { path: "/project/main.svml" },
-    run: { path: "/project/current.svrun" }, targets: ["final.video"],
+    format: "qflow.build-result@1", id: active, source: { id: "/project/main.svml" },
+    run: { id: "/project/current.svrun" }, targets: ["final.video"],
     outputs: {
       "reused.image": { type: mediaTypeRef, value: { kind: "build-output", build: owner, output: "portrait.image" } },
       "voice.audio": { type: mediaTypeRef, value: { kind: "build-file", path: "files/voice.wav", mediaType: "audio/wav", size: 80 } },
@@ -224,7 +227,7 @@ test("media listing includes active files, follows file references and leaves Co
     async removeIncomplete() { throw new Error("read-only"); },
     async updatePresentation() { throw new Error("read-only"); },
     async read(build) { return manifests.find((item) => item.id === build); },
-    async browse() { return { results: [manifests[0] as import("@qflow/build-result").FinishedBuildResultManifest] }; },
+    async browse() { return { results: [manifests[0] as import("@qflow/result").FinishedBuildResultManifest] }; },
     async describeOutput(_build, output) {
       described.push(output);
       if (output === "reused.take") return { kind: "composite", type: mediaTypeRef };
@@ -280,7 +283,7 @@ test("Studio groups repeated external file references and retains both Build use
     const results = new FileBuildResultRepository(join(root, "results"));
     const type = { module: { name: "example", version: "1" }, name: "Image" };
     for (const id of ["bld_20260902T130000000Z_0000000001", "bld_20260902T130000001Z_0000000001"]) {
-      const writer = await results.create({ id, source: { path: join(root, "main.svml") },
+      const writer = await results.create({ id, source: { id: join(root, "main.svml") },
         targets: ["portrait"], publishedOutputs: [{ name: "portrait", output: "portrait" }],
         resourceReferences: { res_image: { kind: "external-file", uri: pathToFileURL(imagePath).href,
           size: 2, mediaType: "image/png" } } });

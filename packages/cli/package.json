@@ -8,28 +8,24 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@qflow/build-result": "workspace:*",
-    "@qflow/build-result-kit": "workspace:*",
-    "@qflow/compiler-node": "workspace:*",
-    "@qflow/component-kit": "workspace:*",
-    "@qflow/core": "workspace:*",
-    "@qflow/driver-node": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/package-loader-node": "workspace:*",
-    "@qflow/project-context-node": "workspace:*",
+    "@qflow/result": "workspace:*",
+    "@qflow/compiler": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/kernel": "workspace:*",
+    "@qflow/executor": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/loader": "workspace:*",
+    "@qflow/project": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/run": "workspace:*",
     "@qflow/runtime": "workspace:*",
-    "@qflow/runtime-host-node": "workspace:*",
     "@qflow/source": "workspace:*",
-    "@qflow/validation": "workspace:*",
+    "@qflow/admission": "workspace:*",
     "@qflow/workspace": "workspace:*",
     "typescript": "5.9.3"
   },
   "devDependencies": {
-    "@qflow/runtime-local": "workspace:*",
     "@qflow/markup": "workspace:*",
-    "@qflow/run-markup": "workspace:*",
-    "@qflow/workspace-fs-node": "workspace:*"
+    "@qflow/runtime-local": "workspace:*"
   }
 }

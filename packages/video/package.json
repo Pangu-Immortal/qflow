@@ -1,0 +1,27 @@
+{
+  "name": "@qflow/video",
+  "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./cli": "./src/commands.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "dependencies": {
+    "@qflow/runtime-local": "workspace:^"
+  },
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/cli": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/loader": "workspace:*",
+    "@qflow/markup": "workspace:*"
+  }
+}

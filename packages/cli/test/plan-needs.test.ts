@@ -1,7 +1,38 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { summarizeConstraints } from "../src/build-planning.js";
+import { createProducerPackageFacet } from "@qflow/producer";
+
+import { createGreetingBuild, producers } from "../../kernel/test/greeting-fixture.js";
+import { evaluatePlanNeeds, summarizeConstraints } from "../src/build-planning.js";
+
+test("Plan retains a deterministic Producer failure even when the Build has no external Need", async () => {
+  const state = createGreetingBuild({ targetOutputs: ["prompt"] });
+  const authored = new Set(state.program.records.map((record) => record.id));
+  const definition = {
+    format: "qflow.build-definition@1" as const,
+    program: state.program,
+    initialRecords: state.records.filter((record) => !authored.has(record.id)),
+    plan: state.plan,
+    targets: state.targets,
+  };
+  const evaluated = await evaluatePlanNeeds(definition, [{
+    format: "qflow.package@1",
+    facets: [createProducerPackageFacet({
+      producers: [{
+        producer: producers.makePrompt,
+        handler() {
+          throw new Error("Timeline end must be after its start");
+        },
+      }],
+    })],
+  }]);
+
+  assert.equal(evaluated.needs.size, 0);
+  assert.equal(evaluated.producerFailures.length, 1);
+  assert.equal(evaluated.producerFailures[0]?.step, state.plan.steps[0]?.id);
+  assert.match(evaluated.producerFailures[0]?.message ?? "", /Timeline end must be after its start/u);
+});
 
 test("a generic request summary reads only declared top-level fields and counts references by kind", () => {
   const summary = summarizeConstraints({

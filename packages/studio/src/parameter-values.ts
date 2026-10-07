@@ -1,6 +1,6 @@
-import type { CanonicalValue, ValueSchema } from "@qflow/protocol";
-import { formatSvsValue } from "@qflow/svs";
-import type { StudioInspectorField, StudioParameterControl, StudioParameterOption, StudioNumberPresentation } from "@qflow/studio-adapter";
+import type { CanonicalValue, ValueSchema } from "@qflow/qflow/protocol";
+import { formatRecipeValue } from "@qflow/qflow/recipe";
+import type { StudioInspectorField, StudioParameterControl, StudioParameterOption, StudioNumberPresentation } from "@qflow/studio-companion";
 
 export const parameterOption = (option: StudioParameterOption): Exclude<StudioParameterOption, string> =>
   typeof option === "string" ? { value: option, label: option } : option;
@@ -114,7 +114,7 @@ export function validateParameterValue(value: CanonicalValue, schema: ValueSchem
 }
 
 export function serializeParameterValue(value: CanonicalValue, language: "svml" | "svs" | "svrun"): string {
-  if (language === "svs") return formatSvsValue(value);
+  if (language === "svs") return formatRecipeValue(value);
   if (typeof value === "string") return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("'", "&apos;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   throw new Error(`${language.toUpperCase()} parameter bindings currently accept scalar values only.`);

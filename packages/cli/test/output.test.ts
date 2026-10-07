@@ -82,6 +82,8 @@ test("plan presents useful choices and readable requests without default graph i
       steps: 2,
       requestCount: 1,
       requestIssueCount: 0,
+      producerFailureCount: 0,
+      producerFailures: [],
       preflight: {
         ok: true,
         capabilityCount: 1,
@@ -118,6 +120,8 @@ test("plan names the Provider and price page behind each request, and points at 
     steps: 3,
     requestCount: 2,
     requestIssueCount: 0,
+    producerFailureCount: 0,
+    producerFailures: [],
     choiceCount: 0,
     choices: [],
   } as const;
@@ -134,7 +138,7 @@ test("plan names the Provider and price page behind each request, and points at 
       use: "@qflow/provider-qflowhub",
       pricing: { kind: "page", url: "https://qflow.ai/commercial/pricing/" },
     },
-    { request: "media:one", capability: "@qflow/media@1#inspect", status: "resolved", endpoint: "media.local", use: "@qflow/provider-media-local", pricing: { kind: "local" } },
+    { request: "media:one", capability: "@qflow/media@1#inspect", status: "resolved", endpoint: "media.local", use: "@qflow/media-local", pricing: { kind: "local" } },
     { request: "whisper:one", capability: "@qflow/whisperx@1#whisperx-alignment", status: "resolved", endpoint: "whisperx.remote", use: "@qflow/provider-example" },
     {
       request: "image:one",
@@ -301,7 +305,7 @@ test("run check treats historical reuse as a normal summary", () => {
       ok: true,
       run: "/project/build.svrun",
       author: "/project/main.svml",
-      frontend: "@qflow/run-markup@1",
+      frontend: "@qflow/markup/run@1",
       targetCount: 1,
       targets: ["final.video"],
       candidates: 1,
@@ -323,6 +327,8 @@ test("plan scope omits unused branches while retaining every demanded request an
   const plan = {
     format: "qflow.cli-plan@1" as const, ok: false, run: "build.svrun", targetCount: 2,
     targets: ["final.video", "poster.image"], steps: 400, requestCount: needs.length, requestIssueCount: 1,
+    producerFailureCount: 1,
+    producerFailures: [{ step: "source::component::timeline.resolve", message: "Timeline end must be after its start" }],
     choiceCount: 35, choices: Array.from({ length: 35 }, (_, i) => ({ output: `old-${i}`, candidate: `selected-${i}` })),
     unreached: Array.from({ length: 125 }, (_, i) => ({ output: `unused-${i}`, operation: "old-producer" })),
     needs, providers: needs.map((need) => ({ request: need.request, capability: need.capability, status: "resolved" as const, endpoint: "local" })),
@@ -342,6 +348,7 @@ test("plan scope omits unused branches while retaining every demanded request an
   assert.deepEqual(parsed.preflight.diagnostics, plan.preflight.diagnostics);
   const rendered = capture(human, { kind: "plan", machine });
   assert.match(rendered, /missing source/u);
+  assert.match(rendered, /timeline\.resolve: Timeline end must be after its start/u);
   assert.match(rendered, /last required error/u);
   assert.doesNotMatch(rendered, /old-\d|unused-\d/u);
   assert.match(rendered, /request summary unavailable/u);
@@ -362,7 +369,7 @@ test("help is concise and describes stable rather than complete output", () => {
   assert.match(output, /^Qflow\n/u);
   assert.match(output, /Results/u);
   assert.match(output, /stable machine view/u);
-  assert.match(output, /programs prepare\|up\|status\|down/u);
+  assert.doesNotMatch(output, /programs prepare\|up\|status\|down/u);
   assert.doesNotMatch(output, /Typical flow|complete machine-readable|image --prompt/u);
 });
 

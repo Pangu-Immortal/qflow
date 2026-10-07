@@ -1,7 +1,7 @@
-import { MemoryResourceStore, NodeDriver } from "@qflow/driver-node";
-import type { ResourceStore } from "@qflow/runtime";
-import type { BuildState } from "@qflow/protocol";
-import type { RuntimeHostTransientExecution } from "@qflow/runtime-host-node";
+import { MemoryResourceStore, Executor } from "@qflow/qflow/executor";
+import type { ResourceStore } from "@qflow/qflow/runtime";
+import type { BuildState } from "@qflow/qflow/protocol";
+import type { CliTransientExecution as RuntimeHostTransientExecution } from "@qflow/qflow/cli";
 
 import type { StudioDomain } from "./domain.js";
 
@@ -24,7 +24,7 @@ export async function executeStudioProjection(
   execution?: RuntimeHostTransientExecution,
 ): Promise<Executed> {
   const result = execution === undefined
-    ? await new NodeDriver({
+    ? await new Executor({
         producers: domain.producers,
         validators: domain.validators,
         resources,

@@ -1,9 +1,9 @@
 /**
- * How much of the programme the timeline shows.
+ * How much of the composition the timeline shows.
  *
  * A sixteen-second Source fits; a three-minute one does not, and reading a
  * cutaway that lasts twelve frames out of five thousand is not possible at one
- * pixel per forty frames. So the whole programme is drawn as a bar, and the
+ * pixel per forty frames. So the whole composition is drawn as a bar, and the
  * part currently on the timeline is a window inside it - dragged to move, or
  * taken by either edge to widen and narrow.
  */
@@ -12,16 +12,16 @@ export type Window = { readonly start: number; readonly end: number };
 
 export type Zoom = {
   readonly element: HTMLElement;
-  /** The visible fraction of the programme, from 0 to 1. */
+  /** The visible fraction of the composition, from 0 to 1. */
   window(): Window;
   subscribe(listen: (window: Window) => void): void;
   /** Zoom about a point, given as a fraction across the visible window. */
   pinch(at: number, factor: number): void;
   /** Slide the window by a fraction of its own width. */
   slide(by: number): void;
-  /** Show a particular programme interval, keeping it inside the strip. */
+  /** Show a particular composition interval, keeping it inside the strip. */
   focus(start: number, end: number): void;
-  /** Show the whole programme. */
+  /** Show the whole composition. */
   fit(): void;
 };
 
@@ -95,7 +95,7 @@ export function createZoom(): Zoom {
   drag(endGrip, (at, began) => settle(began.start, Math.max(at, began.start + NARROWEST)));
 
   // Clicking the bar outside the window centres the window there, which is the
-  // fastest way across a long programme.
+  // fastest way across a long composition.
   element.addEventListener("pointerdown", (event) => {
     const width = window_.end - window_.start;
     const at = fraction(event);

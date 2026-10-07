@@ -1,13 +1,13 @@
-import type { PlannedBuild } from "@qflow/compiler-node";
-import { NodeRunCompiler } from "@qflow/compiler-node";
-import type { Candidate, OperationNode, Satisfaction, BuildTarget } from "@qflow/protocol";
-import type { ArtifactAttachment } from "@qflow/workspace";
+import type { PlannedBuild } from "@qflow/qflow/compiler";
+import { RunCompiler } from "@qflow/qflow/compiler";
+import type { Candidate, OperationNode, Satisfaction, BuildTarget } from "@qflow/qflow/protocol";
+import type { BlobAttachment } from "@qflow/qflow/workspace";
 import {
-  installRunFragmentHostFacets,
-  runFrontendsFromHostFacets,
+  installRunFragmentFacets,
+  runFrontendsFromFacets,
   RunFragmentRegistry,
   RunFrontendRegistry,
-} from "@qflow/run";
+} from "@qflow/qflow/run";
 
 import type { StudioBuildLibrary } from "./build-library.js";
 import { observedCompiledSource } from "./compile.js";
@@ -31,7 +31,7 @@ export type RunPlan = {
   readonly source: CompiledSource;
   readonly run: RunCompilation;
   readonly targets: readonly string[];
-  readonly attachments: readonly ArtifactAttachment[];
+  readonly attachments: readonly BlobAttachment[];
   readonly plan: (run: RunCompilation, targets: readonly string[]) => PlannedBuild;
 };
 
@@ -45,13 +45,13 @@ export async function loadStudioRun(input: {
   const fragments = new RunFragmentRegistry();
   const frontends = new RunFrontendRegistry();
   for (const contribution of input.domain.contributions) {
-    installRunFragmentHostFacets(contribution.hostFacets ?? [], fragments);
-    for (const frontend of runFrontendsFromHostFacets(contribution.hostFacets ?? [])) {
+    installRunFragmentFacets(contribution.facets ?? [], fragments);
+    for (const frontend of runFrontendsFromFacets(contribution.facets ?? [])) {
       frontends.register(frontend);
     }
   }
   const observer = createObserver(input.domain.surfaces, input.registry);
-  const compiler = new NodeRunCompiler({
+  const compiler = new RunCompiler({
     authorCompiler: input.domain.createCompiler(observer.surfaces),
     fragments,
     frontends,
@@ -60,7 +60,7 @@ export async function loadStudioRun(input: {
       resolveHistoricalOutput: input.buildLibrary.resolveHistoricalOutput,
     }),
   });
-  const compiled = await compiler.compileFile(input.run);
+  const compiled = await compiler.compileEntry(input.run);
   const source = await observedCompiledSource(compiled.author, observer.observations());
   const targets = compiled.run.graph.targets.map((target) => target.output);
   return {

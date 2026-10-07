@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { BuildResultManifest, BuildResultRepository } from "@qflow/build-result";
-import type { BuildView } from "@qflow/runtime-host-node";
+import type { BuildResultManifest, BuildResultRepository } from "@qflow/result";
+import type { CliBuildView as BuildView } from "../src/runtime-port.js";
 import { buildResultView, buildStatusView } from "../src/view.js";
 
 test("inspection chooses its scope before following any Output reference", async () => {
   const names = ["final", "important", ...Array.from({ length: 50 }, (_, i) => `unused-${i}`)];
   const manifest = {
-    id: "bld_20260913T093030369Z_55907CDA9E", source: { path: "main.svml" },
+    id: "bld_20260913T093030369Z_55907CDA9E", source: { id: "main.svml" },
     targets: ["final"], highlightedOutputs: ["important"],
     outputs: Object.fromEntries(names.map((name) => [name, {}])),
   } as unknown as BuildResultManifest;

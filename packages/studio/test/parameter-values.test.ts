@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { StudioInspectorField } from "@qflow/studio-adapter";
+import type { StudioInspectorField } from "@qflow/studio-companion";
 import { parameterAuthorValue, parameterControlForSchema, parameterNumber, parameterOption, serializeParameterValue, validateParameterValue } from "../src/parameter-values.js";
 
 const field = (overrides: Partial<StudioInspectorField>): StudioInspectorField => ({

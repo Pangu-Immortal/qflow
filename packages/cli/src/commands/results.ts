@@ -1,7 +1,7 @@
 import { realpath } from "node:fs/promises";
 import { basename, dirname, resolve } from "node:path";
 
-import type { BuildResultRepository } from "@qflow/build-result";
+import type { BuildResultRepository } from "@qflow/result";
 
 import type { CliCommand, ProjectResultCommand } from "../command.js";
 import { exportBuildResultOutput } from "../result-export.js";
@@ -54,7 +54,7 @@ export async function runProjectResultCommand(input: {
       createdAt: buildCreatedAtIso(manifest.id),
       ...(manifest.title === undefined ? {} : { title: manifest.title }),
       outcome: manifest.outcome,
-      ...(manifest.run === undefined ? {} : { run: projectPath(manifest.run.path, projectRoot) }),
+      ...(manifest.run === undefined ? {} : { run: projectPath(manifest.run.id, projectRoot) }),
       targetCount: manifest.targets.length,
       ...(args.presentation.verbose ? {
         targets: manifest.targets.slice(0, args.limit),

@@ -1,10 +1,8 @@
-import type { NodeCompiler } from "@qflow/compiler-node";
-import type { LoadedPackage, NodePackageContribution } from "@qflow/package-loader-node";
-import type { NodeRuntimeHost } from "@qflow/runtime-host-node";
-import type { BuildResultRepository } from "@qflow/build-result";
-import type { BuildResultRepositoryLocation } from "@qflow/build-result-kit";
-import type { BuildResultRepositoryDiagnostic } from "@qflow/build-result-kit";
-import type { CanonicalValue } from "@qflow/protocol";
+import type { Compiler } from "@qflow/compiler";
+import type { LoadedPackage, LogicalPackageAddress, PackageContribution } from "@qflow/loader";
+import type { BuildResultRepository } from "@qflow/result";
+import type { Workspace } from "@qflow/workspace";
+import type { CliDiagnostic, CliResultRepositoryLocation, CliRuntimeHost } from "./runtime-port.js";
 
 export type CliCompilerOptions = {
   /** Canonical containment boundary for Author and Run Sources plus source assets. */
@@ -13,9 +11,9 @@ export type CliCompilerOptions = {
   readonly assetRoots?: readonly string[];
   /** Project-owned package resolution boundary for package Source imports. */
   readonly packageRoot?: string;
-  /** Read-only application Distribution that owns the reserved @qflow namespace. */
+  /** Read-only application Distribution containing protected Host packages and extension fallbacks. */
   readonly distributionPackageRoot?: string;
-  readonly packageContributions: readonly NodePackageContribution[];
+  readonly packageContributions: readonly PackageContribution[];
 };
 
 /**
@@ -29,9 +27,12 @@ export type CliDistribution = {
   readonly packageRoot?: string;
   /** Explicit Host bootstrap packages; never inferred from Source contents. */
   readonly bootstrapPackages: readonly LoadedPackage[];
-  /** Product-owned starter Profile. The generic CLI only writes this explicit value. */
-  readonly initialRuntimeProfile?: CanonicalValue;
-  createCompiler(options: CliCompilerOptions): NodeCompiler;
+  /** Resolve the execution environment explicitly selected for this project, if the Distribution supports one. */
+  resolveProjectRuntime?(projectRoot: string): Promise<{ readonly profile: string } | undefined>;
+  /** Open the definition environment selected by this product Distribution. */
+  createWorkspace(options: Pick<CliCompilerOptions,
+    "workspaceRoot" | "assetRoots" | "packageRoot" | "distributionPackageRoot">): Workspace;
+  createCompiler(options: CliCompilerOptions): Compiler;
   /**
    * Read the self-described Run Source and its Author Source closure, then return
    * only the installed package roots those sources explicitly select.
@@ -47,19 +48,19 @@ export type CliDistribution = {
     readonly packages?: readonly LoadedPackage[];
   }): Promise<{
     readonly selected: readonly string[];
-    readonly logical?: readonly import("@qflow/package-loader-node").LogicalPackageAddress[];
+    readonly logical?: readonly LogicalPackageAddress[];
   }>;
   /** Open the Runtime Profile with this application's Runtime implementation. */
   openRuntimeHost(path: string, options: {
     readonly packageRoot: string;
     readonly distributionPackageRoot?: string;
-  }): Promise<NodeRuntimeHost>;
+  }): Promise<CliRuntimeHost>;
   /** Open project-owned Result history even when no Runtime Profile is selected. */
   openProjectResults(projectRoot: string, options: {
     readonly packageRoot: string;
     readonly distributionPackageRoot?: string;
   }): Promise<{
-    readonly location: BuildResultRepositoryLocation;
+    readonly location: CliResultRepositoryLocation;
     readonly repository: BuildResultRepository;
     close(): void | Promise<void>;
   }>;
@@ -68,7 +69,7 @@ export type CliDistribution = {
     readonly packageRoot: string;
     readonly distributionPackageRoot?: string;
   }): Promise<{
-    readonly location?: BuildResultRepositoryLocation;
-    readonly diagnostics: readonly BuildResultRepositoryDiagnostic[];
+    readonly location?: CliResultRepositoryLocation;
+    readonly diagnostics: readonly CliDiagnostic[];
   }>;
 };

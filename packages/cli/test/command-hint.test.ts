@@ -12,11 +12,11 @@ test("POSIX command hints preserve selectors and literal path characters when co
   const output = execFileSync("/bin/sh", ["-c",
     `qflow() { "$HINT_TEST_NODE" -e 'process.stdout.write(JSON.stringify(process.argv.slice(1)))' -- "$@"; }; ${command}`,
   ], { encoding: "utf8", env: { ...process.env, HINT_TEST_NODE: process.execPath } });
-  assert.deepEqual(JSON.parse(output), [...args, "--workspace", projectRoot, "--runtime", runtimeProfile]);
+  assert.deepEqual(JSON.parse(output), [...args, "--project", projectRoot, "--runtime", runtimeProfile]);
 });
 
 test("PowerShell command hints quote paths as literal strings", () => {
   assert.equal(commandHint(["status", "build-1", "--watch"], {
     projectRoot: "C:\\Films\\director's cut", runtimeProfile: "C:\\$profiles\\voice`new.json",
-  }, "powershell"), "qflow status build-1 --watch --workspace 'C:\\Films\\director''s cut' --runtime 'C:\\$profiles\\voice`new.json'");
+  }, "powershell"), "qflow status build-1 --watch --project 'C:\\Films\\director''s cut' --runtime 'C:\\$profiles\\voice`new.json'");
 });

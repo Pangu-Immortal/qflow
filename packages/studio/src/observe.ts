@@ -9,9 +9,9 @@
  */
 import type {
   MarkupSurfaceRegistryLike, RegisteredSurface, StructuredElement, StructuredSurfaceInput, SurfaceDecodeOutput,
-} from "@qflow/markup";
-import type { ModuleRef } from "@qflow/protocol";
-import type { StudioObservedValue, StudioPlacement, StudioTemporalDomainSourceMap } from "@qflow/studio-adapter";
+} from "@qflow/qflow/markup";
+import type { ModuleRef } from "@qflow/qflow/protocol";
+import type { StudioObservedValue, StudioPlacement, StudioTemporalDomainSourceMap } from "@qflow/studio-companion";
 
 import type { Range } from "./shared.js";
 import type { StudioCompanionRegistry } from "./studio-registry.js";

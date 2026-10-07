@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { NodeCompiledSourceClosure } from "@qflow/compiler-node";
-import type { StudioPlacement } from "@qflow/studio-adapter";
+import type { CompiledAuthorSource } from "@qflow/compiler";
+import type { StudioPlacement } from "@qflow/studio-companion";
 
 import { observedCompiledSource } from "../src/compile.js";
 import { outputFor, placementFor } from "../src/studio-trace.js";
@@ -53,7 +53,7 @@ test("Studio joins repeated local names through compiler-owned provenance", asyn
       element("b.svml", "b::output::visual"),
     ] },
     attachments: [],
-  } as unknown as NodeCompiledSourceClosure;
+  } as unknown as CompiledAuthorSource;
   const source = await observedCompiledSource(compiled, {
     placements: [placement("a.svml"), placement("b.svml")],
     temporalDomains: [],

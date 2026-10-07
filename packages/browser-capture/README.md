@@ -2,10 +2,12 @@
 
 Browser material capture for websites and authored HTML. The package owns browser lifecycle and file
 capture; the task owns navigation, page state and the material worth showing. It imports Puppeteer Core,
-the upstream browser installer and Sharp directly and has no dependency on Qflow Core, Runtime,
-Providers or graph types.
+the upstream browser installer and Sharp directly. Its library does not create a Source Graph, Build,
+Result or Runtime; completed recordings reuse `@qflow/media-local`'s explicit file probe instead of
+forking a second ffprobe parser. The package's CLI contribution uses the installed Qflow CLI host.
 
-The Distribution supplies `qflow capture screenshot` and `qflow capture run`. See `qflow capture --help`
+This package also owns the `@qflow/browser-capture/cli` contribution used by the Distribution for
+`qflow capture screenshot` and `qflow capture run`. See `qflow capture --help`
 for command options. Puppeteer Core is a pinned Distribution dependency, so a plain video project
 needs no browser-library installation or private `node_modules` import path.
 `qflow capture install-browser` explicitly prepares the package's tested Chrome for Testing revision
@@ -59,8 +61,9 @@ capture rate, and `maxWidth` / `maxHeight` constrain output dimensions. These op
 to Puppeteer. The helper defaults those upper bounds to the viewport's device-pixel dimensions.
 Chrome determines the recorded dimensions; device scale can enlarge a screenshot without enlarging
 the recording. Use the returned `width` and `height` for placement. No FFmpeg encoder is involved;
-`ffprobe` reads the completed file's actual dimensions,
-duration, frame rate and audio presence. `stop()` is idempotent and waits for the file to finish.
+the `media-local` file probe invokes the selected `ffprobe` to read the completed file's actual
+dimensions, duration, frame rate and audio presence. Browser Capture does not keep a second media
+probe parser. `stop()` is idempotent and waits for the file to finish.
 
 Both functions accept an optional second `Page` argument for scripts using several pages. Returning
 finishes recordings started through `record`. Ordinary Puppeteer methods remain available; files
@@ -85,5 +88,5 @@ belong in those scripts through normal Puppeteer APIs. A simple screenshot waits
 `--wait-for` and `--wait-ms` add an authored readiness condition. The package does not interpret
 websites or silently rewrite page content.
 
-For a library import in an installed Distribution, use `@qflow/qflow/browser-capture`. The workspace package
-also exports the same API as `@qflow/browser-capture`.
+Library consumers import `@qflow/browser-capture` directly. The root Distribution selects it as an
+ordinary npm dependency; it does not republish the library through an `@qflow/qflow/*` facade.

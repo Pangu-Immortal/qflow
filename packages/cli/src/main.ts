@@ -1,20 +1,17 @@
 import { randomBytes } from "node:crypto";
-import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import type { NodeRuntimeHost } from "@qflow/runtime-host-node";
 import { orderedBuildId } from "@qflow/protocol";
-import { parseSourceHeader } from "@qflow/source";
+import { parseSourceHeader } from "@qflow/source/text";
 
 import { unreachedGenerations } from "./reachability.js";
 import { checkRunFile, collectRunFrontends, loadRunFile } from "./run-file.js";
 import type { CliDistribution } from "./distribution.js";
-import type {
-  CliRuntime,
-  CliRuntimeController,
-} from "./runtime-port.js";
+import type { CliApplicationContext } from "./application.js";
+import type { CliRuntime, CliRuntimeHost } from "./runtime-port.js";
 import { createPlanOutput, createPricingOutput, writeCliHelp, writeCliOutput } from "./output.js";
-import type { CliIo, CliMachineView } from "./output.js";
+import type { CliIo } from "./output.js";
+import type { OperationalMachineView } from "./machine-view.js";
 import { parseCommand } from "./arguments.js";
 import type { CliCommand, RuntimeOption } from "./command.js";
 import { commandHint } from "./command-hint.js";
@@ -24,13 +21,8 @@ import { isProjectResultCommand, runProjectResultCommand } from "./commands/resu
 import { isEnvironmentCommand, runEnvironmentCommand } from "./commands/environment.js";
 import { isExecutionCommand, runExecutionCommand } from "./commands/execution.js";
 import { inlineValuePreview } from "./runtime-view.js";
-import { resolvePackageRoot, resolveProjectRoot } from "@qflow/project-context-node";
+import { resolveProjectRoot } from "@qflow/project";
 import { loadDiscoveredSourcePackages } from "./source-packages.js";
-import {
-  clearRuntimeProfile,
-  findRuntimeProfile,
-  selectRuntimeProfile,
-} from "@qflow/project-context-node";
 import {
   buildStatusView,
   cliTypeName,
@@ -41,12 +33,12 @@ function createPublicBuildId(now = Date.now()): string {
   return orderedBuildId(now, randomBytes(5).toString("hex").toUpperCase());
 }
 
-async function loadRuntime(host: NodeRuntimeHost, endpoints: readonly string[]): Promise<CliRuntime> {
+async function loadRuntime(host: CliRuntimeHost, endpoints: readonly string[]): Promise<CliRuntime> {
   return await host.createRuntime({ endpoints });
 }
 
-function commandWorkspaceRoot(command: CliCommand): string | undefined {
-  return "workspaceRoot" in command ? command.workspaceRoot : undefined;
+function commandProjectRootOption(command: CliCommand): string | undefined {
+  return "projectRoot" in command ? command.projectRoot : undefined;
 }
 
 function commandPackageRoot(command: CliCommand): string | undefined {
@@ -61,6 +53,7 @@ export async function runCli(
   argv: readonly string[],
   io: CliIo,
   distribution: CliDistribution,
+  context?: Pick<CliApplicationContext, "cwd" | "resolveProjectRoot">,
 ): Promise<void> {
   if (argv.length === 0 || argv[0] === "help" || argv.includes("--help")) {
     const topic = argv[0] === "help" ? argv[1] : argv[0] === "--help" ? undefined
@@ -68,20 +61,20 @@ export async function runCli(
     writeCliHelp(io, topic);
     return;
   }
-  const args = parseCommand(argv);
+  const cwd = context?.cwd ?? process.cwd();
+  const args = parseCommand(argv, cwd);
   let resolvedProject: Promise<string> | undefined;
   const commandProjectRoot = async (): Promise<string> => {
-    const workspaceRoot = commandWorkspaceRoot(args);
-    resolvedProject ??= resolveProjectRoot({
-      ...(workspaceRoot === undefined ? {} : { workspaceRoot }),
-      cwd: process.cwd(),
-    });
+    const projectRoot = commandProjectRootOption(args);
+    resolvedProject ??= context === undefined
+      ? resolveProjectRoot({ ...(projectRoot === undefined ? {} : { projectRoot }), cwd })
+      : context.resolveProjectRoot(projectRoot);
     return await resolvedProject;
   };
   const packageRootForProject = async (projectRoot?: string): Promise<string> =>
-    commandPackageRoot(args) ?? await resolvePackageRoot(projectRoot ?? await commandProjectRoot());
+    commandPackageRoot(args) ?? projectRoot ?? await commandProjectRoot();
   const writeOperational = (
-    machine: CliMachineView,
+    machine: OperationalMachineView,
     title: string,
     status: "success" | "warning" | "error" | "info" = "info",
     facts: readonly (readonly [string, string])[] = [],
@@ -89,8 +82,8 @@ export async function runCli(
   ): void => writeCliOutput(io, {
     ...args.presentation,
   }, { kind: "operational", machine, title, status, facts, lines });
-  const runtimeHosts = new Map<string, Promise<NodeRuntimeHost>>();
-  const runtimeHost = async (path: string, requestedPackageRoot?: string): Promise<NodeRuntimeHost> => {
+  const runtimeHosts = new Map<string, Promise<CliRuntimeHost>>();
+  const runtimeHost = async (path: string, requestedPackageRoot?: string): Promise<CliRuntimeHost> => {
     const profile = resolve(path);
     const packageRoot = requestedPackageRoot ?? await packageRootForProject();
     const key = `${profile}\u0000${packageRoot}`;
@@ -114,98 +107,25 @@ export async function runCli(
       ...(distribution.packageRoot === undefined ? {} : { distributionPackageRoot: distribution.packageRoot }),
     });
   };
-  if (args.command === "_worker") {
-    await (await runtimeHost(
-      args.profile,
-      args.packageRoot ?? await packageRootForProject(),
-    )).runWorker(args.readyFile, args.workerOwner,
-      args.executionRoot === undefined ? undefined : { dataRoot: args.executionRoot });
-    return;
-  }
-  if (args.command === "runtime" && args.action === "init") {
-    if (distribution.initialRuntimeProfile === undefined) {
-      throw new Error("This Qflow Distribution does not provide an initial Runtime Profile");
-    }
-    const projectRoot = await commandProjectRoot();
-    const profile = resolve(args.profile ?? resolve(projectRoot, "qflow.runtime.json"));
-    try {
-      await writeFile(profile, `${JSON.stringify(distribution.initialRuntimeProfile, undefined, 2)}\n`, {
-        encoding: "utf8",
-        flag: "wx",
-      });
-    } catch (error) {
-      if (error instanceof Error && "code" in error && error.code === "EEXIST") {
-        throw new Error(`Runtime Profile already exists: ${profile}; select it with qflow runtime use or choose another path`);
-      }
-      throw error;
-    }
-    const selected = await selectRuntimeProfile(projectRoot, profile);
-    writeOperational({
-      format: "qflow.cli-runtime-init@1",
-      profile: selected.profile,
-      project: selected.projectRoot,
-      selected: true,
-    }, "Runtime Profile created", "success", [
-      ["Profile", selected.profile],
-      ["Project", selected.projectRoot],
-    ], ["Review the Profile’s credential stores and Endpoint settings before login or runtime up.",
-      "No package was installed, no service was contacted and no Worker was started."]);
-    return;
-  }
-  if (args.command === "runtime" && args.action === "use") {
-    const profile = resolve(args.profile);
-    const selected = await selectRuntimeProfile(await commandProjectRoot(), profile);
-    writeOperational({
-      format: "qflow.cli-runtime-selection@1",
-      selected: true,
-      profile: selected.profile,
-      project: selected.projectRoot,
-    }, "Runtime selected", "success", [
-      ["Profile", selected.profile],
-      ["Project", selected.projectRoot],
-    ]);
-    return;
-  }
-  if (args.command === "runtime" && args.action === "unset") {
-    const cleared = await clearRuntimeProfile(await commandProjectRoot());
-    writeOperational({
-      format: "qflow.cli-runtime-selection@1",
-      selected: false,
-      removed: cleared !== undefined,
-      ...(cleared === undefined ? {} : { profile: cleared.profile, project: cleared.projectRoot }),
-    }, cleared === undefined ? "No Runtime was selected" : "Runtime selection removed",
-    cleared === undefined ? "info" : "success", cleared === undefined ? [] : [
-      ["Profile", cleared.profile], ["Project", cleared.projectRoot],
-    ]);
-    return;
-  }
-
   let runtimeProfile = acceptsRuntimeContext(args) ? args.runtimeProfile : undefined;
-  let runtimeSelectionFile: string | undefined;
+  let runtimeFromProject = false;
   if (acceptsRuntimeContext(args) && runtimeProfile === undefined && args.command !== "logs") {
-    const selected = await findRuntimeProfile(await commandProjectRoot());
+    const selected = await distribution.resolveProjectRuntime?.(await commandProjectRoot());
     if (selected !== undefined) {
       runtimeProfile = selected.profile;
-      runtimeSelectionFile = selected.selectionFile;
+      runtimeFromProject = true;
     }
   }
-  const runtimeController = async (profile: string): Promise<CliRuntimeController> => {
-    const packageRoot = await packageRootForProject();
-    return await (await runtimeHost(profile, packageRoot)).controller({
-      packageRoot,
-    });
-  };
   if (isEnvironmentCommand(args)) {
     await runEnvironmentCommand({
       args,
       runtimeProfile,
-      runtimeSelectionFile,
+      runtimeFromProject,
       io,
       distribution,
       projectRoot: await commandProjectRoot(),
       packageRootForProject,
       runtimeHost,
-      runtimeController,
       write: writeOperational,
     });
     return;
@@ -231,16 +151,15 @@ export async function runCli(
       runtimeProfile,
       io,
       runtimeHost,
-      runtimeController,
       openProjectResults: projectResults,
-      resolveProjectRuntime: async () => (await findRuntimeProfile(await commandProjectRoot()))?.profile,
+      resolveProjectRuntime: async () => (await distribution.resolveProjectRuntime?.(await commandProjectRoot()))?.profile,
       write: writeOperational,
     });
     return;
   }
   const effectiveWorkspaceRoot = await commandProjectRoot();
   const projectResultsRoot = effectiveWorkspaceRoot;
-  const sourcePackageRoot = args.packageRoot ?? await resolvePackageRoot(effectiveWorkspaceRoot);
+  const sourcePackageRoot = args.packageRoot ?? effectiveWorkspaceRoot;
   const loadedPackageSet = distribution.discoverSourcePackages === undefined
     ? undefined
     : await loadDiscoveredSourcePackages(distribution, {
@@ -263,14 +182,14 @@ export async function runCli(
       : { distributionPackageRoot: distribution.packageRoot }),
     packageContributions,
   });
-  const workspace = await compiler.openFile(args.source);
-  const sourceHeader = parseSourceHeader(workspace.entry.name, workspace.entry.text);
-  const runMode = runFrontends.some((frontend) => frontend.id === sourceHeader.using);
-  const authorMode = compiler.supportsFrontend(sourceHeader.using);
+  const workspace = await compiler.openEntry(args.source);
+  const selectedFrontend = workspace.entry.frontend;
+  const runMode = runFrontends.some((frontend) => frontend.id === selectedFrontend);
+  const authorMode = compiler.supportsFrontend(selectedFrontend);
   if (runMode === authorMode) {
     const message = runMode
-      ? `Frontend ${sourceHeader.using} is ambiguously registered as Author and Run`
-      : `No trusted Author or Run compiler accepts Frontend ${sourceHeader.using}`;
+      ? `Frontend ${selectedFrontend} is ambiguously registered as Author and Run`
+      : `No trusted Author or Run compiler accepts Frontend ${selectedFrontend}`;
     throw new Error(message);
   }
   if ((args.command === "plan" || args.command === "pricing" || args.command === "build") && !runMode) {
@@ -290,7 +209,7 @@ export async function runCli(
           ok: true,
           run: projectPath(loaded.source, effectiveWorkspaceRoot),
           author: projectPath(loaded.authorSource, effectiveWorkspaceRoot),
-          frontend: sourceHeader.using,
+          frontend: selectedFrontend,
           targetCount: loaded.document.targets.length,
           targets: loaded.document.targets.map((item) => item.output),
           candidates: loaded.document.candidates.length,
@@ -312,7 +231,7 @@ export async function runCli(
         return;
     }
     {
-      const result = await compiler.compileSource(workspace.entry, workspace);
+      const result = await compiler.compileResolvedSource(workspace.entry, workspace);
       const authorFacing = result.exports.filter((item) =>
         !item.name.includes(".__") && !/\.binding-\d+$/u.test(item.name) && !item.name.endsWith(".bindings"));
       const outputs = authorFacing.filter((item) => item.ref.kind === "logical-output");
@@ -322,8 +241,8 @@ export async function runCli(
         format: "qflow.cli-check@1" as const,
         sourceKind: "author" as const,
         ok: true,
-        source: projectPath(workspace.entry.name, effectiveWorkspaceRoot),
-        frontend: sourceHeader.using,
+        source: projectPath(workspace.entry.unit.name, effectiveWorkspaceRoot),
+        frontend: selectedFrontend,
         units: result.closure.units.length,
         assets: result.attachments.length,
         modules: modules.length,
@@ -388,8 +307,9 @@ export async function runCli(
         id: createPublicBuildId(),
         definition: result.definition,
         ...(loadedPackageSet === undefined ? {} : {
-          componentPackages: loadedPackageSet
-            .filter((item) => (item.contribution.components?.length ?? 0) > 0)
+          executionPackages: loadedPackageSet
+            .filter((item) => (item.contribution.facets?.some((facet) =>
+              facet.abi === "qflow.producer-package@1" || facet.abi === "qflow.admission-package@1") ?? false))
             .map((item) => item.specifier),
         }),
         catalog,
@@ -403,9 +323,6 @@ export async function runCli(
         },
       } as const;
       const host = await runtimeHost(runtimeProfile);
-      const controller = await host.controller({
-        packageRoot: sourcePackageRoot,
-      });
       const evaluated = await evaluatePlanNeeds(result.definition, packageContributions);
       const providers = await describePlanProviders(host, evaluated.state, evaluated);
       assertPlannedRequests(evaluated.state, evaluated, providers);
@@ -415,7 +332,7 @@ export async function runCli(
       // installing or starting declared programs.
       assertPreflight(preflight);
       try {
-        await controller.worker.up({
+        await host.ensureExecution({
           ...(args.maxWaitMs === undefined ? {} : { maxWaitMs: args.maxWaitMs }),
         });
       } catch (error) {
@@ -453,7 +370,7 @@ export async function runCli(
       if (args.follow && runtime !== undefined) {
         built = await observeBuild(runtime, built, {
           ...(args.maxWaitMs === undefined ? {} : { maxWaitMs: args.maxWaitMs }),
-          controller,
+          executionStatus: async () => await host.executionStatus(),
           commandScope,
           readResult: async () => await buildResults.repository.read(built.id),
           onProgress: (progress) => {
@@ -621,18 +538,23 @@ export async function runCli(
     const localRequestCount = providers?.filter((item) => item.status === "resolved" && item.pricing?.kind === "local").length ?? 0;
     const providerRequestCount = providers?.filter((item) => item.status === "resolved" && item.pricing?.kind !== "local").length;
     const requestIssueCount = needs.filter((item) => item.issue !== undefined).length;
+    const producerFailures = evaluated.producerFailures;
+    const producerFailureCount = producerFailures.length;
     writeCliOutput(io, args.presentation, {
       kind: "plan",
       machine: createPlanOutput({
         format: "qflow.cli-plan@1",
         ok: (preflight?.ok ?? true) && unresolvedRequestCount === 0
-          && unsupportedRequestCount === 0 && requestIssueCount === 0,
+          && unsupportedRequestCount === 0 && requestIssueCount === 0
+          && producerFailureCount === 0,
         run: projectPath(loaded.path, effectiveWorkspaceRoot),
         targetCount: targets.length,
         targets,
         steps: result.definition.plan.steps.length,
         requestCount: needs.length,
         requestIssueCount,
+        producerFailureCount,
+        producerFailures,
         ...(providerRequestCount === undefined ? {} : { providerRequestCount }),
         ...(providers === undefined ? {} : { localRequestCount, unresolvedRequestCount, unsupportedRequestCount }),
         choiceCount: allChoices.length,
@@ -650,7 +572,8 @@ export async function runCli(
       }, { verbose: args.presentation.verbose, limit: args.limit }),
     });
     if ((preflight !== undefined && !preflight.ok) || unresolvedRequestCount > 0
-      || unsupportedRequestCount > 0 || requestIssueCount > 0) io.setExitCode?.(1);
+      || unsupportedRequestCount > 0 || requestIssueCount > 0
+      || producerFailureCount > 0) io.setExitCode?.(1);
   } finally {
     await planResults?.close();
   }

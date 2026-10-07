@@ -4,15 +4,19 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 
-import { FileBuildResultRepository } from "@qflow/build-result";
-import { createRunFrontendHostFacet } from "@qflow/run";
+import { FileBuildResultRepository } from "@qflow/result/node";
+import { createRunFrontendFacet } from "@qflow/run";
 
-import { runCli } from "../src/main.js";
+import { runCli as runCliEngine } from "../src/main.js";
 import { commandHint } from "../src/command-hint.js";
 import type { CliDistribution } from "../src/distribution.js";
-import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-kit";
+import type { CliDiagnostic as RuntimeDoctorDiagnostic } from "../src/runtime-port.js";
 
 const io = { write: () => {} };
+const runCli: typeof runCliEngine = async (argv, output, selected) => await runCliEngine(argv, output, selected, {
+  cwd: tmpdir(),
+  resolveProjectRoot: async (explicit) => await realpath(explicit ?? tmpdir()),
+});
 
 /**
  * Enough of a Distribution to reach the build handler: a Run Frontend the
@@ -29,9 +33,9 @@ function distribution(
     bootstrapPackages: [{
       specifier: "@example/run-frontend",
       contribution: {
-        format: "qflow.node-package@1",
-        hostFacets: [createRunFrontendHostFacet({
-        id: "@qflow/run-markup@1",
+        format: "qflow.package@1",
+        facets: [createRunFrontendFacet({
+        id: "@qflow/markup/run@1",
         discover: () => ({ author: { source: authorSource }, imports: [] }),
         decode: () => ({ document: {
           format: "qflow.run-document@1",
@@ -45,8 +49,11 @@ function distribution(
       },
     }],
     createCompiler: () => ({
-      openFile: async (path: string) => {
-        const source = async (name: string) => ({ id: name, name, text: await readFile(name, "utf8") });
+      openEntry: async (path: string) => {
+        const source = async (name: string) => ({
+          unit: { id: name, name, bytes: new TextEncoder().encode(await readFile(name, "utf8")) },
+          frontend: name.endsWith(".svrun") ? "@qflow/markup/run@1" : "@qflow/markup@1",
+        });
         return {
           entry: await source(path),
           resolveSource: async (_importer: unknown, request: { readonly from: string }) =>
@@ -55,8 +62,8 @@ function distribution(
         };
       },
       supportsFrontend: () => false,
-      compileSource: async (entry: { readonly id: string }) => ({
-        closure: { entry: entry.id, units: [] },
+      compileResolvedSource: async (entry: { readonly unit: { readonly id: string } }) => ({
+        closure: { entry: entry.unit.id, units: [] },
         provenance: { format: "qflow.author-provenance@1", elements: [] },
         program: { closure: { format: "qflow.closure@1", modules: [{ manifest: {
           format: "qflow.module@1",
@@ -104,6 +111,8 @@ function distribution(
     diagnoseProjectResults: async () => ({ diagnostics: [] }),
     openRuntimeHost: async (path: string) => ({
       profile: path,
+      ensureExecution: async () => ({ state: "running" as const }),
+      executionStatus: async () => ({ state: "running" as const }),
       resolvePaths: async () => ({}),
       controller: async () => ({
         profile: path,
@@ -139,7 +148,7 @@ function distribution(
 async function runSource(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "qflow-build-programs-"));
   const path = join(root, "build.svrun");
-  await writeFile(path, '<?svml using="@qflow/run-markup@1"?>\n<svrun/>\n', "utf8");
+  await writeFile(path, '<?svml using="@qflow/markup/run@1"?>\n<svrun/>\n', "utf8");
   await writeFile(join(root, "main.svml"), "author", "utf8");
   return path;
 }
@@ -227,7 +236,7 @@ test("Build confirms durable submission before following stable work progress", 
   const projectRoot = await realpath(dirname(source));
   const runtimeProfile = resolve("/p/a selected runtime.json");
   await runCli([
-    "build", source, "--workspace", projectRoot, "--runtime", runtimeProfile,
+    "build", source, "--project", projectRoot, "--runtime", runtimeProfile,
     "--follow", "--max-wait-ms", "0", "--json",
   ], {
     write(text) { output += text; }, writeProgress(text) { progress += text; },
@@ -238,7 +247,7 @@ test("Build confirms durable submission before following stable work progress", 
 
   output = "";
   await runCli([
-    "build", source, "--workspace", projectRoot, "--runtime", runtimeProfile,
+    "build", source, "--project", projectRoot, "--runtime", runtimeProfile,
   ], { write(text) { output += text; } }, distribution(calls, [], "./main.svml", execution));
   const id = /Watch\s+qflow status (\S+)/u.exec(output)?.[1];
   assert.ok(id);

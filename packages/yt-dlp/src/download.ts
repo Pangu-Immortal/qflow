@@ -5,7 +5,7 @@
  * rather than in a folder. `yt-dlp` is what turns one into a file; everything after that reads the
  * file and never learns where it came from.
  *
- * The tool is a pinned Python dependency prepared explicitly by `qflow media prepare-fetch`, not a
+ * The tool is a pinned Python dependency prepared explicitly by `qflow download prepare`, not a
  * binary the machine happens to carry. `yt-dlp` releases constantly because it is chasing sites that
  * keep changing, so an unpinned copy makes the same link fetch differently on two machines. This is
  * the same shape WhisperX and OpenCV already use for their Python programs.

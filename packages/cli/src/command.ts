@@ -1,5 +1,32 @@
 import type { CliOutputOptions } from "./output.js";
 
+/**
+ * Root command names owned by the domain-neutral long-compilation CLI.
+ *
+ * Application command modules may add other roots, but cannot shadow these.
+ * Keeping the names beside the command union makes command ownership explicit
+ * without teaching Core or the package loader about CLI presentation.
+ */
+export const genericCliCommandNames = [
+  "version",
+  "cli",
+  "check",
+  "plan",
+  "pricing",
+  "build",
+  "builds",
+  "history",
+  "inspect",
+  "get",
+  "logs",
+  "status",
+  "activity",
+  "cancel",
+  "result",
+  "auth",
+  "doctor",
+] as const;
+
 type CommandBase = {
   readonly presentation: CliOutputOptions;
 };
@@ -9,7 +36,7 @@ export type RuntimeOption = ProjectOption & {
 };
 
 export type ProjectOption = {
-  readonly workspaceRoot?: string;
+  readonly projectRoot?: string;
 };
 
 type SourceOptions = ProjectOption & {
@@ -96,60 +123,6 @@ export type ExecutionCommand =
       readonly build: string;
     });
 
-export type RuntimeSelectionCommand =
-  | (CommandBase & ProjectOption & {
-      readonly command: "runtime";
-      readonly action: "init";
-      readonly profile?: string;
-    })
-  | (CommandBase & ProjectOption & {
-      readonly command: "runtime";
-      readonly action: "use";
-      readonly profile: string;
-    })
-  | (CommandBase & ProjectOption & {
-      readonly command: "runtime";
-      readonly action: "unset";
-    });
-
-export type RuntimeOperationCommand =
-  | (CommandBase & RuntimeOption & {
-      readonly command: "runtime";
-      readonly action: "up";
-      readonly endpoints?: readonly string[];
-      readonly maxWaitMs?: number;
-    })
-  | (CommandBase & RuntimeOption & {
-      readonly command: "runtime";
-      readonly action: "down";
-      readonly maxWaitMs?: number;
-    })
-  | (CommandBase & RuntimeOption & {
-      readonly command: "runtime";
-      readonly action: "status";
-      readonly limit: number;
-    })
-  | (CommandBase & RuntimeOption & {
-      readonly command: "runtime";
-      readonly action: "logs";
-      readonly lines: number;
-    });
-
-export type ProgramsCommand =
-  | (CommandBase & RuntimeOption & {
-      readonly command: "programs";
-      readonly endpoints?: readonly string[];
-      readonly action: "up";
-      readonly maxWaitMs?: number;
-      readonly limit: number;
-    })
-  | (CommandBase & RuntimeOption & {
-      readonly command: "programs";
-      readonly endpoints?: readonly string[];
-      readonly action: "prepare" | "down" | "status";
-      readonly limit: number;
-    });
-
 export type AuthCommand =
   | (CommandBase & RuntimeOption & {
       readonly command: "auth";
@@ -173,36 +146,16 @@ export type AuthCommand =
     });
 
 export type EnvironmentCommand =
-  | RuntimeOperationCommand
-  | ProgramsCommand
   | AuthCommand
-  | (CommandBase & RuntimeOption & {
-      readonly command: "paths";
-    })
-  | (CommandBase & {
-      readonly command: "packages";
-      readonly action: "install" | "status";
-      readonly package: string;
-    })
   | (CommandBase & ProjectOption & RuntimeOption & {
       readonly command: "doctor";
       readonly endpoints?: readonly string[];
       readonly limit: number;
     });
 
-export type WorkerCommand = CommandBase & {
-  readonly command: "_worker";
-  readonly profile: string;
-  readonly readyFile: string;
-  readonly workerOwner: string;
-  readonly executionRoot?: string;
-  readonly packageRoot?: string;
-};
-
 export type CliCommand =
   | AuthorCommand
   | ProjectResultCommand
   | ExecutionCommand
-  | RuntimeSelectionCommand
   | EnvironmentCommand
-  | WorkerCommand;
+  ;

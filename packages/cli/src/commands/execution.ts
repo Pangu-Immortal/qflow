@@ -1,14 +1,13 @@
 import { resolve } from "node:path";
 
 import { readExecutionLog } from "@qflow/runtime";
-import type { BuildResultManifest, BuildResultRepository } from "@qflow/build-result";
-import type { NodeRuntimeHost } from "@qflow/runtime-host-node";
+import type { BuildResultManifest, BuildResultRepository } from "@qflow/result";
 
 import type { CliCommand, ExecutionCommand } from "../command.js";
 import { commandHint } from "../command-hint.js";
 import { activityObservationKey, buildProgressLines, buildProgressView, observeBuildView } from "../observation.js";
 import type { CliIo } from "../output.js";
-import type { CliRuntimeController } from "../runtime-port.js";
+import type { CliRuntimeHost } from "../runtime-port.js";
 import { formatOperationProgress } from "../runtime-view.js";
 import { buildStatusView } from "../view.js";
 import type { CliBuildStatusView } from "../view.js";
@@ -44,12 +43,11 @@ export async function runExecutionCommand(input: {
   readonly runtimeProfile: string | undefined;
   readonly resolveProjectRuntime?: () => Promise<string | undefined>;
   readonly io: CliIo;
-  readonly runtimeHost: (profile: string) => Promise<NodeRuntimeHost>;
-  readonly runtimeController: (profile: string) => Promise<CliRuntimeController>;
+  readonly runtimeHost: (profile: string) => Promise<CliRuntimeHost>;
   readonly openProjectResults: OpenProjectResults;
   readonly write: OperationalWriter;
 }): Promise<void> {
-  const { args, runtimeProfile, io, runtimeHost, runtimeController, openProjectResults, write } = input;
+  const { args, runtimeProfile, io, runtimeHost, openProjectResults, write } = input;
   const commandScope = {
     projectRoot: input.projectRoot,
     ...(runtimeProfile === undefined ? {} : { runtimeProfile: resolve(runtimeProfile) }),
@@ -164,12 +162,11 @@ export async function runExecutionCommand(input: {
   const runtime = await selectedHost.openControl({ readOnly: args.command !== "cancel" });
   try {
     if (args.command === "activity") {
-      const controller = await runtimeController(runtimeProfile);
       let previous: string | undefined;
       const writeActivity = async (): Promise<void> => {
-        const [activity, worker] = await Promise.all([
+        const [activity, execution] = await Promise.all([
           runtime.activity(),
-          controller.worker.status(),
+          selectedHost.executionStatus(),
         ]);
         const builds = activity.builds.slice(0, args.limit).map((item) => {
           const status = buildStatusView({ id: item.id, runtime: item, commandScope });
@@ -181,13 +178,13 @@ export async function runExecutionCommand(input: {
           };
         });
         const currentView = JSON.stringify([activity.builds.length,
-          activityObservationKey(worker.state, activity.builds.slice(0, args.limit))]);
+          activityObservationKey(execution.state, activity.builds.slice(0, args.limit))]);
         if (args.watch && currentView === previous) return;
         previous = currentView;
         const value = {
           format: "qflow.cli-activity@1" as const,
           at: Date.now(),
-          worker: worker.state,
+          execution: execution.state,
           builds,
           ...(activity.builds.length <= args.limit ? {} : { omittedBuilds: activity.builds.length - args.limit }),
           ...(args.presentation.verbose ? { capacity: activity.capacity } : {}),
@@ -208,7 +205,7 @@ export async function runExecutionCommand(input: {
           : [];
         write(value, "Runtime activity", activity.builds.length === 0 ? "success" : "info", [
           ["Active Builds", String(activity.builds.length)],
-          ["Worker", worker.state],
+          ["Execution", execution.state],
         ], [
           ...buildLines,
           ...(operationLines.length === 0 ? [] : ["Operations:", ...operationLines]),
@@ -228,10 +225,9 @@ export async function runExecutionCommand(input: {
       let resultReadError: string | undefined;
       let openedResults: Awaited<ReturnType<OpenProjectResults>> | undefined;
       if (args.watch && view !== undefined && view.issue === undefined) {
-        const controller = await runtimeController(runtimeProfile);
         view = await observeBuildView(runtime, args.build, view, {
           ...(args.maxWaitMs === undefined ? {} : { maxWaitMs: args.maxWaitMs }),
-          controller,
+          executionStatus: async () => await selectedHost.executionStatus(),
           commandScope,
           onProgress: (progress) => {
             const report = io.writeProgress ?? (args.presentation.json ? undefined : io.write);
@@ -318,8 +314,8 @@ export async function runExecutionCommand(input: {
         throw new Error(`Build ${args.build} is still ${before.activity}; there is no Result write to finish`);
       }
       if (before !== undefined && before.issue === undefined) {
-        const worker = await (await selectedHost.controller()).worker.status();
-        if (worker.state === "running") {
+        const execution = await selectedHost.executionStatus();
+        if (execution.state === "running") {
           throw new Error(`Build ${args.build} Result is currently being written by the Runtime Worker`);
         }
       }

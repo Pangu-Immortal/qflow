@@ -1,5 +1,5 @@
-import { assertSpeechEvidenceAudioIdentity } from "@qflow/speech-evidence";
-import type { SpeechEvidenceAudio } from "@qflow/speech-evidence";
+import { assertSpeechEvidenceAudioIdentity } from "@qflow/qflow/speech-evidence";
+import type { SpeechEvidenceAudio } from "@qflow/qflow/speech-evidence";
 import type { WhisperXAlignmentRequest, WhisperXLanguage } from "./types.js";
 import { parseWhisperXLanguage } from "./types.js";
 

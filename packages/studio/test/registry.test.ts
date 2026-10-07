@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compositionTypes } from "@qflow/composition";
-import type { StudioTrackCompanion } from "@qflow/studio-adapter";
+import type { StudioTrackCompanion } from "@qflow/studio-companion";
 
 import { StudioCompanionRegistry } from "../src/studio-registry.js";
 

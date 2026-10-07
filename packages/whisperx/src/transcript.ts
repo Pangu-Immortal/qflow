@@ -1,4 +1,4 @@
-import type { SpeechTranscriptPassage } from "@qflow/speech-evidence";
+import type { SpeechTranscriptPassage } from "@qflow/qflow/speech-evidence";
 
 type RawWord = {
   readonly text?: unknown;

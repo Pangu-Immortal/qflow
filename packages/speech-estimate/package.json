@@ -1,0 +1,22 @@
+{
+  "name": "@qflow/speech-estimate",
+  "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./cli": "./src/cli.ts"
+  },
+  "dependencies": {
+    "cmu-pronouncing-dictionary": "3.0.0"
+  },
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/qflow": "workspace:*",
+    "@qflow/recipe": "workspace:*",
+    "@qflow/text": "workspace:*"
+  }
+}

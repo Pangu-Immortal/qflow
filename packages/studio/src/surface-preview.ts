@@ -1,4 +1,4 @@
-import type { SurfacePreview } from "@qflow/markup";
+import type { SurfacePreview } from "@qflow/qflow/markup";
 
 import type { StudioDomain } from "./domain.js";
 import type { StudioMaterialPreview } from "./shared.js";

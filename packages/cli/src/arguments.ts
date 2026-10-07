@@ -3,21 +3,17 @@ import { resolve } from "node:path";
 import type {
   AuthCommand,
   CliCommand,
-  EnvironmentCommand,
   ExecutionCommand,
-  ProgramsCommand,
   ProjectOption,
   ProjectResultCommand,
-  RuntimeOperationCommand,
   RuntimeOption,
-  RuntimeSelectionCommand,
 } from "./command.js";
 import type { CliColorMode, CliOutputOptions } from "./output.js";
 import { CliUsageError } from "./usage-error.js";
 
 type RawOptions = {
   readonly presentation: CliOutputOptions;
-  readonly workspaceRoot?: string;
+  readonly projectRoot?: string;
   readonly assetRoots: readonly string[];
   readonly endpoints: readonly string[];
   readonly packageRoot?: string;
@@ -36,9 +32,6 @@ type RawOptions = {
   readonly before?: string;
   readonly destination?: string;
   readonly watch: boolean;
-  readonly readyFile?: string;
-  readonly workerOwner?: string;
-  readonly executionRoot?: string;
   readonly reason?: string;
   readonly slot?: string;
   readonly credentialFile?: string;
@@ -48,8 +41,8 @@ type RawOptions = {
 
 const commonOptions = ["--json", "--color", "--no-color", "--verbose", "--debug"] as const;
 
-export function parseCommand(argv: readonly string[]): CliCommand {
-  try { return parseArguments(argv); }
+export function parseCommand(argv: readonly string[], cwd = process.cwd()): CliCommand {
+  try { return parseArguments(argv, cwd); }
   catch (error) {
     if (error instanceof CliUsageError) throw error;
     throw new CliUsageError(error instanceof Error ? error.message : String(error),
@@ -57,13 +50,13 @@ export function parseCommand(argv: readonly string[]): CliCommand {
   }
 }
 
-function parseArguments(argv: readonly string[]): CliCommand {
+function parseArguments(argv: readonly string[], cwd: string): CliCommand {
   const [command, ...tail] = argv;
   switch (command) {
     case "check": {
       const [source, rest] = requiredPositional(tail, "check requires one Source");
-      const options = commandOptions(command, rest,
-        "--package-root", "--workspace", "--asset-root", "--limit");
+      const options = commandOptions(command, rest, cwd,
+        "--package-root", "--project", "--asset-root", "--limit");
       return {
         command,
         source,
@@ -77,8 +70,8 @@ function parseArguments(argv: readonly string[]): CliCommand {
     case "plan":
     case "pricing": {
       const [source, rest] = requiredPositional(tail, `${command} requires one Source`);
-      const options = commandOptions(command, rest,
-        "--runtime", "--package-root", "--workspace", "--asset-root", "--limit");
+      const options = commandOptions(command, rest, cwd,
+        "--runtime", "--package-root", "--project", "--asset-root", "--limit");
       if (command === "pricing") return {
         command,
         source,
@@ -102,8 +95,8 @@ function parseArguments(argv: readonly string[]): CliCommand {
     }
     case "build": {
       const [source, rest] = requiredPositional(tail, "build requires one Run Source");
-      const options = commandOptions(command, rest,
-        "--runtime", "--package-root", "--workspace", "--asset-root", "--follow", "--max-wait-ms", "--title", "--limit");
+      const options = commandOptions(command, rest, cwd,
+        "--runtime", "--package-root", "--project", "--asset-root", "--follow", "--max-wait-ms", "--title", "--limit");
       return {
         command,
         source,
@@ -119,7 +112,7 @@ function parseArguments(argv: readonly string[]): CliCommand {
       };
     }
     case "builds": {
-      const options = commandOptions(command, tail, "--workspace", "--limit", "--before");
+      const options = commandOptions(command, tail, cwd, "--project", "--limit", "--before");
       return {
         command,
         presentation: options.presentation,
@@ -130,7 +123,7 @@ function parseArguments(argv: readonly string[]): CliCommand {
     }
     case "history": {
       const [outputName, rest] = requiredPositional(tail, "history requires one exact Output name");
-      const options = commandOptions(command, rest, "--workspace", "--source", "--limit", "--before");
+      const options = commandOptions(command, rest, cwd, "--project", "--source", "--limit", "--before");
       return {
         command,
         outputName,
@@ -143,7 +136,7 @@ function parseArguments(argv: readonly string[]): CliCommand {
     }
     case "inspect": {
       const [build, rest] = requiredPositional(tail, "inspect requires one Build id");
-      const options = commandOptions(command, rest, "--workspace", "--output", "--limit");
+      const options = commandOptions(command, rest, cwd, "--project", "--output", "--limit");
       return {
         command,
         build,
@@ -155,7 +148,7 @@ function parseArguments(argv: readonly string[]): CliCommand {
     }
     case "get": {
       const [build, rest] = requiredPositional(tail, "get requires one Build id");
-      const options = commandOptions(command, rest, "--workspace", "--output", "--to");
+      const options = commandOptions(command, rest, cwd, "--project", "--output", "--to");
       if (options.outputName === undefined) throw new Error("get requires --output with one public Output name");
       if (options.destination === undefined) throw new Error("get requires --to with the export destination");
       return {
@@ -169,13 +162,13 @@ function parseArguments(argv: readonly string[]): CliCommand {
     }
     case "logs": {
       const [build, rest] = requiredPositional(tail, "logs requires one Build id");
-      const options = commandOptions(command, rest, "--runtime", "--workspace", "--lines");
+      const options = commandOptions(command, rest, cwd, "--runtime", "--project", "--lines");
       return { command, build, lines: options.lines, presentation: options.presentation,
         ...optionalProject(options), ...optionalRuntime(options) };
     }
     case "status": {
       const [build, rest] = requiredPositional(tail, "status requires one Build id");
-      const options = commandOptions(command, rest, "--runtime", "--workspace", "--watch", "--max-wait-ms", "--limit");
+      const options = commandOptions(command, rest, cwd, "--runtime", "--project", "--watch", "--max-wait-ms", "--limit");
       if (!options.watch && options.maxWaitMs !== undefined) {
         throw new Error("--max-wait-ms applies to status --watch");
       }
@@ -190,7 +183,7 @@ function parseArguments(argv: readonly string[]): CliCommand {
       };
     }
     case "activity": {
-      const options = commandOptions(command, tail, "--runtime", "--workspace", "--watch", "--jsonl", "--limit");
+      const options = commandOptions(command, tail, cwd, "--runtime", "--project", "--watch", "--jsonl", "--limit");
       if (options.presentation.jsonl === true && !options.watch) {
         throw new Error("--jsonl applies only to activity --watch");
       }
@@ -207,7 +200,7 @@ function parseArguments(argv: readonly string[]): CliCommand {
     }
     case "cancel": {
       const [build, rest] = requiredPositional(tail, "cancel requires one Build id");
-      const options = commandOptions(command, rest, "--runtime", "--workspace", "--reason");
+      const options = commandOptions(command, rest, cwd, "--runtime", "--project", "--reason");
       return {
         command,
         build,
@@ -216,14 +209,11 @@ function parseArguments(argv: readonly string[]): CliCommand {
         ...(options.reason === undefined ? {} : { reason: options.reason }),
       };
     }
-    case "result": return parseResultCommand(tail);
-    case "runtime": return parseRuntimeCommand(tail);
-    case "programs": return parseProgramsCommand(tail);
-    case "packages": return parsePackagesCommand(tail);
-    case "auth": return parseAuthCommand(tail);
+    case "result": return parseResultCommand(tail, cwd);
+    case "auth": return parseAuthCommand(tail, cwd);
     case "doctor": {
       const [profile, rest] = optionalPositional(tail);
-      const options = commandOptions(command, rest, "--workspace", "--runtime", "--limit", "--endpoint");
+      const options = commandOptions(command, rest, cwd, "--project", "--runtime", "--limit", "--endpoint");
       if (profile !== undefined && options.runtimeProfile !== undefined) {
         throw new Error("doctor accepts the Runtime Profile either positionally or with --runtime, not both");
       }
@@ -236,43 +226,23 @@ function parseArguments(argv: readonly string[]): CliCommand {
         ...runtimeOption(profile ?? options.runtimeProfile),
       };
     }
-    case "paths": {
-      const options = commandOptions(command, tail, "--runtime", "--workspace");
-      return { command, presentation: options.presentation, ...optionalRuntime(options) };
-    }
-    case "_worker": {
-      const [profile, rest] = requiredPositional(tail, "internal Worker launch is incomplete");
-      const options = commandOptions(command, rest, "--ready-file", "--worker-owner", "--package-root", "--execution-root");
-      if (options.readyFile === undefined || options.workerOwner === undefined) {
-        throw new Error("internal Worker launch is incomplete");
-      }
-      return {
-        command,
-        profile,
-        readyFile: options.readyFile,
-        workerOwner: options.workerOwner,
-        ...(options.executionRoot === undefined ? {} : { executionRoot: options.executionRoot }),
-        presentation: options.presentation,
-        ...optionalPackageRoot(options),
-      };
-    }
     default: throw new CliUsageError(command === undefined ? "A command is required"
       : `Unknown command ${JSON.stringify(command)}`, "qflow help");
   }
 }
 
-function parseResultCommand(tail: readonly string[]): ProjectResultCommand | ExecutionCommand {
+function parseResultCommand(tail: readonly string[], cwd: string): ProjectResultCommand | ExecutionCommand {
   const [action, ...values] = tail;
   if (action !== "finish" && action !== "discard" && action !== "edit") {
     throw new Error("result accepts finish, discard or edit");
   }
   const [build, rest] = requiredPositional(values, `result ${action} requires one Build id`);
   if (action === "finish" || action === "discard") {
-    const options = commandOptions(`result ${action}`, rest, "--runtime", "--workspace");
+    const options = commandOptions(`result ${action}`, rest, cwd, "--runtime", "--project");
     return { command: "result", action, build, presentation: options.presentation, ...optionalRuntime(options) };
   }
-  const options = commandOptions("result edit", rest,
-    "--workspace", "--title", "--note", "--highlight", "--clear-title", "--clear-note", "--clear-highlights", "--limit");
+  const options = commandOptions("result edit", rest, cwd,
+    "--project", "--title", "--note", "--highlight", "--clear-title", "--clear-note", "--clear-highlights", "--limit");
   if (options.title !== undefined && options.clearTitle) throw new Error("--title and --clear-title are mutually exclusive");
   if (options.note !== undefined && options.clearNote) throw new Error("--note and --clear-note are mutually exclusive");
   if (options.highlightedOutputs.length > 0 && options.clearHighlights) {
@@ -298,98 +268,14 @@ function parseResultCommand(tail: readonly string[]): ProjectResultCommand | Exe
   };
 }
 
-function parseRuntimeCommand(tail: readonly string[]): RuntimeSelectionCommand | RuntimeOperationCommand {
-  const [action, ...values] = tail;
-  if (action !== "init" && action !== "use" && action !== "unset" && action !== "up" && action !== "down"
-    && action !== "status" && action !== "logs") {
-    throw new Error("runtime takes init, use, unset, up, down, status or logs");
-  }
-  if (action === "init") {
-    const [profile, rest] = optionalPositional(values);
-    const options = commandOptions("runtime init", rest, "--workspace");
-    return {
-      command: "runtime",
-      action,
-      presentation: options.presentation,
-      ...optionalProject(options),
-      ...(profile === undefined ? {} : { profile }),
-    };
-  }
-  if (action === "use") {
-    const [profile, rest] = requiredPositional(values, "runtime use requires a Runtime Profile");
-    const options = commandOptions("runtime use", rest, "--workspace");
-    return { command: "runtime", action, profile, presentation: options.presentation, ...optionalProject(options) };
-  }
-  if (action === "unset") {
-    const options = commandOptions("runtime unset", values, "--workspace");
-    return { command: "runtime", action, presentation: options.presentation, ...optionalProject(options) };
-  }
-  const [profile, rest] = optionalPositional(values);
-  const allowed = action === "up" || action === "down"
-    ? action === "up" ? ["--runtime", "--max-wait-ms", "--endpoint"] as const : ["--runtime", "--max-wait-ms"] as const
-    : action === "status"
-      ? ["--runtime", "--limit"] as const
-      : ["--runtime", "--lines"] as const;
-  const options = commandOptions(`runtime ${action}`, rest, "--workspace", ...allowed);
-  rejectDuplicateProfile("runtime", profile, options.runtimeProfile);
-  const runtime = runtimeOption(profile ?? options.runtimeProfile);
-  const common = {
-    command: "runtime" as const,
-    action,
-    presentation: options.presentation,
-    ...runtime,
-    ...optionalProject(options),
-  };
-  if (action === "up" || action === "down") {
-    return { ...common, action, ...(action === "up" && options.endpoints.length > 0 ? { endpoints: options.endpoints } : {}), ...(options.maxWaitMs === undefined ? {} : { maxWaitMs: options.maxWaitMs }) };
-  }
-  if (action === "status") return { ...common, action, limit: options.limit };
-  return { ...common, action, lines: options.lines };
-}
-
-function parseProgramsCommand(tail: readonly string[]): ProgramsCommand {
-  const [action, ...values] = tail;
-  if (action !== "prepare" && action !== "up" && action !== "down" && action !== "status") {
-    throw new Error("programs takes prepare, up, down or status");
-  }
-  const [profile, rest] = optionalPositional(values);
-  const options = commandOptions(`programs ${action}`, rest,
-    "--runtime", "--workspace", "--limit", "--max-wait-ms", "--endpoint");
-  if (action !== "up" && options.maxWaitMs !== undefined) {
-    throw new Error("--max-wait-ms applies to programs up");
-  }
-  rejectDuplicateProfile("programs", profile, options.runtimeProfile);
-  const runtime = runtimeOption(profile ?? options.runtimeProfile);
-  const common = {
-    command: "programs" as const,
-    ...(options.endpoints.length === 0 ? {} : { endpoints: options.endpoints }),
-    action,
-    presentation: options.presentation,
-    limit: options.limit,
-    ...runtime,
-    ...optionalProject(options),
-  };
-  return action === "up"
-    ? { ...common, action, ...(options.maxWaitMs === undefined ? {} : { maxWaitMs: options.maxWaitMs }) }
-    : { ...common, action };
-}
-
-function parsePackagesCommand(tail: readonly string[]): EnvironmentCommand {
-  const [action, ...values] = tail;
-  if (action !== "install" && action !== "status") throw new Error("packages takes install or status");
-  const [specifier, rest] = requiredPositional(values, `packages ${action} requires package@exact-version`);
-  const options = commandOptions(`packages ${action}`, rest);
-  return { command: "packages", action, package: specifier, presentation: options.presentation };
-}
-
-function parseAuthCommand(tail: readonly string[]): AuthCommand {
+function parseAuthCommand(tail: readonly string[], cwd: string): AuthCommand {
   const [action, ...values] = tail;
   if (action !== "status" && action !== "login" && action !== "logout") {
     throw new Error("auth takes status, login or logout");
   }
   const [endpoint, rest] = requiredPositional(values, `auth ${action} requires one Endpoint instance`);
-  const options = commandOptions(`auth ${action}`, rest,
-    "--runtime", "--workspace", "--slot", ...(action === "login" ? ["--from"] as const : []),
+  const options = commandOptions(`auth ${action}`, rest, cwd,
+    "--runtime", "--project", "--slot", ...(action === "login" ? ["--from"] as const : []),
     ...(action === "status" ? ["--limit"] as const : []));
   const common = {
     command: "auth" as const,
@@ -410,16 +296,16 @@ function parseAuthCommand(tail: readonly string[]): AuthCommand {
   return { ...common, action };
 }
 
-function commandOptions(label: string, values: readonly string[], ...allowed: readonly string[]): RawOptions {
-  const options = parseOptions(values);
+function commandOptions(label: string, values: readonly string[], cwd: string, ...allowed: readonly string[]): RawOptions {
+  const options = parseOptions(values, cwd);
   const accepted = new Set<string>([...commonOptions, ...allowed]);
   const invalid = options.seenOptions.find((item) => !accepted.has(item));
   if (invalid !== undefined) throw new Error(`${invalid} does not apply to ${label}`);
   return options;
 }
 
-function parseOptions(values: readonly string[]): RawOptions {
-  let workspaceRoot: string | undefined;
+function parseOptions(values: readonly string[], cwd: string): RawOptions {
+  let projectRoot: string | undefined;
   const assetRoots: string[] = [];
   let packageRoot: string | undefined;
   let runtimeProfile: string | undefined;
@@ -442,9 +328,6 @@ function parseOptions(values: readonly string[]): RawOptions {
   let color: CliColorMode = "auto";
   let verbose = false;
   let watch = false;
-  let readyFile: string | undefined;
-  let workerOwner: string | undefined;
-  let executionRoot: string | undefined;
   let reason: string | undefined;
   let slot: string | undefined;
   let credentialFile: string | undefined;
@@ -475,17 +358,17 @@ function parseOptions(values: readonly string[]): RawOptions {
       continue;
     }
     if (item === "--endpoint") { endpoints.push(optionValue(values, index, "--endpoint requires an Endpoint name")); index += 1; continue; }
-    if (item === "--workspace") {
-      workspaceRoot = resolve(optionValue(values, index, "--workspace requires a directory")); index += 1; continue;
+    if (item === "--project") {
+      projectRoot = resolve(cwd, optionValue(values, index, "--project requires a directory")); index += 1; continue;
     }
     if (item === "--asset-root") {
-      assetRoots.push(resolve(optionValue(values, index, "--asset-root requires a directory"))); index += 1; continue;
+      assetRoots.push(resolve(cwd, optionValue(values, index, "--asset-root requires a directory"))); index += 1; continue;
     }
     if (item === "--package-root") {
-      packageRoot = resolve(optionValue(values, index, "--package-root requires a directory")); index += 1; continue;
+      packageRoot = resolve(cwd, optionValue(values, index, "--package-root requires a directory")); index += 1; continue;
     }
     if (item === "--runtime") {
-      runtimeProfile = resolve(optionValue(values, index, "--runtime requires a Runtime Profile")); index += 1; continue;
+      runtimeProfile = resolve(cwd, optionValue(values, index, "--runtime requires a Runtime Profile")); index += 1; continue;
     }
     if (item === "--out") {
       throw new Error("--out does not apply to Build submission; use `get <build-id> --output <name> --to <path>` to export one Result Output");
@@ -517,22 +400,13 @@ function parseOptions(values: readonly string[]): RawOptions {
       before = optionValue(values, index, "--before requires a Build id"); index += 1; continue;
     }
     if (item === "--to") {
-      destination = resolve(optionValue(values, index, "--to requires a file path")); index += 1; continue;
+      destination = resolve(cwd, optionValue(values, index, "--to requires a file path")); index += 1; continue;
     }
     if (item === "--follow") { follow = true; continue; }
     if (item === "--max-wait-ms") {
       const value = Number(optionValue(values, index, "--max-wait-ms requires milliseconds"));
       if (!Number.isSafeInteger(value) || value < 0) throw new Error("--max-wait-ms must be a non-negative safe integer");
       maxWaitMs = value; index += 1; continue;
-    }
-    if (item === "--ready-file") {
-      readyFile = resolve(optionValue(values, index, "--ready-file requires a path")); index += 1; continue;
-    }
-    if (item === "--worker-owner") {
-      workerOwner = optionValue(values, index, "--worker-owner requires an identity"); index += 1; continue;
-    }
-    if (item === "--execution-root") {
-      executionRoot = resolve(optionValue(values, index, "--execution-root requires a path")); index += 1; continue;
     }
     if (item === "--reason") {
       reason = optionValue(values, index, "--reason requires text"); index += 1; continue;
@@ -541,10 +415,10 @@ function parseOptions(values: readonly string[]): RawOptions {
       slot = optionValue(values, index, "--slot requires a credential slot"); index += 1; continue;
     }
     if (item === "--from") {
-      credentialFile = resolve(optionValue(values, index, "--from requires a credential file")); index += 1; continue;
+      credentialFile = resolve(cwd, optionValue(values, index, "--from requires a credential file")); index += 1; continue;
     }
     if (item === "--source") {
-      source = resolve(optionValue(values, index, "--source requires a source path")); index += 1; continue;
+      source = resolve(cwd, optionValue(values, index, "--source requires a source path")); index += 1; continue;
     }
     throw new Error(`unknown option ${item}`);
   }
@@ -564,7 +438,7 @@ function parseOptions(values: readonly string[]): RawOptions {
     lines,
     watch,
     seenOptions: [...seenOptions],
-    ...(workspaceRoot === undefined ? {} : { workspaceRoot }),
+    ...(projectRoot === undefined ? {} : { projectRoot }),
     ...(packageRoot === undefined ? {} : { packageRoot }),
     ...(runtimeProfile === undefined ? {} : { runtimeProfile }),
     ...(maxWaitMs === undefined ? {} : { maxWaitMs }),
@@ -573,9 +447,6 @@ function parseOptions(values: readonly string[]): RawOptions {
     ...(note === undefined ? {} : { note }),
     ...(before === undefined ? {} : { before }),
     ...(destination === undefined ? {} : { destination }),
-    ...(readyFile === undefined ? {} : { readyFile }),
-    ...(workerOwner === undefined ? {} : { workerOwner }),
-    ...(executionRoot === undefined ? {} : { executionRoot }),
     ...(reason === undefined ? {} : { reason }),
     ...(slot === undefined ? {} : { slot }),
     ...(credentialFile === undefined ? {} : { credentialFile }),
@@ -607,7 +478,7 @@ function positiveInteger(value: string, option: string): number {
 }
 
 function optionalProject(options: RawOptions): ProjectOption {
-  return options.workspaceRoot === undefined ? {} : { workspaceRoot: options.workspaceRoot };
+  return options.projectRoot === undefined ? {} : { projectRoot: options.projectRoot };
 }
 
 function optionalRuntime(options: RawOptions): RuntimeOption {

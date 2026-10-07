@@ -124,6 +124,12 @@ export type PlanOutput = {
   readonly steps?: number;
   readonly requestCount: number;
   readonly requestIssueCount: number;
+  readonly producerFailureCount: number;
+  /** Complete deterministic Producer failures; errors are never hidden by the detail limit. */
+  readonly producerFailures: readonly {
+    readonly step: string;
+    readonly message: string;
+  }[];
   /** Present when a Runtime Profile was selected. */
   readonly providerRequestCount?: number;
   readonly localRequestCount?: number;
@@ -209,7 +215,16 @@ export type PlanNeed = {
   readonly issue?: string;
 };
 
-export type CliMachineView = OperationalMachineView;
+/**
+ * Stable machine-output envelope shared by built-in and contributed commands.
+ *
+ * The generic CLI keeps its own outputs precise in `OperationalMachineView`, but
+ * must not enumerate every application module's payload in a central union.
+ */
+export type CliMachineView = {
+  readonly format: string;
+  readonly [field: string]: unknown;
+};
 
 export type CliPresentation =
   | {
@@ -518,6 +533,7 @@ function renderPlan(
     ["Requests", String(view.machine.requestCount)],
     ...(view.machine.choiceCount === 0 ? [] : [["Run choices", String(view.machine.choiceCount)] as const]),
     ...(view.machine.requestIssueCount === 0 ? [] : [["Request issues", String(view.machine.requestIssueCount)] as const]),
+    ...(view.machine.producerFailureCount === 0 ? [] : [["Producer failures", String(view.machine.producerFailureCount)] as const]),
     ...((view.machine.providerRequestCount ?? 0) === 0 ? [] : [["Provider requests", String(view.machine.providerRequestCount)] as const]),
     ...((view.machine.localRequestCount ?? 0) === 0 ? [] : [["Local requests", String(view.machine.localRequestCount)] as const]),
     ...((view.machine.unsupportedRequestCount ?? 0) === 0 ? [] : [["Unsupported", String(view.machine.unsupportedRequestCount)] as const]),
@@ -527,6 +543,12 @@ function renderPlan(
     ] as const]),
     ...(!verbose || view.machine.steps === undefined ? [] : [["Steps", String(view.machine.steps)] as const]),
   ], colors));
+  if (view.machine.producerFailures.length > 0) {
+    lines.push("", colors.strong("Producer failures"));
+    for (const failure of view.machine.producerFailures) {
+      lines.push(`  ${colors.error(glyph(io, "×", "x"))} ${colors.accent(stepLabel(failure.step))}: ${failure.message}`);
+    }
+  }
   if (view.machine.providers !== undefined) {
     if (view.machine.providers.length > 0) lines.push("", colors.strong("Providers and price pages"));
     const groups = new Map<string, PlanProvider[]>();
@@ -798,14 +820,14 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow check")),
       colors.dim("Validate one self-described Author Source or Run Source without executing it."),
       "",
-      "  qflow check <source> [--workspace <workspace>] [--asset-root <directory>]",
+      "  qflow check <source> [--project <workspace>] [--asset-root <directory>]",
       "  --verbose lists exported names/types and historical references.",
     ],
     doctor: [
       colors.accent(colors.strong("qflow doctor")),
       colors.dim("Diagnose project Results and, when selected or supplied, one Runtime Profile."),
       "",
-      "  qflow doctor [--runtime <profile>] [--workspace <project>] [--endpoint <instance>]",
+      "  qflow doctor [--runtime <profile>] [--project <project>] [--endpoint <instance>]",
       "  A positional Profile is also accepted in place of --runtime.",
       "  Repeat --endpoint <instance> to limit the operation to chosen services; omission covers the Profile.",
       "  Without a Runtime Profile, checks only the project's selected Result Store.",
@@ -814,7 +836,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow plan")),
       colors.dim("Show targets, demanded requests and their readiness without executing them."),
       "",
-      "  qflow plan <run-source> [--runtime <profile>] [--workspace <workspace>] [--asset-root <directory>]",
+      "  qflow plan <run-source> [--runtime <profile>] [--project <workspace>] [--asset-root <directory>]",
       "",
       "With --runtime, plan also preflights only the demanded deployment slice and names the Provider",
       "and price page behind each external request.",
@@ -826,7 +848,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow pricing")),
       colors.dim("Read current pricing material from the selected Providers for the requests in one Run."),
       "",
-      "  qflow pricing <run-source> [--runtime <profile>] [--workspace <workspace>] [--asset-root <directory>]",
+      "  qflow pricing <run-source> [--runtime <profile>] [--project <workspace>] [--asset-root <directory>]",
       "",
       "Pricing is an explicit read-only network operation. It starts no Build and submits no generation.",
       "Matching requests share their parameters and Provider rates, with source URLs.",
@@ -839,87 +861,37 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow build")),
       colors.dim("Submit one durable Build and ensure its selected Runtime Worker is available."),
       "",
-      "  qflow build <run-source> [--title <text>] [--runtime <profile>] [--workspace <workspace>] [--asset-root <directory>] [--follow]",
+      "  qflow build <run-source> [--title <text>] [--runtime <profile>] [--project <workspace>] [--asset-root <directory>] [--follow]",
       "",
       "  --title <text>            give this Result a human-facing title",
       "  --follow                   observe the Build; the Worker still owns execution",
       "  --max-wait-ms <ms>         bound startup or follow waiting",
     ],
-    runtime: [
-      colors.accent(colors.strong("qflow runtime")),
-      colors.dim("Select a project Runtime Profile, then operate the local Build Worker."),
-      "",
-      "  qflow runtime init [<profile>] [--workspace <project>] create and select a starter Profile",
-      "  qflow runtime use <profile> [--workspace <project>]  select the project Profile",
-      "  qflow runtime unset [--workspace <project>]          remove only that selection",
-      "  qflow runtime up [<profile>] [--endpoint <instance>]  prepare helpers, then start the Worker",
-      "  qflow runtime status [<profile>]  inspect the local Worker, active Builds and programs",
-      "  qflow runtime logs [<profile>] [--lines <count>]",
-      "  qflow runtime down [<profile>]    stop the Worker; external programs keep running",
-      "",
-      "The project is resolved first. Selection is read only from that project's .qflow/runtime.",
-      "All runtime actions accept --workspace <project>; operational actions also accept --runtime <profile>.",
-      "For up, repeat --endpoint <instance> to prepare only chosen services; omission prepares the Profile.",
-      "No Profile filename discovery or parent-project inheritance is performed.",
-      "Remote Endpoints such as QflowHub are not started by this command; use doctor to test them.",
-    ],
-    packages: [
-      colors.accent(colors.strong("qflow packages")),
-      colors.dim("Inspect or install one pinned upstream npm package in the shared machine home."),
-      "",
-      "  qflow packages status <package@exact-version>",
-      "  qflow packages install <package@exact-version>",
-      "",
-      "The package is reused by every project and later session on this machine.",
-      "Each exact version has its own installation; npm owns package.json and package-lock.json.",
-      "Preparation reports its install.log for live output and later diagnosis.",
-    ],
-    programs: [
-      colors.accent(colors.strong("qflow programs")),
-      colors.dim("Prepare and operate external programs declared by Endpoints in one Runtime Profile."),
-      "",
-      "  qflow programs prepare [--runtime <profile>] [--endpoint <instance>]  # resources only; does not start services",
-      "  qflow programs up [--runtime <profile>] [--workspace <project>] [--max-wait-ms <ms>]",
-      "  qflow programs status [--runtime <profile>] [--workspace <project>]",
-      "  qflow programs down [--runtime <profile>] [--workspace <project>]",
-      "  A positional Profile is also accepted in place of --runtime.",
-      "  Repeat --endpoint <instance> to limit the operation to chosen services; omission covers the Profile.",
-    ],
     activity: [
       colors.accent(colors.strong("qflow activity")),
       colors.dim("Inspect active Builds and Provider pool capacity."),
       "",
-      "  qflow activity [--workspace <project>] [--runtime <profile>] [--watch]",
-      "  qflow activity [--workspace <project>] [--runtime <profile>] --watch --jsonl",
-    ],
-    paths: [
-      colors.accent(colors.strong("qflow paths")),
-      colors.dim("Show project, Runtime and host state locations without creating them."),
-      "",
-      "  qflow paths [--workspace <project>] [--runtime <profile>]",
-      "  Shows whether Runtime selection comes from a command argument or the project's .qflow/runtime.",
-      "  Without --workspace, the nearest package.json above cwd defines the project (otherwise cwd).",
-      "  Relative command-line paths start at cwd, including when --workspace is supplied.",
+      "  qflow activity [--project <project>] [--runtime <profile>] [--watch]",
+      "  qflow activity [--project <project>] [--runtime <profile>] --watch --jsonl",
     ],
     builds: [
       colors.accent(colors.strong("qflow builds")),
       colors.dim("List project-owned Build Results without opening a Runtime."),
       "",
-      "  qflow builds [--workspace <project>] [--limit <count>] [--before <build-id>]",
+      "  qflow builds [--project <project>] [--limit <count>] [--before <build-id>]",
     ],
     logs: [
       colors.accent(colors.strong("qflow logs")),
       colors.dim("Read Build execution evidence; finished logs need only the project Result Repository."),
       "",
-      "  qflow logs <build-id> [--workspace <project>] [--runtime <profile>] [--lines <count>]",
+      "  qflow logs <build-id> [--project <project>] [--runtime <profile>] [--lines <count>]",
       "  --lines <count>           show the last N records (default 50)",
-      "  runtime logs             reads the Worker process log instead",
     ],
     status: [
       colors.accent(colors.strong("qflow status")),
       colors.dim("Show one Build now, or keep watching it without owning execution."),
       "",
-      "  qflow status <build-id> [--workspace <project>] [--runtime <profile>] [--watch]",
+      "  qflow status <build-id> [--project <project>] [--runtime <profile>] [--watch]",
       "  --watch                   observe until a Result outcome or operator attention",
       "  --max-wait-ms <ms>        stop watching after a bounded wait",
     ],
@@ -927,7 +899,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow inspect")),
       colors.dim("Inspect one project-owned Build Result and its public Outputs."),
       "",
-      "  qflow inspect <build-id> [--output <name>] [--limit <count>] [--workspace <project>]",
+      "  qflow inspect <build-id> [--output <name>] [--limit <count>] [--project <project>]",
       "  Defaults to targets and highlighted Outputs. --verbose expands other available Outputs.",
       "  --output selects one exact name; --limit bounds expanded lists.",
     ],
@@ -935,7 +907,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow get")),
       colors.dim("Export one exact named Build Output to an explicit local destination."),
       "",
-      "  qflow get <build-id> --output <name> --to <path> [--workspace <project>]",
+      "  qflow get <build-id> --output <name> --to <path> [--project <project>]",
       "",
       "Scalar and Resource Outputs become files. A Composite Output becomes a directory",
       "containing value.json and every Resource referenced by that value.",
@@ -944,21 +916,21 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       colors.accent(colors.strong("qflow history")),
       colors.dim("Find one named Output across project-owned Build Results."),
       "",
-      "  qflow history <output-name> [--workspace <project>] [--source <author-source>] [--limit <count>] [--before <build-id>]",
+      "  qflow history <output-name> [--project <project>] [--source <author-source>] [--limit <count>] [--before <build-id>]",
     ],
     cancel: [
       colors.accent(colors.strong("qflow cancel")),
       colors.dim("Stop one Build and request cancellation of submitted work when supported."),
       "",
-      "  qflow cancel <build-id> [--workspace <project>] [--runtime <profile>] [--reason <text>]",
+      "  qflow cancel <build-id> [--project <project>] [--runtime <profile>] [--reason <text>]",
     ],
     result: [
       colors.accent(colors.strong("qflow result")),
       colors.dim("Edit one Result, finish an interrupted Result write, or discard an incomplete submission."),
       "",
-      "  qflow result finish <build-id> [--workspace <project>] [--runtime <profile>]",
-      "  qflow result discard <build-id> [--workspace <project>] [--runtime <profile>]",
-      "  qflow result edit <build-id> [--workspace <project>] [--title <text>] [--note <text>]",
+      "  qflow result finish <build-id> [--project <project>] [--runtime <profile>]",
+      "  qflow result discard <build-id> [--project <project>] [--runtime <profile>]",
+      "  qflow result edit <build-id> [--project <project>] [--title <text>] [--note <text>]",
       "                           [--highlight <output> ...]",
       "  --clear-title            remove the Result's human title",
       "  --clear-note             remove its note",
@@ -971,7 +943,7 @@ function commandHelp(topic: string, colors: Palette): readonly string[] | undefi
       "  qflow auth status <endpoint-instance> [--runtime <profile>] [--slot <name>]",
       "  qflow auth login <endpoint-instance> [--runtime <profile>] [--slot <name>] [--from <secret-file>]",
       "  qflow auth logout <endpoint-instance> [--runtime <profile>] [--slot <name>]",
-      "  All auth actions accept --workspace <project> to use that project's selection.",
+      "  All auth actions accept --project <project> to use that project's selection.",
       "  status shows credential presence and the Provider's declared browser login, if any.",
       "  login opens that browser flow or securely prompts for the secret; --from imports a secret instead.",
       "  Configure the service's Endpoint first. Storing a key does not install a Provider or select bindings.",
@@ -1013,14 +985,13 @@ export function writeCliHelp(io: CliIo, topic?: string): void {
     "",
     colors.strong("Runtime"),
     row("doctor [profile]", "diagnose selected external setup"),
-    row("runtime init|use|unset", "create or select this project's Runtime Profile"),
-    row("runtime up|status|logs|down", "prepare and manage the local Build Runtime"),
-    row("programs prepare|up|status|down", "manage declared external programs only"),
-    row("packages install|status", "manage pinned upstream packages in the machine home"),
     row("activity [--watch]", "show active Builds and their current phases"),
     row("cancel <build-id>", "withdraw one active Build"),
-    row("paths", "show physical state locations"),
     row("auth status|login|logout", "manage Endpoint credentials"),
+    "",
+    colors.strong("Installation"),
+    row("version [--check]", "show this installed Qflow Distribution"),
+    row("cli status|use|remove", "manage explicit project CLI contributions"),
     "",
     colors.strong("Output"),
     row("--json", "stable machine view"),

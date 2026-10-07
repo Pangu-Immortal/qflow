@@ -1,14 +1,15 @@
 import { readFile, realpath } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
-import { authorFrontendsFromHostFacets, prepareAuthorSource } from "@qflow/elaborator";
-import type { AuthorFrontend } from "@qflow/elaborator";
-import { physicalPackageName, resolveNodePackageSource } from "@qflow/package-loader-node";
-import type { LogicalPackageAddress, LoadedPackage } from "@qflow/package-loader-node";
+import { authorFrontendsFromFacets } from "@qflow/author";
+import type { AuthorFrontend } from "@qflow/author";
+import { physicalPackageName, resolveNodePackageSource } from "@qflow/loader/node";
+import type { LogicalPackageAddress, LoadedPackage } from "@qflow/loader";
 import { modulePackageAbi } from "@qflow/protocol";
-import { prepareRunSource, runFragmentHostAbi, runFrontendsFromHostFacets } from "@qflow/run";
+import { runFragmentFacetAbi, runFrontendsFromFacets } from "@qflow/run";
 import type { RunFrontend } from "@qflow/run";
-import { parseSourceHeader, sourceFrontendPackageAbi } from "@qflow/source";
+import { sourceFrontendPackageAbi } from "@qflow/source";
+import { resolveSelfDescribedTextSource } from "@qflow/source/text";
 
 function isWithin(root: string, path: string): boolean {
   const relation = relative(root, path);
@@ -49,12 +50,12 @@ export async function discoverSourcePackages(
   const packages = options.packages ?? [];
   const authorFrontends = [
     ...(options.bootstrapAuthorFrontends ?? []).map((frontend) => ({ frontend, physical: undefined as string | undefined })),
-    ...packages.flatMap((item) => authorFrontendsFromHostFacets(item.contribution.hostFacets ?? [])
+    ...packages.flatMap((item) => authorFrontendsFromFacets(item.contribution.facets ?? [])
       .map((frontend) => ({ frontend, physical: item.specifier as string | undefined }))),
   ];
   const runFrontends = [
     ...(options.bootstrapRunFrontends ?? []).map((frontend) => ({ frontend, physical: undefined as string | undefined })),
-    ...packages.flatMap((item) => runFrontendsFromHostFacets(item.contribution.hostFacets ?? [])
+    ...packages.flatMap((item) => runFrontendsFromFacets(item.contribution.facets ?? [])
       .map((frontend) => ({ frontend, physical: item.specifier as string | undefined }))),
   ];
   const selected = new Set<string>();
@@ -68,8 +69,8 @@ export async function discoverSourcePackages(
         moduleOwners.set(request, item.specifier);
       }
     }
-    for (const facet of item.contribution.hostFacets ?? []) {
-      if (facet.abi !== runFragmentHostAbi) continue;
+    for (const facet of item.contribution.facets ?? []) {
+      if (facet.abi !== runFragmentFacetAbi) continue;
       for (const request of facet.offers ?? []) fragmentOwners.set(request, item.specifier);
     }
   }
@@ -92,8 +93,6 @@ export async function discoverSourcePackages(
       ...(options.distributionPackageRoot === undefined
         ? {}
         : { distributionRoots: [options.distributionPackageRoot] }),
-      externalRoots: [],
-      allowExternal: false,
     });
     return { source: located.source, root: located.root };
   };
@@ -107,12 +106,12 @@ export async function discoverSourcePackages(
     visited.add(canonical);
     const text = await readFile(canonical, "utf8");
     const name = relative(canonicalRoot, canonical);
-    const header = parseSourceHeader(name, text);
-    const authors = authorFrontends.filter((item) => item.frontend.id === header.using);
-    const runs = runFrontends.filter((item) => item.frontend.id === header.using);
-    if (authors.length + runs.length > 1) throw new Error(`Source Frontend ${header.using} is ambiguously provided`);
+    const resolved = resolveSelfDescribedTextSource({ id: canonical, name, text });
+    const authors = authorFrontends.filter((item) => item.frontend.id === resolved.frontend);
+    const runs = runFrontends.filter((item) => item.frontend.id === resolved.frontend);
+    if (authors.length + runs.length > 1) throw new Error(`Source Frontend ${resolved.frontend} is ambiguously provided`);
     if (authors.length + runs.length === 0) {
-      requireLogical({ abi: sourceFrontendPackageAbi, name: header.using }, undefined);
+      requireLogical({ abi: sourceFrontendPackageAbi, name: resolved.frontend }, undefined);
       return;
     }
     if (authors.length === 1) {
@@ -120,7 +119,7 @@ export async function discoverSourcePackages(
       if (owner.physical !== undefined) {
         requireLogical({ abi: sourceFrontendPackageAbi, name: owner.frontend.id }, owner.physical);
       }
-      const discovery = await owner.frontend.discover(prepareAuthorSource({ id: canonical, name, text }));
+      const discovery = await owner.frontend.discover(resolved.unit);
       for (const request of discovery.modules) {
         requireLogical({ abi: modulePackageAbi, name: request }, moduleOwners.get(request));
       }
@@ -134,9 +133,9 @@ export async function discoverSourcePackages(
     if (owner.physical !== undefined) {
       requireLogical({ abi: sourceFrontendPackageAbi, name: owner.frontend.id }, owner.physical);
     }
-    const discovery = await owner.frontend.discover(prepareRunSource({ id: canonical, name, text }));
+    const discovery = await owner.frontend.discover(resolved.unit);
     for (const item of discovery.imports) {
-      requireLogical({ abi: runFragmentHostAbi, name: item.from }, fragmentOwners.get(item.from));
+      requireLogical({ abi: runFragmentFacetAbi, name: item.from }, fragmentOwners.get(item.from));
     }
     const imported = resolveImportedSource(canonical, canonicalRoot, discovery.author.source);
     await discover(imported.source, imported.root);

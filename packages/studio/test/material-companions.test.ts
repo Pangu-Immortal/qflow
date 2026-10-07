@@ -3,9 +3,9 @@ import test from "node:test";
 import { compositionTypes } from "@qflow/composition";
 import { audioTrackTypes } from "@qflow/audio-track";
 import { visualTrackTypes } from "@qflow/visual-track";
-import type { StudioTrackCompanionContext } from "@qflow/studio-adapter";
-import { audioTrackStudioTrackCompanions } from "../../audio-track-studio/src/index.js";
-import { visualTrackStudioTrackCompanions } from "../../visual-track-studio/src/index.js";
+import type { StudioTrackCompanionContext } from "@qflow/studio-companion";
+import { audioTrackStudioTrackCompanions } from "../../audio-track/src/studio.js";
+import { visualTrackStudioTrackCompanions } from "../../visual-track/src/studio.js";
 
 for (const kind of ["audio", "visual"] as const) {
   test(`${kind} Clip titles use explicit author names or exact source references without changing identity`, () => {

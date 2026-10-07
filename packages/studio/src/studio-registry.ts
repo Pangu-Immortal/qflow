@@ -14,17 +14,17 @@ import type {
   StudioTemporalDomainSourceMap,
   StudioSourceBindingDeclaration,
   StudioSpan,
-} from "@qflow/studio-adapter";
-import { studioParameterControls } from "@qflow/studio-adapter";
+} from "@qflow/studio-companion";
+import { studioParameterControls } from "@qflow/studio-companion";
 import { parameterOption } from "./parameter-values.js";
-import { compositionTypes } from "@qflow/composition";
-import { sameModule, sameType } from "@qflow/protocol";
-import type { ModuleRef, TypeRef } from "@qflow/protocol";
+import { compositionTypes } from "@qflow/qflow/composition";
+import { sameModule, sameType } from "@qflow/qflow/protocol";
+import type { ModuleRef, TypeRef } from "@qflow/qflow/protocol";
 
 import type { Placement } from "./observe.js";
 import type { Clip, StudioTrackBinding } from "./shared.js";
 
-export type { StudioEntityDraft, StudioViewRole, StudioSpan } from "@qflow/studio-adapter";
+export type { StudioEntityDraft, StudioViewRole, StudioSpan } from "@qflow/studio-companion";
 
 const flatLane = {
   heightPx: 52,

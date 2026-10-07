@@ -1,29 +1,39 @@
 {
   "name": "@qflow/whisperx",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./cli": "./src/cli.ts"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "qflow": {
     "activation": "./src/activation.ts"
   },
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
   "dependencies": {
-    "@qflow/component-kit": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/media-pipeline": "workspace:*",
+    "@qflow/media-local": "workspace:^",
+    "@qflow/narrative-speech-alignment": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/qflow": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/author": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/narrative": "workspace:*",
     "@qflow/narrative-temporal": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/speech-alignment": "workspace:*",
     "@qflow/speech-evidence": "workspace:*",
     "@qflow/markup": "workspace:*",
-    "@qflow/temporal": "workspace:*"
-  },
-  "devDependencies": {
+    "@qflow/temporal": "workspace:*",
+    "typescript": "5.9.3",
     "@qflow/timeline": "workspace:*"
   }
 }

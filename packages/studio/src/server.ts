@@ -7,9 +7,9 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 import type { Plugin, ViteDevServer } from "vite";
-import type { BuildResultFileRange } from "@qflow/build-result";
-import type { StudioTemporalInstantProjection } from "@qflow/studio-adapter";
-import { sameType } from "@qflow/protocol";
+import type { BuildResultFileRange } from "@qflow/qflow/result";
+import type { StudioTemporalInstantProjection } from "@qflow/studio-companion";
+import { sameType } from "@qflow/qflow/protocol";
 
 import type { StudioBuildLibrary } from "./build-library.js";
 import type { ServedFile } from "./compile.js";
@@ -83,7 +83,7 @@ class StudioMutationRejected extends Error {}
 export function studioPlugin(options: StudioPluginOptions): Plugin {
   let snapshot: StudioSnapshot | undefined;
   let visualHtml: string | undefined;
-  let visualDocument: import("@qflow/hyperframes").HyperframesDocument | undefined;
+  let visualDocument: import("@qflow/qflow/html-program").HtmlProgram | undefined;
   let failure: StudioFailure | undefined;
   let material: ReadonlyMap<string, ServedFile> = new Map();
   let revision = 0;

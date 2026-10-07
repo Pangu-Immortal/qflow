@@ -1,7 +1,7 @@
-import type { Candidate } from "@qflow/protocol";
-import { sameType } from "@qflow/protocol";
-import type { StudioFilmCompanion } from "@qflow/studio-adapter";
-import { timelineTypes } from "@qflow/timeline";
+import type { Candidate } from "@qflow/qflow/protocol";
+import { sameType } from "@qflow/qflow/protocol";
+import type { StudioFilmCompanion } from "@qflow/studio-companion";
+import { timelineTypes } from "@qflow/qflow/timeline";
 
 import type { CompiledSource } from "./compile.js";
 import type { Placement } from "./observe.js";

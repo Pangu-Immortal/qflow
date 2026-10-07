@@ -76,7 +76,7 @@ function openAuthorizeUrl(url: string): void {
   child.unref();
 }
 
-/** Acquire one OAuth credential from the exact data declared by its Endpoint package. */
+/** Acquire one OAuth credential from the exact data declared by its Endpoint instance. */
 export async function acquireOAuthCredential(
   acquisition: CredentialAcquisition,
   options: OAuthAcquisitionOptions = {},

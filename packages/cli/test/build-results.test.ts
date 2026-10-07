@@ -11,13 +11,13 @@ import {
   FileBuildResult,
   FileBuildResultRepository,
   ownedFileReference,
-} from "@qflow/build-result";
-import { ModulePackageRegistry, NodeCompiler } from "@qflow/compiler-node";
-import { AuthorFrontendRegistry, sealGraphFragment } from "@qflow/elaborator";
+} from "@qflow/result/node";
+import { ModulePackageRegistry, Compiler } from "@qflow/compiler";
+import { AuthorFrontendRegistry, sealGraphFragment } from "@qflow/author";
 import { createMarkupAuthorFrontend, MarkupSurfaceRegistry } from "@qflow/markup";
 import type { BuildState, ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
-import { runMarkupFrontend } from "@qflow/run-markup";
-import { NodeFilesystemWorkspace } from "@qflow/workspace-fs-node";
+import { runMarkupFrontend } from "@qflow/markup/run";
+import { NodeFilesystemWorkspace } from "@qflow/workspace/node";
 
 import type { CliDistribution } from "../src/distribution.js";
 import { createCatalogDescriptor } from "../src/build-planning.js";
@@ -43,8 +43,8 @@ async function fixture(root: string, id = "bld_20260902T110000000Z_0000000001", 
   const result = await FileBuildResult.create(join(root, ".qflow", "results"), {
     id,
     title: "episode-stage",
-    source: { path: source },
-    run: { path: "build.svrun" },
+    source: { id: source },
+    run: { id: "build.svrun" },
     targets: ["stage.value"],
     publishedOutputs: [{ name: "stage.value", output: "logical:stage" }],
   });
@@ -73,7 +73,7 @@ function resultDistribution(): CliDistribution {
 
 async function jsonCommand(args: readonly string[], root: string): Promise<unknown> {
   let output = "";
-  await runCli([...args, "--workspace", root, "--json"], {
+  await runCli([...args, "--project", root, "--json"], {
     write(text) { output += text; },
   }, resultDistribution());
   return JSON.parse(output);
@@ -81,7 +81,7 @@ async function jsonCommand(args: readonly string[], root: string): Promise<unkno
 
 async function humanCommand(args: readonly string[], root: string): Promise<string> {
   let output = "";
-  await runCli([...args, "--workspace", root], {
+  await runCli([...args, "--project", root], {
     write(text) { output += text; },
   }, resultDistribution());
   return output;
@@ -169,7 +169,7 @@ test("history scans older pages for matches and compares project-relative source
     ]) {
       const writer = await repository.create({
         id,
-        source: { path: "other.svml" },
+        source: { id: "other.svml" },
         targets: [],
         publishedOutputs: [],
       });
@@ -204,7 +204,7 @@ test("get exports Resource bytes and a self-contained Composite directory", asyn
   try {
     const result = await FileBuildResult.create(join(root, ".qflow", "results"), {
       id: build,
-      source: { path: join(root, "main.svml") },
+      source: { id: join(root, "main.svml") },
       targets: ["final.video"],
       publishedOutputs: [
         { name: "final.video", output: "logical:video" },
@@ -281,22 +281,22 @@ test("get requires an exact Output name and an explicit destination", async () =
   try {
     const silent = { write() {} };
     await assert.rejects(
-      runCli(["get", "bld_20260902T110000000Z_0000000001", "--workspace", root], silent, resultDistribution()),
+      runCli(["get", "bld_20260902T110000000Z_0000000001", "--project", root], silent, resultDistribution()),
       /get requires --output/u,
     );
     await assert.rejects(
       runCli([
-        "get", "bld_20260902T110000000Z_0000000001", "--output", "stage.value", "--workspace", root,
+        "get", "bld_20260902T110000000Z_0000000001", "--output", "stage.value", "--project", root,
       ], silent, resultDistribution()),
       /get requires --to/u,
     );
     await assert.rejects(
-      runCli(["history", "--source", join(root, "main.svml"), "--workspace", root], silent,
+      runCli(["history", "--source", join(root, "main.svml"), "--project", root], silent,
         resultDistribution()),
       /history requires one exact Output name/u,
     );
     await assert.rejects(
-      runCli(["history", "stage.value", "--pin", "--workspace", root], silent, resultDistribution()),
+      runCli(["history", "stage.value", "--pin", "--project", root], silent, resultDistribution()),
       /unknown option --pin/u,
     );
   } finally {
@@ -411,7 +411,7 @@ test("build-record selects one exact Result Output without leaking its storage a
         return resolved;
       },
     }));
-    const authorCompiler = new NodeCompiler({
+    const authorCompiler = new Compiler({
       modules,
       frontends: authorFrontends,
       workspace: new NodeFilesystemWorkspace({ root }),
@@ -420,8 +420,8 @@ test("build-record selects one exact Result Output without leaking its storage a
     const resultsRoot = join(root, ".qflow", "results");
     const result = await FileBuildResult.create(resultsRoot, {
       id: "bld_20260902T110000001Z_0000000001",
-      source: { path: join(root, "main.svml") },
-      run: { path: join(root, "prior.svrun") },
+      source: { id: join(root, "main.svml") },
+      run: { id: join(root, "prior.svrun") },
       targets: ["shot.video"],
       publishedOutputs: [{ name: "shot.video", output: "logical:video" }],
     });
@@ -456,7 +456,7 @@ test("build-record selects one exact Result Output without leaking its storage a
   <import as="media" from="example.result-reuse@1"/>
   <media:Video id="shot"/>
 </svml>`, "utf8");
-    await writeFile(runFile, `<?svml using="@qflow/run-markup@1"?>
+    await writeFile(runFile, `<?svml using="@qflow/markup/run@1"?>
 <svrun version="1">
   <author source="./main.svml"/>
   <target output="shot.video"/>
@@ -464,7 +464,7 @@ test("build-record selects one exact Result Output without leaking its storage a
   <satisfy output="shot.video" candidate="prior"/>
 </svrun>`, "utf8");
 
-    const workspace = await authorCompiler.openFile(runFile);
+    const workspace = await authorCompiler.openEntry(runFile);
     const repository = new FileBuildResultRepository(resultsRoot);
     let opens = 0;
     let resolves = 0;
@@ -557,7 +557,7 @@ test("build-record selects one exact Result Output without leaking its storage a
       if (rootValue.kind !== "value") throw new Error("expected value");
       const extra = { kind: "blob" as const, resource: `res_${id}`, size: 1, mediaType: "image/png" };
       const current = await repository.create({
-        id, source: { path: authorFile }, targets: ["shot.video"],
+        id, source: { id: authorFile }, targets: ["shot.video"],
         publishedOutputs: [{ name: "shot.video", output: "wrapped" }],
         resourceReferences: imported.resultResourceReferences,
       });
@@ -582,14 +582,14 @@ test("build-record selects one exact Result Output without leaking its storage a
       for await (const chunk of (await repository.openFile(id, original.file))!) received.push(...chunk);
       assert.deepEqual(Uint8Array.from(received), bytes);
       await writeFile(runFile, (await readFile(runFile, "utf8")).replace(/build="[^"]+"/, `build="${id}"`));
-      imported = await materializeImport(await loadRunFile({ workspace: await authorCompiler.openFile(runFile), authorCompiler,
+      imported = await materializeImport(await loadRunFile({ workspace: await authorCompiler.openEntry(runFile), authorCompiler,
         frontends: [runMarkupFrontend], packageContributions: [], results: repository }), id);
     }
 
     // Explicit export collects a standalone bundle, including same-named files with different owners.
     const bundle = join(root, "exported-layout");
     await jsonCommand(["get", "bld_20260902T110000003Z_0000000001", "--output", "shot.video", "--to", bundle], root);
-    const exported = JSON.parse(await readFile(join(bundle, "value.json"), "utf8")) as import("@qflow/build-result").BuildResultValueDocument;
+    const exported = JSON.parse(await readFile(join(bundle, "value.json"), "utf8")) as import("@qflow/result").BuildResultValueDocument;
     assert.equal(exported.resources.length, 3);
     const exportedPaths = new Set<string>();
     for (const binding of exported.resources) {
@@ -605,17 +605,17 @@ test("build-record selects one exact Result Output without leaking its storage a
     // A file Candidate is a live address, even when republished by separate Builds.
     const externalPath = join(root, "selected.mp4");
     await writeFile(externalPath, bytes);
-    await writeFile(runFile, `<?svml using="@qflow/run-markup@1"?>
+    await writeFile(runFile, `<?svml using="@qflow/markup/run@1"?>
 <svrun version="1"><author source="./main.svml"/><target output="shot.video"/>
 <file id="selected" type="example.result-reuse@1#Video" from="./selected.mp4" media-type="video/mp4"/>
 <satisfy output="shot.video" candidate="selected"/></svrun>`);
-    const externalRun = await loadRunFile({ workspace: await authorCompiler.openFile(runFile), authorCompiler,
+    const externalRun = await loadRunFile({ workspace: await authorCompiler.openEntry(runFile), authorCompiler,
       frontends: [runMarkupFrontend], packageContributions: [], results: repository });
     assert.deepEqual(Object.values(externalRun.resultResourceReferences), [{
       kind: "external-file", uri: pathToFileURL(await realpath(externalPath)).href, size: bytes.length, mediaType: "video/mp4",
     }]);
     for (const id of ["bld_20260902T110000004Z_0000000001", "bld_20260902T110000005Z_0000000001"]) {
-      const current = await repository.create({ id, source: { path: authorFile }, targets: ["shot.video"],
+      const current = await repository.create({ id, source: { id: authorFile }, targets: ["shot.video"],
         publishedOutputs: [{ name: "shot.video", output: logicalOutput!.id }],
         resourceReferences: externalRun.resultResourceReferences });
       await current.sync({ state: externalRun.compiler.planCompilation(externalRun).state,
@@ -663,7 +663,7 @@ test("Composite Result resources rebuild each shared container once", async () =
     } }),
     describeFile: async () => file,
     openFile: async () => undefined,
-  } as unknown as import("@qflow/build-result").BuildResultRepository;
+  } as unknown as import("@qflow/result").BuildResultRepository;
   const resolved = await resolveBuildResultValue(repository, "owner", "composite");
   assert.equal(resolved?.value.kind, "inline");
   assert.equal(visited, count, "the root array is rebuilt once rather than once per Resource binding");
@@ -675,7 +675,7 @@ test("a failed Result exposes task receipts and credential references without a 
   const id = "bld_20260906T110000000Z_0000000001";
   try {
     const result = await FileBuildResult.create(join(root, ".qflow", "results"), {
-      id, source: { path: "main.svml" }, targets: [], publishedOutputs: [],
+      id, source: { id: "main.svml" }, targets: [], publishedOutputs: [],
     });
     const operation = {
       operation: "op-1", command: "need-1", endpoint: "selected-account", pool: "my-pool",
@@ -707,7 +707,7 @@ test("logs reads finished evidence without a Runtime and clearly limits the tail
   try {
     const id = "bld_20260913T130000000Z_0000000001";
     const result = await FileBuildResult.create(join(root, ".qflow/results"), {
-      id, source: { path: "main.svml" }, targets: [], publishedOutputs: [],
+      id, source: { id: "main.svml" }, targets: [], publishedOutputs: [],
     });
     const records = ["started", "completed"].map((kind, time) => ({ format: "qflow.execution-log@1", time, kind, endpoint: "renderer", command: "c1" }));
     await result.finish({ outcome: "complete", executionLog: (async function* () {
@@ -768,13 +768,13 @@ test("logs reports unavailable evidence as unsuccessful, while an existing empty
       if (state === "no-log") await fixture(root);
       if (state === "empty-log") {
         const result = await FileBuildResult.create(join(root, ".qflow/results"), {
-          id: "bld_20260902T110000001Z_0000000001", source: { path: "main.svml" }, targets: [], publishedOutputs: [],
+          id: "bld_20260902T110000001Z_0000000001", source: { id: "main.svml" }, targets: [], publishedOutputs: [],
         });
         await result.finish({ outcome: "complete", executionLog: (async function* () {})() });
       }
       let exit = 0;
       let output = "";
-      await runCli(["logs", state === "empty-log" ? "bld_20260902T110000001Z_0000000001" : id, "--workspace", root, "--json"], {
+      await runCli(["logs", state === "empty-log" ? "bld_20260902T110000001Z_0000000001" : id, "--project", root, "--json"], {
         write: (text) => { output += text; }, setExitCode: (code) => { exit = code; },
       }, resultDistribution());
       assert.equal(exit, state === "empty-log" ? 0 : 1);

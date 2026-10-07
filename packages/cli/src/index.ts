@@ -1,11 +1,22 @@
 export { runCli } from "./main.js";
+export { indexCliCommandModules, runCliApplication } from "./application.js";
+export type { CliApplication, CliApplicationContext, CliCommandModule } from "./application.js";
+export { runNodeCli, runNodeCliApplication } from "./node-application.js";
+export type { NodeCliRunner } from "./node-application.js";
+export { acceptSecretBytes } from "./secret-input.js";
+export { genericCliCommandNames } from "./command.js";
+export { commandHint } from "./command-hint.js";
+export { cliProviderLine, cliProviderView, createCliScratchResources, openCliRuntimeHost, selectCliProvider } from "./immediate.js";
+export { runVersionCli, writeVersionHelp } from "./version.js";
+export type { VersionEnvironment } from "./version.js";
+export { runInstalledCliApplication, writeCliCompositionHelp } from "./installed-application.js";
+export type { InstalledCliApplicationOptions, LoadedCliCommandSelection } from "./installed-application.js";
 export { discoverSourcePackages } from "./source-discovery.js";
 export { loadDiscoveredSourcePackages } from "./source-packages.js";
 export { collectRunFrontends, loadRunFile, resolveBuildResultValue } from "./run-file.js";
 export type { LoadedRunFile } from "./run-file.js";
 export { qflowHostStateRoot, qflowProjectStateRoot } from "./paths.js";
-export { resolvePackageRoot, resolveProjectRoot } from "@qflow/project-context-node";
-export { findRuntimeProfile } from "@qflow/project-context-node";
+export { resolveProjectRoot } from "@qflow/project";
 export { renderCliError, writeCliHelp, writeCliOutput } from "./output.js";
 export type {
   CliColorMode,
@@ -22,7 +33,6 @@ export type {
   CliOutputView,
   PublicOutputKind,
 } from "./view.js";
-export type { OperationalMachineView } from "./machine-view.js";
 export type {
   CliCompilerOptions,
   CliDistribution,

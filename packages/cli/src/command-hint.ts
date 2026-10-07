@@ -14,7 +14,7 @@ export function commandHint(
     ? value
     : `'${value.replaceAll("'", shell === "powershell" ? "''" : "'\"'\"'")}'`;
   return ["qflow", ...args,
-    ...(scope.projectRoot === undefined ? [] : ["--workspace", scope.projectRoot]),
+    ...(scope.projectRoot === undefined ? [] : ["--project", scope.projectRoot]),
     ...(scope.runtimeProfile === undefined ? [] : ["--runtime", scope.runtimeProfile]),
   ].map(quote).join(" ");
 }

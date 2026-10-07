@@ -5,10 +5,29 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 
 import type { CliDistribution } from "../src/distribution.js";
-import { runCli } from "../src/main.js";
+import { runCliApplication } from "../src/application.js";
+import type { CliIo } from "../src/output.js";
 import type { CliCredentialControl, CliRuntimeControl } from "../src/runtime-port.js";
 import { createLocalCredentialControl } from "@qflow/runtime-local";
+import { cliCommandModules } from "../../runtime-local/src/cli.js";
 import { commandHint } from "../src/command-hint.js";
+
+const runCli = async (argv: readonly string[], output: CliIo, selected: CliDistribution) => await runCliApplication(
+  argv,
+  output,
+  {
+    // The real video application assembles both generic and Local Runtime Host
+    // ports. These focused doubles do the same when mounting Local commands.
+    distribution: {
+      ...selected,
+      openLocalRuntimeHost: async (path: string, options: Parameters<CliDistribution["openRuntimeHost"]>[1]) =>
+        await selected.openRuntimeHost(path, options),
+    } as CliDistribution,
+    commandModules: cliCommandModules,
+    cwd: tmpdir(),
+    resolveProjectRoot: async (explicit) => await realpath(explicit ?? tmpdir()),
+  },
+);
 
 test("activity opens Runtime control without constructing execution Providers", async () => {
   const calls: string[] = [];
@@ -28,6 +47,7 @@ test("activity opens Runtime control without constructing execution Providers", 
         calls.push("control.create");
         return control;
       },
+      executionStatus: async () => ({ state: "stopped" as const }),
       controller: async () => ({
         worker: { status: async () => ({ state: "stopped", profile: path, logPath: "/tmp/worker.log" }) },
       }),
@@ -65,7 +85,7 @@ test("doctor retains later errors even with a small display limit", async () => 
   ] }) } as unknown as CliDistribution;
   let output = "";
   let exitCode = 0;
-  await runCli(["doctor", "--workspace", tmpdir(), "--limit", "1", "--json"], {
+  await runCli(["doctor", "--project", tmpdir(), "--limit", "1", "--json"], {
     write(text) { output += text; }, setExitCode(code) { exitCode = code; },
   }, selected);
   assert.equal(exitCode, 1);
@@ -79,7 +99,7 @@ test("finished status reports failure details and a nonzero exit without a Runti
   }) } as unknown as CliDistribution;
   let output = "";
   let exitCode = 0;
-  await runCli(["status", "failed", "--workspace", tmpdir()], {
+  await runCli(["status", "failed", "--project", tmpdir()], {
     write(text) { output += text; }, setExitCode(code) { exitCode = code; },
   }, selected);
   assert.equal(exitCode, 1);
@@ -90,7 +110,7 @@ test("status --watch follows active execution, then reads its finished Result", 
   const calls: string[] = [];
   const resultLocation = {
     root: "/project",
-    selection: { use: "@qflow/build-result-fs", config: { path: ".qflow/results" } },
+    path: ".qflow/results",
   } as const;
   const view = () => ({
     id: "build-watch",
@@ -115,6 +135,7 @@ test("status --watch follows active execution, then reads its finished Result", 
     openRuntimeHost: async (path: string) => ({
       profile: path,
       openControl: async () => control,
+      executionStatus: async () => ({ state: "running" as const }),
       controller: async () => ({
         worker: { status: async () => ({ state: "running", profile: path, pid: 1, logPath: "/tmp/worker.log" }) },
       }),
@@ -296,7 +317,7 @@ test("status preserves Runtime decision and attention when its Result Store is u
   let exitCode = 0;
 
   await runCli([
-    "status", view.id, "--workspace", tmpdir(), "--runtime", "/tmp/runtime with space.json", "--json",
+    "status", view.id, "--project", tmpdir(), "--runtime", "/tmp/runtime with space.json", "--json",
   ], { write: (text) => { output += text; }, setExitCode: (code) => { exitCode = code; } }, distribution);
 
   const result = JSON.parse(output) as {
@@ -319,7 +340,7 @@ test("status preserves Runtime decision and attention when its Result Store is u
   view.issue = { scope: "cleanup", message: "temporary resource cleanup unavailable" };
   output = "";
   await runCli([
-    "status", view.id, "--workspace", tmpdir(), "--runtime", "/tmp/runtime with space.json", "--json",
+    "status", view.id, "--project", tmpdir(), "--runtime", "/tmp/runtime with space.json", "--json",
   ], { write: (text) => { output += text; } }, distribution);
   const cleanup = JSON.parse(output).build.attention;
   assert.equal(cleanup.message, "temporary resource cleanup unavailable");
@@ -429,7 +450,7 @@ test("command options fail closed instead of being silently ignored", async () =
   );
   await assert.rejects(
     async () => await runCli([
-      "doctor", "/tmp/runtime.json", "--workspace", tmpdir(),
+      "doctor", "/tmp/runtime.json", "--project", tmpdir(),
     ], io, distribution),
     /profile delegated: .*runtime\.json/u,
   );
@@ -456,7 +477,7 @@ test("doctor diagnoses project Results without requiring a Runtime Profile", asy
     },
   } as unknown as CliDistribution;
   let output = "";
-  await runCli(["doctor", "--workspace", projectRoot, "--json"], {
+  await runCli(["doctor", "--project", projectRoot, "--json"], {
     write(text) { output += text; },
   }, distribution);
   assert.deepEqual(calls, [`results:${projectRoot}`]);
@@ -709,16 +730,14 @@ test("a stopped Worker ends observation with scoped evidence commands, not a Res
         }),
         close() { closed = true; },
       }),
-      controller: async () => ({ worker: {
-        status: async () => ({ state: "stopped", profile: runtimeProfile, logPath: "/tmp/worker.log" }),
-      } }),
+      executionStatus: async () => ({ state: "stopped" as const }),
     }),
     openProjectResults: async () => { resultOpened = true; throw new Error("must not be mistaken for result storage"); },
   } as unknown as CliDistribution;
   await assert.rejects(runCli([
-    "status", "waiting-build", "--workspace", projectRoot, "--runtime", runtimeProfile, "--watch", "--json",
+    "status", "waiting-build", "--project", projectRoot, "--runtime", runtimeProfile, "--watch", "--json",
   ], { write() {} }, selected), (error: Error) => {
-    assert.match(error.message, /Runtime Worker is stopped; stopped watching Build waiting-build/u);
+    assert.match(error.message, /Runtime execution is stopped; stopped watching Build waiting-build/u);
     assert.ok(error.message.includes(commandHint(["runtime", "status"], { projectRoot, runtimeProfile })));
     assert.ok(error.message.includes(commandHint(["logs", "waiting-build"], { projectRoot, runtimeProfile })));
     return true;

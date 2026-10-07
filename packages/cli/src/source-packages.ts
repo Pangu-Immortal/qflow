@@ -1,11 +1,11 @@
 import {
   loadNodePackageSelection,
-} from "@qflow/package-loader-node";
+} from "@qflow/loader/node";
 import type {
   LoadedPackage,
   LogicalPackageAddress,
-  NodePackageSelectionRequest,
-} from "@qflow/package-loader-node";
+} from "@qflow/loader";
+import type { NodePackageSelectionRequest } from "@qflow/loader/node";
 import { modulePackageAbi } from "@qflow/protocol";
 
 import type { CliDistribution } from "./distribution.js";
@@ -48,7 +48,7 @@ function offerCounts(packages: readonly LoadedPackage[]): ReadonlyMap<string, nu
         `${module.manifest.name}@${module.manifest.version}`,
         ...(module.specifiers ?? []),
       ].map((name) => ({ abi: modulePackageAbi, name }))),
-      ...(item.contribution.hostFacets ?? []).flatMap((facet) =>
+      ...(item.contribution.facets ?? []).flatMap((facet) =>
         (facet.offers ?? []).map((name) => ({ abi: facet.abi, name }))),
     ];
     for (const address of new Set(offers.map((offer) => `${offer.abi}\u0000${offer.name}`))) {

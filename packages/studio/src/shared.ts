@@ -17,15 +17,14 @@ import type {
   StudioTemporalDomainItem,
   StudioTemporalDomainView,
   StudioTemporalLineage,
-  StudioTemporalPhase,
   StudioTemporalProjection,
   StudioTemporalSource,
   StudioTimelineGesture,
   StudioTimelinePresentation,
   StudioTimelineTone,
   StudioTrackFamily,
-} from "@qflow/studio-adapter";
-import type { CanonicalValue } from "@qflow/protocol";
+} from "@qflow/studio-companion";
+import type { CanonicalValue } from "@qflow/qflow/protocol";
 
 export type {
   Range,
@@ -37,13 +36,12 @@ export type {
   StudioInspectorField,
   StudioInspectorDomain,
   StudioTemporalLineage,
-  StudioTemporalPhase,
   StudioTemporalProjection,
   StudioTemporalSource,
   StudioTimelinePresentation,
   StudioTimelineTone,
   StudioTrackFamily,
-} from "@qflow/studio-adapter";
+} from "@qflow/studio-companion";
 
 export type CandidateOrigin = "run" | "source" | "none";
 export type CandidateStatus = "resolved" | "unresolved";
@@ -235,7 +233,7 @@ export type StudioSnapshot = {
   /** Package-contributed temporal views projected onto the same absolute ruler. */
   readonly temporalDomains: readonly TemporalDomainView[];
   /** The Tracks, compiled into the document the renderer photographs. */
-  readonly preview: { readonly kind: "hyperframes"; readonly srcdoc: string };
+  readonly preview: { readonly kind: "html-program"; readonly srcdoc: string };
   readonly provenance: {
     readonly picture: "resolved";
     /** What the badges above are standing for, in one sentence. */
@@ -254,13 +252,13 @@ export type StudioMutation =
         | {
             readonly kind: "instant";
             readonly frame: number;
-            readonly domain?: import("@qflow/studio-adapter").StudioTemporalDomainEditTarget;
+            readonly domain?: import("@qflow/studio-companion").StudioTemporalDomainEditTarget;
           }
         | {
             readonly kind: "window";
             readonly startFrame: number;
             readonly endFrameExclusive: number;
-            readonly domain?: import("@qflow/studio-adapter").StudioTemporalDomainEditTarget;
+            readonly domain?: import("@qflow/studio-companion").StudioTemporalDomainEditTarget;
           };
     }
   | {

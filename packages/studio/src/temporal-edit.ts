@@ -1,4 +1,4 @@
-import type { StudioEditHandle, StudioTemporalDomainAnchor, StudioTemporalDomainEditTarget, StudioTemporalInstantProjection } from "@qflow/studio-adapter";
+import type { StudioEditHandle, StudioTemporalDomainAnchor, StudioTemporalDomainEditTarget, StudioTemporalInstantProjection } from "@qflow/studio-companion";
 
 export type DomainTarget = StudioTemporalDomainEditTarget;
 

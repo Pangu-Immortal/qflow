@@ -1,11 +1,11 @@
-import { sameType } from "@qflow/protocol";
-import type { BuildState, ProducerStep, StoredValue, TypeRef, TypedRecord } from "@qflow/protocol";
-import { temporalModuleRef, temporalTypes } from "@qflow/temporal";
+import { sameType } from "@qflow/qflow/protocol";
+import type { BuildState, ProducerStep, StoredValue, TypeRef, TypedRecord } from "@qflow/qflow/protocol";
+import { temporalModuleRef, temporalTypes } from "@qflow/qflow/temporal";
 import type {
   StudioTemporalBinding,
   StudioTemporalInstantProjection,
   StudioTemporalProjection,
-} from "@qflow/studio-adapter";
+} from "@qflow/studio-companion";
 
 type PointExpression = {
   readonly ref?: string;
@@ -77,7 +77,14 @@ function instant(
     readonly reference?: unknown;
     readonly boundary?: unknown;
     readonly offset?: unknown;
+    readonly author?: { readonly binding?: unknown; readonly relation?: unknown };
   } | undefined;
+  const parameterAuthority = spec?.author !== undefined
+    && typeof spec.author.binding === "string"
+    && ["direct", "after-start", "before-end"].includes(String(spec.author.relation))
+    ? { kind: "parameter" as const, binding: spec.author.binding,
+        relation: spec.author.relation as "direct" | "after-start" | "before-end" }
+    : undefined;
   if (step?.producer.module.name === temporalModuleRef.name
     && step.producer.module.version === temporalModuleRef.version
     && step.producer.name === "project-program-instant"
@@ -93,7 +100,21 @@ function instant(
       frame: held.frame as number,
       source: { timelineId: held.timelineId, type: timelineRecord?.type ?? record!.type,
         kind: "timeline", id: typeof timeline?.id === "string" ? timeline.id : held.timelineId },
-      authority: { kind: "fixed" },
+      authority: parameterAuthority ?? { kind: "fixed" },
+    };
+  }
+  if (step?.producer.module.name === temporalModuleRef.name
+    && step.producer.module.version === temporalModuleRef.version
+    && step.producer.name === "shift-instant"
+    && parameterAuthority !== undefined) {
+    return {
+      kind: "instant",
+      expression: `${held.frame as number}f`,
+      reference: "absolute",
+      frame: held.frame as number,
+      source: { timelineId: held.timelineId, type: record?.type ?? temporalTypes.instant,
+        kind: "resolved", id: held.id },
+      authority: parameterAuthority,
     };
   }
   if (step !== undefined) {

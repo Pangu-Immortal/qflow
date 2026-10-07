@@ -1,10 +1,10 @@
 import type { CompiledSource } from "./compile.js";
 import type { Placement } from "./observe.js";
 import type { StudioCompanionRegistry } from "./studio-registry.js";
-import type { StudioViewRole, StudioTrackTrace } from "@qflow/studio-adapter";
-import type { TypeRef } from "@qflow/protocol";
+import type { StudioViewRole, StudioTrackTrace } from "@qflow/studio-companion";
+import type { TypeRef } from "@qflow/qflow/protocol";
 
-export type { StudioViewRole } from "@qflow/studio-adapter";
+export type { StudioViewRole } from "@qflow/studio-companion";
 
 export type StudioTraceDependency = {
   readonly name: string;

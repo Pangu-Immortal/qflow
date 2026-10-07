@@ -1,49 +1,46 @@
 {
   "name": "@qflow/studio",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
-    "./start": "./start.ts",
-    "./src/*": "./src/*"
+    "./cli": "./src/cli.ts",
+    "./start": "./src/start.ts"
   },
+  "files": [
+    "dist",
+    "src",
+    "index.html",
+    "locales",
+    "README.md",
+    "INSPECTOR.md",
+    "LOCALIZATION.md"
+  ],
   "dependencies": {
-    "@qflow/audio-track-studio": "workspace:*",
-    "@qflow/build-result": "workspace:*",
-    "@qflow/caption-fine-studio": "workspace:*",
+    "@qflow/media-operations": "workspace:^",
+    "@qflow/media-local": "workspace:^",
+    "@qflow/studio-companion": "workspace:^",
+    "vite": "8.2.2"
+  },
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/audio-track": "workspace:*",
+    "@qflow/caption": "workspace:*",
     "@qflow/cli": "workspace:*",
-    "@qflow/comment-sticker-studio": "workspace:*",
-    "@qflow/compiler-node": "workspace:*",
-    "@qflow/component-kit": "workspace:*",
+    "@qflow/compiler": "workspace:*",
     "@qflow/composition": "workspace:*",
-    "@qflow/core": "workspace:*",
-    "@qflow/depth-stack-studio": "workspace:*",
-    "@qflow/driver-node": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/film-studio": "workspace:*",
-    "@qflow/hyperframes": "workspace:*",
+    "@qflow/html-program": "workspace:*",
+    "@qflow/qflow": "workspace:*",
     "@qflow/markup": "workspace:*",
-    "@qflow/media-pipeline": "workspace:*",
-    "@qflow/visual-track-studio": "workspace:*",
-    "@qflow/package-loader-node": "workspace:*",
-    "@qflow/project-context-node": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/ranking-studio": "workspace:*",
-    "@qflow/run": "workspace:*",
-    "@qflow/runtime": "workspace:*",
-    "@qflow/runtime-host-node": "workspace:*",
-    "@qflow/screen-overlay-studio": "workspace:*",
-    "@qflow/script-studio": "workspace:*",
-    "@qflow/speech": "workspace:*",
-    "@qflow/studio-adapter": "workspace:*",
-    "@qflow/svs": "workspace:*",
+    "@qflow/result": "workspace:*",
+    "@qflow/script": "workspace:*",
     "@qflow/temporal": "workspace:*",
     "@qflow/timeline": "workspace:*",
-    "@qflow/text-fine-studio": "workspace:*",
-    "@qflow/validation": "workspace:*",
-    "@qflow/video-cli": "workspace:*",
-    "@qflow/workspace": "workspace:*",
-    "@qflow/workspace-fs-node": "workspace:*",
-    "vite": "8.2.2"
+    "@qflow/video": "workspace:*",
+    "@qflow/visual-track": "workspace:*",
+    "sharp": "0.35.4"
   }
 }

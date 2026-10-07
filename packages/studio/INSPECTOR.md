@@ -72,7 +72,7 @@ pixels or seconds into frames. `scale` is positive; displayed value = authored m
 Limits and step in `number` refer to displayed values. A number schema's limits and integer setting
 also inform the input when no presentation override is provided. Empty input is not silently zero.
 
-SVML strings escape attribute delimiters and entity characters. SVS values use `formatSvsValue`.
+SVML strings escape attribute delimiters and entity characters. SVS values use `formatRecipeValue`.
 Neither the UI nor a Companion writes source text through an arbitrary callback. Timeline temporal
 gestures are separate from Inspector field conversion; see the temporal author forms for their
 domain-anchor and local-offset editing behavior.
@@ -95,11 +95,11 @@ the selected value, not its display label, is validated and written. Preview hin
 Options remain named keyboard-operable choices. Font hints use a family available to the Studio
 document; declaring a hint does not install or load a font or change the composition's font bytes.
 
-The optional `@qflow/fonts-open/studio` helper owns its catalog labels and descriptions. Caption,
-Typography and Ranking Companions use it to reach a Style's referenced font and edit its `family`
-attribute. It appears for an actual writable family attribute; a `media:Font` file has no such
-attribute. The family still has to supply the authored weight and style. A local font keeps its exact
-file binding. Changing a shared font changes every consumer; this is visible Source reuse.
+Font consumers opt into the referenced font producer's own Parameter Companion. The
+`@qflow/fontsource` Companion exposes the installed package as read-only context and edits only the
+weight and style supported by that package; it does not synthesize a global family dropdown. A
+`media:Font` file has no package Companion. Changing a shared font still changes every consumer;
+this is visible Source reuse.
 
 Nested `referenced` declarations follow explicit author references, such as Style → Font → family.
 They neither scan for candidates nor replace whole-value references with strings. Project components
@@ -107,7 +107,7 @@ can declare their own option values and binding paths through the same ABI.
 
 ## Implementation owners
 
-- `studio-adapter` owns the data-only declarations and snapshot types.
+- `studio-companion` owns the data-only declarations and snapshot types.
 - Component Companions own grouping, choices, units and references to writable author facts.
 - Studio resolves endpoints, renders controls, converts display values and commits source edits.
 - SVML/SVS and the component's ordinary compilation remain the authority for valid authored work.

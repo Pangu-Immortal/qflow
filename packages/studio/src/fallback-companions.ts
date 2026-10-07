@@ -1,7 +1,7 @@
-import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft } from "@qflow/studio-adapter";
-import { artifactPreview, previewLayer, temporalLineageFor, temporalDomainSource } from "@qflow/studio-adapter";
-import { compositionTypes } from "@qflow/composition";
-import { timelineTypes } from "@qflow/timeline";
+import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft } from "@qflow/studio-companion";
+import { artifactPreview, previewLayer, temporalLineageFor, temporalDomainSource } from "@qflow/studio-companion";
+import { compositionTypes } from "@qflow/qflow/composition";
+import { timelineTypes } from "@qflow/qflow/timeline";
 
 type TerminalVisualTrack = {
   readonly presents?: readonly {

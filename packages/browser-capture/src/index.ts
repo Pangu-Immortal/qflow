@@ -1,12 +1,13 @@
 import { execFile } from "node:child_process";
 import { mkdir, open, rm } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, extname, resolve } from "node:path";
 import { Writable } from "node:stream";
 import { promisify } from "node:util";
 import { existsSync } from "node:fs";
 import puppeteer from "puppeteer-core";
 import type { Browser, LaunchOptions, Page, RecordOptions, ScreenshotOptions } from "puppeteer-core";
 import sharp from "sharp";
+import { probeMedia } from "@qflow/media-local/files";
 import { captureBrowserExecutablePath } from "./browser.js";
 export { captureBrowserExecutablePath, installCaptureBrowser } from "./browser.js";
 
@@ -74,22 +75,11 @@ async function reserve(path: string) {
 
 const exec = promisify(execFile);
 async function recordingInfo(path: string, ffprobe: string): Promise<Omit<CaptureOutput, "kind" | "path" | "url">> {
-  const { stdout } = await exec(ffprobe, ["-v", "error", "-show_entries",
-    "format=format_name,duration:stream=codec_type,width,height,avg_frame_rate", "-of", "json", path]);
-  const data = JSON.parse(stdout) as {
-    format?: { format_name?: string; duration?: string };
-    streams?: { codec_type?: string; width?: number; height?: number; avg_frame_rate?: string }[];
-  };
-  const video = data.streams?.find((stream) => stream.codec_type === "video");
-  const [num, den = "1"] = (video?.avg_frame_rate ?? "0").split("/");
-  const rate = Number(num) / Number(den);
-  const duration = Number(data.format?.duration);
-  if (!video?.width || !video.height || !Number.isFinite(duration) || duration <= 0) {
-    throw new Error(`Recording ${path} has no readable video duration or dimensions`);
-  }
-  return { width: video.width, height: video.height, duration,
-    format: data.format?.format_name ?? "unknown", hasAudio: data.streams?.some((s) => s.codec_type === "audio") ?? false,
-    ...(Number.isFinite(rate) && rate > 0 ? { frameRate: rate } : {}) };
+  const media = await probeMedia(path, { ffprobePath: ffprobe });
+  if (!media.hasVideo) throw new Error(`Recording ${path} has no readable video stream`);
+  return { width: media.width, height: media.height, duration: media.duration,
+    format: extname(path).slice(1).toLowerCase(), hasAudio: media.hasAudio,
+    ...(media.frameRate > 0 ? { frameRate: media.frameRate } : {}) };
 }
 
 /**

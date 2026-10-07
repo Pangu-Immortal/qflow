@@ -22,7 +22,7 @@ export type Stage = {
 /**
  * The picture.
  *
- * The synthetic preview is the real HyperFrames document in an iframe, scrubbed
+ * The synthetic preview is the real HTML Program document in an iframe, scrubbed
  * by pausing its animations and setting their time. The transport therefore
  * drives frames, not seconds, and lands on exactly the frame the renderer would
  * photograph.

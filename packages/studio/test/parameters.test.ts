@@ -5,7 +5,7 @@ import type {
   StudioPlacement,
   StudioTemporalDomainView,
   StudioTemporalLineage,
-} from "@qflow/studio-adapter";
+} from "@qflow/studio-companion";
 import type { MarkupSurfaceRegistryLike, RegisteredSurface } from "@qflow/markup";
 
 import { inspectorFieldsForBindings, resolveTimelineEditHandles, sourceBindingsForDraft } from "../src/parameters.js";
@@ -68,7 +68,6 @@ test("timeline gestures resolve through the shared Selection identity", () => {
       startFrame: 0,
       endFrameExclusive: 12,
     },
-    phases: [],
   };
   const handles = resolveTimelineEditHandles([], temporal, [temporalDomain]);
 
@@ -91,7 +90,6 @@ test("moving a Moment projection resolves to the shared Moment identity", () => 
       source: { ...narrativeSourceIdentity, kind: "moment", id: "beat" },
       authority: { kind: "domain", source: { ...narrativeSourceIdentity, kind: "moment", id: "beat" }, boundary: "cue" },
     },
-    phases: [],
   }, [withMoment]);
 
   assert.deepEqual(handles.map((handle) => [handle.gesture, handle.enabled]), [["move", true]]);
@@ -122,7 +120,7 @@ test("at/for and until/for derive complementary semantic and duration inverses",
     authority: { kind: "parameter" as const, binding: "for", relation: "before-end" as const },
   };
   const atFor = resolveTimelineEditHandles([duration], {
-    projection: { kind: "window", start: moment, end: after, startFrame: 12, endFrameExclusive: 20 }, phases: [],
+    projection: { kind: "window", start: moment, end: after, startFrame: 12, endFrameExclusive: 20 },
   }, [withMoment]);
   assert.deepEqual(atFor.map((handle) => [handle.gesture, handle.domain?.kind, handle.sources?.map((source) => source.role)]), [
     ["move", "point", undefined],
@@ -130,7 +128,7 @@ test("at/for and until/for derive complementary semantic and duration inverses",
   ]);
 
   const untilFor = resolveTimelineEditHandles([duration], {
-    projection: { kind: "window", start: before, end: moment, startFrame: 4, endFrameExclusive: 12 }, phases: [],
+    projection: { kind: "window", start: before, end: moment, startFrame: 4, endFrameExclusive: 12 },
   }, [withMoment]);
   assert.deepEqual(untilFor.map((handle) => [handle.gesture, handle.domain?.kind, handle.sources?.map((source) => source.role)]), [
     ["move", "point", undefined],
@@ -170,7 +168,6 @@ test("absolute Window edits work without a semantic lane and use the Companion's
         },
         startFrame: 1, endFrameExclusive: 20,
       },
-      phases: [],
     },
     undefined,
   );
@@ -202,7 +199,7 @@ test("independent reference endpoints expose local edits without claiming their 
   }));
   const handles = resolveTimelineEditHandles(bindings, { projection: {
     kind: "window", start: endpoints[0]!, end: endpoints[1]!, startFrame: 2, endFrameExclusive: 20,
-  }, phases: [] }, [temporalDomain]);
+  } }, [temporalDomain]);
   assert.deepEqual(handles.map(({ gesture, enabled, domain, sources }) => ({ gesture, enabled, domain, roles: sources?.map(source => source.role) })), [
     { gesture: "move", enabled: true, domain: undefined, roles: ["start", "end"] },
     { gesture: "trim-start", enabled: true, domain: undefined, roles: ["start"] },
@@ -272,7 +269,7 @@ test("nested declared references reach the font attribute, not the referring Sty
 
 test("a derived entity follows its actual Style and Companion-owned Recipe presentation", () => {
   const main = "<scene:Track id=\"captions\" layout={baseline-layout}/>";
-  const sheet = `<?svml using="@qflow/svs@1"?>
+  const sheet = `<?svml using="@qflow/recipe@1"?>
 <sheet version="1">
   caption.alt { x: 0.4; handoff: overlap; colors: ["#FF3F56", "#FFA72D"]; }
 </sheet>`;

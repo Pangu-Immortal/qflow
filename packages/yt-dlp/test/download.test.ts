@@ -2,13 +2,11 @@ import assert from "node:assert/strict";
 import { existsSync, writeFileSync } from "node:fs";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import childProcess from "node:child_process";
 import { syncBuiltinESMExports } from "node:module";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import test from "node:test";
-
-import { resolveNodePackageResource } from "@qflow/package-loader-node";
 
 import { downloadVideo, isVideoUrl } from "../src/download.js";
 
@@ -21,7 +19,7 @@ test("only http and https links are fetched; Windows paths stay files", () => {
   assert.equal(isVideoUrl("/tmp/clip.mp4"), false);
 });
 
-test("fetch with a missing environment reports preparation without installing or fetching", async (t) => {
+test("download with a missing environment reports preparation without installing anything", async (t) => {
   let calls = 0;
   t.mock.method(childProcess, "spawnSync", (command: string, args: string[]) => {
     calls++;
@@ -31,36 +29,32 @@ test("fetch with a missing environment reports preparation without installing or
   });
   syncBuiltinESMExports();
   t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports(); });
-  await assert.rejects(downloadVideo("https://example.invalid/video", join(tmpdir(), "never-fetched.mp4")), /media prepare-fetch/u);
+  await assert.rejects(downloadVideo("https://example.invalid/video", join(tmpdir(), "never-fetched.mp4")), /download prepare/u);
   assert.equal(calls, 1);
 });
 
-test("download resolves its declared service from an installed package outside the checkout", async (t) => {
+test("download resolves its locked runtime from an installed package outside the checkout", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "qflow-installed-yt-dlp-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const modules = join(directory, "node_modules", "@qflow");
   const installed = join(modules, "yt-dlp");
-  const service = join(modules, "yt-dlp-service-runtime");
-  const loader = join(modules, "package-loader-node");
   await mkdir(join(installed, "src"), { recursive: true });
-  await mkdir(service, { recursive: true });
-  await mkdir(loader, { recursive: true });
+  await mkdir(join(installed, "runtime"), { recursive: true });
   await cp(new URL("../package.json", import.meta.url), join(installed, "package.json"));
   await cp(new URL("../src/download.ts", import.meta.url), join(installed, "src", "download.ts"));
   await cp(new URL("../src/environment.ts", import.meta.url), join(installed, "src", "environment.ts"));
-  const host = join(modules, "runtime-host-node");
+  const host = join(modules, "qflow");
   await mkdir(host, { recursive: true });
-  await writeFile(join(host, "package.json"), JSON.stringify({ name: "@qflow/runtime-host-node", type: "module", exports: "./index.mjs" }));
-  await writeFile(join(host, "index.mjs"), `export { qflowHostStateRoot, pythonEnvironmentCommand } from ${JSON.stringify(import.meta.resolve("@qflow/runtime-host-node"))};`);
-  const sourceService = dirname(resolveNodePackageResource("@qflow/yt-dlp-service-runtime", "pyproject.toml", { from: import.meta.url }));
-  for (const name of ["package.json", "pyproject.toml", "uv.lock"]) await cp(join(sourceService, name), join(service, name));
-  // Forward only the real locator implementation; no workspace links or services/ ancestor exists.
-  await writeFile(join(loader, "package.json"), JSON.stringify({ name: "@qflow/package-loader-node", type: "module", exports: "./index.mjs" }));
-  await writeFile(join(loader, "index.mjs"), `export { resolveNodePackageResource } from ${JSON.stringify(import.meta.resolve("@qflow/package-loader-node"))};`);
+  await writeFile(join(host, "package.json"), JSON.stringify({
+    name: "@qflow/qflow", type: "module", exports: { "./cli": "./cli.mjs" },
+  }));
+  await writeFile(join(host, "cli.mjs"), `export { qflowHostStateRoot } from ${JSON.stringify(import.meta.resolve("@qflow/qflow/cli"))};`);
+  const sourceRuntime = fileURLToPath(new URL("../runtime", import.meta.url));
+  for (const name of ["pyproject.toml", "uv.lock"]) await cp(join(sourceRuntime, name), join(installed, "runtime", name));
   let calls = 0;
   t.mock.method(childProcess, "spawnSync", (command: string, args: string[]) => {
     calls++;
-    assert.notEqual(command, "uv", "fetch must not run the environment installer");
+    assert.notEqual(command, "uv", "download must not run the environment installer");
     if (args.includes("--version")) return { status: 0, stderr: "", stdout: "2026.08.19\n" };
     return { status: 0, stderr: "", stdout: "" };
   });
@@ -89,12 +83,18 @@ test("download resolves its declared service from an installed package outside t
   assert.equal(calls, 3);
 });
 
-test("the pinned yt-dlp project is a Distribution package asset", () => {
-  const project = dirname(resolveNodePackageResource(
-    "@qflow/yt-dlp-service-runtime",
-    "pyproject.toml",
-    { from: import.meta.url },
-  ));
+test("the pinned yt-dlp project belongs to its behavior package", () => {
+  const project = fileURLToPath(new URL("../runtime", import.meta.url));
   assert.ok(existsSync(join(project, "pyproject.toml")));
   assert.ok(existsSync(join(project, "uv.lock")));
+});
+
+test("the pinned yt-dlp environment includes its browser-impersonation transport", async () => {
+  const project = fileURLToPath(new URL("../runtime", import.meta.url));
+  const [declaration, lock] = await Promise.all([
+    readFile(join(project, "pyproject.toml"), "utf8"),
+    readFile(join(project, "uv.lock"), "utf8"),
+  ]);
+  assert.match(declaration, /yt-dlp\[default,curl-cffi\]==2026\.8\.19/u);
+  assert.match(lock, /name = "curl-cffi"/u);
 });

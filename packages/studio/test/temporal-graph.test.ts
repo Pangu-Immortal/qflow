@@ -75,3 +75,57 @@ test("Studio reads Instant lineage and author authority from executed graph edge
     }],
   });
 });
+
+test("Studio reads author parameter authority declared by the Temporal Spec", () => {
+  const program = [
+    record("timeline", "@qflow/timeline", "Timeline", {
+      id: "main", frameRate: { numerator: 30, denominator: 1 }, frameCount: 100,
+    }),
+    record("point-spec", "@qflow/temporal", "TemporalInstantSpec", {
+      id: "card.activation", subjectId: "card",
+      projection: { ref: "absolute", at: { unit: "frames", value: 42 } },
+      author: { binding: "at", relation: "direct" },
+    }),
+    record("card-spec", "@qflow/depth-stack", "DepthStackCardSpec", { id: "card" }),
+  ];
+  const executed = [
+    record("point", "@qflow/temporal", "TemporalInstant", {
+      id: "card.activation", subjectId: "card", timelineId: "main", frame: 42,
+    }),
+    record("cards", "@qflow/depth-stack", "DepthStackCardSet", { cards: [{ id: "card", activationFrame: 42 }] }),
+    record("track", "@qflow/composition", "VisualTrack", { presents: [] }),
+  ];
+  const steps = [
+    step("project", "@qflow/temporal", "project-program-instant", { timeline: "timeline", spec: "point-spec" }, { instant: "point" }),
+    step("append", "@qflow/depth-stack", "append-depth-stack-card", { set: "empty", spec: "card-spec", activation: "point" }, { set: "cards" }),
+    step("render", "@qflow/depth-stack", "render-depth-stack", { program: "cards" }, { track: "track" }),
+  ];
+  const state = {
+    format: "qflow.build@1",
+    program: { closure: { modules: [] }, records: program },
+    targets: [{ output: "visual" }],
+    plan: {
+      format: "qflow.plan@1", steps,
+      goals: [{ record: "track", type: type("@qflow/composition", "VisualTrack") }],
+      outputBindings: [{ output: "visual", record: "track", type: type("@qflow/composition", "VisualTrack") }],
+    },
+    status: "complete", records: executed, steps: steps.map(({ id }) => ({ id, status: "complete" as const })),
+    needs: [], outstanding: [], diagnostics: [],
+  } as unknown as BuildState;
+
+  const bindings = executedTemporalBindings(state, "visual");
+  assert.equal(bindings.length, 1);
+  assert.deepEqual(bindings[0]?.projection, {
+    kind: "instant",
+    expression: "42f",
+    reference: "absolute",
+    frame: 42,
+    source: {
+      timelineId: "main",
+      type: type("@qflow/timeline", "Timeline"),
+      kind: "timeline",
+      id: "main",
+    },
+    authority: { kind: "parameter", binding: "at", relation: "direct" },
+  });
+});

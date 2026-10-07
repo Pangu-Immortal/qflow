@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compositionTypes } from "@qflow/composition";
-import type { StudioFilmCompanion, StudioPlacement } from "@qflow/studio-adapter";
+import type { StudioFilmCompanion, StudioPlacement } from "@qflow/studio-companion";
 
 import type { CompiledSource } from "../src/compile.js";
 import type { RunPlan } from "../src/run.js";

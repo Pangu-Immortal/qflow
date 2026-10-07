@@ -1,7 +1,7 @@
 # Qflow Studio
 
 For direct picture inspection, `qflow snapshot --studio <studio-url>` reads the current compiled
-`HyperframesDocument` from `GET /__studio/document` and its existing `/__studio/material/<resource>`
+`HtmlProgram` from `GET /__studio/document` and its existing `/__studio/material/<resource>`
 resources. `GET /__studio/visual.html` exposes the same materialized picture without the interactive
 Studio playback shim or audio. Both representations come from the same compilation as the displayed
 preview. The snapshot invocation uses the selected Runtime Profile's frame Provider and creates no
@@ -11,7 +11,10 @@ reports its error instead of returning the previous picture as current.
 The single official Web Studio for SVML. It opens an explicit Run Source,
 traces its Film or Render target back to the semantic and visual projections
 Studio can edit, runs deterministic Producers and explicitly permitted transient Needs, and composites the
-resulting Tracks with HyperFrames.
+resulting Tracks with HTML renderer.
+
+`@qflow/studio/cli` exports Studio's `qflow.cli-command@1` contribution. The root CLI Host selects it
+through the installed Distribution manifest; Studio does not own or wrap the Qflow executable.
 
 ```bash
 cd /path/to/external-video-project
@@ -20,11 +23,11 @@ qflow studio --run build.svrun
 
 When `--runtime` is omitted, Studio reads the resolved project's `.qflow/runtime`
 selection made by `qflow runtime use`. It does not search parent projects for a
-Profile. `--workspace` explicitly selects the project boundary; `--package-root`
+Profile. `--project` explicitly selects the project boundary; `--package-root`
 overrides the author package resolution root when those locations intentionally differ.
 Startup prints the project, Run, Profile and whether the Profile came from the command argument or
 the project's selection file. Relative command-line paths start at the invoking directory;
-`--workspace` selects the project without rebasing `--run` or `--runtime`.
+`--project` selects the project without rebasing `--run` or `--runtime`.
 The upper-left library is intentionally not a filesystem browser:
 
 - Source is the exact Run + Author closure and writes back only the selected file;
@@ -189,7 +192,7 @@ An Instant reference expression edits only its offset; a bare reference has an i
 frame delta. Edited clock values and offsets are written in frames at the current Timeline rate.
 The domain-item Inspector exposes exact anchor identities and, where a declared handle supports it,
 offers choices among coincident anchors. Their meaning and writeback remain package-owned.
-See [temporal author forms](../temporal-markup/EDITING.md) for the complete behavior.
+See [temporal author forms](../temporal/EDITING.md) for the complete behavior.
 
 Tasks and Artifacts are inspection surfaces; selecting an Artifact does not write a
 Run Candidate. Use `build-record`/`satisfy` in the Run for explicit Output reuse.
@@ -208,10 +211,10 @@ Studio profile, package scan or replacement map.
 
 Project packages live at `<project>/packages/<package-basename>/`. Neither the
 project nor its packages are added to the Qflow Distribution or contributor workspace.
-The Host resolves selected project packages from the project first and official
-`@qflow/*` imports from the read-only tool Distribution. The `@qflow/*`
-namespace is Distribution-owned and cannot be shadowed by a project install.
-External Companions compile against `@qflow/qflow/studio-adapter` and the other public `@qflow/qflow/*`
+The Host protects exact packages physically embedded in the read-only tool Distribution.
+Other selected packages, including independently released official `@qflow/*` extensions,
+resolve from the project first and use the Distribution installation only as a fallback.
+External Companions compile against `@qflow/studio-companion` and the other public `@qflow/qflow/*`
 subpaths, with `@qflow/qflow` as a development dependency. The active Distribution supplies those APIs
 at runtime. Ship the Companion's compiled JavaScript with its component package.
 
@@ -257,12 +260,12 @@ ordinary Run Candidates selected with `satisfy`.
 
 Studio and an encoded review use the same ordinary Run. Studio evaluates its
 transient display closure in the browser; building that Run evaluates the
-full target closure and sends the resulting HyperFrames document to the chosen
+full target closure and sends the resulting HTML renderer document to the chosen
 render Endpoint. A separate review Run is useful only when the author wants a
 different Candidate selection. Its path and filename carry no execution
 semantics.
 
-Read [`@qflow/studio-adapter`](../studio-adapter/README.md) for the Companion ABI,
+Read [`@qflow/studio-companion`](../studio-companion/README.md) for the Companion ABI,
 project activation example, value projection and Inspector declarations.
 
 ## Composition audio preview

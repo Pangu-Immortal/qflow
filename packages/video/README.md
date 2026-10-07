@@ -1,0 +1,59 @@
+# `@qflow/video`
+
+Assembly for the official Qflow video application. This package chooses the Markup author language,
+the filesystem Workspace, Source-package discovery and the starter Runtime Profile. It also owns the
+`qflow vocabulary` view because that view describes the author packages selected by this video
+Distribution.
+
+It is deliberately **not** a general video utility package. Browser capture, local media inspection,
+speech measurement, WhisperX transcription and Studio snapshots are owned by their respective
+packages and contribute their own CLI roots:
+
+| Command | Owner |
+| --- | --- |
+| `capture` | `@qflow/browser-capture/cli` |
+| `media` | `@qflow/media-local/cli` |
+| `measure` | `@qflow/speech-estimate/cli` |
+| `transcribe` | `@qflow/whisperx/cli` |
+| `studio`, `snapshot` | `@qflow/studio/cli` |
+| `vocabulary` | `@qflow/video/cli` |
+
+The root executable is the composition root. Its explicit `qflow.cli.use` list installs these command
+contributions under one `qflow` command; `@qflow/video/cli` does not forward or rediscover them.
+Installing or importing an arbitrary Source package never grants it CLI or process authority.
+
+## Application assembly
+
+`createVideoDistribution()` supplies the generic CLI Host with video-product choices:
+
+- `createVideoCompiler()` assembles the selected Author Frontends, Markup Surfaces, Modules and
+  validators for one invocation;
+- `createVideoWorkspace()` resolves Source and asset imports from the project and selected
+  Distribution without treating arbitrary package directories as projects;
+- `discoverVideoSourcePackages()` discovers the closure named by explicit Run and Author imports;
+- the starter Runtime Profile selects ordinary independently distributed Providers and Credential
+  Stores by package name;
+- Local Runtime and Result Repository adapters remain Host concerns and do not enter Author values.
+
+These are replaceable product-assembly decisions, not new Core concepts. A different application may
+reuse the generic compiler and CLI contracts with another Frontend or Workspace.
+
+## Vocabulary
+
+```bash
+qflow vocabulary
+qflow vocabulary @qflow/media-operations --tag StillVideo
+qflow vocabulary --visual text
+```
+
+The command reports installed Author-package manifests and their declared Surfaces. It does not keep
+a registry, scan the network, install packages or make creative choices. Package managers and the
+project lockfile own physical package versions; Source imports own which logical Modules participate
+in a compilation.
+
+## Boundary
+
+The package may depend on compiler, loader, workspace and product assembly APIs. It must not become a
+place to put functionality merely because that functionality is useful while making a video. A
+capability belongs with the behavior and authority it implements; its optional CLI is only another
+port of that owner.
