@@ -5,10 +5,10 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as pause } from "node:timers/promises";
 import test from "node:test";
-import { defineBuild } from "@qflow/core";
-import { FileBuildResultRepository } from "@qflow/build-result";
-import { SqliteRuntimeState } from "@qflow/store-sqlite";
-import { createGreetingBuild } from "../../core/test/greeting-fixture.js";
+import { defineBuild } from "@qflow/kernel";
+import { FileBuildResultRepository } from "@qflow/result/node";
+import { SqliteRuntimeState } from "../src/sqlite-state.js";
+import { createGreetingBuild } from "../../kernel/test/greeting-fixture.js";
 import { statePath } from "../src/config.js";
 import { superviseBuilds } from "../src/supervisor.js";
 
@@ -30,13 +30,13 @@ test("an executor that fails before ready records a failed Build and leaves supe
     const submit = async (build: string): Promise<void> => {
       const request = {
         build,
-        componentPackages: [],
-        result: { root, selection: { use: "@qflow/build-result-fs", config: { path: "results" } } },
+        executionPackages: [],
+        result: { root, path: "results" },
         context: { format: "qflow.local-execution@1", packageRoot: root, hostStateRoot: join(root, "host"),
           distributionPackageRoot: distribution, profile: profileValue },
       };
       await state.submissions.prepare(request);
-      await result.create({ id: build, source: { path: "main.svml" }, targets: ["document"],
+      await result.create({ id: build, source: { id: "main.svml" }, targets: ["document"],
         publishedOutputs: [{ name: "document", output: "document" }] });
       await state.submissions.commit({ ...request,
         definition: defineBuild({ program: initial.program,

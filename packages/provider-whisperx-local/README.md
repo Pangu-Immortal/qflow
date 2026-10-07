@@ -1,7 +1,8 @@
 # @qflow/provider-whisperx-local
 
-Trusted local Provider for the explicit `@qflow/whisperx#whisperx-alignment` capability. It talks to
-the warm Python service in `services/whisperx` through `/health` and `/transcribe`.
+Trusted local Provider for the explicit `@qflow/whisperx#whisperx-alignment` capability. Its
+`runtime/` directory owns the warm Python service and frozen environment used through `/health`
+and `/transcribe`.
 
 The Provider accepts only canonical 16 kHz mono PCM s16 WAV bytes produced by the separate media
 projection Need. It validates those bytes and stages them unchanged. WhisperX is therefore never
@@ -99,7 +100,7 @@ service retains its earlier environment; arrange an idle restart when changing t
 inference settings. Inspect its reported configuration and logs, and account for active work.
 
 If NLTK refuses a proxied fetch during preparation, follow the service’s
-[explicit proxy preparation](../../services/whisperx/README.md#preparing-sentence-data-through-a-proxy).
+[explicit proxy preparation](./runtime/README.md#preparing-sentence-data-through-a-proxy).
 
 Preparation commands write `install.log`; the running service writes `program.log`, with stderr in
 `program.err.log` on Windows. Inspect service logs for Python model-loading and inference messages;

@@ -54,8 +54,8 @@ Runtime Profile example:
   "format": "qflow.runtime-local@1",
   "dataRoot": ".qflow/runtimes/local",
   "credentials": {
-    "platform": {
-      "use": "@qflow/credential-store-platform"
+    "local": {
+      "use": "@qflow/credential-store-local"
     }
   },
   "endpoints": {
@@ -63,7 +63,7 @@ Runtime Profile example:
       "use": "@qflow/provider-beatapi",
       "pool": "beatapi.default",
       "config": {
-        "apiKey": { "store": "platform", "key": "beatapi.api-key" },
+        "apiKey": { "store": "local", "key": "beatapi.api-key" },
         "defaultConcurrency": 3,
         "pollIntervalMs": 10000
       }
@@ -82,3 +82,6 @@ submission of the same body resolves to the same task.
 HTTP failures keep BeatAPI's `error.code`, message, `request_id` and any `retry_after_seconds`; a
 `failed` task keeps its `error_code` and `error_message`. Any URL inside a surfaced reason is
 redacted, since a hosted result URL is an access capability rather than diagnostic content.
+Polling transport failures and HTTP 429/5xx preserve the same task. BeatAPI's
+`retry_after_seconds` takes precedence over the standard `Retry-After` header; either wait is capped
+at the original operation deadline, where the next poll concludes timeout without querying early.

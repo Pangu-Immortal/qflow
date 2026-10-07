@@ -4,11 +4,11 @@ import {
   generationTypes,
   sealGeneratedImageSet,
   sealGeneratedVideoSet,
-} from "@qflow/generation";
-import type { GenerationArtifactUrlResolver, GenerationRequest } from "@qflow/generation";
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, CapabilityRef, CanonicalValue, StoredValue, TypeRef } from "@qflow/protocol";
-import type { EndpointRequest, EndpointSupport } from "@qflow/endpoint-kit";
+} from "@qflow/qflow/generation";
+import type { GenerationArtifactUrlResolver, GenerationRequest } from "@qflow/qflow/generation";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, CapabilityRef, CanonicalValue, StoredValue, TypeRef } from "@qflow/qflow/protocol";
+import type { EndpointRequest, EndpointSupport } from "@qflow/qflow/endpoint";
 import { monidMappings } from "./mapping.js";
 import type { MonidMapping } from "./mapping.js";
 

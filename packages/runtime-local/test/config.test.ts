@@ -8,25 +8,21 @@ import {
   createRuntimeCredentialStoreAdapterFacet,
   createRuntimeEndpointAdapterFacet,
   RuntimeAdapterRegistry,
-} from "@qflow/runtime-kit";
-import {
-  BuildResultRepositoryRegistry,
-  createBuildResultRepositoryHostFacet,
-} from "@qflow/build-result-kit";
-import { FileBuildResultRepository } from "@qflow/build-result";
-import { MemoryResourceStore, ProducerRegistry } from "@qflow/driver-node";
-import { defineEndpointPackage } from "@qflow/endpoint-kit";
+} from "@qflow/runtime-local/extension";
+import { FileBuildResultRepository } from "@qflow/result/node";
+import { MemoryResourceStore, ProducerRegistry } from "@qflow/executor";
+import { defineEndpoint } from "@qflow/endpoint";
 import { credentialRef } from "@qflow/runtime";
 import type { CanonicalValue, CapabilityRef, TypeRef } from "@qflow/protocol";
-import type { RuntimeHostProviderQuery } from "@qflow/runtime-host-node";
-import { SqliteRuntimeState } from "@qflow/store-sqlite";
-import { TypeValidatorRegistry } from "@qflow/validation";
+import type { RuntimeHostProviderQuery } from "@qflow/runtime-local";
+import { SqliteRuntimeState } from "../src/sqlite-state.js";
+import { TypeValidatorRegistry } from "@qflow/admission";
 import {
   capabilities as greetingCapabilities,
   createGreetingBuild,
   producers as greetingProducerRefs,
   types as greetingTypes,
-} from "../../core/test/greeting-fixture.js";
+} from "../../kernel/test/greeting-fixture.js";
 import {
   createRuntimeControlFromConfig,
   createRuntimeFromConfig,
@@ -116,76 +112,17 @@ test("execution memory policy belongs to the local Worker, with an explicit MiB 
   assert.throws(() => parseLocalRuntimeProfile({ ...profile(), worker: { executionMemoryMb: 768, maxBuilds: 8 } }), /maxBuilds/u);
 });
 
-test("Build Result repositories default to the project path and can be selected explicitly", async () => {
+test("Build Results belong to the project filesystem without a second selection plane", async () => {
   const root = await mkdtemp(join(tmpdir(), "qflow-runtime-results-"));
-  const defaultProject = join(root, "default-project");
-  const selectedProject = join(root, "selected-project");
-  await Promise.all([
-    mkdir(defaultProject, { recursive: true }),
-    mkdir(selectedProject, { recursive: true }),
-  ]);
-  await writeFile(
-    join(selectedProject, "qflow.results.json"),
-    JSON.stringify({
-      format: "qflow.build-results@1",
-      use: "example.results",
-      config: { name: "episode-12" },
-    }),
-  );
-  const registry = new BuildResultRepositoryRegistry();
-  let openedContext: unknown;
-  let diagnosedContext: unknown;
-  registry.registerFacet(
-    createBuildResultRepositoryHostFacet({
-      use: "example.results",
-      validate(context) {
-        assert.deepEqual(context.config, { name: "episode-12" });
-      },
-      open(context) {
-        openedContext = context;
-        return {
-          repository: new FileBuildResultRepository(join(root, "remote-fixture")),
-        };
-      },
-      doctor(context) {
-        diagnosedContext = context;
-        return [];
-      },
-    }),
-  );
+  const project = join(root, "project");
+  await mkdir(project, { recursive: true });
   try {
-    const local = await openProjectBuildResultRepository(defaultProject, {
-      packageRoot: process.cwd(),
-      defaultSelection: { use: "@qflow/build-result-fs", config: { path: ".qflow/results" } },
-    });
+    const local = await openProjectBuildResultRepository(project);
     assert.ok(local.repository instanceof FileBuildResultRepository);
-    assert.equal(local.location.root, defaultProject);
-    assert.deepEqual(local.location.selection, {
-      use: "@qflow/build-result-fs",
-      config: { path: ".qflow/results" },
-    });
-
-    const selected = await openProjectBuildResultRepository(selectedProject, {
-      resultRegistry: registry,
-      defaultSelection: { use: "unused.default" },
-    });
-    assert.deepEqual(openedContext, {
-      root: selectedProject,
-      config: { name: "episode-12" },
-    });
-    assert.deepEqual(selected.location, {
-      root: selectedProject,
-      selection: { use: "example.results", config: { name: "episode-12" } },
-    });
-    const diagnosed = await doctorProjectBuildResultRepository(selectedProject, {
-      resultRegistry: registry,
-      defaultSelection: { use: "unused.default" },
-    });
+    assert.deepEqual(local.location, { root: project, path: ".qflow/results" });
+    const diagnosed = await doctorProjectBuildResultRepository(project);
     assert.deepEqual(diagnosed.diagnostics, []);
-    assert.deepEqual(diagnosedContext, {
-      root: selectedProject,
-      config: { name: "episode-12" },
-    });
+    assert.deepEqual(diagnosed.location, local.location);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -344,9 +281,7 @@ test("Runtime providers name the selected Endpoint and its declared price source
   registry.registerFacet(createRuntimeEndpointAdapterFacet({
     use: "example.paid",
     activate: (context) => ({
-      endpoint: defineEndpointPackage({
-        module: { name: "example.provider", version: "1" },
-        facet: "paid",
+      endpoint: defineEndpoint({
         instance: context.instance,
         pool: context.pool ?? context.instance,
         pricing: { kind: "page", url: "https://prices.example/models" },
@@ -357,9 +292,7 @@ test("Runtime providers name the selected Endpoint and its declared price source
   registry.registerFacet(createRuntimeEndpointAdapterFacet({
     use: "example.local",
     activate: (context) => ({
-      endpoint: defineEndpointPackage({
-        module: { name: "example.local-provider", version: "1" },
-        facet: "local",
+      endpoint: defineEndpoint({
         instance: context.instance,
         pool: context.pool ?? context.instance,
         pricing: { kind: "local" },
@@ -413,8 +346,7 @@ test("Runtime pricing reads Provider-owned material with only the selected Endpo
   }));
   registry.registerFacet(createRuntimeEndpointAdapterFacet({
     use: "example.paid",
-    activate: (context) => ({ endpoint: defineEndpointPackage({
-      module: { name: "example.provider", version: "1" }, facet: "paid",
+    activate: (context) => ({ endpoint: defineEndpoint({
       instance: context.instance, pool: context.pool ?? context.instance,
       credentials: { apiKey: credentialRef("secrets", "paid.key") },
       pricing: { kind: "page", url: "https://prices.example/models" },
@@ -429,8 +361,7 @@ test("Runtime pricing reads Provider-owned material with only the selected Endpo
   }));
   registry.registerFacet(createRuntimeEndpointAdapterFacet({
     use: "example.local",
-    activate: (context) => ({ endpoint: defineEndpointPackage({
-      module: { name: "example.local", version: "1" }, facet: "local",
+    activate: (context) => ({ endpoint: defineEndpoint({
       instance: context.instance, pool: context.pool ?? context.instance, pricing: { kind: "local" },
       capabilities: [{ capability: render, returns, lifecycle: "immediate", handler }],
     }) }),
@@ -484,9 +415,7 @@ test("transient execution follows capability opt-in rather than pricing and keep
   registry.registerFacet(createRuntimeEndpointAdapterFacet({
     use: "example.remote",
     activate: (context) => ({
-      endpoint: defineEndpointPackage({
-        module: { name: "example.provider", version: "1" },
-        facet: "remote",
+      endpoint: defineEndpoint({
         instance: context.instance,
         pool: context.pool ?? context.instance,
         credentials: { apiKey: credentialRef("secrets", "remote.key") },
@@ -512,9 +441,7 @@ test("transient execution follows capability opt-in rather than pricing and keep
   registry.registerFacet(createRuntimeEndpointAdapterFacet({
     use: "example.local",
     activate: (context) => ({
-      endpoint: defineEndpointPackage({
-        module: { name: "example.local-provider", version: "1" },
-        facet: "local",
+      endpoint: defineEndpoint({
         instance: context.instance,
         pool: context.pool ?? context.instance,
         pricing: { kind: "local" },
@@ -601,9 +528,7 @@ test("Runtime provider inspection applies Endpoint supports when the complete re
   registry.registerFacet(createRuntimeEndpointAdapterFacet({
     use: "example.narrow",
     activate: (context) => ({
-      endpoint: defineEndpointPackage({
-        module: { name: "example.narrow-provider", version: "1" },
-        facet: "narrow",
+      endpoint: defineEndpoint({
         instance: context.instance,
         pool: context.pool ?? context.instance,
         pricing: { kind: "local" },
@@ -682,9 +607,7 @@ test("Runtime invoke executes one immediate Need through the selected Endpoint a
   registry.registerFacet(createRuntimeEndpointAdapterFacet({
     use: "example.paid",
     activate: (context) => ({
-      endpoint: defineEndpointPackage({
-        module: { name: "example.provider", version: "1" },
-        facet: "paid",
+      endpoint: defineEndpoint({
         instance: context.instance,
         pool: context.pool ?? context.instance,
         credentials: { apiKey: credentialRef("secrets", "paid.key") },
@@ -704,9 +627,7 @@ test("Runtime invoke executes one immediate Need through the selected Endpoint a
   registry.registerFacet(createRuntimeEndpointAdapterFacet({
     use: "example.slow",
     activate: (context) => ({
-      endpoint: defineEndpointPackage({
-        module: { name: "example.slow-provider", version: "1" },
-        facet: "slow",
+      endpoint: defineEndpoint({
         instance: context.instance,
         pool: context.pool ?? context.instance,
         capabilities: [{
@@ -774,9 +695,7 @@ test("providers, doctor and invoke share one resolver: a contested capability is
     registry.registerFacet(createRuntimeEndpointAdapterFacet({
       use,
       activate: (context) => ({
-        endpoint: defineEndpointPackage({
-          module: { name: `example.provider.${instanceLabel}`, version: "1" },
-          facet: instanceLabel,
+        endpoint: defineEndpoint({
           instance: context.instance,
           pool: context.pool ?? context.instance,
           pricing: { kind: "local" },
@@ -847,9 +766,7 @@ test("doctor reports inconsistent limits for shared pools and capacity resources
     registry.registerFacet(createRuntimeEndpointAdapterFacet({
       use,
       activate: (context) => ({
-        endpoint: defineEndpointPackage({
-          module: { name: `example.provider.${name}`, version: "1" },
-          facet: name,
+        endpoint: defineEndpoint({
           instance: context.instance,
           pool: context.pool ?? context.instance,
           pricing: { kind: "local" },
@@ -893,8 +810,7 @@ test("demanded readiness and Programs follow the chosen Endpoint, including befo
   for (const name of ["local", "hosted"]) registry.registerFacet(createRuntimeEndpointAdapterFacet({
     use: `example.${name}`,
     activate: (context) => ({
-      endpoint: defineEndpointPackage({
-        module: { name: `example.${name}`, version: "1" }, facet: name,
+      endpoint: defineEndpoint({
         instance: context.instance, pool: context.instance, pricing: { kind: "local" },
         ...(name === "hosted" ? { credentials: { key: credentialRef("keys", "account") } } : {}),
         capabilities: [{ capability, returns, lifecycle: "immediate", handler: () => ({ value: { kind: "inline", value: "ok" } }) }],

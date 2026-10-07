@@ -1,12 +1,12 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@qflow/speech-evidence";
-import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
-import type { EndpointInvocationContext, EndpointFulfillment } from "@qflow/endpoint-kit";
-import { canonicalize } from "@qflow/protocol";
-import type { CanonicalValue } from "@qflow/protocol";
-import { defineEndpointPackage } from "@qflow/endpoint-kit";
+import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@qflow/qflow/speech-evidence";
+import type { AlignedTranscriptEvidence } from "@qflow/qflow/speech-evidence";
+import type { EndpointInvocationContext, EndpointFulfillment } from "@qflow/qflow/endpoint";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { CanonicalValue } from "@qflow/qflow/protocol";
+import { defineEndpoint } from "@qflow/qflow/endpoint";
 import {
   assertWhisperXEvidenceWav,
   interpretWhisperXTranscript,
@@ -119,9 +119,7 @@ export function createLocalWhisperXProvider(config: CreateLocalWhisperXProviderO
   const requestTimeoutMs = positiveInteger(config.requestTimeoutMs ?? 10 * 60_000, "requestTimeoutMs");
   const maxResponseBytes = positiveInteger(config.maxResponseBytes ?? 64 * 1024 * 1024, "maxResponseBytes");
 
-  return defineEndpointPackage({
-    module: localWhisperXProviderModuleRef,
-    facet: "alignment",
+  return defineEndpoint({
     instance: config.instance ?? "whisperx.local",
     pool: config.pool ?? config.instance ?? "whisperx.local",
     pricing: { kind: "local" },

@@ -7,12 +7,7 @@ import { dirname, join, resolve } from "node:path";
 import { processAlive, stopProcessTree } from "./process-control.js";
 import { readProcessLogs } from "./process-logs.js";
 import { startWithOwnConsole } from "./programs.js";
-
-export type RuntimeWorkerLaunch = {
-  readonly command: string;
-  readonly args: readonly string[];
-  readonly workerArgs?: readonly string[];
-};
+import type { RuntimeWorkerLaunch } from "./host-api.js";
 
 export type RuntimeProcessState = {
   readonly state: "running" | "stopped";

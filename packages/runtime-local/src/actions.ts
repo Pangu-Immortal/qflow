@@ -1,4 +1,5 @@
-import type { BuildExecutionStore, RuntimeActionExecutor } from "@qflow/runtime";
+import type { RuntimeActionExecutor } from "@qflow/qflow/runtime";
+import type { BuildExecutionStore } from "./execution.js";
 
 /** All short Endpoint actions use the Runtime's existing shared resource authority. */
 export function createActionExecutor(store: BuildExecutionStore): RuntimeActionExecutor {

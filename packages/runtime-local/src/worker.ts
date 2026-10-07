@@ -1,32 +1,31 @@
 import { randomUUID } from "node:crypto";
-import type { BuildState } from "@qflow/protocol";
+import type { BuildState } from "@qflow/qflow/protocol";
 import type {
   ResourceStore,
-  BuildCompletion,
-  BuildExecutionSnapshot,
   RuntimeBuildExecution,
   RuntimeCommandExecutor,
   RuntimeExecutionResult,
   RuntimePreparation,
   RuntimeRunnableCommand,
   ScheduledBuildResult,
-} from "@qflow/runtime";
-import { LocalBuildScheduler } from "@qflow/runtime";
-import { BuildMachine } from "@qflow/core";
+} from "@qflow/qflow/runtime";
+import type { BuildCompletion, BuildExecutionSnapshot } from "./execution.js";
+import { InProcessBuildScheduler } from "@qflow/qflow/runtime";
+import { BuildMachine } from "@qflow/qflow/kernel";
 
 type LocalWorkerOptions = {
   readonly executionBuild?: string;
   readonly executionLogs?: import("./log.js").LocalExecutionLogs;
   readonly stores: {
-    readonly builds: import("@qflow/runtime").BuildStore;
-    readonly operations: import("@qflow/runtime").OperationStore;
-    readonly executions: import("@qflow/runtime").CommandExecutionStore;
-    readonly execution: import("@qflow/runtime").BuildExecutionStore;
+    readonly builds: import("@qflow/qflow/runtime").BuildStore;
+    readonly operations: import("@qflow/qflow/runtime").OperationStore;
+    readonly executions: import("@qflow/qflow/runtime").CommandExecutionStore;
+    readonly execution: import("./execution.js").BuildExecutionStore;
   };
   readonly resourceStore: ResourceStore;
   readonly resourceStoreForBuild?: (build: string) => ResourceStore;
   readonly openBuildResultRepository: NonNullable<import("./types.js").CreateLocalRuntimeOptions["openBuildResultRepository"]>;
-  readonly installComponentPackages: (specifiers: readonly string[]) => Promise<void>;
+  readonly installProducerPackages: (specifiers: readonly string[]) => Promise<void>;
   readonly resultWriter: import("./types.js").LocalResultWriter;
 };
 
@@ -71,10 +70,10 @@ class CapacityExecutor implements RuntimeCommandExecutor {
   ): Promise<RuntimeExecutionResult> {
     const store = this.#options.stores.executions;
     const recordExecution = this.#options.executionLogs === undefined ? {} : {
-      recordExecution: (event: import("@qflow/runtime").ExecutionLogEvent) =>
+      recordExecution: (event: import("@qflow/qflow/runtime").ExecutionLogEvent) =>
         this.#options.executionLogs!.record(context.build, descriptor.command.id, event),
     };
-    const execute = (executionContext: import("@qflow/runtime").RuntimeExecutionContext) =>
+    const execute = (executionContext: import("@qflow/qflow/runtime").RuntimeExecutionContext) =>
       execution !== undefined && this.#delegate.executeExecutionCommand !== undefined
         ? this.#delegate.executeExecutionCommand(execution, descriptor, executionContext)
         : this.#delegate.executeCommand(state, descriptor, executionContext);
@@ -189,7 +188,7 @@ class CapacityExecutor implements RuntimeCommandExecutor {
 
   async cancelOperation(
     state: BuildState,
-    operation: import("@qflow/runtime").OperationSnapshot,
+    operation: import("@qflow/qflow/runtime").OperationSnapshot,
   ) {
     assert(this.#delegate.cancelOperation !== undefined, "selected executor cannot cancel Operations");
     return await this.#delegate.cancelOperation(state, operation);
@@ -211,7 +210,7 @@ class DurableLocalWorker {
     this.#executorWithCapacity = new CapacityExecutor(executor, options, this.#owner);
   }
 
-  async #readBuild(build: string): Promise<import("@qflow/runtime").BuildSnapshot | undefined> {
+  async #readBuild(build: string): Promise<import("@qflow/qflow/runtime").BuildSnapshot | undefined> {
     const previous = this.#buildRead;
     let release!: () => void;
     this.#buildRead = new Promise<void>((resolve) => { release = resolve; });
@@ -227,7 +226,7 @@ class DurableLocalWorker {
     }
   }
 
-  async #finishResult(execution: BuildExecutionSnapshot, outcome: import("@qflow/runtime").BuildOutcome, reason?: string): Promise<WorkerTurnResult> {
+  async #finishResult(execution: BuildExecutionSnapshot, outcome: import("./execution.js").BuildOutcome, reason?: string): Promise<WorkerTurnResult> {
     await this.#options.stores.execution.releaseBuildCapacity(execution.build);
     const decided = await this.#options.stores.execution.decide(execution.build, this.#owner, outcome, reason);
     return await this.#options.resultWriter.completeResult(decided);
@@ -242,7 +241,7 @@ class DurableLocalWorker {
       assert(snapshot !== undefined, `Build ${execution.build} has no execution state`);
       const machine = BuildMachine.fromMaterialized(snapshot.definition, snapshot.state);
       for (const operation of received) {
-        let event: import("@qflow/protocol").CommandResult | undefined;
+        let event: import("@qflow/qflow/protocol").CommandResult | undefined;
         try {
           event = await this.#executor.acceptOperation?.(machine.view(), operation);
         } catch (error) {
@@ -327,7 +326,7 @@ class DurableLocalWorker {
     hydrated?: () => void,
   ): Promise<readonly WorkerTurnResult[]> {
     const finished: WorkerTurnResult[] = [];
-    const runnable: { readonly execution: BuildExecutionSnapshot; readonly snapshot: import("@qflow/runtime").BuildSnapshot }[] = [];
+    const runnable: { readonly execution: BuildExecutionSnapshot; readonly snapshot: import("@qflow/qflow/runtime").BuildSnapshot }[] = [];
     for (const execution of executions) {
       assert(execution.turn?.owner === this.#owner && execution.decision === undefined,
         `Execution ${execution.build} was not claimed by this Worker turn`);
@@ -345,7 +344,7 @@ class DurableLocalWorker {
             const result = await this.#executor.advanceOperation!(operation, {
               build: operation.build,
               ...(this.#options.executionLogs === undefined ? {} : {
-                recordExecution: (event: import("@qflow/runtime").ExecutionLogEvent) =>
+                recordExecution: (event: import("@qflow/qflow/runtime").ExecutionLogEvent) =>
                   this.#options.executionLogs!.record(operation.build, operation.command, event),
               }),
             });
@@ -370,7 +369,7 @@ class DurableLocalWorker {
             continue;
           }
         }
-        await this.#options.installComponentPackages(execution.componentPackages);
+        await this.#options.installProducerPackages(execution.executionPackages);
         const snapshot = await this.#readBuild(execution.build);
         assert(snapshot !== undefined, `Execution ${execution.build} has no Build Definition`);
         runnable.push({ execution, snapshot });
@@ -381,7 +380,7 @@ class DurableLocalWorker {
       }
     }
     if (runnable.length === 0) return finished;
-    const scheduler = new LocalBuildScheduler(this.#executorWithCapacity, {
+    const scheduler = new InProcessBuildScheduler(this.#executorWithCapacity, {
       buildStore: this.#options.stores.builds,
       onStateChange: async (build, state) => {
         const item = runnable.find((candidate) => candidate.execution.build === build);

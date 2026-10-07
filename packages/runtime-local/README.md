@@ -3,6 +3,12 @@
 The default local Runtime for Qflow. It owns the Worker, scheduler and active SQLite execution
 worklist. Project-owned Build Results hold finished public Outputs.
 
+This package also exports `@qflow/runtime-local/cli`, the command contribution that owns
+`runtime`, `programs`, `paths` and the internal Worker entry. The generic `@qflow/cli` Host owns
+none of that local process vocabulary: it consumes a narrow `CliRuntimeHost` port for Build,
+Result, credential and transient-execution operations. The root Qflow application explicitly
+selects this contribution and keeps one `qflow` executable.
+
 Managed Program preparation writes subprocess stdout and stderr directly to that Program's
 `install.log`, so dependency-download output is readable before installation finishes. Installation
 and startup progress expose `logPath`; failed installation reports retain it with a short error.
@@ -70,15 +76,8 @@ client supplies its temporary Resources and receives no Endpoint registry. Decla
 inside that one disposable session only. A Provider that needs durable or cross-Build quota admission must
 not opt that capability into transient execution.
 
-A project that wants a non-default Result repository owns a separate `qflow.results.json`:
-
-```json
-{
-  "format": "qflow.build-results@1",
-  "use": "@qflow/build-result-s3",
-  "config": { "bucket": "team-results", "prefix": "projects/episode-12" }
-}
-```
+Build Results belong to the project at `.qflow/results`. Archiving or moving completed Results is a
+post-Build project operation, not a Runtime repository choice.
 
 Submitting a Build stores it and returns. The Worker may advance unrelated Builds together; only the
 resources declared by their Commands constrain execution. An Endpoint instance owns its capacity by
@@ -114,10 +113,9 @@ serialized, while network actions and local work remain concurrent under their d
 QflowHub can be the explicitly selected gateway for users without their own service keys. A bound
 Provider's authentication, quota or transport error never changes that selection. Separate accounts use separate pools even when they implement the same model.
 
-Without `qflow.results.json`, the official video Distribution selects the filesystem adapter at the
-project's `.qflow/results` directory, with no cloud account or service. Runtime Local opens that default
-through the same adapter registry as an explicit `@qflow/build-result-s3` selection; it contains no
-filesystem Repository shortcut.
+The official video Distribution writes Results to the project's `.qflow/results` directory, with no
+cloud account or service. The filesystem implementation belongs to this single-host Runtime rather
+than a public adapter registry.
 Runtime working Resources remain internal and Build-local; there is no ResourceStore selector. After
 a Result has an outcome, history is read from the selected repository, not Runtime SQLite.
 The submission passes known Resource references to the Result writer, separately from the execution
@@ -133,14 +131,14 @@ to completed, failed and cancelled Builds alike.
 Saving a finished Result is a separate, idempotent storage action. If that write is interrupted, the
 Build keeps its already-decided outcome and reports exact operator attention. `qflow result finish
 <build-id>` performs only that pending write and active-state cleanup; it does not run the execution
-Worker, call a Producer or load Provider Endpoint packages. `qflow result discard <build-id>` is only
+Worker, call a Producer or load Provider packages. `qflow result discard <build-id>` is only
 for a submission that never became active and therefore has no Result to save.
 
 Source imports select author packages. Runtime Profile entries select only code allowed to access files,
 credentials, processes or networks. Installing a package changes neither selection.
 
 Endpoint scoping happens before activation when explicit instance IDs are supplied, or when every
-requested capability has a binding. Otherwise discovery loads the Profile's Endpoint packages to
+requested capability has a binding. Otherwise discovery loads the Profile's Provider packages to
 find eligible implementations. Thus unused service readiness is not required, but an uninstalled
 declared package can still prevent unbound discovery. `scopedProfile` owns this distinction; package
 names are not used to guess which capabilities they supply.

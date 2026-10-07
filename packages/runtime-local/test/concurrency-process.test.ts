@@ -6,10 +6,10 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as pause } from "node:timers/promises";
 import test from "node:test";
-import { defineBuild } from "@qflow/core";
-import { FileBuildResultRepository } from "@qflow/build-result";
-import { SqliteRuntimeState } from "@qflow/store-sqlite";
-import { createGreetingBuild, manifest, capabilities, producers, types } from "../../core/test/greeting-fixture.js";
+import { defineBuild } from "@qflow/kernel";
+import { FileBuildResultRepository } from "@qflow/result/node";
+import { SqliteRuntimeState } from "../src/sqlite-state.js";
+import { createGreetingBuild, manifest, capabilities, producers, types } from "../../kernel/test/greeting-fixture.js";
 import { statePath } from "../src/config.js";
 import { superviseBuilds } from "../src/supervisor.js";
 
@@ -64,20 +64,20 @@ for (const scenario of scenarios) {
       await mkdir(pkg, { recursive: true });
       await writeFile(join(pkg, "package.json"), JSON.stringify({ name: "fixture-concurrency", version: "1.0.0", type: "module", qflow: { activation: "./activation.mjs" } }));
       await writeFile(join(pkg, "activation.mjs"), `
-        import {createRuntimeEndpointAdapterFacet} from '@qflow/runtime-kit';
-        import {defineEndpointPackage} from '@qflow/endpoint-kit';
+        import {createRuntimeEndpointAdapterFacet} from '@qflow/runtime-local/extension';
+        import {defineEndpoint} from '@qflow/endpoint';
         const server=${JSON.stringify(endpoint)};
         async function call(path,name){const response=await fetch(server+path,{method:'POST',body:JSON.stringify({name,pid:process.pid,rss:process.memoryUsage().rss})});return response.json();}
         let localCount=0;
-        export default {format:'qflow.node-package@1',modules:[{manifest:${JSON.stringify(manifest)}}],components:[{producers:[
+        export default {format:'qflow.package@1',modules:[{manifest:${JSON.stringify(manifest)}}],facets:[{abi:'qflow.producer-package@1',implementation:{producers:[
           {producer:${JSON.stringify(producers.makePrompt)},handler:async({inputs})=>{
             if(++localCount!==1)throw Error('Component state leaked between Builds');
             const name=inputs.intent.value.value.name;await call('/a',name);
             return {outputs:{prompt:{kind:'inline',value:name}},needs:{}};
           }},
           {producer:${JSON.stringify(producers.requestText)},handler:({inputs})=>({outputs:{},needs:{generation:{prompt:inputs.prompt.value.value}}})}
-        ]}],hostFacets:[createRuntimeEndpointAdapterFacet({use:'fixture-concurrency',activate(context){
-          return {endpoint:defineEndpointPackage({module:{name:'fixture.provider',version:'1'},facet:'generation',instance:context.instance,pool:context.pool,
+        ]}},createRuntimeEndpointAdapterFacet({use:'fixture-concurrency',activate(context){
+          return {endpoint:defineEndpoint({instance:context.instance,pool:context.pool,
             defaultConcurrency:${scenario.capacity},actionLimits:{submit:{concurrency:${scenario.capacity}}},capabilities:[{lifecycle:'asynchronous',capability:${JSON.stringify(capabilities.generation)},returns:${JSON.stringify(types.generated)},endpoint:{
               async start({need,operation}){const name=need.constraints.prompt;await call('/submit',name);return {status:'pending',handle:{name},receipt:{id:operation},wakeAt:Date.now()+250};},
               async poll({handle}){const result=await call('/poll',handle.name);return result.complete?{status:'completed',result:{value:{kind:'inline',value:handle.name}}}:{status:'pending',handle,wakeAt:Date.now()+1000};}
@@ -94,12 +94,12 @@ for (const scenario of scenarios) {
       for (let index = 0; index < scenario.count; index++) {
         const id = `bld_20260914T120000000Z_${String(index).padStart(10,"0")}`;
         ids.push(id);
-        const request = { build: id, componentPackages: ["fixture-concurrency"],
-          result: { root, selection: { use: "@qflow/build-result-fs", config: { path: "results" } } },
+        const request = { build: id, executionPackages: ["fixture-concurrency"],
+          result: { root, path: "results" },
           context: { format: "qflow.local-execution@1", packageRoot: root, hostStateRoot: join(root,"host"), distributionPackageRoot: distribution, profile: profileValue },
         };
         await state.submissions.prepare(request);
-        await repository.create({ id, source: { path: "main.svml" }, targets: ["generated"], publishedOutputs: [{name:"generated",output:"generated"}] });
+        await repository.create({ id, source: { id: "main.svml" }, targets: ["generated"], publishedOutputs: [{name:"generated",output:"generated"}] });
         await state.submissions.commit({ ...request,
           definition: { ...base, program: { ...base.program, records: base.program.records.map((record) => record.id === "intent:root"
             ? { ...record, value: { kind: "inline", value: { name: String(index) } } } : record) } },

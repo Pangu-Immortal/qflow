@@ -4,6 +4,17 @@ Thin Qflow Runtime Provider for a QflowHub deployment. It is an optional default
 paid generation and WhisperX alignment requests. Select it for a chosen QflowHub account, with OAuth
 or an API key in the configured Credential Store; other Providers remain ordinary Profile choices.
 
+The implementation uses only the public `@qflow/qflow/*` Provider APIs. Its one cross-package
+contract is an explicit peer on `@qflow/whisperx`, whose capability identity, request validation and
+wire-response interpretation it implements remotely. Compatible published releases use an ordinary
+SemVer range; the consuming project's npm/pnpm lockfile fixes the installed pair. Qflow performs no
+Provider download, version resolution or Build-time upgrade. The Provider reads its own package
+version for its User-Agent and does not inherit the Qflow Distribution version.
+
+The official Distribution currently obtains this Provider as a default npm dependency because its
+starter Runtime Profile selects QflowHub. The Profile selection and the npm dependency are separate:
+another Distribution may omit it, and a project may install a compatible version explicitly.
+
 `doctor` is read-only. If a stored OAuth access token needs refresh, it reports that account access
 and refresh validity remain unchecked; it does not rotate credentials or conclude that their Store
 is read-only. Authorized execution and pricing reads retain the normal refresh-and-persist path.
@@ -85,9 +96,6 @@ references; the returned job uses the same polling and asset collection lifecycl
 account's `/v1/models` establishes availability. The processed video enters ordinary Normalize,
 then either semantic alignment for a Script performance or a Visual Clip for independently timed footage.
 
-[Background Removal](../background-removal/README.md) declares a separate single-image capability.
-This Provider does not currently implement it; select a project Provider for that operation.
-
 Runtime Profile example:
 
 ```json
@@ -96,7 +104,7 @@ Runtime Profile example:
   "dataRoot": ".qflow/runtimes/local",
   "credentials": {
     "platform": {
-      "use": "@qflow/credential-store-platform"
+      "use": "@qflow/credential-store-local"
     }
   },
   "endpoints": {
@@ -219,8 +227,11 @@ admission budgets. Each accepts `concurrency` and `rate: { limit, periodMs }`, s
 These limits count lifecycle actions; Provider-specific upload parts and HTTP requests remain inside
 those actions. Synchronous speech and transcription retain their ordinary request capacity.
 
-A submission, polling or collection error ends the local attempt. Known job IDs and credential
-references remain available in Result receipts; a timeout with no ID is recorded as such. A job can
+A submission or collection error ends the local attempt. During polling, transport failures and HTTP
+429/5xx preserve the same job handle and schedule another read; a standard `Retry-After` is honored,
+but the wake time never passes the original `operationTimeoutMs` deadline. Credential, response and
+other non-retryable errors still end the attempt. Known job IDs and credential references remain
+available in Result receipts; a timeout with no ID is recorded as such. A job can
 be inspected at `/jobs/<id>` and its generated assets at `/jobs/<id>/assets` on the selected API base.
 The next production attempt uses a new Run and Build. Runtime bindings never switch from a user's
 own Provider to QflowHub after a key, quota or transport failure.

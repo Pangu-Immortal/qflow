@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto";
-import { BuildMachine } from "@qflow/core";
-import { isStreamingResourceStore } from "@qflow/runtime";
+import { BuildMachine } from "@qflow/qflow/kernel";
+import { isStreamingResourceStore } from "@qflow/qflow/runtime";
 import type {
-  BuildExecutionSnapshot,
   BuildSnapshot,
   OperationSnapshot,
-} from "@qflow/runtime";
-import type { CommandResult } from "@qflow/protocol";
-import type { BuildResultWriter } from "@qflow/build-result";
+} from "@qflow/qflow/runtime";
+import type { BuildExecutionSnapshot } from "./execution.js";
+import type { CommandResult } from "@qflow/qflow/protocol";
+import type { BuildResultWriter } from "@qflow/qflow/result";
 
 import type {
   CreateLocalResultWriterOptions,
@@ -55,7 +55,7 @@ export function createLocalResultWriter(
   const owner = randomUUID();
   const openWriter = async (execution: BuildExecutionSnapshot): Promise<{
     readonly writer: BuildResultWriter;
-    readonly manifest: import("@qflow/build-result").BuildResultManifest;
+    readonly manifest: import("@qflow/qflow/result").BuildResultManifest;
     close(): Promise<void>;
   }> => {
     const opened = await options.openBuildResultRepository(execution.result);
@@ -102,7 +102,7 @@ export function createLocalResultWriter(
 
   const syncResult = async (
     execution: BuildExecutionSnapshot,
-    state: import("@qflow/protocol").BuildState,
+    state: import("@qflow/qflow/protocol").BuildState,
   ): Promise<void> => {
     const result = await openWriter(execution);
     try {

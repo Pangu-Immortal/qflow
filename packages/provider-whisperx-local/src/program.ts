@@ -1,14 +1,14 @@
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { resolveNodePackageResource } from "@qflow/package-loader-node";
 import type {
   ManagedProgram,
   ManagedProgramCommand,
   ManagedProgramState,
-} from "@qflow/runtime-kit";
-import { pythonEnvironmentCommand } from "@qflow/runtime-host-node";
+} from "@qflow/runtime-local/extension";
+import { pythonEnvironmentCommand } from "@qflow/runtime-local/node";
 
 /**
  * WhisperX loads multi-gigabyte weights before it can answer, so it is a warm
@@ -20,10 +20,7 @@ import { pythonEnvironmentCommand } from "@qflow/runtime-host-node";
  * program home, while this read-only project remains replaceable Distribution
  * input. A custom service command transfers process ownership to that deployment.
  */
-export const localWhisperXManagedProject = join(
-  resolveNodePackageResource("@qflow/whisperx-service-runtime", "pyproject.toml", { from: import.meta.url }),
-  "..",
-);
+export const localWhisperXManagedProject = fileURLToPath(new URL("../runtime", import.meta.url));
 
 function run(command: ManagedProgramCommand): Promise<{ readonly ok: boolean; readonly output: string }> {
   return new Promise((resolve) => {

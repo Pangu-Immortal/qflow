@@ -1,0 +1,128 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  defineEndpoint,
+  wakeAfter,
+} from "@qflow/endpoint";
+import {
+  EndpointTransportError,
+  endpointTransportError,
+  retryAfterMs,
+  withRequestDeadline,
+} from "@qflow/endpoint/http";
+import type {
+  EndpointRegistrar,
+  EndpointRegistrationOptions,
+  ImmediateEndpointHandler,
+  AsyncEndpoint,
+} from "@qflow/endpoint";
+import type { CapabilityRef, TypeRef } from "@qflow/protocol";
+import { credentialRef } from "@qflow/runtime";
+
+import { capabilities, types } from "../../kernel/test/greeting-fixture.js";
+
+type CapturedRegistration = {
+  readonly id: string;
+  readonly capability: CapabilityRef;
+  readonly returns: TypeRef;
+  readonly kind: "immediate" | "asynchronous";
+  readonly options: EndpointRegistrationOptions;
+};
+
+function capturingRegistrar(registrations: CapturedRegistration[]): EndpointRegistrar {
+  return {
+    registerImmediateEndpoint(id, capability, returns, _handler: ImmediateEndpointHandler, options = {}) {
+      registrations.push({ id, capability, returns, kind: "immediate", options });
+    },
+    registerAsyncEndpoint(id, capability, returns, _endpoint: AsyncEndpoint, options = {}) {
+      registrations.push({ id, capability, returns, kind: "asynchronous", options });
+    },
+  };
+}
+
+test("one Endpoint definition generates one configured instance and host-neutral registration", async () => {
+  const endpoint = defineEndpoint({
+    instance: "example.personal",
+    pool: "example.personal",
+    credentials: { apiKey: credentialRef("env", "EXAMPLE_API_KEY") },
+    defaultConcurrency: 3,
+    capabilities: [{
+      lifecycle: "immediate",
+      transient: true,
+      capability: capabilities.generation,
+      returns: types.generated,
+      capacity: "text-generation",
+      maxConcurrency: 1,
+      handler: () => ({
+        value: { kind: "inline", value: "generated" },
+      }),
+    }],
+  });
+  assert.equal(endpoint.instance.id, "example.personal");
+  assert.equal(endpoint.instance.pool, "example.personal");
+  assert.deepEqual(endpoint.offers, [{
+    capability: capabilities.generation,
+    returns: types.generated,
+    endpoint: "example.personal",
+    transient: true,
+  }]);
+
+  const registrations: CapturedRegistration[] = [];
+  await endpoint.install(capturingRegistrar(registrations));
+  assert.equal(registrations[0]?.id, "example.personal");
+  assert.equal(registrations[0]?.kind, "immediate");
+  assert.deepEqual(registrations[0]?.options.credentials, {
+    apiKey: credentialRef("env", "EXAMPLE_API_KEY"),
+  });
+  assert.equal(registrations[0]?.options.transient, true);
+  assert.deepEqual(registrations[0]?.options.scheduling, {
+    resources: [
+      { id: "pool:example.personal", limit: 3 },
+      { id: "capacity:example.personal/text-generation", limit: 1 },
+    ],
+  });
+});
+
+test("an asynchronous Endpoint cannot opt into disposable execution", () => {
+  assert.throws(() => defineEndpoint({
+    instance: "example.remote",
+    pool: "example.remote",
+    capabilities: [{
+      lifecycle: "asynchronous",
+      transient: true,
+      capability: capabilities.generation,
+      returns: types.generated,
+      endpoint: {
+        start: () => ({ status: "failed", failure: { code: "unused", message: "unused" } }),
+        poll: () => ({ status: "failed", failure: { code: "unused", message: "unused" } }),
+      },
+    }],
+  }), /cannot be transient and asynchronous/u);
+});
+
+test("wakeAfter turns polling policy into an explicit Runtime wake hint", () => {
+  assert.deepEqual(wakeAfter({ job: "123" }, 5_000, 10_000), {
+    status: "pending",
+    handle: { job: "123" },
+    wakeAt: 15_000,
+  });
+});
+
+test("HTTP mechanics retain transport evidence without choosing an Endpoint outcome", async () => {
+  const now = Date.parse("2026-10-07T00:00:00Z");
+  assert.equal(retryAfterMs(new Headers({ "retry-after": "30" }), now), 30_000);
+  assert.equal(retryAfterMs(new Headers({ "retry-after": "Wed, 07 Oct 2026 00:00:45 GMT" }), now), 45_000);
+  assert.equal(retryAfterMs(new Headers({ "retry-after": "later" }), now), undefined);
+
+  const cause = Object.assign(new Error("getaddrinfo ENOTFOUND api.example.test"), { code: "ENOTFOUND" });
+  const observed = endpointTransportError(new TypeError("fetch failed", { cause }));
+  assert.equal(observed.code, "ENOTFOUND");
+  assert.match(observed.message, /fetch failed: getaddrinfo ENOTFOUND api\.example\.test/u);
+  assert.equal(observed.cause instanceof TypeError, true);
+
+  await assert.rejects(
+    withRequestDeadline(1, async ({ wait }) => await wait(new Promise(() => undefined))),
+    (error) => error instanceof EndpointTransportError && error.timeout === true,
+  );
+});

@@ -1,34 +1,41 @@
 {
   "name": "@qflow/runtime-local",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./cli": "./src/cli.ts",
+    "./extension": "./src/extension.ts",
+    "./node": "./src/node.ts",
     "./config": "./src/config.ts",
     "./programs": "./src/programs.ts",
     "./worker-process": "./src/worker-process.ts"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "dependencies": {
-    "@qflow/resource-store-fs": "workspace:*",
-    "@qflow/build-result": "workspace:*",
-    "@qflow/build-result-fs": "workspace:*",
-    "@qflow/build-result-kit": "workspace:*",
-    "@qflow/component-kit": "workspace:*",
-    "@qflow/core": "workspace:*",
-    "@qflow/driver-node": "workspace:*",
-    "@qflow/endpoint-kit": "workspace:*",
-    "@qflow/package-loader-node": "workspace:*",
-    "@qflow/protocol": "workspace:*",
-    "@qflow/runtime": "workspace:*",
-    "@qflow/runtime-kit": "workspace:*",
-    "@qflow/runtime-host-node": "workspace:*",
-    "@qflow/store-sqlite": "workspace:*",
-    "@qflow/validation": "workspace:*",
     "koffi": "3.2.1"
   },
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
   "devDependencies": {
-    "@qflow/credential-store-env": "workspace:*"
+    "@qflow/admission": "workspace:*",
+    "@qflow/credential-store-env": "workspace:*",
+    "@qflow/endpoint": "workspace:*",
+    "@qflow/executor": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/kernel": "workspace:*",
+    "@qflow/loader": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/project": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/result": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/workspace": "workspace:*"
   }
 }

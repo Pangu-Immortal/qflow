@@ -1,4 +1,5 @@
-import { EndpointHttpError, EndpointServiceError } from "@qflow/endpoint-kit";
+import { EndpointServiceError } from "@qflow/qflow/endpoint";
+import { EndpointHttpError, retryAfterMs } from "@qflow/qflow/endpoint/http";
 
 /** Monid's `{ code, message }` error envelope and run outcome fields, kept at the service boundary. */
 function record(value: unknown): Record<string, unknown> | undefined {
@@ -27,7 +28,8 @@ export class MonidHttpError extends EndpointHttpError {
       `Monid HTTP ${status}`, `${request.method} ${request.path}`,
       ...(requestId === undefined ? [] : [`request=${requestId}`]),
     ];
-    super("MONID_HTTP_ERROR", `${facts.join("; ")}${reason === undefined ? "" : `: ${safeMonidReason(reason)}`}`, status);
+    super("MONID_HTTP_ERROR", `${facts.join("; ")}${reason === undefined ? "" : `: ${safeMonidReason(reason)}`}`,
+      status, retryAfterMs(response.headers));
   }
 }
 

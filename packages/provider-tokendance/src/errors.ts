@@ -1,4 +1,5 @@
-import { EndpointHttpError, EndpointServiceError } from "@qflow/endpoint-kit";
+import { EndpointServiceError } from "@qflow/qflow/endpoint";
+import { EndpointHttpError, retryAfterMs } from "@qflow/qflow/endpoint/http";
 
 /** TokenDance relays each protocol's own error body; keep the code, the message and the HTTP facts. */
 function record(value: unknown): Record<string, unknown> | undefined {
@@ -31,7 +32,8 @@ export class TokenDanceHttpError extends EndpointHttpError {
       ...(request.model === undefined ? [] : [`model=${request.model}`]),
       ...(requestId === undefined ? [] : [`request=${requestId}`]),
     ];
-    super(code, `${facts.join("; ")}${reason === undefined ? "" : `: ${safeTokenDanceReason(reason)}`}`, status);
+    super(code, `${facts.join("; ")}${reason === undefined ? "" : `: ${safeTokenDanceReason(reason)}`}`,
+      status, retryAfterMs(response.headers));
   }
 }
 

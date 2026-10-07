@@ -1,14 +1,13 @@
 import { readFileSync } from "node:fs";
-import { requestDeadline } from "@qflow/runtime-kit";
-import type { AsyncEndpoint, EndpointCredential, EndpointFulfillment, EndpointInvocationContext, EndpointPollContext, EndpointPricingReader, EndpointStartContext, EndpointOutcome, ImmediateEndpointHandler } from "@qflow/endpoint-kit";
-import { EndpointResponseError, EndpointServiceError, EndpointTransportError, defineEndpointPackage, pollAgainOrFail, transport, wakeAfter } from "@qflow/endpoint-kit";
-import { selectWireModelForRequest } from "@qflow/generation";
-import type { GenerationRequest } from "@qflow/generation";
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, CapabilityRef } from "@qflow/protocol";
-import { credentialRef } from "@qflow/runtime";
-import type { CredentialRef, ResourceStore } from "@qflow/runtime";
-import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@qflow/speech-evidence";
+import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-local/extension";
+import type { AsyncEndpoint, CredentialRef, EndpointCredential, EndpointFulfillment, EndpointInvocationContext, EndpointPollContext, EndpointPricingReader, EndpointStartContext, EndpointOutcome, ImmediateEndpointHandler, ResourceStore } from "@qflow/qflow/endpoint";
+import { credentialRef, EndpointServiceError, defineEndpoint, wakeAfter } from "@qflow/qflow/endpoint";
+import { EndpointHttpError, EndpointResponseError, EndpointTransportError, withRequestDeadline } from "@qflow/qflow/endpoint/http";
+import { selectWireModelForRequest } from "@qflow/qflow/generation";
+import type { GenerationRequest } from "@qflow/qflow/generation";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, CanonicalValue, CapabilityRef } from "@qflow/qflow/protocol";
+import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@qflow/qflow/speech-evidence";
 import {
   assertWhisperXEvidenceWav,
   interpretWhisperXTranscript,
@@ -19,17 +18,16 @@ import type { WhisperXTranscriptResponse } from "@qflow/whisperx";
 import { hypiHubRouteForCapability, hypiHubRoutes } from "./routes.js";
 import type { QflowHubModelOperation } from "./routes.js";
 import { QflowHubUploader } from "./upload.js";
-import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-kit";
 import { createQflowHubAuth, hypiHubCredentialNeedsRefresh } from "./oauth.js";
 import type { QflowHubAuth } from "./oauth.js";
 import { QflowHubHttpError, QflowHubServiceError, hypiHubJobFailure } from "./errors.js";
 
-function distributionVersion(): string {
+function providerVersion(): string {
   try {
-    const manifest = JSON.parse(readFileSync(new URL("../../../package.json", import.meta.url), "utf8")) as {
+    const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
       readonly name?: unknown; readonly version?: unknown;
     };
-    if (manifest.name !== "@qflow/qflow" || typeof manifest.version !== "string" || manifest.version.length === 0) {
+    if (manifest.name !== "@qflow/provider-qflowhub" || typeof manifest.version !== "string" || manifest.version.length === 0) {
       return "unknown";
     }
     return manifest.version;
@@ -38,7 +36,7 @@ function distributionVersion(): string {
   }
 }
 
-const userAgent = `qflow/${distributionVersion()}`;
+const userAgent = `qflow-provider-qflowhub/${providerVersion()}`;
 
 const identifiedFetch = (fetcher: typeof globalThis.fetch): typeof globalThis.fetch =>
   async (input, init) => {
@@ -55,7 +53,7 @@ export type CreateQflowHubProviderOptions = {
   readonly baseUrl?: string;
   readonly apiKey?: CredentialRef;
   readonly defaultConcurrency?: number;
-  readonly actionLimits?: import("@qflow/endpoint-kit").EndpointActionLimits;
+  readonly actionLimits?: import("@qflow/qflow/endpoint").EndpointActionLimits;
   readonly capabilityConcurrency?: Readonly<Record<string, number>>;
   readonly pollIntervalMs?: number;
   readonly requestTimeoutMs?: number;
@@ -90,15 +88,35 @@ function apiBaseUrl(value: string): string {
 }
 function credential(credentials: Readonly<Record<string, EndpointCredential>>) {
   const value = credentials.apiKey?.secret;
-  assert(typeof value === "string" && value.length > 0, "QflowHub apiKey credential is unavailable; configure this Endpoint's credential with a QflowHub API key or OAuth login");
+  if (typeof value !== "string" || value.length === 0) {
+    throw new QflowHubServiceError("QFLOWHUB_CREDENTIAL_UNAVAILABLE",
+      "QflowHub apiKey credential is unavailable; configure this Endpoint's credential with a QflowHub API key or OAuth login");
+  }
   return credentials.apiKey!;
 }
 function failureMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 function failure(error: unknown): EndpointOutcome {
-  const message = failureMessage(error);
-  return { status: "failed", failure: { code: error instanceof EndpointServiceError ? error.code : "QFLOWHUB_ERROR", message } };
+  if (!(error instanceof EndpointServiceError || error instanceof EndpointHttpError
+    || error instanceof EndpointTransportError || error instanceof EndpointResponseError)) throw error;
+  const code = error instanceof EndpointServiceError || error instanceof EndpointHttpError ? error.code : "QFLOWHUB_ERROR";
+  return { status: "failed", failure: { code, message: failureMessage(error) } };
+}
+
+function retrying(error: unknown, handle: CanonicalValue, pollIntervalMs: number, deadlineAt?: number): EndpointOutcome | undefined {
+  const delay = error instanceof EndpointTransportError ? pollIntervalMs
+    : error instanceof EndpointHttpError && (error.status === 429 || error.status >= 500)
+      ? error.retryAfterMs ?? pollIntervalMs : undefined;
+  if (delay === undefined) return undefined;
+  const now = Date.now();
+  return { status: "pending", handle, wakeAt: Math.min(now + delay, deadlineAt ?? Number.MAX_SAFE_INTEGER), progress: { phase: "retrying" } };
+}
+function unknownSubmission(error: unknown): EndpointOutcome | undefined {
+  return error instanceof EndpointTransportError ? { status: "failed", failure: {
+    code: "QFLOWHUB_SUBMISSION_UNKNOWN",
+    message: `QflowHub submission transport failed; remote outcome is unknown: ${error.message}`,
+  } } : undefined;
 }
 
 function jobId(value: Record<string, unknown>): string {
@@ -107,13 +125,24 @@ function jobId(value: Record<string, unknown>): string {
   return id;
 }
 
-async function verifyModelRoute(client: QflowHubClient, auth: QflowHubAuth, model: string, operation: QflowHubModelOperation): Promise<void> {
-  const card = await client.json(`/models/${encodeURIComponent(model)}`, auth);
+async function verifyModelRoute(client: QflowHubClient, auth: QflowHubAuth, model: string, operation: QflowHubModelOperation): Promise<boolean> {
+  let card: Record<string, unknown>;
+  try {
+    card = await client.json(`/models/${encodeURIComponent(model)}`, auth);
+  } catch (error) {
+    if (error instanceof EndpointTransportError
+      || error instanceof EndpointHttpError && (error.status === 429 || error.status >= 500)) return false;
+    throw error;
+  }
   const endpoints = card.endpoints;
-  assert(Array.isArray(endpoints) && endpoints.every((value) => typeof value === "string"),
-    `QflowHub model ${model} returned no valid operation list; support for ${operation} is unknown`);
-  assert(endpoints.includes(operation),
-    `QflowHub model ${model} does not list operation ${operation}; listed operations: ${endpoints.join(", ") || "none"}`);
+  if (!Array.isArray(endpoints) || !endpoints.every((value) => typeof value === "string")) {
+    throw new EndpointResponseError(`QflowHub model ${model} returned no valid operation list; support for ${operation} is unknown`);
+  }
+  if (!endpoints.includes(operation)) {
+    throw new QflowHubServiceError("QFLOWHUB_MODEL_OPERATION_UNAVAILABLE",
+      `QflowHub model ${model} does not list operation ${operation}; listed operations: ${endpoints.join(", ") || "none"}`);
+  }
+  return true;
 }
 
 class QflowHubClient {
@@ -150,15 +179,12 @@ class QflowHubClient {
   async json(path: string, auth: QflowHubAuth, init: RequestInit = {}, refreshOnUnauthorized = true,
     onResponse?: (response: Response) => Promise<void>): Promise<Record<string, unknown>> {
     const token = await auth.token();
-    const deadline = requestDeadline(this.timeout, () => new EndpointTransportError("QflowHub request timed out"));
-    try {
-      const response = await transport(deadline.wait(this.fetcher(`${this.baseUrl}${path}`, { ...init, signal: deadline.signal, headers: { authorization: `Bearer ${token}`, ...(init.headers ?? {}) } })));
-      if (response.status !== 401 && onResponse !== undefined) await deadline.wait(onResponse(response));
-      const text = await transport(deadline.wait(response.text())); let body: unknown = {};
+    const result = await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(`${this.baseUrl}${path}`, { ...init, signal, headers: { authorization: `Bearer ${token}`, ...(init.headers ?? {}) } }));
+      if (response.status !== 401 && onResponse !== undefined) await wait(onResponse(response));
+      const text = await wait(response.text()); let body: unknown = {};
       if (response.status === 401 && refreshOnUnauthorized && auth.canRefresh()) {
-        deadline.finish();
-        await auth.refresh();
-        return await this.json(path, auth, init, false, onResponse);
+        return undefined;
       }
       if (!response.ok) {
         const input = typeof init.body === "string" ? JSON.parse(init.body) as Record<string, unknown> : undefined;
@@ -169,20 +195,22 @@ class QflowHubClient {
       }
       try { body = text.length === 0 ? {} : JSON.parse(text); } catch { throw new EndpointResponseError(`QflowHub returned invalid JSON (${response.status})`); }
       return object(body, "QflowHub response");
-    } finally { deadline.finish(); }
+    }, () => new EndpointTransportError("QflowHub request timed out", { timeout: true }));
+    if (result !== undefined) return result;
+    await auth.refresh();
+    return await this.json(path, auth, init, false, onResponse);
   }
   async download(url: string): Promise<{ readonly bytes: Uint8Array; readonly mediaType: string }> {
     let lastError: unknown;
     for (let attempt = 0; attempt < this.downloadAttempts; attempt += 1) {
-      const deadline = requestDeadline(this.timeout);
       try {
-        const response = await deadline.wait(this.fetcher(url, { signal: deadline.signal }));
-        if (!response.ok) throw new Error(`QflowHub asset returned HTTP ${response.status}`);
-        return { bytes: new Uint8Array(await deadline.wait(response.arrayBuffer())), mediaType: response.headers.get("content-type")?.split(";", 1)[0] ?? "application/octet-stream" };
+        return await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+          const response = await wait(this.fetcher(url, { signal }));
+          if (!response.ok) throw new QflowHubHttpError(response.status, response, "", { method: "GET", url });
+          return { bytes: new Uint8Array(await wait(response.arrayBuffer())), mediaType: response.headers.get("content-type")?.split(";", 1)[0] ?? "application/octet-stream" };
+        });
       } catch (error) {
         lastError = error;
-      } finally {
-        deadline.finish();
       }
     }
     throw lastError instanceof Error ? lastError : new Error(String(lastError));
@@ -220,19 +248,16 @@ class QflowHubClient {
   }
   async speech(auth: QflowHubAuth, body: Record<string, unknown>, refreshOnUnauthorized = true): Promise<readonly { readonly bytes: Uint8Array; readonly mediaType: string }[]> {
     const token = await auth.token();
-    const deadline = requestDeadline(this.timeout);
-    try {
-      const response = await deadline.wait(this.fetcher(`${this.baseUrl}/audio/speech`, {
+    const result = await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(`${this.baseUrl}/audio/speech`, {
         method: "POST",
         headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
         body: JSON.stringify({ ...body, output: "b64_json" }),
-        signal: deadline.signal,
+        signal,
       }));
-      const bytes = new Uint8Array(await deadline.wait(response.arrayBuffer()));
+      const bytes = new Uint8Array(await wait(response.arrayBuffer()));
       if (response.status === 401 && refreshOnUnauthorized && auth.canRefresh()) {
-        deadline.finish();
-        await auth.refresh();
-        return await this.speech(auth, body, false);
+        return undefined;
       }
       if (!response.ok) {
         throw new QflowHubHttpError(response.status, response, Buffer.from(bytes).toString("utf8"), {
@@ -267,9 +292,10 @@ class QflowHubClient {
           `QflowHub audio response ${index + 1} contains neither audio bytes nor a URL`);
         return await this.download(item.url);
       }));
-    } finally {
-      deadline.finish();
-    }
+    });
+    if (result !== undefined) return result;
+    await auth.refresh();
+    return await this.speech(auth, body, false);
   }
 }
 
@@ -291,7 +317,7 @@ function pricingAuth(credentials: Readonly<Record<string, EndpointCredential>>, 
   });
 }
 
-function pricingModel(request: import("@qflow/endpoint-kit").EndpointRequest, transcriptionModel: string): string | undefined {
+function pricingModel(request: import("@qflow/qflow/endpoint").EndpointRequest, transcriptionModel: string): string | undefined {
   if (capabilityKey(request.capability) === capabilityKey(whisperXCapabilities.alignment)) {
     return transcriptionModel;
   }
@@ -424,11 +450,9 @@ async function prepareGeneration(client: QflowHubClient, context: EndpointInvoca
   const request = route.prepare(context.need.constraints);
   const auth = authFor(context, client);
   await context.reportProgress?.({ phase: `Reading QflowHub model catalogue: ${request.model} (${request.operation})` });
-  try {
-    await verifyModelRoute(client, auth, request.model, request.operation);
-  } catch (error) {
-    throw new QflowHubServiceError(error instanceof EndpointServiceError ? error.code : "QFLOWHUB_ERROR",
-      `QflowHub model catalogue check failed; model=${request.model}; operation=${request.operation}; references uploaded=0; generation not submitted: ${failureMessage(error)}`);
+  if (!await verifyModelRoute(client, auth, request.model, request.operation)) {
+    await context.reportDiagnostic?.({ level: "warning",
+      message: `QflowHub model catalogue is temporarily unavailable for ${request.model}; proceeding without a support verdict` });
   }
   await context.reportProgress?.({ phase: `Preparing QflowHub request: ${request.model} (${request.operation})` });
   const uploaded = new Map<string, Promise<string>>();
@@ -442,13 +466,7 @@ async function prepareGeneration(client: QflowHubClient, context: EndpointInvoca
     uploaded.set(key, promise);
     return promise;
   };
-  let compiled;
-  try {
-    compiled = await request.compile(resolve);
-  } catch (error) {
-    throw new QflowHubServiceError(error instanceof EndpointServiceError ? error.code : "QFLOWHUB_ERROR",
-      `QflowHub request preparation failed; model=${request.model}; operation=${request.operation}; generation not submitted: ${failureMessage(error)}`);
-  }
+  const compiled = await request.compile(resolve);
   return { route, auth, compiled, operation: request.operation };
 }
 
@@ -471,7 +489,14 @@ function endpoint(client: QflowHubClient, pollIntervalMs: number, maxOperationMs
         const path = operation === "image_edits" ? "/images/edits"
           : operation === "images" ? "/images/generations" : "/videos";
         await context.reportProgress?.({ phase: `Submitting QflowHub request: ${compiled.model} (${operation})` });
-        const response = await client.json(path, auth, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": context.operation }, body: JSON.stringify({ model: compiled.model, ...input }) });
+        let response: Record<string, unknown>;
+        try {
+          response = await client.json(path, auth, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": context.operation }, body: JSON.stringify({ model: compiled.model, ...input }) });
+        } catch (error) {
+          const unknown = unknownSubmission(error);
+          if (unknown !== undefined) return unknown;
+          throw error;
+        }
         const status = response.status;
         const remoteEnded = status === "succeeded" || status === "completed";
         const handle: Handle = { contract: "qflow.qflowhub-operation@1", jobId: jobId(response), route: capabilityKey(route.capability), startedAt: Date.now() };
@@ -486,10 +511,12 @@ function endpoint(client: QflowHubClient, pollIntervalMs: number, maxOperationMs
       }
     },
     async poll(context: EndpointPollContext) {
+      let operationDeadlineAt: number | undefined;
       try {
         const handle = object(context.handle, "QflowHub handle") as unknown as Handle; const route = hypiHubRouteForCapability(context.need.capability);
         assert(route !== undefined && handle.contract === "qflow.qflowhub-operation@1" && handle.route === capabilityKey(route.capability), "QflowHub handle is invalid");
-        if (Date.now() - handle.startedAt > maxOperationMs) {
+        operationDeadlineAt = handle.startedAt + maxOperationMs;
+        if (Date.now() >= operationDeadlineAt) {
           return { status: "failed",
             receipt: { id: handle.jobId },
             failure: { code: "QFLOWHUB_OPERATION_TIMEOUT", message: `QflowHub job ${handle.jobId} exceeded this Provider's operationTimeoutMs (${maxOperationMs}); remote outcome is unknown` } };
@@ -501,7 +528,7 @@ function endpoint(client: QflowHubClient, pollIntervalMs: number, maxOperationMs
         if (status !== "succeeded" && status !== "completed") throw new Error(`QflowHub returned unknown job status ${String(status)}`);
         return { status: "ready", handle: context.handle, receipt: { id: handle.jobId } };
       } catch (error) {
-        return pollAgainOrFail(error, { handle: context.handle, pollIntervalMs, failure });
+        return retrying(error, context.handle, pollIntervalMs, operationDeadlineAt) ?? failure(error);
       }
     },
     async collect(context) {
@@ -510,7 +537,7 @@ function endpoint(client: QflowHubClient, pollIntervalMs: number, maxOperationMs
         const route = hypiHubRouteForCapability(context.need.capability);
         assert(route !== undefined && handle.route === capabilityKey(route.capability), "QflowHub collection route differs");
         return await complete(client, authFor(context, client), route, handle.jobId, context.resources);
-      } catch (error) { return failure(error); }
+      } catch (error) { return retrying(error, context.handle, pollIntervalMs) ?? failure(error); }
     },
 
   };
@@ -574,7 +601,10 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
         `WhisperX evidence Resource ${request.audio.resource} is unavailable or has changed`);
       assertWhisperXEvidenceWav(bytes, request.sampleFrames);
       const auth = authFor(context, client);
-      await verifyModelRoute(client, auth, transcriptionModel, "transcriptions");
+      if (!await verifyModelRoute(client, auth, transcriptionModel, "transcriptions")) {
+        await context.reportDiagnostic?.({ level: "warning",
+          message: `QflowHub model catalogue is temporarily unavailable for ${transcriptionModel}; proceeding without a support verdict` });
+      }
       await context.reportProgress?.({ phase: "Preparing audio for hosted transcription" });
       const url = options.publicAssetUrl === undefined
         ? await client.upload(request.audio, context.resources, auth)
@@ -599,11 +629,11 @@ export function createQflowHubProvider(options: CreateQflowHubProviderOptions = 
     }
   };
   const oauthOrigin = new URL(options.baseUrl ?? "https://qflow.ai").origin;
-  return defineEndpointPackage({
-    module: hypiHubProviderModuleRef, facet: "gateway", instance: options.instance ?? "qflowhub.default", pool: options.pool ?? options.instance ?? "qflowhub.default",
+  return defineEndpoint({
+    instance: options.instance ?? "qflowhub.default", pool: options.pool ?? options.instance ?? "qflowhub.default",
     pricing: { kind: "page", url: "https://qflow.ai/commercial/pricing/" },
     readPricing: hypiHubPricingReader(pricingClient, transcriptionModel),
-    credentials: { apiKey: options.apiKey ?? credentialRef("os", "qflowhub.oauth") },
+    credentials: { apiKey: options.apiKey ?? credentialRef("local", "qflowhub.oauth") },
     credentialInputs: { apiKey: {
       label: "QflowHub credential",
       acquisition: {

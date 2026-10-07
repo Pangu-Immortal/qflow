@@ -40,8 +40,8 @@ Runtime Profile example:
   "format": "qflow.runtime-local@1",
   "dataRoot": ".qflow/runtimes/local",
   "credentials": {
-    "platform": {
-      "use": "@qflow/credential-store-platform"
+    "local": {
+      "use": "@qflow/credential-store-local"
     }
   },
   "endpoints": {
@@ -49,7 +49,7 @@ Runtime Profile example:
       "use": "@qflow/provider-pollo",
       "pool": "pollo.default",
       "config": {
-        "apiKey": { "store": "platform", "key": "pollo.api-key" },
+        "apiKey": { "store": "local", "key": "pollo.api-key" },
         "defaultConcurrency": 3,
         "pollIntervalMs": 10000
       }
@@ -65,3 +65,5 @@ Runtime Profile example:
 concurrency. HTTP failures keep Pollo's `errorCode`, message and `requestId`; a failed generation
 keeps its `failMsg`, with any signed URL in the message redacted. Pollo stores generated files for
 14 days; the Provider downloads them when the task completes.
+Polling transport failures and HTTP 429/5xx preserve the same task and honor standard `Retry-After`;
+the scheduled wake never passes the original operation deadline. Other errors end the local attempt.

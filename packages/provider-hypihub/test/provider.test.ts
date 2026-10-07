@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { encodeOAuth2Credential } from "@qflow/runtime";
 
-import { EndpointRegistry, MemoryResourceStore } from "@qflow/driver-node";
-import { defineEndpointPackage } from "@qflow/endpoint-kit";
-import type { AsyncEndpoint } from "@qflow/endpoint-kit";
+import { EndpointRegistry, MemoryResourceStore } from "@qflow/executor";
+import { defineEndpoint } from "@qflow/endpoint";
+import type { AsyncEndpoint } from "@qflow/endpoint";
 import type { CanonicalValue, Need } from "@qflow/protocol";
 import { mimoSpeechEndpoints, sealMimoSpeechRequest } from "@qflow/mimo-speech";
 import { fishAudioSpeechEndpoints, sealFishAudioSpeechRequest } from "@qflow/fishaudio-speech";
@@ -238,6 +238,8 @@ test("QflowHub returns its current model-pricing document", async () => {
     fetch: async (input, init) => {
       assert.equal(String(input), "https://qflow.ai/v1/pricing?model=seedance-2");
       assert.equal((init?.headers as Record<string, string>).authorization, "Bearer test-key");
+      assert.equal((init?.headers as Record<string, string>)["user-agent"],
+        "qflow-provider-qflowhub/0.1.0");
       return Response.json({
         object: "model_pricing",
         model: "seedance-2",
@@ -363,9 +365,7 @@ test("QflowHub declares both MiMo speech capabilities; who serves them is the Pr
   assert.ok(needs.every((item) => registry.resolve(item).status === "resolved"));
 
   // A second Endpoint offering the same capability makes the choice the deployment's, not the Provider's.
-  const other = defineEndpointPackage({
-    module: { name: "example.tts", version: "1" },
-    facet: "tts",
+  const other = defineEndpoint({
     instance: "mimo.official",
     pool: "mimo.official",
     capabilities: [{
@@ -673,7 +673,7 @@ test("QflowHub stops before paid submission when a reference upload fails", asyn
   assert.equal(uploadAttempts, 2);
   assert.equal(cancelled, true);
   assert.equal(paidSubmissions, 0);
-  assert.match(outcome.status === "failed" ? outcome.failure.message : "", /request preparation failed.*generation not submitted/u);
+  assert.match(outcome.status === "failed" ? outcome.failure.message : "", /reference upload failed before generation submission/u);
   assert.doesNotMatch(outcome.status === "failed" ? outcome.failure.message : "", /must-not-leak/u);
 });
 
@@ -947,26 +947,22 @@ test("generation and voice cloning check their exact catalogue operation before 
       try { await selected.registration.handler(context); }
       catch (error) { failed = error as Error & { code?: string }; }
     }
-    if (availability === "available") {
+    if (availability === "available" || availability === "unknown") {
       assert.equal(failed, undefined);
       assert.deepEqual(events, item.references ? ["catalogue", "reference", "submit"] : ["catalogue", "submit"]);
       assert.match(progress.at(-1)!, /Submitting QflowHub request/u);
     } else {
       assert.ok(failed);
       assert.deepEqual(events, ["catalogue"], "neither a reference nor another model is tried");
-      assert.match(failed.message, /model catalogue check failed.*references uploaded=0; generation not submitted/u);
-      assert.ok(failed.message.includes(`model=${item.model}; operation=${item.operation}`));
       if (availability === "missing") {
         assert.equal(failed.code, "model_not_found");
         assert.match(failed.message, /HTTP 404.*request=catalogue-request.*No route for this account/u);
       } else if (availability === "different-operation") {
+        assert.equal(failed.code, "QFLOWHUB_MODEL_OPERATION_UNAVAILABLE");
         assert.match(failed.message, /does not list operation.*listed operations: transcriptions/u);
       } else if (availability === "undeclared") {
         assert.match(failed.message, /returned no valid operation list.*is unknown/u);
         assert.doesNotMatch(failed.message, /does not list operation|model_not_found/u);
-      } else {
-        assert.match(failed.message, /Connection closed before catalogue response/u);
-        assert.doesNotMatch(failed.message, /model_not_found/u);
       }
       assert.equal(progress.length, 1);
       assert.match(progress[0]!, /Reading QflowHub model catalogue/u);

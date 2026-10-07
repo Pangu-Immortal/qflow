@@ -2,7 +2,7 @@ import {
   createRuntimeCredentialStoreAdapterFacet,
   runtimeConfigExact,
   runtimeConfigObject,
-} from "@qflow/runtime-kit";
+} from "@qflow/runtime-local/extension";
 
 import { EnvironmentCredentialStore } from "./index.js";
 
@@ -18,8 +18,8 @@ const environmentCredentialStoreAdapter = createRuntimeCredentialStoreAdapterFac
 });
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
-  hostFacets: [environmentCredentialStoreAdapter],
+  format: "qflow.package@1" as const,
+  facets: [environmentCredentialStoreAdapter],
 };
 
 export default qflowPackage;

@@ -5,17 +5,21 @@
   "private": true,
   "type": "module",
   "exports": { ".": "./src/index.ts" },
+  "files": ["dist", "README.md"],
   "qflow": { "activation": "./src/activation.ts" },
-  "dependencies": {
-    "@qflow/endpoint-kit": "workspace:*",
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^",
+    "@qflow/runtime-local": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/endpoint": "workspace:*",
     "@qflow/generation": "workspace:*",
+    "@qflow/qflow": "workspace:*",
     "@qflow/minimax-h3": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/runtime": "workspace:*",
-    "@qflow/runtime-kit": "workspace:*",
-    "@qflow/wan": "workspace:*"
-  },
-  "devDependencies": {
+    "@qflow/runtime-local": "workspace:*",
+    "@qflow/wan": "workspace:*",
     "@qflow/seedance": "workspace:*"
   }
 }

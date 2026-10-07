@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { GenerationArtifactUrlResolver } from "@qflow/generation";
-import type { EndpointSupport } from "@qflow/endpoint-kit";
+import type { EndpointSupport } from "@qflow/endpoint";
 import type { BlobRef, CanonicalValue } from "@qflow/protocol";
 
 import { hypiHubRoutes } from "../src/routes.js";

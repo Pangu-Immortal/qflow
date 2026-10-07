@@ -2,20 +2,20 @@ import { createActionExecutor } from "./actions.js";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 
 import {
+  producerPackagesFromFacets,
   registerProducerFacets,
-  registerTypeValidatorFacets,
-} from "@qflow/component-kit";
+} from "@qflow/qflow/producer";
 import {
   ProducerRegistry,
-  NodeDriver,
+  Executor,
   EndpointRegistry,
-} from "@qflow/driver-node";
+} from "@qflow/qflow/executor";
 import {
   isStreamingResourceStore,
-} from "@qflow/runtime";
-import { assertOrderedBuildId } from "@qflow/protocol";
-import type { BlobRef, BuildDefinition } from "@qflow/protocol";
-import { TypeValidatorRegistry } from "@qflow/validation";
+} from "@qflow/qflow/runtime";
+import { assertOrderedBuildId } from "@qflow/qflow/protocol";
+import type { BlobRef, BuildDefinition } from "@qflow/qflow/protocol";
+import { admissionPackagesFromFacets, registerTypeValidatorFacets, TypeValidatorRegistry } from "@qflow/qflow/admission";
 
 import { createLocalRuntimeControl } from "./control.js";
 import { createLocalCredentialControl } from "./credentials.js";
@@ -115,34 +115,31 @@ export async function createLocalRuntime(
   const producers = new ProducerRegistry();
   const endpoints = new EndpointRegistry();
   const validators = new TypeValidatorRegistry();
-  for (const component of options.components ?? []) {
-    registerTypeValidatorFacets(validators, component.validators ?? []);
-    registerProducerFacets(producers, component.producers ?? []);
-  }
+  for (const pack of options.producerPackages ?? []) registerProducerFacets(producers, pack.producers ?? []);
+  for (const pack of options.admissionPackages ?? []) registerTypeValidatorFacets(validators, pack.validators ?? []);
   for (const endpoint of options.endpoints ?? []) await endpoint.install(endpoints);
   applyEndpointBindings(endpoints, options.bindings);
-  const loadedComponentPackages = new Set<string>();
+  const loadedProducerPackages = new Set<string>();
   let componentInstallation = Promise.resolve();
-  const installComponentPackages = async (specifiers: readonly string[]): Promise<void> => {
+  const installProducerPackages = async (specifiers: readonly string[]): Promise<void> => {
     const task = componentInstallation.then(async () => {
-      const missing = [...new Set(specifiers)].filter((item) => !loadedComponentPackages.has(item));
+      const missing = [...new Set(specifiers)].filter((item) => !loadedProducerPackages.has(item));
       if (missing.length === 0) return;
-      assert(options.loadComponentPackages !== undefined,
-        `Build requires component package ${missing[0]} but this Runtime cannot load installed packages`);
-      const loaded = await options.loadComponentPackages(missing);
-      const fresh = loaded.filter((item) => !loadedComponentPackages.has(item.specifier));
+      assert(options.loadProducerPackages !== undefined,
+        `Build requires execution package ${missing[0]} but this Runtime cannot load installed packages`);
+      const loaded = await options.loadProducerPackages(missing);
+      const fresh = loaded.filter((item) => !loadedProducerPackages.has(item.specifier));
       for (const item of fresh) {
-        for (const component of item.components) {
-          registerTypeValidatorFacets(validators, component.validators ?? []);
-          registerProducerFacets(producers, component.producers ?? []);
-        }
+        const facets = item.contribution.facets ?? [];
+        for (const pack of producerPackagesFromFacets(facets)) registerProducerFacets(producers, pack.producers ?? []);
+        for (const pack of admissionPackagesFromFacets(facets)) registerTypeValidatorFacets(validators, pack.validators ?? []);
       }
-      for (const item of fresh) loadedComponentPackages.add(item.specifier);
+      for (const item of fresh) loadedProducerPackages.add(item.specifier);
     });
     componentInstallation = task.then(() => undefined, () => undefined);
     await task;
   };
-  const driver = new NodeDriver({
+  const driver = new Executor({
     producers,
     endpoints,
     resources: options.resourceStore,
@@ -177,7 +174,7 @@ export async function createLocalRuntime(
     resourceStore: options.resourceStore,
     ...(options.resourceStoreForBuild === undefined ? {} : { resourceStoreForBuild: options.resourceStoreForBuild }),
     openBuildResultRepository,
-    installComponentPackages,
+    installProducerPackages,
     resultWriter,
   });
   const credentialControl = createLocalCredentialControl({
@@ -261,7 +258,7 @@ export async function createLocalRuntime(
     const executionRequest = {
       build: request.id,
       ...(options.executionContext === undefined ? {} : { context: options.executionContext }),
-      componentPackages: [...new Set(request.componentPackages ?? [])].sort(),
+      executionPackages: [...new Set(request.executionPackages ?? [])].sort(),
       result: resultRequest.repository,
     } as const;
     let prepared = false;
@@ -293,9 +290,9 @@ export async function createLocalRuntime(
         await opened.repository.create({
           id: request.id,
           ...(resultRequest.title === undefined ? {} : { title: resultRequest.title }),
-          source: { path: projectPath(resultRequest.repository.root, request.catalog.source.path) },
+          source: { id: projectPath(resultRequest.repository.root, request.catalog.source.path) },
           ...(request.catalog.run === undefined ? {} : {
-            run: { path: projectPath(resultRequest.repository.root, request.catalog.run.path) },
+            run: { id: projectPath(resultRequest.repository.root, request.catalog.run.path) },
           }),
           targets,
           publishedOutputs,

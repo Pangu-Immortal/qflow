@@ -1,4 +1,5 @@
-import { EndpointHttpError, EndpointServiceError } from "@qflow/endpoint-kit";
+import { EndpointServiceError } from "@qflow/qflow/endpoint";
+import { EndpointHttpError, retryAfterMs } from "@qflow/qflow/endpoint/http";
 
 /** BeatAPI's `{ error: { code, message, request_id, retry_after_seconds } }` envelope and terminal task errors. */
 function record(value: unknown): Record<string, unknown> | undefined {
@@ -25,15 +26,16 @@ export class BeatApiHttpError extends EndpointHttpError {
     const code = text(error?.code) ?? "BEATAPI_HTTP_ERROR";
     const reason = text(error?.message) ?? (error === undefined ? text(bodyText.slice(0, 2000)) : undefined);
     const requestId = text(error?.request_id) ?? text(response.headers.get("x-request-id"));
-    const retryAfter = typeof error?.retry_after_seconds === "number" ? error.retry_after_seconds : undefined;
+    const serviceRetryAfter = typeof error?.retry_after_seconds === "number" ? Math.round(error.retry_after_seconds * 1000) : undefined;
+    const retryAfter = serviceRetryAfter ?? retryAfterMs(response.headers);
     const facts = [
       `BeatAPI HTTP ${status}`, code, `${request.method} ${request.path}`,
       ...(request.model === undefined ? [] : [`model=${request.model}`]),
       ...(requestId === undefined ? [] : [`request=${requestId}`]),
-      ...(retryAfter === undefined ? [] : [`retry-after=${retryAfter}s`]),
+      ...(retryAfter === undefined ? [] : [`retry-after=${retryAfter}ms`]),
     ];
     super(code, `${facts.join("; ")}${reason === undefined ? "" : `: ${safeBeatApiReason(reason)}`}`,
-      status, retryAfter === undefined ? undefined : Math.round(retryAfter * 1000));
+      status, retryAfter);
   }
 }
 

@@ -1,0 +1,28 @@
+{
+  "name": "@qflow/credential-store-local",
+  "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "runtime",
+    "README.md"
+  ],
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^",
+    "@qflow/runtime-local": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/atomic-file": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-local": "workspace:*"
+  }
+}

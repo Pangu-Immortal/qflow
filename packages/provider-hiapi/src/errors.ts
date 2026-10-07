@@ -1,4 +1,5 @@
-import { EndpointHttpError, EndpointServiceError } from "@qflow/endpoint-kit";
+import { EndpointServiceError } from "@qflow/qflow/endpoint";
+import { EndpointHttpError, retryAfterMs } from "@qflow/qflow/endpoint/http";
 
 /** HiAPI's `{ code, message, error_code }` envelope and task `error` object, kept at the service boundary. */
 function record(value: unknown): Record<string, unknown> | undefined {
@@ -29,7 +30,8 @@ export class HiApiHttpError extends EndpointHttpError {
       ...(request.model === undefined ? [] : [`model=${request.model}`]),
       ...(requestId === undefined ? [] : [`request=${requestId}`]),
     ];
-    super(code, `${facts.join("; ")}${reason === undefined ? "" : `: ${safeHiApiReason(reason)}`}`, status);
+    super(code, `${facts.join("; ")}${reason === undefined ? "" : `: ${safeHiApiReason(reason)}`}`,
+      status, retryAfterMs(response.headers));
   }
 }
 

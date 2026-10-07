@@ -1,9 +1,9 @@
 import type {
-  NodeRuntimeHost,
+  LocalRuntimeHost,
   RuntimeController,
   RuntimeWorkerLaunch,
-} from "@qflow/runtime-host-node";
-import { qflowHostStateRoot } from "@qflow/runtime-host-node";
+} from "./host-api.js";
+import { qflowHostStateRoot } from "@qflow/qflow/cli";
 import { resolve } from "node:path";
 import { superviseBuilds } from "./supervisor.js";
 
@@ -16,7 +16,6 @@ import {
   doctorRuntimeConfig,
   invokeRuntimeConfigNeed,
   openTransientRuntimeConfigExecution,
-  prepareRuntimeConfigPackages,
   preflightRuntimeConfig,
   readRuntimeConfigPricing,
   resolveRuntimeConfigPaths,
@@ -43,7 +42,7 @@ export async function openLocalRuntimeHost(
     readonly hostStateRoot?: string;
     readonly workerLaunch: RuntimeWorkerLaunch;
   },
-): Promise<NodeRuntimeHost> {
+): Promise<LocalRuntimeHost> {
   const profile = resolve(path);
   const basePackageRoot = resolve(hostOptions.packageRoot);
   const distribution = {
@@ -92,6 +91,14 @@ export async function openLocalRuntimeHost(
   };
   return {
     profile,
+    executionStatus: async () => {
+      const selected = await controller();
+      return await selected.worker.status();
+    },
+    ensureExecution: async (options) => {
+      const selected = await controller();
+      return await selected.worker.up(options);
+    },
     resolvePaths: async () => {
       const selection = await resolveRuntimeConfigPaths(profile, {
         packageRoot: basePackageRoot,
@@ -120,12 +127,6 @@ export async function openLocalRuntimeHost(
       endpoint,
       { packageRoot: basePackageRoot, ...distribution },
     ),
-    prepare: async (options) => await prepareRuntimeConfigPackages(profile, {
-      packageRoot: basePackageRoot,
-      ...distribution,
-      ...(options?.onProgress === undefined ? {} : { onProgress: options.onProgress }),
-      ...(options?.endpoints === undefined ? {} : { endpoints: options.endpoints }),
-    }),
     preflight: async (options) => await preflightRuntimeConfig(profile, {
       packageRoot: basePackageRoot,
       ...distribution,
@@ -177,7 +178,11 @@ export async function openLocalRuntimeHost(
           const paths = await resolveRuntimeConfigPaths(profile, { packageRoot: basePackageRoot, ...distribution });
           await superviseBuilds({
             profile, dataRoot: paths.dataRoot, readyFile, owner,
-            launch: hostOptions.workerLaunch, signal: abort.signal,
+            launch: {
+              ...hostOptions.workerLaunch,
+              workerArgs: ["--package-root", basePackageRoot],
+            },
+            signal: abort.signal,
             ready: async () => await markRuntimeProcessReady(readyFile, owner),
           });
         }

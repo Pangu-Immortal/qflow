@@ -1,28 +1,34 @@
 {
   "name": "@qflow/provider-qflowhub",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": { ".": "./src/index.ts" },
+  "files": ["dist", "README.md"],
   "qflow": { "activation": "./src/activation.ts" },
-  "dependencies": {
-    "@qflow/endpoint-kit": "workspace:*",
-    "@qflow/generation": "workspace:*",
-    "@qflow/protocol": "workspace:*",
-    "@qflow/runtime": "workspace:*",
-    "@qflow/runtime-kit": "workspace:*",
-    "@qflow/speech-evidence": "workspace:*",
-    "@qflow/text": "workspace:*",
-    "@qflow/whisperx": "workspace:*"
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^",
+    "@qflow/runtime-local": "workspace:^",
+    "@qflow/whisperx": "workspace:^"
   },
   "devDependencies": {
-    "@qflow/driver-node": "workspace:*",
+    "@qflow/endpoint": "workspace:*",
+    "@qflow/generation": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-local": "workspace:*",
+    "@qflow/speech-evidence": "workspace:*",
+    "@qflow/text": "workspace:*",
+    "@qflow/whisperx": "workspace:*",
+    "@qflow/executor": "workspace:*",
     "@qflow/elevenlabs-speech": "workspace:*",
     "@qflow/fishaudio-speech": "workspace:*",
     "@qflow/mimo-speech": "workspace:*",
     "@qflow/seedance": "workspace:*",
-    "@qflow/speech": "workspace:*",
-    "@qflow/volcengine-matting": "workspace:*"
+    "@qflow/volcengine-matting": "workspace:*",
+    "@qflow/gpt-image": "workspace:*",
+    "typescript": "5.9.3"
   }
 }

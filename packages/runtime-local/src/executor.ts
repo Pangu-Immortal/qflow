@@ -1,6 +1,6 @@
 import { setImmediate, setTimeout as pause } from "node:timers/promises";
-import { NodeModuleScope } from "@qflow/package-loader-node/module-scope";
-import { SqliteRuntimeState } from "@qflow/store-sqlite";
+import { NodeModuleScope } from "@qflow/qflow/loader/node/module-scope";
+import { SqliteRuntimeState } from "./sqlite-state.js";
 import { createRuntimeForBuild, statePath } from "./config.js";
 import type { LocalRuntime } from "./types.js";
 

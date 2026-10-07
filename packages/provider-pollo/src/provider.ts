@@ -1,11 +1,11 @@
-import { requestDeadline } from "@qflow/runtime-kit";
-import type { AsyncEndpoint, EndpointCredential, EndpointInvocationContext, EndpointOutcome } from "@qflow/endpoint-kit";
-import { EndpointResponseError, EndpointServiceError, EndpointTransportError, defineEndpointPackage, pollAgainOrFail, transport, wakeAfter } from "@qflow/endpoint-kit";
-import type { GenerationArtifactUrlResolver } from "@qflow/generation";
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, CapabilityRef } from "@qflow/protocol";
-import { credentialRef } from "@qflow/runtime";
-import type { CredentialRef, ResourceStore } from "@qflow/runtime";
+import type { AsyncEndpoint, EndpointCredential, EndpointInvocationContext, EndpointOutcome } from "@qflow/qflow/endpoint";
+import { EndpointServiceError, defineEndpoint, wakeAfter } from "@qflow/qflow/endpoint";
+import { EndpointHttpError, EndpointResponseError, EndpointTransportError, withRequestDeadline } from "@qflow/qflow/endpoint/http";
+import type { GenerationArtifactUrlResolver } from "@qflow/qflow/generation";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, CanonicalValue, CapabilityRef } from "@qflow/qflow/protocol";
+import { credentialRef } from "@qflow/qflow/endpoint";
+import type { CredentialRef, ResourceStore } from "@qflow/qflow/endpoint";
 import { polloRouteForCapability, polloRoutes } from "./routes.js";
 import { PolloHttpError, PolloServiceError, polloTaskFailure } from "./errors.js";
 
@@ -17,7 +17,7 @@ export type CreatePolloProviderOptions = {
   readonly baseUrl?: string;
   readonly apiKey?: CredentialRef;
   readonly defaultConcurrency?: number;
-  readonly actionLimits?: import("@qflow/endpoint-kit").EndpointActionLimits;
+  readonly actionLimits?: import("@qflow/qflow/endpoint").EndpointActionLimits;
   readonly pollIntervalMs?: number;
   readonly requestTimeoutMs?: number;
   readonly operationTimeoutMs?: number;
@@ -48,38 +48,56 @@ function apiBaseUrl(value: string): string {
 }
 function apiKey(credentials: Readonly<Record<string, EndpointCredential>>): string {
   const value = credentials.apiKey?.secret;
-  assert(typeof value === "string" && value.length > 0, "Pollo apiKey credential is unavailable; store a Pollo API key for this Endpoint");
+  if (typeof value !== "string" || value.length === 0) {
+    throw new PolloServiceError("POLLO_CREDENTIAL_UNAVAILABLE",
+      "Pollo apiKey credential is unavailable; store a Pollo API key for this Endpoint");
+  }
   return value;
 }
 function failureMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 function failure(error: unknown): EndpointOutcome {
-  return { status: "failed", failure: { code: error instanceof EndpointServiceError ? error.code : "POLLO_ERROR", message: failureMessage(error) } };
+  if (!(error instanceof EndpointServiceError || error instanceof EndpointHttpError
+    || error instanceof EndpointTransportError || error instanceof EndpointResponseError)) throw error;
+  const code = error instanceof EndpointServiceError || error instanceof EndpointHttpError ? error.code : "POLLO_ERROR";
+  return { status: "failed", failure: { code, message: failureMessage(error) } };
+}
+function retrying(error: unknown, handle: CanonicalValue, pollIntervalMs: number, deadlineAt?: number): EndpointOutcome | undefined {
+  const delay = error instanceof EndpointTransportError ? pollIntervalMs
+    : error instanceof EndpointHttpError && (error.status === 429 || error.status >= 500)
+      ? error.retryAfterMs ?? pollIntervalMs : undefined;
+  if (delay === undefined) return undefined;
+  const now = Date.now();
+  return { status: "pending", handle, wakeAt: Math.min(now + delay, deadlineAt ?? Number.MAX_SAFE_INTEGER), progress: { phase: "retrying" } };
+}
+function unknownSubmission(error: unknown): EndpointOutcome | undefined {
+  return error instanceof EndpointTransportError ? { status: "failed", failure: {
+    code: "POLLO_SUBMISSION_UNKNOWN",
+    message: `Pollo submission transport failed; remote outcome is unknown: ${error.message}`,
+  } } : undefined;
 }
 
 class PolloClient {
   constructor(readonly baseUrl: string, readonly timeout: number, readonly fetcher: typeof globalThis.fetch) {}
   async json(path: string, key: string, init: RequestInit = {}): Promise<Record<string, unknown>> {
-    const deadline = requestDeadline(this.timeout, () => new EndpointTransportError("Pollo request timed out"));
-    try {
-      const response = await transport(deadline.wait(this.fetcher(`${this.baseUrl}${path}`, {
-        ...init, signal: deadline.signal, headers: { "x-api-key": key, ...(init.headers ?? {}) },
-      })));
-      const text = await transport(deadline.wait(response.text()));
-      if (!response.ok) throw new PolloHttpError(response.status, text, { method: init.method ?? "GET", path });
+    return await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(`${this.baseUrl}${path}`, {
+        ...init, signal, headers: { "x-api-key": key, ...(init.headers ?? {}) },
+      }));
+      const text = await wait(response.text());
+      if (!response.ok) throw new PolloHttpError(response.status, response, text, { method: init.method ?? "GET", path });
       let body: unknown;
       try { body = text.length === 0 ? {} : JSON.parse(text); } catch { throw new EndpointResponseError(`Pollo returned invalid JSON (${response.status})`); }
       return object(body, "Pollo response");
-    } finally { deadline.finish(); }
+    }, () => new EndpointTransportError("Pollo request timed out", { timeout: true }));
   }
   async download(url: string): Promise<{ readonly bytes: Uint8Array; readonly mediaType: string }> {
-    const deadline = requestDeadline(this.timeout);
-    try {
-      const response = await deadline.wait(this.fetcher(url, { signal: deadline.signal }));
-      if (!response.ok) throw new Error(`Pollo asset returned HTTP ${response.status}`);
-      return { bytes: new Uint8Array(await deadline.wait(response.arrayBuffer())), mediaType: response.headers.get("content-type")?.split(";", 1)[0] ?? "application/octet-stream" };
-    } finally { deadline.finish(); }
+    return await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(url, { signal }));
+      if (!response.ok) throw new PolloHttpError(response.status, response, "", { method: "GET", path: url });
+      return { bytes: new Uint8Array(await wait(response.arrayBuffer())), mediaType: response.headers.get("content-type")?.split(";", 1)[0] ?? "application/octet-stream" };
+    });
   }
 }
 
@@ -104,18 +122,19 @@ function endpoint(client: PolloClient, pollIntervalMs: number, maxOperationMs: n
         assert(route !== undefined, "Pollo does not implement this exact capability");
         const request = route.prepare(context.need.constraints);
         await context.reportProgress?.({ phase: `Preparing Pollo request: ${request.path}` });
-        let body: Record<string, unknown>;
-        try {
-          body = await request.compile(resolverFor(context, publicAssetUrl));
-        } catch (error) {
-          throw new PolloServiceError(error instanceof EndpointServiceError ? error.code : "POLLO_ERROR",
-            `Pollo request preparation failed; path=${request.path}; generation not submitted: ${failureMessage(error)}`);
-        }
+        const body = await request.compile(resolverFor(context, publicAssetUrl));
         await context.reportProgress?.({ phase: `Submitting Pollo request: ${request.path}` });
-        const response = await client.json(request.path, apiKey(context.credentials), {
-          method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
-        });
-        assert(typeof response.taskId === "string" && response.taskId.length > 0, "Pollo response has no taskId");
+        let response: Record<string, unknown>;
+        try {
+          response = await client.json(request.path, apiKey(context.credentials), {
+            method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+          });
+        } catch (error) {
+          const unknown = unknownSubmission(error);
+          if (unknown !== undefined) return unknown;
+          throw error;
+        }
+        if (typeof response.taskId !== "string" || response.taskId.length === 0) throw new EndpointResponseError("Pollo response has no taskId");
         const handle: Handle = { contract: "qflow.pollo-operation@1", taskId: response.taskId, route: route.key, startedAt: Date.now() };
         const receipt = { id: handle.taskId };
         await context.checkpoint?.({ handle: canonicalize(handle), receipt });
@@ -125,32 +144,34 @@ function endpoint(client: PolloClient, pollIntervalMs: number, maxOperationMs: n
       }
     },
     async poll(context) {
+      let operationDeadlineAt: number | undefined;
       try {
         const handle = object(context.handle, "Pollo handle") as unknown as Handle;
         const route = polloRouteForCapability(context.need.capability);
         assert(route !== undefined && handle.contract === "qflow.pollo-operation@1" && handle.route === route.key, "Pollo handle is invalid");
         const receipt = { id: handle.taskId };
-        if (Date.now() - handle.startedAt > maxOperationMs) {
+        operationDeadlineAt = handle.startedAt + maxOperationMs;
+        if (Date.now() >= operationDeadlineAt) {
           return { status: "failed", receipt, failure: { code: "POLLO_OPERATION_TIMEOUT", message: `Pollo task ${handle.taskId} exceeded this Provider's operationTimeoutMs (${maxOperationMs}); remote outcome is unknown` } };
         }
         const task = await client.json(`/v1/generation/${encodeURIComponent(handle.taskId)}/status`, apiKey(context.credentials));
-        assert(Array.isArray(task.generations) && task.generations.length > 0, "Pollo task has no generations");
+        if (!Array.isArray(task.generations) || task.generations.length === 0) throw new EndpointResponseError("Pollo task has no generations");
         const generations = task.generations.map((item, index) => object(item, `Pollo generation ${index + 1}`));
         const rejected = polloTaskFailure(generations, handle.taskId);
         if (rejected !== undefined) return { ...failure(rejected), receipt };
         const pending = generations.find((generation) => generation.status !== "succeed");
         if (pending !== undefined) {
           const status = String(pending.status);
-          assert(status === "waiting" || status === "processing", `Pollo returned unknown generation status ${status}`);
+          if (status !== "waiting" && status !== "processing") throw new EndpointResponseError(`Pollo returned unknown generation status ${status}`);
           return { ...wakeAfter(canonicalize(handle), pollIntervalMs, Date.now(), { phase: status }), receipt };
         }
         const urls = generations.map((generation, index) => {
-          assert(typeof generation.url === "string" && /^https?:\/\//u.test(generation.url), `Pollo generation ${index + 1} has no URL`);
+          if (typeof generation.url !== "string" || !/^https?:\/\//u.test(generation.url)) throw new EndpointResponseError(`Pollo generation ${index + 1} has no URL`);
           return generation.url;
         });
         return { status: "ready", handle: canonicalize({ ...handle, urls }), receipt };
       } catch (error) {
-        return pollAgainOrFail(error, { handle: context.handle, pollIntervalMs, failure });
+        return retrying(error, context.handle, pollIntervalMs, operationDeadlineAt) ?? failure(error);
       }
     },
     async collect(context) {
@@ -166,7 +187,7 @@ function endpoint(client: PolloClient, pollIntervalMs: number, maxOperationMs: n
         }
         return { status: "completed", result: { value: route.packageResult(blobs) }, receipt: { id: handle.taskId } };
       } catch (error) {
-        return failure(error);
+        return retrying(error, context.handle, pollIntervalMs) ?? failure(error);
       }
     },
   };
@@ -180,10 +201,10 @@ export function createPolloProvider(options: CreatePolloProviderOptions = {}) {
   }
   const client = new PolloClient(apiBaseUrl(options.baseUrl ?? "https://pollo.ai/api/platform"), requestTimeoutMs, options.fetch ?? globalThis.fetch);
   const asyncEndpoint = endpoint(client, options.pollIntervalMs ?? 10_000, operationTimeoutMs, options.publicAssetUrl);
-  return defineEndpointPackage({
-    module: polloProviderModuleRef, facet: "gateway", instance: options.instance ?? "pollo.default", pool: options.pool ?? options.instance ?? "pollo.default",
+  return defineEndpoint({
+    instance: options.instance ?? "pollo.default", pool: options.pool ?? options.instance ?? "pollo.default",
     pricing: { kind: "page", url: "https://api.pollo.ai/pricing" },
-    credentials: { apiKey: options.apiKey ?? credentialRef("os", "pollo.api-key") },
+    credentials: { apiKey: options.apiKey ?? credentialRef("local", "pollo.api-key") },
     credentialInputs: { apiKey: { label: "Pollo API key" } },
     defaultConcurrency: options.defaultConcurrency ?? 4,
     ...(options.actionLimits === undefined ? {} : { actionLimits: options.actionLimits }),

@@ -1,11 +1,11 @@
-import { requestDeadline } from "@qflow/runtime-kit";
-import type { AsyncEndpoint, EndpointCredential, EndpointInvocationContext, EndpointOutcome, ImmediateEndpointHandler } from "@qflow/endpoint-kit";
-import { EndpointResponseError, EndpointServiceError, EndpointTransportError, defineEndpointPackage, pollAgainOrFail, transport, wakeAfter } from "@qflow/endpoint-kit";
-import type { GenerationArtifactUrlResolver } from "@qflow/generation";
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, CapabilityRef } from "@qflow/protocol";
-import { credentialRef } from "@qflow/runtime";
-import type { CredentialRef, ResourceStore } from "@qflow/runtime";
+import type { AsyncEndpoint, EndpointCredential, EndpointInvocationContext, EndpointOutcome, ImmediateEndpointHandler } from "@qflow/qflow/endpoint";
+import { EndpointServiceError, defineEndpoint, wakeAfter } from "@qflow/qflow/endpoint";
+import { EndpointHttpError, EndpointResponseError, EndpointTransportError, withRequestDeadline } from "@qflow/qflow/endpoint/http";
+import type { GenerationArtifactUrlResolver } from "@qflow/qflow/generation";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, CanonicalValue, CapabilityRef } from "@qflow/qflow/protocol";
+import { credentialRef } from "@qflow/qflow/endpoint";
+import type { CredentialRef, ResourceStore } from "@qflow/qflow/endpoint";
 import { tokenDanceRouteForCapability, tokenDanceRoutes } from "./routes.js";
 import type { TokenDanceRoute } from "./routes.js";
 import { TokenDanceHttpError, TokenDanceServiceError, tokenDanceTaskFailure } from "./errors.js";
@@ -18,7 +18,7 @@ export type CreateTokenDanceProviderOptions = {
   readonly baseUrl?: string;
   readonly apiKey?: CredentialRef;
   readonly defaultConcurrency?: number;
-  readonly actionLimits?: import("@qflow/endpoint-kit").EndpointActionLimits;
+  readonly actionLimits?: import("@qflow/qflow/endpoint").EndpointActionLimits;
   readonly pollIntervalMs?: number;
   readonly requestTimeoutMs?: number;
   readonly operationTimeoutMs?: number;
@@ -49,14 +49,34 @@ function apiBaseUrl(value: string): string {
 }
 function apiKey(credentials: Readonly<Record<string, EndpointCredential>>): string {
   const value = credentials.apiKey?.secret;
-  assert(typeof value === "string" && value.length > 0, "TokenDance apiKey credential is unavailable; store a TokenDance API key for this Endpoint");
+  if (typeof value !== "string" || value.length === 0) {
+    throw new TokenDanceServiceError("TOKENDANCE_CREDENTIAL_UNAVAILABLE",
+      "TokenDance apiKey credential is unavailable; store a TokenDance API key for this Endpoint");
+  }
   return value;
 }
 function failureMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 function failure(error: unknown): EndpointOutcome {
-  return { status: "failed", failure: { code: error instanceof EndpointServiceError ? error.code : "TOKENDANCE_ERROR", message: failureMessage(error) } };
+  if (!(error instanceof EndpointServiceError || error instanceof EndpointHttpError
+    || error instanceof EndpointTransportError || error instanceof EndpointResponseError)) throw error;
+  const code = error instanceof EndpointServiceError || error instanceof EndpointHttpError ? error.code : "TOKENDANCE_ERROR";
+  return { status: "failed", failure: { code, message: failureMessage(error) } };
+}
+function retrying(error: unknown, handle: CanonicalValue, pollIntervalMs: number, deadlineAt?: number): EndpointOutcome | undefined {
+  const delay = error instanceof EndpointTransportError ? pollIntervalMs
+    : error instanceof EndpointHttpError && (error.status === 429 || error.status >= 500)
+      ? error.retryAfterMs ?? pollIntervalMs : undefined;
+  if (delay === undefined) return undefined;
+  const now = Date.now();
+  return { status: "pending", handle, wakeAt: Math.min(now + delay, deadlineAt ?? Number.MAX_SAFE_INTEGER), progress: { phase: "retrying" } };
+}
+function unknownSubmission(error: unknown): EndpointOutcome | undefined {
+  return error instanceof EndpointTransportError ? { status: "failed", failure: {
+    code: "TOKENDANCE_SUBMISSION_UNKNOWN",
+    message: `TokenDance submission transport failed; remote outcome is unknown: ${error.message}`,
+  } } : undefined;
 }
 function httpsUrl(value: unknown, subject: string): string {
   assert(typeof value === "string" && /^https?:\/\//u.test(value), `${subject} has no download URL`);
@@ -66,12 +86,11 @@ function httpsUrl(value: unknown, subject: string): string {
 class TokenDanceClient {
   constructor(readonly baseUrl: string, readonly timeout: number, readonly fetcher: typeof globalThis.fetch) {}
   async json(path: string, key: string, init: RequestInit = {}): Promise<Record<string, unknown>> {
-    const deadline = requestDeadline(this.timeout, () => new EndpointTransportError("TokenDance request timed out"));
-    try {
-      const response = await transport(deadline.wait(this.fetcher(`${this.baseUrl}${path}`, {
-        ...init, signal: deadline.signal, headers: { authorization: `Bearer ${key}`, ...(init.headers ?? {}) },
-      })));
-      const text = await transport(deadline.wait(response.text()));
+    return await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(`${this.baseUrl}${path}`, {
+        ...init, signal, headers: { authorization: `Bearer ${key}`, ...(init.headers ?? {}) },
+      }));
+      const text = await wait(response.text());
       if (!response.ok) {
         const input = typeof init.body === "string" ? JSON.parse(init.body) as Record<string, unknown> : undefined;
         throw new TokenDanceHttpError(response.status, response, text, {
@@ -81,7 +100,7 @@ class TokenDanceClient {
       let body: unknown;
       try { body = text.length === 0 ? {} : JSON.parse(text); } catch { throw new EndpointResponseError(`TokenDance returned invalid JSON (${response.status})`); }
       return object(body, "TokenDance response");
-    } finally { deadline.finish(); }
+    }, () => new EndpointTransportError("TokenDance request timed out", { timeout: true }));
   }
   /** MiniMax's file API through the gateway; the returned id is referenced as `mm_file://{file_id}`. */
   async uploadMiniMaxInput(bytes: Uint8Array, artifact: BlobRef, key: string): Promise<string> {
@@ -96,12 +115,11 @@ class TokenDanceClient {
     return `mm_file://${String(id)}`;
   }
   async download(url: string): Promise<{ readonly bytes: Uint8Array; readonly mediaType: string }> {
-    const deadline = requestDeadline(this.timeout);
-    try {
-      const response = await deadline.wait(this.fetcher(url, { signal: deadline.signal }));
-      if (!response.ok) throw new Error(`TokenDance asset returned HTTP ${response.status}`);
-      return { bytes: new Uint8Array(await deadline.wait(response.arrayBuffer())), mediaType: response.headers.get("content-type")?.split(";", 1)[0] ?? "application/octet-stream" };
-    } finally { deadline.finish(); }
+    return await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(url, { signal }));
+      if (!response.ok) throw new TokenDanceHttpError(response.status, response, "", { method: "GET", path: url });
+      return { bytes: new Uint8Array(await wait(response.arrayBuffer())), mediaType: response.headers.get("content-type")?.split(";", 1)[0] ?? "application/octet-stream" };
+    });
   }
 }
 
@@ -138,16 +156,10 @@ async function prepare(client: TokenDanceClient, context: EndpointInvocationCont
   assert(route !== undefined, "TokenDance does not implement this exact capability");
   const request = route.prepare(context.need.constraints);
   await context.reportProgress?.({ phase: `Preparing TokenDance request: ${request.model}` });
-  let body: string;
-  try {
-    body = JSON.stringify(await request.compile(resolverFor(client, route, context, publicAssetUrl)));
-    const cap = route.mediaLimits.body;
-    assert(cap === undefined || Buffer.byteLength(body) <= cap,
-      `TokenDance ${route.protocol} accepts request bodies up to ${(cap ?? 0) / 1_000_000} MB; inline references make this one ${Buffer.byteLength(body)} bytes`);
-  } catch (error) {
-    throw new TokenDanceServiceError(error instanceof EndpointServiceError ? error.code : "TOKENDANCE_ERROR",
-      `TokenDance request preparation failed; model=${request.model}; generation not submitted: ${failureMessage(error)}`);
-  }
+  const body = JSON.stringify(await request.compile(resolverFor(client, route, context, publicAssetUrl)));
+  const cap = route.mediaLimits.body;
+  assert(cap === undefined || Buffer.byteLength(body) <= cap,
+    `TokenDance ${route.protocol} accepts request bodies up to ${(cap ?? 0) / 1_000_000} MB; inline references make this one ${Buffer.byteLength(body)} bytes`);
   return { route, model: request.model, body };
 }
 
@@ -167,7 +179,7 @@ const paths = {
 
 function taskId(protocol: keyof typeof paths, response: Record<string, unknown>): string {
   const id = protocol === "ark-video" ? response.id : response.task_id;
-  assert(typeof id === "string" && id.length > 0, "TokenDance response has no task id");
+  if (typeof id !== "string" || id.length === 0) throw new EndpointResponseError("TokenDance response has no task id");
   return id;
 }
 
@@ -188,9 +200,16 @@ function endpoint(client: TokenDanceClient, pollIntervalMs: number, maxOperation
         const { route, model, body } = await prepare(client, context, publicAssetUrl);
         assert(route.protocol !== "ark-image", "TokenDance image capabilities use an immediate endpoint");
         await context.reportProgress?.({ phase: `Submitting TokenDance request: ${model}` });
-        const response = await client.json(paths[route.protocol].submit, apiKey(context.credentials), {
-          method: "POST", headers: { "content-type": "application/json" }, body,
-        });
+        let response: Record<string, unknown>;
+        try {
+          response = await client.json(paths[route.protocol].submit, apiKey(context.credentials), {
+            method: "POST", headers: { "content-type": "application/json" }, body,
+          });
+        } catch (error) {
+          const unknown = unknownSubmission(error);
+          if (unknown !== undefined) return unknown;
+          throw error;
+        }
         const handle: Handle = { contract: "qflow.tokendance-operation@1", taskId: taskId(route.protocol, response), route: route.key, startedAt: Date.now() };
         const receipt = { id: handle.taskId };
         await context.checkpoint?.({ handle: canonicalize(handle), receipt });
@@ -200,12 +219,14 @@ function endpoint(client: TokenDanceClient, pollIntervalMs: number, maxOperation
       }
     },
     async poll(context) {
+      let operationDeadlineAt: number | undefined;
       try {
         const handle = object(context.handle, "TokenDance handle") as unknown as Handle;
         const route = tokenDanceRouteForCapability(context.need.capability);
         assert(route !== undefined && handle.contract === "qflow.tokendance-operation@1" && handle.route === route.key && route.protocol !== "ark-image", "TokenDance handle is invalid");
         const receipt = { id: handle.taskId };
-        if (Date.now() - handle.startedAt > maxOperationMs) {
+        operationDeadlineAt = handle.startedAt + maxOperationMs;
+        if (Date.now() >= operationDeadlineAt) {
           return { status: "failed", receipt, failure: { code: "TOKENDANCE_OPERATION_TIMEOUT", message: `TokenDance task ${handle.taskId} exceeded this Provider's operationTimeoutMs (${maxOperationMs}); remote outcome is unknown` } };
         }
         const task = taskBody(route.protocol, await client.json(paths[route.protocol].task(handle.taskId), apiKey(context.credentials)));
@@ -213,10 +234,10 @@ function endpoint(client: TokenDanceClient, pollIntervalMs: number, maxOperation
         if (status === "queued" || status === "running") return { ...wakeAfter(canonicalize(handle), pollIntervalMs, Date.now(), { phase: status }), receipt };
         const rejected = tokenDanceTaskFailure(task, handle.taskId);
         if (rejected !== undefined) return { ...failure(rejected), receipt };
-        assert(status === "succeeded", `TokenDance returned unknown task status ${status}`);
+        if (status !== "succeeded") throw new EndpointResponseError(`TokenDance returned unknown task status ${status}`);
         return { status: "ready", handle: canonicalize({ ...handle, url: taskVideoUrl(route.protocol, task) }), receipt };
       } catch (error) {
-        return pollAgainOrFail(error, { handle: context.handle, pollIntervalMs, failure });
+        return retrying(error, context.handle, pollIntervalMs, operationDeadlineAt) ?? failure(error);
       }
     },
     async collect(context) {
@@ -228,7 +249,7 @@ function endpoint(client: TokenDanceClient, pollIntervalMs: number, maxOperation
         const blobs = await store(client, [httpsUrl(handle.url, "TokenDance handle")], context.resources);
         return { status: "completed", result: { value: route.packageResult(blobs) }, receipt: { id: handle.taskId } };
       } catch (error) {
-        return failure(error);
+        return retrying(error, context.handle, pollIntervalMs) ?? failure(error);
       }
     },
   };
@@ -254,10 +275,10 @@ export function createTokenDanceProvider(options: CreateTokenDanceProviderOption
     await context.reportProgress?.({ phase: "Receiving generated images" });
     return { value: route.packageResult(await store(client, urls, context.resources)) };
   };
-  return defineEndpointPackage({
-    module: tokenDanceProviderModuleRef, facet: "gateway", instance: options.instance ?? "tokendance.default", pool: options.pool ?? options.instance ?? "tokendance.default",
+  return defineEndpoint({
+    instance: options.instance ?? "tokendance.default", pool: options.pool ?? options.instance ?? "tokendance.default",
     pricing: { kind: "page", url: "https://tokendance.space/models" },
-    credentials: { apiKey: options.apiKey ?? credentialRef("os", "tokendance.api-key") },
+    credentials: { apiKey: options.apiKey ?? credentialRef("local", "tokendance.api-key") },
     credentialInputs: { apiKey: { label: "TokenDance API key" } },
     defaultConcurrency: options.defaultConcurrency ?? 4,
     ...(options.actionLimits === undefined ? {} : { actionLimits: options.actionLimits }),

@@ -1,8 +1,8 @@
 import { createReadStream } from "node:fs";
 import { appendFile, mkdir, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { readExecutionLog } from "@qflow/runtime";
-import type { ExecutionLogEvent, ExecutionLogRecord, ExecutionLogView } from "@qflow/runtime";
+import { readExecutionLog } from "@qflow/qflow/runtime";
+import type { ExecutionLogEvent, ExecutionLogRecord, ExecutionLogView } from "@qflow/qflow/runtime";
 
 export type LocalExecutionLogs = {
   record(build: string, command: string, event: ExecutionLogEvent): Promise<void>;

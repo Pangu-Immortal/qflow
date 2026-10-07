@@ -2,8 +2,8 @@ import type {
   CredentialRef,
   CredentialStore,
   CredentialValue,
-} from "@qflow/runtime";
-import { verifyCredentialRef } from "@qflow/runtime";
+} from "@qflow/runtime-local/extension";
+import { verifyCredentialRef } from "@qflow/runtime-local/extension";
 
 /** Resolves only explicitly requested environment variables and never snapshots or enumerates env. */
 export class EnvironmentCredentialStore implements CredentialStore {

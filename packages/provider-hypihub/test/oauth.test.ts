@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { EndpointCredential } from "@qflow/endpoint-kit";
+import type { EndpointCredential } from "@qflow/endpoint";
 import { decodeOAuth2Credential, encodeOAuth2Credential } from "@qflow/runtime";
 
 import { createQflowHubAuth } from "../src/oauth.js";

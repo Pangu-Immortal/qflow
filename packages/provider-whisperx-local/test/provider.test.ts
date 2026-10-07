@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { sealSpeechEvidenceAudio, speechEvidenceTypes } from "@qflow/speech-evidence";
 import assert from "node:assert/strict";
-import { MemoryResourceStore, EndpointRegistry } from "@qflow/driver-node";
+import { MemoryResourceStore, EndpointRegistry } from "@qflow/executor";
 import type { Need } from "@qflow/protocol";
 import {
   whisperXCapabilities,

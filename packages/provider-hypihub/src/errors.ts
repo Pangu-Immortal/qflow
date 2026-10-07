@@ -1,4 +1,5 @@
-import { EndpointHttpError, EndpointServiceError, retryAfterMs } from "@qflow/endpoint-kit";
+import { EndpointServiceError } from "@qflow/qflow/endpoint";
+import { EndpointHttpError, retryAfterMs } from "@qflow/qflow/endpoint/http";
 
 /** QflowHub's public error envelope, kept at the service boundary. */
 function record(value: unknown): Record<string, unknown> | undefined {

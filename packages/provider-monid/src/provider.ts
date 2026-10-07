@@ -1,11 +1,11 @@
-import { requestDeadline } from "@qflow/runtime-kit";
-import type { AsyncEndpoint, EndpointCredential, EndpointInvocationContext, EndpointOutcome } from "@qflow/endpoint-kit";
-import { EndpointResponseError, EndpointServiceError, EndpointTransportError, defineEndpointPackage, pollAgainOrFail, transport, wakeAfter } from "@qflow/endpoint-kit";
-import type { GenerationArtifactUrlResolver } from "@qflow/generation";
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, CapabilityRef } from "@qflow/protocol";
-import { credentialRef } from "@qflow/runtime";
-import type { CredentialRef, ResourceStore } from "@qflow/runtime";
+import type { AsyncEndpoint, EndpointCredential, EndpointInvocationContext, EndpointOutcome } from "@qflow/qflow/endpoint";
+import { EndpointServiceError, defineEndpoint, wakeAfter } from "@qflow/qflow/endpoint";
+import { EndpointHttpError, EndpointResponseError, EndpointTransportError, withRequestDeadline } from "@qflow/qflow/endpoint/http";
+import type { GenerationArtifactUrlResolver } from "@qflow/qflow/generation";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, CanonicalValue, CapabilityRef } from "@qflow/qflow/protocol";
+import { credentialRef } from "@qflow/qflow/endpoint";
+import type { CredentialRef, ResourceStore } from "@qflow/qflow/endpoint";
 import { monidRouteForCapability, monidRoutes } from "./routes.js";
 import { MonidHttpError, MonidServiceError, monidRunFailure, monidTerminalStatuses } from "./errors.js";
 
@@ -17,7 +17,7 @@ export type CreateMonidProviderOptions = {
   readonly baseUrl?: string;
   readonly apiKey?: CredentialRef;
   readonly defaultConcurrency?: number;
-  readonly actionLimits?: import("@qflow/endpoint-kit").EndpointActionLimits;
+  readonly actionLimits?: import("@qflow/qflow/endpoint").EndpointActionLimits;
   readonly pollIntervalMs?: number;
   readonly requestTimeoutMs?: number;
   readonly operationTimeoutMs?: number;
@@ -48,17 +48,37 @@ function apiBaseUrl(value: string): string {
 }
 function apiKey(credentials: Readonly<Record<string, EndpointCredential>>): string {
   const value = credentials.apiKey?.secret;
-  assert(typeof value === "string" && value.length > 0, "Monid apiKey credential is unavailable; store a Monid API key for this Endpoint");
+  if (typeof value !== "string" || value.length === 0) {
+    throw new MonidServiceError("MONID_CREDENTIAL_UNAVAILABLE",
+      "Monid apiKey credential is unavailable; store a Monid API key for this Endpoint");
+  }
   return value;
 }
 function failureMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 function failure(error: unknown): EndpointOutcome {
-  return { status: "failed", failure: { code: error instanceof EndpointServiceError ? error.code : "MONID_ERROR", message: failureMessage(error) } };
+  if (!(error instanceof EndpointServiceError || error instanceof EndpointHttpError
+    || error instanceof EndpointTransportError || error instanceof EndpointResponseError)) throw error;
+  const code = error instanceof EndpointServiceError || error instanceof EndpointHttpError ? error.code : "MONID_ERROR";
+  return { status: "failed", failure: { code, message: failureMessage(error) } };
+}
+function retrying(error: unknown, handle: CanonicalValue, pollIntervalMs: number, deadlineAt?: number): EndpointOutcome | undefined {
+  const delay = error instanceof EndpointTransportError ? pollIntervalMs
+    : error instanceof EndpointHttpError && (error.status === 429 || error.status >= 500)
+      ? error.retryAfterMs ?? pollIntervalMs : undefined;
+  if (delay === undefined) return undefined;
+  const now = Date.now();
+  return { status: "pending", handle, wakeAt: Math.min(now + delay, deadlineAt ?? Number.MAX_SAFE_INTEGER), progress: { phase: "retrying" } };
+}
+function unknownSubmission(error: unknown): EndpointOutcome | undefined {
+  return error instanceof EndpointTransportError ? { status: "failed", failure: {
+    code: "MONID_SUBMISSION_UNKNOWN",
+    message: `Monid submission transport failed; remote outcome is unknown: ${error.message}`,
+  } } : undefined;
 }
 function runId(run: Record<string, unknown>): string {
-  assert(typeof run.runId === "string" && run.runId.length > 0, "Monid response has no runId");
+  if (typeof run.runId !== "string" || run.runId.length === 0) throw new EndpointResponseError("Monid response has no runId");
   return run.runId;
 }
 function httpsUrl(value: unknown, subject: string): string {
@@ -90,12 +110,11 @@ const extensions: Readonly<Record<string, string>> = {
 class MonidClient {
   constructor(readonly baseUrl: string, readonly timeout: number, readonly pollIntervalMs: number, readonly fetcher: typeof globalThis.fetch) {}
   async json(path: string, key: string, init: RequestInit = {}): Promise<{ readonly status: number; readonly body: Record<string, unknown> }> {
-    const deadline = requestDeadline(this.timeout, () => new EndpointTransportError("Monid request timed out"));
-    try {
-      const response = await transport(deadline.wait(this.fetcher(`${this.baseUrl}${path}`, {
-        ...init, signal: deadline.signal, headers: { authorization: `Bearer ${key}`, ...(init.headers ?? {}) },
-      })));
-      const text = await transport(deadline.wait(response.text()));
+    return await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(`${this.baseUrl}${path}`, {
+        ...init, signal, headers: { authorization: `Bearer ${key}`, ...(init.headers ?? {}) },
+      }));
+      const text = await wait(response.text());
       let body: unknown;
       try { body = text.length === 0 ? {} : JSON.parse(text); } catch { body = undefined; }
       // A synchronous run mirrors the provider's HTTP status while still returning the run itself.
@@ -103,7 +122,7 @@ class MonidClient {
       if (!response.ok && !run) throw new MonidHttpError(response.status, response, text, { method: init.method ?? "GET", path });
       if (body === undefined) throw new EndpointResponseError(`Monid returned invalid JSON (${response.status})`);
       return { status: response.status, body: object(body, "Monid response") };
-    } finally { deadline.finish(); }
+    }, () => new EndpointTransportError("Monid request timed out", { timeout: true }));
   }
   async run(request: { readonly provider: string; readonly endpoint: string; readonly input: Record<string, unknown> }, key: string) {
     return await this.json("/v1/run", key, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(request) });
@@ -115,16 +134,15 @@ class MonidClient {
   async completeRun(request: { readonly provider: string; readonly endpoint: string; readonly input: Record<string, unknown> }, key: string): Promise<Record<string, unknown>> {
     let run = (await this.run(request, key)).body;
     const id = runId(run);
-    const deadline = requestDeadline(this.timeout);
-    try {
+    return await withRequestDeadline(this.timeout, async ({ wait }) => {
       while (!monidTerminalStatuses.includes(String(run.status) as typeof monidTerminalStatuses[number])) {
-        await deadline.wait(new Promise((resolve) => setTimeout(resolve, this.pollIntervalMs)));
+        await wait(new Promise((resolve) => setTimeout(resolve, this.pollIntervalMs)));
         run = await this.getRun(id, key);
       }
-    } finally { deadline.finish(); }
-    const rejected = monidRunFailure(run, id);
-    if (rejected !== undefined) throw rejected;
-    return object(run.output, `Monid ${request.provider}${request.endpoint} output`);
+      const rejected = monidRunFailure(run, id);
+      if (rejected !== undefined) throw rejected;
+      return object(run.output, `Monid ${request.provider}${request.endpoint} output`);
+    });
   }
   /** Upload through the workspace file system (`sfs`) and mint a URL third parties can fetch. */
   async publish(artifact: BlobRef, resources: ResourceStore, key: string): Promise<string> {
@@ -133,21 +151,19 @@ class MonidClient {
     const path = `qflow/${artifact.resource}.${extensions[artifact.mediaType] ?? artifact.mediaType.split("/")[1] ?? "bin"}`;
     const put = await this.completeRun({ provider: "sfs", endpoint: "/put", input: { path, sizeBytes: bytes.byteLength } }, key);
     const uploadUrl = httpsUrl(put.uploadUrl, "Monid sfs /put output");
-    const deadline = requestDeadline(this.timeout);
-    try {
-      const response = await deadline.wait(this.fetcher(uploadUrl, { method: "PUT", body: new Blob([new Uint8Array(bytes)]), signal: deadline.signal }));
-      assert(response.ok, `Monid file upload returned HTTP ${response.status}`);
-    } finally { deadline.finish(); }
+    await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(uploadUrl, { method: "PUT", body: new Blob([new Uint8Array(bytes)]), signal }));
+      if (!response.ok) throw new MonidHttpError(response.status, response, "", { method: "PUT", path: uploadUrl });
+    });
     const cat = await this.completeRun({ provider: "sfs", endpoint: "/cat", input: { path, ttl: "1d" } }, key);
     return httpsUrl(cat.url, "Monid sfs /cat output");
   }
   async download(url: string): Promise<{ readonly bytes: Uint8Array; readonly mediaType: string }> {
-    const deadline = requestDeadline(this.timeout);
-    try {
-      const response = await deadline.wait(this.fetcher(url, { signal: deadline.signal }));
-      if (!response.ok) throw new Error(`Monid asset returned HTTP ${response.status}`);
-      return { bytes: new Uint8Array(await deadline.wait(response.arrayBuffer())), mediaType: response.headers.get("content-type")?.split(";", 1)[0] ?? "application/octet-stream" };
-    } finally { deadline.finish(); }
+    return await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(url, { signal }));
+      if (!response.ok) throw new MonidHttpError(response.status, response, "", { method: "GET", path: url });
+      return { bytes: new Uint8Array(await wait(response.arrayBuffer())), mediaType: response.headers.get("content-type")?.split(";", 1)[0] ?? "application/octet-stream" };
+    });
   }
 }
 
@@ -172,15 +188,16 @@ function endpoint(client: MonidClient, pollIntervalMs: number, maxOperationMs: n
         assert(route !== undefined, "Monid does not implement this exact capability");
         const request = route.prepare(context.need.constraints);
         await context.reportProgress?.({ phase: `Preparing Monid request: ${request.service} ${request.endpoint}` });
-        let input: Record<string, unknown>;
-        try {
-          input = await request.compile(resolverFor(client, context, publicAssetUrl));
-        } catch (error) {
-          throw new MonidServiceError(error instanceof EndpointServiceError ? error.code : "MONID_ERROR",
-            `Monid request preparation failed; endpoint=${request.endpoint}; generation not submitted: ${failureMessage(error)}`);
-        }
+        const input = await request.compile(resolverFor(client, context, publicAssetUrl));
         await context.reportProgress?.({ phase: `Submitting Monid request: ${request.service} ${request.endpoint}` });
-        const { body: run } = await client.run({ provider: request.service, endpoint: request.endpoint, input }, apiKey(context.credentials));
+        let run: Record<string, unknown>;
+        try {
+          ({ body: run } = await client.run({ provider: request.service, endpoint: request.endpoint, input }, apiKey(context.credentials)));
+        } catch (error) {
+          const unknown = unknownSubmission(error);
+          if (unknown !== undefined) return unknown;
+          throw error;
+        }
         const handle: Handle = { contract: "qflow.monid-operation@1", runId: runId(run), route: route.key, startedAt: Date.now() };
         const receipt = { id: handle.runId };
         const ended = monidTerminalStatuses.includes(String(run.status) as typeof monidTerminalStatuses[number]);
@@ -194,12 +211,14 @@ function endpoint(client: MonidClient, pollIntervalMs: number, maxOperationMs: n
       }
     },
     async poll(context) {
+      let operationDeadlineAt: number | undefined;
       try {
         const handle = object(context.handle, "Monid handle") as unknown as Handle;
         const route = monidRouteForCapability(context.need.capability);
         assert(route !== undefined && handle.contract === "qflow.monid-operation@1" && handle.route === route.key, "Monid handle is invalid");
         const receipt = { id: handle.runId };
-        if (Date.now() - handle.startedAt > maxOperationMs) {
+        operationDeadlineAt = handle.startedAt + maxOperationMs;
+        if (Date.now() >= operationDeadlineAt) {
           return { status: "failed", receipt, failure: { code: "MONID_OPERATION_TIMEOUT", message: `Monid run ${handle.runId} exceeded this Provider's operationTimeoutMs (${maxOperationMs}); remote outcome is unknown` } };
         }
         const run = await client.getRun(handle.runId, apiKey(context.credentials));
@@ -211,7 +230,7 @@ function endpoint(client: MonidClient, pollIntervalMs: number, maxOperationMs: n
         if (rejected !== undefined) return { ...failure(rejected), receipt };
         return { status: "ready", handle: canonicalize({ ...handle, urls: outputUrls(run) }), receipt };
       } catch (error) {
-        return pollAgainOrFail(error, { handle: context.handle, pollIntervalMs, failure });
+        return retrying(error, context.handle, pollIntervalMs, operationDeadlineAt) ?? failure(error);
       }
     },
     async collect(context) {
@@ -229,7 +248,7 @@ function endpoint(client: MonidClient, pollIntervalMs: number, maxOperationMs: n
         }
         return { status: "completed", result: { value: route.packageResult(blobs) }, receipt: { id: handle.runId } };
       } catch (error) {
-        return failure(error);
+        return retrying(error, context.handle, pollIntervalMs) ?? failure(error);
       }
     },
   };
@@ -244,10 +263,10 @@ export function createMonidProvider(options: CreateMonidProviderOptions = {}) {
   }
   const client = new MonidClient(apiBaseUrl(options.baseUrl ?? "https://api.monid.ai"), requestTimeoutMs, Math.min(pollIntervalMs, 5_000), options.fetch ?? globalThis.fetch);
   const asyncEndpoint = endpoint(client, pollIntervalMs, operationTimeoutMs, options.publicAssetUrl);
-  return defineEndpointPackage({
-    module: monidProviderModuleRef, facet: "gateway", instance: options.instance ?? "monid.default", pool: options.pool ?? options.instance ?? "monid.default",
+  return defineEndpoint({
+    instance: options.instance ?? "monid.default", pool: options.pool ?? options.instance ?? "monid.default",
     pricing: { kind: "page", url: "https://monid.ai/tools" },
-    credentials: { apiKey: options.apiKey ?? credentialRef("os", "monid.api-key") },
+    credentials: { apiKey: options.apiKey ?? credentialRef("local", "monid.api-key") },
     credentialInputs: { apiKey: { label: "Monid API key" } },
     defaultConcurrency: options.defaultConcurrency ?? 4,
     ...(options.actionLimits === undefined ? {} : { actionLimits: options.actionLimits }),

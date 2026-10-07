@@ -65,8 +65,8 @@ Runtime Profile example:
   "format": "qflow.runtime-local@1",
   "dataRoot": ".qflow/runtimes/local",
   "credentials": {
-    "platform": {
-      "use": "@qflow/credential-store-platform"
+    "local": {
+      "use": "@qflow/credential-store-local"
     }
   },
   "endpoints": {
@@ -74,7 +74,7 @@ Runtime Profile example:
       "use": "@qflow/provider-monid",
       "pool": "monid.default",
       "config": {
-        "apiKey": { "store": "platform", "key": "monid.api-key" },
+        "apiKey": { "store": "local", "key": "monid.api-key" },
         "defaultConcurrency": 3,
         "pollIntervalMs": 10000
       }
@@ -88,3 +88,5 @@ Runtime Profile example:
 `qflow auth login monid.default --runtime qflow.runtime.json`. Optional `requestTimeoutMs`,
 `operationTimeoutMs` and `actionLimits` bound single HTTP calls, the whole remote run and action
 concurrency; file-system runs poll at most every five seconds within `requestTimeoutMs`.
+Polling transport failures and HTTP 429/5xx preserve the same run and honor standard `Retry-After`;
+the scheduled wake never passes the original operation deadline. Other errors end the local attempt.

@@ -1,7 +1,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { setTimeout as pause } from "node:timers/promises";
-import { SqliteRuntimeState } from "@qflow/store-sqlite";
-import type { RuntimeWorkerLaunch } from "./worker-process.js";
+import { SqliteRuntimeState } from "./sqlite-state.js";
+import type { RuntimeWorkerLaunch } from "./host-api.js";
 import { createRuntimeResultWriter, localExecutionContext, readRuntimeWorkerOptions, statePath } from "./config.js";
 
 type Carrier = { readonly child: ChildProcess; readonly builds: Set<string>; readonly ready: Promise<void>;
@@ -47,6 +47,7 @@ export async function superviseBuilds(options: {
       ...options.launch.args, "_worker", options.profile,
       "--ready-file", options.readyFile, "--worker-owner", options.owner,
       "--execution-root", options.dataRoot,
+      ...(options.launch.workerArgs ?? []),
     ], {
       stdio: ["ignore", "inherit", "inherit", "ipc"], windowsHide: true,
       // Node's CommonJS evaluation callback needs this for scoped dynamic import().

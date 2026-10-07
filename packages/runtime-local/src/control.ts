@@ -2,16 +2,16 @@ import type {
   CreateLocalRuntimeControlOptions,
   LocalRuntimeControl,
 } from "./types.js";
-import { buildExecutionActivity } from "@qflow/runtime";
+import { buildExecutionActivity } from "./execution.js";
 import type {
-  PendingBuildSubmission,
-  BuildCatalogEntry,
-  BuildExecutionSnapshot,
   BuildSnapshot,
   OperationSnapshot,
-} from "@qflow/runtime";
-import type { BuildView } from "@qflow/runtime-host-node";
-import { buildIdCreatedAt } from "@qflow/protocol";
+} from "@qflow/qflow/runtime";
+import type { PendingBuildSubmission } from "./submission.js";
+import type { BuildCatalogEntry } from "./catalog.js";
+import type { BuildExecutionSnapshot } from "./execution.js";
+import type { BuildView } from "./host-api.js";
+import { buildIdCreatedAt } from "@qflow/qflow/protocol";
 
 function buildView(input: {
   readonly build: string;
@@ -20,7 +20,7 @@ function buildView(input: {
   readonly submission?: PendingBuildSubmission;
   readonly execution?: BuildExecutionSnapshot;
   readonly operations: readonly OperationSnapshot[];
-  readonly commands: readonly import("@qflow/runtime").CommandExecutionReceipt[];
+  readonly commands: readonly import("@qflow/qflow/runtime").CommandExecutionReceipt[];
 }): BuildView | undefined {
   if (input.submission === undefined && input.execution === undefined) return undefined;
   const createdAt = buildIdCreatedAt(input.build);

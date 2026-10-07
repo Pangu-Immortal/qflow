@@ -5,7 +5,7 @@ import {
   runtimeConfigObject,
   runtimeConfigPositiveInteger,
   runtimeConfigString,
-} from "@qflow/runtime-kit";
+} from "@qflow/runtime-local/extension";
 
 import { createLocalWhisperXProvider, localWhisperXDefaults } from "./provider.js";
 import { localWhisperXProgram } from "./program.js";
@@ -95,8 +95,8 @@ const localWhisperXRuntimeAdapter = createRuntimeEndpointAdapterFacet({
 });
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
-  hostFacets: [localWhisperXRuntimeAdapter],
+  format: "qflow.package@1" as const,
+  facets: [localWhisperXRuntimeAdapter],
 };
 
 export default qflowPackage;

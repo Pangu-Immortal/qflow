@@ -7,10 +7,10 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as pause } from "node:timers/promises";
 import test from "node:test";
-import { defineBuild } from "@qflow/core";
-import { FileBuildResultRepository } from "@qflow/build-result";
-import { SqliteRuntimeState } from "@qflow/store-sqlite";
-import { createGreetingBuild, manifest, capabilities, producers, types } from "../../core/test/greeting-fixture.js";
+import { defineBuild } from "@qflow/kernel";
+import { FileBuildResultRepository } from "@qflow/result/node";
+import { SqliteRuntimeState } from "../src/sqlite-state.js";
+import { createGreetingBuild, manifest, capabilities, producers, types } from "../../kernel/test/greeting-fixture.js";
 import { statePath } from "../src/config.js";
 
 const distribution = fileURLToPath(new URL("../../../", import.meta.url));
@@ -42,22 +42,22 @@ test("a draining carrier finishes its existing Build while a new carrier shares 
   const endpoint=`http://127.0.0.1:${address.port}`;
   try {
     const pkg=join(root,'node_modules','fixture-rotation'); await mkdir(pkg,{recursive:true});
-    await writeFile(join(root,'package.json'),'{"private":true}');
+    await writeFile(join(root,'package.json'),'{"private":true,"qflow":{"project":true}}');
     await writeFile(join(pkg,'package.json'),JSON.stringify({name:'fixture-rotation',version:'1.0.0',type:'module',qflow:{activation:'./activation.mjs'}}));
     await writeFile(join(pkg,'activation.mjs'),`
-      import {createRuntimeEndpointAdapterFacet} from '@qflow/runtime-kit';
-      import {defineEndpointPackage} from '@qflow/endpoint-kit';
+      import {createRuntimeEndpointAdapterFacet} from '@qflow/runtime-local/extension';
+      import {defineEndpoint} from '@qflow/endpoint';
       const server=${JSON.stringify(endpoint)};
       async function call(path,name){return (await fetch(server+path,{method:'POST',body:JSON.stringify({name,pid:process.pid})})).json();}
       let calls=0;
-      export default {format:'qflow.node-package@1',modules:[{manifest:${JSON.stringify(manifest)}}],components:[{producers:[
+      export default {format:'qflow.package@1',modules:[{manifest:${JSON.stringify(manifest)}}],facets:[{abi:'qflow.producer-package@1',implementation:{producers:[
         {producer:${JSON.stringify(producers.makePrompt)},handler:async({inputs})=>{
           if(++calls!==1)throw Error('Build module state leaked');
           const name=inputs.intent.value.value.name;await call('/local',name);return {outputs:{prompt:{kind:'inline',value:name}},needs:{}};
         }},
         {producer:${JSON.stringify(producers.requestText)},handler:({inputs})=>({outputs:{},needs:{generation:{prompt:inputs.prompt.value.value}}})}
-      ]}],hostFacets:[createRuntimeEndpointAdapterFacet({use:'fixture-rotation',activate(context){return {endpoint:defineEndpointPackage({
-        module:{name:'fixture.provider',version:'1'},facet:'generation',instance:context.instance,pool:context.pool,defaultConcurrency:1,
+      ]}},createRuntimeEndpointAdapterFacet({use:'fixture-rotation',activate(context){return {endpoint:defineEndpoint({
+        instance:context.instance,pool:context.pool,defaultConcurrency:1,
         capabilities:[{lifecycle:'asynchronous',capability:${JSON.stringify(capabilities.generation)},returns:${JSON.stringify(types.generated)},endpoint:{
           async start({need,operation}){const name=need.constraints.prompt;await call('/start',name);return {status:'pending',handle:{name},receipt:{id:operation},wakeAt:Date.now()+50};},
           async poll({handle}){const result=await call('/poll',handle.name);return result.complete?{status:'completed',result:{value:{kind:'inline',value:handle.name}}}:{status:'pending',handle,wakeAt:Date.now()+50};}
@@ -71,10 +71,10 @@ test("a draining carrier finishes its existing Build while a new carrier shares 
       const id=`bld_20260914T120000000Z_${String(ids.size).padStart(10,'0')}`;ids.set(name,id);
       const initial=createGreetingBuild({targetOutputs:[target]});const authored=new Set(initial.program.records.map(r=>r.id));
       const base=defineBuild({program:initial.program,initialRecords:initial.records.filter(r=>!authored.has(r.id)),plan:initial.plan,targets:initial.targets});
-      const request={build:id,componentPackages:['fixture-rotation'],result:{root,selection:{use:'@qflow/build-result-fs',config:{path:'results'}}},
+      const request={build:id,executionPackages:['fixture-rotation'],result:{root,path:'results'},
         context:{format:'qflow.local-execution@1',packageRoot:root,hostStateRoot:join(root,'host'),distributionPackageRoot:distribution,profile:profileValue}};
       await state.submissions.prepare(request);
-      await repository.create({id,source:{path:'main.svml'},targets:[target],publishedOutputs:[{name:target,output:target}]});
+      await repository.create({id,source:{id:'main.svml'},targets:[target],publishedOutputs:[{name:target,output:target}]});
       await state.submissions.commit({...request,definition:{...base,program:{...base.program,records:base.program.records.map(r=>r.id==='intent:root'?{...r,value:{kind:'inline',value:{name}}}:r)}},
         catalog:{source:{path:join(root,'main.svml')},publishedOutputs:[{name:target,ref:{kind:'logical-output',id:target}}]}});
       return id;

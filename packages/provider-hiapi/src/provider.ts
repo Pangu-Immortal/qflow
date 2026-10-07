@@ -1,11 +1,11 @@
-import { requestDeadline } from "@qflow/runtime-kit";
-import type { AsyncEndpoint, EndpointCredential, EndpointInvocationContext, EndpointOutcome } from "@qflow/endpoint-kit";
-import { EndpointResponseError, EndpointServiceError, EndpointTransportError, defineEndpointPackage, pollAgainOrFail, transport, wakeAfter } from "@qflow/endpoint-kit";
-import type { GenerationArtifactUrlResolver } from "@qflow/generation";
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, CapabilityRef } from "@qflow/protocol";
-import { credentialRef } from "@qflow/runtime";
-import type { CredentialRef, ResourceStore } from "@qflow/runtime";
+import type { AsyncEndpoint, EndpointCredential, EndpointInvocationContext, EndpointOutcome } from "@qflow/qflow/endpoint";
+import { EndpointServiceError, defineEndpoint, wakeAfter } from "@qflow/qflow/endpoint";
+import { EndpointHttpError, EndpointResponseError, EndpointTransportError, withRequestDeadline } from "@qflow/qflow/endpoint/http";
+import type { GenerationArtifactUrlResolver } from "@qflow/qflow/generation";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, CanonicalValue, CapabilityRef } from "@qflow/qflow/protocol";
+import { credentialRef } from "@qflow/qflow/endpoint";
+import type { CredentialRef, ResourceStore } from "@qflow/qflow/endpoint";
 import { hiApiRouteForCapability, hiApiRoutes } from "./routes.js";
 import type { HiApiMediaLimits } from "./routes.js";
 import { HiApiHttpError, HiApiServiceError, hiApiTaskFailure } from "./errors.js";
@@ -18,7 +18,7 @@ export type CreateHiApiProviderOptions = {
   readonly baseUrl?: string;
   readonly apiKey?: CredentialRef;
   readonly defaultConcurrency?: number;
-  readonly actionLimits?: import("@qflow/endpoint-kit").EndpointActionLimits;
+  readonly actionLimits?: import("@qflow/qflow/endpoint").EndpointActionLimits;
   readonly pollIntervalMs?: number;
   readonly requestTimeoutMs?: number;
   readonly operationTimeoutMs?: number;
@@ -49,25 +49,49 @@ function apiBaseUrl(value: string): string {
 }
 function apiKey(credentials: Readonly<Record<string, EndpointCredential>>): string {
   const value = credentials.apiKey?.secret;
-  assert(typeof value === "string" && value.length > 0, "HiAPI apiKey credential is unavailable; store a HiAPI API key for this Endpoint");
+  if (typeof value !== "string" || value.length === 0) {
+    throw new HiApiServiceError("HIAPI_CREDENTIAL_UNAVAILABLE",
+      "HiAPI apiKey credential is unavailable; store a HiAPI API key for this Endpoint");
+  }
   return value;
 }
 function failureMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 function failure(error: unknown): EndpointOutcome {
-  return { status: "failed", failure: { code: error instanceof EndpointServiceError ? error.code : "HIAPI_ERROR", message: failureMessage(error) } };
+  if (!(error instanceof EndpointServiceError
+    || error instanceof EndpointHttpError
+    || error instanceof EndpointTransportError
+    || error instanceof EndpointResponseError)) throw error;
+  const code = error instanceof EndpointServiceError || error instanceof EndpointHttpError
+    ? error.code : "HIAPI_ERROR";
+  return { status: "failed", failure: { code, message: failureMessage(error) } };
+}
+function retrying(error: unknown, handle: CanonicalValue, pollIntervalMs: number, deadlineAt?: number): EndpointOutcome | undefined {
+  const delay = error instanceof EndpointTransportError
+    ? pollIntervalMs
+    : error instanceof EndpointHttpError && (error.status === 429 || error.status >= 500)
+      ? error.retryAfterMs ?? pollIntervalMs
+      : undefined;
+  if (delay === undefined) return undefined;
+  const now = Date.now();
+  return { status: "pending", handle, wakeAt: Math.min(now + delay, deadlineAt ?? Number.MAX_SAFE_INTEGER), progress: { phase: "retrying" } };
+}
+function unknownSubmission(error: unknown): EndpointOutcome | undefined {
+  return error instanceof EndpointTransportError ? { status: "failed", failure: {
+    code: "HIAPI_SUBMISSION_UNKNOWN",
+    message: `HiAPI submission transport failed; remote outcome is unknown: ${error.message}`,
+  } } : undefined;
 }
 
 class HiApiClient {
   constructor(readonly baseUrl: string, readonly timeout: number, readonly fetcher: typeof globalThis.fetch) {}
   async json(path: string, key: string, init: RequestInit = {}): Promise<Record<string, unknown>> {
-    const deadline = requestDeadline(this.timeout, () => new EndpointTransportError("HiAPI request timed out"));
-    try {
-      const response = await transport(deadline.wait(this.fetcher(`${this.baseUrl}${path}`, {
-        ...init, signal: deadline.signal, headers: { authorization: `Bearer ${key}`, ...(init.headers ?? {}) },
-      })));
-      const text = await transport(deadline.wait(response.text()));
+    return await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(`${this.baseUrl}${path}`, {
+        ...init, signal, headers: { authorization: `Bearer ${key}`, ...(init.headers ?? {}) },
+      }));
+      const text = await wait(response.text());
       if (!response.ok) {
         const input = typeof init.body === "string" ? JSON.parse(init.body) as Record<string, unknown> : undefined;
         throw new HiApiHttpError(response.status, response, text, {
@@ -77,15 +101,14 @@ class HiApiClient {
       let body: unknown;
       try { body = text.length === 0 ? {} : JSON.parse(text); } catch { throw new EndpointResponseError(`HiAPI returned invalid JSON (${response.status})`); }
       return object(object(body, "HiAPI response").data, "HiAPI response data");
-    } finally { deadline.finish(); }
+    }, () => new EndpointTransportError("HiAPI request timed out", { timeout: true }));
   }
   async download(url: string): Promise<{ readonly bytes: Uint8Array; readonly mediaType: string }> {
-    const deadline = requestDeadline(this.timeout);
-    try {
-      const response = await deadline.wait(this.fetcher(url, { signal: deadline.signal }));
-      if (!response.ok) throw new Error(`HiAPI asset returned HTTP ${response.status}`);
-      return { bytes: new Uint8Array(await deadline.wait(response.arrayBuffer())), mediaType: response.headers.get("content-type")?.split(";", 1)[0] ?? "application/octet-stream" };
-    } finally { deadline.finish(); }
+    return await withRequestDeadline(this.timeout, async ({ signal, wait }) => {
+      const response = await wait(this.fetcher(url, { signal }));
+      if (!response.ok) throw new HiApiHttpError(response.status, response, "", { method: "GET", path: url });
+      return { bytes: new Uint8Array(await wait(response.arrayBuffer())), mediaType: response.headers.get("content-type")?.split(";", 1)[0] ?? "application/octet-stream" };
+    });
   }
 }
 
@@ -127,17 +150,19 @@ function endpoint(client: HiApiClient, pollIntervalMs: number, maxOperationMs: n
         const request = route.prepare(context.need.constraints);
         await context.reportProgress?.({ phase: `Preparing HiAPI request: ${request.model}` });
         let body: Record<string, unknown>;
-        try {
-          body = await request.compile(resolverFor(request.mediaLimits, context, publicAssetUrl));
-        } catch (error) {
-          throw new HiApiServiceError(error instanceof EndpointServiceError ? error.code : "HIAPI_ERROR",
-            `HiAPI request preparation failed; model=${request.model}; generation not submitted: ${failureMessage(error)}`);
-        }
+        body = await request.compile(resolverFor(request.mediaLimits, context, publicAssetUrl));
         await context.reportProgress?.({ phase: `Submitting HiAPI request: ${request.model}` });
-        const response = await client.json("/v1/tasks", apiKey(context.credentials), {
-          method: "POST", headers: { "content-type": "application/json", "idempotency-key": context.operation }, body: JSON.stringify(body),
-        });
-        assert(typeof response.taskId === "string" && response.taskId.length > 0, "HiAPI response has no taskId");
+        let response: Record<string, unknown>;
+        try {
+          response = await client.json("/v1/tasks", apiKey(context.credentials), {
+            method: "POST", headers: { "content-type": "application/json", "idempotency-key": context.operation }, body: JSON.stringify(body),
+          });
+        } catch (error) {
+          const unknown = unknownSubmission(error);
+          if (unknown !== undefined) return unknown;
+          throw error;
+        }
+        if (typeof response.taskId !== "string" || response.taskId.length === 0) throw new EndpointResponseError("HiAPI response has no taskId");
         const handle: Handle = { contract: "qflow.hiapi-operation@1", taskId: response.taskId, route: route.key, startedAt: Date.now() };
         const receipt = { id: handle.taskId };
         await context.checkpoint?.({ handle: canonicalize(handle), receipt });
@@ -147,12 +172,14 @@ function endpoint(client: HiApiClient, pollIntervalMs: number, maxOperationMs: n
       }
     },
     async poll(context) {
+      let operationDeadlineAt: number | undefined;
       try {
         const handle = object(context.handle, "HiAPI handle") as unknown as Handle;
         const route = hiApiRouteForCapability(context.need.capability);
         assert(route !== undefined && handle.contract === "qflow.hiapi-operation@1" && handle.route === route.key, "HiAPI handle is invalid");
         const receipt = { id: handle.taskId };
-        if (Date.now() - handle.startedAt > maxOperationMs) {
+        operationDeadlineAt = handle.startedAt + maxOperationMs;
+        if (Date.now() >= operationDeadlineAt) {
           return { status: "failed", receipt, failure: { code: "HIAPI_OPERATION_TIMEOUT", message: `HiAPI task ${handle.taskId} exceeded this Provider's operationTimeoutMs (${maxOperationMs}); remote outcome is unknown` } };
         }
         const task = await client.json(`/v1/tasks/${encodeURIComponent(handle.taskId)}`, apiKey(context.credentials));
@@ -162,16 +189,16 @@ function endpoint(client: HiApiClient, pollIntervalMs: number, maxOperationMs: n
         }
         const rejected = hiApiTaskFailure(task, handle.taskId);
         if (rejected !== undefined) return { ...failure(rejected), receipt };
-        assert(status === "success", `HiAPI returned unknown task status ${status}`);
-        assert(Array.isArray(task.output) && task.output.length > 0, "HiAPI task succeeded without output");
+        if (status !== "success") throw new EndpointResponseError(`HiAPI returned unknown task status ${status}`);
+        if (!Array.isArray(task.output) || task.output.length === 0) throw new EndpointResponseError("HiAPI task succeeded without output");
         const urls = task.output.map((item, index) => {
           const url = object(item, `HiAPI output ${index + 1}`).url;
-          assert(typeof url === "string" && /^https?:\/\//u.test(url), `HiAPI output ${index + 1} has no URL`);
+          if (typeof url !== "string" || !/^https?:\/\//u.test(url)) throw new EndpointResponseError(`HiAPI output ${index + 1} has no URL`);
           return url;
         });
         return { status: "ready", handle: canonicalize({ ...handle, urls }), receipt };
       } catch (error) {
-        return pollAgainOrFail(error, { handle: context.handle, pollIntervalMs, failure });
+        return retrying(error, context.handle, pollIntervalMs, operationDeadlineAt) ?? failure(error);
       }
     },
     async collect(context) {
@@ -187,7 +214,7 @@ function endpoint(client: HiApiClient, pollIntervalMs: number, maxOperationMs: n
         }
         return { status: "completed", result: { value: route.packageResult(blobs) }, receipt: { id: handle.taskId } };
       } catch (error) {
-        return failure(error);
+        return retrying(error, context.handle, pollIntervalMs) ?? failure(error);
       }
     },
   };
@@ -201,10 +228,10 @@ export function createHiApiProvider(options: CreateHiApiProviderOptions = {}) {
   }
   const client = new HiApiClient(apiBaseUrl(options.baseUrl ?? "https://api.hiapi.ai"), requestTimeoutMs, options.fetch ?? globalThis.fetch);
   const asyncEndpoint = endpoint(client, options.pollIntervalMs ?? 10_000, operationTimeoutMs, options.publicAssetUrl);
-  return defineEndpointPackage({
-    module: hiApiProviderModuleRef, facet: "gateway", instance: options.instance ?? "hiapi.default", pool: options.pool ?? options.instance ?? "hiapi.default",
+  return defineEndpoint({
+    instance: options.instance ?? "hiapi.default", pool: options.pool ?? options.instance ?? "hiapi.default",
     pricing: { kind: "page", url: "https://www.hiapi.ai/en/pricing" },
-    credentials: { apiKey: options.apiKey ?? credentialRef("os", "hiapi.api-key") },
+    credentials: { apiKey: options.apiKey ?? credentialRef("local", "hiapi.api-key") },
     credentialInputs: { apiKey: { label: "HiAPI API key" } },
     defaultConcurrency: options.defaultConcurrency ?? 4,
     ...(options.actionLimits === undefined ? {} : { actionLimits: options.actionLimits }),

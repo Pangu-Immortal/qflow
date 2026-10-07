@@ -5,8 +5,8 @@ import { join } from "node:path";
 import test from "node:test";
 import { setTimeout as sleep } from "node:timers/promises";
 
-import { createRuntimeEndpointAdapterFacet, RuntimeAdapterRegistry } from "@qflow/runtime-kit";
-import type { ManagedProgram, ManagedProgramCommand } from "@qflow/runtime-kit";
+import { createRuntimeEndpointAdapterFacet, RuntimeAdapterRegistry } from "@qflow/runtime-local/extension";
+import type { ManagedProgram, ManagedProgramCommand } from "@qflow/runtime-local/extension";
 import type { CapabilityRef } from "@qflow/protocol";
 
 import {

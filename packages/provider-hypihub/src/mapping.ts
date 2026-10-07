@@ -1,5 +1,5 @@
-import type { CapabilityRef, ModuleRef } from "@qflow/protocol";
-import type { GenerationWireMapping } from "@qflow/generation";
+import type { CapabilityRef, ModuleRef } from "@qflow/qflow/protocol";
+import type { GenerationWireMapping } from "@qflow/qflow/generation";
 
 /** QflowHub model IDs and the normalized request fields they accept. */
 const SEEDANCE: ModuleRef = { name: "@qflow/seedance", version: "1" };

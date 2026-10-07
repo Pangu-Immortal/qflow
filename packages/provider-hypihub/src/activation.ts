@@ -6,7 +6,7 @@ import {
   runtimeConfigObject,
   runtimeConfigPositiveInteger,
   runtimeConfigString,
-} from "@qflow/runtime-kit";
+} from "@qflow/runtime-local/extension";
 
 import { createQflowHubProvider, diagnoseQflowHubProvider } from "./provider.js";
 
@@ -84,8 +84,8 @@ const adapter = createRuntimeEndpointAdapterFacet({
 });
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
-  hostFacets: [adapter],
+  format: "qflow.package@1" as const,
+  facets: [adapter],
 };
 
 export default qflowPackage;

@@ -1,17 +1,22 @@
 {
   "name": "@qflow/credential-store-env",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
+  "files": ["dist", "README.md"],
   "qflow": {
     "activation": "./src/activation.ts"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "@qflow/runtime-local": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/qflow": "workspace:*",
     "@qflow/runtime": "workspace:*",
-    "@qflow/runtime-kit": "workspace:*"
+    "@qflow/runtime-local": "workspace:*"
   }
 }
