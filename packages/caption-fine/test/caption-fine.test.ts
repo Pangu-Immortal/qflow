@@ -7,8 +7,8 @@ import test from "node:test";
 import type { CaptionProgram, CaptionTiming } from "@qflow/caption";
 import type { FontArtifactRef } from "@qflow/media";
 import { captionDocument, parseScript } from "@qflow/script";
-import type { RegionTrack } from "@qflow/region-track";
-import type { SvsRecipe } from "@qflow/svs";
+import type { RegionEvidence } from "@qflow/qflow/region-evidence";
+import type { Recipe } from "@qflow/recipe";
 
 import { fixtureResource } from "../../../test/fixture-resource.js";
 import {
@@ -25,7 +25,7 @@ function renderCaption(
   program: CaptionProgram,
   document: Parameters<typeof renderFineCaption>[2],
   timeline: Timeline,
-  regions?: RegionTrack,
+  regions?: RegionEvidence,
 ) {
   return renderFineCaption(schedule, program, document, timeline, bounds, regions);
 }
@@ -41,7 +41,7 @@ const font: FontArtifactRef = {
   style: "normal",
 };
 
-const recipe: SvsRecipe = {
+const recipe: Recipe = {
   path: "caption.base",
   properties: {
     "stack-order": 70,
@@ -203,7 +203,7 @@ test("Fine Caption follows measured Role regions and hides null Frames", () => {
   <BOY>one two || three four
 </line>`);
   const space = sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } });
-  const regions: RegionTrack = {
+  const regions: RegionEvidence = {
     timelineId: space.id,
     series: [{
       id: "BOY",
@@ -224,12 +224,12 @@ test("Fine Caption follows measured Role regions and hides null Frames", () => {
   assert.equal(declarationAt(2, "opacity"), 1);
 });
 
-test("Fine Caption keeps authored placement when a Cue Role has no measured track", () => {
+test("Fine Caption keeps authored placement when a Cue Role has no measured evidence series", () => {
   const { document, program, projection } = fixture(`<line>
   <BOY>one two || three four
 </line>`);
   const space = sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } });
-  const regions: RegionTrack = {
+  const regions: RegionEvidence = {
     timelineId: space.id,
     series: [{ id: "WIFE", frames: Array.from({ length: 90 }, () => null) }],
   };
@@ -316,7 +316,7 @@ test("Fine Caption gives overlapping acoustic Words one current Karaoke owner", 
   assert.equal(opacityAt(secondActive, 14), 1);
 });
 
-function unevenChineseCaption(properties: SvsRecipe["properties"] = {}) {
+function unevenChineseCaption(properties: Recipe["properties"] = {}) {
   const { document, program, projection } = fixture("<line>你真好看</line>");
   const { "max-lines": _lines, "max-words-per-line": _words, ...flow } = recipe.properties;
   const style = fineCaptionStyle("plain", {
@@ -458,10 +458,10 @@ test("Caption Surface wires one Timeline to both ordinary and tracked-region ren
   const { decodeFineCaptionTrackSurface } = await import("../src/surface.js");
   const { timelineTypes } = await import("@qflow/timeline");
   const { captionTypes } = await import("@qflow/caption");
-  const { regionTrackTypes } = await import("@qflow/region-track");
+  const { regionEvidenceTypes } = await import("@qflow/qflow/region-evidence");
   const { spatialTypes } = await import("@qflow/spatial");
   const types = { timeline: timelineTypes.timeline, document: captionTypes.document,
-    timing: captionTypes.timing, within: spatialTypes.frame, program: captionTypes.program, regions: regionTrackTypes.track };
+    timing: captionTypes.timing, within: spatialTypes.frame, program: captionTypes.program, regions: regionEvidenceTypes.evidence };
   for (const tracking of [false, true]) {
     const names = tracking ? ["timeline", "document", "timing", "within", "regions"] as const
       : ["timeline", "document", "timing", "within"] as const;

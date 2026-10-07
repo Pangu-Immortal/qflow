@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseStructuredElement } from "@qflow/markup";
 import type { SurfaceResolvedReference } from "@qflow/markup";
-import { svsRecipeType } from "@qflow/svs";
+import { recipeType } from "@qflow/recipe";
 
 import {
   bindText,
@@ -194,7 +194,7 @@ test("Text Render projects only declared SVS Recipe properties and lets explicit
       record: { value: { kind: "inline", value: template } } as unknown as NonNullable<SurfaceResolvedReference["record"]>,
     }],
     ["recipes.shot", {
-      path: "recipes.shot", ref: { kind: "record", id: "recipes.shot" }, type: svsRecipeType,
+      path: "recipes.shot", ref: { kind: "record", id: "recipes.shot" }, type: recipeType,
       record: { value: { kind: "inline", value: {
 
         path: "recipes.shot",

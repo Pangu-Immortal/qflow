@@ -1,10 +1,11 @@
-import type { Timeline } from "@qflow/timeline";
-import type { CaptionDocument, CaptionProgram, CaptionTiming } from "@qflow/caption";
-import type { ComponentPackage } from "@qflow/component-kit";
-import type { StoredValue } from "@qflow/protocol";
-import { canonicalize } from "@qflow/protocol";
-import type { RegionTrack } from "@qflow/region-track";
-import type { SpatialFrame } from "@qflow/spatial";
+import type { Timeline } from "@qflow/qflow/timeline";
+import type { CaptionDocument, CaptionProgram, CaptionTiming } from "@qflow/qflow/caption";
+import type { ProducerPackage } from "@qflow/qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { StoredValue } from "@qflow/qflow/protocol";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { RegionEvidence } from "@qflow/qflow/region-evidence";
+import type { SpatialFrame } from "@qflow/qflow/spatial";
 
 import { captionFineProducers } from "./manifest.js";
 import { renderFineCaption } from "./render.js";
@@ -51,10 +52,10 @@ export const captionFineComponent = {
           inline<CaptionDocument>(inputs.document?.value, "CaptionDocument"),
           inline<Timeline>(inputs.timeline?.value, "Timeline"),
           inline<SpatialFrame>(inputs.within?.value, "SpatialFrame"),
-          inline<RegionTrack>(inputs.regions?.value, "RegionTrack"),
+          inline<RegionEvidence>(inputs.regions?.value, "RegionEvidence"),
         )) } },
         needs: {},
       }),
     },
   ],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

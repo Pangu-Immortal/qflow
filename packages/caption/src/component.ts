@@ -1,5 +1,6 @@
+import type { AdmissionPackage } from "@qflow/admission";
 import type { TemporalWindow } from "@qflow/temporal";
-import type { ComponentPackage } from "@qflow/component-kit";
+import type { ProducerPackage } from "@qflow/producer";
 import type { StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 
@@ -41,4 +42,4 @@ export const captionComponent = {
     { type: captionTypes.program, handler: ({ value }) => assertCaptionProgram(inline<CaptionProgram>(value, "CaptionProgram")) },
     { type: captionTypes.timing, handler: ({ value }) => assertCaptionTiming(inline<CaptionTiming>(value, "CaptionTiming")) },
   ],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

@@ -1,4 +1,7 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { createStudioCompanionFacet } from "@qflow/studio-companion";
 
 import {
   captionFineComponent,
@@ -8,23 +11,28 @@ import {
   decodeFineCaptionTrackSurface,
   captionFineMarkupSurfaces,
 } from "./index.js";
+import { captionFineStudioParameterCompanions, captionFineStudioTrackCompanions } from "./studio.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{
     manifest: captionFineManifest,
   }],
-  components: [captionFineComponent],
-  hostFacets: [
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[captionFineComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    createMarkupSurfaceFacet({
       module: captionFineModuleRef,
-    declaration: captionFineMarkupSurfaces.find((item) => item.name === "style")!,
+      declaration: captionFineMarkupSurfaces.find((item) => item.name === "style")!,
       handler: decodeFineCaptionStyleSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: captionFineModuleRef,
-    declaration: captionFineMarkupSurfaces.find((item) => item.name === "caption")!,
+      declaration: captionFineMarkupSurfaces.find((item) => item.name === "caption")!,
       handler: decodeFineCaptionTrackSurface,
+    }),
+    createStudioCompanionFacet({
+      tracks: captionFineStudioTrackCompanions,
+      parameters: captionFineStudioParameterCompanions,
     }),
   ],
 };

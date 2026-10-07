@@ -26,6 +26,6 @@ values without receiving the Projection or learning Narrative source kinds. Sele
 dispatch remain owned here. The completed Projection stores absolute boundaries and no reusable
 local-to-absolute mapping identity.
 
-Speech Alignment is one producer of `NarrativeAlignment`; manually authored, imported or adjusted
+Speech Alignment is one producer of `NarrativeAlignment`; reviewed, manually authored or imported
 relations use the same Type without pretending to be speech. Timeline and common Temporal packages
 do not enumerate Narrative event kinds.

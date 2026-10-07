@@ -69,7 +69,7 @@ pure functions.
 
 ## Evidence over time is a peer package
 
-Frame-indexed observations do not belong to static geometry. `@qflow/region-track` relates prepared
+Frame-indexed observations do not belong to static geometry. `@qflow/region-evidence` relates prepared
 regions to a Timeline and resolves them into picture-plane Frames. Detection, identity association,
 interpolation and source-to-picture projection remain explicit preparation or project-package work.
 This keeps Spatial reusable and prevents a central scene or evidence registry.

@@ -1,8 +1,10 @@
+import { createAdmissionPackageFacet } from "@qflow/admission";
+import { createProducerPackageFacet } from "@qflow/producer";
 import { speechEvidenceComponent } from "./component.js";
 import { speechEvidenceManifest } from "./index.js";
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: speechEvidenceManifest }],
-  components: [speechEvidenceComponent],
+  facets: [...[speechEvidenceComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)])],
 };
 export default qflowPackage;

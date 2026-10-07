@@ -1,4 +1,5 @@
-import type { ComponentPackage } from "@qflow/component-kit";
+import type { AdmissionPackage } from "@qflow/admission";
+import type { ProducerPackage } from "@qflow/producer";
 import { canonicalize } from "@qflow/protocol";
 import type { StoredValue } from "@qflow/protocol";
 import { anchoredFrame, aspectFrame, assertCanvas, assertContentFit, assertIntrinsicExtent, assertSpatialFrame, assertSpatialMap2D, assertSpatialPath, assertSpatialPoint, frameFromEdges, resolveContentFit } from "./geometry.js";
@@ -38,4 +39,4 @@ export const spatialComponent = {
     { type: spatialTypes.map2D, handler: ({ value }) => assertSpatialMap2D(inline<SpatialMap2D>(value, "SpatialMap2D")) },
     { type: spatialTypes.fit, handler: ({ value }) => assertContentFit(inline<ContentFit>(value, "ContentFit")) },
   ],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

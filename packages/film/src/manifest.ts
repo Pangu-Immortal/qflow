@@ -1,11 +1,10 @@
-import { timelineTypes, timelineDependency } from "@qflow/timeline";
-import type { Timeline } from "@qflow/timeline";
-import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
-import { audioTrackSchema, compositionDependency, compositionTypes, visualTrackSchema } from "@qflow/composition";
-
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { spatialDependency, spatialTypes } from "@qflow/spatial";
-import { svsManifest, svsModuleRef, svsRecipeType } from "@qflow/svs";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
+import { audioTrackSchema, compositionDependency, compositionTypes, visualTrackSchema } from "@qflow/qflow/composition";
+import { spatialDependency, spatialTypes } from "@qflow/qflow/spatial";
+import { recipeManifest, recipeModuleRef, recipeType } from "@qflow/qflow/recipe";
+import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal/markup";
+import { timelineTypes, timelineDependency } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/qflow/timeline";
 
 export const filmModuleRef = { name: "@qflow/film", version: "1" } as const;
 export const filmTypes = {
@@ -59,7 +58,7 @@ export const filmMarkupSurfaces = [{
           summary: "Selects the Canvas that decides the Composition's dimensions." },
         ...temporalContextAttributeVocabulary,
         { name: "appearance", kind: "reference", required: true,
-          accepts: [svsRecipeType],
+          accepts: [recipeType],
           summary: "Selects the SVS Recipe that decides the clear color behind every Track.",
           recipe: [
             { name: "background", required: true,
@@ -103,7 +102,7 @@ export const filmManifest: ModuleManifest = {
     timelineDependency,
     spatialDependency,
     compositionDependency,
-    { module: svsModuleRef },
+    { module: recipeModuleRef },
   ],
   types: [
     { name: filmTypes.program.name },

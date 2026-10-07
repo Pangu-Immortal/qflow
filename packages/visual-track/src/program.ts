@@ -1,12 +1,12 @@
-import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/composition";
-import type { VisualTrack } from "@qflow/composition";
-import { canonicalize } from "@qflow/protocol";
-import { assertSpatialFrame, assertSpatialPath } from "@qflow/spatial";
-import type { SpatialPath } from "@qflow/spatial";
-import { assertTemporalWindowFor } from "@qflow/temporal";
-import type { TemporalWindow } from "@qflow/temporal";
-import { assertTimelineIdentity, timelineFrameCount } from "@qflow/timeline";
-import type { Timeline } from "@qflow/timeline";
+import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/qflow/composition";
+import type { VisualTrack } from "@qflow/qflow/composition";
+import { canonicalize } from "@qflow/qflow/protocol";
+import { assertSpatialFrame, assertSpatialPath } from "@qflow/qflow/spatial";
+import type { SpatialPath } from "@qflow/qflow/spatial";
+import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
+import type { TemporalWindow } from "@qflow/qflow/temporal";
+import { assertTimelineIdentity, timelineFrameCount } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/qflow/timeline";
 
 import {
   assertMediaIdentity,

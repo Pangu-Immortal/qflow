@@ -1,5 +1,6 @@
+import type { AdmissionPackage } from "@qflow/admission";
 import type { CaptionDocument, CaptionTiming } from "@qflow/caption";
-import type { ComponentPackage } from "@qflow/component-kit";
+import type { ProducerPackage } from "@qflow/producer";
 import type { StoredValue } from "@qflow/protocol";
 import { canonicalize } from "@qflow/protocol";
 import type { NarrativeProjection } from "@qflow/narrative-temporal";
@@ -30,4 +31,4 @@ export const narrativeCaptionComponent = {
     type: narrativeCaptionTypes.binding,
     handler: ({ value }) => assertNarrativeCaptionBindingIdentity(inline<NarrativeCaptionBinding>(value, "NarrativeCaptionBinding")),
   }],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

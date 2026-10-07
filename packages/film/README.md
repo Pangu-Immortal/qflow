@@ -7,6 +7,11 @@ Official package-owned assembly layer between peer Tracks and the generic Compos
 Film is an ordinary author component and an optional Target, not a Core root or a privileged video
 type.
 
+The official video Distribution installs Film as an ordinary default npm dependency. Film owns its
+author Surface, assembly Producers and Studio film companion together; the reusable companion is
+published as `@qflow/film/studio`. Composition remains the shared value below it, so another author
+package can assemble the same public result without importing Film.
+
 The package lowers one concrete Film declaration into a finite `FilmTrackSet` fold, then compiles
 that set into `Composition`. This supports any number and mix
 of VisualTrack and AudioTrack inputs while every Core Operation retains a fixed manifest-declared

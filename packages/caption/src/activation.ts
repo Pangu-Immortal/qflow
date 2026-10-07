@@ -1,4 +1,6 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/admission";
+import { createProducerPackageFacet } from "@qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/markup";
 import {
   captionComponent, captionManifest, captionModuleRef,
   decodeHiddenCaptionStyleSurface,
@@ -6,11 +8,11 @@ import {
 } from "./index.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: captionManifest }],
-  components: [captionComponent],
-  hostFacets: [
-    createMarkupSurfaceHostFacet({ module: captionModuleRef,
+  facets: [
+    ...[captionComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    createMarkupSurfaceFacet({ module: captionModuleRef,
     declaration: captionMarkupSurfaces.find((item) => item.name === "hidden")!, handler: decodeHiddenCaptionStyleSurface }),
   ],
 };

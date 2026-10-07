@@ -85,3 +85,7 @@ enter the reusable Style, so a paragraph or run cannot accidentally move or rest
 There is no aggregate Typography Track or Typography-owned collection Program. Several independent
 occurrences remain several explicit `.visual` contributions; a coordinated text-led visual role is
 one project component rather than an accidental collection of unrelated strings.
+
+The package also publishes `@qflow/text-fine/studio`. That subpath describes the same Flow, Point and
+Path surfaces to Studio; it is part of this rendering family's release rather than a separately
+versioned companion package.

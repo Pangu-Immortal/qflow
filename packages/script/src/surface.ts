@@ -17,8 +17,8 @@ import {
   narrativeSelectionType,
   narrativeType,
 } from "./manifest.js";
-import { canonicalize } from "@qflow/protocol";
-import { textTypes } from "@qflow/text";
+import { canonicalize } from "@qflow/qflow/protocol";
+import { textTypes } from "@qflow/qflow/text";
 import { parseScript } from "./parser.js";
 import type { ScriptSurfaceInput, ScriptSurfaceOutput } from "./types.js";
 

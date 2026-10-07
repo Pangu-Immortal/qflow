@@ -1,9 +1,9 @@
-import { assertTimelineIdentity } from "@qflow/timeline";
-import type { Timeline } from "@qflow/timeline";
-import { assertCanvas } from "@qflow/spatial";
-import type { Canvas } from "@qflow/spatial";
-import { assertAudioTrackIdentity, assertCompositionIdentity, assertVisualTrackIdentity, sealComposition } from "@qflow/composition";
-import type { AudioTrack, Composition, Track, VisualTrack } from "@qflow/composition";
+import { assertAudioTrackIdentity, assertCompositionIdentity, assertVisualTrackIdentity, sealComposition } from "@qflow/qflow/composition";
+import type { AudioTrack, Composition, Track, VisualTrack } from "@qflow/qflow/composition";
+import { assertCanvas } from "@qflow/qflow/spatial";
+import type { Canvas } from "@qflow/qflow/spatial";
+import { assertTimelineIdentity } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/qflow/timeline";
 
 import type { FilmProgram, FilmTrackSet } from "./types.js";
 

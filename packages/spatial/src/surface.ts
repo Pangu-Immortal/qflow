@@ -1,5 +1,5 @@
 import type { CanonicalValue } from "@qflow/protocol";
-import type { AuthorValueRef } from "@qflow/elaborator";
+import type { AuthorValueRef } from "@qflow/author";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,

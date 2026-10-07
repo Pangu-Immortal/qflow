@@ -4,16 +4,16 @@ import {
   composeTemporalWindow,
   durationInFrames,
   projectProgramInstant,
-} from "@qflow/temporal";
+} from "@qflow/qflow/temporal";
 import type {
   LocalTemporalDomain,
   TemporalExtent,
   TemporalDuration,
   TemporalInstant,
   TemporalWindow,
-} from "@qflow/temporal";
-import { assertClockIdentity, sealTimeline } from "@qflow/timeline";
-import type { Clock, Timeline } from "@qflow/timeline";
+} from "@qflow/qflow/temporal";
+import { assertClockIdentity, sealTimeline } from "@qflow/qflow/timeline";
+import type { Clock, Timeline } from "@qflow/qflow/timeline";
 
 import type {
   ConstructionExtent,

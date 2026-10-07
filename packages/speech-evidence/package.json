@@ -11,8 +11,11 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/component-kit": "workspace:*",
-    "@qflow/protocol": "workspace:*"
+    "@qflow/producer": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/temporal": "workspace:*",
+    "@qflow/admission": "workspace:*"
   },
   "devDependencies": {
     "@qflow/timeline": "workspace:*"

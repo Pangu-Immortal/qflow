@@ -6,7 +6,7 @@ import type { BlobRef, CanonicalValue } from "@qflow/protocol";
 import {
   assertVisualStyleV1,
   VISUAL_IR_V1,
-} from "@qflow/visual-ir";
+} from "./visual.js";
 import { assertTimelineIdentity, timelineFrameCount, timelineSampleFrames } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
 import { assertCompositableSurfaceRef, assertFontArtifactRef } from "@qflow/media";

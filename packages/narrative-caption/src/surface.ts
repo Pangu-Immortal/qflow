@@ -1,5 +1,5 @@
 import { captionTypes } from "@qflow/caption";
-import { sealGraphFragment } from "@qflow/elaborator";
+import { sealGraphFragment } from "@qflow/author";
 import {
   assertAttributes,
   assertEmptyElement,

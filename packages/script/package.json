@@ -1,24 +1,35 @@
 {
   "name": "@qflow/script",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./studio": "./src/studio.ts"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "qflow": {
     "activation": "./src/activation.ts"
   },
-  "dependencies": {
-    "@qflow/caption": "workspace:*",
-    "@qflow/narrative": "workspace:*",
-    "@qflow/narrative-caption": "workspace:*",
-    "@qflow/protocol": "workspace:*",
-    "@qflow/text": "workspace:*",
-    "@qflow/markup": "workspace:*"
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^",
+    "@qflow/studio-companion": "workspace:^"
   },
   "devDependencies": {
-    "@qflow/core": "workspace:*"
+    "@qflow/qflow": "workspace:*",
+    "@qflow/studio-companion": "workspace:*",
+    "@qflow/caption": "workspace:*",
+    "@qflow/kernel": "workspace:*",
+    "@qflow/speech-estimate": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/narrative": "workspace:*",
+    "@qflow/narrative-caption": "workspace:*",
+    "@qflow/narrative-temporal": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/text": "workspace:*"
   }
 }

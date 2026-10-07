@@ -1,18 +1,18 @@
-import { timelineDependency, timelineTypes } from "@qflow/timeline";
-import type { Timeline } from "@qflow/timeline";
-import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
-import { visualSourceTimeMapSchema } from "@qflow/composition";
+import { timelineDependency, timelineTypes } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/qflow/timeline";
+import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal/markup";
+import { visualSourceTimeMapSchema } from "@qflow/qflow/composition";
 import { readFile } from "node:fs/promises";
 
-import { artifactDependency, artifactTypes } from "@qflow/artifact";
-import { compositionDependency, compositionTypes } from "@qflow/composition";
+import { blobDependency, blobTypes } from "@qflow/qflow/blob";
+import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
 import {
   compositableSurfaceSchema,
   mediaDependency,
   mediaTypes,
-} from "@qflow/media";
+} from "@qflow/qflow/media";
 
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
 import {
   contentFitSchema,
   intrinsicExtentSchema,
@@ -20,10 +20,10 @@ import {
   spatialFrameSchema,
   spatialMap2DSchema,
   spatialTypes,
-} from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import { temporalDependency, temporalTypes } from "@qflow/temporal";
-import { temporalWindowAttributeVocabulary } from "@qflow/temporal-markup";
+} from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
+import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
+import { temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal/markup";
 
 const previewImage = (file: string) => ({
   mediaType: "image/png",
@@ -275,14 +275,14 @@ export const visualTrackMarkupSurfaces = [{
               summary: "Chooses the Frame the Clip occupies in the program picture plane." },
             { name: "z", kind: "literal", required: true,
               summary: "Sets this occurrence's absolute picture stacking order." },
-            { name: "treatment", kind: "reference", required: false, accepts: [svsRecipeType],
+            { name: "treatment", kind: "reference", required: false, accepts: [recipeType],
               summary: "Optionally chooses reusable image and Frame treatment; timing, fitting and stacking do not belong to it.",
               recipe: treatmentRecipeProperties },
             { name: "motion", kind: "reference", required: false, accepts: [visualTrackTypes.motion],
               summary: "Optionally applies a reusable typed Motion. Inline Pose children express the same value." },
             { name: "clip", kind: "reference", required: false, accepts: [spatialTypes.path],
               summary: "Clips the Clip to an authored Path." },
-            { name: "image", kind: "reference", required: false, accepts: [artifactTypes.blob],
+            { name: "image", kind: "reference", required: false, accepts: [blobTypes.blob],
               summary: "Shows a durationless still image as the Clip's direct source." },
             { name: "media", kind: "reference", required: false, accepts: [mediaTypes.synchronized],
               summary: "Shows an explicitly prepared timed source." },
@@ -399,7 +399,7 @@ export const visualTrackManifest: ModuleManifest = {
   name: visualTrackModuleRef.name,
   version: visualTrackModuleRef.version,
   dependencies: [
-    artifactDependency,
+    blobDependency,
     mediaDependency,
     timelineDependency,
     temporalDependency,
@@ -421,8 +421,8 @@ export const visualTrackManifest: ModuleManifest = {
   producers: [
     { name: visualTrackProducers.createLayers.name, inputs: [], outputs: [{ name: "layers", type: visualTrackTypes.layerSet }], needs: [] },
     { name: visualTrackProducers.appendPaintLayer.name, inputs: [{ name: "layers", type: visualTrackTypes.layerSet }, { name: "spec", type: visualTrackTypes.paintLayerSpec }], outputs: [{ name: "layers", type: visualTrackTypes.layerSet }], needs: [] },
-    { name: visualTrackProducers.appendStillLayer.name, inputs: [{ name: "layers", type: visualTrackTypes.layerSet }, { name: "source", type: artifactTypes.blob }, { name: "extent", type: spatialTypes.extent }, { name: "fit", type: spatialTypes.fit }, { name: "spec", type: visualTrackTypes.sampleLayerSpec }], outputs: [{ name: "layers", type: visualTrackTypes.layerSet }], needs: [] },
-    { name: visualTrackProducers.appendMappedStillLayer.name, inputs: [{ name: "layers", type: visualTrackTypes.layerSet }, { name: "source", type: artifactTypes.blob }, { name: "extent", type: spatialTypes.extent }, { name: "mapping", type: spatialTypes.map2D }, { name: "spec", type: visualTrackTypes.sampleLayerSpec }], outputs: [{ name: "layers", type: visualTrackTypes.layerSet }], needs: [] },
+    { name: visualTrackProducers.appendStillLayer.name, inputs: [{ name: "layers", type: visualTrackTypes.layerSet }, { name: "source", type: blobTypes.blob }, { name: "extent", type: spatialTypes.extent }, { name: "fit", type: spatialTypes.fit }, { name: "spec", type: visualTrackTypes.sampleLayerSpec }], outputs: [{ name: "layers", type: visualTrackTypes.layerSet }], needs: [] },
+    { name: visualTrackProducers.appendMappedStillLayer.name, inputs: [{ name: "layers", type: visualTrackTypes.layerSet }, { name: "source", type: blobTypes.blob }, { name: "extent", type: spatialTypes.extent }, { name: "mapping", type: spatialTypes.map2D }, { name: "spec", type: visualTrackTypes.sampleLayerSpec }], outputs: [{ name: "layers", type: visualTrackTypes.layerSet }], needs: [] },
     { name: visualTrackProducers.appendTimedLayer.name, inputs: [{ name: "layers", type: visualTrackTypes.layerSet }, { name: "source", type: mediaTypes.synchronized }, { name: "fit", type: spatialTypes.fit }, { name: "spec", type: visualTrackTypes.sampleLayerSpec }], outputs: [{ name: "layers", type: visualTrackTypes.layerSet }], needs: [] },
     { name: visualTrackProducers.appendMappedTimedLayer.name, inputs: [{ name: "layers", type: visualTrackTypes.layerSet }, { name: "source", type: mediaTypes.synchronized }, { name: "mapping", type: spatialTypes.map2D }, { name: "spec", type: visualTrackTypes.sampleLayerSpec }], outputs: [{ name: "layers", type: visualTrackTypes.layerSet }], needs: [] },
     { name: visualTrackProducers.appendSurfaceLayer.name, inputs: [{ name: "layers", type: visualTrackTypes.layerSet }, { name: "source", type: mediaTypes.compositableSurface }, { name: "fit", type: spatialTypes.fit }, { name: "spec", type: visualTrackTypes.sampleLayerSpec }], outputs: [{ name: "layers", type: visualTrackTypes.layerSet }], needs: [] },

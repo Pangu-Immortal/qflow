@@ -7,10 +7,10 @@ import { projectMomentWindow, projectProgramWindow, projectSegmentWindow, projec
 import type { TemporalWindowProjection } from "../../../test/temporal-fixture.js";
 
 import { sealComposition } from "@qflow/composition";
-import { compileHyperframesDocument } from "@qflow/hyperframes";
+import { compileHtmlProgram } from "@qflow/html-program";
 import { mediaTypes } from "@qflow/media";
 import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
-import { artifactTypes } from "@qflow/artifact";
+import { blobTypes } from "@qflow/blob";
 import { temporalTypes } from "@qflow/temporal";
 import {
   appendMediaPaintLayer,
@@ -40,8 +40,8 @@ import type { VisualClipSpec, MediaLayerSet, VisualSourceTimeSpec } from "@qflow
 import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import type { BlobRef } from "@qflow/protocol";
 import { spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import type { SvsRecipe } from "@qflow/svs";
+import { recipeType } from "@qflow/recipe";
+import type { Recipe } from "@qflow/recipe";
 import type { StructuredElement, StructuredNode, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/markup";
 
 const space = sealTimeline({ id: "test-space", frameCount: 120, frameRate: { numerator: 30, denominator: 1 },
@@ -304,7 +304,7 @@ test("self-blur is two explicit samples of one Resource and collection keeps one
   const track = projectVisualTrack(space, finalizeVisualTrack(appendProgramVisualClip(
     createVisualTrackSet(), header, semantic, layers, frame, clipSpec(),
   ), header, space));
-  const document = compileHyperframesDocument(sealComposition({
+  const document = compileHtmlProgram(sealComposition({
     id: "media",
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [track],
@@ -574,7 +574,7 @@ test("transparent, Paint, self-blur and alternate-source backing are only ordere
   const track = projectVisualTrack(space, finalizeVisualTrack(appendProgramVisualClip(
     createVisualTrackSet(), header, semantic, layers, frame, clipSpec(),
   ), header, space));
-  const document = compileHyperframesDocument(sealComposition({
+  const document = compileHtmlProgram(sealComposition({
     id: "layer-matrix", canvas: { width: 1080, height: 1920, clearColor: "#000000" }, tracks: [track],
   }), space);
   assert.deepEqual(track.presents[0]!.elements.filter((element) => element.kind === "image").map((element) => element.id),
@@ -647,10 +647,10 @@ test("the Visual author Surface emits explicit graph edges for layers, absolute 
   const node = (name: string, attributes: Record<string, MarkupAttributeValue>, children: StructuredNode[] = []): StructuredElement => ({
     kind: "element", name, attributes, children, range,
   });
-  const appearance = (path: string, properties: SvsRecipe["properties"]): SurfaceResolvedReference => ({
+  const appearance = (path: string, properties: Recipe["properties"]): SurfaceResolvedReference => ({
     path,
     ref: { kind: "record", id: path },
-    type: svsRecipeType,
+    type: recipeType,
     record: { value: { kind: "inline", value: { path, properties } } } as never,
   });
   const plain = (path: string, type: SurfaceResolvedReference["type"]): SurfaceResolvedReference => ({
@@ -661,7 +661,7 @@ test("the Visual author Surface emits explicit graph edges for layers, absolute 
     ["frame", plain("frame", spatialTypes.frame)],
     ["mapping", plain("mapping", spatialTypes.map2D)],
     ["clip-path", plain("clip-path", spatialTypes.path)],
-    ["still", plain("still", artifactTypes.blob)],
+    ["still", plain("still", blobTypes.blob)],
     ["extent", plain("extent", spatialTypes.extent)],
     ["video", plain("video", mediaTypes.synchronized)],
     ["surface", plain("surface", mediaTypes.compositableSurface)],
@@ -712,7 +712,7 @@ test("the Visual author Surface emits explicit graph edges for layers, absolute 
   assert.equal(result.fragments.some((candidate) => candidate.operations.some((operation) =>
     operation.producer.module.name === "@qflow/narrative-temporal")), false);
   assert.equal(producers.some((name) => name.includes("sound") || name.includes("audio")), false);
-  assert.ok(fragment.inputs.some((entry) => entry.type.name === artifactTypes.blob.name));
+  assert.ok(fragment.inputs.some((entry) => entry.type.name === blobTypes.blob.name));
   assert.ok(fragment.inputs.some((entry) => entry.type.name === mediaTypes.synchronized.name));
   assert.ok(fragment.inputs.some((entry) => entry.type.name === spatialTypes.path.name));
   const clipSpecs = result.records.filter((entry) => entry.type.name === "VisualClipSpec");

@@ -1,32 +1,43 @@
 {
   "name": "@qflow/caption-fine",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./studio": "./src/studio.ts"
   },
+  "files": [
+    "dist",
+    "preview",
+    "README.md"
+  ],
   "qflow": {
     "activation": "./src/activation.ts"
   },
-  "dependencies": {
-    "@qflow/caption": "workspace:*",
-    "@qflow/component-kit": "workspace:*",
-    "@qflow/composition": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/hyperframes": "workspace:*",
-    "@qflow/media": "workspace:*",
-    "@qflow/protocol": "workspace:*",
-    "@qflow/region-track": "workspace:*",
-    "@qflow/timeline": "workspace:*",
-    "@qflow/spatial": "workspace:*",
-    "@qflow/svs": "workspace:*",
-    "@qflow/markup": "workspace:*",
-    "@qflow/temporal": "workspace:*",
-    "@qflow/temporal-markup": "workspace:*"
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^",
+    "@qflow/studio-companion": "workspace:^"
   },
   "devDependencies": {
-    "@qflow/script": "workspace:*"
+    "@qflow/caption": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/studio-companion": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/html-program": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/region-evidence": "workspace:*",
+    "@qflow/timeline": "workspace:*",
+    "@qflow/spatial": "workspace:*",
+    "@qflow/recipe": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/temporal": "workspace:*",
+    "@qflow/script": "workspace:*",
+    "@qflow/browser-capture": "workspace:*",
+    "sharp": "0.35.4"
   }
 }

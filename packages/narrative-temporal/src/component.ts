@@ -1,4 +1,5 @@
-import type { ComponentPackage } from "@qflow/component-kit";
+import type { AdmissionPackage } from "@qflow/admission";
+import type { ProducerPackage } from "@qflow/producer";
 import type { Narrative, NarrativeSegmentRef, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import { canonicalize } from "@qflow/protocol";
 import type { ProducerRef, StoredValue } from "@qflow/protocol";
@@ -59,10 +60,10 @@ export const narrativeTemporalComponent = {
     projectionFacet(narrativeTemporalProducers.projectSegmentInstant, "segment", "segment"),
     projectionFacet(narrativeTemporalProducers.projectMomentInstant, "moment", "moment"),
   ])],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;
 
 function projectionFacet(producer: ProducerRef, inputName: "selection" | "segment" | "moment",
-  sourceKind: "selection" | "segment" | "moment"): NonNullable<ComponentPackage["producers"]>[number] {
+  sourceKind: "selection" | "segment" | "moment"): NonNullable<ProducerPackage["producers"]>[number] {
   return { producer, handler: ({ inputs }) => {
     const spec = inline<NarrativeInstantSpec>(inputs.spec?.value, "NarrativeInstantSpec");
     return { outputs: { instant: { kind: "inline" as const, value: canonicalize(projectNarrativeInstant({

@@ -1,13 +1,13 @@
-import type { FrameSpan, VisualEasing, VisualSourceTimeMap, VisualSourceTimeRational } from "@qflow/composition";
-import type { CompositableSurfaceRef, MediaRational } from "@qflow/media";
-import type { BlobRef } from "@qflow/protocol";
+import type { FrameSpan, VisualEasing, VisualSourceTimeMap, VisualSourceTimeRational } from "@qflow/qflow/composition";
+import type { CompositableSurfaceRef, MediaRational } from "@qflow/qflow/media";
+import type { BlobRef } from "@qflow/qflow/protocol";
 import type {
   ContentFit,
   IntrinsicExtent,
   SpatialFrame,
   SpatialMap2D,
   SpatialPath,
-} from "@qflow/spatial";
+} from "@qflow/qflow/spatial";
 
 /** Intrinsic visual truth resolved before Media authoring; never a Provider or lineage envelope. */
 export type MediaVisualSource =

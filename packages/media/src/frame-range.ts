@@ -1,6 +1,6 @@
 import type { MediaRational } from "./types.js";
 
-/** A half-open selection on the original programme frame clock. */
+/** A half-open selection on the original program frame clock. */
 export type MediaFrameRange = {
   readonly startFrame: number;
   readonly endFrameExclusive: number;

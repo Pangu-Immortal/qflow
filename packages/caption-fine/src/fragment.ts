@@ -1,9 +1,9 @@
-import { captionTypes } from "@qflow/caption";
-import { compositionTypes } from "@qflow/composition";
-import { sealGraphFragment } from "@qflow/elaborator";
-import { timelineTypes } from "@qflow/timeline";
-import { regionTrackTypes } from "@qflow/region-track";
-import { spatialTypes } from "@qflow/spatial";
+import { captionTypes } from "@qflow/qflow/caption";
+import { compositionTypes } from "@qflow/qflow/composition";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import { timelineTypes } from "@qflow/qflow/timeline";
+import { regionEvidenceTypes } from "@qflow/qflow/region-evidence";
+import { spatialTypes } from "@qflow/qflow/spatial";
 
 import { captionFineProducers, captionFineTypes } from "./manifest.js";
 
@@ -53,14 +53,14 @@ export const fineCaptionTrackFragment = sealGraphFragment({
 });
 
 /** The same Caption pipeline with one explicit, external spatial-evidence edge. */
-export const fineCaptionRegionTrackFragment = sealGraphFragment({
+export const fineCaptionRegionEvidenceFragment = sealGraphFragment({
   inputs: [
     { name: "document", type: captionTypes.document },
     { name: "timeline", type: timelineTypes.timeline },
     { name: "within", type: spatialTypes.frame },
     { name: "timing", type: captionTypes.timing },
     { name: "program", type: captionTypes.program },
-    { name: "regions", type: regionTrackTypes.track },
+    { name: "regions", type: regionEvidenceTypes.evidence },
   ],
   operations: [
     {

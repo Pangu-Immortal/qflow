@@ -1,28 +1,29 @@
 import {
   sealRecord,
-} from "@qflow/core";
-import type { AuthorFrontend, AuthorSourceExport } from "@qflow/elaborator";
-import { parseSvs } from "@qflow/svs";
+} from "@qflow/kernel";
+import type { AuthorFrontend, AuthorSourceExport } from "@qflow/author";
+import { parseRecipe } from "@qflow/recipe";
+import { decodeSourceText } from "@qflow/source";
 
 import { textModuleRef, textTypes } from "./manifest.js";
-import { textTemplateFromSvsRecipes } from "./svs.js";
+import { textTemplateFromRecipes } from "./recipe.js";
 
-export const textSvsFrontendId = "@qflow/text/svs@1";
+export const textRecipeFrontendId = "@qflow/text/svs@1";
 
-export const textSvsFrontend: AuthorFrontend = {
-  id: textSvsFrontendId,
+export const textRecipeFrontend: AuthorFrontend = {
+  id: textRecipeFrontendId,
   discover() {
     return { modules: [`${textModuleRef.name}@${textModuleRef.version}`], sources: [] };
   },
   decode(source, context) {
-    const parsed = parseSvs(source.name, source.text);
+    const parsed = parseRecipe(source.name, decodeSourceText(source));
     const recipes = parsed.recipes.map((item) => item.value);
     const candidates = recipes
       .map((recipe) => /^text-template\.([a-z][a-z0-9-]{0,95})$/u.exec(recipe.path)?.[1])
       .filter((id): id is string => id !== undefined);
     if (candidates.length !== 1) throw new Error(`${source.name} must declare exactly one root Recipe text-template.<id>`);
     const id = candidates[0]!;
-    const template = textTemplateFromSvsRecipes(recipes, id);
+    const template = textTemplateFromRecipes(recipes, id);
     const record = sealRecord({
       id,
       type: textTypes.template,

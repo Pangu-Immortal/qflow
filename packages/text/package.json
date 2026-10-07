@@ -11,11 +11,13 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/component-kit": "workspace:*",
-    "@qflow/core": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/kernel": "workspace:*",
+    "@qflow/author": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/svs": "workspace:*"
+    "@qflow/recipe": "workspace:*",
+    "@qflow/source": "workspace:*",
+    "@qflow/admission": "workspace:*"
   }
 }

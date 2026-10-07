@@ -3,10 +3,10 @@
 Author-facing media declarations for the neutral `@qflow/media` contract module.
 
 `<media:Image>`, `<media:Audio>`, `<media:Video>` and `<media:Font>` request bytes through the Host-owned source-asset
-capability. Image, Audio and Video emit one Resource-backed `BlobArtifact`; Font wraps the same immutable
+capability. Image, Audio and Video emit one Resource-backed `Blob`; Font wraps the same immutable
 bytes with exact weight/style metadata as a one-source `FontArtifactRef`. A logical font face may
 also contain several exact Unicode-range sources when another package, such as
-`@qflow/fonts-open`, owns a sharded installed font. `FontStackRef` is the generic ordered value
+`@qflow/fontsource`, adapts a sharded installed font. `FontStackRef` is the generic ordered value
 for one primary face followed by exact glyph fallbacks. Media declarations do not open files themselves,
 inspect media, call a Provider or promote declared audio to speech. The consuming author package
 decides whether an audio artifact is a voice reference, soundtrack, evidence source or something
@@ -38,12 +38,25 @@ to Timeline construction is not observable downstream.
 <media:Font id="caption-font" src="./assets/fonts/creator-bold.otf" weight="700" style="normal"/>
 ```
 
-The source can be a project font, a user-supplied file, or an installed font's file path. The Host
-stages its bytes as an ordinary resource; the render machine does not need that font installed.
+The source can be a project font, a user-supplied file, or an npm package resource such as
+`package:@company/brand-fonts/files/brand.woff2`. The Host stages its bytes as an ordinary resource;
+the render machine does not need that font installed.
 Project-relative assets make the Source portable. The supported filename extensions are `.ttf`,
 `.otf`, `.woff` and `.woff2`. The Surface has no selector for a face within a `.ttc`/`.otc` collection;
 use the intended standalone face. Weight/style metadata describes that face, not a synthetic transform.
 
 Caption Fine and Typography Styles can consume this value as their primary `font` or an explicit
-Fallback face. `@qflow/fonts-open` offers bundled faces through the same media types; its catalog
-does not limit which external fonts an author may supply.
+Fallback face. `@qflow/fontsource` adapts only packages the project explicitly installs; Media
+does not carry a font catalog or limit which package and project-owned files an author may supply.
+
+A face split across Unicode ranges uses `Source` children. A stack is a separate, generic value:
+
+```svml
+<media:Font id="latin" src="package:@company/type/files/latin.woff2" weight="600" style="normal"/>
+<media:Font id="han" weight="600" style="normal">
+  <media:Source src="./assets/fonts/han-1.woff2" unicode-range="U+4E00-9FFF"/>
+</media:Font>
+<media:FontStack id="caption" primary={latin}>
+  <media:Fallback font={han}/>
+</media:FontStack>
+```

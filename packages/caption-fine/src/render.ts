@@ -1,8 +1,8 @@
-import { assertTimelineIdentity, timelineFrameCount } from "@qflow/timeline";
-import type { Timeline } from "@qflow/timeline";
-import { assertCaptionProgramForDocument } from "@qflow/caption";
-import type { CaptionProgram } from "@qflow/caption";
-import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/composition";
+import { assertTimelineIdentity, timelineFrameCount } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/qflow/timeline";
+import { assertCaptionProgramForDocument } from "@qflow/qflow/caption";
+import type { CaptionProgram } from "@qflow/qflow/caption";
+import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/qflow/composition";
 import type {
   VisualAnimation,
   VisualBoxElement,
@@ -14,17 +14,17 @@ import type {
   VisualTextElement,
   VisualTextPaintLayer,
   VisualTrack,
-} from "@qflow/composition";
-import type { CaptionDocument, CaptionDisplayWord, CaptionUnit } from "@qflow/caption";
-import { assertRegionTrack } from "@qflow/region-track";
-import type { RegionTrack } from "@qflow/region-track";
-import { assertSpatialFrame } from "@qflow/spatial";
-import type { SpatialFrame } from "@qflow/spatial";
+} from "@qflow/qflow/composition";
+import type { CaptionDocument, CaptionDisplayWord, CaptionUnit } from "@qflow/qflow/caption";
+import { assertRegionEvidence } from "@qflow/qflow/region-evidence";
+import type { RegionEvidence } from "@qflow/qflow/region-evidence";
+import { assertSpatialFrame } from "@qflow/qflow/spatial";
+import type { SpatialFrame } from "@qflow/qflow/spatial";
 
 import { assertFineCaptionParameters, FINE_CAPTION_FAMILY } from "./style.js";
 import { assertFineCaptionSchedule } from "./schedule.js";
 import { uniformGap, wordGaps } from "./spacing.js";
-import { browserProgram } from "@qflow/hyperframes";
+import { htmlVisual } from "@qflow/qflow/html-program";
 import { joinedBoxSetup } from "./joined-box.js";
 import type {
   FineCaptionActiveUnderline,
@@ -806,7 +806,7 @@ function cueElements(
   });
 
   if (parameters.activeBox.mode === "trail" && parameters.activeBox.continuity === "joined") {
-    // Fine owns this drawing program. The renderer only executes its existing browser-program
+    // Fine owns this drawing program. The renderer only executes its existing HtmlVisual
     // format; it learns nothing about captions, activation units or their layout rules.
     push({
       id: "joined-boxes", parent: "cue", kind: "program",
@@ -814,7 +814,7 @@ function cueElements(
         { name: "position", value: "absolute" }, { name: "inset", value: "0" },
         { name: "padding", value: `${compactNumber(parameters.cueBox.paddingYPx)}px ${compactNumber(parameters.cueBox.paddingXPx)}px` },
       ],
-      program: browserProgram({
+      program: htmlVisual({
         html: "{{joined-layout}}" + atoms.map((_, index) => `{{joined-box-${index + 1}}}`).join(""),
         setup: joinedBoxSetup,
         css: ":scope { pointer-events: none; }",
@@ -1083,7 +1083,7 @@ export function renderFineCaption(
   document: CaptionDocument,
   timeline: Timeline,
   within: SpatialFrame,
-  regions?: RegionTrack,
+  regions?: RegionEvidence,
 ): VisualTrack {
   assertFineCaptionSchedule(schedule);
   assertCaptionProgramForDocument(program, document);
@@ -1105,8 +1105,8 @@ export function renderFineCaption(
     assertFineCaptionParameters(style.rendering.parameters as unknown as FineCaptionParameters);
   }
   const totalFrames = timelineFrameCount(timeline);
-  const regionTracks = regions === undefined ? undefined : (() => {
-    assertRegionTrack(regions);
+  const regionSeriesById = regions === undefined ? undefined : (() => {
+    assertRegionEvidence(regions);
     const regionFrameCount = regions.series[0]!.frames.length;
     if (regions.timelineId !== timeline.id || regionFrameCount !== totalFrames) {
       throw new Error(`Fine Caption regions do not cover Timeline ${timeline.id}'s ${totalFrames} Frames`);
@@ -1126,15 +1126,15 @@ export function renderFineCaption(
     const endFrameExclusive = Math.min(totalFrames, Math.max(startFrame + 1, measuredEnd));
     if (startFrame >= totalFrames || endFrameExclusive <= startFrame) return [];
     const durationFrames = endFrameExclusive - startFrame;
-    const trackedPlacement = regionTracks === undefined ? undefined : (() => {
+    const trackedPlacement = regionSeriesById === undefined ? undefined : (() => {
       const role = resolvedAtoms[0]?.role;
       if (role === undefined || resolvedAtoms.some((atom) => atom.role !== role)) {
         throw new Error(`Fine Caption Cue ${cue.id} must contain exactly one Script Role to follow regions`);
       }
-      const track = regionTracks.get(role);
-      if (track === undefined) return undefined;
+      const series = regionSeriesById.get(role);
+      if (series === undefined) return undefined;
       return {
-        frames: track.frames.slice(startFrame, endFrameExclusive),
+        frames: series.frames.slice(startFrame, endFrameExclusive),
       };
     })();
     const atomFrames = new Map(cue.units.map((atom) => [atom.unitId, {

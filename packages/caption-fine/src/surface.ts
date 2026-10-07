@@ -1,25 +1,20 @@
-import { captionProducers, captionTypes } from "@qflow/caption";
-import { assertFontArtifactRef, assertFontStackRef, mediaTypes } from "@qflow/media";
-import type { FontArtifactRef, FontStackRef } from "@qflow/media";
-import { timelineTypes } from "@qflow/timeline";
-import { regionTrackTypes } from "@qflow/region-track";
-import { spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import type { SvsRecipe } from "@qflow/svs";
-import type {
-  StructuredElement,
-  StructuredSurfaceHandler,
-  SurfaceResolvedReference,
-  MarkupAttributeValue,
-} from "@qflow/markup";
+import { captionProducers, captionTypes } from "@qflow/qflow/caption";
+import { assertFontArtifactRef, assertFontStackRef, mediaTypes } from "@qflow/qflow/media";
+import type { FontArtifactRef, FontStackRef } from "@qflow/qflow/media";
+import { timelineTypes } from "@qflow/qflow/timeline";
+import { regionEvidenceTypes } from "@qflow/qflow/region-evidence";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
+import type { Recipe } from "@qflow/qflow/recipe";
+import type { StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/qflow/markup";
 
-import { sealGraphFragment } from "@qflow/elaborator";
-import type { FragmentOperation } from "@qflow/elaborator";
-import type { SurfaceRecordDraft, SurfaceComponentDraft } from "@qflow/markup";
-import { assertEmptyElement, optionalTextAttribute } from "@qflow/markup";
-import { createTemporalWindowConstruction, resolveTemporalContext, temporalWindowAttributeNames } from "@qflow/temporal-markup";
-import { temporalTypes } from "@qflow/temporal";
-import { compositionTypes } from "@qflow/composition";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import type { FragmentOperation } from "@qflow/qflow/author";
+import type { SurfaceRecordDraft, SurfaceComponentDraft } from "@qflow/qflow/markup";
+import { assertEmptyElement, optionalTextAttribute } from "@qflow/qflow/markup";
+import { createTemporalWindowConstruction, resolveTemporalContext, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
+import { temporalTypes } from "@qflow/qflow/temporal";
+import { compositionTypes } from "@qflow/qflow/composition";
 import { captionFineProducers, captionFineTypes } from "./manifest.js";
 const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
@@ -113,7 +108,7 @@ function exactFonts(
 export const decodeFineCaptionStyleSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
   attributes(element, ["id", "recipe", "font"]);
   const id = stringAttribute(element, "id");
-  const recipe = inline<SvsRecipe>(reference(element, "recipe", svsRecipeType, resolveReference), `${element.name}.recipe`);
+  const recipe = inline<Recipe>(reference(element, "recipe", recipeType, resolveReference), `${element.name}.recipe`);
   const style = fineCaptionStyle(id, recipe, exactFonts(element, resolveReference));
   return {
     records: [{ id, type: captionTypes.style, value: { kind: "inline", value: style }, range: element.range }],
@@ -129,7 +124,7 @@ export const decodeFineCaptionTrackSurface: StructuredSurfaceHandler = ({ elemen
   const timing = reference(element, "timing", captionTypes.timing, resolveReference);
   const within = reference(element, "within", spatialTypes.frame, resolveReference);
   const context = resolveTemporalContext({ element, resolveReference });
-  const regions = element.attributes.regions === undefined ? undefined : reference(element, "regions", regionTrackTypes.track, resolveReference);
+  const regions = element.attributes.regions === undefined ? undefined : reference(element, "regions", regionEvidenceTypes.evidence, resolveReference);
   const records: SurfaceRecordDraft[] = [{ id: `${id}.header`, type: captionTypes.header,
     value: { kind: "inline", value: { id } }, range: element.range }];
   const components: SurfaceComponentDraft[] = [];
@@ -163,7 +158,7 @@ export const decodeFineCaptionTrackSurface: StructuredSurfaceHandler = ({ elemen
   }
   operations.push({ id: "schedule", producer: captionFineProducers.schedule,
     inputs: { timing: input("timing"), document: input("document"), program: operation(previous) }, result: { kind: "output", name: "schedule" } });
-  if (regions !== undefined) { inputs.push({ name: "regions", type: regionTrackTypes.track }); bindings.regions = regions.ref; }
+  if (regions !== undefined) { inputs.push({ name: "regions", type: regionEvidenceTypes.evidence }); bindings.regions = regions.ref; }
   operations.push({ id: "render", producer: regions === undefined ? captionFineProducers.render : captionFineProducers.renderWithRegions,
     inputs: { schedule: operation("schedule"), document: input("document"), timeline: input("timeline"), within: input("within"), program: operation(previous), ...(regions === undefined ? {} : { regions: input("regions") }) }, result: { kind: "output", name: "track" } });
   const collector = sealGraphFragment({ inputs, operations, exports: [

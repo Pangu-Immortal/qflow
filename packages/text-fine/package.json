@@ -1,32 +1,44 @@
 {
   "name": "@qflow/text-fine",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./studio": "./src/studio.ts"
   },
+  "files": [
+    "dist",
+    "preview",
+    "README.md"
+  ],
   "qflow": {
     "activation": "./src/activation.ts"
   },
-  "dependencies": {
-    "@qflow/component-kit": "workspace:*",
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^",
+    "@qflow/studio-companion": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/compiler": "workspace:*",
+    "@qflow/producer": "workspace:*",
     "@qflow/composition": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/source": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/timeline": "workspace:*",
     "@qflow/spatial": "workspace:*",
-    "@qflow/svs": "workspace:*",
+    "@qflow/recipe": "workspace:*",
     "@qflow/temporal": "workspace:*",
-    "@qflow/temporal-markup": "workspace:*",
     "@qflow/text": "workspace:*",
-    "@qflow/visual-ir": "workspace:*",
-    "@qflow/markup": "workspace:*"
-  },
-  "devDependencies": {
-    "@qflow/core": "workspace:*",
-    "@qflow/validation": "workspace:*"
+    "@qflow/markup": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/studio-companion": "workspace:*",
+    "@qflow/kernel": "workspace:*",
+    "@qflow/admission": "workspace:*",
+    "@qflow/html-program": "workspace:*",
+    "@qflow/narrative": "workspace:*"
   }
 }

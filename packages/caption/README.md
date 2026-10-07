@@ -29,7 +29,7 @@ actually needs and ordered `Use` children. Fine takes one placement Frame:
 </caption-fine:Caption>
 ```
 
-Time attributes come from `@qflow/temporal-markup`: `during`, or exactly two of `from`, `until`, and
+Time attributes come from `@qflow/temporal/markup`: `during`, or exactly two of `from`, `until`, and
 `for`, including resolved temporal references and explicit frame/second expressions. Omitted time
 attributes mean the whole Timeline. Domain adapters must resolve semantic or other domain references
 to ordinary absolute Windows/Instants before a Caption family consumes them. `role` filters content independently of time. Later matching
@@ -39,7 +39,7 @@ remain independent and can intentionally display simultaneous captions.
 ## Rendering-family extension
 
 A family owns its Style, schedule, renderer and Track Surface. It can use ordinary VisualTrack
-objects or an explicit browser program; no central renderer dispatch is required.
+objects or an explicit HTML visual; no central renderer dispatch is required.
 
 The public helpers and Types are in [index.ts](src/index.ts):
 

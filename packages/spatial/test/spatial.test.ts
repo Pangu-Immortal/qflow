@@ -1,15 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { registerTypeValidatorFacets } from "@qflow/component-kit";
-import { createResolvedClosure, sealBuildRequest, start } from "@qflow/core";
-import { AuthorFrontendRegistry, compileSourceClosure, resolveCompiledSourceExport } from "@qflow/elaborator";
-import type { AuthorSourceUnit } from "@qflow/elaborator";
+import { registerTypeValidatorFacets } from "@qflow/admission";
+import { createResolvedClosure, sealBuildRequest, start } from "@qflow/kernel";
+import { AuthorFrontendRegistry, resolveCompiledSourceExport } from "@qflow/author";
+import { compileSourceClosure } from "@qflow/compiler";
+import type { ResolvedSource } from "@qflow/source";
+import { resolveSelfDescribedTextSource } from "@qflow/source/text";
 import {
   MarkupSurfaceRegistry,
   createMarkupAuthorFrontend,
 } from "@qflow/markup";
-import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
+import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/admission";
 
 import {
   anchoredFrame,
@@ -208,8 +210,8 @@ test("SpatialPath is typed geometry and rejects an empty or stateful command str
   assert.throws(() => sealSpatialPath({ commands: [{ kind: "move", xPx: 0, yPx: 0 }, { kind: "close" }] }), /no drawable/u);
 });
 
-function source(text: string): AuthorSourceUnit {
-  return { id: "/project/main.svml", name: "main.svml", text: `<?svml using="@qflow/markup@1"?>\n${text}` };
+function source(text: string): ResolvedSource {
+  return resolveSelfDescribedTextSource({ id: "/project/main.svml", name: "main.svml", text: `<?svml using="@qflow/markup@1"?>\n${text}` });
 }
 
 test("self-described Spatial Surfaces produce explicit static geometry", async () => {

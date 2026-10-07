@@ -1,12 +1,12 @@
-import type { Timeline } from "@qflow/timeline";
+import type { Timeline } from "@qflow/qflow/timeline";
 import type {
   VisualAnimation,
   VisualElement,
   VisualStyleDeclaration,
   VisualSourceTimeMap,
-} from "@qflow/composition";
-import { mapSpatialPoint } from "@qflow/spatial";
-import type { SpatialFrame, SpatialPath } from "@qflow/spatial";
+} from "@qflow/qflow/composition";
+import { mapSpatialPoint } from "@qflow/qflow/spatial";
+import type { SpatialFrame, SpatialPath } from "@qflow/qflow/spatial";
 
 import { poseAnimation, samplingAnimation } from "./motion.js";
 import { resolveVisualSourceTime } from "./source-time.js";

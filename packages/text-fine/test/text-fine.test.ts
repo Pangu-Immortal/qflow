@@ -6,11 +6,12 @@ import { narrativeProjectionFixture, timelineFixture } from "../../../test/timel
 import { projectSelectionWindow } from "../../../test/temporal-fixture.js";
 
 import { spatialComponent, videoContractManifests } from "../../../test/support/video-domain.js";
-import { registerTypeValidatorFacets } from "@qflow/component-kit";
+import { registerTypeValidatorFacets } from "@qflow/admission";
 import { compositionTypes, sealComposition } from "@qflow/composition";
-import { createResolvedClosure, sealBuildRequest, start } from "@qflow/core";
-import { AuthorFrontendRegistry, compileSourceClosure, resolveCompiledSourceExport } from "@qflow/elaborator";
-import { compileHyperframesDocument } from "@qflow/hyperframes";
+import { createResolvedClosure, sealBuildRequest, start } from "@qflow/kernel";
+import { AuthorFrontendRegistry, resolveCompiledSourceExport } from "@qflow/author";
+import { compileSourceClosure } from "@qflow/compiler";
+import { compileHtmlProgram } from "@qflow/html-program";
 import { mediaDependency, mediaTypes } from "@qflow/media";
 import type { CompositableSurfaceRef, FontArtifactRef } from "@qflow/media";
 import type { NarrativeSelectionRef } from "@qflow/narrative";
@@ -42,10 +43,11 @@ import {
 } from "@qflow/text-fine";
 import type { TextStyle } from "@qflow/text-fine";
 import { spatialDependency, spatialTypes } from "@qflow/spatial";
-import { svsManifest, svsRecipeType } from "@qflow/svs";
+import { recipeManifest, recipeType } from "@qflow/recipe";
 import { sealText, textComponent, textDependency, textManifest, textTypes } from "@qflow/text";
 import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup";
-import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
+import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/admission";
+import { resolveSelfDescribedTextSource } from "@qflow/source/text";
 
 const space = sealTimeline({ id: "test-space", frameCount: 150, frameRate: { numerator: 30, denominator: 1 },
 });
@@ -198,7 +200,7 @@ test("Text Mask explicitly consumes one fine Text occurrence and one owned still
   assert.ok(track.presents[0]?.elements[2]?.style.some((entry) =>
     entry.name === "transform" && entry.value === "matrix(2,0,0,2,0,-120)"));
   assert.equal(track.presents[0]?.elements[2]?.style.some((entry) => entry.name === "object-fit"), false);
-  const html = compileHyperframesDocument(sealComposition({
+  const html = compileHtmlProgram(sealComposition({
     id: "owned-mask-composition",
     canvas: { width: 1080, height: 1920, clearColor: "#000000" }, tracks: [track],
   }), space).html;
@@ -264,7 +266,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
     outputs: [
-      svsRecipeType,
+      recipeType,
       timelineTypes.timeline,
       spatialTypes.point,
       spatialTypes.frame,
@@ -283,7 +285,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
       spatialDependency,
       mediaDependency,
       {
-        module: { name: svsManifest.name, version: svsManifest.version },
+        module: { name: recipeManifest.name, version: recipeManifest.version },
       },
       textDependency,
     ],
@@ -302,7 +304,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
     records: [
       {
         id: "editorial",
-        type: svsRecipeType,
+        type: recipeType,
         value: { kind: "inline", value: {
 
           path: "text.editorial",
@@ -315,7 +317,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
       },
       {
         id: "mask-editorial",
-        type: svsRecipeType,
+        type: recipeType,
         value: { kind: "inline", value: {
 
           path: "text.mask-editorial",
@@ -356,7 +358,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
   registerTypeValidatorFacets(validators, spatialComponent.validators ?? []);
   registerTypeValidatorFacets(validators, textComponent.validators ?? []);
   const compiled = await compileSourceClosure({
-    entry: {
+    entry: resolveSelfDescribedTextSource({
       id: "/project/text.svml",
       name: "text.svml",
       text: `<?svml using="@qflow/markup@1"?>
@@ -399,7 +401,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
         <text:Flow id="mask-shape" timeline={semantic} within={body-frame} style={mask-shape-style} z="75" wrap="none" during="timeline">MASK</text:Flow>
         <text:Mask id="masked-titles" timeline={semantic} text={mask-shape.occurrence} material={material}/>
       </svml>`,
-    },
+    }),
     closure,
     frontends,
     admitRecord: createRecordAdmitter(validators),
@@ -563,7 +565,7 @@ test("rich Text lowers ordered glyph layers, boxes, bounded flow, sequences and 
     sealTextItemSpec({ id: "path", document: document("Renderer-neutral Path Text") }),
     pathStyle, stillTextMotion("path-still"), absoluteWindow("path", 0, 150),
   );
-  const rendered = compileHyperframesDocument(sealComposition({
+  const rendered = compileHtmlProgram(sealComposition({
     id: "rich-text-film", canvas: { width: 1080, height: 900, clearColor: "#000000" },
     tracks: [renderFineTextOccurrence(space, area), renderFineTextOccurrence(space, path)],
   }), space);
@@ -582,14 +584,14 @@ test("a paragraph's source indentation is not part of its words", async () => {
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
     outputs: [
-      svsRecipeType, timelineTypes.timeline, spatialTypes.frame,
+      recipeType, timelineTypes.timeline, spatialTypes.frame,
       mediaTypes.fontArtifact, textTypes.text,
     ],
   } as const;
   const fixtureManifest: ModuleManifest = {
     format: "qflow.module@1", name: fixtureModule.name, version: fixtureModule.version,
     dependencies: [timelineDependency, spatialDependency, mediaDependency,
-      { module: { name: svsManifest.name, version: svsManifest.version } }, textDependency],
+      { module: { name: recipeManifest.name, version: recipeManifest.version } }, textDependency],
     types: [], capabilities: [], producers: [],
   };
   const closure = createResolvedClosure([
@@ -598,7 +600,7 @@ test("a paragraph's source indentation is not part of its words", async () => {
   const surfaces = new MarkupSurfaceRegistry();
   surfaces.registerStructured({ module: fixtureModule, declaration: fixtureSurface, handler: ({ element }) => ({
     records: [
-      { id: "editorial", type: svsRecipeType, value: { kind: "inline", value: {
+      { id: "editorial", type: recipeType, value: { kind: "inline", value: {
           path: "text.editorial", properties: { size: 44, "line-height": 1.15 } } },
         range: element.range },
       { id: "semantic", type: timelineTypes.timeline, value: { kind: "inline", value: semantic }, range: element.range },
@@ -618,7 +620,7 @@ test("a paragraph's source indentation is not part of its words", async () => {
   registerTypeValidatorFacets(validators, spatialComponent.validators ?? []);
   registerTypeValidatorFacets(validators, textComponent.validators ?? []);
   const compiled = await compileSourceClosure({
-    entry: {
+    entry: resolveSelfDescribedTextSource({
       id: "/project/text.svml", name: "text.svml",
       text: `<?svml using="@qflow/markup@1"?>
         <svml>
@@ -635,7 +637,7 @@ test("a paragraph's source indentation is not part of its words", async () => {
             </text:P>
           </text:Flow>
         </svml>`,
-    },
+    }),
     closure, frontends,
     admitRecord: createRecordAdmitter(validators),
     resolveSource() { throw new Error("Text fixture has no source imports."); },

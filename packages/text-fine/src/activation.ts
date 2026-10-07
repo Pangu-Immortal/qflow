@@ -1,4 +1,7 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { createStudioCompanionFacet } from "@qflow/studio-companion";
 import {
   decodeTypographyMotionSurface,
   decodeTypographyPathMotionSurface,
@@ -12,40 +15,42 @@ import {
   textFineModuleRef,
   textFineMarkupSurfaces,
 } from "./index.js";
+import { textFineStudioTrackCompanions } from "./studio.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: textFineManifest }],
-  components: [textFineComponent],
-  hostFacets: [
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[textFineComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    createMarkupSurfaceFacet({
       module: textFineModuleRef,
-    declaration: textFineMarkupSurfaces.find((item) => item.name === "style")!, handler: decodeTypographyStyleSurface,
+      declaration: textFineMarkupSurfaces.find((item) => item.name === "style")!, handler: decodeTypographyStyleSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: textFineModuleRef,
-    declaration: textFineMarkupSurfaces.find((item) => item.name === "motion")!, handler: decodeTypographyMotionSurface,
+      declaration: textFineMarkupSurfaces.find((item) => item.name === "motion")!, handler: decodeTypographyMotionSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: textFineModuleRef,
-    declaration: textFineMarkupSurfaces.find((item) => item.name === "path-motion")!, handler: decodeTypographyPathMotionSurface,
+      declaration: textFineMarkupSurfaces.find((item) => item.name === "path-motion")!, handler: decodeTypographyPathMotionSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: textFineModuleRef,
-    declaration: textFineMarkupSurfaces.find((item) => item.name === "flow")!, handler: decodeTypographyFlowSurface,
+      declaration: textFineMarkupSurfaces.find((item) => item.name === "flow")!, handler: decodeTypographyFlowSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: textFineModuleRef,
-    declaration: textFineMarkupSurfaces.find((item) => item.name === "point")!, handler: decodeTypographyPointSurface,
+      declaration: textFineMarkupSurfaces.find((item) => item.name === "point")!, handler: decodeTypographyPointSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: textFineModuleRef,
-    declaration: textFineMarkupSurfaces.find((item) => item.name === "path")!, handler: decodeTypographyPathSurface,
+      declaration: textFineMarkupSurfaces.find((item) => item.name === "path")!, handler: decodeTypographyPathSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: textFineModuleRef,
-    declaration: textFineMarkupSurfaces.find((item) => item.name === "mask")!, handler: decodeTypographyMaskSurface,
+      declaration: textFineMarkupSurfaces.find((item) => item.name === "mask")!, handler: decodeTypographyMaskSurface,
     }),
+    createStudioCompanionFacet({ tracks: textFineStudioTrackCompanions }),
   ],
 };
 export default qflowPackage;

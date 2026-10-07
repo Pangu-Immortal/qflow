@@ -1,6 +1,6 @@
 import type { CanonicalValue } from "@qflow/protocol";
-import { svsRecipeType } from "@qflow/svs";
-import type { SvsRecipe } from "@qflow/svs";
+import { recipeType } from "@qflow/recipe";
+import type { Recipe } from "@qflow/recipe";
 import type {
   MarkupAttributeValue,
   StructuredElement,
@@ -129,8 +129,8 @@ export const decodeTextRenderSurface: StructuredSurfaceHandler = ({ element, res
     const templateValue = inline<TextTemplate>(template, `${element.name}.template`);
     verifyTextTemplate(templateValue);
     const consumed = textTemplateBindingNames(templateValue);
-    const recipe = reference(element, "recipe", svsRecipeType, resolveReference);
-    const value = inline<SvsRecipe>(recipe, `${element.name}.recipe`);
+    const recipe = reference(element, "recipe", recipeType, resolveReference);
+    const value = inline<Recipe>(recipe, `${element.name}.recipe`);
     for (const [name, item] of Object.entries(value.properties)) {
       if (!consumed.has(name)) continue;
       if (typeof item !== "string" && typeof item !== "boolean" && !(typeof item === "number" && Number.isFinite(item))) {

@@ -1,18 +1,18 @@
-import { assertTimelineIdentity, timelineFrameCount } from "@qflow/timeline";
-import type { Timeline } from "@qflow/timeline";
+import { assertTimelineIdentity, timelineFrameCount } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/qflow/timeline";
 import {
   assertSpatialFrame,
   assertSpatialPath,
   assertSpatialPoint,
   resolveContentFit,
-} from "@qflow/spatial";
-import type { SpatialFrame, SpatialPath, SpatialPoint } from "@qflow/spatial";
-import { assertTemporalWindowFor } from "@qflow/temporal";
-import type { TemporalWindow } from "@qflow/temporal";
+} from "@qflow/qflow/spatial";
+import type { SpatialFrame, SpatialPath, SpatialPoint } from "@qflow/qflow/spatial";
+import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
+import type { TemporalWindow } from "@qflow/qflow/temporal";
 import {
   assertVisualTrackIdentity,
   sealVisualTrack,
-} from "@qflow/composition";
+} from "@qflow/qflow/composition";
 import type {
   VisualElement,
   VisualPathTextElement,
@@ -20,12 +20,12 @@ import type {
   VisualTextElement,
   VisualTextFlowElement,
   VisualTrack,
-} from "@qflow/composition";
-import { assertCompositableSurfaceRef } from "@qflow/media";
-import type { CompositableSurfaceRef } from "@qflow/media";
-import { canonicalize } from "@qflow/protocol";
-import { verifyText } from "@qflow/text";
-import type { Text } from "@qflow/text";
+} from "@qflow/qflow/composition";
+import { assertCompositableSurfaceRef } from "@qflow/qflow/media";
+import type { CompositableSurfaceRef } from "@qflow/qflow/media";
+import { canonicalize } from "@qflow/qflow/protocol";
+import { verifyText } from "@qflow/qflow/text";
+import type { Text } from "@qflow/qflow/text";
 
 import type {
   FineTextOccurrence,

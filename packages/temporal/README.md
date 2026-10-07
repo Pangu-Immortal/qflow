@@ -24,11 +24,15 @@ may map one complete finite source-local domain onto an equal-length Window at n
 the pure exact-projection helper. This total one-to-one operation keeps every local boundary
 projectable and produces no durable Placement value.
 
-Author syntax does not live here. `@qflow/temporal-markup` constructs absolute literals and composes
-Windows. Domain packages such as `@qflow/narrative-temporal` project their own values into these
+Author syntax does not live in the main contract entry. The same owner exposes
+`@qflow/qflow/temporal/markup` to construct absolute literals and compose Windows from Markup.
+Domain packages such as `@qflow/narrative-temporal` project their own values into these
 common types. Visual, audio, caption, typography and project components receive only the completed
 Instant or Window plus the Timeline they already consume.
 
 Temporal rejects Instants outside Timeline, Windows whose endpoint Timelines or stored span disagree,
 reversed or empty Windows, non-exact local-domain projection, and incompatible frame rates. It does not
 clip, repair, infer meaning, perform rendering, or define Studio behavior.
+
+Author-directed editing follows the declaration that produced a value rather than asking a consumer
+to invert an arbitrary projection; see [EDITING.md](EDITING.md).

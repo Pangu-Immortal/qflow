@@ -1,6 +1,7 @@
-import { artifactTypes } from "@qflow/artifact";
+import { blobTypes } from "@qflow/blob";
 import type { StructuredElement, StructuredSurfaceHandler } from "@qflow/markup";
-import { assertFontArtifactRef } from "./render.js";
+import type { FontArtifactRef } from "./render.js";
+import { assertFontArtifactRef, assertFontStackRef } from "./render.js";
 import { mediaTypes } from "./manifest.js";
 
 const IMAGE_MEDIA_TYPES = new Map([
@@ -51,6 +52,24 @@ function assertChildrenEmpty(element: StructuredElement): void {
   }
 }
 
+function localName(name: string): string {
+  const colon = name.lastIndexOf(":");
+  return colon < 0 ? name : name.slice(colon + 1);
+}
+
+function assertAttributes(
+  element: StructuredElement,
+  required: readonly string[],
+  optional: readonly string[] = [],
+): void {
+  const allowed = new Set([...required, ...optional]);
+  const actual = Object.keys(element.attributes);
+  if (required.some((name) => element.attributes[name] === undefined) || actual.some((name) => !allowed.has(name))) {
+    const suffix = optional.length === 0 ? "" : `, with optional ${optional.join(", ")}`;
+    throw new Error(`${element.name} requires ${required.join(", ")}${suffix}`);
+  }
+}
+
 function mediaTypeFor(
   element: StructuredElement,
   source: string,
@@ -95,7 +114,7 @@ async function decodeMediaAssetSurface(
   return {
     records: [{
       id,
-      type: artifactTypes.blob,
+      type: blobTypes.blob,
       value: resolved.artifact,
       range: element.range,
     }],
@@ -114,13 +133,8 @@ export const decodeMediaVideoSurface: StructuredSurfaceHandler = async ({ elemen
   await decodeMediaAssetSurface(element, resolveAsset, "video", VIDEO_MEDIA_TYPES);
 
 export const decodeMediaFontSurface: StructuredSurfaceHandler = async ({ element, resolveAsset }) => {
-  const names = Object.keys(element.attributes).sort();
-  if (names.join(",") !== "id,src,style,weight" && names.join(",") !== "id,media-type,src,style,weight") {
-    throw new Error(`${element.name} requires id, src, weight and style, with optional media-type`);
-  }
-  assertChildrenEmpty(element);
+  assertAttributes(element, ["id", "weight", "style"], ["src", "media-type"]);
   const id = stringAttribute(element, "id");
-  const source = stringAttribute(element, "src");
   const weight = Number(stringAttribute(element, "weight"));
   if (!Number.isSafeInteger(weight) || weight < 1 || weight > 1_000) {
     throw new Error(`${element.name}.weight must be an integer from 1 to 1000`);
@@ -130,16 +144,92 @@ export const decodeMediaFontSurface: StructuredSurfaceHandler = async ({ element
     throw new Error(`${element.name}.style must be normal, italic or oblique`);
   }
   const fontStyle = style as "normal" | "italic" | "oblique";
-  const mediaType = mediaTypeFor(element, source, "font", FONT_MEDIA_TYPES);
-  const resolved = await resolveAsset({ from: source, mediaType, range: element.range });
+  const sourceAttribute = element.attributes.src;
+  const sourceChildren = element.children.filter((child): child is StructuredElement => child.kind === "element");
+  if (element.children.some((child) => child.kind === "text" && child.value.trim().length > 0)) {
+    throw new Error(`${element.name} accepts only Source children`);
+  }
+  if (sourceAttribute !== undefined && sourceChildren.length > 0) {
+    throw new Error(`${element.name} must use either src or Source children, not both`);
+  }
+  if (sourceAttribute === undefined && sourceChildren.length === 0) {
+    throw new Error(`${element.name} requires src or one or more Source children`);
+  }
+  if (sourceAttribute === undefined && element.attributes["media-type"] !== undefined) {
+    throw new Error(`${element.name}.media-type belongs on each Source when the face has multiple sources`);
+  }
+  const declarations = sourceAttribute === undefined
+    ? sourceChildren.map((child) => {
+        if (localName(child.name) !== "Source") throw new Error(`${element.name} accepts only Source children`);
+        assertAttributes(child, ["src"], ["media-type", "unicode-range"]);
+        assertChildrenEmpty(child);
+        return {
+          element: child,
+          source: stringAttribute(child, "src"),
+          unicodeRange: child.attributes["unicode-range"] === undefined
+            ? undefined
+            : stringAttribute(child, "unicode-range"),
+        };
+      })
+    : [{ element, source: stringAttribute(element, "src"), unicodeRange: undefined }];
+  const sources: FontArtifactRef["sources"][number][] = [];
+  for (const declaration of declarations) {
+    const mediaType = mediaTypeFor(declaration.element, declaration.source, "font", FONT_MEDIA_TYPES);
+    const resolved = await resolveAsset({ from: declaration.source, mediaType, range: declaration.element.range });
+    sources.push({
+      artifact: resolved.artifact,
+      ...(declaration.unicodeRange === undefined ? {} : { unicodeRange: declaration.unicodeRange }),
+    });
+  }
   const font = {
-    sources: [{ artifact: resolved.artifact }],
+    sources,
     weight,
     style: fontStyle,
   };
   assertFontArtifactRef(font, `${element.name}.${id}`);
   return {
     records: [{ id, type: mediaTypes.fontArtifact, value: { kind: "inline" as const, value: font }, range: element.range }],
+    components: [],
+    fragments: [],
+  };
+};
+
+function sameType(left: { readonly module: { readonly name: string; readonly version: string }; readonly name: string }, right: typeof mediaTypes.fontArtifact): boolean {
+  return left.module.name === right.module.name && left.module.version === right.module.version && left.name === right.name;
+}
+
+export const decodeMediaFontStackSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
+  assertAttributes(element, ["id", "primary"]);
+  const id = stringAttribute(element, "id");
+  const faces: FontArtifactRef[] = [];
+  const append = (owner: StructuredElement, name: string): void => {
+    const raw = owner.attributes[name];
+    if (typeof raw !== "object" || raw.kind !== "reference") {
+      throw new Error(`${owner.name}.${name} must be a whole-value reference`);
+    }
+    const resolved = resolveReference(raw.path);
+    if (resolved === undefined) throw new Error(`${owner.name}.${name} cannot resolve ${raw.path}`);
+    if (!sameType(resolved.type, mediaTypes.fontArtifact)) throw new Error(`${owner.name}.${name} has the wrong type`);
+    if (resolved.record?.value.kind !== "inline") {
+      throw new Error(`${owner.name}.${name} must reference an authored inline FontArtifact`);
+    }
+    faces.push(resolved.record.value.value as unknown as FontArtifactRef);
+  };
+  append(element, "primary");
+  for (const child of element.children) {
+    if (child.kind === "text") {
+      if (child.value.trim()) throw new Error(`${element.name} accepts only Fallback children`);
+      continue;
+    }
+    if (localName(child.name) !== "Fallback") throw new Error(`${element.name} accepts only Fallback children`);
+    assertAttributes(child, ["font"]);
+    assertChildrenEmpty(child);
+    append(child, "font");
+  }
+  const stack = { faces };
+  assertFontStackRef(stack, `${element.name}.${id}`);
+  return {
+    records: [{ id, type: mediaTypes.fontStack, value: { kind: "inline", value: stack }, range: element.range }],
     components: [],
     fragments: [],
   };

@@ -1,7 +1,9 @@
+import { createAdmissionPackageFacet } from "@qflow/admission";
+import { createProducerPackageFacet } from "@qflow/producer";
 import { narrativeComponent, narrativeManifest } from "./index.js";
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: narrativeManifest }],
-  components: [narrativeComponent],
+  facets: [...[narrativeComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)])],
 };
 export default qflowPackage;

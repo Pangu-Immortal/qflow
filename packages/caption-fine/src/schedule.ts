@@ -1,6 +1,6 @@
-import { assertCaptionProgramForDocument, assertCaptionTiming, captionUseVisibility } from "@qflow/caption";
-import type { CaptionProgram, CaptionTiming } from "@qflow/caption";
-import type { CaptionDocument } from "@qflow/caption";
+import { assertCaptionProgramForDocument, assertCaptionTiming, captionUseVisibility } from "@qflow/qflow/caption";
+import type { CaptionProgram, CaptionTiming } from "@qflow/qflow/caption";
+import type { CaptionDocument } from "@qflow/qflow/caption";
 
 import { assertFineCaptionParameters, FINE_CAPTION_FAMILY } from "./style.js";
 import type { FineCaptionParameters, FineCaptionSchedule, FineCaptionScheduledCue } from "./types.js";

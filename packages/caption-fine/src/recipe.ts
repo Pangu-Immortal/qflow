@@ -1,4 +1,4 @@
-import type { ValueSchema } from "@qflow/protocol";
+import type { ValueSchema } from "@qflow/qflow/protocol";
 
 export const fineCaptionOneShotMotions = [
   "none", "fade", "pop", "scale", "spring", "bounce", "elastic", "stamp", "tilt", "zoom-blur",

@@ -1,0 +1,23 @@
+{
+  "name": "@qflow/recipe",
+  "version": "0.0.0-dev",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "dependencies": {
+    "@qflow/source": "workspace:*",
+    "@qflow/kernel": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "@qflow/compiler": "workspace:*",
+    "@qflow/markup": "workspace:*"
+  }
+}

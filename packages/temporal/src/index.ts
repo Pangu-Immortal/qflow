@@ -103,14 +103,19 @@ export const temporalExtentSchema: ValueSchema = object({
   frameCount: { schema: unsignedInteger },
 });
 export const temporalDurationSchema: ValueSchema = duration;
+const temporalAuthorParameterSchema: ValueSchema = object({
+  binding: { schema: string },
+  relation: { schema: { kind: "string", enum: ["direct", "after-start", "before-end"] } },
+});
 export const temporalShiftSpecSchema: ValueSchema = object({
   id: { schema: string }, subjectId: { schema: string },
   direction: { schema: { kind: "oneOf", variants: [
     { kind: "literal", value: 1 }, { kind: "literal", value: -1 },
-  ] } },
+  ] } }, author: { schema: temporalAuthorParameterSchema, optional: true },
 });
 export const temporalInstantSpecSchema: ValueSchema = object({
   id: { schema: string }, subjectId: { schema: string }, projection: { schema: instant },
+  author: { schema: temporalAuthorParameterSchema, optional: true },
 });
 export const temporalInstantSchema: ValueSchema = object({
   id: { schema: string }, subjectId: { schema: string }, timelineId: { schema: string }, frame: { schema: unsignedInteger },

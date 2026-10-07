@@ -1,6 +1,5 @@
-import type { SourceRange } from "@qflow/protocol";
-
-import { canonicalStringify } from "@qflow/protocol";
+import { canonicalStringify } from "@qflow/qflow/protocol";
+import type { SourceRange } from "@qflow/qflow/protocol";
 import { captionDocument, narrativeValue } from "./narrative.js";
 import { parseScript } from "./parser.js";
 import type { Affinity, ParsedNarrative, SemanticAnchor } from "./types.js";

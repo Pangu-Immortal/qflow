@@ -1,4 +1,6 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/admission";
+import { createProducerPackageFacet } from "@qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/markup";
 
 import {
   decodeNarrativeCaptionTimingSurface,
@@ -9,10 +11,10 @@ import {
 } from "./index.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: narrativeCaptionManifest }],
-  components: [narrativeCaptionComponent],
-  hostFacets: [createMarkupSurfaceHostFacet({
+  facets: [
+    ...[narrativeCaptionComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),createMarkupSurfaceFacet({
     module: narrativeCaptionModuleRef,
     declaration: narrativeCaptionTimingMarkupSurface,
     handler: decodeNarrativeCaptionTimingSurface,

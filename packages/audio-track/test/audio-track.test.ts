@@ -21,28 +21,28 @@ import {
   decodeAudioTrackSurface,
 } from "@qflow/audio-track";
 import type { AudioClipSpec, AudioSourceTimeSpec, AudioTrackSet } from "@qflow/audio-track";
-import { artifactManifest } from "@qflow/artifact";
-import { registerTypeValidatorFacets } from "@qflow/component-kit";
+import { blobManifest } from "@qflow/blob";
+import { registerTypeValidatorFacets } from "@qflow/admission";
 import { sealComposition, compositionManifest, compositionTypes } from "@qflow/composition";
-import { createResolvedClosure, sealBuildRequest, start } from "@qflow/core";
-import { AuthorFrontendRegistry, compileSourceClosure, resolveCompiledSourceExport } from "@qflow/elaborator";
+import { createResolvedClosure, sealBuildRequest, start } from "@qflow/kernel";
+import { AuthorFrontendRegistry, resolveCompiledSourceExport } from "@qflow/author";
+import { compileSourceClosure } from "@qflow/compiler";
 import type { SynchronizedMedia } from "@qflow/media";
 import { mediaComponent, mediaDependency, mediaManifest, mediaTypes } from "@qflow/media";
 import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import { narrativeManifest } from "@qflow/narrative";
-import { compileAudioProgramPlan } from "@qflow/media-pipeline";
+import { compileAudioProgramPlan } from "@qflow/media-operations";
 import type { ModuleManifest } from "@qflow/protocol";
 import { temporalProducers } from "@qflow/temporal";
 import type { TemporalDuration } from "@qflow/temporal";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
-import { speechManifest } from "@qflow/speech";
 import { narrativeTemporalManifest } from "@qflow/narrative-temporal";
 import { spatialManifest } from "@qflow/spatial";
-import { svsManifest } from "@qflow/svs";
+import { recipeManifest } from "@qflow/recipe";
 import { temporalManifest } from "@qflow/temporal";
 import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup";
-import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/validation";
-import { visualIrManifest } from "@qflow/visual-ir";
+import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/admission";
+import { resolveSelfDescribedTextSource } from "@qflow/source/text";
 
 const space = sealTimeline({ id: "test-space", frameCount: 300, frameRate: { numerator: 30, denominator: 1 },
 });
@@ -324,17 +324,15 @@ test("the self-described Audio Surface parses into the same finite Producer grap
     producers: [],
   };
   const closure = createResolvedClosure([
-    artifactManifest,
+    blobManifest,
     mediaManifest,
     narrativeManifest,
     timelineManifest,
-    speechManifest,
     narrativeTemporalManifest,
-    svsManifest,
+    recipeManifest,
     spatialManifest,
     speechEvidenceManifest,
     temporalManifest,
-    visualIrManifest,
     compositionManifest,
     audioTrackManifest,
     fixtureManifest,
@@ -361,7 +359,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
   const validators = new TypeValidatorRegistry();
   registerTypeValidatorFacets(validators, mediaComponent.validators ?? []);
   const compiled = await compileSourceClosure({
-    entry: {
+    entry: resolveSelfDescribedTextSource({
       id: "/project/audio.svml",
       name: "audio.svml",
       text: `<?svml using="@qflow/markup@1"?>
@@ -375,7 +373,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
           </audio:Clip>
         </audio:Track>
       </svml>`,
-    },
+    }),
     closure,
     frontends,
     admitRecord: createRecordAdmitter(validators),

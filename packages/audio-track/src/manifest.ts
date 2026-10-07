@@ -1,13 +1,13 @@
-import { compositionDependency, compositionTypes } from "@qflow/composition";
-import { mediaDependency, mediaTypes } from "@qflow/media";
-import { blobRefObjectSchema } from "@qflow/protocol";
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { temporalDependency, temporalTypes } from "@qflow/temporal";
+import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
+import { mediaDependency, mediaTypes } from "@qflow/qflow/media";
+import { blobRefObjectSchema } from "@qflow/qflow/protocol";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
+import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
 import {
   temporalContextAttributeVocabulary,
   temporalWindowAttributeVocabulary,
-} from "@qflow/temporal-markup";
-import { timelineDependency, timelineTypes } from "@qflow/timeline";
+} from "@qflow/qflow/temporal/markup";
+import { timelineDependency, timelineTypes } from "@qflow/qflow/timeline";
 
 export const audioTrackModuleRef = { name: "@qflow/audio-track", version: "1" } as const;
 export const audioTrackTypes = {

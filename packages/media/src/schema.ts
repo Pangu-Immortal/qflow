@@ -46,7 +46,7 @@ export const synchronizedMediaSchema: ValueSchema = object({
   audio: { schema: object({ artifact: { schema: blobArtifactSchema(["audio/wav"]) } }), optional: true },
 });
 
-export const renderedVisualSchema: ValueSchema = object({ frameRate: { schema: rational }, frameCount: { schema: { kind: "number", integer: true, minimum: 1 } },
+export const timelineVisualSchema: ValueSchema = object({ frameRate: { schema: rational }, frameCount: { schema: { kind: "number", integer: true, minimum: 1 } },
   canvas: { schema: object({ width: { schema: { kind: "number", integer: true, minimum: 1 } }, height: { schema: { kind: "number", integer: true, minimum: 1 } } }) },
   artifact: { schema: blobArtifactSchema() } });
 export const timelineAudioSchema: ValueSchema = object({ artifact: { schema: blobArtifactSchema(["audio/wav"]) },

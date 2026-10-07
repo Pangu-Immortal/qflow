@@ -1,9 +1,10 @@
-import type { Timeline } from "@qflow/timeline";
-import type { ComponentPackage } from "@qflow/component-kit";
-import type { Canvas } from "@qflow/spatial";
-import type { AudioTrack, VisualTrack } from "@qflow/composition";
-import type { StoredValue } from "@qflow/protocol";
-import { canonicalize } from "@qflow/protocol";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { ProducerPackage } from "@qflow/qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { StoredValue } from "@qflow/qflow/protocol";
+import type { AudioTrack, VisualTrack } from "@qflow/qflow/composition";
+import type { Canvas } from "@qflow/qflow/spatial";
+import type { Timeline } from "@qflow/qflow/timeline";
 
 import { filmProducers } from "./manifest.js";
 import { appendFilmAudioTrack, appendFilmVisualTrack, compileFilmComposition, createFilmTrackSet } from "./program.js";
@@ -58,4 +59,4 @@ export const filmComponent = {
       }),
     },
   ],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

@@ -1,4 +1,4 @@
-import { canonicalStringify } from "@qflow/protocol";
+import { canonicalStringify } from "@qflow/qflow/protocol";
 
 import { ScriptSyntaxError } from "./error.js";
 import { narrativeValue } from "./narrative.js";

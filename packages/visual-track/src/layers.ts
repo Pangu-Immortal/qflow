@@ -1,16 +1,16 @@
 import {
   assertCompositableSurfaceRef,
   verifySynchronizedMedia,
-} from "@qflow/media";
-import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
-import { canonicalize, isResourceId } from "@qflow/protocol";
-import type { BlobRef } from "@qflow/protocol";
+} from "@qflow/qflow/media";
+import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/qflow/media";
+import { canonicalize, isResourceId } from "@qflow/qflow/protocol";
+import type { BlobRef } from "@qflow/qflow/protocol";
 import {
   assertContentFit,
   assertIntrinsicExtent,
   assertSpatialMap2D,
-} from "@qflow/spatial";
-import type { ContentFit, IntrinsicExtent, SpatialMap2D } from "@qflow/spatial";
+} from "@qflow/qflow/spatial";
+import type { ContentFit, IntrinsicExtent, SpatialMap2D } from "@qflow/qflow/spatial";
 
 import type {
   MediaGradientStop,
@@ -36,7 +36,7 @@ export function assertMediaIdentity(value: string, label: string): void {
 function assertBlob(value: BlobRef, label: string, prefix?: string): void {
   assert(value.kind === "blob" && isResourceId(value.resource)
     && Number.isSafeInteger(value.size) && value.size >= 0 && value.mediaType.length > 0,
-  `${label} is not a valid BlobArtifact.`);
+  `${label} is not a valid Blob.`);
   if (prefix !== undefined) assert(value.mediaType.startsWith(prefix), `${label} must be ${prefix} bytes.`);
 }
 

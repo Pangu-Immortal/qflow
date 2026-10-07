@@ -1,17 +1,11 @@
-import { mediaTypes } from "@qflow/media";
-import type {
-  MarkupAttributeValue,
-  StructuredElement,
-  StructuredSurfaceHandler,
-  SurfaceRecordDraft,
-  SurfaceResolvedReference,
-} from "@qflow/markup";
-import type { TemporalDuration } from "@qflow/temporal";
+import { mediaTypes } from "@qflow/qflow/media";
+import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceRecordDraft, SurfaceResolvedReference } from "@qflow/qflow/markup";
+import type { TemporalDuration } from "@qflow/qflow/temporal";
 import {
   createTemporalWindowConstruction,
   resolveTemporalContext,
   temporalWindowAttributeNames,
-} from "@qflow/temporal-markup";
+} from "@qflow/qflow/temporal/markup";
 
 import { createAudioTrackFragment } from "./fragment.js";
 import { audioTrackTypes } from "./manifest.js";

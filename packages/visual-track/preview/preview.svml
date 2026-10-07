@@ -4,12 +4,12 @@
      padding, clipping and motion; build.svrun renders the same composition. -->
 <svml>
   <import as="media" from="@qflow/media@1"/>
-  <import as="pipeline" from="@qflow/media-pipeline@1"/>
+  <import as="mediaop" from="@qflow/media-operations@1"/>
   <import as="time" from="@qflow/timeline-author@1"/>
   <import as="visual" from="@qflow/visual-track@1"/>
   <import as="space" from="@qflow/spatial@1"/>
   <import as="film" from="@qflow/film@1"/>
-  <import as="render" from="@qflow/render-hyperframes@1"/>
+  <import as="html" from="@qflow/html-video@1"/>
   <import as="recipes" source="./recipes.svs"/>
 
   <space:Canvas id="vertical" width="720" height="1280"/>
@@ -23,8 +23,8 @@
   <media:Image id="picture-a" src="./rounded.png"/>
   <media:Image id="picture-b" src="./flush.png"/>
 
-  <pipeline:StillVideo id="duration" source={picture-a} duration="5" clock={clock}/>
-  <pipeline:Normalize id="duration-media" source={duration.video} clock={clock}
+  <mediaop:StillVideo id="duration" source={picture-a} duration="5s" clock={clock}/>
+  <mediaop:Normalize id="duration-media" source={duration.video} clock={clock}
     video="primary-moving" audio="none" span-authority="video"/>
   <time:Timeline id="speech" clock={clock} end="showcase.end">
     <time:Window id="showcase" from="start" for={duration-media.extent}/>
@@ -46,5 +46,5 @@
   <film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline} appearance={recipes.film.vertical}>
     <film:Track source={showcase.visual}/>
   </film:Film>
-  <render:Video id="final" composition={main.composition} timeline={speech.timeline}/>
+  <html:Video id="final" composition={main.composition} timeline={speech.timeline}/>
 </svml>

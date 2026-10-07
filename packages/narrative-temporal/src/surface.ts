@@ -1,5 +1,5 @@
-import { sealGraphFragment } from "@qflow/elaborator";
-import type { FragmentOperation, GraphFragment } from "@qflow/elaborator";
+import { sealGraphFragment } from "@qflow/author";
+import type { FragmentOperation, GraphFragment } from "@qflow/author";
 import {
   assertAttributes, assertEmptyElement, localName, textAttribute,
   type StructuredElement, type StructuredSurfaceHandler, type SurfaceComponentDraft,
@@ -9,7 +9,7 @@ import { narrativeTypes } from "@qflow/narrative";
 import { canonicalize, sameType, type TypeRef } from "@qflow/protocol";
 import { temporalProducers, temporalTypes } from "@qflow/temporal";
 import type { TemporalDuration } from "@qflow/temporal";
-import { parseTemporalDuration } from "@qflow/temporal-markup";
+import { parseTemporalDuration } from "@qflow/temporal/markup";
 import { timelineTypes } from "@qflow/timeline";
 
 import { narrativeTemporalProducers, narrativeTemporalTypes } from "./manifest.js";

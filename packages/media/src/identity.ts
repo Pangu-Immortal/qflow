@@ -8,7 +8,7 @@ import type {
   MediaInspection,
   MuxedMedia,
   MediaRational,
-  RenderedVisual,
+  TimelineVisual,
   MediaStream,
   MediaStreamSelection,
   MediaTimestamp,
@@ -185,18 +185,18 @@ export function verifySynchronizedMedia(value: unknown): asserts value is Synchr
   }
 }
 
-export function sealRenderedVisual(value: RenderedVisual): RenderedVisual {
-  return canonicalize(value) as unknown as RenderedVisual;
+export function sealTimelineVisual(value: TimelineVisual): TimelineVisual {
+  return canonicalize(value) as unknown as TimelineVisual;
 }
 
-export function verifyRenderedVisual(value: unknown): asserts value is RenderedVisual {
-  const item = object(value, "RenderedVisual") as unknown as RenderedVisual;
-  verifyRational(item.frameRate, "RenderedVisual.frameRate");
-  positiveInteger(item.frameCount, "RenderedVisual.frameCount");
-  positiveInteger(item.canvas?.width, "RenderedVisual.canvas.width");
-  positiveInteger(item.canvas?.height, "RenderedVisual.canvas.height");
-  verifyBlob(item.artifact, "RenderedVisual.artifact");
-  assert(item.artifact.mediaType.startsWith("video/"), "RenderedVisual Artifact must be video");
+export function verifyTimelineVisual(value: unknown): asserts value is TimelineVisual {
+  const item = object(value, "TimelineVisual") as unknown as TimelineVisual;
+  verifyRational(item.frameRate, "TimelineVisual.frameRate");
+  positiveInteger(item.frameCount, "TimelineVisual.frameCount");
+  positiveInteger(item.canvas?.width, "TimelineVisual.canvas.width");
+  positiveInteger(item.canvas?.height, "TimelineVisual.canvas.height");
+  verifyBlob(item.artifact, "TimelineVisual.artifact");
+  assert(item.artifact.mediaType.startsWith("video/"), "TimelineVisual Artifact must be video");
 }
 
 export function sealTimelineAudio(value: TimelineAudio): TimelineAudio {

@@ -120,3 +120,20 @@ today's effect names into tomorrow's ceiling.
 
 Audio from synchronized media is never selected implicitly. Author the corresponding occurrence
 independently through [`@qflow/audio-track`](../audio-track/README.md).
+
+## Distribution and Studio
+
+Visual Track is an official default Author Package, not a Core or terminal-ABI package. The Qflow
+video Distribution obtains it through an ordinary npm dependency so a default installation can use
+it immediately, while its code, version and activation remain owned by `@qflow/visual-track`.
+Projects select it explicitly with the logical `@qflow/visual-track@1` Module ABI. Package managers
+and the project lockfile select the physical implementation version.
+
+The stable terminal [`VisualTrack`](../composition/README.md) type is owned by Composition. Visual
+Track is one plain producer of that type; another project or published component may produce the same
+terminal value without depending on this package.
+
+The package's activation contributes both its authoring Surfaces and its Studio Companion. The
+Companion preserves Clip material, Frame, fit, source-time, treatment and typed Motion as separate
+author facts. Studio's generic terminal fallback can still display a Composition `VisualTrack` made
+by another package without interpreting it as a Visual Track Clip.

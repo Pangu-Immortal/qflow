@@ -1,4 +1,4 @@
-import type { CaptionDisplayWord } from "@qflow/caption";
+import type { CaptionDisplayWord } from "@qflow/qflow/caption";
 
 type Surface = Pick<CaptionDisplayWord, "text" | "separatorBefore">;
 

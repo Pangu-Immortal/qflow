@@ -1,7 +1,7 @@
 import { compositableSurfaceSchema, fontArtifactSchema, mediaDependency } from "@qflow/media";
 import { timelineDependency } from "@qflow/timeline";
 import type { ValueSchema } from "@qflow/protocol";
-import { VISUAL_IR_V1, VISUAL_STYLE_ENUM_VALUES_V1, VISUAL_STYLE_NAMES_V1 } from "@qflow/visual-ir";
+import { VISUAL_IR_V1, VISUAL_STYLE_ENUM_VALUES_V1, VISUAL_STYLE_NAMES_V1 } from "./visual.js";
 export { mediaDependency, timelineDependency };
 const string = { kind: "string", minLength: 1 } as const; const number = { kind: "number", minimum: 0 } as const;
 const integer = { kind: "number", integer: true, minimum: 0 } as const; const signedInteger = { kind: "number", integer: true } as const;

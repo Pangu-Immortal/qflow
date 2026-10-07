@@ -1,4 +1,5 @@
-import type { ComponentPackage } from "@qflow/component-kit";
+import type { AdmissionPackage } from "@qflow/admission";
+import type { ProducerPackage } from "@qflow/producer";
 import type { StoredValue } from "@qflow/protocol";
 import { timelineTypes } from "./manifest.js";
 import { assertTimelineIdentity } from "./identity.js";
@@ -15,4 +16,4 @@ export const timelineComponent = {
     type: timelineTypes.timeline,
     handler: ({ value }) => assertTimelineIdentity(track(value)),
   }],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

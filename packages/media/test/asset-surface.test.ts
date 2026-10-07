@@ -15,7 +15,7 @@ for (const fixture of [
   { label: "Audio", decode: decodeMediaAudioSurface, src: "./reference.wav", mediaType: "audio/wav" },
   { label: "Video", decode: decodeMediaVideoSurface, src: "./reference.mp4", mediaType: "video/mp4" },
 ] as const) {
-  test(`${fixture.label} Surface publishes the resolved BlobArtifact`, async () => {
+  test(`${fixture.label} Surface publishes the resolved Blob`, async () => {
     const artifact = {
       kind: "blob" as const,
       resource: fixtureResource(`media:${fixture.label.toLowerCase()}`),
@@ -41,7 +41,7 @@ for (const fixture of [
 
     assert.deepEqual(requests, [{ from: fixture.src, mediaType: fixture.mediaType, range }]);
     assert.deepEqual(result.records, [{ id: "reference", type: {
-      module: { name: "@qflow/artifact", version: "1" }, name: "BlobArtifact",
+      module: { name: "@qflow/blob", version: "1" }, name: "Blob",
     }, value: artifact, range }]);
   });
 }

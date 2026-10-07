@@ -51,3 +51,16 @@ the base package and Core do not acquire a catalogue of sound roles or effects.
 
 Using synchronized media here does not make its picture visible. Author picture independently with
 [`@qflow/visual-track`](../visual-track/README.md).
+
+## Distribution and Studio
+
+Audio Track is an independently versioned official Author Package. The official Qflow video
+Distribution installs it by an ordinary npm dependency, while Source selects it explicitly with
+`<import from="@qflow/audio-track@1" .../>`. The package owns its Clip/Track authoring model, runtime
+facet and specialized Studio companion in one activation and one release lifecycle.
+
+The terminal `Composition.AudioTrack` ABI remains owned by Composition rather than this package.
+Other components can therefore publish an AudioTrack without depending on Audio Track, and Studio's
+generic terminal fallback can still display those contributions. Package managers and ordinary
+lockfiles select the physical package version; Qflow does not add another version or installation
+mechanism.

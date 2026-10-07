@@ -1,10 +1,10 @@
-import { timelineTypes } from "@qflow/timeline";
+import { timelineTypes } from "@qflow/qflow/timeline";
 
-import { artifactTypes } from "@qflow/artifact";
-import { compositionTypes } from "@qflow/composition";
-import { sealGraphFragment } from "@qflow/elaborator";
-import { spatialTypes } from "@qflow/spatial";
-import { temporalTypes } from "@qflow/temporal";
+import { blobTypes } from "@qflow/qflow/blob";
+import { compositionTypes } from "@qflow/qflow/composition";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { temporalTypes } from "@qflow/qflow/temporal";
 
 import { visualTrackProducers, visualTrackTypes } from "./manifest.js";
 
@@ -16,7 +16,7 @@ export const stillVisualTrackFragment = sealGraphFragment({
   inputs: [
     { name: "header", type: visualTrackTypes.header },
     { name: "timeline", type: timelineTypes.timeline },
-    { name: "source", type: artifactTypes.blob },
+    { name: "source", type: blobTypes.blob },
     { name: "extent", type: spatialTypes.extent },
     { name: "frame", type: spatialTypes.frame },
     { name: "fit", type: spatialTypes.fit },

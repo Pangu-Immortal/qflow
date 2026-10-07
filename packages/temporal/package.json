@@ -5,14 +5,18 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./markup": "./src/markup/index.ts"
   },
   "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/component-kit": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/producer": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/timeline": "workspace:*"
+    "@qflow/timeline": "workspace:*",
+    "@qflow/admission": "workspace:*"
   }
 }

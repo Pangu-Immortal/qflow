@@ -1,4 +1,5 @@
-import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
+import type { AdmissionPackage } from "@qflow/admission";
+import type { ProducerPackage, ProducerHandlerContext } from "@qflow/producer";
 import { canonicalize } from "@qflow/protocol";
 import type { StoredValue } from "@qflow/protocol";
 import type { Timeline } from "@qflow/timeline";
@@ -53,4 +54,4 @@ export const temporalComponent = {
       inline<TemporalInstant>(inputs.end?.value, "TemporalInstant end"),
     )) }, needs: {} }) },
   ],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

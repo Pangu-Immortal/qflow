@@ -1,4 +1,7 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { createStudioCompanionFacet } from "@qflow/studio-companion";
 import {
   audioTrackComponent,
   audioTrackManifest,
@@ -7,21 +10,26 @@ import {
   decodeAudioSourceTimeSurface,
   audioTrackMarkupSurfaces,
 } from "./index.js";
+import { audioTrackStudioParameterCompanions, audioTrackStudioTrackCompanions } from "./studio.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: audioTrackManifest }],
-  components: [audioTrackComponent],
-  hostFacets: [
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[audioTrackComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    createMarkupSurfaceFacet({
       module: audioTrackModuleRef,
       declaration: audioTrackMarkupSurfaces.find((item) => item.name === "track")!,
       handler: decodeAudioTrackSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: audioTrackModuleRef,
       declaration: audioTrackMarkupSurfaces.find((item) => item.name === "source-time")!,
       handler: decodeAudioSourceTimeSurface,
+    }),
+    createStudioCompanionFacet({
+      tracks: audioTrackStudioTrackCompanions,
+      parameters: audioTrackStudioParameterCompanions,
     }),
   ],
 };

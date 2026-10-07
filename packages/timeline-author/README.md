@@ -4,6 +4,11 @@ Construct one finite absolute Timeline from a small acyclic graph of named Insta
 This package owns author syntax and lowering; [`@qflow/timeline`](../timeline/README.md) owns only the
 completed value `{ id, frameRate, frameCount }`.
 
+The official video Distribution installs this package as an ordinary default npm dependency. Its
+parser and construction values remain package-owned; downstream components consume only the public
+Timeline, Window and Instant values. Core and the Timeline value package do not know this author
+syntax exists.
+
 Timeline is not a media Track, clip list, semantic anchor registry or hidden schedule. Its author
 graph does only two jobs:
 

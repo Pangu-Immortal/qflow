@@ -1,12 +1,12 @@
-import { assertTimelineIdentity, timelineFrameSampleBoundary, timelineSampleFrames } from "@qflow/timeline";
-import type { Timeline } from "@qflow/timeline";
-import { assertAudioTrackIdentity, sealAudioTrack } from "@qflow/composition";
-import type { AudioClip, AudioTrack } from "@qflow/composition";
-import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/media";
-import type { SynchronizedMedia } from "@qflow/media";
-import { canonicalize, isResourceId } from "@qflow/protocol";
-import { assertTemporalWindowFor, temporalDurationInSamples } from "@qflow/temporal";
-import type { TemporalWindow, TemporalDuration } from "@qflow/temporal";
+import { assertTimelineIdentity, timelineFrameSampleBoundary, timelineSampleFrames } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/qflow/timeline";
+import { assertAudioTrackIdentity, sealAudioTrack } from "@qflow/qflow/composition";
+import type { AudioClip, AudioTrack } from "@qflow/qflow/composition";
+import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/qflow/media";
+import type { SynchronizedMedia } from "@qflow/qflow/media";
+import { canonicalize, isResourceId } from "@qflow/qflow/protocol";
+import { assertTemporalWindowFor, temporalDurationInSamples } from "@qflow/qflow/temporal";
+import type { TemporalWindow, TemporalDuration } from "@qflow/qflow/temporal";
 
 import type {
   AudioClipSpec,

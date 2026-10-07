@@ -1,5 +1,5 @@
 export { textComponent } from "./component.js";
-export { textSvsFrontend, textSvsFrontendId } from "./frontend.js";
+export { textRecipeFrontend, textRecipeFrontendId } from "./frontend.js";
 export { createTextRenderFragment } from "./fragment.js";
 export type { TextFragmentBinding } from "./fragment.js";
 export {
@@ -22,6 +22,6 @@ export {
   verifyTextBindings,
   verifyTextTemplate,
 } from "./program.js";
-export { textTemplateFromSvsRecipes } from "./svs.js";
+export { textTemplateFromRecipes } from "./recipe.js";
 export { decodeTextRenderSurface, decodeTextValueSurface } from "./surface.js";
 export type * from "./types.js";

@@ -1,10 +1,11 @@
-import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
-import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, StoredValue } from "@qflow/protocol";
-import type { ContentFit, IntrinsicExtent, SpatialFrame, SpatialMap2D, SpatialPath } from "@qflow/spatial";
-import type { TemporalWindow } from "@qflow/temporal";
-import type { Timeline } from "@qflow/timeline";
+import type { ProducerPackage, ProducerHandlerContext } from "@qflow/qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/qflow/media";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, StoredValue } from "@qflow/qflow/protocol";
+import type { ContentFit, IntrinsicExtent, SpatialFrame, SpatialMap2D, SpatialPath } from "@qflow/qflow/spatial";
+import type { TemporalWindow } from "@qflow/qflow/temporal";
+import type { Timeline } from "@qflow/qflow/timeline";
 
 import {
   appendMediaPaintLayer,
@@ -43,7 +44,7 @@ function inline<T>(value: StoredValue | undefined, label: string): T {
 }
 
 function blob(value: StoredValue | undefined): BlobRef {
-  if (value?.kind !== "blob") throw new Error("Visual source must be a BlobArtifact.");
+  if (value?.kind !== "blob") throw new Error("Visual source must be a Blob.");
   return value;
 }
 
@@ -119,4 +120,4 @@ export const visualTrackComponent = {
     type: visualTrackTypes.program,
     handler: ({ value }) => assertVisualTrackProgram(inline<VisualTrackProgram>(value, "VisualTrackProgram")),
   }],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

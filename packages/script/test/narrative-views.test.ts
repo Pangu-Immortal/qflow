@@ -10,7 +10,7 @@ import type { CaptionDocument, CaptionProgram } from "@qflow/caption";
 import { captionUnitsForNarrativeSelection } from "@qflow/narrative-caption";
 import { parseStructuredElement } from "@qflow/markup";
 import type { SurfaceResolvedReference } from "@qflow/markup";
-import { countSpeechEstimateUnits } from "@qflow/estimate";
+import { countSpeechEstimateUnits } from "@qflow/speech-estimate";
 import type { Text } from "@qflow/text";
 
 const body = `<intro><HOST>Try @{brand} <qflow|Hai-Pit> @{/brand} today. ||</intro>

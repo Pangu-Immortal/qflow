@@ -2,9 +2,9 @@ import type {
   AudioSourceTimeMap,
   AudioSourceTimePiece,
   AudioSourceTimeRational,
-} from "@qflow/composition";
-import { temporalDurationInSamples } from "@qflow/temporal";
-import type { Timeline } from "@qflow/timeline";
+} from "@qflow/qflow/composition";
+import { temporalDurationInSamples } from "@qflow/qflow/temporal";
+import type { Timeline } from "@qflow/qflow/timeline";
 
 import type {
   AudioSourceTimeBounds,

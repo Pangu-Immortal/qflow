@@ -1,20 +1,20 @@
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
-import { compileHyperframesDocument, materializeHyperframesHtml } from "@qflow/hyperframes";
+import { compileHtmlProgram, materializeHtmlProgram } from "@qflow/html-program";
 import { sealComposition } from "@qflow/composition";
 import sharp from "sharp";
 import test from "node:test";
 import { captureBrowserExecutablePath, withCapture } from "@qflow/browser-capture";
 import { captionDocument, parseScript } from "@qflow/script";
 import { sealTimeline } from "@qflow/timeline";
-import type { SvsRecipe } from "@qflow/svs";
+import type { Recipe } from "@qflow/recipe";
 import { projectProgramWindow } from "../../../test/temporal-fixture.js";
 import { fixtureResource } from "../../../test/fixture-resource.js";
 import { fineCaptionStyle, renderFineCaption, scheduleFineCaption } from "../src/index.js";
 
 const executablePath = process.env.QFLOW_CAPTURE_TEST_BROWSER ?? await captureBrowserExecutablePath();
 
-function cueHtml(source: string, width: number, extra: SvsRecipe["properties"]): string {
+function cueHtml(source: string, width: number, extra: Recipe["properties"]): string {
   const document = captionDocument(parseScript("layout", `<line>${source}</line>`), "caption", "story");
   const timeline = sealTimeline({ id: "timeline", frameCount: 120, frameRate: { numerator: 30, denominator: 1 } });
   const style = fineCaptionStyle("plain", { path: "caption", properties: {
@@ -31,10 +31,10 @@ function cueHtml(source: string, width: number, extra: SvsRecipe["properties"]):
   }] };
   const track = renderFineCaption(scheduleFineCaption(timed, program, document), program, document, timeline,
     { xPx: 0, yPx: 0, widthPx: width, heightPx: 500 });
-  const compiled = compileHyperframesDocument(sealComposition({ id: "test",
+  const compiled = compileHtmlProgram(sealComposition({ id: "test",
     canvas: { width, height: 500, clearColor: "#ffffff" }, tracks: [track] }), timeline);
   // Both copies use the same face. Exact-font loading is exercised by renderer integration.
-  return materializeHyperframesHtml(compiled, () => "data:font/woff2;base64,AA==")
+  return materializeHtmlProgram(compiled, () => "data:font/woff2;base64,AA==")
     .replace("</head>", `<style>[data-qflow-element-id]{font-family:Arial!important}[data-composition-id]{width:${width}px;height:500px}</style></head>`);
 
 }
@@ -76,13 +76,15 @@ test("joined backgrounds cover wrapped glyphs, preserve opacity and seek without
       // Reverse/repeated seeks and a resized Cue exercise measurement after layout changes.
       for (const [frame, scale, size] of [[0, 1, width], [20, 1, width], [5, .7, width],
         [0, 1, width + 40], [20, 1, width]] as const) {
-        const coverage = await page.evaluate(({ frame, scale, size }) => {
+        const coverage = await page.evaluate(async ({ frame, scale, size }) => {
           const cue = document.querySelector<HTMLElement>('[data-qflow-element-id="cue"]')!;
           cue.style.width = `${size}px`;
           // The box is measured in its own coordinates even while its ancestors move.
           cue.style.transform = `rotate(12deg) scale(${scale})`;
-          window.dispatchEvent(new CustomEvent("hf-seek", { detail: { time: frame / 30 } }));
-          const error = (window as unknown as { __qflowBrowserProgramError?: string }).__qflowBrowserProgramError;
+          await (window as typeof window & {
+            __qflowFrameProgram: { applyFrame(frame: number): Promise<void> };
+          }).__qflowFrameProgram.applyFrame(frame);
+          const error = (window as unknown as { __qflowHtmlVisualError?: string }).__qflowHtmlVisualError;
           const layers = Array.from(document.querySelectorAll<HTMLElement>('[data-caption-active-box="joined"]'));
           const index = Math.min(Math.floor(frame / 5), layers.length - 1);
           const path = layers[index]!.querySelector<SVGPathElement>('path')!;
@@ -112,12 +114,14 @@ test("joined backgrounds cover wrapped glyphs, preserve opacity and seek without
     await page.setContent(cueHtml("supercalifragilisticexpialidocious", 170, {
       "active-box-padding": "12 8", "active-box-border-width": 2, "active-box-border-color": "#000000",
     }));
-    const samples = await page.evaluate(() => {
+    const samples = await page.evaluate(async () => {
       const word = document.querySelector('[data-qflow-element-id="atom-1-base-1"]')!;
       const range = document.createRange(); range.selectNodeContents(word);
       const lines = Array.from(range.getClientRects());
       for (const atom of Array.from(document.querySelectorAll<HTMLElement>('[data-caption-atom]'))) atom.style.visibility = "hidden";
-      window.dispatchEvent(new CustomEvent("hf-seek", { detail: { time: 1 } }));
+      await (window as typeof window & {
+        __qflowFrameProgram: { applyFrame(frame: number): Promise<void> };
+      }).__qflowFrameProgram.applyFrame(30);
       return {
         count: lines.length,
         points: lines.map(line => ({ x: (line.left + line.right) / 2, y: (line.top + line.bottom) / 2 })).concat(

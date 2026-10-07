@@ -1,4 +1,5 @@
-import type { ComponentPackage } from "@qflow/component-kit";
+import type { AdmissionPackage } from "@qflow/admission";
+import type { ProducerPackage } from "@qflow/producer";
 import { compositionTypes } from "./manifest.js";
 import { assertAudioTrackIdentity, assertCompositionIdentity, assertVisualTrackIdentity } from "./track.js";
 import type { AudioTrack, Composition, VisualTrack } from "./track.js";
@@ -7,4 +8,4 @@ export const compositionComponent = { validators: [
   { type: compositionTypes.visualTrack, handler: ({ value }) => assertVisualTrackIdentity(inline(value, "VisualTrack") as VisualTrack) },
   { type: compositionTypes.audioTrack, handler: ({ value }) => assertAudioTrackIdentity(inline(value, "AudioTrack") as AudioTrack) },
   { type: compositionTypes.composition, handler: ({ value }) => assertCompositionIdentity(inline(value, "Composition") as Composition) },
-] } satisfies ComponentPackage;
+] } satisfies ProducerPackage & AdmissionPackage;

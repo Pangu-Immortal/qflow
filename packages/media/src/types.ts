@@ -95,8 +95,8 @@ export type SynchronizedMedia = {
 /** Identity for deriving an author-visible local temporal domain from normalized media. */
 export type MediaDomainSpec = { readonly id: string };
 
-/** Silent, frame-exact visual output from a renderer such as HyperFrames. */
-export type RenderedVisual = {
+/** Silent, frame-exact visual output produced from a timeline composition. */
+export type TimelineVisual = {
   readonly frameRate: MediaRational;
   readonly frameCount: number;
   readonly canvas: {

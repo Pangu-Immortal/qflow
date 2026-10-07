@@ -11,19 +11,18 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/component-kit": "workspace:*",
+    "@qflow/admission": "workspace:*",
+    "@qflow/producer": "workspace:*",
     "@qflow/media": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/visual-ir": "workspace:*",
     "@qflow/timeline": "workspace:*"
   },
   "devDependencies": {
-    "@qflow/artifact": "workspace:*",
-    "@qflow/core": "workspace:*",
+    "@qflow/blob": "workspace:*",
+    "@qflow/kernel": "workspace:*",
     "@qflow/narrative": "workspace:*",
+    "@qflow/recipe": "workspace:*",
     "@qflow/spatial": "workspace:*",
-    "@qflow/speech": "workspace:*",
-    "@qflow/speech-evidence": "workspace:*",
-    "@qflow/validation": "workspace:*"
+    "@qflow/speech-evidence": "workspace:*"
   }
 }

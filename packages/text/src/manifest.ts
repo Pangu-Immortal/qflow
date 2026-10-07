@@ -1,5 +1,5 @@
 import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
-import { svsRecipeType } from "@qflow/svs";
+import { recipeType } from "@qflow/recipe";
 
 export const textModuleRef = { name: "@qflow/text", version: "1" } as const;
 
@@ -70,7 +70,7 @@ export const textMarkupSurfaces = [{
             { name: "when-select-<binding>", required: false,
               summary: "States the same condition as `when-param-`, for a binding an author reads as a Selection." },
           ] },
-        { name: "recipe", kind: "reference", required: false, accepts: [svsRecipeType],
+        { name: "recipe", kind: "reference", required: false, accepts: [recipeType],
           summary: "Chooses the Recipe whose scalar properties fill the bindings the Template declares." },
       ],
       children: [

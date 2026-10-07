@@ -1,4 +1,5 @@
-import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
+import type { AdmissionPackage } from "@qflow/admission";
+import type { ProducerPackage, ProducerHandlerContext } from "@qflow/producer";
 import type { StoredValue } from "@qflow/protocol";
 
 import {
@@ -69,4 +70,4 @@ export const textComponent = {
       }),
     },
   ],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

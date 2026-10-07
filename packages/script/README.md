@@ -9,6 +9,11 @@ absolute work boundaries belong to Timeline.
 The package is an ordinary statically declared Surface module. Core does not import it and does not
 know that Script, Segment or Narrative exist.
 
+The official video Distribution installs this package as an ordinary default npm dependency. Script
+owns its parser, formatter, source inverse and Studio temporal-domain facet; `@qflow/script/studio`
+exposes that facet for reuse. Packages that need Script-specific parsing depend on this package,
+while consumers of the result depend on the public Narrative, Caption and Text values instead.
+
 ```svml
 <script id="story">
   @{answer}
@@ -203,28 +208,6 @@ requested boundary needs an interior insertion site.
 
 Writeback reparses the result to retain the requested bindings and unchanged speech, display and
 Narrative/Caption content. Source offsets remain parser-private; no formatting history is stored.
-
-## Explicit migration from 0.1
-
-The 0.2 parser rejects bare `@name` markers. Preview migration from the repository or installed
-Distribution root, then explicitly write the reviewed result:
-
-```sh
-node packages/script/bin/migrate-0.2.mjs /path/to/film.svml
-node packages/script/bin/migrate-0.2.mjs /path/to/film.svml --write
-```
-
-Use `--body` for a file containing a raw Script body rather than outer SVML. The tool converts
-markers only inside Script bodies, leaves comments and escapes intact, and does not touch provider
-prompt references such as `@image1`. It neither installs anything nor runs during a build.
-
-The tool changes marker spelling, not marker placement. Move a marker that separates a word from
-its attached quote or punctuation to the complete word boundary before using that source.
-
-Review authored whitespace after migration: spaces previously discarded by Chinese/punctuation
-normalization now appear. The tool preserves source spaces rather than guessing the author's intent.
-Regenerate affected Narrative, caption and Build results with the new reader/writer together;
-protocol identities remain `@1`. Existing rendered media is not modified by source migration.
 
 ## Complete authored content and narrow exports
 

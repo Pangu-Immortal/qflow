@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createResolvedClosure, link } from "@qflow/core";
-import { verifyGraphFragment } from "@qflow/elaborator";
+import { createResolvedClosure, link } from "@qflow/kernel";
+import { verifyGraphFragment } from "@qflow/author";
 import { temporalExtentFromDomain } from "@qflow/temporal";
 import { videoContractManifests } from "../../../test/support/video-domain.js";
 

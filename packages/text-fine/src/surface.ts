@@ -1,7 +1,7 @@
-import { timelineTypes } from "@qflow/timeline";
-import { resolveTemporalContext } from "@qflow/temporal-markup";
+import { timelineTypes } from "@qflow/qflow/timeline";
+import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
 
-import { compositionTypes } from "@qflow/composition";
+import { compositionTypes } from "@qflow/qflow/composition";
 import type {
   VisualColorPaint,
   VisualStyleDeclaration,
@@ -10,27 +10,22 @@ import type {
   VisualTextRunStyle,
   VisualTextSequenceAnimation,
   VisualTextTypography,
-} from "@qflow/composition";
+} from "@qflow/qflow/composition";
 import {
   assertFontArtifactRef,
   assertFontStackRef,
   mediaTypes,
-} from "@qflow/media";
-import type { FontArtifactRef, FontStackRef } from "@qflow/media";
-import { spatialTypes } from "@qflow/spatial";
-import { sealGraphFragment } from "@qflow/elaborator";
-import type { FragmentOperation, GraphFragment } from "@qflow/elaborator";
-import { svsRecipeType } from "@qflow/svs";
-import type { SvsRecipe } from "@qflow/svs";
-import { textTypes } from "@qflow/text";
-import type {
-  StructuredElement,
-  StructuredSurfaceHandler,
-  SurfaceResolvedReference,
-  MarkupAttributeValue,
-} from "@qflow/markup";
-import { temporalTypes } from "@qflow/temporal";
-import { createTemporalWindowConstruction } from "@qflow/temporal-markup";
+} from "@qflow/qflow/media";
+import type { FontArtifactRef, FontStackRef } from "@qflow/qflow/media";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import type { FragmentOperation, GraphFragment } from "@qflow/qflow/author";
+import { recipeType } from "@qflow/qflow/recipe";
+import type { Recipe } from "@qflow/qflow/recipe";
+import { textTypes } from "@qflow/qflow/text";
+import type { StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/qflow/markup";
+import { temporalTypes } from "@qflow/qflow/temporal";
+import { createTemporalWindowConstruction } from "@qflow/qflow/temporal/markup";
 
 import { fineTextWindowAttributeVocabulary, textFineProducers, textFineTypes } from "./manifest.js";
 import {
@@ -154,26 +149,26 @@ function inline<T>(value: SurfaceResolvedReference, label: string): T {
   return value.record.value.value as unknown as T;
 }
 
-function recipe(value: SurfaceResolvedReference, label: string): SvsRecipe {
-  if (!sameType(value.type, svsRecipeType)) throw new Error(`${label} must reference an SVS Recipe.`);
-  return inline<SvsRecipe>(value, label);
+function recipe(value: SurfaceResolvedReference, label: string): Recipe {
+  if (!sameType(value.type, recipeType)) throw new Error(`${label} must reference an SVS Recipe.`);
+  return inline<Recipe>(value, label);
 }
 
-function propNumber(value: SvsRecipe, name: string, fallback?: number): number {
+function propNumber(value: Recipe, name: string, fallback?: number): number {
   const result = value.properties[name];
   if (result === undefined && fallback !== undefined) return fallback;
   if (typeof result !== "number" || !Number.isFinite(result)) throw new Error(`Text Recipe ${name} must be a number.`);
   return result;
 }
 
-function propString(value: SvsRecipe, name: string, fallback?: string): string {
+function propString(value: Recipe, name: string, fallback?: string): string {
   const result = value.properties[name];
   if (result === undefined && fallback !== undefined) return fallback;
   if (typeof result !== "string" || !result.trim()) throw new Error(`Text Recipe ${name} must be text.`);
   return result.trim();
 }
 
-function propBoolean(value: SvsRecipe, name: string, fallback: boolean): boolean {
+function propBoolean(value: Recipe, name: string, fallback: boolean): boolean {
   return booleanValue(value.properties[name], `Text Recipe ${name}`, fallback);
 }
 
@@ -359,7 +354,7 @@ const STYLE_PROPERTIES = new Set([
 export const decodeTypographyStyleSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
   allowed(element, ["id", "recipe", "font"], ["id", "recipe", "font"]);
   const id = text(element, "id");
-  const value = recipe(reference(element.attributes.recipe, `${element.name}.recipe`, svsRecipeType, resolveReference), `${element.name}.recipe`);
+  const value = recipe(reference(element.attributes.recipe, `${element.name}.recipe`, recipeType, resolveReference), `${element.name}.recipe`);
   const unknown = Object.keys(value.properties).filter((name) => !STYLE_PROPERTIES.has(name));
   if (unknown.length > 0) throw new Error(`Text Recipe does not accept ${unknown[0]}.`);
   const fonts = exactFonts(element, resolveReference);

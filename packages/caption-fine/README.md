@@ -14,14 +14,14 @@ does not carry a private visual role.
   </caption-fine:Caption>
 ```
 
-An optional Region Track supplies a moving placement point when the user's reference
+An optional Region Evidence supplies a moving placement point when the user's reference
 visibly uses head-following Caption or the user asks for that treatment. Ordinary Caption uses the
-Style's placement without regions. Region Track is authored numeric input mapped from available picture
+Style's placement without regions. Region Evidence is authored numeric input mapped from available picture
 evidence to the composition that consumes it; it is not a face-tracking request:
 
 ```xml
-<import as="region" from="@qflow/region-track@1"/>
-<region:Track id="heads" within={vertical.bounds} timeline={speech.timeline}
+<import as="region" from="@qflow/region-evidence@1"/>
+<region:Evidence id="heads" within={vertical.bounds} timeline={speech.timeline}
   recipe={tracking.heads.default}/>
 <caption-fine:Caption id="captions-track" document={story.caption} timing={story-captions}
   timeline={speech.timeline} within={vertical.bounds} regions={heads}>
@@ -29,10 +29,10 @@ evidence to the composition that consumes it; it is not a face-tracking request:
   </caption-fine:Caption>
 ```
 
-With `regions`, every Cue must carry one Script Role. When Region Track contains a measured region for that
+With `regions`, every Cue must carry one Script Role. When Region Evidence contains a measured region for that
 Role and Frame, Fine places the Cue at the region's top center. When that Role has a series but
 the current Frame is `null`, the Cue is not rendered: absence of evidence never becomes a guessed
-position. A Role with no Track uses the Style's authored `x` and `y`, so unrelated speakers remain
+position. A Role with no evidence series uses the Style's authored `x` and `y`, so unrelated speakers remain
 ordinary fixed captions. The Style still owns its width and anchors, so `anchor-x: center;
 anchor-y: bottom` puts the Caption immediately above a measured region. The Timeline is finished
 external evidence: Fine does not detect people, associate identities, smooth motion, interpolate
@@ -40,7 +40,7 @@ missing Frames or invoke a Provider. Without `regions`, the ordinary Recipe `x` 
 unchanged.
 
 This keeps placement inspectable and editable. If a tracked face needs padding or an above-head anchor,
-transform the measured numbers while authoring Region Track, then give Caption the result. Do
+transform the measured numbers while authoring Region Evidence, then give Caption the result. Do
 not hide that transformation in a Provider or ask the Build to rediscover the face.
 
 One SVS Recipe freezes three public dimensions:
@@ -105,7 +105,7 @@ lines are included. Padding and borders extend beyond those rectangles without c
 overlapping line backgrounds share one outline and paint translucent color once. Cue motion then
 moves text and decoration together.
 
-This decoration uses HyperFrames' existing local browser-program extension, owned by Fine. Its
+This decoration uses the HtmlProgram's local `HtmlVisual` extension, owned by Fine. Its
 measurement copy uses the same exact-font text and available width, is removed synchronously after
 measurement, and is recomputed when a frame is sought (including after fonts finish loading). It
 adds no layout records to Script, Caption, Timeline or Runtime. Other backends must support the
@@ -145,7 +145,10 @@ The Qflow Skill's Caption craft page owns grouping and visual direction.
 
 `font` accepts an exact face or ordered stack. A local file declared through `media:Font` can be the
 primary face or a `<caption-fine:Fallback font={...}/>` child, just like a bundled face. See
-[Media font assets](../media/README.md#font-files) and [the open catalog](../fonts-open/README.md).
+[Media font assets](../media/README.md#font-files) and the independently installed
+[`@qflow/fontsource` adapter](../fontsource/README.md).
 
-The [Fine Studio Companion](../caption-fine-studio/src/index.ts) reads the same schedule and authored Use
-Style references. It presents the actual Cue timing and exposes Use timing and supported Style edits in the Inspector.
+The package's Studio facet, published as `@qflow/caption-fine/studio`, reads the same schedule and
+authored Use Style references. It presents the actual Cue timing and exposes Use timing and supported
+Style edits in the Inspector. Runtime and authoring support therefore ship as one versioned capability
+rather than as independently versioned packages.

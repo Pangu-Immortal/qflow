@@ -1,5 +1,5 @@
 export { captionFineComponent } from "./component.js";
-export { fineCaptionRegionTrackFragment, fineCaptionTrackFragment } from "./fragment.js";
+export { fineCaptionRegionEvidenceFragment, fineCaptionTrackFragment } from "./fragment.js";
 export { captionFineManifest, captionFineMarkupSurfaces, captionFineModuleRef, captionFineProducers, captionFineTypes } from "./manifest.js";
 export { renderFineCaption } from "./render.js";
 export { assertFineCaptionSchedule, scheduleFineCaption } from "./schedule.js";

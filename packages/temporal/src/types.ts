@@ -10,12 +10,20 @@ export type TemporalInstantExpression =
   | { readonly ref: "timeline.end"; readonly offset?: TemporalDuration }
   | { readonly ref: "absolute"; readonly at: TemporalDuration; readonly offset?: TemporalDuration };
 
+/** Exact author parameter that owns one projected endpoint. Syntax owners may omit it for references. */
+export type TemporalAuthorParameter = {
+  readonly binding: string;
+  readonly relation: "direct" | "after-start" | "before-end";
+};
+
 /** Input value for an Instant projection producer. */
 export type TemporalInstantSpec = {
   readonly id: string;
   /** Author/domain entity whose timing this projection controls. */
   readonly subjectId: string;
   readonly projection: TemporalInstantExpression;
+  /** Optional inverse declared by the author syntax that created this Spec. */
+  readonly author?: TemporalAuthorParameter;
 };
 
 /** Input value for composing two resolved Instants into a Window. */
@@ -44,6 +52,8 @@ export type TemporalShiftSpec = {
   readonly id: string;
   readonly subjectId: string;
   readonly direction: 1 | -1;
+  /** Optional duration inverse declared by the author syntax that created this shift. */
+  readonly author?: TemporalAuthorParameter;
 };
 
 /**

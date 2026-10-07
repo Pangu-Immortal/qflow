@@ -2,21 +2,20 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
 
-import { registerTypeValidatorFacets } from "@qflow/component-kit";
-import { createResolvedClosure } from "@qflow/core";
+import { registerTypeValidatorFacets } from "@qflow/admission";
+import { createResolvedClosure } from "@qflow/kernel";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef } from "@qflow/protocol";
-import { TypeValidatorRegistry, validateValue } from "@qflow/validation";
-import { artifactManifest } from "@qflow/artifact";
+import { TypeValidatorRegistry, validateValue } from "@qflow/admission";
+import { blobManifest } from "@qflow/blob";
 import type { FontArtifactRef } from "@qflow/media";
 import { mediaManifest } from "@qflow/media";
 import { narrativeManifest } from "@qflow/narrative";
 import { timelineManifest, sealTimeline } from "@qflow/timeline";
-import { speechManifest } from "@qflow/speech";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { spatialManifest } from "@qflow/spatial";
-import { svsManifest } from "@qflow/svs";
-import { VISUAL_IR_V1, visualIrManifest } from "@qflow/visual-ir";
+import { recipeManifest } from "@qflow/recipe";
+import { VISUAL_IR_V1 } from "@qflow/composition";
 
 import {
   assertCompositionIdentity,
@@ -30,8 +29,8 @@ import {
 } from "../src/index.js";
 import type { VisualTrack } from "../src/index.js";
 
-const videoContractManifests = [artifactManifest, narrativeManifest, mediaManifest, timelineManifest,
-  speechManifest, speechEvidenceManifest, svsManifest, spatialManifest, visualIrManifest, compositionManifest] as const;
+const videoContractManifests = [blobManifest, narrativeManifest, mediaManifest, timelineManifest,
+  speechEvidenceManifest, recipeManifest, spatialManifest, compositionManifest] as const;
 
 const font: FontArtifactRef = {
   sources: [{ artifact: { kind: "blob", resource: fixtureResource("track:test-font"), size: 1_024, mediaType: "font/woff2" } }],

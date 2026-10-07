@@ -1,4 +1,7 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { createStudioCompanionFacet } from "@qflow/studio-companion";
 import {
   decodeVisualTrackSurface,
   decodeVisualMotionSurface,
@@ -8,26 +11,31 @@ import {
   visualTrackModuleRef,
   visualTrackMarkupSurfaces,
 } from "./index.js";
+import { visualTrackStudioParameterCompanions, visualTrackStudioTrackCompanions } from "./studio.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: visualTrackManifest }],
-  components: [visualTrackComponent],
-  hostFacets: [
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[visualTrackComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    createMarkupSurfaceFacet({
       module: visualTrackModuleRef,
       declaration: visualTrackMarkupSurfaces.find((item) => item.name === "track")!,
       handler: decodeVisualTrackSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: visualTrackModuleRef,
       declaration: visualTrackMarkupSurfaces.find((item) => item.name === "motion")!,
       handler: decodeVisualMotionSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: visualTrackModuleRef,
       declaration: visualTrackMarkupSurfaces.find((item) => item.name === "source-time")!,
       handler: decodeVisualSourceTimeSurface,
+    }),
+    createStudioCompanionFacet({
+      tracks: visualTrackStudioTrackCompanions,
+      parameters: visualTrackStudioParameterCompanions,
     }),
   ],
 };

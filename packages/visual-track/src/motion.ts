@@ -1,8 +1,8 @@
 import type {
   VisualAnimation,
   VisualStyleDeclaration,
-} from "@qflow/composition";
-import { canonicalize } from "@qflow/protocol";
+} from "@qflow/qflow/composition";
+import { canonicalize } from "@qflow/qflow/protocol";
 
 import type {
   MediaSamplingMotion,

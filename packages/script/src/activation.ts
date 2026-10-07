@@ -1,4 +1,5 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { createStudioCompanionFacet } from "@qflow/studio-companion";
 
 import {
   decodeScriptSurface,
@@ -6,15 +7,19 @@ import {
   scriptModuleRef,
   scriptMarkupSurfaces,
 } from "./index.js";
+import { scriptStudioTemporalDomains } from "./studio.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: scriptManifest }],
-  hostFacets: [createMarkupSurfaceHostFacet({
-    module: scriptModuleRef,
-    declaration: scriptMarkupSurfaces.find((item) => item.name === "script")!,
-    handler: decodeScriptSurface,
-  })],
+  facets: [
+    createMarkupSurfaceFacet({
+      module: scriptModuleRef,
+      declaration: scriptMarkupSurfaces.find((item) => item.name === "script")!,
+      handler: decodeScriptSurface,
+    }),
+    createStudioCompanionFacet({ temporalDomains: scriptStudioTemporalDomains }),
+  ],
 };
 
 export default qflowPackage;

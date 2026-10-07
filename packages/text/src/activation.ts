@@ -1,5 +1,7 @@
-import { createAuthorFrontendHostFacet } from "@qflow/elaborator";
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/admission";
+import { createProducerPackageFacet } from "@qflow/producer";
+import { createAuthorFrontendFacet } from "@qflow/author";
+import { createMarkupSurfaceFacet } from "@qflow/markup";
 
 import {
   decodeTextRenderSurface,
@@ -7,22 +9,22 @@ import {
   textComponent,
   textManifest,
   textModuleRef,
-  textSvsFrontend,
+  textRecipeFrontend,
   textMarkupSurfaces,
 } from "./index.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{ manifest: textManifest }],
-  components: [textComponent],
-  hostFacets: [
-    createAuthorFrontendHostFacet(textSvsFrontend),
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[textComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    createAuthorFrontendFacet(textRecipeFrontend),
+    createMarkupSurfaceFacet({
       module: textModuleRef,
     declaration: textMarkupSurfaces.find((item) => item.name === "value")!,
       handler: decodeTextValueSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: textModuleRef,
     declaration: textMarkupSurfaces.find((item) => item.name === "render")!,
       handler: decodeTextRenderSurface,

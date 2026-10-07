@@ -505,7 +505,7 @@ export function parseScript(
       }
       const marker = parseMarker(raw, index);
       if (!marker) {
-        if (raw[index] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a delimited @{...} marker; migrate bare markers from 0.1 explicitly.", absoluteStart + index);
+        if (raw[index] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a delimited @{...} marker.", absoluteStart + index);
         index += 1;
         continue;
       }
@@ -614,7 +614,7 @@ export function parseScript(
       offset += marker.length;
       continue;
     }
-    if (source[offset] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a delimited @{...} marker; migrate bare markers from 0.1 explicitly.", offset);
+    if (source[offset] === "@") fail("SCRIPT_MARKER", "Unescaped @ must begin a delimited @{...} marker.", offset);
 
     if (source[offset] === "<" && current) {
       const end = findUnescaped(source, ">", offset + 1);

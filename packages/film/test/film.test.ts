@@ -1,7 +1,7 @@
 import { sealTimeline, timelineTypes } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
 import { compositionComponent, spatialComponent, videoContractManifests } from "../../../test/support/video-domain.js";
-import { registerTypeValidatorFacets } from "@qflow/component-kit";
+import { registerTypeValidatorFacets } from "@qflow/admission";
 import { compositionTypes, sealAudioTrack, sealVisualTrack } from "@qflow/composition";
 import type { Composition, Track } from "@qflow/composition";
 import type { FontArtifactRef } from "@qflow/media";
@@ -18,19 +18,19 @@ import {
   sealCompiledGraph,
   sealRecord,
   start,
-} from "@qflow/core";
-import { ProducerRegistry, NodeDriver } from "@qflow/driver-node";
+} from "@qflow/kernel";
+import { ProducerRegistry, Executor } from "@qflow/executor";
 import {
   bindAuthorFragment,
   elaborateGraphFragment,
   mergeFragmentContributions,
-} from "@qflow/elaborator";
+} from "@qflow/author";
 import { appendFilmAudioTrack, appendFilmVisualTrack, compileFilmComposition, createFilmAssemblyFragment, createFilmTrackSet, filmManifest, filmProducers, filmTypes, sealFilmProgram } from "@qflow/film";
-import { compileHyperframesDocument, hyperframesDocumentFragment, hyperframesManifest, hyperframesProducers, hyperframesTypes } from "@qflow/hyperframes";
+import { compileHtmlProgram, htmlProgramFragment, htmlProgramManifest, htmlProgramProducers, htmlProgramTypes } from "@qflow/html-program";
 import type { CanonicalValue, CompiledGraph, StoredValue, TypedRecord } from "@qflow/protocol";
 import { renderFineTextOccurrence, stillTextMotion } from "@qflow/text-fine";
 import type { TextStyle } from "@qflow/text-fine";
-import { admitRecord, TypeValidatorRegistry } from "@qflow/validation";
+import { admitRecord, TypeValidatorRegistry } from "@qflow/admission";
 
 const space = sealTimeline({ id: "test-space", frameCount: 120, frameRate: { numerator: 30, denominator: 1 },
 });
@@ -116,7 +116,7 @@ function stored(value: CanonicalValue): StoredValue {
 
 const closure = createResolvedClosure([
   ...videoContractManifests,
-  hyperframesManifest,
+  htmlProgramManifest,
   filmManifest,
 ]);
 const records = await Promise.all([
@@ -153,21 +153,21 @@ const filmInstance = elaborateGraphFragment(linked, filmFragment, {
 const filmContribution = bindAuthorFragment(filmInstance, {
   composition: "main.composition",
 });
-const hyperframesInstance = elaborateGraphFragment(linked, hyperframesDocumentFragment, {
+const htmlProgramInstance = elaborateGraphFragment(linked, htmlProgramFragment, {
   id: "main-render",
-  fragment: hyperframesDocumentFragment.id,
+  fragment: htmlProgramFragment.id,
   inputs: {
     composition: { kind: "logical-output", id: "main.composition" },
     timeline: { kind: "record", id: "timeline" },
   },
 });
-const hyperframesContribution = bindAuthorFragment(hyperframesInstance, {
-  document: "main.document",
+const htmlProgramContribution = bindAuthorFragment(htmlProgramInstance, {
+  program: "main.program",
 });
 const merged = mergeFragmentContributions(
   { outputs: [], candidates: [], operations: [] },
   filmContribution,
-  hyperframesContribution,
+  htmlProgramContribution,
 );
 const graph: CompiledGraph = sealCompiledGraph({ ...merged });
 
@@ -185,15 +185,15 @@ function producerModules(target: string): string[] {
   return build(target).plan.steps.map((step) => step.producer.module.name);
 }
 
-test("Film stops at Composition and Hyperframes remains an ordinary downstream Fragment", () => {
-  assert.equal(producerModules("main.composition").includes(hyperframesProducers.compile.module.name), false);
+test("Film stops at Composition and HTML compilation remains an ordinary downstream Fragment", () => {
+  assert.equal(producerModules("main.composition").includes(htmlProgramProducers.compile.module.name), false);
   assert.deepEqual(producerNames("main.composition").filter((name) => name.startsWith("append-")).sort(), [
     filmProducers.appendAudioTrack.name,
     filmProducers.appendVisualTrack.name,
     filmProducers.appendVisualTrack.name,
   ].sort());
   assert.equal(
-    producerModules("main.document").filter((name) => name === hyperframesProducers.compile.module.name).length,
+    producerModules("main.program").filter((name) => name === htmlProgramProducers.compile.module.name).length,
     1,
   );
 });
@@ -229,17 +229,17 @@ test("the Driver folds peer Tracks, then independently compiles the Composition"
     )) },
     needs: {},
   }));
-  registry.registerProducer(hyperframesProducers.compile, ({ inputs }) => ({
-    outputs: { document: stored(compileHyperframesDocument(
+  registry.registerProducer(htmlProgramProducers.compile, ({ inputs }) => ({
+    outputs: { program: stored(compileHtmlProgram(
       inline(inputs.composition) as never,
       inline(inputs.timeline) as typeof space,
     )) },
     needs: {},
   }));
 
-  const result = await new NodeDriver({ producers: registry, validators: validatorRegistry() }).run(build("main.document"));
+  const result = await new Executor({ producers: registry, validators: validatorRegistry() }).run(build("main.program"));
   assert.equal(result.status, "complete");
-  const documentRecord = result.state.records.find((record) => record.type.module.name === hyperframesTypes.document.module.name);
+  const documentRecord = result.state.records.find((record) => record.type.module.name === htmlProgramTypes.program.module.name);
   assert(documentRecord);
   const document = inline(documentRecord) as { readonly html: string };
   assert.match(document.html, /data-qflow-text-run="title-text"/u);

@@ -1,8 +1,9 @@
-import type { ComponentPackage } from "@qflow/component-kit";
-import { canonicalize } from "@qflow/protocol";
-import type { StoredValue } from "@qflow/protocol";
-import type { LocalTemporalDomain, TemporalDuration, TemporalExtent, TemporalWindow } from "@qflow/temporal";
-import type { Clock, Timeline } from "@qflow/timeline";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { ProducerPackage } from "@qflow/qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { StoredValue } from "@qflow/qflow/protocol";
+import type { LocalTemporalDomain, TemporalDuration, TemporalExtent, TemporalWindow } from "@qflow/qflow/temporal";
+import type { Clock, Timeline } from "@qflow/qflow/timeline";
 
 import { timelineAuthorProducers } from "./manifest.js";
 import {
@@ -40,4 +41,4 @@ export const timelineAuthorComponent = {
     { producer: timelineAuthorProducers.instant, handler: ({ inputs }) => ({ outputs: { instant: output(materializeInstant(inline<Timeline>(inputs.timeline?.value, "Timeline"), inline<ConstructionPoint>(inputs.point?.value, "ConstructionPoint"), inline<ConstructionIdentitySpec>(inputs.spec?.value, "ConstructionIdentitySpec"))) }, needs: {} }) },
     { producer: timelineAuthorProducers.window, handler: ({ inputs }) => ({ outputs: { window: output(materializeWindow(inline<Timeline>(inputs.timeline?.value, "Timeline"), inline<ConstructionSpan>(inputs.span?.value, "ConstructionSpan"), inline<ConstructionIdentitySpec>(inputs.spec?.value, "ConstructionIdentitySpec"))) }, needs: {} }) },
   ],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

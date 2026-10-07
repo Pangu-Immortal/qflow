@@ -1,5 +1,5 @@
-import type { CaptionTimingUnit } from "@qflow/caption";
-import type { FontArtifactRef } from "@qflow/media";
+import type { CaptionTimingUnit } from "@qflow/qflow/caption";
+import type { FontArtifactRef } from "@qflow/qflow/media";
 
 export type FineCaptionGlyphPaint = {
   readonly fill: string;

@@ -1,9 +1,9 @@
-import type { CaptionStyleIntent } from "@qflow/caption";
-import { sealCaptionStyle } from "@qflow/caption";
-import { assertFontArtifactRef } from "@qflow/media";
-import type { FontArtifactRef } from "@qflow/media";
-import { canonicalStringify } from "@qflow/protocol";
-import type { SvsRecipe } from "@qflow/svs";
+import type { CaptionStyleIntent } from "@qflow/qflow/caption";
+import { sealCaptionStyle } from "@qflow/qflow/caption";
+import { assertFontArtifactRef } from "@qflow/qflow/media";
+import type { FontArtifactRef } from "@qflow/qflow/media";
+import { canonicalStringify } from "@qflow/qflow/protocol";
+import type { Recipe } from "@qflow/qflow/recipe";
 
 import type { FineCaptionGlyphPaint, FineCaptionParameters } from "./types.js";
 import {
@@ -20,12 +20,12 @@ const ALLOWED_PROPERTIES = new Set<string>([
   ...fineCaptionOptionalRecipeProperties,
 ]);
 
-function required(value: SvsRecipe, name: string): unknown {
+function required(value: Recipe, name: string): unknown {
   if (!Object.hasOwn(value.properties, name)) throw new Error(`Fine Caption Recipe requires ${name}`);
   return value.properties[name];
 }
 
-function number(value: SvsRecipe, name: string, fallback?: number): number {
+function number(value: Recipe, name: string, fallback?: number): number {
   const property = Object.hasOwn(value.properties, name) ? value.properties[name] : fallback;
   if (typeof property !== "number" || !Number.isFinite(property)) {
     throw new Error(`Fine Caption Recipe ${name} must be a number`);
@@ -33,13 +33,13 @@ function number(value: SvsRecipe, name: string, fallback?: number): number {
   return property;
 }
 
-function integer(value: SvsRecipe, name: string, fallback?: number): number {
+function integer(value: Recipe, name: string, fallback?: number): number {
   const property = number(value, name, fallback);
   if (!Number.isSafeInteger(property)) throw new Error(`Fine Caption Recipe ${name} must be an integer`);
   return property;
 }
 
-function string(value: SvsRecipe, name: string, fallback?: string): string {
+function string(value: Recipe, name: string, fallback?: string): string {
   const property = Object.hasOwn(value.properties, name) ? value.properties[name] : fallback;
   if (typeof property !== "string" || !property.trim()) {
     throw new Error(`Fine Caption Recipe ${name} must be a string`);
@@ -48,7 +48,7 @@ function string(value: SvsRecipe, name: string, fallback?: string): string {
 }
 
 function choice<const T extends readonly string[]>(
-  value: SvsRecipe,
+  value: Recipe,
   name: string,
   choices: T,
   fallback?: T[number],
@@ -58,7 +58,7 @@ function choice<const T extends readonly string[]>(
   return property as T[number];
 }
 
-function color(value: SvsRecipe, name: string, fallback?: string): string {
+function color(value: Recipe, name: string, fallback?: string): string {
   const property = string(value, name, fallback);
   if (!/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/iu.test(property)) {
     throw new Error(`Fine Caption Recipe ${name} must be an RGB or RGBA hex color`);
@@ -75,7 +75,7 @@ function padding(value: string): { readonly x: number; readonly y: number } {
 }
 
 function optionalGradient(
-  recipe: SvsRecipe,
+  recipe: Recipe,
   prefix: "" | "active-",
   base?: FineCaptionGlyphPaint["gradient"],
 ): FineCaptionGlyphPaint["gradient"] | undefined {
@@ -95,7 +95,7 @@ function optionalGradient(
   };
 }
 
-function glyphPaint(recipe: SvsRecipe, prefix: "" | "active-", base?: FineCaptionGlyphPaint): FineCaptionGlyphPaint {
+function glyphPaint(recipe: Recipe, prefix: "" | "active-", base?: FineCaptionGlyphPaint): FineCaptionGlyphPaint {
   const fallback = <K extends keyof FineCaptionGlyphPaint>(key: K): FineCaptionGlyphPaint[K] | undefined => base?.[key];
   const baseShadow = fallback("shadow") as FineCaptionGlyphPaint["shadow"] | undefined;
   const baseGlow = fallback("glow") as FineCaptionGlyphPaint["glow"] | undefined;
@@ -171,7 +171,7 @@ function assertPaint(value: FineCaptionGlyphPaint, label: string): void {
 }
 
 export function fineCaptionParameters(
-  recipe: SvsRecipe,
+  recipe: Recipe,
   exactFonts: readonly FontArtifactRef[],
 ): FineCaptionParameters {
   for (const name of fineCaptionRequiredRecipeProperties) required(recipe, name);
@@ -358,7 +358,7 @@ export function assertFineCaptionParameters(value: FineCaptionParameters): void 
 
 export function fineCaptionStyle(
   id: string,
-  recipe: SvsRecipe,
+  recipe: Recipe,
   exactFonts: readonly FontArtifactRef[],
 ): CaptionStyleIntent {
   return sealCaptionStyle({

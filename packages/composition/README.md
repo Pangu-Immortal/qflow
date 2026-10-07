@@ -2,6 +2,11 @@
 
 Provider-neutral visual and audio Track contracts and their final Composition.
 
+Composition also owns the terminal structural visual vocabulary identified by `VISUAL_IR_V1`,
+including its supported CSS-shaped declarations and validation. There is no peer Visual IR Module:
+the vocabulary versions the visual representation carried by `VisualTrack`, while richer renderer
+program payloads remain explicitly owned by their rendering package.
+
 ## VisualTrack
 
 `sealVisualTrack` accepts `id`, `timelineId`, `visualIr: VISUAL_IR_V1` and `presents` and returns
@@ -53,15 +58,15 @@ each selected Output explicitly.
 A Composition carries its id, Canvas with clear color, and peer Tracks. The Tracks retain their
 Timeline identity; assembly and rendering receive the corresponding Timeline separately.
 `@qflow/film` is one author-facing way to assemble it;
-`@qflow/render-hyperframes` consumes it to produce a video.
+`@qflow/html-video` consumes it to produce a video.
 
 ### Visibility without a new source-time origin
 
 A VisualPresent may supply `visibility`, an ordered list of non-overlapping subranges in program
 frames, all inside its `span`. Omission means the full span; an empty list means never visible.
 `span` continues to define local animation and media-sampling time. This permits rule overrides or
-other partial visibility without cutting a program into restarted copies. HyperFrames applies the
-visibility independently when seeking; custom HTML and typed media keep their original clocks.
+other partial visibility without cutting a program into restarted copies. The `HtmlProgram` applies
+visibility independently at each requested frame; custom HTML and typed media keep their original clocks.
 
 ## Audio level automation on the program clock
 

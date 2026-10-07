@@ -12,11 +12,12 @@
   },
   "dependencies": {
     "@qflow/caption": "workspace:*",
-    "@qflow/component-kit": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/author": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/narrative": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/narrative-temporal": "workspace:*"
+    "@qflow/narrative-temporal": "workspace:*",
+    "@qflow/admission": "workspace:*"
   }
 }

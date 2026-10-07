@@ -1,17 +1,17 @@
-import { temporalDependency, temporalTypes } from "@qflow/temporal";
-import { temporalContextAttributeVocabulary, temporalWindowAttributeVocabulary } from "@qflow/temporal-markup";
-import { timelineDependency, timelineTypes } from "@qflow/timeline";
-import type { Timeline } from "@qflow/timeline";
+import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
+import { temporalContextAttributeVocabulary, temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal/markup";
+import { timelineDependency, timelineTypes } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/qflow/timeline";
 import { readFile } from "node:fs/promises";
 
-import { captionModuleRef, captionTypes } from "@qflow/caption";
-import { compositionDependency, compositionTypes } from "@qflow/composition";
-import { mediaDependency, mediaTypes } from "@qflow/media";
+import { captionModuleRef, captionTypes } from "@qflow/qflow/caption";
+import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
+import { mediaDependency, mediaTypes } from "@qflow/qflow/media";
 
-import type { ModuleManifest, ProducerRef } from "@qflow/protocol";
-import { regionTrackDependency, regionTrackTypes } from "@qflow/region-track";
-import { spatialDependency, spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
+import type { ModuleManifest, ProducerRef } from "@qflow/qflow/protocol";
+import { regionEvidenceDependency, regionEvidenceTypes } from "@qflow/qflow/region-evidence";
+import { spatialDependency, spatialTypes } from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
 
 import { fineCaptionOneShotMotions } from "./recipe.js";
 
@@ -39,7 +39,7 @@ export const captionFineMarkupSurfaces = [
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names this Style so a timed Use can select it." },
-          { name: "recipe", kind: "reference", required: true, accepts: [svsRecipeType],
+          { name: "recipe", kind: "reference", required: true, accepts: [recipeType],
             summary: "Chooses the Recipe that carries Cue geometry, Paint and local motion.",
             recipe: [
               { name: "stack-order", required: true,
@@ -286,7 +286,7 @@ export const captionFineMarkupSurfaces = [
                 summary: "Chooses the single face this fallback contributes." },
             ] },
         ],
-        example: `<fonts:Stack id="caption-font" family="inter" weight="800" style="normal"/>
+        example: `<fontsource:Face id="caption-font" package="@fontsource-variable/inter" weight="800" style="normal"/>
 <caption-fine:Style id="primary-caption" recipe={recipes.caption.primary} font={caption-font}/>`,
         notes: [
           "Referencing a font stack in `font` and writing `<Fallback>` children are both allowed; the stack's faces come first.",
@@ -313,7 +313,7 @@ export const captionFineMarkupSurfaces = [
           ...temporalContextAttributeVocabulary,
           { name: "within", kind: "reference", required: true, accepts: [spatialTypes.frame],
             summary: "Chooses the resolved picture-plane Frame used by Recipe x, y, width and height." },
-          { name: "regions", kind: "reference", required: false, accepts: [regionTrackTypes.track],
+          { name: "regions", kind: "reference", required: false, accepts: [regionEvidenceTypes.evidence],
             summary: "Optionally follows external, frame-exact regions whose ids equal Script Roles, placing a Cue at its measured speaker region's top center and hiding it on null Frames." },
         ],
         children: [{ tag: "Use", cardinality: "many", summary: "Presents complete Cues inside a time window. Later matching Uses replace earlier ones.", attributes: [
@@ -335,7 +335,7 @@ export const captionFineMarkupSurfaces = [
         notes: [
           "Use without time attributes covers the whole Timeline. Role filters content without changing the window.",
           "Script Cue breaks organize text; Use windows change presentation without cutting Cues or restarting word timing. A hidden Use still replaces earlier presentation.",
-          "Without regions, Recipe x/y placement is unchanged. With regions, a measured region overrides x/y for that Frame; a null Frame on that Role track hides the Cue, while a missing Role track retains authored x/y.",
+          "Without regions, Recipe x/y placement is unchanged. With regions, a measured region overrides x/y for that Frame; a null Frame in that Role series hides the Cue, while a missing Role series retains authored x/y.",
           "The tracked point replaces Recipe x/y while width and the Recipe anchor still decide the Caption box geometry; anchor-x=center and anchor-y=bottom place the box immediately above the measured region.",
         ],
       },
@@ -353,7 +353,7 @@ export const captionFineManifest: ModuleManifest = {
     mediaDependency,
     spatialDependency,
     timelineDependency,
-    regionTrackDependency, temporalDependency,
+    regionEvidenceDependency, temporalDependency,
   ],
   types: [{ name: captionFineTypes.schedule.name }],
   capabilities: [],
@@ -388,7 +388,7 @@ export const captionFineManifest: ModuleManifest = {
         { name: "document", type: captionTypes.document },
         { name: "timeline", type: timelineTypes.timeline },
         { name: "within", type: spatialTypes.frame },
-        { name: "regions", type: regionTrackTypes.track },
+        { name: "regions", type: regionEvidenceTypes.evidence },
       ],
       outputs: [{ name: "track", type: compositionTypes.visualTrack }],
       needs: [],

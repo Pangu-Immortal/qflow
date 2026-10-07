@@ -6,7 +6,7 @@ import { textManifest } from "@qflow/text";
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createResolvedClosure } from "@qflow/core";
+import { createResolvedClosure } from "@qflow/kernel";
 import type { ModuleManifest } from "@qflow/protocol";
 import {
   decodeScriptSurface,

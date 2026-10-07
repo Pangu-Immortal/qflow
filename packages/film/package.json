@@ -1,33 +1,43 @@
 {
   "name": "@qflow/film",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./studio": "./src/studio.ts"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "qflow": {
     "activation": "./src/activation.ts"
   },
-  "dependencies": {
-    "@qflow/component-kit": "workspace:*",
-    "@qflow/composition": "workspace:*",
-    "@qflow/elaborator": "workspace:*",
-    "@qflow/protocol": "workspace:*",
-    "@qflow/timeline": "workspace:*",
-    "@qflow/spatial": "workspace:*",
-    "@qflow/svs": "workspace:*",
-    "@qflow/markup": "workspace:*",
-    "@qflow/temporal-markup": "workspace:*"
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^",
+    "@qflow/studio-companion": "workspace:^"
   },
   "devDependencies": {
-    "@qflow/core": "workspace:*",
-    "@qflow/driver-node": "workspace:*",
-    "@qflow/hyperframes": "workspace:*",
+    "@qflow/compiler": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/studio-companion": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/kernel": "workspace:*",
+    "@qflow/executor": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/source": "workspace:*",
+    "@qflow/html-program": "workspace:*",
+    "@qflow/markup": "workspace:*",
     "@qflow/media": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/spatial": "workspace:*",
+    "@qflow/recipe": "workspace:*",
     "@qflow/text": "workspace:*",
     "@qflow/text-fine": "workspace:*",
-    "@qflow/validation": "workspace:*"
+    "@qflow/timeline": "workspace:*",
+    "@qflow/admission": "workspace:*"
   }
 }

@@ -1,6 +1,6 @@
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { temporalDependency, temporalTypes } from "@qflow/temporal";
-import { timelineDependency, timelineTypes } from "@qflow/timeline";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
+import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
+import { timelineDependency, timelineTypes } from "@qflow/qflow/timeline";
 
 export const timelineAuthorModuleRef = { name: "@qflow/timeline-author", version: "1" } as const;
 export const timelineAuthorTypes = {

@@ -1,15 +1,10 @@
-import { resolveTemporalContext } from "@qflow/temporal-markup";
-import { spatialTypes } from "@qflow/spatial";
-import { compositionTypes } from "@qflow/composition";
-import type { AudioTrack, Track, VisualTrack } from "@qflow/composition";
-import { svsRecipeType } from "@qflow/svs";
-import type { SvsRecipe } from "@qflow/svs";
-import type {
-  StructuredElement,
-  StructuredSurfaceHandler,
-  SurfaceResolvedReference,
-  MarkupAttributeValue,
-} from "@qflow/markup";
+import { compositionTypes } from "@qflow/qflow/composition";
+import type { AudioTrack, Track, VisualTrack } from "@qflow/qflow/composition";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
+import type { Recipe } from "@qflow/qflow/recipe";
+import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import type { StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/qflow/markup";
 
 import { createFilmAssemblyFragment } from "./fragment.js";
 import { filmTypes } from "./manifest.js";
@@ -61,14 +56,14 @@ function requiredReference(
   return resolved;
 }
 
-function recipe(reference: SurfaceResolvedReference, label: string): SvsRecipe {
-  if (!sameType(reference.type, svsRecipeType)) throw new Error(`${label} must reference an SVS Recipe`);
+function recipe(reference: SurfaceResolvedReference, label: string): Recipe {
+  if (!sameType(reference.type, recipeType)) throw new Error(`${label} must reference an SVS Recipe`);
   const value = reference.record?.value;
   if (value?.kind !== "inline" || value.value === null || Array.isArray(value.value)
     || typeof value.value !== "object") {
     throw new Error(`${label} must reference an authored Recipe value`);
   }
-  return value.value as SvsRecipe;
+  return value.value as Recipe;
 }
 
 function trackChildren(element: StructuredElement): StructuredElement[] {
