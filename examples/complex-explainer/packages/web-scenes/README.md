@@ -23,7 +23,7 @@ Each Surface receives Timeline, Canvas, font, a temporal Window, its explicit as
 
 Prepared video inputs are SynchronizedMedia. Image inputs are Blob artifacts. `DeliveryWorkshop.reference` is the fictional drinking illustration; it is deliberately an image, without fabricating a silent Take or video. Media entries explicitly choose native playback, holding the last frame or looping where the scene needs it.
 
-Shared ordinary modules under `src/shared/` own browser-program assembly and media sampling, visual primitives, the route cards, terminal behavior and editor artwork. `@explainer/visual-language` supplies common palette and motion helpers. These code dependencies are not automatically separate Film Tracks.
+Shared ordinary modules under `src/shared/` own html-visual assembly and media sampling, visual primitives, the route cards, terminal behavior and editor artwork. `@explainer/visual-language` supplies common palette and motion helpers. These code dependencies are not automatically separate Film Tracks.
 
 ## Companion and sound
 

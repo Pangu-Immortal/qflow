@@ -5,8 +5,8 @@
     "env": {
       "use": "@qflow/credential-store-env"
     },
-    "platform": {
-      "use": "@qflow/credential-store-platform"
+    "local": {
+      "use": "@qflow/credential-store-local"
     }
   },
   "endpoints": {
@@ -15,7 +15,7 @@
       "config": {
         "baseUrl": "https://qflow.ai",
         "apiKey": {
-          "store": "platform",
+          "store": "local",
           "key": "qflowhub.oauth"
         },
         "defaultConcurrency": 4,
@@ -23,13 +23,13 @@
       }
     },
     "media.local": {
-      "use": "@qflow/provider-media-local",
+      "use": "@qflow/media-local",
       "config": {
         "defaultConcurrency": 2
       }
     },
-    "hyperframes.local": {
-      "use": "@qflow/provider-hyperframes-local",
+    "html.local": {
+      "use": "@qflow/provider-html-local",
       "config": {
         "workers": 2,
         "quality": "standard",

@@ -1,6 +1,12 @@
-import { assertAttributes, assertEmptyElement, canonicalize, createMarkupSurfaceHostFacet, sameType,
-  sealGraphFragment, textAttribute } from "@qflow/qflow/author-kit";
-import type { ComponentPackage, ModuleManifest, StructuredSurfaceHandler, SurfaceResolvedReference, TypeRef } from "@qflow/qflow/author-kit";
+import { assertAttributes, assertEmptyElement, createMarkupSurfaceFacet, textAttribute } from "@qflow/qflow/markup";
+import { canonicalize, sameType } from "@qflow/qflow/protocol";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import type { ProducerPackage } from "@qflow/qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { ModuleManifest, TypeRef } from "@qflow/qflow/protocol";
+import type { StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";
 import { compositionTypes } from "@qflow/qflow/composition";
 import { mediaTypes } from "@qflow/qflow/media";
 import type { FontStackRef } from "@qflow/qflow/media";
@@ -12,8 +18,8 @@ import type { SpatialFrame } from "@qflow/qflow/spatial";
 import { temporalTypes } from "@qflow/qflow/temporal";
 import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
 import { createTemporalInstantConstruction, createTemporalWindowConstruction, temporalWindowAttributeNames,
-  temporalWindowAttributeVocabulary, resolveTemporalContext } from "@qflow/qflow/temporal-markup";
-import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal-markup";
+  temporalWindowAttributeVocabulary, resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal/markup";
 import { renderExplainer } from "./render.js";
 import type { ExplainerOptions } from "./render.js";
 
@@ -42,7 +48,7 @@ const inline = <T>(record: { value: { kind: string; value?: unknown } } | undefi
   if (record?.value.kind !== "inline") throw new Error("Explainer inputs must be inline values.");
   return record.value.value as T;
 };
-const component: ComponentPackage = { producers: [{ producer, handler: ({ inputs }) => ({ needs: {}, outputs: {
+const component: ProducerPackage & AdmissionPackage = { producers: [{ producer, handler: ({ inputs }) => ({ needs: {}, outputs: {
   visual: { kind: "inline", value: canonicalize(renderExplainer(inline<Timeline>(inputs.timeline),
     inline<SpatialFrame>(inputs.within), inline<TemporalWindow>(inputs.window), inline<TemporalInstant>(inputs.reveal),
     inline<SynchronizedMedia>(inputs.media), inline<TemporalWindow>(inputs.sourceWindow),
@@ -96,6 +102,7 @@ const declaration = { name: "scene", tag: "Scene", mode: "structured" as const,
     example: '<explainer:Scene id="scene" timeline={speech.timeline} within={within} font={font} media={presenter.media} source-window={speech.presenter} during="timeline" reveal={story-time.reveal} title="How it works" transition-frames="18" stack-order="0"/>',
   },
 };
-export const qflowPackage = { format: "qflow.node-package@1" as const, modules: [{ manifest }], components: [component],
-  hostFacets: [createMarkupSurfaceHostFacet({ module, declaration, handler: decodeSurface })] };
+export const qflowPackage = { format: "qflow.package@1" as const, modules: [{ manifest }],
+  facets: [createProducerPackageFacet(component), createAdmissionPackageFacet(component),
+    createMarkupSurfaceFacet({ module, declaration, handler: decodeSurface })] };
 export default qflowPackage;

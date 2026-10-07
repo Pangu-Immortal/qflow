@@ -1,4 +1,4 @@
-<?svml using="@qflow/svs@1"?>
+<?svml using="@qflow/recipe@1"?>
 <sheet version="1">
   film.main { background: #090f1b; }
   media.hidden { stack-order: 0; fit: cover; opacity: 0; }

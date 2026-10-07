@@ -1,20 +1,14 @@
 import { palette } from "@explainer/visual-language";
 import { placedVisualMedia } from "./placed-visual-media.js";
-import {
-  assertAttributes,
-  assertEmptyElement,
-  textAttribute,
-  canonicalize,
-  sealGraphFragment,
-  createMarkupSurfaceHostFacet,
-  sameType,
-} from "@qflow/qflow/author-kit";
+import { assertAttributes, assertEmptyElement, textAttribute, createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { canonicalize, sameType } from "@qflow/qflow/protocol";
+import { sealGraphFragment } from "@qflow/qflow/author";
 import { presenterStyle, presenterTypes } from "./presenter.js";
 import { sealVisualTrack, compositionTypes } from "@qflow/qflow/composition";
 import { timelineTypes } from "@qflow/qflow/timeline";
 import { spatialTypes } from "@qflow/qflow/spatial";
 import { temporalTypes } from "@qflow/qflow/temporal";
-import { browserProgram } from "@qflow/qflow/hyperframes";
+import { htmlVisual } from "@qflow/qflow/html-program";
 const styles = (o) =>
   Object.entries(o).map(([name, value]) => ({ name, value }));
 export function installPortraitInset(module, manifest, component) {
@@ -60,7 +54,7 @@ export function installPortraitInset(module, manifest, component) {
           Object.entries(inputs).map(([k, r]) => [k, r.value.value]),
         ),
         { clips, children } = placedVisualMedia(timeline, window, sources.sources);
-      const program = browserProgram({
+      const program = htmlVisual({
         html:
           '<div class="viewport"><div class="inner">' +
           children.map((v) => "{{" + v.id + "}}").join("") +
@@ -113,7 +107,7 @@ export function installPortraitInset(module, manifest, component) {
       };
     },
   });
-  return createMarkupSurfaceHostFacet({
+  return createMarkupSurfaceFacet({
     module,
     declaration: {
       name: "portrait-inset",

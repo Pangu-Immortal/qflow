@@ -3,21 +3,17 @@ import { installPortraitInset } from "./portrait-inset.js";
 import { installReframe } from "./reframe.js";
 import { installPullback } from "./pullback.js";
 import { installPresenter } from "./presenter.js";
-import {
-  assertAttributes,
-  assertEmptyElement,
-  canonicalize,
-  createMarkupSurfaceHostFacet,
-  sameType,
-  sealGraphFragment,
-  textAttribute,
-} from "@qflow/qflow/author-kit";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { assertAttributes, assertEmptyElement, createMarkupSurfaceFacet, textAttribute } from "@qflow/qflow/markup";
+import { canonicalize, sameType } from "@qflow/qflow/protocol";
+import { sealGraphFragment } from "@qflow/qflow/author";
 import { compositionTypes } from "@qflow/qflow/composition";
 import { mediaTypes } from "@qflow/qflow/media";
 import { timelineTypes } from "@qflow/qflow/timeline";
 import { spatialTypes } from "@qflow/qflow/spatial";
 import { temporalTypes } from "@qflow/qflow/temporal";
-import { visualTrackModuleRef } from "@qflow/qflow/visual-track";
+import { visualTrackModuleRef } from "@qflow/visual-track";
 import {
   createTemporalWindowConstruction,
   createTemporalInstantConstruction,
@@ -25,7 +21,7 @@ import {
   temporalWindowAttributeNames,
   temporalWindowAttributeVocabulary,
   temporalContextAttributeVocabulary,
-} from "@qflow/qflow/temporal-markup";
+} from "@qflow/qflow/temporal/markup";
 import { renderTitle, renderTimer, renderFlag, renderStage, renderVeil } from "./render.js";
 import { module, defaults } from "./definition.js";
 import { studioFacet } from "./studio.js";
@@ -536,12 +532,13 @@ const portraitTransition = installPortraitTransition(module, manifest, component
 const portraitInset = installPortraitInset(module, manifest, component);
 const presenter = installPresenter(module, manifest, component);
 export const qflowPackage = {
-  format: "qflow.node-package@1",
+  format: "qflow.package@1",
   modules: [{ manifest }],
-  components: [component],
-  hostFacets: [
+  facets: [
+    createProducerPackageFacet(component),
+    createAdmissionPackageFacet(component),
     ...declarations.map((declaration) =>
-      createMarkupSurfaceHostFacet({
+      createMarkupSurfaceFacet({
         module,
         declaration,
         handler: decode(declaration.tag),

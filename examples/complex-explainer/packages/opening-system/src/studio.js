@@ -1,9 +1,9 @@
 import { compositionTypes } from "@qflow/qflow/composition";
 import {
-  createStudioCompanionHostFacet,
+  createStudioCompanionFacet,
   textLayer,
   temporalLineageFor,
-} from "@qflow/qflow/studio-adapter";
+} from "@qflow/studio-companion";
 import { module, defaults } from "./definition.js";
 
 const section = (id, label) => ({ id, label });
@@ -254,7 +254,7 @@ const parameters = [
     ...frames(["from", "to"]),
   },
 ];
-export const studioFacet = createStudioCompanionHostFacet({
+export const studioFacet = createStudioCompanionFacet({
   tracks,
   parameters,
 });

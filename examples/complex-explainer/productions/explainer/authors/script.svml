@@ -22,7 +22,7 @@
       <HOST> @{road-place!} 虽然贴的还可以， || @{road-fail!} 但做动效就不行咯。 || 想让@{road-number!} 一个数字弹出来、 || 或者@{road-image!} 一张图飞进来， || @{road-keys!} 要么让 AI 在时间轴上 || 标出二十几个时间点， || @{road-tokens!} 烧掉几十万的token， || @{road-generated!} 要么用seedance直出， || @{road-unstable!} 不仅效果不稳定， || @{road-styles!} 而且还改不了样式。
     </keyframe-cost>
     <code-road>
-      <HOST> @{code-start!} 第二条路是让 AI 去写代码。 || @{code-remotion!} Remotion和@{code-hyperframes!} Hyperframes， || 本质都是写@{code-html!} html， || @{code-play!} 动效想怎么做怎么做。
+      <HOST> @{code-start!} 第二条路是让 AI 去写代码。 || @{code-remotion!} Remotion和@{code-hyperframes!} HTML， || 本质都是写@{code-html!} html， || @{code-play!} 动效想怎么做怎么做。
     </code-road>
     <reuse-cost>
       <HOST> @{code-once!} 但代价是每条视频只能用一次了！ || @{code-variant!} 下次想做个差不多的， || @{code-copy!} 得让 AI 把几千行的html || @{code-duplicate!} 原封不动抄一遍， || @{code-tokens!} 又会烧掉几十万的token；

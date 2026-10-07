@@ -7,7 +7,7 @@
   <import as="text" from="@qflow/text@1"/>
   <import as="gpt" from="@qflow/gpt-image@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
-  <import as="pipeline" from="@qflow/media-pipeline@1"/>
+  <import as="mediaop" from="@qflow/media-operations@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
   <import as="semantic" from="@qflow/narrative-temporal@1"/>
   <import as="narrative-caption" from="@qflow/narrative-caption@1"/>
@@ -15,11 +15,11 @@
   <import as="audio-track" from="@qflow/audio-track@1"/>
   <import as="caption" from="@qflow/caption@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
-  <import as="fonts" from="@qflow/fonts-open@1"/>
+  <import as="fonts" from="@qflow/fontsource@1"/>
   <import as="visual" from="@qflow/visual-track@1"/>
   <import as="space" from="@qflow/spatial@1"/>
   <import as="film" from="@qflow/film@1"/>
-  <import as="render" from="@qflow/render-hyperframes@1"/>
+  <import as="html" from="@qflow/html-video@1"/>
   <import as="recipes" source="./recipes.svs"/>
   <import as="broll-kit" source="@qflow/seedance-kits/broll"/>
   <import as="podcast-kit" source="@qflow/seedance-kits/podcast"/>
@@ -178,16 +178,16 @@
     left="0%" top="0%" right="100%" bottom="100%"/>
   <time:Clock id="clock" frame-rate="30"/>
 
-  <pipeline:Normalize id="soundtrack-media" source={soundtrack}
+  <mediaop:Normalize id="soundtrack-media" source={soundtrack}
     video="none" audio="default" span-authority="audio" clock={clock}/>
 
-  <pipeline:Normalize id="opening-media" source={opening-take.video}
+  <mediaop:Normalize id="opening-media" source={opening-take.video}
     video="primary-moving" audio="default" span-authority="video" clock={clock}/>
-  <pipeline:Normalize id="daily-retinol-media" source={daily-retinol-take.video}
+  <mediaop:Normalize id="daily-retinol-media" source={daily-retinol-take.video}
     video="primary-moving" audio="default" span-authority="video" clock={clock}/>
-  <pipeline:Normalize id="skin-is-asking-media" source={skin-is-asking-take.video}
+  <mediaop:Normalize id="skin-is-asking-media" source={skin-is-asking-take.video}
     video="primary-moving" audio="default" span-authority="video" clock={clock}/>
-  <pipeline:Normalize id="lifestyle-media" source={lifestyle-montage.video}
+  <mediaop:Normalize id="lifestyle-media" source={lifestyle-montage.video}
     video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 
   <whisperx:Alignment id="opening-semantic" narrative={story}
@@ -234,7 +234,7 @@
     </visual:Clip>
   </visual:Track>
 
-  <fonts:Stack id="caption-font" family="montserrat" weight="900" style="normal"/>
+  <fonts:Face id="caption-font" package="@fontsource-variable/montserrat" weight="900" style="normal"/>
   <caption-fine:Style id="caption-idol-style" recipe={recipes.caption.retinol-idol}
     font={caption-font}/>
   <caption-fine:Style id="caption-tboy-style" recipe={recipes.caption.retinol-tboy}
@@ -256,6 +256,6 @@
     <film:Track source={music-bed.audio}/>
   </film:Film>
 
-  <render:Video id="final" composition={main.composition}
+  <html:Video id="final" composition={main.composition}
     timeline={speech.timeline}/>
 </svml>

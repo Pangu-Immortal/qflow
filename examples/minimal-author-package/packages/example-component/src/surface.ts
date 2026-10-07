@@ -1,9 +1,9 @@
-import type { StructuredElement, StructuredSurfaceHandler, SurfaceComponentDraft, SurfaceRecordDraft, SurfaceResolvedReference } from "@qflow/qflow/author-kit";
+import type { StructuredElement, StructuredSurfaceHandler, SurfaceComponentDraft, SurfaceRecordDraft, SurfaceResolvedReference } from "@qflow/qflow/markup";
 import { exampleBoxFragment, exampleImageFragment, exampleTextFragment } from "./fragment.js";
 import { exampleMarkupSurfaces, exampleTypes } from "./manifest.js";
 import { mediaTypes } from "@qflow/qflow/media";
-import { svsRecipeType } from "@qflow/qflow/svs";
-import { artifactTypes } from "@qflow/qflow/artifact";
+import { recipeType } from "@qflow/qflow/recipe";
+import { blobTypes } from "@qflow/qflow/blob";
 import { spatialTypes } from "@qflow/qflow/spatial";
 
 function text(element: StructuredElement, name: string): string {
@@ -24,7 +24,7 @@ export const decodeExampleSurface: StructuredSurfaceHandler = ({ element, resolv
   if (element.name.endsWith(":Style")) {
     const recipe = reference(element, "recipe", resolveReference);
     const font = reference(element, "font", resolveReference);
-    if (recipe.type.module.name !== svsRecipeType.module.name || recipe.type.name !== svsRecipeType.name) throw new Error("Style.recipe must be an SVS Recipe.");
+    if (recipe.type.module.name !== recipeType.module.name || recipe.type.name !== recipeType.name) throw new Error("Style.recipe must be an SVS Recipe.");
     if (font.type.module.name !== mediaTypes.fontStack.module.name || font.type.name !== mediaTypes.fontStack.name) throw new Error("Style.font must be a FontStackRef.");
     if (recipe.record?.value.kind !== "inline" || font.record?.value.kind !== "inline") throw new Error("Style references must resolve to inline records.");
     return { records: [{ id, type: exampleTypes.style, value: { kind: "inline", value: { recipe: recipe.record.value.value, fonts: font.record.value.value } }, range: element.range }], components: [], fragments: [], exports: [id] };
@@ -40,7 +40,7 @@ export const decodeExampleSurface: StructuredSurfaceHandler = ({ element, resolv
   const type = surface.name === "box" ? exampleTypes.box : surface.name === "text" ? exampleTypes.text : exampleTypes.imageSlot;
   const record: SurfaceRecordDraft = { id: `${id}.value`, type, value: { kind: "inline", value: { id } }, range: element.range };
   const image = element.attributes.image === undefined ? undefined : reference(element, "image", resolveReference);
-  if (image !== undefined && (image.type.module.name !== artifactTypes.blob.module.name || image.type.name !== artifactTypes.blob.name)) throw new Error(`${element.name}.image must be a Blob Artifact.`);
+  if (image !== undefined && (image.type.module.name !== blobTypes.blob.module.name || image.type.name !== blobTypes.blob.name)) throw new Error(`${element.name}.image must be a Blob Artifact.`);
   const component: SurfaceComponentDraft = { id, fragment: fragment.id, inputs: { timeline: timeline.ref,
     within: within.ref, ...(image === undefined ? {} : { image: image.ref }) }, outputs: { visual: `${id}.visual` }, range: element.range };
   return { records: [record], components: [component], fragments: [fragment], exports: [`${id}.value`, `${id}.visual`] };

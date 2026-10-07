@@ -1,10 +1,9 @@
-import { captionFineStudioTrackCompanions } from "@qflow/caption-fine-studio";
-import { createStudioTrackCompanionHostFacet } from "@qflow/qflow/studio-adapter";
-import {
-  createMarkupSurfaceHostFacet,
-  sealGraphFragment,
-  canonicalize,
-} from "@qflow/qflow/author-kit";
+import { captionFineStudioTrackCompanions } from "@qflow/caption-fine/studio";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createStudioTrackCompanionFacet } from "@qflow/studio-companion";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import { canonicalize } from "@qflow/qflow/protocol";
 import {
   captionFineManifest,
   captionFineModuleRef,
@@ -96,11 +95,7 @@ const handler = (ctx) => {
     })),
   };
 };
-export const qflowPackage = {
-  format: "qflow.node-package@1",
-  modules: [{ manifest }],
-  components: [
-    {
+const producers = {
       producers: [
         {
           producer,
@@ -121,18 +116,21 @@ export const qflowPackage = {
           }),
         },
       ],
-    },
-  ],
-  hostFacets: [
-    createStudioTrackCompanionHostFacet(
+};
+export const qflowPackage = {
+  format: "qflow.package@1",
+  modules: [{ manifest }],
+  facets: [
+    createProducerPackageFacet(producers),
+    createStudioTrackCompanionFacet(
       captionFineStudioTrackCompanions.map((companion) => ({
         ...companion,
         output: { ...companion.output, modules: [module] },
       })),
     ),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module,
-      declaration: captionFineMarkupSurfaces.find((s) => s.name === "track"),
+      declaration: captionFineMarkupSurfaces.find((s) => s.name === "caption"),
       handler,
     }),
   ],

@@ -1,15 +1,15 @@
 {
   "format": "qflow.runtime-local@1",
   "dataRoot": ".qflow/execution",
-  "credentials": { "platform": { "use": "@qflow/credential-store-platform" } },
+  "credentials": { "local": { "use": "@qflow/credential-store-local" } },
   "endpoints": {
     "images.personal": {
       "use": "@example/provider-images",
-      "config": { "baseUrl": "https://images.example", "apiKey": { "store": "platform", "key": "images.personal" } }
+      "config": { "baseUrl": "https://images.example", "apiKey": { "store": "local", "key": "images.personal" } }
     },
     "videos.personal": {
       "use": "@example/provider-videos",
-      "config": { "baseUrl": "https://videos.example", "apiKey": { "store": "platform", "key": "videos.personal" } }
+      "config": { "baseUrl": "https://videos.example", "apiKey": { "store": "local", "key": "videos.personal" } }
     }
   },
   "bindings": {

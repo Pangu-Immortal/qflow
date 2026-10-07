@@ -1,9 +1,9 @@
-<?svml using="@qflow/run-markup@1"?>
+<?svml using="@qflow/markup/run@1"?>
 <svrun version="1">
   <author source="./swap-effect-banana.svml"/>
   <target output="final.video"/>
-  <file id="ronaldo-banana" type="@qflow/artifact@1#BlobArtifact" from="./reused/ronaldo.mp4" media-type="video/mp4"/>
-  <file id="messi-banana" type="@qflow/artifact@1#BlobArtifact" from="./reused/messi.mp4" media-type="video/mp4"/>
+  <file id="ronaldo-banana" type="@qflow/blob@1#Blob" from="./reused/ronaldo.mp4" media-type="video/mp4"/>
+  <file id="messi-banana" type="@qflow/blob@1#Blob" from="./reused/messi.mp4" media-type="video/mp4"/>
   <satisfy output="ronaldo-take.video" candidate="ronaldo-banana"/>
   <satisfy output="messi-take.video" candidate="messi-banana"/>
 </svrun>

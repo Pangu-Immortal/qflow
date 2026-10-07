@@ -23,15 +23,18 @@ question-mark, sparkles, building and Bitcoin PNGs remain local assets. Their pa
 Caption and the flashes. The soundtrack and reveal sound are also supplied files. No generic
 photographic image prompt stands in for this purpose-made graphic artwork.
 
+The repeated flash is implemented by the project-local `packages/flash` Author Package. It is part
+of this video's source, not an official Screen Overlay family or an ecosystem dependency.
+
 ## Build a fresh result
 
 [reference.svs](reference.svs) owns this entry's Recipes. The copied Kits are under `kits/`.
 
 ```bash
 qflow check reference.svrun
-qflow measure reference.svml --segment manifest-rule --language en --pace fast --rounding ceil
-qflow measure reference.svml --segment real-estate-rule --language en --pace fast --rounding ceil
-qflow measure reference.svml --segment bitcoin-rule --language en --pace fast --rounding ceil
+qflow estimate reference.svml --segment manifest-rule --language en --pace fast --rounding ceil
+qflow estimate reference.svml --segment real-estate-rule --language en --pace fast --rounding ceil
+qflow estimate reference.svml --segment bitcoin-rule --language en --pace fast --rounding ceil
 qflow plan reference.svrun --runtime ./qflow.runtime.json
 ```
 
@@ -63,7 +66,7 @@ Once that real Recipe exists, add its import to the Source's opening prologue:
 After `vertical` is declared, add its measured timeline and connect it to the existing Caption Track:
 
 ```svml
-<region:Track id="wife-heads" within={vertical.bounds} timeline={speech.timeline}
+<region:Evidence id="wife-heads" within={vertical.bounds} timeline={speech.timeline}
   recipe={heads.heads.wife}/>
 <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
   timeline={speech.timeline} within={vertical.bounds} regions={wife-heads}>
@@ -93,6 +96,22 @@ Apply the same explicit selection to the other two passages. Media, duration and
 independent reusable facts. Check `qflow plan` to confirm that the second render contains no new image, voice,
 video or alignment requests. Inspect camera cuts and moving head placement in the result. Changing
 only Caption or MG needs no repeat generation; changing the footage requires matching measurements.
+
+If reviewing the actual footage reveals an alignment error, the reviewed artifact is a complete,
+validated `NarrativeAlignment` Stored Value—not a frame patch embedded in the Source. A Studio or
+review tool can write that file, and a Run variant can select it explicitly:
+
+```svml
+<value id="reviewed-manifest-alignment"
+  type="@qflow/narrative-temporal@1#NarrativeAlignment"
+  from="./reviewed/manifest-rule.alignment.json"/>
+<satisfy output="manifest-rule-semantic.alignment" candidate="reviewed-manifest-alignment"/>
+```
+
+The reviewed alignment must describe the complete domain of the accepted media. Select matching
+media and domain Candidates from the same accepted Result when necessary. The Source keeps the
+reproducible Alignment request and creative timing intent; the Run records which observed result is
+accepted for this Build.
 
 ## Prompt provenance
 

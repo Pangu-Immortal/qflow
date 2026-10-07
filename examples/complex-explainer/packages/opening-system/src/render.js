@@ -1,7 +1,7 @@
 import { palette } from "@explainer/visual-language";
 import { flagSetup } from "./flag-cloth.js";
 import { sealVisualTrack } from "@qflow/qflow/composition";
-import { browserProgram } from "@qflow/qflow/hyperframes";
+import { htmlVisual } from "@qflow/qflow/html-program";
 import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
 
 const digits = {
@@ -78,7 +78,7 @@ export function renderTitle(timeline, within, window, font, o, bounce) {
     within,
     window,
     o,
-    browserProgram({
+    htmlVisual({
       html: `
 <div class="time">${dotSvg}</div
 ><div class="titlebox"
@@ -139,7 +139,7 @@ export function renderTimer(timeline, within, window, font, o, logo, stop) {
     within,
     window,
     o,
-    browserProgram({
+    htmlVisual({
       html: `
 <div class="badge"
   ><div class="pennant"><canvas class="flag-canvas"></canvas></div><div class="backplate"></div
@@ -252,7 +252,7 @@ export function renderStage(timeline, within, window, items, o) {
         "object-fit": i === 0 ? "cover" : o.fit,
       }),
     }));
-    const program = browserProgram({
+    const program = htmlVisual({
       html: `
 <div class="back">{{back}}</div><div class="shade"></div
 ><div class="front"
@@ -307,7 +307,7 @@ export function renderVeil(timeline, within, window, o) {
     within,
     window,
     o,
-    browserProgram({
+    htmlVisual({
       html: '<div class="wash"></div><div class="pattern"></div>',
       css: `:scope{pointer-events:none}.wash,.pattern{position:absolute;inset:0}.wash{background:${o.tint};opacity:${o.shade}}.pattern{background-image:${patterns[o.pattern]};background-size:${cell}px ${cell}px;opacity:${o.amount}}`,
       data: {
@@ -320,7 +320,7 @@ export function renderVeil(timeline, within, window, o) {
 }
 
 export function renderFlag(timeline, within, window, o, logo) {
- return track(timeline, within, window, o, browserProgram({
+ return track(timeline, within, window, o, htmlVisual({
   html: '<div class="floor-cloth"><canvas class="flag-canvas"></canvas></div><div class="logo-resource">{{flag-logo}}</div>',
   css: `:scope{pointer-events:none}.floor-cloth{position:absolute;left:${o.x*100}%;top:${o.y*100}%;width:${o.width*100}%;height:${o.height*100}%;filter:none}.flag-canvas{display:block;width:100%;height:100%;image-rendering:pixelated}.logo-resource{position:absolute;opacity:0;width:1px;height:1px}`,
   data: {fps:timeline.frameRate.numerator/timeline.frameRate.denominator,flagPose:'floor',flagColor:o.flagColor,flagAmplitude:o.flagAmplitude,flagSpeed:o.flagSpeed},

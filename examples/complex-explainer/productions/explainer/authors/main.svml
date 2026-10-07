@@ -6,7 +6,7 @@
   <import as="assets" source="./assets.svml"/>
   <import as="direction" source="./direction.svml"/>
   <import as="seedance" from="@qflow/seedance@1"/>
-  <import as="pipeline" from="@qflow/media-pipeline@1"/>
+  <import as="mediaop" from="@qflow/media-operations@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
   <import as="semantic" from="@qflow/narrative-temporal@1"/>
   <import as="time" from="@qflow/timeline-author@1"/>
@@ -19,149 +19,149 @@
   <import as="linecaption" from="@explainer/single-line-captions@1"/>
   <import as="caption-fine" from="@qflow/caption-fine@1"/>
   <import as="film" from="@qflow/film@1"/>
-  <import as="render" from="@qflow/render-hyperframes@1"/>
+  <import as="html" from="@qflow/html-video@1"/>
   <import as="look" source="../recipes/composition.svs"/>
   <import as="gfx" from="@explainer/opening-system@1"/>
   <import as="spatial" from="@qflow/spatial@1"/>
 
   <!-- Prepared material outputs: explicit Run reuse boundaries -->
-  <pipeline:Normalize id="bgm-media" source={assets.bgm-source} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
-  <pipeline:Normalize id="web-qflow-media" source={assets.web-qflow} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="web-creatify-media" source={assets.web-creatify} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="web-higgsfield-media" source={assets.web-higgsfield} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="bgm-media" source={assets.bgm-source} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
+  <mediaop:Normalize id="web-qflow-media" source={assets.web-qflow} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="web-creatify-media" source={assets.web-creatify} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="web-higgsfield-media" source={assets.web-higgsfield} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
   <seedance:ReferenceVideo id="opening-generation" model="mini" prompt={direction.opening-prompt} duration="5" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="opening-media" source={opening-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="opening-media" source={opening-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="opening" narrative={copy.story}
     segment={copy.story.segment.opening} media={opening-media.media} domain={opening-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="introduction-generation" model="mini" prompt={direction.introduction-prompt} duration="11" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="introduction-media" source={introduction-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="introduction-media" source={introduction-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="introduction" narrative={copy.story}
     segment={copy.story.segment.introduction} media={introduction-media.media} domain={introduction-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="competitors-generation" model="mini" prompt={direction.competitors-prompt} duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="competitors-media" source={competitors-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="competitors-media" source={competitors-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="competitors" narrative={copy.story}
     segment={copy.story.segment.competitors} media={competitors-media.media} domain={competitors-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="two-roads-generation" model="mini" prompt={direction.two-roads-prompt} duration="6" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="two-roads-media" source={two-roads-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="two-roads-media" source={two-roads-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="two-roads" narrative={copy.story}
     segment={copy.story.segment.two-roads} media={two-roads-media.media} domain={two-roads-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="editor-road-generation" model="mini" prompt={direction.editor-road-prompt} duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="editor-road-media" source={editor-road-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="editor-road-media" source={editor-road-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="editor-road" narrative={copy.story}
     segment={copy.story.segment.editor-road} media={editor-road-media.media} domain={editor-road-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="keyframe-cost-generation" model="mini" prompt={direction.keyframe-cost-prompt} duration="13" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="keyframe-cost-media" source={keyframe-cost-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="keyframe-cost-media" source={keyframe-cost-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="keyframe-cost" narrative={copy.story}
     segment={copy.story.segment.keyframe-cost} media={keyframe-cost-media.media} domain={keyframe-cost-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="code-road-generation" model="mini" prompt={direction.code-road-prompt} duration="6" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="code-road-media" source={code-road-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="code-road-media" source={code-road-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="code-road" narrative={copy.story}
     segment={copy.story.segment.code-road} media={code-road-media.media} domain={code-road-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="reuse-cost-generation" model="mini" prompt={direction.reuse-cost-prompt} duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="reuse-cost-media" source={reuse-cost-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="reuse-cost-media" source={reuse-cost-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="reuse-cost" narrative={copy.story}
     segment={copy.story.segment.reuse-cost} media={reuse-cost-media.media} domain={reuse-cost-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="timing-cost-generation" model="mini" prompt={direction.timing-cost-prompt} duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="timing-cost-media" source={timing-cost-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="timing-cost-media" source={timing-cost-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="timing-cost" narrative={copy.story}
     segment={copy.story.segment.timing-cost} media={timing-cost-media.media} domain={timing-cost-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="water-break-generation" model="mini" prompt={direction.water-break-prompt} duration="4" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="water-break-media" source={water-break-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="water-break-media" source={water-break-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="water-break" narrative={copy.story}
     segment={copy.story.segment.water-break} media={water-break-media.media} domain={water-break-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="synthesis-generation" model="mini" prompt={direction.synthesis-prompt} duration="5" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="synthesis-media" source={synthesis-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="synthesis-media" source={synthesis-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="synthesis" narrative={copy.story}
     segment={copy.story.segment.synthesis} media={synthesis-media.media} domain={synthesis-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="components-generation" model="mini" prompt={direction.components-prompt} duration="12" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="components-media" source={components-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="components-media" source={components-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="components" narrative={copy.story}
     segment={copy.story.segment.components} media={components-media.media} domain={components-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="semantic-time-generation" model="mini" prompt={direction.semantic-time-prompt} duration="5" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="semantic-time-media" source={semantic-time-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="semantic-time-media" source={semantic-time-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="semantic-time" narrative={copy.story}
     segment={copy.story.segment.semantic-time} media={semantic-time-media.media} domain={semantic-time-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="semantic-demo-generation" model="mini" prompt={direction.semantic-demo-prompt} duration="10" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="semantic-demo-media" source={semantic-demo-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="semantic-demo-media" source={semantic-demo-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="semantic-demo" narrative={copy.story}
     segment={copy.story.segment.semantic-demo} media={semantic-demo-media.media} domain={semantic-demo-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="result-generation" model="mini" prompt={direction.result-prompt} duration="8" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="result-media" source={result-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="result-media" source={result-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="result" narrative={copy.story}
     segment={copy.story.segment.result} media={result-media.media} domain={result-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="reference-reveal-generation" model="mini" prompt={direction.reference-reveal-prompt} duration="5" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="reference-reveal-media" source={reference-reveal-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="reference-reveal-media" source={reference-reveal-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="reference-reveal" narrative={copy.story}
     segment={copy.story.segment.reference-reveal} media={reference-reveal-media.media} domain={reference-reveal-media.domain} language="zh"/>
   <seedance:ReferenceVideo id="closing-generation" model="mini" prompt={direction.closing-prompt} duration="11" resolution="720p" aspect-ratio="9:16" generate-audio="true">
     <seedance:Reference image={assets.presenter-reference} person-reference="true"/>
     <seedance:Reference audio={assets.voice-reference}/>
   </seedance:ReferenceVideo>
-  <pipeline:Normalize id="closing-media" source={closing-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
+  <mediaop:Normalize id="closing-media" source={closing-generation.video} clock={assets.clock} video="primary-moving" audio="default" span-authority="video"/>
   <whisperx:Alignment id="closing" narrative={copy.story}
     segment={copy.story.segment.closing} media={closing-media.media} domain={closing-media.domain} language="zh"/>
-  <pipeline:Normalize id="code-demo-media" source={assets.code-demo} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="readme-demo-media" source={assets.readme-demo} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="price-creatify-media" source={assets.price-creatify} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="price-higgsfield-media" source={assets.price-higgsfield} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="templates-creatify-media" source={assets.templates-creatify} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="templates-higgsfield-media" source={assets.templates-higgsfield} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="case-creatify-media" source={assets.case-creatify} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="case-higgsfield-media" source={assets.case-higgsfield} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="reference-ranking-media" source={assets.reference-ranking} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="reference-podcast-media" source={assets.reference-podcast} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="reference-interview-media" source={assets.reference-interview} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="qflow-ranking-media" source={assets.qflow-ranking} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="qflow-podcast-media" source={assets.qflow-podcast} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="qflow-interview-media" source={assets.qflow-interview} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="code-demo-media" source={assets.code-demo} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="readme-demo-media" source={assets.readme-demo} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="price-creatify-media" source={assets.price-creatify} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="price-higgsfield-media" source={assets.price-higgsfield} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="templates-creatify-media" source={assets.templates-creatify} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="templates-higgsfield-media" source={assets.templates-higgsfield} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="case-creatify-media" source={assets.case-creatify} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="case-higgsfield-media" source={assets.case-higgsfield} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="reference-ranking-media" source={assets.reference-ranking} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="reference-podcast-media" source={assets.reference-podcast} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="reference-interview-media" source={assets.reference-interview} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="qflow-ranking-media" source={assets.qflow-ranking} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="qflow-podcast-media" source={assets.qflow-podcast} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="qflow-interview-media" source={assets.qflow-interview} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
 
   <!-- One Timeline: placed Takes, opening gap and silent ending -->
   <time:Timeline id="program" clock={assets.clock} end="closing.end+2s">
@@ -327,12 +327,12 @@
   </semantic:Projection>
   <narrative-caption:Timing id="caption-timing" document={copy.story.caption}
     binding={copy.story.caption-binding} projection={story-time.projection}/>
-  <pipeline:Normalize id="ranking-clone-media" source={assets.ranking-clone} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="swap-virtual-media" source={assets.swap-virtual} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="swap-language-media" source={assets.swap-language} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="swap-topic-media" source={assets.swap-topic} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="swap-product-media" source={assets.swap-product} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
-  <pipeline:Normalize id="swap-vehicle-media" source={assets.swap-vehicle} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="ranking-clone-media" source={assets.ranking-clone} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="swap-virtual-media" source={assets.swap-virtual} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="swap-language-media" source={assets.swap-language} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="swap-topic-media" source={assets.swap-topic} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="swap-product-media" source={assets.swap-product} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
+  <mediaop:Normalize id="swap-vehicle-media" source={assets.swap-vehicle} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
 
   <!-- Opening chrome and independent montage -->
   <gfx:Title id="opening-title" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} from="start" until={story-time.moment-begin-cue} bounce-at={story-time.moment-opening-brand-cue} color="#fa67aa" title-y="0.58" title="Qflow" subtitle="一分钟了解" seconds="60"/>
@@ -418,14 +418,14 @@
   <audio:Track id="music" timeline={program.timeline}>
     <audio:Clip id="bgm" source={bgm-media.media} during="timeline" gain="0.09" fade-in="6f" fade-out="2s"/>
   </audio:Track>
-  <pipeline:Normalize id="sfx-tap-media" source={assets.sfx-tap} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
-  <pipeline:Normalize id="sfx-pop-media" source={assets.sfx-pop} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
-  <pipeline:Normalize id="sfx-swipe-media" source={assets.sfx-swipe} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
-  <pipeline:Normalize id="sfx-land-media" source={assets.sfx-land} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
-  <pipeline:Normalize id="sfx-reject-media" source={assets.sfx-reject} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
-  <pipeline:Normalize id="sfx-ticks-media" source={assets.sfx-ticks} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
-  <pipeline:Normalize id="sfx-spark-media" source={assets.sfx-spark} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
-  <pipeline:Normalize id="sfx-finish-media" source={assets.sfx-finish} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
+  <mediaop:Normalize id="sfx-tap-media" source={assets.sfx-tap} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
+  <mediaop:Normalize id="sfx-pop-media" source={assets.sfx-pop} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
+  <mediaop:Normalize id="sfx-swipe-media" source={assets.sfx-swipe} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
+  <mediaop:Normalize id="sfx-land-media" source={assets.sfx-land} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
+  <mediaop:Normalize id="sfx-reject-media" source={assets.sfx-reject} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
+  <mediaop:Normalize id="sfx-ticks-media" source={assets.sfx-ticks} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
+  <mediaop:Normalize id="sfx-spark-media" source={assets.sfx-spark} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
+  <mediaop:Normalize id="sfx-finish-media" source={assets.sfx-finish} clock={assets.clock} video="none" audio="default" span-authority="audio"/>
   <audio:Track id="pixel-effects" timeline={program.timeline}>
     <audio:Clip id="sfx-intro-codex" source={sfx-pop-media.media} from={story-time.moment-intro-codex-cue} for="0.24s" gain="0.16" fade-out="1f"/>
     <audio:Clip id="sfx-intro-claude" source={sfx-pop-media.media} from={story-time.moment-intro-claude-cue} for="0.24s" gain="0.16" fade-out="1f"/>
@@ -602,11 +602,11 @@
     <film:Track source={delivery-workshop.visual}/>
     <film:Track source={outro-scene.visual}/>
   </film:Film>
-  <render:Video id="complete-film" composition={main.composition} timeline={program.timeline}/>
+  <html:Video id="complete-film" composition={main.composition} timeline={program.timeline}/>
   <!-- Consecutive export ranges for limited temporary disk space. -->
-  <render:Video id="export-part-1" composition={main.composition} timeline={program.timeline} start-frame="0" end-frame-exclusive="900"/>
-  <render:Video id="export-part-2" composition={main.composition} timeline={program.timeline} start-frame="900" end-frame-exclusive="1800"/>
-  <render:Video id="export-part-3" composition={main.composition} timeline={program.timeline} start-frame="1800" end-frame-exclusive="2700"/>
-  <render:Video id="export-part-4" composition={main.composition} timeline={program.timeline} start-frame="2700" end-frame-exclusive="3600"/>
-  <render:Video id="export-part-5" composition={main.composition} timeline={program.timeline} start-frame="3600" end-frame-exclusive="4112"/>
+  <html:Video id="export-part-1" composition={main.composition} timeline={program.timeline} start-frame="0" end-frame-exclusive="900"/>
+  <html:Video id="export-part-2" composition={main.composition} timeline={program.timeline} start-frame="900" end-frame-exclusive="1800"/>
+  <html:Video id="export-part-3" composition={main.composition} timeline={program.timeline} start-frame="1800" end-frame-exclusive="2700"/>
+  <html:Video id="export-part-4" composition={main.composition} timeline={program.timeline} start-frame="2700" end-frame-exclusive="3600"/>
+  <html:Video id="export-part-5" composition={main.composition} timeline={program.timeline} start-frame="3600" end-frame-exclusive="4112"/>
 </svml>

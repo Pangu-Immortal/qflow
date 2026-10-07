@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@qflow/caption-fine": "workspace:*",
-    "@qflow/caption-fine-studio": "workspace:*",
-    "@qflow/qflow": "workspace:*"
+    "@qflow/qflow": "workspace:*",
+    "@qflow/studio-companion": "workspace:*"
   }
 }

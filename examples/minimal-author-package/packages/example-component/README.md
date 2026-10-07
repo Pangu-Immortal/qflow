@@ -1,14 +1,15 @@
 # Example component fixture
 
 A small complete package for learning Manifest, Surface, Fragment, Producer and activation wiring. Framework-facing imports come from
-`@qflow/qflow/author-kit`; video-domain imports use their owning `@qflow/qflow/*` subpaths. Its only Qflow
+the narrow `@qflow/qflow/author`, `producer`, `admission` and `markup` subpaths; video-domain imports
+use their owning `@qflow/qflow/*` subpaths. Its only Qflow
 framework dependency is the released `@qflow/qflow` Distribution; TypeScript and Node types are ordinary
 build tooling. No Runtime dependency is bundled into its tarball.
 
 It contains a Module Manifest with nominal Types and deterministic Producers, validators, a structured
 Surface decoder returning `records`, `components`, `fragments` and `exports`, and sealed Fragments with
 literal `fragment-input`, `fragment-operation` and `output` references. `src/temporal.ts` shows the
-Surface-side `@qflow/qflow/temporal-markup` Window/Moment projections; that package is distinct from the
+Surface-side `@qflow/qflow/temporal/markup` Window/Moment projections; that package is distinct from the
 graph-side `@qflow/qflow/temporal` Producers.
 
 The Surfaces demonstrate a box, a text surface, an image slot and a Style decoder. The slot is a graph

@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "qflow": { "project": true },
   "dependencies": {
     "@explainer/opening-system": "file:packages/opening-system",
     "@explainer/launch-scenes": "file:packages/launch-scenes",

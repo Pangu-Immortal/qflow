@@ -1,12 +1,12 @@
 import {
   createRuntimeEndpointAdapterFacet, runtimeConfigCredentialRef, runtimeConfigExact,
   runtimeConfigObject, runtimeConfigPositiveInteger, runtimeConfigString,
-} from "@qflow/qflow/runtime-kit";
+} from "@qflow/runtime-local/extension";
 import { createImageProvider, providerModule } from "./provider.js";
 
 export default {
-  format: "qflow.node-package@1" as const,
-  hostFacets: [createRuntimeEndpointAdapterFacet({
+  format: "qflow.package@1" as const,
+  facets: [createRuntimeEndpointAdapterFacet({
     use: providerModule.name,
     activate(context) {
       const config = runtimeConfigObject(context.config, "Image service");

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { BrowserProgram } from "@qflow/qflow/hyperframes";
+import type { HtmlVisual } from "@qflow/qflow/html-program";
 import type { FontStackRef } from "@qflow/media";
 import type { Timeline } from "@qflow/timeline";
 import { composeTemporalWindow, projectProgramInstant } from "@qflow/temporal";
@@ -30,7 +30,7 @@ test("the same chat renderer consumes authored and word-bound events; changing p
   const program = (value: ReturnType<typeof scene>) => {
     const element = value.presents[0]!.elements.find(element => element.kind === "program")!;
     assert.equal(element.kind, "program");
-    return element.program.payload as unknown as BrowserProgram;
+    return element.program.payload as unknown as HtmlVisual;
   };
   const before = program(scene(60)), after = program(scene(90));
   assert.equal(before.html, after.html);

@@ -1,6 +1,6 @@
 import { sealVisualTrack } from "@qflow/qflow/composition";
 import type { VisualElement } from "@qflow/qflow/composition";
-import { browserProgram } from "@qflow/qflow/hyperframes";
+import { htmlVisual } from "@qflow/qflow/html-program";
 import type { FontStackRef } from "@qflow/qflow/media";
 import type { Timeline } from "@qflow/qflow/timeline";
 import type { SpatialFrame } from "@qflow/qflow/spatial";
@@ -23,7 +23,7 @@ export function renderChat(timeline: Timeline, within: SpatialFrame, window: Tem
   });
   const children = [text("title", options.title, 30, "#f6ead9"), text("subtitle", "A small change of plan", 16, "#b8c6c5"),
     ...messages.flatMap((message, index) => [text(`sender-${index}`, message.sender, 16, "#a9b8bd"), text(`text-${index}`, message.text, 27, "#f4efe6")])];
-  const program = browserProgram({
+  const program = htmlVisual({
     html: `<header><div class="status"></div><div>{{title}}<div class="subtitle">{{subtitle}}</div></div></header>
       <div class="viewport"><div class="messages">${messages.map((message, index) => `<article class="${message.side}" data-message="${index}">
       <div class="sender">{{sender-${index}}}</div><div class="bubble">{{text-${index}}}</div></article>`).join("")}</div></div>

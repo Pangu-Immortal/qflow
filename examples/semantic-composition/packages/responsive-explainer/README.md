@@ -36,7 +36,7 @@ blur are ordinary HTML/CSS relationships. A peer Audio Clip independently publis
 `mix.audio` using the same media and Window.
 
 `src/activation.ts` declares the Module, Surface, absolute time construction and Producer Fragment.
-`src/render.ts` emits a browser program with HTML slots for typed video and text children. Its render
+`src/render.ts` emits a HTML visual with HTML slots for typed video and text children. Its render
 function computes state directly from local frame time, supporting direct seeking, range renders
 and independent workers.
 

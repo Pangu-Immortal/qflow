@@ -10,13 +10,13 @@
   <import from="@qflow/script@1"/>
   <import as="wording" from="@qflow/text@1"/>
   <import as="seedance" from="@qflow/seedance@1"/>
-  <import as="pipeline" from="@qflow/media-pipeline@1"/>
+  <import as="mediaop" from="@qflow/media-operations@1"/>
   <import as="time" from="@qflow/timeline-author@1"/>
   <import as="whisperx" from="@qflow/whisperx@1"/>
   <import as="semantic" from="@qflow/narrative-temporal@1"/>
   <import as="space" from="@qflow/spatial@1"/>
   <import as="film" from="@qflow/film@1"/>
-  <import as="render" from="@qflow/render-hyperframes@1"/>
+  <import as="html" from="@qflow/html-video@1"/>
   <import as="example" from="@example/example-component@1"/>
   <import as="recipes" source="./recipes.svs"/>
 
@@ -30,7 +30,7 @@
 
   <wording:Value id="direction">A neutral catalogue card in a quiet studio.</wording:Value>
   <seedance:TextVideo id="take" model="mini" prompt={direction} duration="4" generate-audio="true"/>
-  <pipeline:Normalize id="take-media" source={take.video} recipe={recipes.media.aroll} clock={clock}/>
+  <mediaop:Normalize id="take-media" source={take.video} recipe={recipes.media.aroll} clock={clock}/>
   <whisperx:Alignment id="showcase-semantic" narrative={story}
     segment={story.segment.showcase} media={take-media.media} domain={take-media.domain} language="en"/>
   <time:Timeline id="speech" clock={clock} end="showcase-semantic.end">
@@ -54,5 +54,5 @@
     <film:Track source={speech-sound.audio}/>
     <film:Track source={box.visual}/>
   </film:Film>
-  <render:Video id="final" composition={main.composition} timeline={speech.timeline}/>
+  <html:Video id="final" composition={main.composition} timeline={speech.timeline}/>
 </svml>

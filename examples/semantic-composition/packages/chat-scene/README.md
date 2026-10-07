@@ -20,10 +20,11 @@ up as the conversation develops. Message times are on the film clock and must fa
 
 The Surface uses the shared temporal helpers and expands children to a finite create/append/render
 graph. The rendering function receives Timeline, an explicit picture-plane Frame, Window and Instants, so it knows nothing about
-Script parsing, speech models or Runtime. The browser program evaluates any requested frame directly,
+Script parsing, speech models or Runtime. The HTML visual evaluates any requested frame directly,
 including frames reached by scrubbing, range rendering or concurrent workers.
 
 Compile with `npm run build`. The package uses the public `@qflow/qflow/*` interfaces and can live in any
 video project's `packages/`. It is an example to adapt, not an official component to install for every
 animation. The complete runnable Source is [chat.svml](../../chat.svml); see the surrounding
-example README for commands. `font` receives a FontStack, for example from `fonts:Stack`.
+example README for commands. `font` receives a generic `media:FontStack`, whose faces may come from
+the Fontsource adapter, project files or another font package.

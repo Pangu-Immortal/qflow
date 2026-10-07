@@ -1,5 +1,11 @@
-import { assertAttributes, assertEmptyElement, canonicalize, createMarkupSurfaceHostFacet, sameType, sealGraphFragment, textAttribute } from "@qflow/qflow/author-kit";
-import type { ComponentPackage, FragmentOperation, ModuleManifest, StructuredSurfaceHandler, SurfaceResolvedReference, TypeRef } from "@qflow/qflow/author-kit";
+import { assertAttributes, assertEmptyElement, createMarkupSurfaceFacet, textAttribute } from "@qflow/qflow/markup";
+import { canonicalize, sameType } from "@qflow/qflow/protocol";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import type { ProducerPackage } from "@qflow/qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { FragmentOperation } from "@qflow/qflow/author";
+import type { ModuleManifest, TypeRef } from "@qflow/qflow/protocol";
+import type { StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";
 import { compositionTypes } from "@qflow/qflow/composition";
 import { mediaTypes } from "@qflow/qflow/media";
 import type { FontStackRef } from "@qflow/qflow/media";
@@ -11,7 +17,7 @@ import { assertTemporalInstantFor, temporalTypes } from "@qflow/qflow/temporal";
 import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
 import { createTemporalInstantConstruction, createTemporalWindowConstruction, resolveTemporalContext,
   temporalContextAttributeVocabulary, temporalInstantAttributeNames, temporalInstantAttributeVocabulary,
-  temporalWindowAttributeNames, temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal-markup";
+  temporalWindowAttributeNames, temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal/markup";
 import { renderChat } from "./render.js";
 import type { ChatOptions, Message } from "./render.js";
 
@@ -34,7 +40,7 @@ const inline = <T>(record: { value: { kind: string; value?: unknown } } | undefi
   return record.value.value as T;
 };
 const value = (data: unknown) => ({ kind: "inline" as const, value: canonicalize(data) });
-const component: ComponentPackage = { producers: [
+const component: ProducerPackage & AdmissionPackage = { producers: [
   { producer: producers.empty, handler: () => ({ outputs: { messages: value([]) }, needs: {} }) },
   { producer: producers.append, handler: ({ inputs }) => {
     const message = inline<Omit<Message, "at">>(inputs.message), at = inline<TemporalInstant>(inputs.at);
@@ -104,6 +110,9 @@ const declaration = { name: "scene", tag: "Scene", mode: "structured" as const,
     example: '<chat:Scene id="chat" timeline={speech.timeline} within={within} font={font} during="timeline" title="Conversation"><chat:Message id="answer" sender="Maya" side="left" text="Here it is." at={story-time.answer}/></chat:Scene>',
   },
 };
-export const qflowPackage = { format: "qflow.node-package@1" as const, modules: [{ manifest }], components: [component],
-  hostFacets: [createMarkupSurfaceHostFacet({ module, declaration, handler: decodeSurface })] };
+export const qflowPackage = { format: "qflow.package@1" as const, modules: [{ manifest }],
+  facets: [createProducerPackageFacet(component), createAdmissionPackageFacet(component),
+    createMarkupSurfaceFacet({ module, declaration, handler: decodeSurface })] };
 export default qflowPackage;
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";

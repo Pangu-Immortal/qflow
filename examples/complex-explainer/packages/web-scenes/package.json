@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@explainer/visual-language": "file:../visual-language",
-    "@qflow/qflow": "workspace:*"
+    "@qflow/qflow": "workspace:*",
+    "@qflow/studio-companion": "workspace:*"
   }
 }

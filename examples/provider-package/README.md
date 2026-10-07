@@ -120,14 +120,14 @@ mapping against the Model's own port table.
 Copy the package matching your service's request shape — `packages/provider-images` or
 `packages/provider-videos` — into the video's `packages/`. Choose your own package name and change
 `providerModule.name` with it. A service that renders both images and video can implement both
-capabilities in one package; `defineEndpointPackage` accepts several. Implement the actual service
+capabilities in one package; `defineEndpoint` accepts several. Implement the actual service
 protocol, including its request limits, upload/download limits and any OAuth or cancellation
 behavior it really offers. Configure the selected service address; `images.example` and
 `videos.example` are placeholders that cannot generate media.
 
 Use the active `@qflow/qflow` version as a development dependency. Build and install with the
 project's package manager. In this repository the examples use `workspace:*` for that dependency;
-replace it with your selected release when copying it out. The `@qflow/driver-node` and model
+replace it with your selected release when copying it out. The `@qflow/executor` and model
 development dependencies (`@qflow/gpt-image`, `@qflow/seedance`) serve the repository tests only and
 can be removed from the copied package. For example:
 
@@ -151,7 +151,7 @@ generation follows the agreed production scope and spending authority.
 
 The service decides whether an Endpoint needs its own credential slot at all. A service that
 authenticates through the platform it runs on, or one reached at a private address, may declare no
-credentials or a non-secret account name; `defineEndpointPackage` takes whichever the service has.
+credentials or a non-secret account name; `defineEndpoint` takes whichever the service has.
 
 ## Owners
 

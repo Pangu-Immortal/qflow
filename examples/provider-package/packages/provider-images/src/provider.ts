@@ -1,5 +1,5 @@
-import { canonicalize, defineEndpointPackage, wakeAfter } from "@qflow/qflow/endpoint-kit";
-import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow/endpoint-kit";
+import { canonicalize, defineEndpoint, wakeAfter } from "@qflow/qflow/endpoint";
+import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow/endpoint";
 import { compileWireRequest, generationTypes, sealGeneratedImageSet, selectWireModelForRequest } from "@qflow/qflow/generation";
 import type { GenerationRequest, GenerationWireMapping } from "@qflow/qflow/generation";
 
@@ -132,8 +132,8 @@ export function createImageProvider(options: {
       } } };
     },
   };
-  return defineEndpointPackage({
-    module: providerModule, facet: "images", instance: options.instance, pool: options.pool,
+  return defineEndpoint({
+    instance: options.instance, pool: options.pool,
     credentials: { apiKey: options.apiKey }, credentialInputs: { apiKey: { label: "Image service API key" } },
     defaultConcurrency: options.concurrency ?? 1,
     actionLimits: { submit: { concurrency: 1 }, poll: { concurrency: 4 }, collect: { concurrency: 1 } },

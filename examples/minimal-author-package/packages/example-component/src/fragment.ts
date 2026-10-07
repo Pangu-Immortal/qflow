@@ -1,6 +1,6 @@
 import { compositionTypes } from "@qflow/qflow/composition";
-import { artifactTypes } from "@qflow/qflow/artifact";
-import { sealGraphFragment } from "@qflow/qflow/author-kit";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sealGraphFragment } from "@qflow/qflow/author";
 import { timelineTypes } from "@qflow/qflow/timeline";
 import { spatialTypes } from "@qflow/qflow/spatial";
 import { exampleProducers } from "./manifest.js";
@@ -11,7 +11,7 @@ const operation = (id: string) => ({ kind: "fragment-operation" as const, operat
 
 export function createExampleFragment(producer: typeof exampleProducers[keyof typeof exampleProducers], id: string, image = false) {
   const inputs = [{ name: "timeline", type: timelineTypes.timeline }, { name: "within", type: spatialTypes.frame },
-    ...(image ? [{ name: "image", type: artifactTypes.blob }] : [])];
+    ...(image ? [{ name: "image", type: blobTypes.blob }] : [])];
   const renderInputs = { timeline: input("timeline"), within: input("within"), ...(image ? { image: input("image") } : {}) };
   return sealGraphFragment({
     inputs,

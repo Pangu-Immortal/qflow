@@ -1,11 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { compositionTypes } from "@qflow/qflow/composition";
-import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/author-kit";
+import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/protocol";
 import { timelineTypes } from "@qflow/qflow/timeline";
 import { temporalTypes } from "@qflow/qflow/temporal";
 import { mediaTypes } from "@qflow/qflow/media";
-import { svsRecipeType } from "@qflow/qflow/svs";
-import { artifactTypes } from "@qflow/qflow/artifact";
+import { recipeType } from "@qflow/qflow/recipe";
+import { blobTypes } from "@qflow/qflow/blob";
 import { spatialTypes } from "@qflow/qflow/spatial";
 
 const previewImage = (file: string) => ({
@@ -32,12 +32,12 @@ export const exampleProducers = {
 export const exampleManifest: ModuleManifest = {
   format: "qflow.module@1", name: exampleModuleRef.name, version: exampleModuleRef.version,
   dependencies: [
-    { module: artifactTypes.blob.module },
+    { module: blobTypes.blob.module },
     { module: compositionTypes.visualTrack.module },
     { module: mediaTypes.fontStack.module },
     { module: spatialTypes.frame.module },
     { module: timelineTypes.timeline.module },
-    { module: svsRecipeType.module },
+    { module: recipeType.module },
     { module: temporalTypes.window.module },
   ],
   types: Object.values(exampleTypes).map(({ name }) => ({ name })),
@@ -47,7 +47,7 @@ export const exampleManifest: ModuleManifest = {
     inputs: producer === exampleProducers.appendItems
       ? [{ name: "previous", type: exampleTypes.itemSet }, { name: "item", type: exampleTypes.itemSet }]
       : [{ name: "timeline", type: timelineTypes.timeline }, { name: "within", type: spatialTypes.frame },
-        ...(producer === exampleProducers.renderImage ? [{ name: "image", type: artifactTypes.blob }] : [])],
+        ...(producer === exampleProducers.renderImage ? [{ name: "image", type: blobTypes.blob }] : [])],
     outputs: producer === exampleProducers.appendItems
       ? [{ name: "set", type: exampleTypes.itemSet }]
       : [{ name: "visual", type: compositionTypes.visualTrack }],
@@ -72,12 +72,12 @@ const vocabulary = (summary: string, example: string) => ({
 export const exampleMarkupSurfaces = [
   { name: "box", tag: "Box", mode: "structured", outputs: [exampleTypes.box, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A framed box surface.", "<example:Box id=\"box\" timeline={speech.timeline} within={layout.card}/>") , preview: previewImage("Box.png") } },
   { name: "text", tag: "Text", mode: "structured", outputs: [exampleTypes.text, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, compositionTypes.visualTrack], vocabulary: { ...vocabulary("A text-bearing surface.", "<example:Text id=\"title\" timeline={speech.timeline} within={layout.title}>Hello</example:Text>"), preview: previewImage("Box.png") } },
-  { name: "image-slot", tag: "ImageSlot", mode: "structured", outputs: [exampleTypes.imageSlot, compositionTypes.visualTrack], vocabulary: { ...vocabulary("An image slot whose content is a graph input.", "<example:ImageSlot id=\"shot\" timeline={speech.timeline} within={layout.shot} image={shot-image}/>") , attributes: [...vocabulary("", "").attributes, { name: "image", kind: "reference" as const, required: false, accepts: [artifactTypes.blob], summary: "Optional image Blob Artifact." }], preview: previewImage("Box.png") } },
+  { name: "image-slot", tag: "ImageSlot", mode: "structured", outputs: [exampleTypes.imageSlot, compositionTypes.visualTrack], vocabulary: { ...vocabulary("An image slot whose content is a graph input.", "<example:ImageSlot id=\"shot\" timeline={speech.timeline} within={layout.shot} image={shot-image}/>") , attributes: [...vocabulary("", "").attributes, { name: "image", kind: "reference" as const, required: false, accepts: [blobTypes.blob], summary: "Optional image Blob Artifact." }], preview: previewImage("Box.png") } },
   { name: "style", tag: "Style", mode: "structured", outputs: [exampleTypes.style], vocabulary: {
     summary: "Decodes one SVS Recipe and exact FontStackRef into a Style value.",
     attributes: [
       { name: "id", kind: "identifier", required: true, summary: "Names this Style." },
-      { name: "recipe", kind: "reference", required: true, accepts: [svsRecipeType], summary: "The decoded recipe with path and properties." },
+      { name: "recipe", kind: "reference", required: true, accepts: [recipeType], summary: "The decoded recipe with path and properties." },
       { name: "font", kind: "reference", required: true, accepts: [mediaTypes.fontStack], summary: "An exact FontStackRef." },
     ], example: "<example:Style id=\"card\" recipe={recipes.card} font={caption-font}/>",
   } },

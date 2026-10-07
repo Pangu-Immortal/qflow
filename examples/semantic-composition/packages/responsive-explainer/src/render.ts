@@ -1,6 +1,6 @@
 import { sealVisualTrack } from "@qflow/qflow/composition";
 import type { VisualElement } from "@qflow/qflow/composition";
-import { browserProgram } from "@qflow/qflow/hyperframes";
+import { htmlVisual } from "@qflow/qflow/html-program";
 import type { FontArtifactRef } from "@qflow/qflow/media";
 import type { SynchronizedMedia } from "@qflow/qflow/media";
 import type { Timeline } from "@qflow/qflow/timeline";
@@ -44,7 +44,7 @@ export function renderExplainer(timeline: Timeline, within: SpatialFrame, window
       { name: "white-space", value: "nowrap" }],
   }));
   // Exact fonts belong to the typed text children; the program supplies layout and behavior.
-  const program = browserProgram({
+  const program = htmlVisual({
     html: `<div class="diagram"><div class="heading">{{label-0}}</div>
       <svg viewBox="0 0 440 300"><path d="M60 60 H320 V150 H60 V240 H320"/></svg>
       <div class="step first">{{label-1}}</div><div class="step second">{{label-2}}</div>

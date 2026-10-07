@@ -1,4 +1,4 @@
-<?svml using="@qflow/run-markup@1"?>
+<?svml using="@qflow/markup/run@1"?>
 
 <svrun version="1">
   <author source="./swap-topic.svml"/>

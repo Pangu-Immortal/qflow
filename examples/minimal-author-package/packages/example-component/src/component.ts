@@ -1,9 +1,11 @@
 import { sealVisualTrack } from "@qflow/qflow/composition";
 import type { Timeline } from "@qflow/qflow/timeline";
 import type { SpatialFrame } from "@qflow/qflow/spatial";
-import { canonicalize } from "@qflow/qflow/author-kit";
-import type { BlobRef, ComponentPackage, ProducerHandler, TypedRecord } from "@qflow/qflow/author-kit";
-import { VISUAL_IR_V1 } from "@qflow/qflow/visual-ir";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, TypedRecord } from "@qflow/qflow/protocol";
+import type { ProducerPackage, ProducerHandler } from "@qflow/qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import { VISUAL_IR_V1 } from "@qflow/qflow/composition";
 import { exampleProducers, exampleTypes } from "./manifest.js";
 
 const inline = <T>(record: { readonly value: { readonly kind: string; readonly value?: unknown } } | undefined): T => {
@@ -49,4 +51,4 @@ export const exampleComponent = {
     { type: exampleTypes.text, handler: () => {} },
     { type: exampleTypes.imageSlot, handler: () => {} },
   ],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

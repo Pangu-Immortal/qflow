@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { EndpointRegistry, MemoryResourceStore } from "@qflow/driver-node";
+import { EndpointRegistry, MemoryResourceStore } from "@qflow/executor";
 import { sealGptImage2Request } from "@qflow/gpt-image";
-import type { BlobRef, EndpointStartContext } from "@qflow/qflow/endpoint-kit";
-import { canonicalize } from "@qflow/qflow/endpoint-kit";
+import type { BlobRef, EndpointStartContext } from "@qflow/qflow/endpoint";
+import { canonicalize } from "@qflow/qflow/endpoint";
 import { generationTypes } from "@qflow/qflow/generation";
 import { capability, createImageProvider } from "../src/provider.js";
 
@@ -15,7 +15,7 @@ test("project Provider maps a reference, retains its receipt and collects throug
   let checkpoint: unknown;
   const provider = createImageProvider({
     instance: "images.personal", pool: "images.personal", baseUrl: "https://images.example",
-    apiKey: { store: "os", key: "images.personal" }, pollIntervalMs: 0,
+    apiKey: { store: "local", key: "images.personal" }, pollIntervalMs: 0,
     fetch: async (input, init) => {
       const url = new URL(String(input)); calls.push(url.pathname);
       if (url.hostname === "assets.example") {
@@ -81,7 +81,7 @@ test("project Provider retains public submission and task errors without suggest
     let checkpointed = false;
     const provider = createImageProvider({
       instance: "images.personal", pool: "images.personal", baseUrl: "https://images.example",
-      apiKey: { store: "os", key: "images.personal" }, pollIntervalMs: 0,
+      apiKey: { store: "local", key: "images.personal" }, pollIntervalMs: 0,
       fetch: async (input) => {
         const path = new URL(String(input)).pathname;
         calls.push(path);

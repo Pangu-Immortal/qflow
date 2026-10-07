@@ -1,9 +1,9 @@
 import type { FontStackRef } from "@qflow/qflow/media";
-import type { SvsRecipe } from "@qflow/qflow/svs";
+import type { Recipe } from "@qflow/qflow/recipe";
 
 /** The two values a Style decoder receives after author references are resolved. */
 export type ExampleStyleInput = {
-  readonly recipe: { readonly path: string; readonly properties: SvsRecipe["properties"] };
+  readonly recipe: { readonly path: string; readonly properties: Recipe["properties"] };
   readonly fonts: FontStackRef;
 };
 

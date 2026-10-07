@@ -1,4 +1,4 @@
-<?svml using="@qflow/svs@1"?>
+<?svml using="@qflow/recipe@1"?>
 
 <sheet version="1">
   speaker.host {

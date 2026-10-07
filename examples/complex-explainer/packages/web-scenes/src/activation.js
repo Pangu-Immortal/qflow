@@ -1,20 +1,16 @@
 import { renderComponentWorkshop } from "./scenes/components/index.js";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
 import { renderSemanticWorkshop } from "./scenes/semantic-time/index.js";
 import { renderDeliveryWorkshop } from "./scenes/delivery/index.js";
 import { renderCodeJourney } from "./scenes/code-route/index.js";
 import { renderOutro } from "./scenes/outro/index.js";
 import { sceneCompanions } from "./studio.js";
-import { createStudioTrackCompanionHostFacet } from "@qflow/qflow/studio-adapter";
+import { createStudioTrackCompanionFacet } from "@qflow/studio-companion";
 import { renderRoad } from "./scenes/editor-route/index.js";
-import {
-  assertAttributes,
-  assertEmptyElement,
-  textAttribute,
-  canonicalize,
-  sameType,
-  sealGraphFragment,
-  createMarkupSurfaceHostFacet,
-} from "@qflow/qflow/author-kit";
+import { assertAttributes, assertEmptyElement, textAttribute, createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { canonicalize, sameType } from "@qflow/qflow/protocol";
+import { sealGraphFragment } from "@qflow/qflow/author";
 import { compositionTypes } from "@qflow/qflow/composition";
 import { mediaTypes } from "@qflow/qflow/media";
 import { timelineTypes } from "@qflow/qflow/timeline";
@@ -29,7 +25,7 @@ import {
   temporalContextAttributeVocabulary,
   temporalInstantAttributeNames,
   temporalInstantAttributeVocabulary,
-} from "@qflow/qflow/temporal-markup";
+} from "@qflow/qflow/temporal/markup";
 import { renderIntro, renderComparison } from "./render.js";
 const module = { name: "@explainer/web-scenes", version: "1" },
   type = (name) => ({ module, name }),
@@ -412,13 +408,14 @@ function decode(tag) {
   };
 }
 export const qflowPackage = {
-  format: "qflow.node-package@1",
+  format: "qflow.package@1",
   modules: [{ manifest }],
-  components: [component],
-  hostFacets: [
-    createStudioTrackCompanionHostFacet(sceneCompanions(module, tags)),
+  facets: [
+    createProducerPackageFacet(component),
+    createAdmissionPackageFacet(component),
+    createStudioTrackCompanionFacet(sceneCompanions(module, tags)),
     ...Object.keys(tags).map((tag) =>
-      createMarkupSurfaceHostFacet({
+      createMarkupSurfaceFacet({
         module,
         declaration: {
           name: tags[tag].name,

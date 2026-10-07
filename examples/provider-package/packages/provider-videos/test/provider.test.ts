@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { EndpointRegistry, MemoryResourceStore } from "@qflow/driver-node";
+import { EndpointRegistry, MemoryResourceStore } from "@qflow/executor";
 import { sealSeedanceRequest } from "@qflow/seedance";
-import type { BlobRef, EndpointStartContext } from "@qflow/qflow/endpoint-kit";
-import { canonicalize } from "@qflow/qflow/endpoint-kit";
+import type { BlobRef, EndpointStartContext } from "@qflow/qflow/endpoint";
+import { canonicalize } from "@qflow/qflow/endpoint";
 import { generationTypes } from "@qflow/qflow/generation";
 import { assertMappingCoversPorts } from "@qflow/qflow/generation";
 import { seedancePorts } from "@qflow/seedance";
@@ -23,7 +23,7 @@ test("project video Provider uploads a reference, retains its receipt and collec
   let checkpoint: unknown;
   const provider = createVideoProvider({
     instance: "videos.personal", pool: "videos.personal", baseUrl: "https://videos.example",
-    apiKey: { store: "os", key: "videos.personal" }, pollIntervalMs: 0,
+    apiKey: { store: "local", key: "videos.personal" }, pollIntervalMs: 0,
     fetch: async (input, init) => {
       const url = new URL(String(input)); calls.push(url.pathname);
       if (url.hostname === "assets.example") {
@@ -94,7 +94,7 @@ test("project video Provider uploads a reference, retains its receipt and collec
 test("project video Provider reports its narrower service range without changing the model", async () => {
   const provider = createVideoProvider({
     instance: "videos.personal", pool: "videos.personal", baseUrl: "https://videos.example",
-    apiKey: { store: "os", key: "videos.personal" },
+    apiKey: { store: "local", key: "videos.personal" },
   });
   const need = (ports: Parameters<typeof sealSeedanceRequest>[1]) => ({
     id: "need:range", capability, returns: generationTypes.videoSet,
@@ -118,7 +118,7 @@ test("project video Provider keeps the received task id when the render fails re
   let checkpointed = false;
   const provider = createVideoProvider({
     instance: "videos.personal", pool: "videos.personal", baseUrl: "https://videos.example",
-    apiKey: { store: "os", key: "videos.personal" }, pollIntervalMs: 0,
+    apiKey: { store: "local", key: "videos.personal" }, pollIntervalMs: 0,
     fetch: async (input) => {
       const path = new URL(String(input)).pathname;
       calls.push(path);
@@ -168,7 +168,7 @@ test("first and last frame person flags reach the upload API, including false", 
   const flags: (string | null)[] = [];
   const provider = createVideoProvider({
     instance: "videos.personal", pool: "videos.personal", baseUrl: "https://videos.example",
-    apiKey: { store: "os", key: "example" },
+    apiKey: { store: "local", key: "example" },
     fetch: async (input, init) => {
       const path = new URL(String(input)).pathname;
       if (path === "/uploads") {

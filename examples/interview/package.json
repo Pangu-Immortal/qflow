@@ -2,5 +2,9 @@
   "name": "qflow-interview",
   "version": "0.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "qflow": { "project": true },
+  "dependencies": {
+    "@interview/flash": "file:packages/flash"
+  }
 }

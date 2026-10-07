@@ -1,5 +1,5 @@
 import { sealVisualTrack } from "@qflow/qflow/composition";
-import { browserProgram } from "@qflow/qflow/hyperframes";
+import { htmlVisual } from "@qflow/qflow/html-program";
 import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
 const sty = (o) => Object.entries(o).map(([name, value]) => ({ name, value }));
 const esc = (s) =>
@@ -24,7 +24,7 @@ function seal(t, within, w, o, html, css, setup, data, children = []) {
             id: "scene",
             kind: "program",
             order: 0,
-            program: browserProgram({
+            program: htmlVisual({
               html: html + '<div class="font-resource">{{font}}</div>',
               css:
                 ":scope{pointer-events:none}.font-resource{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}" +

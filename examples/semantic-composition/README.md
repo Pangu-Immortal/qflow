@@ -24,13 +24,15 @@ From the repository after installing its dependencies:
 ```bash
 pnpm build:public-types
 pnpm --filter @example/chat-scene build
-node bin/qflow.mjs check examples/semantic-composition/chat.svml --workspace examples/semantic-composition
-node bin/qflow.mjs build examples/semantic-composition/chat.svrun --workspace examples/semantic-composition --runtime examples/semantic-composition/qflow.runtime.json --follow
+node bin/qflow.mjs check examples/semantic-composition/chat.svml --project examples/semantic-composition
+node bin/qflow.mjs build examples/semantic-composition/chat.svrun --project examples/semantic-composition --runtime examples/semantic-composition/qflow.runtime.json --follow
 ```
 
-The Profile selects local HyperFrames and FFmpeg. Its execution data lives in `.qflow/runtimes/local`;
+The Profile selects local HTML rasterization and FFmpeg. Its execution data lives in `.qflow/runtimes/local`;
 `.qflow/runtime` is reserved for the project's Profile-selection file. Use the machine's prepared browser/media tools;
 there is no hosted generation account in this example. The final Output is `final.video`. The same
 Run can be opened in Studio, where its component lane and physical clock work without a Script lane.
-For an independent project, install `@qflow/qflow`, copy the component into `packages/`, replace its workspace
-dependency with the installed Qflow version, and build the package normally.
+For an independent project, install `@qflow/qflow`, `@qflow/fontsource` and
+`@fontsource-variable/inter` in the project's ordinary `package.json`, copy the component into
+`packages/`, replace its workspace dependency with the installed Qflow version, and build the
+package normally. The project lockfile, rather than Qflow, fixes the exact font package version.

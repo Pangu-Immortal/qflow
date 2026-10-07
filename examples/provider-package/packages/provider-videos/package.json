@@ -7,5 +7,5 @@
   "exports": { ".": "./dist/provider.js" },
   "files": ["dist"],
   "scripts": { "build": "tsc -p tsconfig.json" },
-  "devDependencies": { "@qflow/qflow": "workspace:*", "typescript": "5.9.3", "@qflow/driver-node": "workspace:*", "@qflow/seedance": "workspace:*" }
+  "devDependencies": { "@qflow/qflow": "workspace:*", "@qflow/runtime-local": "workspace:*", "typescript": "5.9.3", "@qflow/executor": "workspace:*", "@qflow/seedance": "workspace:*" }
 }
