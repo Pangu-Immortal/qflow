@@ -1,21 +1,15 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { resolveNodePackageResource } from "@qflow/package-loader-node";
-import type { ManagedProgramCommand } from "@qflow/runtime-kit";
+import type { ManagedProgramCommand } from "@qflow/runtime-local/extension";
 import {
   pythonEnvironmentExecutable,
   resolveRuntimeExecutable,
-} from "@qflow/runtime-host-node";
+} from "@qflow/runtime-local/node";
 
-/**
- * The locked Python project is its own package asset. Repository workspaces and
- * installed npm distributions therefore resolve the same immutable input.
- */
-export const localOpenCvManagedProject = join(
-  resolveNodePackageResource("@qflow/image-opencv-runtime", "pyproject.toml", { from: import.meta.url }),
-  "..",
-);
+/** The locked Python project is immutable material owned and shipped by this Provider. */
+export const localOpenCvManagedProject = fileURLToPath(new URL("../runtime", import.meta.url));
 
 export type LocalOpenCvDeployment = {
   readonly pythonExecutable: string;

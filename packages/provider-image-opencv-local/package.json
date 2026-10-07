@@ -1,6 +1,6 @@
 {
   "name": "@qflow/provider-image-opencv-local",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -10,18 +10,18 @@
   "qflow": {
     "activation": "./src/activation.ts"
   },
-  "dependencies": {
-    "@qflow/artifact": "workspace:*",
-    "@qflow/endpoint-kit": "workspace:*",
-    "@qflow/protocol": "workspace:*",
-    "@qflow/raster": "workspace:*",
-    "@qflow/image-opencv-runtime": "workspace:*",
-    "@qflow/package-loader-node": "workspace:*",
-    "@qflow/runtime-kit": "workspace:*",
-    "@qflow/runtime-host-node": "workspace:*"
+  "files": ["dist", "runtime", "README.md"],
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^",
+    "@qflow/image-operations": "workspace:^",
+    "@qflow/runtime-local": "workspace:^"
   },
   "devDependencies": {
-    "@qflow/driver-node": "workspace:*",
-    "@qflow/image-transform": "workspace:*"
+    "@qflow/blob": "workspace:*",
+    "@qflow/executor": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/image-operations": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/runtime-local": "workspace:*"
   }
 }

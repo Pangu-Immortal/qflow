@@ -1,0 +1,35 @@
+{
+  "name": "@qflow/media-local",
+  "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./cli": "./src/cli.ts",
+    "./files": "./src/files.ts"
+  },
+  "files": ["dist", "README.md"],
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "dependencies": {
+    "@qflow/media-operations": "workspace:^",
+    "sharp": "0.35.4"
+  },
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^",
+    "@qflow/runtime-local": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/blob": "workspace:*",
+    "@qflow/endpoint": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/runtime": "workspace:*",
+    "@qflow/runtime-local": "workspace:*",
+    "@qflow/speech-evidence": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/executor": "workspace:*"
+  }
+}

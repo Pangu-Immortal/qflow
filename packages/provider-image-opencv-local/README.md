@@ -1,14 +1,14 @@
 # `@qflow/provider-image-opencv-local`
 
-Local OpenCV/NumPy realization of the single `@qflow/raster` capability.
+Local OpenCV/NumPy realization of the two deterministic capabilities owned by
+`@qflow/image-operations`: `transform-image` and `compose-image`.
 
-Image Transform and Image Compose lower their different author meanings to one closed RasterRequest.
-One Handler stages its declared Resource inputs, and one Python interpreter shares decoding, fit,
-interpolation, alpha and encoding primitives across both variants. It runs in a bounded child process
-and returns one new image Resource. Temporary paths, OpenCV details and diagnostics stay inside the
-Endpoint and never enter the image Product.
+Transform and Compose remain separate Needs. One Provider implements both while its private Python
+interpreter shares decoding, fit, interpolation, alpha and encoding primitives. Each Need runs in a
+bounded child process and returns one new image Resource. Temporary paths, OpenCV details and
+diagnostics stay inside the Endpoint and never enter the author language.
 
-The Distribution ships the frozen deployment source from `services/image-opencv`. With the Runtime
+The Provider ships its frozen deployment source in `runtime/`. With the Runtime
 Adapter's declared configuration, `programs up` installs it only when the machine Program Home has no
 healthy environment; the Endpoint, program probe and doctor all resolve the shared `.venv`
 interpreter. An explicit `pythonExecutable` selects an operator-managed compatible environment and

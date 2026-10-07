@@ -4,10 +4,10 @@ import {
   runtimeConfigObject,
   runtimeConfigPositiveInteger,
   runtimeConfigString,
-} from "@qflow/runtime-kit";
+} from "@qflow/runtime-local/extension";
 import {
   diagnoseRuntimeExecutable,
-} from "@qflow/runtime-host-node";
+} from "@qflow/runtime-local/node";
 
 import { resolveLocalOpenCvDeployment } from "./deployment.js";
 import { createLocalOpenCvImageProvider } from "./provider.js";
@@ -54,8 +54,8 @@ const localOpenCvRuntimeAdapter = createRuntimeEndpointAdapterFacet({
 });
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
-  hostFacets: [localOpenCvRuntimeAdapter],
+  format: "qflow.package@1" as const,
+  facets: [localOpenCvRuntimeAdapter],
 };
 
 export default qflowPackage;

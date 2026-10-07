@@ -4,18 +4,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { artifactTypes } from "@qflow/artifact";
-import { defineEndpointPackage } from "@qflow/endpoint-kit";
-import type { EndpointFulfillment } from "@qflow/endpoint-kit";
-import { canonicalize } from "@qflow/protocol";
-import type { CanonicalValue } from "@qflow/protocol";
+import { blobTypes } from "@qflow/qflow/blob";
+import { defineEndpoint } from "@qflow/qflow/endpoint";
+import type { EndpointFulfillment, EndpointInvocationContext } from "@qflow/qflow/endpoint";
+import type { CanonicalValue } from "@qflow/qflow/protocol";
 import {
-  assertRasterRequest,
-  rasterCapabilities,
-  rasterOutputMediaType,
-  rasterSources,
-} from "@qflow/raster";
-import type { RasterRequest } from "@qflow/raster";
+  assertImageComposeRequest,
+  assertImageTransformRequest,
+  imageComposeSources,
+  imageOperationsCapabilities,
+  imageTransformOutputMediaType,
+} from "@qflow/image-operations";
+import type { ImageComposeRequest, ImageTransformRequest } from "@qflow/image-operations";
 
 export const localOpenCvImageProviderModuleRef = {
   name: "@qflow/provider-image-opencv-local",
@@ -41,10 +41,17 @@ function positiveInteger(value: number, subject: string): number {
   return value;
 }
 
-function request(value: CanonicalValue): RasterRequest {
-  assert(value !== null && typeof value === "object" && !Array.isArray(value), "Raster request must be an object");
-  const item = value as unknown as RasterRequest;
-  assertRasterRequest(item);
+function transformRequest(value: CanonicalValue): ImageTransformRequest {
+  assert(value !== null && typeof value === "object" && !Array.isArray(value), "Image transform request must be an object");
+  const item = value as unknown as ImageTransformRequest;
+  assertImageTransformRequest(item);
+  return item;
+}
+
+function composeRequest(value: CanonicalValue): ImageComposeRequest {
+  assert(value !== null && typeof value === "object" && !Array.isArray(value), "Image compose request must be an object");
+  const item = value as unknown as ImageComposeRequest;
+  assertImageComposeRequest(item);
   return item;
 }
 
@@ -93,63 +100,82 @@ export function createLocalOpenCvImageProvider(config: CreateLocalOpenCvImagePro
   const maxInputBytes = positiveInteger(config.maxInputBytes ?? 128 * 1024 * 1024, "maxInputBytes");
   const maxOutputBytes = positiveInteger(config.maxOutputBytes ?? 256 * 1024 * 1024, "maxOutputBytes");
   const script = fileURLToPath(new URL("../runtime/raster_execute.py", import.meta.url));
-  return defineEndpointPackage({
-    module: localOpenCvImageProviderModuleRef,
-    facet: "raster",
+
+  const execute = async (
+    kind: "transform" | "compose",
+    need: ImageTransformRequest | ImageComposeRequest,
+    context: EndpointInvocationContext,
+  ): Promise<EndpointFulfillment> => {
+    const sources = kind === "transform"
+      ? [(need as ImageTransformRequest).source]
+      : imageComposeSources(need as ImageComposeRequest);
+    const uniqueSources = [...new Map(sources.map((source) => [source.resource, source])).values()];
+    const totalInputBytes = uniqueSources.reduce((sum, source) => sum + source.size, 0);
+    assert(totalInputBytes <= maxInputBytes, "Image operation inputs exceed their configured byte limit");
+    const work = await mkdtemp(join(tmpdir(), "qflow-image-opencv-"));
+    try {
+      const paths = new Map<string, string>();
+      for (const [index, source] of uniqueSources.entries()) {
+        const bytes = await context.resources.get(source.resource);
+        assert(bytes !== undefined, `Image source Artifact ${source.resource} is unavailable`);
+        assert(bytes.byteLength === source.size, "Image source size differs from its BlobRef");
+        const path = join(work, `source-${String(index + 1).padStart(4, "0")}.bin`);
+        await writeFile(path, bytes);
+        paths.set(source.resource, path);
+      }
+      const runtimeRequest = kind === "transform"
+        ? {
+            kind,
+            source: paths.get((need as ImageTransformRequest).source.resource),
+            operations: (need as ImageTransformRequest).operations,
+          }
+        : {
+            kind,
+            canvas: (need as ImageComposeRequest).canvas,
+            background: (need as ImageComposeRequest).background,
+            layers: (need as ImageComposeRequest).layers.map((layer) => ({
+              source: paths.get(layer.source.resource), frame: layer.frame, fit: layer.fit,
+              interpolation: layer.interpolation, opacity: layer.opacity,
+            })),
+          };
+      const program = join(work, "request.json");
+      const output = join(work, "output.bin");
+      await writeFile(program, JSON.stringify(runtimeRequest), "utf8");
+      await runProcess({
+        executable: pythonExecutable,
+        args: [script, program, output],
+        timeoutMs: processTimeoutMs,
+        maxStderrBytes: 256 * 1024,
+      });
+      const info = await stat(output);
+      assert(info.isFile() && info.size > 0 && info.size <= maxOutputBytes,
+        "OpenCV image execution produced an invalid output size");
+      const mediaType = kind === "transform"
+        ? imageTransformOutputMediaType(need as ImageTransformRequest)
+        : "image/png";
+      return { value: await context.resources.put(await readFile(output), mediaType) };
+    } finally {
+      await rm(work, { recursive: true, force: true }).catch(() => {});
+    }
+  };
+
+  return defineEndpoint({
     instance: config.instance ?? "image.opencv.local",
     pool: config.pool ?? config.instance ?? "image.opencv.local",
     pricing: { kind: "local" },
     defaultConcurrency: config.defaultConcurrency ?? 1,
     capabilities: [{
       lifecycle: "immediate" as const,
-      capability: rasterCapabilities.execute,
-      returns: artifactTypes.blob,
-      handler: async (context): Promise<EndpointFulfillment> => {
-        const need = request(context.need.constraints);
-        const sources = [...new Map(rasterSources(need).map((source) => [source.resource, source])).values()];
-        const totalInputBytes = sources.reduce((sum, source) => sum + source.size, 0);
-        assert(totalInputBytes <= maxInputBytes, "Raster inputs exceed their configured byte limit");
-        const work = await mkdtemp(join(tmpdir(), "qflow-raster-opencv-"));
-        try {
-          const paths = new Map<string, string>();
-          for (const [index, source] of sources.entries()) {
-            const bytes = await context.resources.get(source.resource);
-            assert(bytes !== undefined, `Raster source Artifact ${source.resource} is unavailable`);
-            assert(bytes.byteLength === source.size, "Raster source size differs from its BlobRef");
-            const path = join(work, `source-${String(index + 1).padStart(4, "0")}.bin`);
-            await writeFile(path, bytes);
-            paths.set(source.resource, path);
-          }
-          const runtimeRequest = need.kind === "transform"
-            ? { kind: "transform", source: paths.get(need.source.resource), operations: need.operations }
-            : {
-                kind: "compose", canvas: need.canvas, background: need.background,
-                layers: need.layers.map((layer) => ({
-                  source: paths.get(layer.source.resource), frame: layer.frame, fit: layer.fit,
-                  interpolation: layer.interpolation, opacity: layer.opacity,
-                })),
-              };
-          const program = join(work, "request.json");
-          const output = join(work, "output.bin");
-          await writeFile(program, JSON.stringify(runtimeRequest), "utf8");
-          await runProcess({
-            executable: pythonExecutable,
-            args: [script, program, output],
-            timeoutMs: processTimeoutMs,
-            maxStderrBytes: 256 * 1024,
-          });
-          const info = await stat(output);
-          assert(info.isFile() && info.size > 0 && info.size <= maxOutputBytes,
-            "OpenCV raster execution produced an invalid output size");
-          const mediaType = rasterOutputMediaType(need);
-          const artifact = await context.resources.put(await readFile(output), mediaType);
-          return {
-            value: artifact,
-          };
-        } finally {
-          await rm(work, { recursive: true, force: true }).catch(() => {});
-        }
-      },
+      capability: imageOperationsCapabilities.transform,
+      returns: blobTypes.blob,
+      handler: async (context): Promise<EndpointFulfillment> =>
+        await execute("transform", transformRequest(context.need.constraints), context),
+    }, {
+      lifecycle: "immediate" as const,
+      capability: imageOperationsCapabilities.compose,
+      returns: blobTypes.blob,
+      handler: async (context): Promise<EndpointFulfillment> =>
+        await execute("compose", composeRequest(context.need.constraints), context),
     }],
   });
 }

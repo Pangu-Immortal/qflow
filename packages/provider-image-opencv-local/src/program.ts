@@ -1,10 +1,10 @@
 import { execFile } from "node:child_process";
 
-import type { ManagedProgram, ManagedProgramState } from "@qflow/runtime-kit";
+import type { ManagedProgram, ManagedProgramState } from "@qflow/runtime-local/extension";
 
 import type { LocalOpenCvDeployment } from "./deployment.js";
 
-/** Kept equal to `services/image-opencv/pyproject.toml` by a test in this package. */
+/** Kept equal to this Provider's bundled `runtime/pyproject.toml` by a package test. */
 const REQUIRED_MAJOR = { cv2: 4, numpy: 2 } as const;
 
 const PROBE_PROGRAM =

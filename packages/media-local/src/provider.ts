@@ -1,0 +1,147 @@
+import { mediaTypes } from "@qflow/qflow/media";
+import { blobTypes } from "@qflow/qflow/blob";
+import {
+  executeExtractAudio,
+  executeExtractFrame,
+  executeInspectMedia,
+  executeMuxProgramMedia,
+  executeNormalizeMedia,
+  executeProjectSpeechEvidenceAudio,
+  executeRenderTimelineAudio,
+  executeRenderStillVideo,
+  executeTransformMedia,
+} from "./execute.js";
+import type { MediaExecutionEnvironment, MediaOperationResult } from "./execute.js";
+import { mediaOperationsCapabilities } from "@qflow/media-operations";
+import { isStreamingResourceStore } from "@qflow/qflow/endpoint";
+import { speechEvidenceCapabilities, speechEvidenceTypes } from "@qflow/qflow/speech-evidence";
+import { defineEndpoint } from "@qflow/qflow/endpoint";
+import type { EndpointFulfillment, EndpointInvocationContext } from "@qflow/qflow/endpoint";
+
+export const localMediaProviderModuleRef = { name: "@qflow/media-local", version: "1" } as const;
+
+export type CreateLocalMediaProviderOptions = {
+  readonly instance?: string;
+  readonly pool?: string;
+  readonly ffmpegPath?: string;
+  readonly ffprobePath?: string;
+  readonly defaultConcurrency?: number;
+  readonly processTimeoutMs?: number;
+  readonly maxProbeOutputBytes?: number;
+};
+
+function assert(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(message);
+}
+
+function positiveInteger(value: number, subject: string): number {
+  assert(Number.isSafeInteger(value) && value > 0, `${subject} must be a positive integer`);
+  return value;
+}
+
+function fulfillment(result: MediaOperationResult): EndpointFulfillment {
+  return { value: result.value };
+}
+
+/**
+ * Execute media-operation Needs against the Build's ResourceStore and the
+ * FFmpeg toolchain selected for this local Provider.
+ */
+export function createLocalMediaProvider(config: CreateLocalMediaProviderOptions) {
+  const ffmpegPath = config.ffmpegPath ?? "ffmpeg";
+  const ffprobePath = config.ffprobePath ?? "ffprobe";
+  const processTimeoutMs = positiveInteger(config.processTimeoutMs ?? 10 * 60_000, "processTimeoutMs");
+  const maxProbeOutputBytes = positiveInteger(config.maxProbeOutputBytes ?? 256 * 1024 * 1024,
+    "maxProbeOutputBytes");
+  const common = { ffmpegPath, ffprobePath, processTimeoutMs, maxProbeOutputBytes };
+  const environment = (context: EndpointInvocationContext): MediaExecutionEnvironment => ({
+    ...common,
+    artifacts: {
+      get: async (source) => await context.resources.get(source.resource),
+      open: async (source) => isStreamingResourceStore(context.resources)
+        ? await context.resources.open(source.resource)
+        : await context.resources.get(source.resource).then((bytes) => bytes === undefined
+          ? undefined
+          : (async function* () { yield bytes; })()),
+      put: async (bytes, mediaType) => await context.resources.put(bytes, mediaType),
+      putFile: async (path, mediaType) => isStreamingResourceStore(context.resources)
+        ? await context.resources.putStream(createReadStream(path), mediaType)
+        : await context.resources.put(await readFile(path), mediaType),
+    },
+  });
+  const operation = (
+    execute: (env: MediaExecutionEnvironment, constraints: never) => Promise<MediaOperationResult>,
+  ) => async (context: EndpointInvocationContext): Promise<EndpointFulfillment> =>
+    fulfillment(await execute(environment(context), context.need.constraints as never));
+
+  return defineEndpoint({
+    instance: config.instance ?? "media.local",
+    pool: config.pool ?? config.instance ?? "media.local",
+    pricing: { kind: "local" },
+    defaultConcurrency: config.defaultConcurrency ?? 1,
+    capabilities: [
+      {
+        lifecycle: "immediate" as const,
+        transient: true,
+        capability: mediaOperationsCapabilities.inspect,
+        returns: mediaTypes.inspection,
+        handler: operation(executeInspectMedia),
+      },
+      {
+        lifecycle: "immediate" as const,
+        transient: true,
+        capability: mediaOperationsCapabilities.normalize,
+        returns: mediaTypes.synchronized,
+        handler: operation(executeNormalizeMedia),
+      },
+      {
+        lifecycle: "immediate" as const,
+        transient: true,
+        capability: mediaOperationsCapabilities.transform,
+        returns: blobTypes.blob,
+        handler: operation(executeTransformMedia),
+      },
+      {
+        lifecycle: "immediate" as const,
+        transient: true,
+        capability: mediaOperationsCapabilities.extractAudio,
+        returns: blobTypes.blob,
+        handler: operation(executeExtractAudio),
+      },
+      {
+        lifecycle: "immediate" as const,
+        transient: true,
+        capability: mediaOperationsCapabilities.extractFrame,
+        returns: blobTypes.blob,
+        handler: operation(executeExtractFrame),
+      },
+      {
+        lifecycle: "immediate" as const,
+        transient: true,
+        capability: mediaOperationsCapabilities.renderStill,
+        returns: blobTypes.blob,
+        handler: operation(executeRenderStillVideo),
+      },
+      {
+        lifecycle: "immediate" as const,
+        capability: speechEvidenceCapabilities.projectAudio,
+        returns: speechEvidenceTypes.audio,
+        handler: operation(executeProjectSpeechEvidenceAudio),
+      },
+      {
+        lifecycle: "immediate" as const,
+        capability: mediaOperationsCapabilities.renderAudio,
+        returns: mediaTypes.timelineAudio,
+        handler: operation(executeRenderTimelineAudio),
+      },
+      {
+        lifecycle: "immediate" as const,
+        capability: mediaOperationsCapabilities.mux,
+        returns: mediaTypes.muxed,
+        handler: operation(executeMuxProgramMedia),
+      },
+    ],
+  });
+}
+import { createReadStream } from "node:fs";
+import { readFile } from "node:fs/promises";

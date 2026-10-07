@@ -1,0 +1,29 @@
+{
+  "name": "@qflow/image-operations",
+  "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/blob": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/qflow": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/spatial": "workspace:*"
+  }
+}

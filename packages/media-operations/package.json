@@ -1,0 +1,34 @@
+{
+  "name": "@qflow/media-operations",
+  "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^"
+  },
+  "devDependencies": {
+    "@qflow/blob": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/composition": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/media": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/run": "workspace:*",
+    "@qflow/recipe": "workspace:*",
+    "@qflow/markup": "workspace:*",
+    "@qflow/timeline": "workspace:*",
+    "@qflow/temporal": "workspace:*",
+    "@qflow/qflow": "workspace:*"
+  }
+}
