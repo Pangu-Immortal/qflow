@@ -1,11 +1,11 @@
-import { assertTimelineIdentity, timelineFrameSampleBoundary, timelineSampleFrames } from "@qflow/timeline";
-import type { Timeline } from "@qflow/timeline";
+import { assertTimelineIdentity, timelineFrameSampleBoundary, timelineSampleFrames } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/qflow/timeline";
 import {
   assertAudioTrackIdentity,
   assertVisualTrackIdentity,
   sealAudioTrack,
   sealVisualTrack,
-} from "@qflow/composition";
+} from "@qflow/qflow/composition";
 import type {
   AudioClip,
   AudioTrack,
@@ -14,8 +14,8 @@ import type {
   VisualPresent,
   VisualStyleDeclaration,
   VisualTrack,
-} from "@qflow/composition";
-import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/media";
+} from "@qflow/qflow/composition";
+import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/qflow/media";
 
 import {
   assertColumnProgram,

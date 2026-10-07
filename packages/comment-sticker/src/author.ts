@@ -1,6 +1,6 @@
-import { assertFontStackRef } from "@qflow/media";
-import type { FontStackRef } from "@qflow/media";
-import type { SvsRecipe } from "@qflow/svs";
+import { assertFontStackRef } from "@qflow/qflow/media";
+import type { FontStackRef } from "@qflow/qflow/media";
+import type { Recipe } from "@qflow/qflow/recipe";
 
 import { sealCommentStickerStyle } from "./program.js";
 import type { CommentStickerStyle, CommentStickerTextStyle } from "./types.js";
@@ -19,53 +19,53 @@ const KEYS = new Set([
   "hold", "hold-amplitude-y", "hold-rotation-amplitude", "hold-period-frames",
 ]);
 
-function fail(recipe: SvsRecipe, message: string): never {
+function fail(recipe: Recipe, message: string): never {
   throw new Error(`Comment Sticker Recipe ${recipe.path} ${message}`);
 }
 
-function optionalNumber(recipe: SvsRecipe, name: string): number | undefined {
+function optionalNumber(recipe: Recipe, name: string): number | undefined {
   const value = recipe.properties[name];
   if (value === undefined) return undefined;
   if (typeof value !== "number" || !Number.isFinite(value)) fail(recipe, `${name} must be a finite number.`);
   return value;
 }
 
-function number(recipe: SvsRecipe, name: string, fallback: number): number {
+function number(recipe: Recipe, name: string, fallback: number): number {
   return optionalNumber(recipe, name) ?? fallback;
 }
 
-function integer(recipe: SvsRecipe, name: string, fallback: number): number {
+function integer(recipe: Recipe, name: string, fallback: number): number {
   const value = number(recipe, name, fallback);
   if (!Number.isSafeInteger(value)) fail(recipe, `${name} must be an integer.`);
   return value;
 }
 
-function optionalString(recipe: SvsRecipe, name: string): string | undefined {
+function optionalString(recipe: Recipe, name: string): string | undefined {
   const value = recipe.properties[name];
   if (value === undefined) return undefined;
   if (typeof value !== "string" || value.trim().length === 0) fail(recipe, `${name} must be text.`);
   return value.trim();
 }
 
-function string(recipe: SvsRecipe, name: string, fallback: string): string {
+function string(recipe: Recipe, name: string, fallback: string): string {
   return optionalString(recipe, name) ?? fallback;
 }
 
-function boolean(recipe: SvsRecipe, name: string, fallback: boolean): boolean {
+function boolean(recipe: Recipe, name: string, fallback: boolean): boolean {
   const value = recipe.properties[name];
   if (value === undefined) return fallback;
   if (typeof value !== "boolean") fail(recipe, `${name} must be boolean.`);
   return value;
 }
 
-function oneOf<const T extends string>(recipe: SvsRecipe, name: string, values: readonly T[], fallback: T): T {
+function oneOf<const T extends string>(recipe: Recipe, name: string, values: readonly T[], fallback: T): T {
   const value = string(recipe, name, fallback);
   if (!values.includes(value as T)) fail(recipe, `${name} must be ${values.join(" | ")}.`);
   return value as T;
 }
 
 function typography(
-  recipe: SvsRecipe,
+  recipe: Recipe,
   fonts: FontStackRef,
   prefix: "header" | "body" | "meta",
   defaults: Omit<CommentStickerTextStyle, "fonts">,
@@ -79,7 +79,7 @@ function typography(
   };
 }
 
-export function decodeCommentStickerStyle(recipe: SvsRecipe, fonts: FontStackRef, id: string): CommentStickerStyle {
+export function decodeCommentStickerStyle(recipe: Recipe, fonts: FontStackRef, id: string): CommentStickerStyle {
   assertFontStackRef(fonts, "Comment Sticker font stack");
   const unknown = Object.keys(recipe.properties).filter((key) => !KEYS.has(key));
   if (unknown.length > 0) fail(recipe, `does not accept ${unknown.join(", ")}.`);

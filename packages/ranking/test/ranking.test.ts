@@ -6,12 +6,12 @@ import { fixtureResource } from "../../../test/fixture-resource.js";
 import { narrativeProjectionFixture, timelineFixture } from "../../../test/timeline-fixture.js";
 import { projectMomentInstantFixture, projectSegmentWindow, projectSelectionWindow } from "../../../test/temporal-fixture.js";
 
-import { createResolvedClosure } from "@qflow/core";
+import { createResolvedClosure } from "@qflow/kernel";
 import type { FontArtifactRef, SynchronizedMedia } from "@qflow/media";
 import { mediaTypes } from "@qflow/media";
 import type { NarrativeSegmentRef, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
 import { sealCanvas, sealSpatialFrame } from "@qflow/spatial";
-import type { SvsRecipe } from "@qflow/svs";
+import type { Recipe } from "@qflow/recipe";
 
 import {
   appendColumnItem,
@@ -78,7 +78,7 @@ import type {
   TopThreeItemSpec,
 } from "@qflow/ranking";
 import { spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
+import { recipeType } from "@qflow/recipe";
 import { sealText, textManifest, textTypes } from "@qflow/text";
 import { temporalProducers, temporalTypes } from "@qflow/temporal";
 import type { TemporalWindow } from "@qflow/temporal";
@@ -151,7 +151,7 @@ const font: FontArtifactRef = {
   weight: 700,
   style: "normal",
 };
-const recipe = (path: string, properties: SvsRecipe["properties"] = {}): SvsRecipe => ({
+const recipe = (path: string, properties: Recipe["properties"] = {}): Recipe => ({
   path, properties,
 });
 const image = (id: string) => ({ kind: "blob" as const, resource: fixtureResource(`ranking-image:${id}`), size: 64, mediaType: "image/png" });
@@ -547,7 +547,7 @@ test("all three author Surfaces preserve absolute temporal, spatial, font, image
     ["top-style", rankingTypes.topThreeStyle, decodeTopThreeStyleSurface, {}],
   ] as const;
   for (const [id, type, handler, properties] of styleCases) {
-    references.set(`${id}-recipe`, inlineReference(`${id}-recipe`, svsRecipeType, recipe(id, properties)));
+    references.set(`${id}-recipe`, inlineReference(`${id}-recipe`, recipeType, recipe(id, properties)));
     const result = await handler({
       sourceName: "ranking.svml",
       element: node(`ranking:${type.name.replace(/Style$/u, "Style")}`, { id, recipe: ref(`${id}-recipe`), font: ref("font") }),

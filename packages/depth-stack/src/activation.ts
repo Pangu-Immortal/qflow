@@ -1,4 +1,7 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { createStudioTrackCompanionFacet } from "@qflow/studio-companion";
 
 import {
   decodeDepthStackLabelSurface,
@@ -8,24 +11,26 @@ import {
   depthStackModuleRef,
   depthStackMarkupSurfaces,
 } from "./index.js";
+import { depthStackStudioTrackCompanions } from "./studio.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{
     manifest: depthStackManifest,
   }],
-  components: [depthStackComponent],
-  hostFacets: [
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[depthStackComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    createMarkupSurfaceFacet({
       module: depthStackModuleRef,
     declaration: depthStackMarkupSurfaces.find((item) => item.name === "label")!,
       handler: decodeDepthStackLabelSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: depthStackModuleRef,
     declaration: depthStackMarkupSurfaces.find((item) => item.name === "track")!,
       handler: decodeDepthStackSurface,
     }),
+    createStudioTrackCompanionFacet(depthStackStudioTrackCompanions),
   ],
 };
 

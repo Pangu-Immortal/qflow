@@ -1,13 +1,13 @@
-import { timelineTypes } from "@qflow/timeline";
+import { timelineTypes } from "@qflow/qflow/timeline";
 
-import { artifactTypes } from "@qflow/artifact";
-import { compositionTypes } from "@qflow/composition";
-import { sealGraphFragment } from "@qflow/elaborator";
-import type { FragmentOperation, GraphFragment } from "@qflow/elaborator";
-import { mediaTypes } from "@qflow/media";
+import { blobTypes } from "@qflow/qflow/blob";
+import { compositionTypes } from "@qflow/qflow/composition";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import type { FragmentOperation, GraphFragment } from "@qflow/qflow/author";
+import { mediaTypes } from "@qflow/qflow/media";
 import { visualTrackProducers, visualTrackTypes } from "@qflow/visual-track";
-import { spatialTypes } from "@qflow/spatial";
-import { temporalTypes } from "@qflow/temporal";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { temporalTypes } from "@qflow/qflow/temporal";
 
 import { depthStackProducers, depthStackTypes } from "./manifest.js";
 
@@ -29,7 +29,7 @@ export type DepthStackFragmentCard = {
 
 function sourceInput(card: DepthStackFragmentCard): GraphFragment["inputs"][number] {
   const type = card.sourceKind === "still"
-    ? artifactTypes.blob
+    ? blobTypes.blob
     : card.sourceKind === "timed" ? mediaTypes.synchronized : mediaTypes.compositableSurface;
   return { name: card.sourceName, type };
 }

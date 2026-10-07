@@ -9,8 +9,8 @@ import type {
   MediaPaintLayerSpec,
   MediaSampleLayerSpec,
 } from "@qflow/visual-track";
-import type { ContentFit } from "@qflow/spatial";
-import type { SvsRecipe } from "@qflow/svs";
+import type { ContentFit } from "@qflow/qflow/spatial";
+import type { Recipe } from "@qflow/qflow/recipe";
 
 import {
   sealDepthStackCardSpec,
@@ -37,28 +37,28 @@ const DECK_KEYS = [
   "stack-order",
 ] as const;
 
-function fail(recipe: SvsRecipe, message: string): never {
+function fail(recipe: Recipe, message: string): never {
   throw new Error(`DepthStack Recipe ${recipe.path} ${message}`);
 }
 
-function optionalNumber(recipe: SvsRecipe, name: string): number | undefined {
+function optionalNumber(recipe: Recipe, name: string): number | undefined {
   const value = recipe.properties[name];
   if (value === undefined) return undefined;
   if (typeof value !== "number" || !Number.isFinite(value)) fail(recipe, `${name} must be a finite number.`);
   return value;
 }
 
-function number(recipe: SvsRecipe, name: string, fallback: number): number {
+function number(recipe: Recipe, name: string, fallback: number): number {
   return optionalNumber(recipe, name) ?? fallback;
 }
 
-function integer(recipe: SvsRecipe, name: string, fallback: number): number {
+function integer(recipe: Recipe, name: string, fallback: number): number {
   const value = number(recipe, name, fallback);
   if (!Number.isSafeInteger(value)) fail(recipe, `${name} must be an integer.`);
   return value;
 }
 
-function optionalString(recipe: SvsRecipe, name: string): string | undefined {
+function optionalString(recipe: Recipe, name: string): string | undefined {
   const value = recipe.properties[name];
   if (value === undefined) return undefined;
   if (typeof value !== "string" || value.trim().length === 0) fail(recipe, `${name} must be text.`);
@@ -66,7 +66,7 @@ function optionalString(recipe: SvsRecipe, name: string): string | undefined {
 }
 
 function oneOf<T extends string>(
-  recipe: SvsRecipe,
+  recipe: Recipe,
   name: string,
   values: readonly T[],
   fallback: T,
@@ -76,15 +76,15 @@ function oneOf<T extends string>(
   return value as T;
 }
 
-function boolean(recipe: SvsRecipe, name: string, fallback: boolean): boolean {
+function boolean(recipe: Recipe, name: string, fallback: boolean): boolean {
   const value = recipe.properties[name];
   if (value === undefined) return fallback;
   if (typeof value !== "boolean") fail(recipe, `${name} must be boolean.`);
   return value;
 }
 
-function mediaRecipe(recipe: SvsRecipe, keys: readonly string[]): SvsRecipe {
-  const selected: Record<string, SvsRecipe["properties"][string]> = {};
+function mediaRecipe(recipe: Recipe, keys: readonly string[]): Recipe {
+  const selected: Record<string, Recipe["properties"][string]> = {};
   for (const key of keys) {
     const value = recipe.properties[key];
     if (value !== undefined) selected[key] = value;
@@ -92,7 +92,7 @@ function mediaRecipe(recipe: SvsRecipe, keys: readonly string[]): SvsRecipe {
   return { ...recipe, properties: selected };
 }
 
-function tone(recipe: SvsRecipe, prefix: string, fallback: DeckCardTone): DeckCardTone {
+function tone(recipe: Recipe, prefix: string, fallback: DeckCardTone): DeckCardTone {
   return {
     brightness: number(recipe, `${prefix}-brightness`, fallback.brightness),
     contrast: number(recipe, `${prefix}-contrast`, fallback.contrast),
@@ -101,7 +101,7 @@ function tone(recipe: SvsRecipe, prefix: string, fallback: DeckCardTone): DeckCa
 }
 
 function step(
-  recipe: SvsRecipe,
+  recipe: Recipe,
   prefix: "previous" | "next",
   defaults: DepthStackPoseStep,
 ): DepthStackPoseStep {
@@ -117,7 +117,7 @@ function step(
   };
 }
 
-function assertKnownKeys(recipe: SvsRecipe): void {
+function assertKnownKeys(recipe: Recipe): void {
   const allowed = new Set<string>([
     ...DECK_KEYS,
     ...visualMaterialKeys.fit,
@@ -128,7 +128,7 @@ function assertKnownKeys(recipe: SvsRecipe): void {
   if (unknown.length > 0) fail(recipe, `does not accept ${unknown.join(", ")}.`);
 }
 
-export function decodeDepthStackSpec(recipe: SvsRecipe): DepthStackSpec {
+export function decodeDepthStackSpec(recipe: Recipe): DepthStackSpec {
   assertKnownKeys(recipe);
   const frameRecipe = mediaRecipe(recipe, visualMaterialKeys.frame);
   const previousDefaults: DepthStackPoseStep = {
@@ -180,7 +180,7 @@ export function decodeDepthStackSpec(recipe: SvsRecipe): DepthStackSpec {
   });
 }
 
-export function decodeDepthStackCardSpec(recipe: SvsRecipe, id: string): DepthStackCardSpec {
+export function decodeDepthStackCardSpec(recipe: Recipe, id: string): DepthStackCardSpec {
   assertKnownKeys(recipe);
   return sealDepthStackCardSpec({
 
@@ -193,7 +193,7 @@ export function decodeDepthStackCardSpec(recipe: SvsRecipe, id: string): DepthSt
 }
 
 export function decodeDepthStackMaterial(
-  recipe: SvsRecipe,
+  recipe: Recipe,
   id: string,
   sourceKind: "still" | "timed" | "surface",
 ): {

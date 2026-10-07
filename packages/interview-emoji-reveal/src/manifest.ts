@@ -1,15 +1,15 @@
-import { timelineTypes, timelineDependency } from "@qflow/timeline";
-import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
+import { timelineTypes, timelineDependency } from "@qflow/qflow/timeline";
+import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal/markup";
 import { readFile } from "node:fs/promises";
 
-import { artifactDependency, artifactTypes } from "@qflow/artifact";
-import { compositionDependency, compositionTypes } from "@qflow/composition";
+import { blobDependency, blobTypes } from "@qflow/qflow/blob";
+import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
 
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { spatialDependency, spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import { temporalDependency, temporalInstantSchema, temporalTypes, temporalWindowSchema } from "@qflow/temporal";
-import { temporalWindowAttributeVocabulary } from "@qflow/temporal-markup";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
+import { spatialDependency, spatialTypes } from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
+import { temporalDependency, temporalInstantSchema, temporalTypes, temporalWindowSchema } from "@qflow/qflow/temporal";
+import { temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal/markup";
 
 const previewImage = (file: string) => ({
   mediaType: "image/png",
@@ -101,7 +101,7 @@ export const emojiRevealMarkupSurfaces = [
       summary: "Compiles one Recipe into the visual Style shared by an SVG Reveal strip.",
       attributes: [
         { name: "id", kind: "identifier", required: true, summary: "Names this Style." },
-        { name: "recipe", kind: "reference", required: true, accepts: [svsRecipeType],
+        { name: "recipe", kind: "reference", required: true, accepts: [recipeType],
           summary: "Chooses the Recipe that controls placement, board paint, slot geometry and reveal motion.",
           recipe: recipe.map(([name, fallback, summary]) => ({ name, required: false, fallback, summary })) },
       ],
@@ -119,12 +119,12 @@ export const emojiRevealMarkupSurfaces = [
         ...temporalContextAttributeVocabulary,
         { name: "within", kind: "reference", required: true, accepts: [spatialTypes.frame], summary: "Chooses the Frame used for normalized placement." },
         { name: "style", kind: "reference", required: true, accepts: [emojiRevealTypes.style], summary: "Chooses the strip Style." },
-        { name: "placeholder", kind: "reference", required: true, accepts: [artifactTypes.blob], summary: "Supplies the one image drawn in every unrevealed slot." },
+        { name: "placeholder", kind: "reference", required: true, accepts: [blobTypes.blob], summary: "Supplies the one image drawn in every unrevealed slot." },
         ...temporalWindowAttributeVocabulary,
       ],
       children: [{ tag: "Item", cardinality: "many", summary: "One answer slot, either settled from the start or revealed at one event.", attributes: [
         { name: "id", kind: "identifier", required: true, summary: "Names this answer slot and the timing subject it owns." },
-        { name: "icon", kind: "reference", required: true, accepts: [artifactTypes.blob], summary: "Supplies this answer as an image Artifact from the same visual icon family as the placeholder." },
+        { name: "icon", kind: "reference", required: true, accepts: [blobTypes.blob], summary: "Supplies this answer as an image Artifact from the same visual icon family as the placeholder." },
         { name: "preset", kind: "literal", required: false, values: ["true", "false"], summary: "Settles this Item from the start of the EmojiReveal Window; preset Items have no at." },
         { name: "at", kind: "expression", required: false, accepts: [temporalTypes.instant], summary: "Chooses this non-preset Item's resolved reveal Instant or authored absolute time; required unless preset is true." },
       ] }],
@@ -147,7 +147,7 @@ export const emojiRevealMarkupSurfaces = [
 
 export const emojiRevealManifest: ModuleManifest = {
   format: "qflow.module@1", name: emojiRevealModuleRef.name, version: emojiRevealModuleRef.version,
-  dependencies: [artifactDependency, timelineDependency, spatialDependency, temporalDependency, compositionDependency],
+  dependencies: [blobDependency, timelineDependency, spatialDependency, temporalDependency, compositionDependency],
   types: [
     { name: emojiRevealTypes.header.name }, { name: emojiRevealTypes.style.name },
     { name: emojiRevealTypes.itemSpec.name }, { name: emojiRevealTypes.set.name }, { name: emojiRevealTypes.program.name },
@@ -156,13 +156,13 @@ export const emojiRevealManifest: ModuleManifest = {
   producers: [
     { name: emojiRevealProducers.createSet.name, inputs: [], outputs: [{ name: "set", type: emojiRevealTypes.set }], needs: [] },
     { name: emojiRevealProducers.appendItem.name,
-      inputs: [{ name: "set", type: emojiRevealTypes.set }, { name: "timeline", type: timelineTypes.timeline }, { name: "spec", type: emojiRevealTypes.itemSpec }, { name: "icon", type: artifactTypes.blob }, { name: "activation", type: temporalTypes.instant }],
+      inputs: [{ name: "set", type: emojiRevealTypes.set }, { name: "timeline", type: timelineTypes.timeline }, { name: "spec", type: emojiRevealTypes.itemSpec }, { name: "icon", type: blobTypes.blob }, { name: "activation", type: temporalTypes.instant }],
       outputs: [{ name: "set", type: emojiRevealTypes.set }], needs: [] },
     { name: emojiRevealProducers.appendPresetItem.name,
-      inputs: [{ name: "set", type: emojiRevealTypes.set }, { name: "spec", type: emojiRevealTypes.itemSpec }, { name: "icon", type: artifactTypes.blob }],
+      inputs: [{ name: "set", type: emojiRevealTypes.set }, { name: "spec", type: emojiRevealTypes.itemSpec }, { name: "icon", type: blobTypes.blob }],
       outputs: [{ name: "set", type: emojiRevealTypes.set }], needs: [] },
     { name: emojiRevealProducers.finalize.name,
-      inputs: [{ name: "header", type: emojiRevealTypes.header }, { name: "timeline", type: timelineTypes.timeline }, { name: "outer", type: temporalTypes.window }, { name: "style", type: emojiRevealTypes.style }, { name: "placeholder", type: artifactTypes.blob }, { name: "set", type: emojiRevealTypes.set }],
+      inputs: [{ name: "header", type: emojiRevealTypes.header }, { name: "timeline", type: timelineTypes.timeline }, { name: "outer", type: temporalTypes.window }, { name: "style", type: emojiRevealTypes.style }, { name: "placeholder", type: blobTypes.blob }, { name: "set", type: emojiRevealTypes.set }],
       outputs: [{ name: "program", type: emojiRevealTypes.program }], needs: [] },
     { name: emojiRevealProducers.render.name,
       inputs: [{ name: "within", type: spatialTypes.frame }, { name: "timeline", type: timelineTypes.timeline }, { name: "program", type: emojiRevealTypes.program }],

@@ -1,24 +1,17 @@
-import { resolveTemporalContext } from "@qflow/temporal-markup";
-import { artifactTypes } from "@qflow/artifact";
-import { mediaTypes } from "@qflow/media";
-import type { FontStackRef } from "@qflow/media";
+import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { blobTypes } from "@qflow/qflow/blob";
+import { mediaTypes } from "@qflow/qflow/media";
+import type { FontStackRef } from "@qflow/qflow/media";
 import { visualTrackTypes } from "@qflow/visual-track";
-import type { TypeRef } from "@qflow/protocol";
-import { spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import { createTemporalInstantConstruction, temporalInstantAttributeNames } from "@qflow/temporal-markup";
-import type { SvsRecipe } from "@qflow/svs";
-import { sealText, textTypes } from "@qflow/text";
-import { sealGraphFragment } from "@qflow/elaborator";
-import type { AuthorValueRef } from "@qflow/elaborator";
-import type {
-  StructuredElement,
-  StructuredSurfaceHandler,
-  SurfaceComponentDraft,
-  SurfaceRecordDraft,
-  SurfaceResolvedReference,
-  MarkupAttributeValue,
-} from "@qflow/markup";
+import type { TypeRef } from "@qflow/qflow/protocol";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
+import { createTemporalInstantConstruction, temporalInstantAttributeNames } from "@qflow/qflow/temporal/markup";
+import type { Recipe } from "@qflow/qflow/recipe";
+import { sealText, textTypes } from "@qflow/qflow/text";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import type { AuthorValueRef } from "@qflow/qflow/author";
+import type { StructuredElement, StructuredSurfaceHandler, SurfaceComponentDraft, SurfaceRecordDraft, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/qflow/markup";
 
 import {
   decodeDepthStackCardSpec,
@@ -108,8 +101,8 @@ function recipe(
   raw: MarkupAttributeValue | undefined,
   label: string,
   resolve: (path: string) => SurfaceResolvedReference | undefined,
-): SvsRecipe {
-  return inline<SvsRecipe>(reference(raw, label, svsRecipeType, resolve), label);
+): Recipe {
+  return inline<Recipe>(reference(raw, label, recipeType, resolve), label);
 }
 
 function labelText(element: StructuredElement): string {
@@ -216,8 +209,8 @@ export const decodeDepthStackSurface: StructuredSurfaceHandler = ({ element, res
     cardIndex += 1;
     const suffix = String(cardIndex).padStart(4, "0");
     const cardId = text(child, "id");
-    const source = oneOfReference(child.attributes.source, `${child.name}.source`, [artifactTypes.blob, mediaTypes.synchronized, mediaTypes.compositableSurface], resolveReference);
-    const sourceKind = sameType(source.type, artifactTypes.blob) ? "still"
+    const source = oneOfReference(child.attributes.source, `${child.name}.source`, [blobTypes.blob, mediaTypes.synchronized, mediaTypes.compositableSurface], resolveReference);
+    const sourceKind = sameType(source.type, blobTypes.blob) ? "still"
       : sameType(source.type, mediaTypes.synchronized) ? "timed" : "surface";
     const extent = child.attributes.extent === undefined ? undefined
       : reference(child.attributes.extent, `${child.name}.extent`, spatialTypes.extent, resolveReference);

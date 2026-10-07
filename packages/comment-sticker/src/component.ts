@@ -1,9 +1,10 @@
-import type { Timeline } from "@qflow/timeline";
-import type { ComponentPackage, ProducerHandlerContext } from "@qflow/component-kit";
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, StoredValue } from "@qflow/protocol";
-import type { SpatialFrame } from "@qflow/spatial";
-import type { Text } from "@qflow/text";
+import type { Timeline } from "@qflow/qflow/timeline";
+import type { ProducerPackage, ProducerHandlerContext } from "@qflow/qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, StoredValue } from "@qflow/qflow/protocol";
+import type { SpatialFrame } from "@qflow/qflow/spatial";
+import type { Text } from "@qflow/qflow/text";
 
 import { commentStickerProducers, commentStickerTypes } from "./manifest.js";
 import { appendProjectedCommentSticker, assertCommentStickerProgram, createCommentStickerSet, createCommentStickerContent, setCommentStickerContentText, finalizeCommentSticker, renderCommentSticker } from "./program.js";
@@ -15,7 +16,7 @@ import type {
   CommentStickerSet,
   CommentStickerStyle,
 } from "./types.js";
-import type { TemporalWindow } from "@qflow/temporal";
+import type { TemporalWindow } from "@qflow/qflow/temporal";
 
 function inline<T>(value: StoredValue | undefined, label: string): T {
   if (value?.kind !== "inline") throw new Error(`${label} must be inline.`);
@@ -93,4 +94,4 @@ export const commentStickerComponent = {
     type: commentStickerTypes.program,
     handler: ({ value }) => assertCommentStickerProgram(inline<CommentStickerProgram>(value, "CommentStickerProgram")),
   }],
-} satisfies ComponentPackage;
+} satisfies ProducerPackage & AdmissionPackage;

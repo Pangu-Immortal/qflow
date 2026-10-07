@@ -1,8 +1,8 @@
-import { depthStackMarkupSurfaces, depthStackModuleRef } from "@qflow/depth-stack";
-import type { DepthStackProgram } from "@qflow/depth-stack";
-import { compositionTypes } from "@qflow/composition";
-import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration } from "@qflow/studio-adapter";
-import { requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-adapter";
+import { depthStackMarkupSurfaces, depthStackModuleRef } from "./index.js";
+import type { DepthStackProgram } from "./index.js";
+import { compositionTypes } from "@qflow/qflow/composition";
+import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration } from "@qflow/studio-companion";
+import { requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-companion";
 
 const deckProperties = (depthStackMarkupSurfaces
   .find((surface) => surface.name === "track")?.vocabulary.attributes
@@ -107,7 +107,7 @@ function projectDeck(context: StudioTrackCompanionContext): readonly StudioEntit
   });
 }
 
-export const deckTrackStudioTrackCompanions: readonly StudioTrackCompanion[] = [
+export const depthStackStudioTrackCompanions: readonly StudioTrackCompanion[] = [
   {
     id: "track", role: "track",
     output: { type: compositionTypes.visualTrack, surface: "track", modules: [depthStackModuleRef] },

@@ -44,23 +44,25 @@ attributes, children, outputs and configured example.
 
 ## Read it as a temporal component example
 
-The following files are included in the Distribution and show how the responsibilities connect:
+The published package contains compiled code, preview material and this README. The maintained source
+lives in the Qflow repository; these links show how the responsibilities connect without claiming the
+installed tarball contains a second editable source tree:
 
 | File | What to learn from it |
 | --- | --- |
-| [surface.ts](src/surface.ts) | `rankingSurface` resolves author inputs, projects the outer and item times through `createTemporalWindowConstruction` / `createTemporalInstantConstruction`, and retains the returned drafts and references. |
-| [fragment.ts](src/fragment.ts) | `createRankingFragment` receives Timeline and wires typed content, time, layout and Style inputs into finite operations. |
-| [schedule.ts](src/schedule.ts) | Compute reveal, activation and settled spans from the projected times. |
-| [component.ts](src/component.ts) and [render.ts](src/render.ts) | Build the ranking program and produce picture and optional sound from that schedule. |
-| [manifest.ts](src/manifest.ts) and [activation.ts](src/activation.ts) | Publish Types, Producers, Surface vocabulary and package contributions. |
-| [Ranking Companion](../ranking-studio/src/index.ts) | Read the same program, present persistent rows and activation lanes, and connect edits to actual Source inputs. |
+| [surface.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/surface.ts) | `rankingSurface` resolves author inputs, projects the outer and item times through `createTemporalWindowConstruction` / `createTemporalInstantConstruction`, and retains the returned drafts and references. |
+| [fragment.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/fragment.ts) | `createRankingFragment` receives Timeline and wires typed content, time, layout and Style inputs into finite operations. |
+| [schedule.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/schedule.ts) | Compute reveal, activation and settled spans from the projected times. |
+| [component.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/component.ts) and [render.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/render.ts) | Build the ranking program and produce picture and optional sound from that schedule. |
+| [manifest.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/manifest.ts) and [activation.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/activation.ts) | Publish Types, Producers, Surface vocabulary and package contributions. |
+| [Ranking Companion](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/studio.ts) | Read the same program, present persistent rows and activation lanes, and connect edits to actual Source inputs. |
 
 A project component can use these relationships with its own behavior. External TypeScript uses
-`@qflow/qflow/author-kit`, `@qflow/qflow/temporal-markup` and the appropriate `@qflow/qflow/*` domain APIs; the official
-implementation's `@qflow/*` imports are internal workspace spellings. Copy the relevant idea into
+`@qflow/qflow/author`, `@qflow/qflow/producer`, `@qflow/qflow/admission`,
+`@qflow/qflow/markup`, `@qflow/qflow/temporal/markup` and the appropriate domain APIs. Copy the relevant idea into
 the project's own package, with its own Module identity, instead of editing the installed Ranking.
 
 The Companion uses published values and temporal lineage, so a visible row and its reveal handle can
 represent different spans. Moving the authored semantic boundary changes the shared event and its
-consumers; editing a Style changes its appearance. [Studio Adapter](../studio-adapter/README.md)
+consumers; editing a Style changes its appearance. [Studio Companion](../studio-companion/README.md)
 contains a minimal project Companion and the exact presentation/editing interface.

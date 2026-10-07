@@ -39,3 +39,6 @@ ordinary graph `Text` references; `comment={...}` is exclusive with body text. T
 one package-owned content value through explicit Text edges before temporal placement. `avatar` is
 an independent Artifact edge. Metadata is never fabricated: if `meta` is absent, no metadata row
 is rendered. Sound effects remain a separate Audio Track.
+
+The same installed package contributes its Studio Companion. Runtime behavior and editor projection
+therefore share one owner and version; there is no separate Studio package to install.

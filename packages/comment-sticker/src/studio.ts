@@ -1,8 +1,8 @@
-import { commentStickerMarkupSurfaces, commentStickerModuleRef, commentStickerTypes } from "@qflow/comment-sticker";
-import type { CommentStickerProgram } from "@qflow/comment-sticker";
-import { compositionTypes } from "@qflow/composition";
-import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-adapter";
-import { artifactPreview, childEntities, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource, textLayer } from "@qflow/studio-adapter";
+import { commentStickerMarkupSurfaces, commentStickerModuleRef, commentStickerTypes } from "./index.js";
+import type { CommentStickerProgram } from "./index.js";
+import { compositionTypes } from "@qflow/qflow/composition";
+import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
+import { artifactPreview, childEntities, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource, textLayer } from "@qflow/studio-companion";
 
 const frameParameters: readonly StudioSourceBindingDeclaration[] = [
   { name: "within" },

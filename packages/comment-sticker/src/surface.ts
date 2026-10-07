@@ -1,20 +1,13 @@
-import { resolveTemporalContext } from "@qflow/temporal-markup";
-import { artifactTypes } from "@qflow/artifact";
-import { mediaTypes } from "@qflow/media";
-import type { FontStackRef } from "@qflow/media";
-import { spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import type { SvsRecipe } from "@qflow/svs";
-import { sealText, textTypes } from "@qflow/text";
-import type {
-  StructuredElement,
-  StructuredSurfaceHandler,
-  SurfaceComponentDraft,
-  SurfaceRecordDraft,
-  SurfaceResolvedReference,
-  MarkupAttributeValue,
-} from "@qflow/markup";
-import { createTemporalWindowConstruction, temporalWindowAttributeNames } from "@qflow/temporal-markup";
+import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { blobTypes } from "@qflow/qflow/blob";
+import { mediaTypes } from "@qflow/qflow/media";
+import type { FontStackRef } from "@qflow/qflow/media";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
+import type { Recipe } from "@qflow/qflow/recipe";
+import { sealText, textTypes } from "@qflow/qflow/text";
+import type { StructuredElement, StructuredSurfaceHandler, SurfaceComponentDraft, SurfaceRecordDraft, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/qflow/markup";
+import { createTemporalWindowConstruction, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
 
 import { decodeCommentStickerStyle } from "./author.js";
 import { createCommentStickerFragment } from "./fragment.js";
@@ -81,9 +74,9 @@ export const decodeCommentStickerStyleSurface: StructuredSurfaceHandler = ({ ele
   allowed(element, ["id", "recipe", "font"], ["id", "recipe", "font"]);
   if (element.children.some((child) => child.kind === "element" || child.value.trim())) throw new Error(`${element.name} must be empty.`);
   const id = text(element, "id");
-  const recipeRef = reference(element.attributes.recipe, `${element.name}.recipe`, svsRecipeType, resolveReference);
+  const recipeRef = reference(element.attributes.recipe, `${element.name}.recipe`, recipeType, resolveReference);
   const fontRef = reference(element.attributes.font, `${element.name}.font`, mediaTypes.fontStack, resolveReference);
-  const style = decodeCommentStickerStyle(inline<SvsRecipe>(recipeRef, `${element.name}.recipe`), inline<FontStackRef>(fontRef, `${element.name}.font`), id);
+  const style = decodeCommentStickerStyle(inline<Recipe>(recipeRef, `${element.name}.recipe`), inline<FontStackRef>(fontRef, `${element.name}.font`), id);
   return { records: [{ id, type: commentStickerTypes.style, value: { kind: "inline", value: style }, range: element.range }], components: [], fragments: [] };
 };
 
@@ -116,7 +109,7 @@ export const decodeCommentStickerTrackSurface: StructuredSurfaceHandler = ({ ele
     const suffix = String(items.length + 1).padStart(4, "0");
     const frame = reference(child.attributes.frame, `${child.name}.frame`, spatialTypes.frame, resolveReference);
     const style = reference(child.attributes.style, `${child.name}.style`, commentStickerTypes.style, resolveReference);
-    const avatar = child.attributes.avatar === undefined ? undefined : reference(child.attributes.avatar, `${child.name}.avatar`, artifactTypes.blob, resolveReference);
+    const avatar = child.attributes.avatar === undefined ? undefined : reference(child.attributes.avatar, `${child.name}.avatar`, blobTypes.blob, resolveReference);
     const comment = child.attributes.comment === undefined
       ? dedent(child.children.map((node) => node.kind === "text" ? node.value : "").join(""))
       : graphText(child.attributes.comment, `${child.name}.comment`, resolveReference);

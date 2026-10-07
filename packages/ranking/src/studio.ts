@@ -1,13 +1,23 @@
-import { openFontStudioFields } from "@qflow/fonts-open/studio";
-import { rankingMarkupSurfaces, rankingModuleRef, rankingTypes } from "@qflow/ranking";
-import type { RankingProgram, RankingSchedule, RankingSoundEventPlan } from "@qflow/ranking";
-import { compositionTypes } from "@qflow/composition";
-import type { AudioTrack } from "@qflow/composition";
-import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-adapter";
-import { artifactPreview, authoredChildFor, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-adapter";
+import { rankingMarkupSurfaces, rankingModuleRef, rankingTypes } from "./index.js";
+import type { RankingProgram, RankingSchedule, RankingSoundEventPlan } from "./index.js";
+import { compositionTypes } from "@qflow/qflow/composition";
+import type { AudioTrack } from "@qflow/qflow/composition";
+import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
+import { artifactPreview, authoredChildFor, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-companion";
 
 
-const fontInspector = openFontStudioFields("style");
+const fontInspector: {
+  readonly binding: StudioSourceBindingDeclaration;
+  readonly fields: readonly StudioInspectorFieldDeclaration[];
+} = {
+  binding: { name: "font", referenced: [{ name: "family", writable: true }] },
+  fields: [{
+    binding: "style.font.family", label: "Font Family", domain: "how",
+    page: { id: "font", label: "Font" }, section: { id: "face", label: "Primary Face" },
+    summary: "Changes the authored primary font family reference.",
+    control: "text",
+  }],
+};
 
 const frameParameters: readonly StudioSourceBindingDeclaration[] = [
   { name: "within" },

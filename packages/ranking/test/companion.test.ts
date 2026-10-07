@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compositionTypes } from "@qflow/composition";
-import type { StudioTrackCompanionContext } from "@qflow/studio-adapter";
-import { rankingStudioTrackCompanions } from "../src/index.js";
+import { compositionTypes } from "@qflow/qflow/composition";
+import type { StudioTrackCompanionContext } from "@qflow/studio-companion";
+import { rankingStudioTrackCompanions } from "../src/studio.js";
 
 test("each Ranking surface has independent visual and audio Companions", () => {
   for (const surface of ["column", "tier", "top-three"]) {

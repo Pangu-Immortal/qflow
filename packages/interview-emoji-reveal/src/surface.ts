@@ -1,14 +1,11 @@
-import { resolveTemporalContext } from "@qflow/temporal-markup";
-import {
-  assertAttributes, assertEmptyElement, optionalTextAttribute, textAttribute, type MarkupAttributeValue, type StructuredSurfaceHandler,
-  type SurfaceComponentDraft, type SurfaceRecordDraft, type SurfaceResolvedReference,
-} from "@qflow/markup";
-import { artifactTypes } from "@qflow/artifact";
-import { sameType, type CanonicalValue, type TypeRef } from "@qflow/protocol";
-import { spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import type { SvsRecipe } from "@qflow/svs";
-import { createTemporalInstantConstruction, createTemporalWindowConstruction, temporalWindowAttributeNames } from "@qflow/temporal-markup";
+import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { assertAttributes, assertEmptyElement, optionalTextAttribute, textAttribute, type MarkupAttributeValue, type StructuredSurfaceHandler, type SurfaceComponentDraft, type SurfaceRecordDraft, type SurfaceResolvedReference } from "@qflow/qflow/markup";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sameType, type CanonicalValue, type TypeRef } from "@qflow/qflow/protocol";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
+import type { Recipe } from "@qflow/qflow/recipe";
+import { createTemporalInstantConstruction, createTemporalWindowConstruction, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
 
 import { createEmojiRevealFragment } from "./fragment.js";
 import { emojiRevealTypes } from "./manifest.js";
@@ -41,8 +38,8 @@ function boolean(element: Parameters<StructuredSurfaceHandler>[0]["element"], na
 export const decodeEmojiRevealStyleSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
   assertAttributes(element, ["id", "recipe"]); assertEmptyElement(element);
   const id = textAttribute(element, "id");
-  const recipe = reference(element.attributes.recipe, `${element.name}.recipe`, svsRecipeType, resolveReference);
-  const style = decodeEmojiRevealStyle(id, inline<SvsRecipe>(recipe, `${element.name}.recipe`));
+  const recipe = reference(element.attributes.recipe, `${element.name}.recipe`, recipeType, resolveReference);
+  const style = decodeEmojiRevealStyle(id, inline<Recipe>(recipe, `${element.name}.recipe`));
   return { records: [{ id, type: emojiRevealTypes.style, value: { kind: "inline", value: style as unknown as CanonicalValue }, range: element.range }], components: [], fragments: [] };
 };
 
@@ -52,7 +49,7 @@ export const decodeEmojiRevealTrackSurface: StructuredSurfaceHandler = ({ elemen
   const context = resolveTemporalContext({ element, resolveReference });
   const within = reference(element.attributes.within, `${element.name}.within`, spatialTypes.frame, resolveReference);
   const style = reference(element.attributes.style, `${element.name}.style`, emojiRevealTypes.style, resolveReference);
-  const placeholder = reference(element.attributes.placeholder, `${element.name}.placeholder`, artifactTypes.blob, resolveReference);
+  const placeholder = reference(element.attributes.placeholder, `${element.name}.placeholder`, blobTypes.blob, resolveReference);
   const outer = createTemporalWindowConstruction({ id, subjectId: id, element, ...context, resolveReference });
   const headerId = `${id}.header`;
   const records: SurfaceRecordDraft[] = [...outer.records, {
@@ -79,7 +76,7 @@ export const decodeEmojiRevealTrackSurface: StructuredSurfaceHandler = ({ elemen
     const timed = child.attributes.at !== undefined;
     if (preset && timed) throw new Error(`${child.name} cannot combine preset=true with at.`);
     if (!preset && !timed) throw new Error(`${child.name} requires at unless preset=true.`);
-    const icon = reference(child.attributes.icon, `${child.name}.icon`, artifactTypes.blob, resolveReference);
+    const icon = reference(child.attributes.icon, `${child.name}.icon`, blobTypes.blob, resolveReference);
     const spec = sealEmojiRevealItemSpec({ id: itemId, preset });
     const suffix = String(index).padStart(4, "0");
     const specId = `${id}.item.${suffix}.spec`; const specName = `item-${suffix}-spec`;

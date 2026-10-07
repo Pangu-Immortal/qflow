@@ -1,13 +1,13 @@
 import {
   assertFontArtifactRef,
   assertFontStackRef,
-} from "@qflow/media";
+} from "@qflow/qflow/media";
 import type {
   FontArtifactRef,
   FontStackRef,
-} from "@qflow/media";
-import { canonicalize } from "@qflow/protocol";
-import type { SvsRecipe } from "@qflow/svs";
+} from "@qflow/qflow/media";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { Recipe } from "@qflow/qflow/recipe";
 
 import {
   assertColumnStyle,
@@ -55,44 +55,44 @@ const TOP_KEYS = [
   "ring-width", "label-gap",
 ] as const;
 
-function fail(recipe: SvsRecipe, message: string): never {
+function fail(recipe: Recipe, message: string): never {
   throw new Error(`Ranking Recipe ${recipe.path} ${message}`);
 }
 
-function known(recipe: SvsRecipe, allowed: readonly string[]): void {
+function known(recipe: Recipe, allowed: readonly string[]): void {
   const set = new Set(allowed);
   const unknown = Object.keys(recipe.properties).filter((key) => !set.has(key));
   if (unknown.length > 0) fail(recipe, `does not accept ${unknown.join(", ")}.`);
 }
 
-function number(recipe: SvsRecipe, name: string, fallback: number): number {
+function number(recipe: Recipe, name: string, fallback: number): number {
   const value = recipe.properties[name];
   if (value === undefined) return fallback;
   if (typeof value !== "number" || !Number.isFinite(value)) fail(recipe, `${name} must be a finite number.`);
   return value;
 }
 
-function integer(recipe: SvsRecipe, name: string, fallback: number): number {
+function integer(recipe: Recipe, name: string, fallback: number): number {
   const value = number(recipe, name, fallback);
   if (!Number.isSafeInteger(value)) fail(recipe, `${name} must be an integer.`);
   return value;
 }
 
-function optionalNumber(recipe: SvsRecipe, name: string): number | undefined {
+function optionalNumber(recipe: Recipe, name: string): number | undefined {
   const value = recipe.properties[name];
   if (value === undefined) return undefined;
   if (typeof value !== "number" || !Number.isFinite(value)) fail(recipe, `${name} must be a finite number.`);
   return value;
 }
 
-function text(recipe: SvsRecipe, name: string, fallback: string): string {
+function text(recipe: Recipe, name: string, fallback: string): string {
   const value = recipe.properties[name];
   if (value === undefined) return fallback;
   if (typeof value !== "string" || value.trim().length === 0) fail(recipe, `${name} must be text.`);
   return value.trim();
 }
 
-function oneOf<T extends string>(recipe: SvsRecipe, name: string, values: readonly T[], fallback: T): T {
+function oneOf<T extends string>(recipe: Recipe, name: string, values: readonly T[], fallback: T): T {
   const value = text(recipe, name, fallback);
   if (!values.includes(value as T)) fail(recipe, `${name} must be ${values.join(" | ")}.`);
   return value as T;
@@ -107,7 +107,7 @@ function exactFonts(value: FontStackRef | FontArtifactRef): FontArtifactRef[] {
   return [structuredClone(value)];
 }
 
-function typography(recipe: SvsRecipe, fonts: readonly FontArtifactRef[]): RankingTextStyle {
+function typography(recipe: Recipe, fonts: readonly FontArtifactRef[]): RankingTextStyle {
   return {
     fonts: structuredClone(fonts),
     sizePx: number(recipe, "font-size", 28),
@@ -117,7 +117,7 @@ function typography(recipe: SvsRecipe, fonts: readonly FontArtifactRef[]): Ranki
   };
 }
 
-function board(recipe: SvsRecipe): RankingBoardPaint {
+function board(recipe: Recipe): RankingBoardPaint {
   return {
     background: text(recipe, "board-background", "#151821"),
     borderColor: text(recipe, "board-border-color", "#ffffff33"),
@@ -133,7 +133,7 @@ function board(recipe: SvsRecipe): RankingBoardPaint {
   };
 }
 
-function motion(recipe: SvsRecipe): RankingMotionStyle {
+function motion(recipe: Recipe): RankingMotionStyle {
   return {
     appearFrames: integer(recipe, "appear-frames", 6),
     moveFrames: integer(recipe, "move-frames", 8),
@@ -141,7 +141,7 @@ function motion(recipe: SvsRecipe): RankingMotionStyle {
   };
 }
 
-function sound(recipe: SvsRecipe): RankingSoundStyle {
+function sound(recipe: Recipe): RankingSoundStyle {
   const value: RankingSoundStyle = {
 
     appearGain: number(recipe, "appear-gain", 1),
@@ -152,7 +152,7 @@ function sound(recipe: SvsRecipe): RankingSoundStyle {
   return canonicalize(value) as unknown as RankingSoundStyle;
 }
 
-function rowList(recipe: SvsRecipe): TierRowStyle[] {
+function rowList(recipe: Recipe): TierRowStyle[] {
   const value = recipe.properties.rows ?? [
     { id: "s", label: "S", color: "#EE5F52" },
     { id: "a", label: "A", color: "#F0A04C" },
@@ -175,7 +175,7 @@ function rowList(recipe: SvsRecipe): TierRowStyle[] {
   });
 }
 
-function colorList(recipe: SvsRecipe, name: string, fallback: readonly string[]): string[] {
+function colorList(recipe: Recipe, name: string, fallback: readonly string[]): string[] {
   const value = recipe.properties[name] ?? fallback;
   if (!Array.isArray(value) || value.length === 0) fail(recipe, `${name} must be a non-empty color array.`);
   return value.map((item, index) => {
@@ -185,7 +185,7 @@ function colorList(recipe: SvsRecipe, name: string, fallback: readonly string[])
 }
 
 export function decodeTierBoardStyle(
-  recipe: SvsRecipe,
+  recipe: Recipe,
   font: FontStackRef | FontArtifactRef,
 ): { readonly style: TierBoardStyle; readonly sound: RankingSoundStyle } {
   known(recipe, TIER_KEYS);
@@ -218,7 +218,7 @@ export function decodeTierBoardStyle(
 }
 
 export function decodeColumnStyle(
-  recipe: SvsRecipe,
+  recipe: Recipe,
   font: FontStackRef | FontArtifactRef,
 ): { readonly style: ColumnStyle; readonly sound: RankingSoundStyle } {
   known(recipe, COLUMN_KEYS);
@@ -246,7 +246,7 @@ export function decodeColumnStyle(
 }
 
 export function decodeTopThreeStyle(
-  recipe: SvsRecipe,
+  recipe: Recipe,
   font: FontStackRef | FontArtifactRef,
 ): { readonly style: TopThreeStyle; readonly sound: RankingSoundStyle } {
   known(recipe, TOP_KEYS);

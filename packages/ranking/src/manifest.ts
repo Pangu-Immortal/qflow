@@ -1,17 +1,17 @@
-import { timelineTypes, timelineDependency } from "@qflow/timeline";
-import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
+import { timelineTypes, timelineDependency } from "@qflow/qflow/timeline";
+import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal/markup";
 import { readFile } from "node:fs/promises";
 
-import { artifactDependency } from "@qflow/artifact";
-import { compositionDependency, compositionTypes } from "@qflow/composition";
-import { mediaDependency, mediaTypes } from "@qflow/media";
+import { blobDependency } from "@qflow/qflow/blob";
+import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
+import { mediaDependency, mediaTypes } from "@qflow/qflow/media";
 
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import { temporalDependency, temporalInstantSchema, temporalTypes, temporalWindowSchema } from "@qflow/temporal";
-import { temporalInstantAttributeVocabulary } from "@qflow/temporal-markup";
-import { textDependency, textTypes } from "@qflow/text";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
+import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
+import { temporalDependency, temporalInstantSchema, temporalTypes, temporalWindowSchema } from "@qflow/qflow/temporal";
+import { temporalInstantAttributeVocabulary } from "@qflow/qflow/temporal/markup";
+import { textDependency, textTypes } from "@qflow/qflow/text";
 
 const previewImage = (file: string, mediaType = "image/png") => ({
   mediaType,
@@ -142,7 +142,7 @@ function typedRecipeProperties<const T extends readonly {
   readonly required: boolean;
   readonly summary: string;
   readonly values?: readonly string[];
-  readonly fallback?: import("@qflow/protocol").CanonicalValue;
+  readonly fallback?: import("@qflow/qflow/protocol").CanonicalValue;
 }[]>(properties: T) {
   return properties.map((property) => {
     const schema = rankingRecipeSchemas[property.name as keyof typeof rankingRecipeSchemas];
@@ -251,7 +251,7 @@ const allRankingMarkupSurfaces = [
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names this Style so a TierBoard can reference it." },
-          { name: "recipe", kind: "reference", required: true, accepts: [svsRecipeType],
+          { name: "recipe", kind: "reference", required: true, accepts: [recipeType],
             summary: "Chooses the Recipe carrying the tier rows, board Paint, row and cell geometry, icon treatment and entrance motion.",
             recipe: typedRecipeProperties([
               { name: "rows", required: false, fallback: [
@@ -327,7 +327,7 @@ const allRankingMarkupSurfaces = [
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names this Style so a Column can reference it." },
-          { name: "recipe", kind: "reference", required: true, accepts: [svsRecipeType],
+          { name: "recipe", kind: "reference", required: true, accepts: [recipeType],
             summary: "Chooses the Recipe carrying the rank colors, board Paint, row geometry, icon treatment, staging pose and motion.",
             recipe: typedRecipeProperties([
               { name: "rank-colors", required: false, fallback: ["#facc15", "#d1d5db", "#fb923c", "#60a5fa", "#a78bfa"],
@@ -420,7 +420,7 @@ const allRankingMarkupSurfaces = [
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names this Style so a TopThree can reference it." },
-          { name: "recipe", kind: "reference", required: true, accepts: [svsRecipeType],
+          { name: "recipe", kind: "reference", required: true, accepts: [recipeType],
             summary: "Chooses the Recipe carrying the slot colors, podium geometry, ring and label spacing, board Paint and motion.",
             recipe: typedRecipeProperties([
               { name: "slot-colors", required: false, fallback: ["#facc15", "#d1d5db", "#fb923c"],
@@ -697,7 +697,7 @@ export const rankingMarkupSurfaces = allRankingMarkupSurfaces;
 
 export const rankingManifest: ModuleManifest = {
   format: "qflow.module@1", name: rankingModuleRef.name, version: rankingModuleRef.version,
-  dependencies: [artifactDependency, mediaDependency, timelineDependency, spatialDependency, temporalDependency, compositionDependency, textDependency],
+  dependencies: [blobDependency, mediaDependency, timelineDependency, spatialDependency, temporalDependency, compositionDependency, textDependency],
   types: [
     { name: rankingTypes.header.name },
     { name: rankingTypes.itemSpec.name },

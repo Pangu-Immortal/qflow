@@ -1,13 +1,13 @@
-import { timelineTypes } from "@qflow/timeline";
+import { timelineTypes } from "@qflow/qflow/timeline";
 
-import { artifactTypes } from "@qflow/artifact";
-import { compositionTypes } from "@qflow/composition";
-import { sealGraphFragment } from "@qflow/elaborator";
-import type { FragmentOperation } from "@qflow/elaborator";
-import type { TypeRef } from "@qflow/protocol";
-import { spatialTypes } from "@qflow/spatial";
-import { textTypes } from "@qflow/text";
-import { temporalTypes } from "@qflow/temporal";
+import { blobTypes } from "@qflow/qflow/blob";
+import { compositionTypes } from "@qflow/qflow/composition";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import type { FragmentOperation } from "@qflow/qflow/author";
+import type { TypeRef } from "@qflow/qflow/protocol";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { textTypes } from "@qflow/qflow/text";
+import { temporalTypes } from "@qflow/qflow/temporal";
 
 import { commentStickerProducers, commentStickerTypes } from "./manifest.js";
 
@@ -51,7 +51,7 @@ export function createCommentStickerFragment(items: readonly CommentStickerFragm
     if (item.authorName !== undefined) types.set(item.authorName, textTypes.text);
     if (item.headerTextName !== undefined) types.set(item.headerTextName, textTypes.text);
     if (item.metaName !== undefined) types.set(item.metaName, textTypes.text);
-    if (item.avatarName !== undefined) types.set(item.avatarName, artifactTypes.blob);
+    if (item.avatarName !== undefined) types.set(item.avatarName, blobTypes.blob);
     const suffix = String(index + 1).padStart(4, "0");
     const createContentId = `comment:content:${suffix}:create`;
     operations.push({

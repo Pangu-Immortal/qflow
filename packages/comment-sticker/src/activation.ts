@@ -1,4 +1,7 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { createStudioTrackCompanionFacet } from "@qflow/studio-companion";
 
 import {
   commentStickerComponent,
@@ -8,24 +11,26 @@ import {
   decodeCommentStickerTrackSurface,
   commentStickerMarkupSurfaces,
 } from "./index.js";
+import { commentStickerStudioTrackCompanions } from "./studio.js";
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{
     manifest: commentStickerManifest,
   }],
-  components: [commentStickerComponent],
-  hostFacets: [
-    createMarkupSurfaceHostFacet({
+  facets: [
+    ...[commentStickerComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    createMarkupSurfaceFacet({
       module: commentStickerModuleRef,
     declaration: commentStickerMarkupSurfaces.find((item) => item.name === "style")!,
       handler: decodeCommentStickerStyleSurface,
     }),
-    createMarkupSurfaceHostFacet({
+    createMarkupSurfaceFacet({
       module: commentStickerModuleRef,
     declaration: commentStickerMarkupSurfaces.find((item) => item.name === "track")!,
       handler: decodeCommentStickerTrackSurface,
     }),
+    createStudioTrackCompanionFacet(commentStickerStudioTrackCompanions),
   ],
 };
 

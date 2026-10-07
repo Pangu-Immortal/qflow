@@ -1,17 +1,17 @@
-import { timelineTypes, timelineDependency } from "@qflow/timeline";
-import { temporalContextAttributeVocabulary } from "@qflow/temporal-markup";
+import { timelineTypes, timelineDependency } from "@qflow/qflow/timeline";
+import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal/markup";
 import { readFile } from "node:fs/promises";
 
-import { artifactDependency, artifactTypes } from "@qflow/artifact";
-import { compositionDependency, compositionTypes } from "@qflow/composition";
-import { fontArtifactSchema, mediaDependency, mediaTypes } from "@qflow/media";
+import { blobDependency, blobTypes } from "@qflow/qflow/blob";
+import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
+import { fontArtifactSchema, mediaDependency, mediaTypes } from "@qflow/qflow/media";
 
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
-import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import { temporalDependency, temporalTypes } from "@qflow/temporal";
-import { temporalWindowAttributeVocabulary } from "@qflow/temporal-markup";
-import { textDependency, textTypes } from "@qflow/text";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
+import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
+import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
+import { temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal/markup";
+import { textDependency, textTypes } from "@qflow/qflow/text";
 
 const previewImage = (file: string) => ({
   mediaType: "image/png",
@@ -146,7 +146,7 @@ export const commentStickerMarkupSurfaces = [
         attributes: [
           { name: "id", kind: "identifier", required: true,
             summary: "Names the Style so a Sticker can reference it." },
-          { name: "recipe", kind: "reference", required: true, accepts: [svsRecipeType],
+          { name: "recipe", kind: "reference", required: true, accepts: [recipeType],
             summary: "Chooses the Recipe that decides the card's appearance and its enter, hold and exit motion.",
             recipe: [
               { name: "stack-order", required: false, fallback: "62",
@@ -294,7 +294,7 @@ export const commentStickerMarkupSurfaces = [
                 summary: "Supplies the card's header row." },
               { name: "meta", kind: "expression", required: false, accepts: [textTypes.text],
                 summary: "Supplies the card's metadata row, which is not rendered when it is absent." },
-              { name: "avatar", kind: "reference", required: false, accepts: [artifactTypes.blob],
+              { name: "avatar", kind: "reference", required: false, accepts: [blobTypes.blob],
                 summary: "Supplies the image Artifact drawn as the commenter's avatar." },
               ...temporalWindowAttributeVocabulary,
             ],
@@ -331,7 +331,7 @@ export const commentStickerManifest: ModuleManifest = {
   format: "qflow.module@1",
   name: commentStickerModuleRef.name,
   version: commentStickerModuleRef.version,
-  dependencies: [artifactDependency, timelineDependency, spatialDependency, temporalDependency, mediaDependency, compositionDependency, textDependency],
+  dependencies: [blobDependency, timelineDependency, spatialDependency, temporalDependency, mediaDependency, compositionDependency, textDependency],
   types: [
     { name: commentStickerTypes.header.name },
     { name: commentStickerTypes.style.name },
@@ -355,7 +355,7 @@ export const commentStickerManifest: ModuleManifest = {
     { name: commentStickerProducers.createSet.name, inputs: [], outputs: [{ name: "set", type: commentStickerTypes.set }], needs: [] },
     ...([
       [commentStickerProducers.appendItem, []],
-      [commentStickerProducers.appendItemAvatar, [{ name: "avatar", type: artifactTypes.blob }]],
+      [commentStickerProducers.appendItemAvatar, [{ name: "avatar", type: blobTypes.blob }]],
     ] as const).map(([producer, extra]) => ({
       name: producer.name,
       inputs: [...appendInputs, ...extra],

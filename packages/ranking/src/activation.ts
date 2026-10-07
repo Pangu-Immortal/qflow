@@ -1,4 +1,7 @@
-import { createMarkupSurfaceHostFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
+import { createStudioTrackCompanionFacet } from "@qflow/studio-companion";
 
 import {
   decodeColumnStyleSurface,
@@ -12,6 +15,7 @@ import {
   rankingMarkupSurfaces,
   rankingModuleRef,
 } from "./index.js";
+import { rankingStudioTrackCompanions } from "./studio.js";
 
 const facets = [
   ["tier-style", decodeTierBoardStyleSurface],
@@ -23,16 +27,19 @@ const facets = [
 ] as const;
 
 export const qflowPackage = {
-  format: "qflow.node-package@1" as const,
+  format: "qflow.package@1" as const,
   modules: [{
     manifest: rankingManifest,
   }],
-  components: [rankingComponent],
-  hostFacets: facets.map(([surface, handler]) => createMarkupSurfaceHostFacet({
-    module: rankingModuleRef,
-    declaration: rankingMarkupSurfaces.find((item) => item.name === surface)!,
-    handler,
-  })),
+  facets: [
+    ...[rankingComponent].flatMap((component) => [createProducerPackageFacet(component), createAdmissionPackageFacet(component)]),
+    ...facets.map(([surface, handler]) => createMarkupSurfaceFacet({
+      module: rankingModuleRef,
+      declaration: rankingMarkupSurfaces.find((item) => item.name === surface)!,
+      handler,
+    })),
+    createStudioTrackCompanionFacet(rankingStudioTrackCompanions),
+  ],
 };
 
 export default qflowPackage;

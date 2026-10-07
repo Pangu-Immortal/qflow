@@ -5,13 +5,13 @@ import { fixtureResource } from "../../../test/fixture-resource.js";
 import { timelineFixture } from "../../../test/timeline-fixture.js";
 import { projectProgramWindow } from "../../../test/temporal-fixture.js";
 
-import { artifactTypes } from "@qflow/artifact";
-import { compileHyperframesDocument } from "@qflow/hyperframes";
+import { blobTypes } from "@qflow/blob";
+import { compileHtmlProgram } from "@qflow/html-program";
 import type { FontArtifactRef, FontStackRef } from "@qflow/media";
 import { mediaTypes } from "@qflow/media";
 import { spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import type { SvsRecipe } from "@qflow/svs";
+import { recipeType } from "@qflow/recipe";
+import type { Recipe } from "@qflow/recipe";
 import { parseStructuredElement } from "@qflow/markup";
 import type { SurfaceResolvedReference } from "@qflow/markup";
 import { sealText } from "@qflow/text";
@@ -40,7 +40,7 @@ const font: FontArtifactRef = {
   style: "normal",
 };
 const fonts: FontStackRef = { faces: [font] };
-const recipe: SvsRecipe = {
+const recipe: Recipe = {
 
   path: "comment.social",
   properties: { "avatar-fallback": "initial", "body-max-lines": 4 },
@@ -90,7 +90,7 @@ test("explicit metadata is rendered and the terminal compiler accepts the Track 
   const meta = rendered.presents[0]?.elements.find((element) => element.id === "meta");
   assert.equal(meta?.kind === "text-flow" ? meta.document.paragraphs[0]?.inlines[0]?.kind === "text"
     ? meta.document.paragraphs[0].inlines[0].text : undefined : undefined, "Featured comment");
-  const document = compileHyperframesDocument({
+  const document = compileHtmlProgram({
     id: "comment-film",
     canvas: { width: 1080, height: 1920, clearColor: "#000000" },
     tracks: [rendered],
@@ -151,7 +151,7 @@ const noAsset = () => { throw new Error("No assets are resolved by this test.");
 
 test("Style Surface consumes an explicit SVS Recipe and exact Font Stack", async () => {
   const refs = new Map([
-    ["styles.comment", authored("styles.comment", svsRecipeType, recipe)],
+    ["styles.comment", authored("styles.comment", recipeType, recipe)],
     ["fonts.ui", authored("fonts.ui", mediaTypes.fontStack, fonts)],
   ]);
   const result = await decodeCommentStickerStyleSurface({
@@ -170,7 +170,7 @@ test("Track Surface lowers mixed literal and resolved-Window Stickers to a finit
     ["video.timeline", authored("video.timeline", timelineTypes.timeline, semantic)],
     ["layout.comment", authored("layout.comment", spatialTypes.frame, frame)],
     ["social", authored("social", commentStickerTypes.style, style)],
-    ["avatar", authored("avatar", artifactTypes.blob, blob)],
+    ["avatar", authored("avatar", blobTypes.blob, blob)],
     ["copy", authored("copy", textTypes.text, sealText("This is graph-supplied comment content."))],
   ]);
   const result = await decodeCommentStickerTrackSurface({

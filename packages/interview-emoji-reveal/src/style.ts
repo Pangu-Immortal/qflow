@@ -1,5 +1,5 @@
-import { canonicalize } from "@qflow/protocol";
-import type { SvsRecipe } from "@qflow/svs";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { Recipe } from "@qflow/qflow/recipe";
 
 import { assertEmojiRevealStyle } from "./program.js";
 import type { EmojiRevealStyle } from "./types.js";
@@ -11,23 +11,23 @@ const KEYS = new Set([
   "icon-size", "reveal-frames", "stack-order",
 ]);
 
-function fail(recipe: SvsRecipe, message: string): never { throw new Error(`Emoji Reveal Recipe ${recipe.path} ${message}`); }
-function numeric(recipe: SvsRecipe, name: string, fallback: number): number {
+function fail(recipe: Recipe, message: string): never { throw new Error(`Emoji Reveal Recipe ${recipe.path} ${message}`); }
+function numeric(recipe: Recipe, name: string, fallback: number): number {
   const value = recipe.properties[name] ?? fallback;
   if (typeof value !== "number" || !Number.isFinite(value)) fail(recipe, `${name} must be a finite number.`);
   return value;
 }
-function integer(recipe: SvsRecipe, name: string, fallback: number): number {
+function integer(recipe: Recipe, name: string, fallback: number): number {
   const value = numeric(recipe, name, fallback);
   if (!Number.isSafeInteger(value)) fail(recipe, `${name} must be an integer.`);
   return value;
 }
-function text(recipe: SvsRecipe, name: string, fallback: string): string {
+function text(recipe: Recipe, name: string, fallback: string): string {
   const value = recipe.properties[name] ?? fallback;
   if (typeof value !== "string" || value.trim().length === 0) fail(recipe, `${name} must be text.`);
   return value.trim();
 }
-export function decodeEmojiRevealStyle(id: string, recipe: SvsRecipe): EmojiRevealStyle {
+export function decodeEmojiRevealStyle(id: string, recipe: Recipe): EmojiRevealStyle {
   const unknown = Object.keys(recipe.properties).filter((key) => !KEYS.has(key));
   if (unknown.length > 0) fail(recipe, `does not accept ${unknown.join(", ")}.`);
   const style: EmojiRevealStyle = {

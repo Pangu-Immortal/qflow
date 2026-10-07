@@ -1,11 +1,11 @@
-import { timelineTypes } from "@qflow/timeline";
+import { timelineTypes } from "@qflow/qflow/timeline";
 
-import { compositionTypes } from "@qflow/composition";
-import { artifactTypes } from "@qflow/artifact";
-import { sealGraphFragment } from "@qflow/elaborator";
-import type { FragmentOperation } from "@qflow/elaborator";
-import { spatialTypes } from "@qflow/spatial";
-import { temporalTypes } from "@qflow/temporal";
+import { compositionTypes } from "@qflow/qflow/composition";
+import { blobTypes } from "@qflow/qflow/blob";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import type { FragmentOperation } from "@qflow/qflow/author";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { temporalTypes } from "@qflow/qflow/temporal";
 
 import { emojiRevealProducers, emojiRevealTypes } from "./manifest.js";
 
@@ -48,9 +48,9 @@ export function createEmojiRevealFragment(items: readonly EmojiRevealFragmentIte
     inputs: [
       { name: "header", type: emojiRevealTypes.header }, { name: "timeline", type: timelineTypes.timeline },
       { name: "within", type: spatialTypes.frame }, { name: "outer", type: temporalTypes.window }, { name: "style", type: emojiRevealTypes.style },
-      { name: "placeholder", type: artifactTypes.blob },
+      { name: "placeholder", type: blobTypes.blob },
       ...items.flatMap((item) => [
-        { name: item.specName, type: emojiRevealTypes.itemSpec }, { name: item.iconName, type: artifactTypes.blob },
+        { name: item.specName, type: emojiRevealTypes.itemSpec }, { name: item.iconName, type: blobTypes.blob },
         ...(item.activationName === undefined ? [] : [{ name: item.activationName, type: temporalTypes.instant }]),
       ]),
     ],

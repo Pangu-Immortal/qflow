@@ -1,25 +1,13 @@
-import { resolveTemporalContext } from "@qflow/temporal-markup";
-import {
-  assertEmptyElement as empty,
-  assertAttributes as allowed,
-  localName,
-  textAttribute as text,
-  optionalTextAttribute as optionalText,
-  type StructuredElement,
-  type StructuredSurfaceHandler,
-  type SurfaceComponentDraft,
-  type SurfaceRecordDraft,
-  type SurfaceResolvedReference,
-  type MarkupAttributeValue,
-} from "@qflow/markup";
-import { sameType, type CanonicalValue, type TypeRef } from "@qflow/protocol";
-import { mediaTypes } from "@qflow/media";
-import type { FontArtifactRef, FontStackRef } from "@qflow/media";
-import { spatialTypes } from "@qflow/spatial";
-import { svsRecipeType } from "@qflow/svs";
-import type { SvsRecipe } from "@qflow/svs";
-import { textTypes } from "@qflow/text";
-import { createTemporalInstantConstruction, createTemporalWindowConstruction, temporalInstantAttributeNames } from "@qflow/temporal-markup";
+import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { assertEmptyElement as empty, assertAttributes as allowed, localName, textAttribute as text, optionalTextAttribute as optionalText, type StructuredElement, type StructuredSurfaceHandler, type SurfaceComponentDraft, type SurfaceRecordDraft, type SurfaceResolvedReference, type MarkupAttributeValue } from "@qflow/qflow/markup";
+import { sameType, type CanonicalValue, type TypeRef } from "@qflow/qflow/protocol";
+import { mediaTypes } from "@qflow/qflow/media";
+import type { FontArtifactRef, FontStackRef } from "@qflow/qflow/media";
+import { spatialTypes } from "@qflow/qflow/spatial";
+import { recipeType } from "@qflow/qflow/recipe";
+import type { Recipe } from "@qflow/qflow/recipe";
+import { textTypes } from "@qflow/qflow/text";
+import { createTemporalInstantConstruction, createTemporalWindowConstruction, temporalInstantAttributeNames } from "@qflow/qflow/temporal/markup";
 
 import { createRankingFragment } from "./fragment.js";
 import type { RankingFragmentItem, RankingFragmentSound } from "./fragment.js";
@@ -91,15 +79,15 @@ function inline<T>(value: SurfaceResolvedReference, label: string): T {
 
 function styleSurface<T>(
   styleType: TypeRef,
-  decode: (recipe: SvsRecipe, font: FontArtifactRef | FontStackRef) => { readonly style: T; readonly sound: RankingSoundStyle },
+  decode: (recipe: Recipe, font: FontArtifactRef | FontStackRef) => { readonly style: T; readonly sound: RankingSoundStyle },
 ): StructuredSurfaceHandler {
   return ({ element, resolveReference }) => {
     allowed(element, ["id", "recipe", "font"]);
     empty(element);
     const id = text(element, "id");
-    const recipeRef = reference(element.attributes.recipe, `${element.name}.recipe`, svsRecipeType, resolveReference);
+    const recipeRef = reference(element.attributes.recipe, `${element.name}.recipe`, recipeType, resolveReference);
     const fontRef = oneOfReference(element.attributes.font, `${element.name}.font`, [mediaTypes.fontArtifact, mediaTypes.fontStack], resolveReference);
-    const decoded = decode(inline<SvsRecipe>(recipeRef, `${element.name}.recipe`), inline<FontArtifactRef | FontStackRef>(fontRef, `${element.name}.font`));
+    const decoded = decode(inline<Recipe>(recipeRef, `${element.name}.recipe`), inline<FontArtifactRef | FontStackRef>(fontRef, `${element.name}.font`));
     return {
       records: [
         { id, type: styleType, value: { kind: "inline", value: decoded.style as unknown as CanonicalValue }, range: element.range },

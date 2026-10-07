@@ -48,4 +48,8 @@ one normal edge; it never reads filenames, URLs or hidden media metadata.
 
 The package has no Provider, Need, queue, credential, global z band or cross-Track input. Another
 Deck family can install independently and lower to the same terminal `VisualTrack` without changing
-this package, Core, Film, Composition or HyperFrames.
+this package, Core, Film, Composition or the `HtmlProgram`.
+
+The package also owns its Studio companion and publishes it from `@qflow/depth-stack/studio`.
+Studio observes the same card behavior, activation instants and appearance recipe; it is not a
+separately selected or versioned product.
