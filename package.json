@@ -231,6 +231,10 @@
       "import": "./packages/html-program/src/index.ts"
     }
   },
+  "imports": {
+    "#cli": "./packages/cli/src/index.ts",
+    "#loader/distribution-resolution": "./packages/loader/src/node/distribution-resolution.ts"
+  },
   "bin": {
     "qflow": "./bin/qflow.mjs"
   },
