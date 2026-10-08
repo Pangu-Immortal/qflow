@@ -117,7 +117,7 @@ The official video Distribution writes Results to the project's `.qflow/results`
 cloud account or service. The filesystem implementation belongs to this single-host Runtime rather
 than a public adapter registry.
 Runtime working Resources remain internal and Build-local; there is no ResourceStore selector. After
-a Result has an outcome, history is read from the selected repository, not Runtime SQLite.
+a Result has an outcome, history is read from the project Result repository, not Runtime SQLite.
 The submission passes known Resource references to the Result writer, separately from the execution
 graph. Staging bytes for a running Build does not make them new Result files: external and reused
 resources keep their addresses even when a Producer embeds them inside a new Composite value.
@@ -168,7 +168,7 @@ Profile's `dataRoot`. Each record carries time, Command and Endpoint identity. P
 and repeated progress counters do not become log entries. The latest counters remain active Runtime
 state; Provider-authored diagnostics and phase changes are durable evidence.
 
-Result finishing streams this log through the selected Repository before publishing the terminal
+Result finishing streams this log through the project Result repository before publishing the terminal
 manifest or clearing the Build working directory. Complete, failed and cancelled Builds use the same
 finishing path. A failed archive leaves Result attention and preserves the working directory; finishing
 that Result performs no external execution. Log write failures also surface at the Result boundary,

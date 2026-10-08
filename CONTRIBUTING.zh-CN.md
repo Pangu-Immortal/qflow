@@ -66,18 +66,24 @@ Qflow 状态目录，关闭 Puppeteer 隐式下载，先验证缺少浏览器的
 `npm package execution` 工作流在 PR 上执行这项检查，发布流程复用它；发布的就是已经
 安装并执行过的同一份 tarball。
 
-正式发布请走现有的 GitHub Release 工作流。把下一个稳定 npm 版本写入 `package.json` 并提交到
-`main`。打开 **Releases → Draft a new release**，选择该提交，打上标签 `v<version>`（例如
-`v0.1.8`），写好发布说明后发布 Release。带标签的提交必须包含此工作流。
-`Publish npm` 会核对标签与版本一致、且该提交属于 main 的历史，运行 Linux/Windows 检查，
-构建并检查打包后的 CLI，再以 `latest` 发布到 npm，并把 tarball 附加到这次 Release。
-检查与打包使用触发时的提交，即使随后 main 继续前进。此路径只支持稳定版，不支持预发布。
+正式发布请走现有的 GitHub 工作流。把下一个稳定 npm 版本写入 `package.json` 并提交到
+`main`，然后先在 `main` 上运行 **Actions → Publish npm → Run workflow**，填写该版本且不要勾选
+**Publish to npm**。这会在不改动 npm 的情况下，对完整且不可变的候选版本运行 Linux/Windows
+检查，并将其保留为可下载构件。这个准确提交通过后，再打开 **Releases → Draft a new release**，
+选择该提交，打上标签 `v<version>`（例如 `v0.1.8`），写好发布说明后发布 Release。带标签的提交
+必须包含此工作流。`Publish npm` 会核对标签与版本一致、且该提交属于 main 的历史，运行
+Linux/Windows 检查，构建并检查打包后的 CLI，预检发布计划中的每个包在 npm 上的状态，
+按依赖优先、根 Distribution 最后的顺序以 `latest` 发布，并把 tarball 附加到这次 Release。
+只有全部检查、包安装与 Registry 预检成功后，才会发生任何 npm 写入。检查与打包使用触发时的
+提交，即使随后 main 继续前进。此路径只支持稳定版，不支持预发布。
 
 **Actions → Publish npm → Run workflow** 在 `main` 上仍然可用：填写已提交的版本，不勾选
-**Publish to npm** 时只运行 Linux/Windows 检查并提供可下载的 README 与 tarball；勾选后，
-在检查通过后把本次打出的 tarball 发布为 `latest`。补完一次失败的 Release 发布时，先修好
-外部问题再重跑该 Release 的工作流。若必须改代码，准备新版本和新的 Release。已经发布的
-npm 版本会被跳过且不改动 `latest`；已经附在 Release 上的文件会保留。
+**Publish to npm** 时只运行检查并提供可下载构件；勾选后则手动发布 npm。补完一次失败的 Release
+发布时，先修好外部问题再重跑该 Release 的工作流。检查或包预检失败不会消耗 npm 版本。如果候选
+版本没有任何包进入 npm，可以撤回 Release 与标签，修复代码但保留原定版本，再重新验证完整候选。
+如果独立包已经发布了一部分，重跑同一个不可变候选即可：匹配的版本会被跳过，发布按依赖顺序继续。
+只有根 Distribution 版本已经存在于 npm 后，根包代码变更才必须使用新的 patch 版本；资源上传失败等
+外部步骤仍可在原版本上重跑。已经附在 Release 上的文件会保留。
 push main、只 push 标签、或保存草稿 Release 都不会发布 npm。工作流不修改版本，也不创建标签。
 可见的 Release 可以早于 npm 发布成功；对外宣布该 npm 版本可用前，先看这次 Actions 的结果。
 

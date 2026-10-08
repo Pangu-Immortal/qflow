@@ -169,10 +169,10 @@ all through normal compilation. A separate offset remains a separate local decis
 
 ## Load it with the project package
 
-Keep the Companion separate from the component's Producers. External packages import
-`@qflow/qflow/studio-companion` and relevant public `@qflow/qflow/*` APIs, with the Distribution as a
-development dependency. Add `createStudioTrackCompanionFacet(companions)` to the existing
-activation's `facets`, retaining its author and producer contributions. Ship the compiled
+Keep the Companion separate from the component's Producers. External packages declare and import
+`@qflow/studio-companion` alongside relevant public `@qflow/qflow/*` APIs, with the Distribution as
+their framework development dependency. Add `createStudioTrackCompanionFacet(companions)` to the
+existing activation's `facets`, retaining its author and producer contributions. Ship the compiled
 Companion through the package's normal activation entry.
 
 The Source-selected package activates its Companion. Restart Studio after changing package code

@@ -27,7 +27,7 @@
 
   <!-- The Program projection owns the complete board lifetime. Each discussed
        footballer's complete Segment projects its disjoint reveal window, so
-       TierBoard consumes windows without finding frames. Cue breaks are author intent. -->
+       TierBoard consumes windows without finding frames. Cue boundaries are author intent. -->
   <script id="story">
     <ronaldo>
       <HOST>Ronaldo is <D | Dee> tier. || Bro has @{hair-gel} more || hair gel than @{trophy} trophies || at this point.@{/trophy}@{/hair-gel} || Built like || @{greek-god} a Greek god, || plays like || @{greek-tragedy} a Greek tragedy.@{/greek-tragedy}@{/greek-god} || But hey, || at least @{penaldo-social} he's got || the most followers || on Instagram.@{/penaldo-social}

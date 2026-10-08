@@ -124,7 +124,8 @@ instead. Credential entry operates on an already declared Endpoint and changes n
 selection or neither. Its JSON fields `profileSource` and `selectionFile` expose that distinction; the
 selection-file location is shown even when no selection exists. `doctor` states whether it checked
 only project Results or also a selected Runtime. An unselected Runtime is not a completed environment
-diagnosis. Result repository selection and project-package resolution remain independent of Runtime.
+diagnosis. Project-owned Result history and project-package resolution remain available without
+opening a Runtime.
 
 For a command invoked outside the project, name both the project and its input explicitly:
 
@@ -167,14 +168,15 @@ browsing/export lives under `commands/results.ts`; generic diagnosis and credent
 `commands/environment.ts`; active Build observation is read-only code in `observation.ts`; and human
 rendering is separate from the explicit machine-view union. `runtime-local/cli` owns local Profile
 selection, paths, Programs and Worker lifecycle. `main.ts` consumes only `CliRuntimeHost`; it never
-imports the Local Runtime implementation. Result commands do not consult or construct a Runtime,
-and the generic CLI cannot silently choose a Result Repository or a Provider-specific login flow.
+imports the Local Runtime implementation. Result commands do not consult or construct a Runtime;
+the generic CLI opens the resolved project's Result history and cannot silently choose a
+Provider-specific login flow.
 
 ## Execution logs
 
 `qflow logs <build-id> [--project <project>] [--runtime <profile>] [--lines <count>]` reads Build
 execution phases and Provider diagnostics. It reads a finished Result directly, without opening the
-Runtime; an active Build is read through Runtime control. The selected Repository handles file access.
+Runtime; an active Build is read through Runtime control. The project Result repository handles file access.
 `--lines` limits the tail and the report states the omitted count; JSON carries records plus that count.
 An unavailable log reports `source: "unavailable"` and exits unsuccessfully; a readable log with zero
 records is a successful empty result. The human report distinguishes a finished Result with no log

@@ -8,10 +8,11 @@ A **Provider** knows how to fulfill that request through a particular service. A
 configured instance of that Provider, with its service address, credential reference and capacity.
 The Runtime Profile binds the requested capability to an Endpoint.
 
-Qflow's official Distribution includes local Providers, the QflowHub Provider, and API-key Providers
-for TokenDance, HiAPI, Pollo and Monid that serve the installed models each service offers. Other services
-connect through packages owned by the production or their authors. The Agent can implement a new
-service through the public SDK, just as it can create a visual component for a video.
+Qflow's official Distribution selects local Providers and the QflowHub Provider as defaults.
+TokenDance, HiAPI, Pollo, BeatAPI and Monid Providers are independently versioned packages installed
+by projects that choose those services. Other services connect through packages owned by the
+production or their authors. The Agent can implement a new service through the public SDK, just as
+it can create a visual component for a video.
 [Model and deployment services](./service-partners.md) introduces independent partners through that
 same path. Choosing a service is separate from [choosing an Agent environment](./agents.md).
 

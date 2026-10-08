@@ -15,7 +15,7 @@ interface and implementation; the execution system runs the resulting dependency
 | Model | Defines an exact generation request and its outputs | Source imports |
 | Provider Endpoint | Executes supported requests through an API or local tool | Runtime Profile |
 | Credential store | Resolves the named credentials for an Endpoint | Runtime Profile |
-| Result repository | Keeps a project's Build records and produced files | Project Result configuration |
+| Result repository | Keeps a project's Build records and produced files | Runtime implementation; Local Runtime uses project `.qflow/results` |
 | Distribution | Supplies the executable applications and official packages | Installed `@qflow/qflow` release |
 
 For example, a Model describes a requested video, while a Provider maps that request to a service.
@@ -42,8 +42,9 @@ The consumer installs a chosen version and keeps its lockfile with the project.
 ## Installation and Source imports
 
 The Skill, executable Distribution and video project are installed and updated separately. The
-`@qflow/qflow` Distribution includes the official author packages and public extension APIs. Its selected
-Runtime adapters can prepare their declared services and other runtime materials through
+`@qflow/qflow` Distribution embeds Core, installs product-selected default author packages as ordinary
+npm dependencies, and exposes public extension APIs. Its selected Runtime adapters can prepare their
+declared services and other runtime materials through
 `qflow runtime up`. npm dependencies are installed with the package that owns them: Distribution
 dependencies with the Distribution, and project component dependencies with the project.
 
@@ -67,5 +68,5 @@ supplies the public Qflow APIs when it loads the selected extension.
 - [Models and Providers](./providers.md) explains new models, services and credentials.
 - [Runtime](./runtime.md) covers Endpoint and credential configuration.
 
-Exact SDK types and implementation examples live with the corresponding package's README and
-source, which also ship in the Distribution.
+Exact SDK types and implementation examples live with the corresponding package README and
+repository source. An installed package supplies its public types and executable code.

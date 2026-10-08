@@ -18,7 +18,7 @@ The current production Run explicitly selects accepted Outputs. Read the plan be
 
 | Edit | Owner |
 | --- | --- |
-| Spoken words, cue breaks, Moments and Selections | `authors/script.svml` |
+| Spoken words, Cue boundaries, Moments and Selections | `authors/script.svml` |
 | Input images, recordings, fonts and clock/canvas | `authors/assets.svml` |
 | Performance prompt and selected speaker Kit | `authors/direction.svml`, `recipes/performance.svs` |
 | Material outputs, media placement, Uses, scene events and Film | `authors/main.svml` |

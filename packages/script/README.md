@@ -146,7 +146,7 @@ Script preserves the normalized display spelling independently of speech tokeniz
 whitespace runs become one space; leading/trailing whitespace in a Turn and padding at the edges
 of a Dual Text side are omitted. No language-specific rule removes a Chinese space or inserts a
 space between numeric and Korean/Latin tokens. `是的 就是这样`, `3개월`, `3 개월`, `3D` and `3 D`
-therefore remain distinct as authored. Source newlines are prose formatting, not Caption Cue breaks.
+therefore remain distinct as authored. Source newlines are prose formatting, not Caption Cue separators.
 Use `||` for Cues and a family's layout controls for visual rows.
 
 Each `CaptionDisplayWord.separatorBefore` is `""` or `" "`, relative to the preceding displayed word

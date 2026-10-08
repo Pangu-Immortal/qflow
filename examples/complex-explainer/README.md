@@ -77,7 +77,7 @@ explains joining exported parts. The archive also includes `productions/explaine
 | Which existing material should a new Build use? | [Render Run](productions/explainer/runs/render.svrun) |
 
 Generated and normalized Outputs remain in the entry Source where the Run can satisfy them explicitly.
-Changing a cue break or graphic event does not require replacing the performance. A rewrite of the
+Changing a Cue boundary or graphic event does not require replacing the performance. A rewrite of the
 spoken words is different: supply new performance media with timing for that Script and select it in the Run.
 The retained generation declarations show the original direction but are not invoked by the default
 Run. Configure an explicitly chosen Model/Provider path before requesting new material.

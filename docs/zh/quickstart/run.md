@@ -325,7 +325,7 @@ Author/Run Source 通过 import 选择作者包；官方视频 Distribution 已�
 qflow doctor
 ```
 
-Doctor 总会校验项目选择的 Result Repository；存在已选或显式传入的 Runtime Profile 时，还会校验全部
+Doctor 总会校验项目的 Result 仓库；存在已选或显式传入的 Runtime Profile 时，还会校验全部
 Runtime 角色、Endpoint 配置、凭据是否存在和有界环境探测。它不启动 Worker，也不发付费请求。
 
 存在 Profile 时，`doctor` 默认检查整个 Profile，也可以重复 `--endpoint <instance>` 限定服务。

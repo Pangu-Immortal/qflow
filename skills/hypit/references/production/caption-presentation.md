@@ -65,6 +65,8 @@ not restart the Cue's animation clock. Changing only one word's visual role is a
 choice: Fine provides current/trail unit emphasis, while a custom family can interpret authored word
 attributes for structural layouts. Display/pronunciation units remain complete.
 
-In Studio, the content row shows Cues and the Uses row shows authored windows. Select a Use to edit
-its time or referenced Style. Moving the Use does not move `||`. Inspect the resulting placement,
-handoffs and emphasis alongside the other visuals while reusing the existing media.
+In Studio, Caption's timeline row shows Cue Items. Presentation Uses remain Inspector objects rather
+than draggable timeline ranges: their referenced Style or Recipe can be edited there, while their
+Scope and Role explain which Cues they affect. Changing `||` changes Cue structure; changing a Use
+does not. Inspect the resulting placement, handoffs and emphasis alongside the other visuals while
+reusing the existing media.

@@ -14,7 +14,7 @@ or [updates](#let-the-installation-channel-own-updates) for the current question
 | Part | What it supplies | Where changes belong |
 | --- | --- | --- |
 | Qflow Skill | Production judgment and navigation | The Skill's own installation channel |
-| Executable Distribution, `@qflow/qflow` | CLI, Studio, Runtime and bundled packages | Its npm/release installation |
+| Executable Distribution, `@qflow/qflow` | CLI, embedded Core and product-selected default packages | Its npm/release installation |
 | Video project | Sources, Runs, assets, project packages, selected Profile and Results | The project's files and package lock |
 
 An installed Skill does not install the executable. Installing the executable does not connect an

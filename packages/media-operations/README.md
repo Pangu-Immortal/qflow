@@ -118,5 +118,5 @@ of hidden normalization/limiting. The local FFmpeg Provider consumes the shared 
 public request and result semantics.
 
 AudioProgramPlan preserves AudioClip `gainEnvelope` and `audibility` on the full program sample
-clock. The [Composition definition](../composition/README.md#audio-presentation-on-the-program-clock)
+clock. The [Composition definition](../composition/README.md#audio-level-automation-on-the-program-clock)
 owns their semantics; the plan does not reinterpret source choice or presentation precedence.

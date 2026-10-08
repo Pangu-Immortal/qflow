@@ -20,7 +20,7 @@ Keep discovery tied to the question being answered:
 | --- | --- |
 | An executable or prepared local service | `qflow paths`, package-manager records, the selected Profile and Provider-documented tool locations |
 | Surface syntax or reusable behavior | Installed vocabulary, the owning package's documentation and a relevant component example |
-| This production's inputs and completed work | Supplied files, its notes, Sources, Runs and selected Result repository, including explicitly linked shared assets |
+| This production's inputs and completed work | Supplied files, its notes, Sources, Runs and project Result history, including explicitly linked shared assets |
 
 Follow a path beyond the project when a supplied location, recorded dependency or documented tool
 location explains its purpose. A nearby project with a similar name or subject does not establish
@@ -72,9 +72,10 @@ references inside files remain relative to their declaring file.
 
 For example, `qflow check authors/main.svml --asset-root /path/to/shared-media` admits intentionally
 referenced shared media. Keep the same relevant boundaries for subsequent commands. An ordinary
-project uses its own package installation. Exact packages embedded in the selected Distribution come
-from that Distribution; independently distributed packages, including `@qflow/*` packages, remain
-ordinary project dependencies. [Distribution](../environment/distribution.md) explains locating that executable,
+project uses its own package installation. Embedded Core comes from the selected Distribution;
+product-selected default packages are ordinary dependencies installed with it. Independently
+distributed project packages, including `@qflow/*` packages, remain ordinary project dependencies.
+[Distribution](../environment/distribution.md) explains locating that executable,
 and [component vocabulary](../production/vocabulary.md#let-ordinary-package-management-own-distribution)
 explains installing project packages.
 
@@ -214,7 +215,7 @@ selected as file Candidates. A Composite export contains `value.json` and its re
 inspection and transport; that document uses the Result value format, whereas a Run `<value>` accepts
 a StoredValue wrapper. To retain structured normalized media, local-domain or alignment reuse, keep
 its Result available and select each required Output with `build-record`. [Builds and Results](../production/builds.md)
-explains repository selection and export.
+explains Result reuse and export.
 
 ## Resume from present facts
 

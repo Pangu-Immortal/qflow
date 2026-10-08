@@ -51,5 +51,6 @@ assembly, generation and primary-image selection. The clean module then adds its
 generic image-operations package owns the Program shape and operation semantics; this package owns
 the selected cleanup recipe.
 
-The Surface implementation belongs to this package. `model-kit` remains responsible only for the
-exact request and Fragment shell; it owns no author-Surface registry or model syntax.
+The Surface implementation belongs to this package. The public
+`@qflow/qflow/generation/model` helpers remain responsible only for the exact request and Fragment
+shell; they own no author-Surface registry or model syntax.

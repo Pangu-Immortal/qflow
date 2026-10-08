@@ -4,4 +4,4 @@ Uses the public fine-caption renderer and author surface. Incoming cues take the
 
 ## Studio
 
-The project Track reuses the standard Fine Caption Companion with its Module identity. Cues display their actual content and numbering, and Uses keep the normal style band and recipe parameters. Only visibility scheduling differs from Fine Caption; cue identities, style projection and author editing follow the existing public implementation.
+The project Track reuses the standard Fine Caption Companion with its Module identity. Cue Items display their actual content and numbering. Uses remain Inspector presentation-rule objects with their Style and Recipe controls. Only visibility scheduling differs from Fine Caption; Cue identities, Style projection and author editing follow the existing public implementation.

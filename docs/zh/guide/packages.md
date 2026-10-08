@@ -13,7 +13,7 @@ Qflow 把视频需要什么，与哪些代码和服务完成它，分别表达�
 | Model | 定义明确的生成请求与输出 | Source 导入 |
 | Provider Endpoint | 通过 API 或本地工具执行支持的请求 | Runtime Profile |
 | 凭据存储 | 为 Endpoint 解析具名凭据 | Runtime Profile |
-| Result 仓库 | 保留项目的 Build 记录与产物文件 | 项目 Result 配置 |
+| Result 仓库 | 保留项目的 Build 记录与产物文件 | Runtime 实现；Local Runtime 使用项目的 `.qflow/results` |
 | Distribution | 提供可执行应用与官方包 | 安装的 `qflow` 版本 |
 
 例如，Model 描述要生成的视频，Provider 将请求映射到服务；Ranking 组件描述榜单的行为，渲染器将其贡献绘制到最终编排。两者都通过明确输入与输出参与同一个图。
@@ -30,17 +30,17 @@ Window 与 Instant；作者主导节奏的动画，则可以在声明的时钟�
 
 ## 安装与 Source 导入
 
-Skill、可执行 Distribution 和视频项目分别安装与更新。`@qflow/qflow` Distribution 包含官方作者包和公开扩展 API。所选 Runtime Adapter 可以通过 `qflow runtime up` 准备其声明的服务与运行材料。npm 依赖随其所有者安装：Distribution 的依赖随 Distribution 安装，项目组件的依赖由项目管理。
+Skill、可执行 Distribution 和视频项目分别安装与更新。`@qflow/qflow` Distribution 内嵌 Core，将产品选定的默认作者包作为普通 npm 依赖安装，并公开扩展 API。所选 Runtime Adapter 可以通过 `qflow runtime up` 准备其声明的服务与运行材料。npm 依赖随其所有者安装：Distribution 的依赖随 Distribution 安装，项目组件的依赖由项目管理。
 
 Source 使用 `@your-studio/scoreboard@1` 这样的逻辑 Module 地址。npm 安装的包版本决定实际实现，逻辑 `@1` 标识作者接口。视频 Build 使用这些已安装的版本；缺包时会报告安装所需的信息。
 
 ## 编写与分享扩展
 
-外部包只使用自己实际需要的窄公共所有者，例如 `@qflow/qflow/author`、`producer`、`admission`、`markup`、`composition`、`model-kit` 或 `endpoint`。将选定的 `@qflow/qflow` 版本作为开发依赖，把扩展编译为 JavaScript，分发它自己的代码与素材。`package.json` 中的 activation 入口描述它提供的能力；加载选中的扩展时，当前 Distribution 提供公开 Qflow API。
+外部包只使用自己实际需要的窄公共所有者，例如 `@qflow/qflow/author`、`@qflow/qflow/producer`、`@qflow/qflow/admission`、`@qflow/qflow/markup`、`@qflow/qflow/composition`、`@qflow/qflow/generation/model` 或 `@qflow/qflow/endpoint`。将选定的 `@qflow/qflow` 版本作为开发依赖，把扩展编译为 JavaScript，分发它自己的代码与素材。`package.json` 中的 activation 入口描述它提供的能力；加载选中的扩展时，当前 Distribution 提供公开 Qflow API。
 
 - [添加作者包](./author-packages.md)：从随发行包提供的可构建组件开始。
 - [组件结构](./component-anatomy.md)：组件内部各部分的职责。
 - [模型与 Provider](./providers.md)：新模型、服务与凭据的选择。
 - [Runtime](./runtime.md)：Endpoint 和凭据配置。
 
-精确 SDK 类型与实现示例留在对应包的 README 和源码中，它们也随 Distribution 分发。
+精确 SDK 类型与实现示例留在对应包的 README 和仓库源码中；安装后的包提供公开类型与可执行代码。

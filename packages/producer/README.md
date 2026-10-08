@@ -33,12 +33,14 @@ Author Kit; import only the owner of each responsibility:
 | `@qflow/qflow/author` | sealed Author Graph Fragments |
 | `@qflow/qflow/markup` | Markup Surface declarations and handlers |
 | `@qflow/qflow/temporal/markup` | author-time semantic Window/Instant projection helpers |
-| `@qflow/qflow/composition`, `@qflow/qflow/composition` | peer Track values and renderer-independent visual representation |
-| `@qflow/studio-companion` (optional, in Companion code) | editor entity projection, Inspector bindings and executed temporal lineage |
+| `@qflow/qflow/composition` | peer Track values and renderer-independent visual representation |
+| `@qflow/studio-companion` (optional, in Companion code) | editor Item projection, Inspector bindings and executed temporal lineage |
 
-The Author Package keeps one development dependency on `@qflow/qflow`, compiles its activation to
-JavaScript, and publishes only its own files. The active Distribution supplies these subpaths at
-execution, so a component does not carry a second Core or choose its own framework version. This
+The Author Package keeps `@qflow/qflow` as its framework development dependency. A package that
+contributes a Companion also declares `@qflow/studio-companion` as a development dependency. It
+compiles its activation to JavaScript and publishes only its own files. The active Distribution
+supplies these APIs at execution, so a component does not carry a second Core or choose its own
+framework version. This
 package remains the deterministic-handler owner; the public subpaths do not create a second package
 format or a facade that claims to own every kind of author extension.
 
@@ -96,7 +98,7 @@ Runtime.
 ## Optional Studio presentation
 
 A component can render through the ordinary Track protocol without custom editor behavior. When it
-needs meaningful timeline entities or Inspector fields, put a Companion in a separate file and
+needs meaningful timeline Items or Inspector fields, put a Companion in a separate file and
 merge `createStudioTrackCompanionFacet(companions)` into the same activation's `facets`.
 Retain the existing Module, Producer and Surface contributions. The selected project's package
 supplies the extension; do not edit Studio's registry or add editor metadata to the domain Manifest.

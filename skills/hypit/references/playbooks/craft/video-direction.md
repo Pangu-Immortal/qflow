@@ -57,7 +57,7 @@ people, objects and world through useful references. A literal boundary frame he
 continuity is intended; it is not needed for every new passage. The accepted outputs establish the
 target's actual time. When uninterrupted continuity is essential, use a capability that can carry
 it or explain what an edited interpretation changes. When an accepted wordless action carries the
-passage, [empty Segments](../../production/media.md#empty-segments-use-their-media-boundaries)
+passage, [empty Segments](../../production/media.md#project-a-wordless-segment-when-its-identity-is-consumed)
 let that material establish its time without word tokens.
 
 [Reference relationships](generated-dependencies.md) owns how images carry identity and world

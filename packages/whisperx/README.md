@@ -52,7 +52,7 @@ first and final frame, no evidence audio or WhisperX capability is requested, an
 `NarrativeAlignment` type is published.
 
 For Chinese speech use `zh`. WhisperX may emit character-sized evidence units; local alignment maps
-them to Script's authored units while Caption continues to use Script's display wording and Cue breaks.
+them to Script's authored units while Caption continues to use Script's display wording and authored Cue boundaries.
 The package validates only the language-code form; the selected Endpoint owns actual language support.
 
 ## Local deployment

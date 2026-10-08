@@ -387,7 +387,7 @@ repository. The installed package manager owns their versions.
 qflow doctor
 ```
 
-Doctor always validates the project's selected Result Repository. When a Runtime Profile is selected or
+Doctor always validates the project's Result repository. When a Runtime Profile is selected or
 passed explicitly, it also validates every selected Runtime role, Endpoint configuration, credential
 presence and bounded environment probe. It never starts the Worker or performs a paid request.
 

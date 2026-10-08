@@ -163,7 +163,7 @@ Your agent can check the environment, request the credentials the video needs, g
 
 - **Clone any video:** drop in a video, get the whole workflow — footage, captions, B-roll, effects. Not a script breakdown.
 - **One workflow, 100 variants:** reuse the composition and existing material; generate the parts that change.
-- **Pluggable components:** swap the host without touching the captions. Use the library, fork it, or write your own.
+- **Pluggable components:** swap the host without touching the captions. Use an installed package, adapt an example, or write your own.
 - **Open source:** no Qflow seat pricing, per-render fees or added watermark. Model-service usage is billed by the service you choose.
 
 ## What Qflow Can Build

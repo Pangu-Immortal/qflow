@@ -85,7 +85,8 @@ owner's scope; `@qflow/*` is the Qflow project's publishing namespace, not a sco
 
 TypeScript imports use public SDK paths such as `@qflow/qflow/author`, `@qflow/qflow/producer`,
 `@qflow/qflow/admission`, `@qflow/qflow/markup`, `@qflow/qflow/composition`,
-`@qflow/qflow/text`, `@qflow/qflow/caption` or `@qflow/qflow/studio-companion`. Source imports instead name logical Modules,
+`@qflow/qflow/text` or `@qflow/qflow/caption`; Studio Companions use the independent
+`@qflow/studio-companion` package. Source imports instead name logical Modules,
 such as `@qflow/caption@1`. When learning from installed official source, translate its internal
 workspace imports to the corresponding public SDK paths in the project package.
 
@@ -109,8 +110,9 @@ with a drawing example. [System relationships](system.md) places it in the compl
 
 The project's package manager installs and versions components. Qflow loads only packages selected
 by Source or Run imports and their declared dependencies. Project packages resolve from the project;
-exact packages embedded in the selected Distribution come from that Distribution, while independently
-published packages—including `@qflow/*` packages—follow ordinary project-first package resolution.
+embedded Core comes from the selected Distribution, while its product-selected default packages are
+ordinary dependencies installed with it. Independently published project packages—including
+`@qflow/*` packages—follow ordinary project-first package resolution.
 Qflow does not scan the dependency tree for possible components.
 
 Keep a new component project-local while it serves this work. If its owner later wants to use it

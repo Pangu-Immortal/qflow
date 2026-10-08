@@ -9,7 +9,7 @@ description: 为组件提供有意义的时间线 Item 和 Studio 编辑控件�
 
 Companion 是应用贡献。项目组件可以在同一个物理包中，以独立文件和 facet 携带它；官方 Distribution 通过独立包提供官方 Companion。两种情况下，Studio 都加载当前 Source 和 Distribution 所选包的 Companion。
 
-[Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md) 提供 activation 与接口示例。外部包使用 `@qflow/qflow/studio-companion`，将 Companion 编译为 JavaScript 并与组件一起分发。修改安装代码后，重启 Studio 加载新贡献。
+[Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md) 提供 activation 与接口示例。外部包声明并使用 `@qflow/studio-companion`，将 Companion 编译为 JavaScript 并与组件一起分发。修改安装代码后，重启 Studio 加载新贡献。
 
 ## 描述作者面对的对象
 

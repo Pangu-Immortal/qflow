@@ -253,7 +253,7 @@ Narrative Projection 声明通过 `{story.moment.ranking}` 引用 Moment，并�
 | `\\` | 字面量 `\` |
 | `\|` | 字面量 `|`（两个竖线写成 `\|\|`） |
 
-普通文本中的单个 `|` 本身就是字面量；未转义的 `||` 才是 Caption Cue Break。
+普通文本中的单个 `|` 本身就是字面量；未转义的 `||` 才是 Caption Cue 分隔符。
 在 Dual Text 内部，第一个未转义的 `|` 分隔 display 和 spoken 两侧；display 侧的竖线必须
 写成 `\|`，需要字面量右尖括号时写成 `\>`。
 

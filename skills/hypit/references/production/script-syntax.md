@@ -171,7 +171,7 @@ GUEST: That looks much easier.
 
 Pass that Text to the speaking prompt. In action direction, relate HOST and GUEST to the supplied
 character views and voices. The selected [Prompt Kit](prompt-kits.md) owns its reference
-order; [podcast direction](../playbooks/formats/two-person-podcast.md#direct-conversation-inside-a-take)
+order; [podcast direction](../playbooks/formats/two-person-podcast.md#direct-conversation-inside-a-generated-clip)
 shows how those roles and references form one performed exchange.
 
 These are projections of one authored Script, not copies to maintain. The performance request,
