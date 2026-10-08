@@ -3,6 +3,7 @@
 import { readFileSync, realpathSync } from "node:fs";
 import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { spawnSync } from "node:child_process";
 
 if (process.argv.length === 3 && ["--version", "-v"].includes(process.argv[2])) {
   const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
@@ -22,9 +23,18 @@ process.emitWarning = function qflowWarning(warning, ...args) {
 // path so its loader and every later package import share one file identity.
 const distributionRoot = realpathSync.native(resolve(dirname(fileURLToPath(import.meta.url)), ".."));
 const args = process.argv.slice(2);
+const canonicalLauncher = resolve(distributionRoot, "bin", "qflow.mjs");
+if (fileURLToPath(import.meta.url) !== canonicalLauncher) {
+  const child = spawnSync(process.execPath, [...process.execArgv, canonicalLauncher, ...args], {
+    stdio: "inherit",
+    windowsHide: true,
+  });
+  if (child.error !== undefined) throw child.error;
+  process.exit(child.status ?? 1);
+}
 const distributionUrl = pathToFileURL(distributionRoot + sep);
 const { runQflow } = await import(new URL("bin/run.mjs", distributionUrl).href);
 await runQflow(args, {
   distributionRoot,
-  launcher: resolve(distributionRoot, "bin", "qflow.mjs"),
+  launcher: canonicalLauncher,
 });
