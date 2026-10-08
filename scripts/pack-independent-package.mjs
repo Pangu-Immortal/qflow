@@ -3,7 +3,7 @@ import { globSync } from "node:fs";
 import { cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -47,7 +47,13 @@ async function copyDeclaredEntry(packageRoot, stage, entry) {
   const source = resolve(packageRoot, entry);
   if (!inside(packageRoot, source)) throw new Error(`${entry} escapes ${packageRoot}`);
   await stat(source);
-  await cp(source, resolve(stage, entry), { recursive: true });
+  await cp(source, resolve(stage, entry), {
+    recursive: true,
+    filter: (candidate) => {
+      const name = basename(candidate);
+      return name !== "__pycache__" && !name.endsWith(".pyc") && !name.endsWith(".pyo");
+    },
+  });
 }
 
 async function compileSources(packageRoot, stage) {

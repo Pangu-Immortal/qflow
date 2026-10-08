@@ -130,6 +130,10 @@ try {
   await access(join(whisperRuntime, "pyproject.toml"));
   await access(join(whisperRuntime, "uv.lock"));
   await access(join(whisperRuntime, "src", "qflow_whisperx_service", "server.py"));
+  const whisperRuntimeFiles = await readdir(whisperRuntime, { recursive: true });
+  assert.equal(whisperRuntimeFiles.some((path) => path.split(/[\\/]/u).includes("__pycache__")
+    || path.endsWith(".pyc") || path.endsWith(".pyo")), false,
+    "published Python Runtime must not contain interpreter caches");
   const openCvRuntime = join(consumer, "node_modules", "@qflow", "provider-image-opencv-local", "runtime");
   await access(join(openCvRuntime, "pyproject.toml"));
   await access(join(openCvRuntime, "uv.lock"));
