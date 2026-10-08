@@ -65,11 +65,11 @@ The central Preview evaluates the composition's compiled `HtmlProgram`. It uses 
 media sampling and motion as an encoded render. Check the actual picture when adjusting caption
 placement, graphic emphasis or coverage.
 
-The Timeline shows component appearances on a shared clock. A semantic composition also shows
-Segments, Words, Selections and Moments. Select an entity to seek to it; playback, frame stepping,
+The Timeline shows component appearances on a shared clock. Domain projections can also contribute
+mapping and evidence rows, while authored Instants and Windows share a temporal row. Select an Item to seek to it; playback, frame stepping,
 zoom and scrolling help examine a particular transition or layout.
 
-The Inspector shows the selected entity's properties. Editable fields and timeline handles depend
+The Inspector shows the selected Item's properties. Editable fields and timeline handles depend
 on the component's **Studio Companion**, which describes the component to Studio. A project component
 can supply its own Companion alongside its rendering code. Renderability and the available editing
 controls are separate: a field or gesture needs a clear source value to change.
@@ -96,7 +96,7 @@ available to explore the editable work and discuss further changes.
 
 For component authors, [Timing edits in Studio](../guide/studio-temporal-windows.md) explains semantic
 editing, and the [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md)
-explains how to expose component entities and controls.
+explains how to expose component Items and controls.
 
 To add another interface language, load a local JSON translation with `--locale-pack ./language.json`.
 The [localization guide](https://github.com/qflow-ai/qflow/blob/main/packages/studio/LOCALIZATION.md)

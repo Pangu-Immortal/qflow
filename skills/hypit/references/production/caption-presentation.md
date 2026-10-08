@@ -4,8 +4,8 @@ Read this to apply subtitle treatments, change them during a passage, or hide th
 [Caption craft](../playbooks/craft/captions.md) owns visual direction;
 [Caption authoring](caption-authoring.md) explains creating a new family.
 
-**Script organizes content; the family forms Cues; Use organizes presentation in time.** `||` gives
-the family a hard content break. An upstream adapter resolves every document Unit's timing once; the
+**Script authors Words, Units and Cues; the family presents those Cues; Use organizes presentation
+in time.** `||` ends the current authored Cue. An upstream adapter resolves every document Unit's timing once; the
 Track consumes that flat `CaptionTiming` without knowing whether it came from Narrative, SRT/VTT or
 authored absolute time. Each Use selects a complete Style inside an already resolved time window.
 

@@ -50,11 +50,11 @@ and evaluate its state at the requested frame. Keep separately useful overlays a
 ## Keep the existing text and timing chain
 
 ```text
-Script → CaptionDocument (displayed words, Cue breaks and word attributes)
+Script → CaptionDocument (displayed Words, correspondence Units, authored Cues and word attributes)
 NarrativeCaptionBinding + NarrativeProjection → CaptionTiming
 Track Uses → resolved time windows, Styles and optional speaker filters
 CaptionDocument + complete unit Timing + Uses + family parameters
-  → family-owned Cues and schedule → VisualTrack
+  → family-owned schedule for the authored Cues → VisualTrack
 ```
 
 Consume each display word's `separatorBefore` with its `text`; never rebuild wording by joining
@@ -98,10 +98,10 @@ keywords, long text and an N:M pronunciation span. Make author correction possib
 attributes, `||` and Style configuration instead of inventing missing text or dropping words.
 
 The projection publishes every complete Unit's absolute boundaries and does not form Cues. The
-family schedule respects authored Cue breaks and structural boundaries while forming its readable
-groups. Visual line wrapping is a separate operation. A narrow width should not silently rewrite the
-Script into new spoken Cues. If the family needs an additional grouping rule, give that rule explicit
-parameters and preserve the original word/unit associations in the schedule.
+CaptionDocument already partitions complete Units into authored Cues. A family schedule joins those
+Cues to Unit timing and may derive lines, pages, cards or local states, but it does not split or merge
+Cues. Visual line wrapping is a separate operation. A narrow width must not silently rewrite the
+Script into new Cues. Preserve the original Cue, Unit and Word associations in the schedule.
 
 Display Words reflect Script's lexical units: a Han character is normally one Word, while an
 English word is normally one Word. Keep that timing granularity separate from visual grouping.

@@ -11,8 +11,8 @@ the source domain.
 
 | Author form | Moving it changes | Trimming it changes |
 | --- | --- | --- |
-| `from="2s" for="8f"` | `from`; duration remains eight frames | `from` or `for` |
-| `until="3s" for="8f"` | `until`; duration remains eight frames | `for` or `until` |
+| `from="2s" for="8f"` | `from`; duration remains eight frames | leading: `from` + `for`; trailing: `for` |
+| `until="3s" for="8f"` | `until`; duration remains eight frames | leading: `for`; trailing: `until` + `for` |
 | `from="1s" until="3s"` | both endpoints by the same delta | the selected endpoint |
 | named Window declared with `from`/`until`/`for` | the named declaration | the selected relation |
 | component `during={named-window}` | the named value's producer | the named value's producer |
@@ -43,6 +43,16 @@ different editing rules while publishing the same Temporal types.
 
 If a producer declares no inverse, the resolved value remains usable but Studio does not guess a
 write target. This keeps shared meaning, local clock values and component behavior separate.
+
+Each drag is solved as one complete constraint. A leading trim keeps the old end, a trailing trim
+keeps the old start, and a move keeps the old duration. Studio follows the executed Temporal graph
+to the exact author endpoints and commits every required source change together.
+
+Named values constructed inside `<time:Timeline>` follow the same rule. Timeline Author retains the
+child declaration that owns each literal offset or duration, so Studio can edit that exact
+`Instant.at`, `Window.from`, `Window.until` or `Window.for` value. Bare references continue upstream;
+an `earliest(...)` or `latest(...)` expression stays read-only when changing it would require choosing
+one branch on the author's behalf.
 
 Unedited expressions retain their units: `2s` remains two seconds when frame rate changes, whereas
 `60f` remains sixty frames. A changed clock value is written on a whole frame boundary for the

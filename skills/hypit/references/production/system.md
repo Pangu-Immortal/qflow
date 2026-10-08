@@ -58,9 +58,9 @@ Behavior spanning several occurrences—such as a continuing presenter, slidesho
 ducking relationship—belongs to a component. It can publish ordinary VisualTrack and/or AudioTrack
 outputs for Film. [Tracks](tracks.md) routes ordinary Clips and richer components.
 
-Caption is another peer relation: a document owns displayed text and hard breaks, CaptionTiming owns
-complete absolute Unit boundaries, and a Caption family owns Cue formation, visible scheduling and
-drawing.
+Caption is another peer relation: a document owns displayed Words, correspondence Units and authored
+Cues; CaptionTiming owns complete absolute Unit boundaries; and a Caption family owns visible
+scheduling, layout, motion and drawing without redefining Cue membership.
 
 ## Give each part the direction it can realize
 

@@ -15,7 +15,7 @@ Caption uses a source-neutral document produced by Script and a replaceable Styl
 ```text
 Script → CaptionDocument + NarrativeCaptionBinding
 Binding + NarrativeProjection → complete Unit CaptionTiming
-CaptionDocument + CaptionTiming + Uses → family Cue schedule → VisualTrack
+authored Cues + CaptionTiming + Uses → family presentation schedule → VisualTrack
 ```
 
 ```svml
@@ -25,9 +25,10 @@ CaptionDocument + CaptionTiming + Uses → family Cue schedule → VisualTrack
 <import as="fonts" from="@qflow/fontsource@1"/>
 ```
 
-`@qflow/caption` owns the common CaptionDocument contract, complete-unit Selection/Role projection,
-Style assignment and the flat timing join. `@qflow/caption-fine` is one Style family: it forms Cues
-and owns their geometry, glyph/Cue/Pill Paint and layered local motion.
+`@qflow/caption` owns the common CaptionDocument contract, including ordered Words, correspondence
+Units and authored Cues, plus complete-unit Selection/Role queries, Style assignment and the flat
+timing join. `@qflow/caption-fine` is one Style family: it presents those Cues and owns their
+geometry, glyph/Cue/Pill Paint and layered local motion.
 
 ### caption-fine:Style
 

@@ -159,17 +159,18 @@ include when the user wants to continue editing on another machine.
 | View | What it shows and what it can change |
 | --- | --- |
 | Source | The exact Run, Author and imported Source/Recipe files. Select a file and use Edit source; changes save automatically, and Cmd/Ctrl+S saves immediately. Check save/error state. This is not a project filesystem browser. |
-| Preview | The selected Film composition evaluated from its compiled `HtmlProgram` in the browser. Play or seek with the transport or timeline. Selecting a component-declared visual part selects its corresponding timeline entity; adjust its exposed position in the Inspector. |
-| Timeline | Semantic Segments, Selections and Moments, plus the component-projected Track entities and their visible intervals, materials or event lanes. A rectangle may describe occupancy, activation or persistent visibility; read the component's meaning. |
-| Inspector | With nothing selected, project, Canvas, time and Run facts. For a selected entity, its declared read-only facts and adjustable fields, organized under Where, When and How where applicable. |
+| Preview | The selected Film composition evaluated from its compiled `HtmlProgram` in the browser. Play or seek with the transport or timeline. Selecting a component-declared visual part selects its corresponding timeline Item; adjust its exposed position in the Inspector. |
+| Timeline | Projected domain evidence, authored Instants and Windows, plus component-projected Track Items and their visible intervals, materials or event lanes. A rectangle may describe occupancy, activation or persistent visibility; read the component's meaning. |
+| Inspector | With nothing selected, project, Canvas, time and Run facts. For a selected Item, its declared read-only facts and adjustable fields, organized under Where, When and How where applicable. |
 | Tasks | One card per Build, grouped into ongoing and finished. Active status and progress come from the selected Runtime; completed, failed and cancelled Builds come from project Results. Cards retain the source Run, times and any failure or attention reason. |
 | Artifacts | Image, video and audio file Outputs from project Results, including those already published by ongoing Builds. Use the sidebar to choose all media, videos, images or audio. View media on a Build opens its Outputs; opening the Artifacts tab returns to project media. Structured Outputs such as normalized media and NarrativeAlignment stay intact and do not add their internal files to this gallery. Click a card to view it in the central preview; video and audio have playback and a time slider. Back to composition returns to the existing composition position. Previewing a file does not select it as a Candidate in the Run. |
 
 A declared lane stays one row even when items overlap. Later items cover earlier ones at equal
 stacking order; selecting an item brings its full rectangle forward within that lane. This changes
 editor selection, not the Film's paint order. The same behavior applies to attached child lanes.
-The time ruler and its Segment, Word and Selection/Moment bands form one pinned Timeline area.
-Empty information bands are omitted; a work without Segments keeps the ordinary time ruler.
+The time ruler, each projection's mapping and evidence rows, and the shared authored temporal row
+form one pinned Timeline area. Empty information rows are omitted; a work without a domain
+projection keeps the ordinary time ruler and its authored temporal declarations.
 Select an overlapping object to bring it forward, or right-click the overlap to choose one covered
 by its peers. This changes editor selection, not the composition.
 
@@ -246,6 +247,6 @@ lifetime, a reveal event, a Cue's actual Style, or a scene's layout choices. Its
 the rendered work. Generic Track projection is useful when no additional authoring concepts are
 needed; a component with meaningful child events or controls can publish those directly.
 
-Read [Companion authoring](studio-companions.md) for entities and child lanes, picture selection,
+Read [Companion authoring](studio-companions.md) for Items and child lanes, picture selection,
 parameter controls, unit conversion, semantic writeback and package activation. It builds on the
 same [component design](component-design.md) decisions used to make the video.
