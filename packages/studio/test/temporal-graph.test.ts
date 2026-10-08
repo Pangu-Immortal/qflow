@@ -36,7 +36,7 @@ test("Studio reads Instant lineage and author authority from executed graph edge
     }),
   ];
   const steps = [
-    step("project", "@qflow/narrative-temporal", "project-moment-instant", { timeline: "timeline", projection: "projection", moment: "moment", spec: "point-spec" }, { instant: "point" }),
+    step("project", "@qflow/narrative-temporal", "project-moment-instant", { projection: "projection", moment: "moment", spec: "point-spec" }, { instant: "point" }),
     step("append", "@qflow/depth-stack", "append-depth-stack-card", { set: "empty", spec: "card-spec", activation: "point" }, { set: "cards" }),
     step("render", "@qflow/depth-stack", "render-depth-stack", { program: "cards" }, { track: "track" }),
   ];

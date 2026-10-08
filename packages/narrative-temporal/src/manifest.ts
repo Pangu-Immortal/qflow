@@ -47,17 +47,17 @@ export const narrativeTemporalManifest: ModuleManifest = {
     outputs: [{ name: "projection", type: narrativeTemporalTypes.narrativeProjection }], needs: [],
   }, {
     name: narrativeTemporalProducers.projectSelectionInstant.name,
-    inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
+    inputs: [{ name: "projection", type: narrativeTemporalTypes.narrativeProjection },
       { name: "selection", type: narrativeTypes.selection }, { name: "spec", type: narrativeTemporalTypes.narrativeInstantSpec }],
     outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [],
   }, {
     name: narrativeTemporalProducers.projectSegmentInstant.name,
-    inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
+    inputs: [{ name: "projection", type: narrativeTemporalTypes.narrativeProjection },
       { name: "segment", type: narrativeTypes.segmentRef }, { name: "spec", type: narrativeTemporalTypes.narrativeInstantSpec }],
     outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [],
   }, {
     name: narrativeTemporalProducers.projectMomentInstant.name,
-    inputs: [{ name: "timeline", type: timelineTypes.timeline }, { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
+    inputs: [{ name: "projection", type: narrativeTemporalTypes.narrativeProjection },
       { name: "moment", type: narrativeTypes.moment }, { name: "spec", type: narrativeTemporalTypes.narrativeInstantSpec }],
     outputs: [{ name: "instant", type: temporalTypes.instant }], needs: [],
   }],

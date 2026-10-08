@@ -144,15 +144,14 @@ export const decodeAbsoluteWindowSurface: StructuredSurfaceHandler = ({ element,
 
 /** Publish one reusable authored absolute Instant. Existing Instants can be referenced directly. */
 export const decodeAbsoluteInstantSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
-  assertAttributes(element, ["id", "timeline", "at"], ["id", "timeline", "at"]);
+  assertAttributes(element, ["id", "timeline", "at", "offset"], ["id", "timeline", "at"]);
   assertEmptyElement(element);
-  if (typeof element.attributes.at !== "string") {
-    throw new Error(`${element.name}.at must be an authored absolute expression; reference an existing Instant directly.`);
-  }
   const id = textAttribute(element, "id");
   const context = resolveTemporalContext({ element, resolveReference });
   const construction = createTemporalInstantConstruction({ id, element, ...context, resolveReference });
-  if (construction.components.length !== 1) throw new Error(`${element.name} did not construct an Instant.`);
+  if (construction.components.length !== 1) {
+    throw new Error(`${element.name}.at aliases an existing Instant; reference it directly or add an exact offset.`);
+  }
   const component = construction.components[0]!;
   return {
     records: construction.records,

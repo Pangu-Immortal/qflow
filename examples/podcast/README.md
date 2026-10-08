@@ -44,10 +44,10 @@ One five-second silent B-roll request combines the three lifestyle pictures into
 second scene is strawberry bingsu, not a literal smoothie demonstration: the montage illustrates the
 whole routine. It covers part of the incoming man's response, creating a J-cut and giving the final
 cooking scene time to read. Its Clip omits `Map`, so the bounded partial identity plays at native
-speed, truncates when the Selection is shorter, and ends coverage when the source finishes. It does
+speed, truncates when the occurrence Window is shorter, and ends coverage when the source finishes. It does
 not freeze the last frame or retime to fill the Window. Inspect the newly aligned endpoint and adjust
-the Selection if the actual montage needs more reading time. Exact word-to-scene reconstruction
-would use separate Clips and adjoining Selections instead.
+the projected Window if the actual montage needs more reading time. Exact word-to-scene reconstruction
+would use separate Clips and adjoining projected Windows instead.
 
 `shared-soundtrack.m4a` is the only supplied media asset on the final route. Images, voices and generated clips
 are generated; normalization, alignment, Caption and Film composition are explicit downstream work.

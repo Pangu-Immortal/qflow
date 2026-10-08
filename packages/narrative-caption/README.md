@@ -14,5 +14,5 @@ CaptionTiming and therefore do not depend on Narrative or speech.
 <narrative-caption:Timing id="story-captions"
   document={story.caption}
   binding={story.caption-binding}
-  projection={speech.projection}/>
+  projection={speech}/>
 ```

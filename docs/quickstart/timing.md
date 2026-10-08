@@ -89,14 +89,17 @@ absolute Window:
     domain={opening-media.domain} window={speech.opening}/>
   <semantic:Map alignment={answer-alignment.alignment}
     domain={answer-media.domain} window={speech.answer}/>
-  <semantic:Window id="proof" selection={story.selection.proof}/>
-  <semantic:Instant id="claim" moment={story.moment.claim}/>
 </semantic:Projection>
+<semantic:Window id="proof" projection={story-time} during={story.selection.proof}/>
+<semantic:Instant id="claim" projection={story-time} at={story.moment.claim}/>
 ```
 
-The requested outputs `story-time.proof` and `story-time.claim` are ordinary absolute Window and
+The requested outputs `proof` and `claim` are ordinary absolute Window and
 Instant values. Semantic time is one
 optional projection source; direct seconds, frames and named Timeline values remain equally valid.
+Projection reads the exact semantic boundary. Declare a separate absolute relationship such as
+`<time:Instant id="after-claim" timeline={speech.timeline} at={claim} offset="+5f"/>` when an authored
+offset is needed.
 
 ## Present picture and audio
 

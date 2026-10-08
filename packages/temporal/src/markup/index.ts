@@ -70,6 +70,13 @@ function negate(value: TemporalDuration): TemporalDuration {
   return value.unit === "seconds" ? { ...value, numerator: -value.numerator } : { ...value, value: -value.value };
 }
 
+function signedDuration(raw: MarkupAttributeValue, label: string): { readonly direction: 1 | -1; readonly duration: TemporalDuration } {
+  if (typeof raw !== "string") throw new Error(`${label} must be an exact signed duration.`);
+  const match = /^([+-])(.+)$/u.exec(raw.trim());
+  if (match === null) throw new Error(`${label} must be an exact signed duration such as +12f or -250ms.`);
+  return { direction: match[1] === "+" ? 1 : -1, duration: parseTemporalDuration(match[2]!, label) };
+}
+
 export function parseTemporalInstant(value: string, label: string): TemporalInstantExpression {
   const trimmed = value.trim();
   const aliases = [["start", "timeline.start"], ["end", "timeline.end"],
@@ -239,7 +246,38 @@ export function createTemporalInstantConstruction(value: {
   if (raw === undefined) throw new Error(`${value.element.name}.${attribute} is required.`);
   if (typeof raw !== "string") {
     const found = resolvedReference(raw, `${value.element.name}.${attribute}`, temporalTypes.instant, value.resolveReference);
-    return { records: [], components: [], fragments: [], ref: found.ref };
+    const rawOffset = value.element.attributes.offset;
+    if (rawOffset === undefined) return { records: [], components: [], fragments: [], ref: found.ref };
+    const offset = signedDuration(rawOffset, `${value.element.name}.offset`);
+    const durationId = `${value.id}.__temporal.duration`, shiftId = `${value.id}.__temporal.shift`;
+    const fragment = sealGraphFragment({ inputs: [
+      { name: "timeline", type: timelineTypes.timeline }, { name: "instant", type: temporalTypes.instant },
+      { name: "duration", type: temporalTypes.duration }, { name: "spec", type: temporalTypes.shiftSpec },
+    ], operations: [{ id: "extent", producer: temporalProducers.extentFromDuration,
+      inputs: { timeline: fragmentInput("timeline"), duration: fragmentInput("duration") },
+      result: { kind: "output", name: "extent" } },
+    { id: "shift", producer: temporalProducers.shiftInstant,
+      inputs: { timeline: fragmentInput("timeline"), instant: fragmentInput("instant"),
+        extent: operation("extent"), spec: fragmentInput("spec") }, result: { kind: "output", name: "instant" } }],
+    exports: [{ name: "instant", type: temporalTypes.instant, root: operation("shift") }] });
+    const componentId = `${value.id}.__temporal`;
+    return {
+      records: [
+        { id: durationId, type: temporalTypes.duration, value: { kind: "inline", value: offset.duration }, range: value.element.range },
+        { id: shiftId, type: temporalTypes.shiftSpec, value: { kind: "inline", value: {
+          id: value.id, subjectId: value.subjectId ?? value.id, direction: offset.direction,
+          author: { binding: "offset", relation: "direct" },
+        } }, range: value.element.range },
+      ],
+      components: [{ id: componentId, fragment: fragment.id, inputs: {
+        timeline: value.timeline.ref, instant: found.ref,
+        duration: { kind: "record", id: durationId }, spec: { kind: "record", id: shiftId },
+      }, outputs: { instant: `${value.id}.__temporal.instant.value` }, range: value.element.range }],
+      fragments: [fragment], ref: { kind: "component-output", component: componentId, output: "instant" },
+    };
+  }
+  if (value.element.attributes.offset !== undefined) {
+    throw new Error(`${value.element.name}.offset is only valid when at references an existing Instant.`);
   }
   const specId = `${value.id}.__temporal.instant`;
   const fragment = sealGraphFragment({ inputs: [

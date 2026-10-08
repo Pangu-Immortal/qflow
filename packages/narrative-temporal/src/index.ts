@@ -6,5 +6,6 @@ export { narrativeTemporalDependency, narrativeTemporalManifest, narrativeTempor
 export { createNarrativeProjection, momentFrame, narrativeBoundaryFrame, projectNarrativeAlignment, projectNarrativeInstant,
   segmentFrameSpan, selectionFrameSpan, tokenFrameSpan } from "./projection.js";
 export { narrativeAlignmentSchema } from "./schema.js";
-export { decodeNarrativeProjectionSurface, narrativeProjectionMarkupSurface } from "./surface.js";
+export { decodeNarrativeInstantSurface, decodeNarrativeProjectionSurface, decodeNarrativeWindowSurface,
+  narrativeProjectionMarkupSurfaces } from "./surface.js";
 export type * from "./types.js";

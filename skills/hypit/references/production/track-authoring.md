@@ -31,7 +31,7 @@ This existing answer-strip vocabulary illustrates a concrete choice:
 <emoji:EmojiReveal id="answers" timeline={speech.timeline} within={canvas.bounds}
   style={answer-style} placeholder={question-icon} during={speech.window}>
   <emoji:Item id="known" icon={known-icon} preset="true"/>
-  <emoji:Item id="surprise" icon={answer-icon} at={story-time.reveal}/>
+  <emoji:Item id="surprise" icon={answer-icon} at={reveal}/>
 </emoji:EmojiReveal>
 ```
 
@@ -64,9 +64,9 @@ Instants/Windows. A component can combine directly authored and domain-produced 
 time models. The installed `examples/semantic-composition/packages/chat-scene` demonstrates repeated
 content children with their own events and a picture drawn entirely in code.
 
-For a Window consumer, `during={story-time.example}` reuses a projected interval. To start a short
+For a Window consumer, `during={example}` reuses a projected interval. To start a short
 effect at an Instant, first declare a named Window from that Instant, then pass it through `during`.
-An Instant consumer may accept `at={story-time.answer}` because it owns a state transition. Read the
+An Instant consumer may accept `at={answer}` because it owns a state transition. Read the
 actual Surface: Window and Instant consumers deliberately expose different reference vocabulary.
 [Timing](timing.md) describes the shared forms.
 
@@ -125,17 +125,18 @@ Moment-driven state and `@qflow/ranking` demonstrates reveal Windows and settled
 `@qflow/visual-track` is the default example for ordinary Clip occurrences with independent Window,
 Frame, fit and source-time relations. Optional examples are evidence, not prerequisites.
 
-Ranking's repository README links its implementation: `surface.ts` projects authored time,
+Ranking's repository README links its implementation: `surface.ts` resolves authored time references,
 `fragment.ts` connects typed inputs, `schedule.ts` computes reveal and settled spans, `render.ts`
 draws them, and `studio.ts` turns the same program into editor entities. Read it only when that
 example is relevant and available; a new project component may use fewer operations or different state.
 
-The Surface exposes author intent and lowers absolute temporal forms through
-`createTemporalWindowConstruction` or `createTemporalInstantConstruction`. The Fragment wires the
+The Surface exposes author intent and resolves absolute temporal inputs through
+`resolveTemporalWindowReference` or `resolveTemporalInstantReference`. The Fragment wires the
 completed value, the shared Timeline, explicit placement Frames and authored values into the
-component's Producers. Narrative, beat or other domain packages project their own values upstream;
-the component accepts their projected absolute values. The Producer owns the visual/state behavior, while
-Studio follows the graph back to the value's actual declaration for editing.
+component's Producers. Timeline authoring, Narrative, beat or other domain packages publish those
+values upstream; the component does not construct an anonymous value or inspect its origin. The
+Producer owns the visual/state behavior, while Studio follows the graph back to the value's actual
+declaration for editing.
 
 Wire supplied media, Script content and event references through Source. Expose other content or
 treatment in Source or Recipe where the work needs those choices. A one-off component can own fixed
@@ -161,12 +162,11 @@ Resolve the Track's `timeline` through `resolveTemporalContext` and wire `contex
 directly to its Timeline input. Source footage is supplied explicitly through media inputs. The
 visual Producer consumes Timeline, explicit media and absolute time values.
 
-For each Window, call `createTemporalWindowConstruction`; for an event, use
-`createTemporalInstantConstruction`. Pass the resolved context, the child element and
-`resolveReference`. Preserve all returned `records`, `components` and `fragments`, and wire the
-returned `ref` into the domain Fragment. Window consumers support `during` or exactly two of
-`from`, `until`, and `for`; Instant consumers support `at`. These accept completed temporal values
-or absolute expressions only. A Narrative package must publish its selected boundary first.
+For each Window input, call `resolveTemporalWindowReference`; for an event, use
+`resolveTemporalInstantReference`. Pass the child element and `resolveReference`, then wire the
+returned `ref` into the domain Fragment. Window consumers use `during`; Instant consumers use `at`.
+Both attributes reference completed temporal values. Timeline-authoring and domain packages own
+declarations; a Narrative package must publish its selected boundary first.
 
 Keep each child's `subjectId` meaningful for inspection while qualifying graph ids by its owning
 Track, so multiple instances can coexist. Do not use it to reject a deliberately shared Window. A

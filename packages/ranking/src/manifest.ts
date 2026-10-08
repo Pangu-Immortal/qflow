@@ -546,7 +546,7 @@ const allRankingMarkupSurfaces = [
   during={speech.window}
   style={tier-style}>
   <ranking:TierItem id="row-regen" tier="s" preset="true" icon={icon-regen}/>
-  <ranking:TierItem id="row-remini" tier="a" entry="drop" icon={icon-remini} during={story-time.remini}/>
+  <ranking:TierItem id="row-remini" tier="a" entry="drop" icon={icon-remini} during={remini}/>
 </ranking:TierBoard>`,
         notes: [
           "The board requires at least one TierItem, accepts no other child and no text of its own, and Item ids must be unique within it.",
@@ -613,10 +613,10 @@ const allRankingMarkupSurfaces = [
         ],
         example: `<ranking:ColumnStyle id="board-style" recipe={recipes.ranking.board} font={ui-font}/>
 <ranking:Column id="board" timeline={speech.timeline} within={vertical.bounds} frame={board-frame}
-  during={story-time.ranking}
+  during={ranking}
   style={board-style}>
-  <ranking:ColumnItem id="row-regen" rank="1" label="ReGen" icon={icon-regen} during={story-time.regen}/>
-  <ranking:ColumnItem id="row-chatgpt" rank="2" label="ChatGPT" icon={icon-chatgpt} during={story-time.chatgpt}/>
+  <ranking:ColumnItem id="row-regen" rank="1" label="ReGen" icon={icon-regen} during={regen}/>
+  <ranking:ColumnItem id="row-chatgpt" rank="2" label="ChatGPT" icon={icon-chatgpt} during={chatgpt}/>
   <ranking:ColumnItem id="row-remini" rank="5" preset="true" label="Remini" icon={icon-remini}/>
 </ranking:Column>`,
         notes: [
@@ -642,7 +642,7 @@ const allRankingMarkupSurfaces = [
           { name: "during", kind: "expression", required: true, values: ["program"], accepts: [temporalTypes.window],
             summary: "Chooses the board's whole-program, Selection or Segment lifetime." },
           { name: "terminal", kind: "expression", required: true, accepts: [temporalTypes.instant],
-            summary: "Chooses the terminal Moment or authored time, such as 8s." },
+            summary: "Chooses the named absolute Instant at which the completed board settles." },
           { name: "style", kind: "reference", required: true, accepts: [rankingTypes.topThreeStyle],
             summary: "Chooses the TopThreeStyle this board is drawn in, and only that variant's." },
           { name: "appear-sound", kind: "reference", required: false, accepts: [mediaTypes.synchronized],
@@ -677,11 +677,11 @@ const allRankingMarkupSurfaces = [
         ],
         example: `<ranking:TopThreeStyle id="podium-style" recipe={recipes.ranking.podium} font={ui-font}/>
 <ranking:TopThree id="podium" timeline={speech.timeline} frame={board-frame}
-  during={story-time.board} terminal={story-time.done}
+  during={board} terminal={done}
   style={podium-style}>
-  <ranking:TopThreeItem id="slot-gold" label="ReGen" icon={icon-regen} at={story-time.regen}/>
-  <ranking:TopThreeItem id="slot-silver" label="ChatGPT" at={story-time.chatgpt}/>
-  <ranking:TopThreeItem id="slot-bronze" label="Remini" at={story-time.remini}/>
+  <ranking:TopThreeItem id="slot-gold" label="ReGen" icon={icon-regen} at={regen}/>
+  <ranking:TopThreeItem id="slot-silver" label="ChatGPT" at={chatgpt}/>
+  <ranking:TopThreeItem id="slot-bronze" label="Remini" at={remini}/>
 </ranking:TopThree>`,
         notes: [
           "The board requires at least one TopThreeItem, accepts no other child and no text of its own, and Item ids must be unique within it.",

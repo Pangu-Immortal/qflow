@@ -68,7 +68,7 @@ test("standalone Window publishes one reusable value and its boundaries", async 
   assert.equal(output.fragments[0]?.exports.filter((port) => port.type.name === "TemporalInstant").length, 2);
 });
 
-test("standalone Instant publishes an authored absolute point and does not alias another domain value", async () => {
+test("standalone Instant publishes direct points and explicit shifts without creating aliases", async () => {
   const literal = parseStructuredElement({ name: "timeline.svml", text:
     '<time:Instant id="credits" timeline={film.timeline} at="timeline.end-2s"/>' }, 0).element;
   const output = await decodeAbsoluteInstantSurface({
@@ -85,5 +85,15 @@ test("standalone Instant publishes an authored absolute point and does not alias
     sourceName: "timeline.svml", element: alias,
     resolveReference: (path) => absoluteReferences.get(path),
     resolveAsset: async () => { throw new Error("unused"); },
-  }), /reference an existing Instant directly/);
+  }), /reference it directly or add an exact offset/);
+
+  const shifted = parseStructuredElement({ name: "timeline.svml", text:
+    '<time:Instant id="after-reveal" timeline={film.timeline} at={reveal} offset="+5f"/>' }, 0).element;
+  const shiftedOutput = await decodeAbsoluteInstantSurface({
+    sourceName: "timeline.svml", element: shifted,
+    resolveReference: (path) => absoluteReferences.get(path),
+    resolveAsset: async () => { throw new Error("unused"); },
+  });
+  assert.deepEqual(shiftedOutput.exports, ["after-reveal"]);
+  assert.equal(shiftedOutput.fragments[0]?.operations.at(-1)?.producer.name, "shift-instant");
 });

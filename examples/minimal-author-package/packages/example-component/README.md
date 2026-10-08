@@ -9,7 +9,7 @@ build tooling. No Runtime dependency is bundled into its tarball.
 It contains a Module Manifest with nominal Types and deterministic Producers, validators, a structured
 Surface decoder returning `records`, `components`, `fragments` and `exports`, and sealed Fragments with
 literal `fragment-input`, `fragment-operation` and `output` references. `src/temporal.ts` shows the
-Surface-side `@qflow/qflow/temporal/markup` Window/Moment projections; that package is distinct from the
+Surface-side `@qflow/qflow/temporal/markup` Window/Instant reference resolvers; that package is distinct from the
 graph-side `@qflow/qflow/temporal` Producers.
 
 The Surfaces demonstrate a box, a text surface, an image slot and a Style decoder. The slot is a graph
@@ -46,5 +46,5 @@ Distribution supplies the runtime APIs. The resulting component tarball contains
 and preview assets. For registry publication, select a release version and remove the fixture's
 `private: true` after the owner chooses to publish it.
 
-The active Distribution's `packages/ranking/README.md` is the richer example for semantic input
-projection, persistent visual state and a Companion. Its README and source ship with that Distribution.
+The active Distribution's `packages/ranking/README.md` is the richer example for resolved temporal
+inputs, persistent visual state and a Companion. Its README and source ship with that Distribution.

@@ -31,16 +31,17 @@ local package dependency to install the component.
 ## Give the component a useful interface
 
 Expose the decisions another video author would want to change: content, materials, placement,
-appearance and meaningful events. A transition can accept a Moment for when the layout changes and
-a Selection for how long the scene appears. A pure animation can accept authored event times instead.
-Project those inputs onto the chosen clock, then use the resulting schedule to draw the scene.
+appearance and meaningful events. Give the component absolute Window and Instant inputs for when the
+scene exists or changes. Source may obtain those named values from a Narrative Projection or direct
+Timeline declarations; the component uses the same interface in either case.
 
-For an existing spoken performance, consume its Timeline so picture sampling follows the same
-takes and source positions as the speech. Other video inputs enter the timeline as normalized media.
+For an existing spoken performance, consume the normalized media, its absolute occurrence Window and
+any source-time relation the presentation needs as separate inputs. Other video inputs use the same
+media path; Timeline contains neither clips nor source positions.
 The [responsive explainer example](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/responsive-explainer)
 shows a continuously playing video moving from full screen to a side portrait inside an HTML scene.
 The [chat example](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/chat-scene)
-shows the same event interface accepting authored times or Script Moments.
+shows the same event interface consuming Instants produced from either direct or semantic declarations.
 
 A Style-like Surface publishes its value under the bare authored id, such as `style={board-style}`.
 Separate outputs can use descriptive suffixes such as `.visual`, `.audio` or `.track`. Document the

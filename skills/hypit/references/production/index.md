@@ -27,7 +27,7 @@ For a standalone asset edit, follow the actual material operation and deliver it
 | Current question | Owner |
 | --- | --- |
 | Files, generated/reused outputs, stream selection, normalization, local domains, semantic alignment or processed variants | [Media preparation](media.md) |
-| Timeline end, Instants, Windows, Extents, Placements, gaps and overlap | [Timeline](timeline.md) |
+| Timeline end, Instants, Windows, Extents, gaps and overlap | [Timeline](timeline.md) |
 | Semantic events, clock positions, offsets, durations and timing edits | [Timing](timing.md) |
 | Canvas, destination Frames, source extents, fit, crop and coordinates | [Spatial layout](spatial.md) |
 | Download source footage | [Video downloads](video-downloads.md) |

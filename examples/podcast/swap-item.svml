@@ -208,8 +208,8 @@
     <semantic:Map alignment={opening-semantic.alignment} domain={opening-media.domain} window={speech.opening-semantic}/>
     <semantic:Map alignment={daily-retinol-semantic.alignment} domain={daily-retinol-media.domain} window={speech.daily-retinol-semantic}/>
     <semantic:Map alignment={skin-is-asking-semantic.alignment} domain={skin-is-asking-media.domain} window={speech.skin-is-asking-semantic}/>
-    <semantic:Window id="selection-lifestyle" selection={story.selection.lifestyle}/>
   </semantic:Projection>
+  <semantic:Window id="selection-lifestyle" projection={story-time} during={story.selection.lifestyle}/>
   <audio:Track id="speech-sound" timeline={speech.timeline}>
     <audio:Clip id="opening-semantic-source" source={opening-media.media} during={speech.opening-semantic}/>
     <audio:Clip id="daily-retinol-semantic-source" source={daily-retinol-media.media} during={speech.daily-retinol-semantic}/>
@@ -228,7 +228,7 @@
 
   <visual:Track id="lifestyle" timeline={speech.timeline}>
     <visual:Clip id="lifestyle-cutaway" media={lifestyle-media.media}
-      frame={full-frame} during={story-time.selection-lifestyle}
+      frame={full-frame} during={selection-lifestyle}
       z="40" fit="cover">
       <visual:Map/>
     </visual:Clip>
@@ -240,7 +240,7 @@
   <caption-fine:Style id="caption-tboy-style" recipe={recipes.caption.retinol-tboy}
     font={caption-font}/>
 
-  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time}/>
   <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
     timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={caption-idol-style}/>

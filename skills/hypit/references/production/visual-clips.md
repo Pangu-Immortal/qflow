@@ -22,7 +22,7 @@ Visual Track = a set of Visual Clips
   <visual:Clip id="speaker" media={speaker-media.media}
     during={program.speaker} frame={layout.full} z="10" fit="cover"/>
   <visual:Clip id="photo" image={product} extent={product-extent}
-    during={story-time.example} frame={layout.detail} z="20" fit="contain"
+    during={example} frame={layout.detail} z="20" fit="contain"
     treatment={look.visual.still} motion={photo-push}/>
 </visual:Track>
 ```
@@ -37,8 +37,8 @@ A Clip takes one source form:
 - normalized `media` for timed picture;
 - a typed `surface` for compositable pixels.
 
-`during` accepts a resolved Window or the complete Timeline. The alternate form supplies exactly two
-of `from`, `until` and `for`.
+`during` accepts a resolved Window, including the complete `timeline.window`. Declare any direct
+clock range as a named Timeline child or standalone `time:Window` before using it here.
 
 Ordinary fit and alignment attributes derive the source-to-picture SpatialMap2D. Supply an authored
 `space:Map` through `mapping` when the production already owns the exact relation. The Clip Frame

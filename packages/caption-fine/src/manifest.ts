@@ -330,7 +330,7 @@ export const captionFineMarkupSurfaces = [
         ],
         example: `<caption-fine:Caption id="captions" document={story.caption} timing={story-captions} timeline={film.timeline} within={vertical.bounds}>
   <caption-fine:Use style={primary-caption}/>
-  <caption-fine:Use during={story-time.answer} style={answer-caption}/>
+  <caption-fine:Use during={answer} style={answer-caption}/>
 </caption-fine:Caption>`,
         notes: [
           "Use without time attributes covers the whole Timeline. Role filters content without changing the window.",

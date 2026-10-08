@@ -43,10 +43,10 @@ For one concrete trace, [Script](authors/script.svml) places `road-fail` at the 
 is difficult. [Main Source](authors/main.svml) connects that meaning to the editor scene:
 
 ```svml
-<webscene:Beat name="fail" at={story-time.moment-road-fail-cue}/>
+<webscene:Beat name="fail" at={moment-road-fail-cue}/>
 ```
 
-The scene projects the event to a frame. Its
+The scene receives the named absolute event and reads its frame. Its
 [animation](../../packages/web-scenes/src/scenes/editor-route/animation.js) derives the attempted
 drag and return from that frame, sharing the object's displacement with the pointer. `fail` is this
 component's vocabulary, not a special event known to Qflow. Moving the spoken anchor changes when
@@ -59,8 +59,8 @@ the scope of the objects that respond to it.
 ## Keep playing footage distinct from its frame
 
 The same accepted presenter footage appears full-frame, in a circular inset and through a moving
-viewport. The short return to the inset on “我们继续” is a Performance Use applied to existing media.
-The camera presentation changes while the source playback continues. The
+viewport. The short return to the inset on “我们继续” is another visual occurrence of the existing
+media. The camera presentation changes while the source playback continues. The
 [opening system](../../packages/opening-system/README.md) owns these Styles; Main Source owns where
 they are used. Foreground and enlarged background presentations likewise share the same media sample.
 

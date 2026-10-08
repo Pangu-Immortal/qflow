@@ -70,13 +70,13 @@ Script document types. A family Track accepts `document`, resolved `timing`, `ti
 <keyword:Track id="captions" document={story.caption} timing={story-captions} timeline={program.timeline}>
   <keyword:Use style={base-style}/>
   <keyword:Use role="GUEST" style={guest-style}/>
-  <keyword:Use during={story-time.punchline} style={punchline-style}/>
+  <keyword:Use during={punchline} style={punchline-style}/>
 </keyword:Track>
 ```
 
-These names assume the project family and its Styles have been declared. Reuse the common absolute
-time helpers for `during`, or exactly two of `from`, `until` and `for`. A Use has the same
-meaning regardless of the family. `role` filters whose content it presents within that window.
+These names assume the project family and its Styles have been declared. `during` references a named
+absolute Window declared upstream. A Use has the same meaning regardless of the family. `role`
+filters whose content it presents within that window.
 
 For a keyword layout, Script can mark `useful{emphasis}`. The family reads that attribute from the
 CaptionDocument and gives it a visual role within the complete Cue. The word role and the time

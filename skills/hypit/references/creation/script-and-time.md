@@ -164,17 +164,19 @@ Reference seconds document what you observed; the target Script expresses what t
 
 A chat animation, diagram or kinetic-text piece can instead be drawn entirely by components. Its
 messages and changes still carry meaning; the author chooses when the audience receives them and
-how long they need to read. Keep content and event timing together in the owning component's Source.
-An event can have an identity such as `question` or `reveal` and an authored `at="2.6s"` without
-inventing spoken words or a media-backed Segment. Film time is declared through a Timeline with an explicit end;
-[composition and rendering](../production/rendering.md#compose-an-authored-animation) shows the form.
+how long they need to read. Keep content and the named time values that drive it together in Source.
+An event can have an identity such as `question` or `reveal`, produced by a Timeline child or a
+standalone `time:Instant`, without inventing spoken words or a media-backed Segment. Film time is
+declared through a Timeline with an explicit end; [composition and
+rendering](../production/rendering.md#compose-an-authored-animation) shows the form.
 
 Choose timing per relationship, not once for the whole video. A spoken Moment can introduce a chat
 scene whose messages then unfold at authored intervals. Conversely, an authored animation can reveal
 one item on a spoken Moment. Ask the Narrative projection to publish that Moment as an absolute
-Instant, optionally with an explicit offset, then pass the result to the component. The event's
-trigger and its entrance duration are different choices: `at={story-time.answer}` locates the
-answer; ten frames can give its arrival a particular character.
+Instant. If the design needs a lead or lag, derive a separate named `time:Instant` with an explicit
+offset, then pass the chosen result to the component. The event's trigger and its entrance duration
+are different choices: `at={answer}` locates the answer; ten frames can give its arrival a particular
+character.
 
 ## Estimate before choosing durations
 
@@ -232,14 +234,15 @@ Speech-rate estimation has no role there; the resulting media still determines i
 ## Bind meaning to Script identities
 
 For a picture, Caption treatment, MG state, sound, or effect that belongs to spoken meaning, author a
-Selection or Moment and use the consuming component's Surface to project it through the Timeline.
-Use explicit seconds for genuinely clock-based or speechless design.
+Selection or Moment, reveal it through an explicit Narrative Projection declaration, and pass the
+resulting named Window or Instant to the consumer. Use a direct named time declaration for genuinely
+clock-based or speechless design.
 
 Choose an anchor by the event it names, including which side owns a pause. For adjacent B-roll,
 one Selection can end where the next begins; for a held reaction, a range can include the silence
 before the next word. [Marker affinities](../production/script-syntax.md#bind-meaning-to-script-identities)
 express these choices through word and structural boundaries. [Timing](../production/timing.md)
-explains projecting those identities into a component's Instant or Window, adding deliberate offsets,
+explains projecting those identities into named Instants or Windows, adding deliberate offsets,
 and what a later Studio edit changes.
 
 Reference archives keep original seconds and explain which original words or content events an item

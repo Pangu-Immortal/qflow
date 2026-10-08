@@ -10,19 +10,20 @@ Use Narrative time when a picture or event should follow meaning as wording or p
 Use direct Timeline time when it should follow the film clock. Both choices resolve to the same
 absolute value types.
 
-`semantic:Projection` maps aligned local evidence into Timeline and publishes only the values this
-production asks to reuse:
+`semantic:Projection` maps aligned local evidence into Timeline. Independent declarations explicitly
+choose it when revealing the semantic values this production asks to reuse:
 
 ```svml
 <semantic:Projection id="story-time" narrative={story} timeline={film.timeline}>
   <semantic:Map alignment={speech.alignment} domain={speech-media.domain} window={film.speech}/>
-  <semantic:Window id="proof" selection={story.selection.proof}/>
-  <semantic:Instant id="claim" moment={story.moment.claim}/>
-  <semantic:Instant id="answer-end" segment={story.segment.answer} boundary="end"/>
 </semantic:Projection>
+<semantic:Window id="proof" projection={story-time} during={story.selection.proof}/>
+<semantic:Instant id="claim" projection={story-time} at={story.moment.claim}/>
+<semantic:Instant id="answer-end" projection={story-time}
+  at={story.segment.answer} boundary="end"/>
 ```
 
-Components then use `story-time.proof`, `story-time.claim` and `story-time.answer-end` as ordinary
+Components then use `proof`, `claim` and `answer-end` as ordinary
 Window and Instant values.
 
 ## Declare, then consume
@@ -32,8 +33,8 @@ Timeline authoring and domain projectors produce named values. Components only c
 | Form | Result |
 | --- | --- |
 | `<time:Window id="beat" timeline={film.timeline} from="2s" for="12f"/>` | A named absolute Window |
-| `<time:Window id="answer" timeline={film.timeline} from={story-time.claim} until={story-time.answer-end}/>` | A named Window between projected Instants |
-| `during={story-time.proof}` | Consume a projected Window |
+| `<time:Window id="answer" timeline={film.timeline} from={claim} until={answer-end}/>` | A named Window between projected Instants |
+| `during={proof}` | Consume a projected Window |
 | `during={beat}` | Consume a directly authored Window |
 
 Window declarations supply exactly two of `from`, `until` and `for`. `for` can also reference a
@@ -44,9 +45,10 @@ TemporalExtent, including generated media duration. The complete film is already
 
 | Form | Result |
 | --- | --- |
-| `at={story-time.claim}` | A projected event |
+| `at={claim}` | A projected event |
 | `<time:Instant id="cut" timeline={film.timeline} at="2s"/>` | A named direct clock event |
 | `<time:Instant id="credits" timeline={film.timeline} at="timeline.end-12f"/>` | A named event relative to the Timeline boundary |
+| `<time:Instant id="after-claim" timeline={film.timeline} at={claim} offset="+5f"/>` | A separate absolute offset from a resolved event |
 | `at={cut}` | Consume the named event |
 
 The component decides what the event changes and whether that state persists.

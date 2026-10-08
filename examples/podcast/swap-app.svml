@@ -200,8 +200,8 @@
     <semantic:Map alignment={opening-semantic.alignment} domain={opening-media.domain} window={speech.opening-semantic}/>
     <semantic:Map alignment={daily-cheatgpt-semantic.alignment} domain={daily-cheatgpt-media.domain} window={speech.daily-cheatgpt-semantic}/>
     <semantic:Map alignment={brain-is-asking-semantic.alignment} domain={brain-is-asking-media.domain} window={speech.brain-is-asking-semantic}/>
-    <semantic:Window id="selection-lifestyle" selection={story.selection.lifestyle}/>
   </semantic:Projection>
+  <semantic:Window id="selection-lifestyle" projection={story-time} during={story.selection.lifestyle}/>
   <audio:Track id="speech-sound" timeline={speech.timeline}>
     <audio:Clip id="opening-semantic-source" source={opening-media.media} during={speech.opening-semantic}/>
     <audio:Clip id="daily-cheatgpt-semantic-source" source={daily-cheatgpt-media.media} during={speech.daily-cheatgpt-semantic}/>
@@ -220,7 +220,7 @@
 
   <visual:Track id="lifestyle" timeline={speech.timeline}>
     <visual:Clip id="lifestyle-cutaway" media={lifestyle-media.media}
-      frame={full-frame} during={story-time.selection-lifestyle}
+      frame={full-frame} during={selection-lifestyle}
       z="40" fit="cover">
       <visual:Map/>
     </visual:Clip>
@@ -232,7 +232,7 @@
   <caption-fine:Style id="caption-nerd-style" recipe={recipes.caption.nerd}
     font={caption-font}/>
 
-  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time}/>
   <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
     timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={caption-jock-style}/>

@@ -310,15 +310,14 @@ export const commentStickerMarkupSurfaces = [
         example: `
 <comment:Track id="comments" timeline={speech.timeline}>
   <comment:Sticker id="one" frame={comment-frame} style={social} avatar={viewer-avatar}
-    author="@viewer" meta="Featured" during={story-time.reaction}>
+    author="@viewer" meta="Featured" during={reaction}>
     Wait, it pinned the caption to the word, not the second.
   </comment:Sticker>
 </comment:Track>
         `,
         notes: [
           "A Track requires at least one Sticker.",
-          "A Sticker states one Window form: `during`, or exactly two of `from`, `until` and `for`.",
-          "With `start` and `end`, `selection` or `moment` binds the point of reference; both together are refused.",
+          "A Sticker references one already resolved Window through `during`.",
           "A Sticker's copy is either `comment` or the element's own text; stating both is refused, and one of the two is required.",
           "Stacking order comes from the Style's Recipe, so a Sticker has no `z`.",
         ],

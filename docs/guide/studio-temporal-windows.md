@@ -28,12 +28,12 @@ Narrative time is projected before it reaches the component:
 ```svml
 <semantic:Projection id="story-time" narrative={story} timeline={film.timeline}>
   <semantic:Map alignment={speech.alignment} domain={speech-media.domain} window={film.speech}/>
-  <semantic:Window id="proof" selection={story.selection.proof}/>
-  <semantic:Instant id="reveal" moment={story.moment.reveal}/>
 </semantic:Projection>
+<semantic:Window id="proof" projection={story-time} during={story.selection.proof}/>
+<semantic:Instant id="reveal" projection={story-time} at={story.moment.reveal}/>
 
-<visual:Clip during={story-time.proof} .../>
-<deck:Card at={story-time.reveal} .../>
+<visual:Clip during={proof} .../>
+<deck:Card at={reveal} .../>
 ```
 
 The Narrative projection declaration retains the Selection or Moment relation required by its

@@ -101,8 +101,8 @@ that is a genuine dependency cycle rather than a scheduling problem.
 ## Local domains contribute, then disappear
 
 A prepared source may supply the `TemporalExtent` that determines a Window. That is its complete
-relationship with Timeline construction. The Timeline does not retain the source, its local domain,
-or a public Placement object.
+relationship with Timeline construction. The completed Timeline retains only its absolute domain and
+the named absolute values declared by its author graph.
 
 When a domain package must project local evidence, it consumes the complete local domain and the
 equal-length Window directly. The relation is exact native-speed translation: local frame zero maps
@@ -118,13 +118,15 @@ domain projection:
 
 ```svml
 <time:Window id="reveal-band" timeline={film.timeline}
-  from={story-time.reveal} until={story-time.answer-end}/>
+  from={reveal} until={answer-end}/>
+<time:Instant id="after-reveal" timeline={film.timeline} at={reveal} offset="+5f"/>
 <time:Instant id="credits" timeline={film.timeline} at="timeline.end-2s"/>
 
 <visual:Clip during={reveal-band} .../>
 ```
 
 The standalone Window publishes `reveal-band`, `reveal-band.start` and `reveal-band.end`. A standalone
-Instant authors an absolute expression; an already resolved Instant needs no renaming and should be
-referenced directly. Absolute value Types are the common waist; Timeline and Narrative projection are
-only two possible producers of them.
+Instant either authors an absolute expression or gives an existing Instant one explicit signed
+offset. An existing Instant that needs no offset should be referenced directly rather than aliased.
+Absolute value Types are the common waist; Timeline and Narrative projection are only two possible
+producers of them.

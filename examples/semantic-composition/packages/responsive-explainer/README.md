@@ -11,7 +11,7 @@ already available:
 
 <explainer:Scene id="scene" timeline={speech.timeline}
   within={canvas.bounds} font={font} media={speaker-media.media} source-window={speech.speaker}
-  during={speech.window} reveal={story-time.demonstrate} title="Make room for meaning"
+  during={speech.window} reveal={demonstrate} title="Make room for meaning"
   transition-frames="24" stack-order="0"/>
 
 <film:Film id="main" canvas={canvas.canvas} timeline={speech.timeline} appearance={look.film}>

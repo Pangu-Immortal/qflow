@@ -205,17 +205,17 @@
   <semantic:Projection id="story-time" narrative={story} timeline={speech.timeline}>
     <semantic:Map alignment={ronaldo-semantic.alignment} domain={ronaldo-media.domain} window={speech.ronaldo-semantic}/>
     <semantic:Map alignment={messi-semantic.alignment} domain={messi-media.domain} window={speech.messi-semantic}/>
-    <semantic:Window id="segment-ronaldo" segment={story.segment.ronaldo}/>
-    <semantic:Window id="segment-messi" segment={story.segment.messi}/>
-    <semantic:Window id="selection-hair-gel" selection={story.selection.hair-gel}/>
-    <semantic:Window id="selection-trophy" selection={story.selection.trophy}/>
-    <semantic:Window id="selection-greek-god" selection={story.selection.greek-god}/>
-    <semantic:Window id="selection-greek-tragedy" selection={story.selection.greek-tragedy}/>
-    <semantic:Window id="selection-penaldo-social" selection={story.selection.penaldo-social}/>
-    <semantic:Window id="selection-tired-dad" selection={story.selection.tired-dad}/>
-    <semantic:Window id="selection-walks-around" selection={story.selection.walks-around}/>
-    <semantic:Window id="selection-hat-trick" selection={story.selection.hat-trick}/>
   </semantic:Projection>
+  <semantic:Window id="segment-ronaldo" projection={story-time} during={story.segment.ronaldo}/>
+  <semantic:Window id="segment-messi" projection={story-time} during={story.segment.messi}/>
+  <semantic:Window id="selection-hair-gel" projection={story-time} during={story.selection.hair-gel}/>
+  <semantic:Window id="selection-trophy" projection={story-time} during={story.selection.trophy}/>
+  <semantic:Window id="selection-greek-god" projection={story-time} during={story.selection.greek-god}/>
+  <semantic:Window id="selection-greek-tragedy" projection={story-time} during={story.selection.greek-tragedy}/>
+  <semantic:Window id="selection-penaldo-social" projection={story-time} during={story.selection.penaldo-social}/>
+  <semantic:Window id="selection-tired-dad" projection={story-time} during={story.selection.tired-dad}/>
+  <semantic:Window id="selection-walks-around" projection={story-time} during={story.selection.walks-around}/>
+  <semantic:Window id="selection-hat-trick" projection={story-time} during={story.selection.hat-trick}/>
   <audio:Track id="speech-sound" timeline={speech.timeline}>
     <audio:Clip id="ronaldo-semantic-source" source={ronaldo-media.media} during={speech.ronaldo-semantic}/>
     <audio:Clip id="messi-semantic-source" source={messi-media.media} during={speech.messi-semantic}/>
@@ -267,44 +267,44 @@
     <ranking:TierItem id="neymar" tier="d" preset="true" icon={neymar-icon.image}/>
     <ranking:TierItem id="benzema" tier="d" preset="true" icon={benzema-icon.image}/>
     <ranking:TierItem id="ronaldo" tier="d" entry="drop"
-      icon={ronaldo-icon.image} during={story-time.segment-ronaldo}/>
+      icon={ronaldo-icon.image} during={segment-ronaldo}/>
     <ranking:TierItem id="messi" tier="s" entry="drop"
-      icon={messi-icon.image} during={story-time.segment-messi}/>
+      icon={messi-icon.image} during={segment-messi}/>
   </ranking:TierBoard>
 
   <!-- Every Item consumes a projected Selection window. Later overlapping
        jokes use a higher explicit z on their own Clip occurrence. -->
   <visual:Track id="broll" timeline={speech.timeline}>
     <visual:Clip id="hair-gel" image={broll-hair-gel.image}
-      extent={hair-gel-extent} during={story-time.selection-hair-gel}
+      extent={hair-gel-extent} during={selection-hair-gel}
       frame={hair-gel-frame} z="40" fit="cover" treatment={recipes.media.hair-gel}
       motion={broll-left}/>
     <visual:Clip id="trophy" image={broll-trophy.image}
-      extent={trophy-extent} during={story-time.selection-trophy}
+      extent={trophy-extent} during={selection-trophy}
       frame={trophy-frame} z="41" fit="cover" treatment={recipes.media.trophy}
       motion={broll-right}/>
     <visual:Clip id="greek-god" image={broll-greek-god.image}
-      extent={greek-god-extent} during={story-time.selection-greek-god}
+      extent={greek-god-extent} during={selection-greek-god}
       frame={greek-god-frame} z="42" fit="cover" treatment={recipes.media.greek-god}
       motion={broll-left}/>
     <visual:Clip id="greek-tragedy" image={broll-greek-tragedy.image}
-      extent={greek-tragedy-extent} during={story-time.selection-greek-tragedy}
+      extent={greek-tragedy-extent} during={selection-greek-tragedy}
       frame={greek-tragedy-frame} z="43" fit="cover" treatment={recipes.media.greek-tragedy}
       motion={broll-right}/>
     <visual:Clip id="penaldo-social" image={broll-penaldo-social.image}
-      extent={penaldo-social-extent} during={story-time.selection-penaldo-social}
+      extent={penaldo-social-extent} during={selection-penaldo-social}
       frame={penaldo-social-frame} z="44" fit="cover" treatment={recipes.media.penaldo-social}
       motion={broll-wide}/>
     <visual:Clip id="tired-dad" image={broll-tired-dad-trophy.image}
-      extent={tired-dad-extent} during={story-time.selection-tired-dad}
+      extent={tired-dad-extent} during={selection-tired-dad}
       frame={tired-dad-frame} z="45" fit="cover" treatment={recipes.media.tired-dad}
       motion={broll-right}/>
     <visual:Clip id="walks-around" image={broll-walks-around.image}
-      extent={walks-around-extent} during={story-time.selection-walks-around}
+      extent={walks-around-extent} during={selection-walks-around}
       frame={walks-around-frame} z="46" fit="cover" treatment={recipes.media.walks-around}
       motion={broll-left}/>
     <visual:Clip id="hat-trick" image={broll-hat-trick.image}
-      extent={hat-trick-extent} during={story-time.selection-hat-trick}
+      extent={hat-trick-extent} during={selection-hat-trick}
       frame={hat-trick-frame} z="47" fit="cover" treatment={recipes.media.hat-trick}
       motion={broll-right}/>
   </visual:Track>
@@ -312,7 +312,7 @@
   <caption-fine:Style id="caption-style" recipe={recipes.caption.primary}
     font={display-font}/>
 
-  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time}/>
   <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
     timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={caption-style}/>

@@ -66,6 +66,8 @@ Visual and Audio placement is a separate decision:
 SynchronizedMedia + Window -> visual / audio occurrence
 ```
 
-Put a named Instant or Window in Timeline when it determines extent or several consumers deliberately
-share it. Write one-off component timing directly on that component. The project `TIMELINE.md` can
-retain human observations and their meaning; Source constructs the executable Timeline.
+Put a named Instant or Window inside Timeline when it participates in the construction DAG. After the
+Timeline resolves, standalone time declarations and domain projectors can publish additional named
+values against it. Components consume those values, including single-use ones, through ordinary
+references. The project `TIMELINE.md` can retain human observations and their meaning; Source
+constructs the executable Timeline.

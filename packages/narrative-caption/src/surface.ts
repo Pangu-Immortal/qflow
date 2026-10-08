@@ -75,6 +75,6 @@ export const narrativeCaptionTimingMarkupSurface = {
       { name: "projection", kind: "reference", required: true, accepts: [narrativeTemporalTypes.narrativeProjection], summary: "Locates those Tokens on one Timeline." },
     ],
     ports: [{ name: "", type: captionTypes.timing, summary: "Neutral absolute timing for the selected CaptionDocument." }],
-    example: '<narrative-caption:Timing id="story-captions" document={story.caption} binding={story.caption-binding} projection={speech.projection}/>',
+    example: '<narrative-caption:Timing id="story-captions" document={story.caption} binding={story.caption-binding} projection={speech}/>',
   },
 } as const;

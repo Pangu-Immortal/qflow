@@ -124,7 +124,7 @@ Timeline 不要求语音或媒体：
 ```
 
 组件用普通绝对时间拥有自己的阅读节奏。没有选择 AudioTrack 时，结果是静音的。在语音作品
-中，同一组件也可以使用投影到 Timeline 上的语义 Moment 或 Selection。
+中，Narrative Projection 可以把 Moment 或 Selection 显影成同样的绝对 Instant 与 Window 输入。
 
 ## 执行前检查
 

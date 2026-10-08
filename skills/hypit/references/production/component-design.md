@@ -124,8 +124,9 @@ trace concrete revisions back to their design decisions and source owners.
 ## Let meaning drive the behavior
 
 Prefer Script Selections, Moments and Segments for events that respond to the argument or performance.
-The Surface projects them through the accepted Timeline; the component consumes the resulting
-Windows or Instants. A different delivery can then move the event while preserving its purpose.
+An upstream Narrative Projection reveals them as named absolute Windows or Instants; the component
+consumes those values without knowing their semantic source. A different delivery can then move the
+event while preserving its purpose.
 Explicit time remains useful for an authored lead, a short entrance or another clock-based decision.
 In a pure MG piece, name the events that carry its meaning and direct their reading rhythm. A useful
 component accepts resolved Instants or Windows so the same reveal can follow a Script Moment or an
@@ -140,8 +141,9 @@ different phrases. Give those actions their own semantic inputs. Placing them at
 at 20%, 50% and 80% of the outer Window preserves neither their identities nor their relationship
 to unevenly changed speech.
 
-The Surface can accept an outer Selection and separate Moments for those events, projecting each
-through Timeline. The implementation derives movement between the resulting events and keeps its
+The component can accept an outer Window and separate Instants for those events. Source obtains them
+from the appropriate projector or direct time declarations. The implementation derives movement
+between the resulting events and keeps its
 pointer path, button geometry, click rebound and decoration local. A movement that simply unfolds
 inside one authored event interval may use normalized progress there; it needs no marker for every
 animation key. Meaningful event location and the designed duration/shape of motion are different choices.

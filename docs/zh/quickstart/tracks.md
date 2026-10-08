@@ -85,7 +85,7 @@ CJK 口播可以直接书写。若一个只负责显示的 emoji 仍需跟随语
 ```svml
 <caption:Hidden id="hidden"/>
 <narrative-caption:Timing id="story-captions" document={story.caption}
-  binding={story.caption-binding} projection={story-time.projection}/>
+  binding={story.caption-binding} projection={story-time}/>
 <caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
   timeline={speech.timeline} within={vertical.bounds}>
   <caption-fine:Use style={primary-caption}/>
@@ -96,7 +96,8 @@ CJK 口播可以直接书写。若一个只负责显示的 emoji 仍需跟随语
 </caption-fine:Caption>
 ```
 
-`||` 决定 Cue 分组。窗口可以从 Cue 中间开始，完整文字和原来的逐词时间仍然保留。`role` 按说话人过滤内容，独立于时间窗口。也可以使用 `at`/`for`、`until`/`for` 或 `start`/`end`。
+`||` 决定 Cue 分组。窗口可以从 Cue 中间开始，完整文字和原来的逐词时间仍然保留。`role`
+按说话人过滤内容，独立于时间窗口。需要限定时间的 Use 通过 `during` 引用已经解析的绝对 Window。
 
 ## Visual Clip 与 B-roll
 
@@ -139,7 +140,7 @@ Recipe 与类型化 Motion 都只是可选的复用值：
 
 <visual:Track id="product-broll" timeline={speech.timeline}>
   <visual:Clip media={product-media.media} frame={product-frame}
-    during={story-time.product-demo} z="40" fit="contain"
+    during={product-demo} z="40" fit="contain"
     treatment={recipes.visual.product} motion={product-motion-in}>
     <visual:Map/>
   </visual:Clip>
@@ -147,7 +148,7 @@ Recipe 与类型化 Motion 都只是可选的复用值：
 ```
 
 `left`、`top`、`right`、`bottom` 是父 Frame 内的边坐标；`right` 和 `bottom` 不是 CSS 式外边距。
-Narrative 投影可以在上游发布 `story-time.product-demo`；Visual Track 只消费完成的 Window。同一个
+Narrative 投影可以在上游发布 `product-demo`；Visual Track 只消费完成的 Window。同一个
 fit 是构造 Clip 源局部平面到节目画面 `SpatialMap2D` 的常用入口；解析后的 Program 保存 Map，
 而不是另存一个“内容框”。当组件或源局部证据已经拥有精确仿射关系时，可以声明
 `<space:Map>`，并用 `mapping={...}` 代替全部 fit 属性。Clip 的 `frame` 仍独立负责裁剪和外框处理。
@@ -198,7 +199,7 @@ Clip 模型也能表达全屏切换、分屏和角落小窗。公开 Clip 只有
 | `Track.id` | 是 | 稳定的 Audio Track 身份 |
 | `Track.timeline` | 是 | 定义精确采样域与帧域的 Timeline |
 | `Clip.source` | 是 | 显式选流并规范化后的 `SynchronizedMedia` |
-| `during`、`at`/`for` 或 `start`/`end` | 三种形式选一 | 全节目、Selection、Moment 或显式窗口 |
+| `during` | 是 | 具名绝对 Window |
 | `source-time` 或 `Map` 子节点 | 否 | 可复用或内联的目标时间到源时间偏函数；省略时为有界局部恒等映射 |
 | `gain`、`fade-in`、`fade-out` | 否 | 显式的单 Clip 混音值 |
 
@@ -311,12 +312,11 @@ Qflow 安装。使用前先把所选发布版本写入视频项目的普通 `pac
 | 属性 | 取值 |
 |---|---|
 | `timeline` | 板据以计时的绝对 Timeline |
-| `semantic` | 仅供语义时间表达式使用的可选 Narrative 投影 |
 | `within` | 所选板型拥有独立揭示区或讲解区时使用的 `space:Frame` |
 | `frame` | 一个 `space:Frame`——选中组件声明的板面位置 |
 | `during` | 选中组件声明的时间形式 |
 | `style` | 对应的样式记录，且只接受本变体的 |
-| `terminal` | 完整板定格的 Moment。仅 `TopThree` |
+| `terminal` | 完整板定格的绝对 Instant。仅 `TopThree` |
 | `appear-sound`、`move-sound` | 可选，Synchronized Media |
 
 只使用所选包明确声明的时间形式；不要从另一个组件族推断 terminal 或 reveal 规则。
@@ -325,17 +325,19 @@ Qflow 安装。使用前先把所选发布版本写入视频项目的普通 `pac
 
 每个变体只接受自己的那一种，至少一个，且 id 在同一块板内不可重复。
 
-- **`TopThreeItem`** —— `label` 与 item 自己的绝对 `at={story-time...}` 必填，可选 `icon` 与 `stack`，最多三条。揭示顺序由这些 Instant 的真实帧顺序决定。
-- **`ColumnItem`** —— `label` 与 `rank` 必填，可选 `icon` 与 `stack`。非 preset item 用自己的 `during` Selection；`preset="true"` 的 item 开场已在位且不写 `during`。
+- **`TopThreeItem`** —— `label` 与 item 自己的具名绝对 Instant `at` 必填，可选 `icon` 与
+  `stack`，最多三条。揭示顺序由这些 Instant 的真实帧顺序决定。
+- **`ColumnItem`** —— `label` 与 `rank` 必填，可选 `icon` 与 `stack`。非 preset item 用
+  `during` 引用自己的绝对 Window；`preset="true"` 的 item 开场已在位且不写 `during`。
 
 ```svml
 <ranking:ColumnStyle id="board-style" recipe={recipes.ranking.board} font={ui-font}/>
 <ranking:Column id="board" timeline={speech.timeline} within={vertical.bounds} frame={board-frame}
-  during={story-time.board} style={board-style}>
+  during={board} style={board-style}>
   <ranking:ColumnItem id="row-regen" rank="1" label="ReGen" icon={icon-regen}
-    during={story-time.regen-reveal}/>
+    during={regen-reveal}/>
   <ranking:ColumnItem id="row-chatgpt" rank="2" label="ChatGPT" icon={icon-chatgpt}
-    during={story-time.chatgpt-reveal}/>
+    during={chatgpt-reveal}/>
   <ranking:ColumnItem id="row-remini" rank="3" preset="true" label="Remini" icon={icon-remini}/>
 </ranking:Column>
 ```
@@ -344,7 +346,7 @@ Qflow 安装。使用前先把所选发布版本写入视频项目的普通 `pac
 
 ## 卡片堆
 
-卡片堆按深度排布卡片：一张在最前，其余向后退去，每张新卡在一个 Moment 上发出。Visual Clip 是把一个镜头放进一个 Frame，而卡片堆是在同一个 Frame 里维持一叠并整体移动它们。
+卡片堆按深度排布卡片：一张在最前，其余向后退去，每张新卡在一个 Instant 上发出。Visual Clip 是把一个镜头放进一个 Frame，而卡片堆是在同一个 Frame 里维持一叠并整体移动它们。
 
 ```svml
 <import as="deck" from="@qflow/depth-stack@1"/>
@@ -352,8 +354,8 @@ Qflow 安装。使用前先把所选发布版本写入视频项目的普通 `pac
 
 ### deck:DepthStack
 
-`id`、`timeline`、`within`、`frame`、`appearance` 与 `until` 全部必填。`until` 接受绝对
-Instant，例如上游从语义投影出的事件，或 `8s` 这样的作者时间。
+`id`、`timeline`、`within`、`frame`、`appearance` 与 `until` 全部必填。`until` 引用具名
+绝对 Instant；它既可以来自 Narrative Projection，也可以来自直接时间声明。
 
 ### deck:Card
 
@@ -363,7 +365,7 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 |---|---|
 | `source` | 必填——静态图片、Synchronized Medium 或 Compositable Surface |
 | `extent` | 静态图片必填，其余情况给了会被拒绝 |
-| `at` | 必填——绝对发牌 Instant，或 `2s`、`12f` 等作者时间 |
+| `at` | 必填——具名绝对发牌 Instant |
 | `appearance` | 可选——它自己的 Recipe，否则沿用整叠的 |
 | `label` | 可选——一条 `deck:Label` 记录 |
 
@@ -374,9 +376,9 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 ```svml
 <space:Frame id="deck-frame" within={vertical.bounds} left="44%" top="60%" right="98%" bottom="88%"/>
 <deck:DepthStack id="deck" timeline={speech.timeline} within={vertical.bounds}
-  frame={deck-frame} appearance={recipes.deck.stack} until={story-time.done}>
-  <deck:Card id="card-spatial" source={icon-spatial} extent={square} at={story-time.deal-one}/>
-  <deck:Card id="card-type" source={icon-type} extent={square} at={story-time.deal-two}/>
+  frame={deck-frame} appearance={recipes.deck.stack} until={done}>
+  <deck:Card id="card-spatial" source={icon-spatial} extent={square} at={deal-one}/>
+  <deck:Card id="card-type" source={icon-type} extent={square} at={deal-two}/>
 </deck:DepthStack>
 ```
 
@@ -394,13 +396,16 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 
 `comment:Track` 接受 `id` 与 `timeline`，两者皆为必填。
 
-`comment:Sticker` 必填 `id`、`frame` 与 `style`。它的 Window 可以使用 `during`、`from` + `for` 或 `from` + `until`。文案来自 `comment=` 属性或元素自身的文字，两个都给会被拒绝。可选的 `author`、`header` 与 `meta` 各接受字符串或 Text 引用，`avatar` 接受一张图片；这里没有 `z`，层叠顺序来自 recipe 的 `stack-order`。
+`comment:Sticker` 必填 `id`、`frame`、`style` 与 `during`；`during` 引用具名绝对 Window。
+文案来自 `comment=` 属性或元素自身的文字，两个都给会被拒绝。可选的 `author`、`header` 与
+`meta` 各接受字符串或 Text 引用，`avatar` 接受一张图片；这里没有 `z`，层叠顺序来自
+recipe 的 `stack-order`。
 
 ```svml
 <comment:Style id="social" recipe={recipes.comment} font={ui-font}/>
 <comment:Track id="comments" timeline={speech.timeline}>
   <comment:Sticker id="one" frame={comment-frame} style={social} avatar={viewer-avatar}
-    author="@viewer" meta="Featured" during={story-time.reaction}>
+    author="@viewer" meta="Featured" during={reaction}>
     原来它把字幕钉在词上，而不是钉在秒上。
   </comment:Sticker>
 </comment:Track>
@@ -450,7 +455,7 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
   video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 <visual:Track id="cards" timeline={speech.timeline}>
   <visual:Clip media={card-media.media} frame={card-frame}
-    during={story-time.demo} z="40" fit="cover" treatment={recipes.visual.card}/>
+    during={demo} z="40" fit="cover" treatment={recipes.visual.card}/>
 </visual:Track>
 
 <!-- Text: persistent title overlay -->

@@ -7,20 +7,19 @@ Project components for an explanation-led video. They share the film's Timeline 
 - **Flag**: an independent low-angle pixel flag. It uses the same deterministic pixel texture treatment as Timer, with its own Window, placement, dimensions and color. No relationship to the opposition boards is inferred. The current Source places it below captions during the first-road explanation. `flag-amplitude` and `flag-speed` keep the folds slow and the logo readable.
 - **Stage**: independent images or normalized videos in a clear foreground viewport, with the same material enlarged, blurred and dimmed behind it. Each Item has its own projected Window. Foreground and background share exact video sampling. An image is held during its Window. Later declared Items paint above earlier ones if they overlap. Empty intervals stay empty. `fit="contain"` preserves the supplied screenshot; `cover` fills and crops. `x`, `y`, `width`, `height` are fractions of Canvas dimensions. `blur` is specified at a reference width of 1080 and scales with Canvas width. `brightness`, `zoom`, `radius` and `z` finish the treatment.
 
-The visual components accept the shared absolute Window forms: `during`, or exactly two of `from`,
-`until` and `for`. Stage Items use the same forms. Domain projection happens upstream; drawing code
-consumes only resolved Windows. Literal time is useful for a rapid montage, while a projected Window
-can follow a Segment.
+The visual components and Stage Items accept already declared absolute Windows through `during`.
+Domain projection and direct clock declarations happen upstream; drawing code consumes only resolved
+Windows. Direct time is useful for a rapid montage, while a projected Window can follow a Segment.
 
 ```svml
 <import as="gfx" from="@explainer/opening-system@1"/>
 <gfx:Title id="opening-title" timeline={program.timeline} within={canvas.bounds} font={display-font}
-  from="timeline.start" until={story-time.begin}
+  during={opening-title-window}
   title="Qflow" subtitle="一分钟了解" seconds="60"/>
 <gfx:Timer id="series-timer" timeline={program.timeline} within={canvas.bounds} font={display-font} logo={flag-logo}
-  from={story-time.begin} until="timeline.end" title="Qflow"/>
-<gfx:Stage id="coverage" timeline={program.timeline} within={canvas.bounds} during={story-time.example}>
-  <gfx:Item id="demo" video={prepared-demo.media} during={story-time.example}/>
+  during={series-timer-window} title="Qflow"/>
+<gfx:Stage id="coverage" timeline={program.timeline} within={canvas.bounds} during={example}>
+  <gfx:Item id="demo" video={prepared-demo.media} during={example}/>
 </gfx:Stage>
 ```
 
@@ -34,7 +33,7 @@ The actual montage and semantic title/timer bindings live in `authors/main.svml`
 
 The pennant and floor flag use a small Canvas raster with stepped diagonal folds and discrete shaded bands. `src/flag-cloth.js` retains its filename, but the current renderer uses no 3D engine or cloth simulation. Frame time determines the low-cadence movement, and nearest-neighbor scaling preserves the pixels. The supplied logo remains readable; amplitude and speed are author choices. The pennant paints in front of its backplate. Brand artwork is supplied by Source.
 
-The current Title uses the shared pink window treatment described below; earlier luminous corner studies remain historical outputs.
+The Title uses the shared pink window treatment described below.
 
 Stage `push-rate` is the foreground scale increase per second, default zero. For example, `push-rate="0.025"` increases scale by 2.5% per second while the viewport stays fixed. Each Item starts at native scale; its own original Window determines animation age even when the Stage clips that Window. The production enables this on the four-image montage; short flashes therefore move slightly, while a longer hold develops a visible slow push.
 
@@ -45,7 +44,7 @@ Stage `push-rate` is the foreground scale increase per second, default zero. For
 
 `pattern` selects `mesh`, `dots`, or `hatch`; `cell` sets motif size at 1080px Canvas width; `amount` sets motif opacity. `tint` and `shade` describe the translucent color wash independently. `fade-frames` shapes its short entrance/exit; zero gives an immediate boundary. The pattern remains stationary during the hold. The defaults are a starting treatment, not a requirement to apply the overlay to every picture.
 
-Earlier texture studies are retained in private production history. The active Source shows the selected treatment.
+The active Source shows the selected texture treatment.
 
 ### Opening pullback as a Presenter Use
 

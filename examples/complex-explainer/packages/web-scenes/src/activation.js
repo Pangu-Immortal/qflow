@@ -430,7 +430,7 @@ export const qflowPackage = {
               {
                 tag: "Beat",
                 cardinality: "many",
-                summary: "Named event in the scene, projected from a Moment or authored time.",
+                summary: "Named absolute event in the scene, produced upstream by semantic or direct time authoring.",
                 attributes: [
                   {
                     name: "name",

@@ -225,8 +225,8 @@ Selection markers are zero-width and never appear in any text projection. They c
 `NarrativeSelection` with `startAnchorId` and `endAnchorId`. Script itself contains no seconds or
 frame numbers — timing comes from Timeline alignment.
 
-Other components reference Selections via `{story.selection.problem}` to bind visual content to
-semantic moments in the narrative.
+A Narrative Projection declaration references `{story.selection.problem}` and publishes a named
+absolute Window. Components consume that Window without understanding Script identities.
 
 ## Moments
 
@@ -247,7 +247,8 @@ Moments are named time **points** (not ranges):
 Each Moment name occurs once and compiles into one `NarrativeMoment` with an `anchorId`. Selection
 and Moment share the same name namespace — the same id cannot be used for both.
 
-Other components reference Moments via `{story.moment.ranking}`.
+A Narrative Projection declaration references `{story.moment.ranking}` and publishes a named
+absolute Instant. Components consume that Instant without understanding Script identities.
 
 ## Comments and escaping
 
@@ -308,5 +309,6 @@ This Script declares:
 - Three Selections: `whole` (entire Script), `problem`, `solution`, `emphasis`
 - One Moment: `ranking` (marks the instant "After the first recap")
 
-Downstream components reference these by name: `{story.segment.hook.dialogue}` for generation,
-`{story.selection.problem}` for B-roll timing, `{story.moment.ranking}` for a visual card reveal.
+Downstream graph nodes reference these by name: `{story.segment.hook.dialogue}` supplies generation
+text, while Narrative Projection declarations reveal `{story.selection.problem}` for B-roll timing
+and `{story.moment.ranking}` for a visual card event.

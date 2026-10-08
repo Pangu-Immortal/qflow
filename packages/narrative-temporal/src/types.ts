@@ -50,5 +50,4 @@ export type NarrativeInstantSpec = {
   readonly id: string;
   readonly subjectId: string;
   readonly boundary: "start" | "end" | "cue";
-  readonly offset?: import("@qflow/temporal").TemporalDuration;
 };

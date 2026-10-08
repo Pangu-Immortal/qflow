@@ -198,16 +198,16 @@
     <semantic:Map alignment={uber-rule-semantic.alignment} domain={uber-rule-media.domain} window={speech.uber-rule-semantic}/>
     <semantic:Map alignment={shortcuts-rule-semantic.alignment} domain={shortcuts-rule-media.domain} window={speech.shortcuts-rule-semantic}/>
     <semantic:Map alignment={first-place-rule-semantic.alignment} domain={first-place-rule-media.domain} window={speech.first-place-rule-semantic}/>
-    <semantic:Instant id="moment-uber-cue" moment={story.moment.uber}/>
-    <semantic:Instant id="moment-shortcuts-cue" moment={story.moment.shortcuts}/>
-    <semantic:Instant id="moment-first-place-cue" moment={story.moment.first-place}/>
   </semantic:Projection>
-  <time:Window id="uber-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-uber-cue} for="20f"/>
-  <time:Window id="shortcuts-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-shortcuts-cue} for="20f"/>
-  <time:Window id="first-place-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-first-place-cue} for="20f"/>
-  <time:Window id="uber-flash-window" timeline={speech.timeline} from={story-time.moment-uber-cue} for="8f"/>
-  <time:Window id="shortcuts-flash-window" timeline={speech.timeline} from={story-time.moment-shortcuts-cue} for="8f"/>
-  <time:Window id="first-place-flash-window" timeline={speech.timeline} from={story-time.moment-first-place-cue} for="8f"/>
+  <semantic:Instant id="moment-uber-cue" projection={story-time} at={story.moment.uber}/>
+  <semantic:Instant id="moment-shortcuts-cue" projection={story-time} at={story.moment.shortcuts}/>
+  <semantic:Instant id="moment-first-place-cue" projection={story-time} at={story.moment.first-place}/>
+  <time:Window id="uber-reveal-sfx-window" timeline={speech.timeline} from={moment-uber-cue} for="20f"/>
+  <time:Window id="shortcuts-reveal-sfx-window" timeline={speech.timeline} from={moment-shortcuts-cue} for="20f"/>
+  <time:Window id="first-place-reveal-sfx-window" timeline={speech.timeline} from={moment-first-place-cue} for="20f"/>
+  <time:Window id="uber-flash-window" timeline={speech.timeline} from={moment-uber-cue} for="8f"/>
+  <time:Window id="shortcuts-flash-window" timeline={speech.timeline} from={moment-shortcuts-cue} for="8f"/>
+  <time:Window id="first-place-flash-window" timeline={speech.timeline} from={moment-first-place-cue} for="8f"/>
   <audio:Track id="speech-sound" timeline={speech.timeline}>
     <audio:Clip id="uber-rule-semantic-source" source={uber-rule-media.media} during={speech.uber-rule-semantic}/>
     <audio:Clip id="shortcuts-rule-semantic-source" source={shortcuts-rule-media.media} during={speech.shortcuts-rule-semantic}/>
@@ -238,7 +238,7 @@
 
   <region:Evidence id="ada-heads" within={vertical.bounds} timeline={speech.timeline}
     recipe={tracking.heads.ada}/>
-  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time}/>
   <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
     timeline={speech.timeline} within={vertical.bounds} regions={ada-heads}>
     <caption-fine:Use style={caption-leon-style}/>
@@ -248,9 +248,9 @@
   <emoji:Style id="rule-reveal-style" recipe={recipes.emoji.strip}/>
   <emoji:EmojiReveal id="rule-reveal" timeline={speech.timeline} within={vertical.bounds}
     style={rule-reveal-style} placeholder={rule-placeholder.image} during={speech.window}>
-    <emoji:Item id="uber" icon={uber-icon.image} at={story-time.moment-uber-cue}/>
-    <emoji:Item id="shortcuts" icon={shortcuts-icon.image} at={story-time.moment-shortcuts-cue}/>
-    <emoji:Item id="first-place" icon={first-place-icon.image} at={story-time.moment-first-place-cue}/>
+    <emoji:Item id="uber" icon={uber-icon.image} at={moment-uber-cue}/>
+    <emoji:Item id="shortcuts" icon={shortcuts-icon.image} at={moment-shortcuts-cue}/>
+    <emoji:Item id="first-place" icon={first-place-icon.image} at={moment-first-place-cue}/>
   </emoji:EmojiReveal>
 
   <flash:Flash id="uber-flash" timeline={speech.timeline} within={vertical.bounds}

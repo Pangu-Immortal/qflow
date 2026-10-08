@@ -108,8 +108,8 @@ export const audioTrackMarkupSurfaces = [{
 </audio:Track>`,
     notes: [
       "A Track requires at least one Clip and accepts no text content.",
-      "A Clip states one Window form: `during`, or exactly two of `from`, `until` and `for`.",
-      "Project semantic, beat or other domain time upstream, then pass resolved Windows or Instants here.",
+      "A Clip references one already resolved Window through `during`.",
+      "Project semantic, beat or other domain time upstream, then pass the resolved Window here.",
       "Omitting Map means bounded partial identity; uncovered target samples are silent.",
     ],
   },

@@ -129,7 +129,7 @@ Caption content comes from Script and Timeline. Uses choose presentation in time
 ```svml
 <caption:Hidden id="hidden"/>
 <narrative-caption:Timing id="story-captions" document={story.caption}
-  binding={story.caption-binding} projection={story-time.projection}/>
+  binding={story.caption-binding} projection={story-time}/>
 <caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
   timeline={speech.timeline} within={vertical.bounds}>
   <caption-fine:Use style={primary-caption}/>
@@ -140,7 +140,9 @@ Caption content comes from Script and Timeline. Uses choose presentation in time
 </caption-fine:Caption>
 ```
 
-`||` organizes Cues. A window can start inside a Cue while retaining its complete text and original word timing. `role` filters the speaker independently of time. `at`/`for`, `until`/`for` and `start`/`end` use the same time language as other tracks.
+`||` organizes Cues. A window can start inside a Cue while retaining its complete text and original
+word timing. `role` filters the speaker independently of time. A timed Use names an already resolved
+absolute Window through `during`.
 
 ## Visual Clips and B-roll
 
@@ -185,7 +187,7 @@ to the occurrence; reusable pixel treatment and typed Motion remain optional val
 
 <visual:Track id="product-broll" timeline={speech.timeline}>
   <visual:Clip media={product-media.media} frame={product-frame}
-    during={story-time.product-demo} z="40" fit="contain"
+    during={product-demo} z="40" fit="contain"
     treatment={recipes.visual.product} motion={product-motion-in}>
     <visual:Map/>
   </visual:Clip>
@@ -195,7 +197,7 @@ to the occurrence; reusable pixel treatment and typed Motion remain optional val
 `left`, `top`, `right` and `bottom` are edge coordinates inside the parent Frame; `right` and
 `bottom` are not CSS-style margins. A Frame covering the middle 84% of the canvas horizontally is
 `left="8%" right="92%"`, and `right="8%"` would place its right edge to the left of its left edge,
-which is rejected. A Narrative projection may publish `story-time.product-demo` upstream; Visual Track
+which is rejected. A Narrative projection may publish `product-demo` upstream; Visual Track
 only consumes the resulting Window.
 Fit is the common constructor for the Clip's source-to-picture `SpatialMap2D`; the resolved Program
 stores the map rather than a second content rectangle. When a component or source-local evidence
@@ -372,13 +374,12 @@ family is refused by name.
 | Attribute | Takes |
 |---|---|
 | `timeline` | the absolute Timeline the board is timed against |
-| `semantic` | the optional Narrative projection used by semantic timing expressions |
 | `within` | a `space:Frame` when the selected board has an independent reveal or explanation stage |
 | `frame` | a `space:Frame` — the board's declared placement |
 | `during` | the timing form declared by the selected component |
 | `style` | the matching style record, and only that variant's |
 | `appear-sound`, `move-sound` | optional Synchronized Media |
-| `terminal` | the Moment where the completed board settles. `TopThree` only |
+| `terminal` | the absolute Instant where the completed board settles. `TopThree` only |
 
 Use only the timing forms admitted by the selected package; do not infer a terminal or reveal model
 from another component family.
@@ -389,22 +390,22 @@ Optional sounds and reveal phases are valid only when the selected package decla
 
 Each variant takes its own, at least one, and ids must be unique within a board.
 
-- **`TopThreeItem`** — `label` and item-owned Moment `at` are required; `icon` and `stack` are optional.
-  At most three. TopThree reveal order comes from these Moments' actual frame order.
+- **`TopThreeItem`** — `label` and item-owned absolute Instant `at` are required; `icon` and `stack`
+  are optional. At most three. TopThree reveal order comes from these Instants' actual frame order.
 - **`ColumnItem`** — `label` (required) and `rank` (required, a positive integer that decides the
   numbered row and nothing else), optional `icon` and `stack`. Each item also owns its reveal time:
-  `during` names a Selection whose projected window is when it prefers to appear, and
+  `during` names the absolute Window when it prefers to appear, and
   `preset="true"` marks a row that starts already placed. Exactly one of the two — an item with
   neither, or with both, is refused by name.
 
 ```svml
 <ranking:ColumnStyle id="board-style" recipe={recipes.ranking.board} font={ui-font}/>
 <ranking:Column id="board" timeline={speech.timeline} within={vertical.bounds} frame={board-frame}
-  during={story-time.board} style={board-style}>
+  during={board} style={board-style}>
   <ranking:ColumnItem id="row-regen" rank="1" label="ReGen" icon={icon-regen}
-    during={story-time.regen-reveal}/>
+    during={regen-reveal}/>
   <ranking:ColumnItem id="row-chatgpt" rank="2" label="ChatGPT" icon={icon-chatgpt}
-    during={story-time.chatgpt-reveal}/>
+    during={chatgpt-reveal}/>
   <ranking:ColumnItem id="row-remini" rank="3" preset="true" label="Remini" icon={icon-remini}/>
 </ranking:Column>
 ```
@@ -415,7 +416,7 @@ AudioTrack; without one there is no audio output to add.
 ## Card decks
 
 A deck holds cards in depth: one is in front, the others recede behind it, and each new card is dealt
-on a Moment. Where a Visual Clip places one shot in one Frame, a deck keeps a stack of them in the
+on an Instant. Where a Visual Clip places one shot in one Frame, a deck keeps a stack of them in the
 same Frame and moves the whole stack.
 
 ```svml
@@ -424,8 +425,8 @@ same Frame and moves the whole stack.
 
 ### deck:DepthStack
 
-`id`, `timeline`, `within`, `frame`, `appearance` and `until` are required. `until` accepts an
-absolute Instant, for example a Narrative-projected event or `8s`.
+`id`, `timeline`, `within`, `frame`, `appearance` and `until` are required. `until` references a named
+absolute Instant, whether it came from a Narrative Projection or a direct time declaration.
 
 ### deck:Card
 
@@ -435,7 +436,7 @@ A direct child of the stack, self-closing, at least one, and dealt in document o
 |---|---|
 | `source` | required — a still image, a Synchronized Medium, or a Compositable Surface |
 | `extent` | required for a still image and refused for anything else |
-| `at` | required — an absolute reveal Instant or an authored time such as `2s` or `12f` |
+| `at` | required — a named absolute reveal Instant |
 | `appearance` | optional — its own Recipe, otherwise the stack's |
 | `label` | optional — a `deck:Label` record |
 
@@ -447,9 +448,9 @@ give both and it is refused. `size`, `color`, `align`, `block` and `padding` are
 ```svml
 <space:Frame id="deck-frame" within={vertical.bounds} left="44%" top="60%" right="98%" bottom="88%"/>
 <deck:DepthStack id="deck" timeline={speech.timeline} within={vertical.bounds}
-  frame={deck-frame} appearance={recipes.deck.stack} until={story-time.done}>
-  <deck:Card id="card-spatial" source={icon-spatial} extent={square} at={story-time.deal-one}/>
-  <deck:Card id="card-type" source={icon-type} extent={square} at={story-time.deal-two}/>
+  frame={deck-frame} appearance={recipes.deck.stack} until={done}>
+  <deck:Card id="card-spatial" source={icon-spatial} extent={square} at={deal-one}/>
+  <deck:Card id="card-type" source={icon-type} extent={square} at={deal-two}/>
 </deck:DepthStack>
 ```
 
@@ -468,10 +469,10 @@ optional metadata line.
 card's whole appearance — background, border, radius, tail, avatar, the three text rows, and the
 enter/hold/exit motion — and every key has a default, so a recipe may set only what it changes.
 
-`comment:Track` takes `id`, `canvas` and `timeline` for the complete work.
+`comment:Track` takes `id` and `timeline` for the complete work.
 
-`comment:Sticker` requires `id`, `frame` and `style`. Its Window can use `during`, `from` + `for`, or
-`from` + `until`. Its copy is either the `comment=` attribute or the element's own text — both is refused. The
+`comment:Sticker` requires `id`, `frame`, `style` and `during`, which references a named absolute
+Window. Its copy is either the `comment=` attribute or the element's own text — both is refused. The
 optional `author`, `header` and `meta` each take a string or a Text reference, `avatar` takes an
 image, and there is no `z`: stacking order comes from the recipe's `stack-order`.
 
@@ -479,7 +480,7 @@ image, and there is no `z`: stacking order comes from the recipe's `stack-order`
 <comment:Style id="social" recipe={recipes.comment} font={ui-font}/>
 <comment:Track id="comments" timeline={speech.timeline}>
   <comment:Sticker id="one" frame={comment-frame} style={social} avatar={viewer-avatar}
-    author="@viewer" meta="Featured" during={story-time.reaction}>
+    author="@viewer" meta="Featured" during={reaction}>
     Wait, it pinned the caption to the word, not the second.
   </comment:Sticker>
 </comment:Track>
@@ -530,7 +531,7 @@ All four track families together in one source file:
   video="primary-moving" audio="none" span-authority="video" clock={clock}/>
 <visual:Track id="cards" timeline={speech.timeline}>
   <visual:Clip media={card-media.media} frame={card-frame}
-    during={story-time.demo} z="40" fit="cover" treatment={recipes.visual.card}/>
+    during={demo} z="40" fit="cover" treatment={recipes.visual.card}/>
 </visual:Track>
 
 <!-- Text: persistent title overlay -->

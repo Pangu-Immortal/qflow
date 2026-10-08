@@ -26,12 +26,12 @@ Timeline 子声明或独立具名声明上，不写在组件表面。
 ```svml
 <semantic:Projection id="story-time" narrative={story} timeline={film.timeline}>
   <semantic:Map alignment={speech.alignment} domain={speech-media.domain} window={film.speech}/>
-  <semantic:Window id="proof" selection={story.selection.proof}/>
-  <semantic:Instant id="reveal" moment={story.moment.reveal}/>
 </semantic:Projection>
+<semantic:Window id="proof" projection={story-time} during={story.selection.proof}/>
+<semantic:Instant id="reveal" projection={story-time} at={story.moment.reveal}/>
 
-<visual:Clip during={story-time.proof} .../>
-<deck:Card at={story-time.reveal} .../>
+<visual:Clip during={proof} .../>
+<deck:Card at={reveal} .../>
 ```
 
 Narrative 投影声明保留 Companion 写回 Selection 或 Moment 所需的来源关系。修改这一声明后，

@@ -21,12 +21,12 @@ focused material lowerer, but Deck is not a Visual Clip mode and exports only an
   id="proof-stack"
   timeline={speech.timeline}
   frame={layout.proof-stack}
-  until={story-time.proof-end}
+  until={proof-end}
   appearance={recipes.deck.proof}
 >
   <deck:Card id="proof-1" source={proof1.image} extent={proof1.extent}
-    at={story-time.proof1} label={proof-label-style}/>
-  <deck:Card id="proof-2" source={proof2.video} at={story-time.proof2}/>
+    at={proof1} label={proof-label-style}/>
+  <deck:Card id="proof-2" source={proof2.video} at={proof2}/>
 </deck:DepthStack>
 ```
 
@@ -38,9 +38,9 @@ require a hidden looping mode on the material and never depends on renderer play
 Optional labels are separate exact-font values and are referenced by Cards. Filenames, URLs and
 media metadata are never treated as label truth.
 
-The Surface constructs literal `at` values when needed or passes through resolved
-`TemporalInstant` references. Card append and completion consume those Instants directly; they never
-locate a Moment/Selection or manufacture a one-frame terminal Window internally.
+The Surface resolves named `TemporalInstant` references for every Card and for the terminal boundary.
+Card append and completion consume those Instants directly; they do not locate semantic identities or
+manufacture a one-frame terminal Window internally.
 
 `deck:Label` accepts either literal body copy or `content={Text}`. It binds that copy to exact font
 and label appearance in a small explicit Fragment. The DepthStack receives the resulting label as

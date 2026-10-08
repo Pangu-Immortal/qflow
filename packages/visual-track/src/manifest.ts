@@ -319,13 +319,12 @@ export const visualTrackMarkupSurfaces = [{
 
 <visual:Track id="cutaways" timeline={speech.timeline}>
   <visual:Clip media={prepared.media} during={program.window} frame={full} z="10" fit="cover"/>
-  <visual:Clip id="bags" media={cutaway-bags.media} during={story-time.bags}
+  <visual:Clip id="bags" media={cutaway-bags.media} during={bags}
     frame={full} z="20" fit="cover" treatment={recipes.visual.cutaway} motion={gentle-push}/>
 </visual:Track>`,
       notes: [
         "A Track requires at least one Clip and accepts no text content.",
-        "A Clip uses an existing Window with `during`, or supplies exactly two of `from`, `until` and `for`.",
-        "An absolute point is a resolved Instant, `start`, `end`, or a bare duration read from Timeline start.",
+        "A Clip references one already resolved Window through `during`.",
         "A Clip names exactly one of `image`, `media` or `surface`; `extent` is required with `image` and refused otherwise.",
         "`z`, fitting and source time belong to the occurrence and cannot hide inside a treatment Recipe.",
         "An explicit `mapping` is mutually exclusive with every fit attribute. It is already in program-picture coordinates; the Frame still owns clipping and treatment.",

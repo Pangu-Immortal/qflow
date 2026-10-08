@@ -29,8 +29,9 @@ an ordinary clip or picture; a project component can coordinate a moving video v
 a diagram inside one scene. Independent captions or overlays can remain separate contributions.
 Each component owns the content whose behavior belongs together.
 
-For a spoken video, Script Selections and Moments let those components follow the meaning of the
-performance. An authored animation can instead use seconds or frames on its declared clock.
+For a spoken video, a Narrative Projection can reveal Script Selections and Moments as the absolute
+Windows and Instants those components consume. An authored animation can produce the same values
+directly from seconds or frames on its declared clock.
 [Film and Rendering](../quickstart/composition.md) explains how these contributions fit together.
 
 New components normally live in the video's `packages/` directory and use the owner's package

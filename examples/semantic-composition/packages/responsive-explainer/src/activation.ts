@@ -96,7 +96,7 @@ const declaration = { name: "scene", tag: "Scene", mode: "structured" as const,
         .map(({ name, type }) => ({ name, kind: "reference" as const, required: true, accepts: [type], summary: name })),
       ...temporalWindowAttributeVocabulary,
     ], ports: [{ name: "visual", type: compositionTypes.visualTrack, summary: "The coordinated scene." }],
-    example: '<explainer:Scene id="scene" timeline={speech.timeline} within={within} font={font} media={presenter.media} source-window={speech.presenter} during={speech.window} reveal={story-time.reveal} title="How it works" transition-frames="18" stack-order="0"/>',
+    example: '<explainer:Scene id="scene" timeline={speech.timeline} within={within} font={font} media={presenter.media} source-window={speech.presenter} during={speech.window} reveal={reveal} title="How it works" transition-frames="18" stack-order="0"/>',
   },
 };
 export const qflowPackage = { format: "qflow.package@1" as const, modules: [{ manifest }],

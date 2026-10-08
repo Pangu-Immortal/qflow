@@ -7,14 +7,14 @@ For speech-led work, bind the message to the words that introduce it:
 
 ```svml
 <chat:Scene id="conversation" timeline={speech.timeline} within={canvas.bounds} font={font}
-  during={story-time.demo} title="Conversation">
+  during={demo} title="Conversation">
   <chat:Message id="answer" sender="Maya" side="left" text="Here it is."
-    at={story-time.answer}/>
+    at={answer}/>
 </chat:Scene>
 ```
 
-The same component can receive a graphics-only `timeline={animation.timeline}` and `at="2s"` for authored animation. A Scene
-has an outer Window; its message Instants trigger persistent state. `entrance-frames` controls arrival
+The same component can receive Instants declared directly by a graphics-only Timeline. A Scene has an
+outer Window; its message Instants trigger persistent state. `entrance-frames` controls arrival
 and scrolling duration independently of those triggers (default 10). Messages stay visible or scroll
 up as the conversation develops. Message times are on the film clock and must fall inside the Scene.
 

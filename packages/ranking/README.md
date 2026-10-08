@@ -24,8 +24,8 @@ This excerpt assumes the Script, Timeline, Canvas, Frame and Style have been dec
 <import as="ranking" from="@qflow/ranking@1"/>
 
 <ranking:Column id="priorities" timeline={speech.timeline} within={vertical.bounds}
-  frame={layout.ranking} during={story-time.ranking} style={ranking-style}>
-  <ranking:ColumnItem rank="1" label="Winner" during={story-time.winner}/>
+  frame={layout.ranking} during={ranking} style={ranking-style}>
+  <ranking:ColumnItem rank="1" label="Winner" during={winner}/>
   <ranking:ColumnItem rank="2" preset="true" label="Already placed"/>
 </ranking:Column>
 ```
@@ -50,7 +50,7 @@ installed tarball contains a second editable source tree:
 
 | File | What to learn from it |
 | --- | --- |
-| [surface.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/surface.ts) | `rankingSurface` resolves author inputs, projects the outer and item times through `createTemporalWindowConstruction` / `createTemporalInstantConstruction`, and retains the returned drafts and references. |
+| [surface.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/surface.ts) | `rankingSurface` resolves the board's already declared Window and item Window or Instant references, together with its content, layout and Style inputs. |
 | [fragment.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/fragment.ts) | `createRankingFragment` receives Timeline and wires typed content, time, layout and Style inputs into finite operations. |
 | [schedule.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/schedule.ts) | Compute reveal, activation and settled spans from the projected times. |
 | [component.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/component.ts) and [render.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/render.ts) | Build the ranking program and produce picture and optional sound from that schedule. |

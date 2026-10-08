@@ -53,7 +53,7 @@ For example, this alternative uses the existing program's Timeline and an author
 <mediaop:Normalize id="overlay-media" source={cutout.video} clock={clock}
   video="primary-moving" audio="none" span-authority="video"/>
 <visual:Track id="overlay" timeline={speech.timeline}>
-  <visual:Clip media={overlay-media.media} during={story-time.example}
+  <visual:Clip media={overlay-media.media} during={example}
     frame={overlay-frame} z="30" fit="contain" treatment={look.visual.overlay}/>
 </visual:Track>
 ```

@@ -12,7 +12,7 @@ Audio Track = additive set of Audio Clips
 
 ```svml
 <time:Window id="reveal-hit-window" timeline={program.timeline}
-  from={story-time.reveal} for="600ms"/>
+  from={reveal} for="600ms"/>
 
 <audio:Track id="mix" timeline={program.timeline}>
   <audio:Clip id="voice" source={speaker-media.media} during={program.speaker}/>

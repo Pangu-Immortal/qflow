@@ -134,8 +134,8 @@ export const emojiRevealMarkupSurfaces = [
       ],
       example: `<emoji:EmojiReveal id="rules" timeline={speech.timeline} within={vertical.bounds} style={emoji-strip} placeholder={question-icon} during={speech.window}>
   <emoji:Item id="manifest" icon={manifest-icon} preset="true"/>
-  <emoji:Item id="real-estate" icon={real-estate-icon} at={story-time.real-estate}/>
-  <emoji:Item id="bitcoin" icon={bitcoin-icon} at={story-time.bitcoin}/>
+  <emoji:Item id="real-estate" icon={real-estate-icon} at={real-estate}/>
+  <emoji:Item id="bitcoin" icon={bitcoin-icon} at={bitcoin}/>
 </emoji:EmojiReveal>`,
       notes: [
         "Item order is display order: preset Items come first, then non-preset Items in strict chronological reveal order.",

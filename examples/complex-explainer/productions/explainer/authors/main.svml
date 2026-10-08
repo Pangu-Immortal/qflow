@@ -203,196 +203,208 @@
     <semantic:Map alignment={result.alignment} domain={result-media.domain} window={program.result}/>
     <semantic:Map alignment={reference-reveal.alignment} domain={reference-reveal-media.domain} window={program.reference-reveal}/>
     <semantic:Map alignment={closing.alignment} domain={closing-media.domain} window={program.closing}/>
-    <semantic:Instant id="moment-begin-cue" moment={copy.story.moment.begin}/>
-    <semantic:Instant id="moment-opening-brand-cue" moment={copy.story.moment.opening-brand}/>
-    <semantic:Instant id="moment-road-overview-cue" moment={copy.story.moment.road-overview}/>
-    <semantic:Instant id="segment-timing-cost-end" segment={copy.story.segment.timing-cost} boundary="end"/>
-    <semantic:Instant id="segment-synthesis-start" segment={copy.story.segment.synthesis} boundary="start"/>
-    <semantic:Instant id="segment-closing-start" segment={copy.story.segment.closing} boundary="start"/>
-    <semantic:Instant id="moment-outro-overtime-cue" moment={copy.story.moment.outro-overtime}/>
-    <semantic:Instant id="segment-opening-end" segment={copy.story.segment.opening} boundary="end"/>
-    <semantic:Instant id="segment-opening-end-plus-1-5s" segment={copy.story.segment.opening} boundary="end" offset="+1.5s"/>
-    <semantic:Instant id="segment-opening-end-plus-0f" segment={copy.story.segment.opening} boundary="end" offset="+0f"/>
-    <semantic:Instant id="segment-opening-end-plus-5f" segment={copy.story.segment.opening} boundary="end" offset="+5f"/>
-    <semantic:Instant id="segment-opening-end-plus-9f" segment={copy.story.segment.opening} boundary="end" offset="+9f"/>
-    <semantic:Instant id="segment-opening-end-plus-14f" segment={copy.story.segment.opening} boundary="end" offset="+14f"/>
-    <semantic:Instant id="segment-opening-end-plus-45f" segment={copy.story.segment.opening} boundary="end" offset="+45f"/>
-    <semantic:Instant id="segment-introduction-start" segment={copy.story.segment.introduction} boundary="start"/>
-    <semantic:Window id="segment-opening" segment={copy.story.segment.opening}/>
-    <semantic:Window id="segment-two-roads" segment={copy.story.segment.two-roads}/>
-    <semantic:Instant id="segment-two-roads-start" segment={copy.story.segment.two-roads} boundary="start"/>
-    <semantic:Instant id="segment-two-roads-start-plus-1s" segment={copy.story.segment.two-roads} boundary="start" offset="+1s"/>
-    <semantic:Instant id="moment-road-half-cue" moment={copy.story.moment.road-half}/>
-    <semantic:Instant id="segment-two-roads-end" segment={copy.story.segment.two-roads} boundary="end"/>
-    <semantic:Window id="segment-water-break" segment={copy.story.segment.water-break}/>
-    <semantic:Instant id="moment-resume-cue" moment={copy.story.moment.resume}/>
-    <semantic:Window id="segment-closing" segment={copy.story.segment.closing}/>
-    <semantic:Instant id="segment-closing-start-plus-1s" segment={copy.story.segment.closing} boundary="start" offset="+1s"/>
-    <semantic:Instant id="moment-outro-github-cue" moment={copy.story.moment.outro-github}/>
-    <semantic:Instant id="moment-outro-bye-cue" moment={copy.story.moment.outro-bye}/>
-    <semantic:Window id="segment-timing-cost" segment={copy.story.segment.timing-cost}/>
-    <semantic:Instant id="moment-result-guess-cue" moment={copy.story.moment.result-guess}/>
-    <semantic:Instant id="segment-reference-reveal-end" segment={copy.story.segment.reference-reveal} boundary="end"/>
-    <semantic:Instant id="segment-closing-end-minus-12f" segment={copy.story.segment.closing} boundary="end" offset="-12f"/>
-    <semantic:Instant id="segment-closing-end" segment={copy.story.segment.closing} boundary="end"/>
-    <semantic:Instant id="moment-intro-codex-cue" moment={copy.story.moment.intro-codex}/>
-    <semantic:Instant id="moment-intro-claude-cue" moment={copy.story.moment.intro-claude}/>
-    <semantic:Instant id="moment-intro-examples-cue" moment={copy.story.moment.intro-examples}/>
-    <semantic:Instant id="moment-intro-face-cue" moment={copy.story.moment.intro-face}/>
-    <semantic:Instant id="moment-competitor-monthly-cue" moment={copy.story.moment.competitor-monthly}/>
-    <semantic:Instant id="moment-competitor-watermark-cue" moment={copy.story.moment.competitor-watermark}/>
-    <semantic:Instant id="moment-roads-cue" moment={copy.story.moment.roads}/>
-    <semantic:Instant id="moment-road-assets-cue" moment={copy.story.moment.road-assets}/>
-    <semantic:Instant id="moment-road-drag-cue" moment={copy.story.moment.road-drag}/>
-    <semantic:Instant id="moment-road-fail-cue" moment={copy.story.moment.road-fail}/>
-    <semantic:Instant id="moment-road-number-cue" moment={copy.story.moment.road-number}/>
-    <semantic:Instant id="moment-road-image-cue" moment={copy.story.moment.road-image}/>
-    <semantic:Instant id="moment-road-keys-cue" moment={copy.story.moment.road-keys}/>
-    <semantic:Instant id="moment-road-tokens-cue" moment={copy.story.moment.road-tokens}/>
-    <semantic:Instant id="moment-code-play-cue" moment={copy.story.moment.code-play}/>
-    <semantic:Instant id="moment-code-duplicate-cue" moment={copy.story.moment.code-duplicate}/>
-    <semantic:Instant id="moment-solution-keep-cue" moment={copy.story.moment.solution-keep}/>
-    <semantic:Instant id="moment-solution-drop-cue" moment={copy.story.moment.solution-drop}/>
-    <semantic:Instant id="moment-part-caption-cue" moment={copy.story.moment.part-caption}/>
-    <semantic:Instant id="moment-part-ranking-cue" moment={copy.story.moment.part-ranking}/>
-    <semantic:Instant id="moment-part-chart-cue" moment={copy.story.moment.part-chart}/>
-    <semantic:Instant id="moment-part-card-cue" moment={copy.story.moment.part-card}/>
-    <semantic:Instant id="moment-parts-library-cue" moment={copy.story.moment.parts-library}/>
-    <semantic:Instant id="moment-parts-reuse-cue" moment={copy.story.moment.parts-reuse}/>
-    <semantic:Instant id="moment-parts-swap-cue" moment={copy.story.moment.parts-swap}/>
-    <semantic:Instant id="moment-rank-reveal-cue" moment={copy.story.moment.rank-reveal}/>
-    <semantic:Instant id="moment-product-reveal-cue" moment={copy.story.moment.product-reveal}/>
-    <semantic:Instant id="moment-sem-voice-cue" moment={copy.story.moment.sem-voice}/>
-    <semantic:Instant id="moment-sem-adapt-cue" moment={copy.story.moment.sem-adapt}/>
-    <semantic:Instant id="moment-result-assets-cue" moment={copy.story.moment.result-assets}/>
-    <semantic:Instant id="moment-result-meta-cue" moment={copy.story.moment.result-meta}/>
-    <semantic:Instant id="moment-outro-install-cue" moment={copy.story.moment.outro-install}/>
-    <semantic:Instant id="moment-outro-gift-cue" moment={copy.story.moment.outro-gift}/>
-    <semantic:Instant id="segment-opening-end-plus-4f" segment={copy.story.segment.opening} boundary="end" offset="+4f"/>
-    <semantic:Instant id="segment-opening-end-plus-13f" segment={copy.story.segment.opening} boundary="end" offset="+13f"/>
-    <semantic:Instant id="segment-opening-end-plus-28f" segment={copy.story.segment.opening} boundary="end" offset="+28f"/>
-    <semantic:Window id="segment-introduction" segment={copy.story.segment.introduction}/>
-    <semantic:Instant id="moment-intro-language-cue" moment={copy.story.moment.intro-language}/>
-    <semantic:Instant id="moment-intro-install-cue" moment={copy.story.moment.intro-install}/>
-    <semantic:Instant id="moment-intro-thirty-cue" moment={copy.story.moment.intro-thirty}/>
-    <semantic:Instant id="moment-intro-product-cue" moment={copy.story.moment.intro-product}/>
-    <semantic:Window id="segment-competitors" segment={copy.story.segment.competitors}/>
-    <semantic:Instant id="moment-competitor-other-cue" moment={copy.story.moment.competitor-other}/>
-    <semantic:Instant id="moment-competitor-templates-cue" moment={copy.story.moment.competitor-templates}/>
-    <semantic:Instant id="moment-competitor-cases-cue" moment={copy.story.moment.competitor-cases}/>
-    <semantic:Instant id="segment-keyframe-cost-end" segment={copy.story.segment.keyframe-cost} boundary="end"/>
-    <semantic:Instant id="moment-road-editor-cue" moment={copy.story.moment.road-editor}/>
-    <semantic:Instant id="moment-road-operate-cue" moment={copy.story.moment.road-operate}/>
-    <semantic:Instant id="moment-road-capcut-cue" moment={copy.story.moment.road-capcut}/>
-    <semantic:Instant id="moment-road-premiere-cue" moment={copy.story.moment.road-premiere}/>
-    <semantic:Instant id="moment-road-resolve-cue" moment={copy.story.moment.road-resolve}/>
-    <semantic:Instant id="moment-road-same-cue" moment={copy.story.moment.road-same}/>
-    <semantic:Instant id="moment-road-place-cue" moment={copy.story.moment.road-place}/>
-    <semantic:Instant id="moment-road-generated-cue" moment={copy.story.moment.road-generated}/>
-    <semantic:Instant id="moment-road-unstable-cue" moment={copy.story.moment.road-unstable}/>
-    <semantic:Instant id="moment-road-styles-cue" moment={copy.story.moment.road-styles}/>
-    <semantic:Instant id="segment-code-road-start" segment={copy.story.segment.code-road} boundary="start"/>
-    <semantic:Instant id="segment-synthesis-end" segment={copy.story.segment.synthesis} boundary="end"/>
-    <semantic:Instant id="moment-code-remotion-cue" moment={copy.story.moment.code-remotion}/>
-    <semantic:Instant id="moment-code-hyperframes-cue" moment={copy.story.moment.code-hyperframes}/>
-    <semantic:Instant id="moment-code-html-cue" moment={copy.story.moment.code-html}/>
-    <semantic:Instant id="moment-code-once-cue" moment={copy.story.moment.code-once}/>
-    <semantic:Instant id="moment-code-variant-cue" moment={copy.story.moment.code-variant}/>
-    <semantic:Instant id="moment-code-copy-cue" moment={copy.story.moment.code-copy}/>
-    <semantic:Instant id="moment-code-tokens-cue" moment={copy.story.moment.code-tokens}/>
-    <semantic:Instant id="moment-code-time-cue" moment={copy.story.moment.code-time}/>
-    <semantic:Instant id="moment-code-different-cue" moment={copy.story.moment.code-different}/>
-    <semantic:Instant id="moment-code-match-cue" moment={copy.story.moment.code-match}/>
-    <semantic:Instant id="moment-code-retime-cue" moment={copy.story.moment.code-retime}/>
-    <semantic:Instant id="segment-water-break-start" segment={copy.story.segment.water-break} boundary="start"/>
-    <semantic:Instant id="moment-solution-cue" moment={copy.story.moment.solution}/>
-    <semantic:Instant id="moment-solution-roads-cue" moment={copy.story.moment.solution-roads}/>
-    <semantic:Window id="segment-components" segment={copy.story.segment.components}/>
-    <semantic:Instant id="moment-parts-all-cue" moment={copy.story.moment.parts-all}/>
-    <semantic:Instant id="moment-parts-word-cue" moment={copy.story.moment.parts-word}/>
-    <semantic:Instant id="moment-parts-picture-cue" moment={copy.story.moment.parts-picture}/>
-    <semantic:Instant id="moment-parts-color-cue" moment={copy.story.moment.parts-color}/>
-    <semantic:Instant id="segment-semantic-time-start" segment={copy.story.segment.semantic-time} boundary="start"/>
-    <semantic:Instant id="segment-semantic-demo-end" segment={copy.story.segment.semantic-demo} boundary="end"/>
-    <semantic:Instant id="moment-sem-bind-cue" moment={copy.story.moment.sem-bind}/>
-    <semantic:Instant id="moment-sem-examples-cue" moment={copy.story.moment.sem-examples}/>
-    <semantic:Instant id="moment-sem-rewrite-scene-cue" moment={copy.story.moment.sem-rewrite-scene}/>
-    <semantic:Instant id="moment-sem-rewrite-cue" moment={copy.story.moment.sem-rewrite}/>
-    <semantic:Instant id="moment-sem-syntax-cue" moment={copy.story.moment.sem-syntax}/>
-    <semantic:Instant id="segment-result-start" segment={copy.story.segment.result} boundary="start"/>
-    <semantic:Instant id="moment-result-upload-cue" moment={copy.story.moment.result-upload}/>
-    <semantic:Instant id="moment-result-compare-cue" moment={copy.story.moment.result-compare}/>
-    <semantic:Instant id="moment-result-brand-cue" moment={copy.story.moment.result-brand}/>
-    <semantic:Instant id="moment-outro-copy-cue" moment={copy.story.moment.outro-copy}/>
   </semantic:Projection>
+  <semantic:Instant id="moment-begin-cue" projection={story-time} at={copy.story.moment.begin}/>
+  <semantic:Instant id="moment-opening-brand-cue" projection={story-time} at={copy.story.moment.opening-brand}/>
+  <semantic:Instant id="moment-road-overview-cue" projection={story-time} at={copy.story.moment.road-overview}/>
+  <semantic:Instant id="segment-timing-cost-end" projection={story-time} at={copy.story.segment.timing-cost} boundary="end"/>
+  <semantic:Instant id="segment-synthesis-start" projection={story-time} at={copy.story.segment.synthesis} boundary="start"/>
+  <semantic:Instant id="segment-closing-start" projection={story-time} at={copy.story.segment.closing} boundary="start"/>
+  <semantic:Instant id="moment-outro-overtime-cue" projection={story-time} at={copy.story.moment.outro-overtime}/>
+  <semantic:Instant id="segment-opening-end" projection={story-time} at={copy.story.segment.opening} boundary="end"/>
+  <semantic:Instant id="segment-opening-end-plus-1-5s-base" projection={story-time} at={copy.story.segment.opening} boundary="end"/>
+  <time:Instant id="segment-opening-end-plus-1-5s" timeline={program.timeline} at={segment-opening-end-plus-1-5s-base} offset="+1.5s"/>
+  <semantic:Instant id="segment-opening-end-plus-0f-base" projection={story-time} at={copy.story.segment.opening} boundary="end"/>
+  <time:Instant id="segment-opening-end-plus-0f" timeline={program.timeline} at={segment-opening-end-plus-0f-base} offset="+0f"/>
+  <semantic:Instant id="segment-opening-end-plus-5f-base" projection={story-time} at={copy.story.segment.opening} boundary="end"/>
+  <time:Instant id="segment-opening-end-plus-5f" timeline={program.timeline} at={segment-opening-end-plus-5f-base} offset="+5f"/>
+  <semantic:Instant id="segment-opening-end-plus-9f-base" projection={story-time} at={copy.story.segment.opening} boundary="end"/>
+  <time:Instant id="segment-opening-end-plus-9f" timeline={program.timeline} at={segment-opening-end-plus-9f-base} offset="+9f"/>
+  <semantic:Instant id="segment-opening-end-plus-14f-base" projection={story-time} at={copy.story.segment.opening} boundary="end"/>
+  <time:Instant id="segment-opening-end-plus-14f" timeline={program.timeline} at={segment-opening-end-plus-14f-base} offset="+14f"/>
+  <semantic:Instant id="segment-opening-end-plus-45f-base" projection={story-time} at={copy.story.segment.opening} boundary="end"/>
+  <time:Instant id="segment-opening-end-plus-45f" timeline={program.timeline} at={segment-opening-end-plus-45f-base} offset="+45f"/>
+  <semantic:Instant id="segment-introduction-start" projection={story-time} at={copy.story.segment.introduction} boundary="start"/>
+  <semantic:Window id="segment-opening" projection={story-time} during={copy.story.segment.opening}/>
+  <semantic:Window id="segment-two-roads" projection={story-time} during={copy.story.segment.two-roads}/>
+  <semantic:Instant id="segment-two-roads-start" projection={story-time} at={copy.story.segment.two-roads} boundary="start"/>
+  <semantic:Instant id="segment-two-roads-start-plus-1s-base" projection={story-time} at={copy.story.segment.two-roads} boundary="start"/>
+  <time:Instant id="segment-two-roads-start-plus-1s" timeline={program.timeline} at={segment-two-roads-start-plus-1s-base} offset="+1s"/>
+  <semantic:Instant id="moment-road-half-cue" projection={story-time} at={copy.story.moment.road-half}/>
+  <semantic:Instant id="segment-two-roads-end" projection={story-time} at={copy.story.segment.two-roads} boundary="end"/>
+  <semantic:Window id="segment-water-break" projection={story-time} during={copy.story.segment.water-break}/>
+  <semantic:Instant id="moment-resume-cue" projection={story-time} at={copy.story.moment.resume}/>
+  <semantic:Window id="segment-closing" projection={story-time} during={copy.story.segment.closing}/>
+  <semantic:Instant id="segment-closing-start-plus-1s-base" projection={story-time} at={copy.story.segment.closing} boundary="start"/>
+  <time:Instant id="segment-closing-start-plus-1s" timeline={program.timeline} at={segment-closing-start-plus-1s-base} offset="+1s"/>
+  <semantic:Instant id="moment-outro-github-cue" projection={story-time} at={copy.story.moment.outro-github}/>
+  <semantic:Instant id="moment-outro-bye-cue" projection={story-time} at={copy.story.moment.outro-bye}/>
+  <semantic:Window id="segment-timing-cost" projection={story-time} during={copy.story.segment.timing-cost}/>
+  <semantic:Instant id="moment-result-guess-cue" projection={story-time} at={copy.story.moment.result-guess}/>
+  <semantic:Instant id="segment-reference-reveal-end" projection={story-time} at={copy.story.segment.reference-reveal} boundary="end"/>
+  <semantic:Instant id="segment-closing-end-minus-12f-base" projection={story-time} at={copy.story.segment.closing} boundary="end"/>
+  <time:Instant id="segment-closing-end-minus-12f" timeline={program.timeline} at={segment-closing-end-minus-12f-base} offset="-12f"/>
+  <semantic:Instant id="segment-closing-end" projection={story-time} at={copy.story.segment.closing} boundary="end"/>
+  <semantic:Instant id="moment-intro-codex-cue" projection={story-time} at={copy.story.moment.intro-codex}/>
+  <semantic:Instant id="moment-intro-claude-cue" projection={story-time} at={copy.story.moment.intro-claude}/>
+  <semantic:Instant id="moment-intro-examples-cue" projection={story-time} at={copy.story.moment.intro-examples}/>
+  <semantic:Instant id="moment-intro-face-cue" projection={story-time} at={copy.story.moment.intro-face}/>
+  <semantic:Instant id="moment-competitor-monthly-cue" projection={story-time} at={copy.story.moment.competitor-monthly}/>
+  <semantic:Instant id="moment-competitor-watermark-cue" projection={story-time} at={copy.story.moment.competitor-watermark}/>
+  <semantic:Instant id="moment-roads-cue" projection={story-time} at={copy.story.moment.roads}/>
+  <semantic:Instant id="moment-road-assets-cue" projection={story-time} at={copy.story.moment.road-assets}/>
+  <semantic:Instant id="moment-road-drag-cue" projection={story-time} at={copy.story.moment.road-drag}/>
+  <semantic:Instant id="moment-road-fail-cue" projection={story-time} at={copy.story.moment.road-fail}/>
+  <semantic:Instant id="moment-road-number-cue" projection={story-time} at={copy.story.moment.road-number}/>
+  <semantic:Instant id="moment-road-image-cue" projection={story-time} at={copy.story.moment.road-image}/>
+  <semantic:Instant id="moment-road-keys-cue" projection={story-time} at={copy.story.moment.road-keys}/>
+  <semantic:Instant id="moment-road-tokens-cue" projection={story-time} at={copy.story.moment.road-tokens}/>
+  <semantic:Instant id="moment-code-play-cue" projection={story-time} at={copy.story.moment.code-play}/>
+  <semantic:Instant id="moment-code-duplicate-cue" projection={story-time} at={copy.story.moment.code-duplicate}/>
+  <semantic:Instant id="moment-solution-keep-cue" projection={story-time} at={copy.story.moment.solution-keep}/>
+  <semantic:Instant id="moment-solution-drop-cue" projection={story-time} at={copy.story.moment.solution-drop}/>
+  <semantic:Instant id="moment-part-caption-cue" projection={story-time} at={copy.story.moment.part-caption}/>
+  <semantic:Instant id="moment-part-ranking-cue" projection={story-time} at={copy.story.moment.part-ranking}/>
+  <semantic:Instant id="moment-part-chart-cue" projection={story-time} at={copy.story.moment.part-chart}/>
+  <semantic:Instant id="moment-part-card-cue" projection={story-time} at={copy.story.moment.part-card}/>
+  <semantic:Instant id="moment-parts-library-cue" projection={story-time} at={copy.story.moment.parts-library}/>
+  <semantic:Instant id="moment-parts-reuse-cue" projection={story-time} at={copy.story.moment.parts-reuse}/>
+  <semantic:Instant id="moment-parts-swap-cue" projection={story-time} at={copy.story.moment.parts-swap}/>
+  <semantic:Instant id="moment-rank-reveal-cue" projection={story-time} at={copy.story.moment.rank-reveal}/>
+  <semantic:Instant id="moment-product-reveal-cue" projection={story-time} at={copy.story.moment.product-reveal}/>
+  <semantic:Instant id="moment-sem-voice-cue" projection={story-time} at={copy.story.moment.sem-voice}/>
+  <semantic:Instant id="moment-sem-adapt-cue" projection={story-time} at={copy.story.moment.sem-adapt}/>
+  <semantic:Instant id="moment-result-assets-cue" projection={story-time} at={copy.story.moment.result-assets}/>
+  <semantic:Instant id="moment-result-meta-cue" projection={story-time} at={copy.story.moment.result-meta}/>
+  <semantic:Instant id="moment-outro-install-cue" projection={story-time} at={copy.story.moment.outro-install}/>
+  <semantic:Instant id="moment-outro-gift-cue" projection={story-time} at={copy.story.moment.outro-gift}/>
+  <semantic:Instant id="segment-opening-end-plus-4f-base" projection={story-time} at={copy.story.segment.opening} boundary="end"/>
+  <time:Instant id="segment-opening-end-plus-4f" timeline={program.timeline} at={segment-opening-end-plus-4f-base} offset="+4f"/>
+  <semantic:Instant id="segment-opening-end-plus-13f-base" projection={story-time} at={copy.story.segment.opening} boundary="end"/>
+  <time:Instant id="segment-opening-end-plus-13f" timeline={program.timeline} at={segment-opening-end-plus-13f-base} offset="+13f"/>
+  <semantic:Instant id="segment-opening-end-plus-28f-base" projection={story-time} at={copy.story.segment.opening} boundary="end"/>
+  <time:Instant id="segment-opening-end-plus-28f" timeline={program.timeline} at={segment-opening-end-plus-28f-base} offset="+28f"/>
+  <semantic:Window id="segment-introduction" projection={story-time} during={copy.story.segment.introduction}/>
+  <semantic:Instant id="moment-intro-language-cue" projection={story-time} at={copy.story.moment.intro-language}/>
+  <semantic:Instant id="moment-intro-install-cue" projection={story-time} at={copy.story.moment.intro-install}/>
+  <semantic:Instant id="moment-intro-thirty-cue" projection={story-time} at={copy.story.moment.intro-thirty}/>
+  <semantic:Instant id="moment-intro-product-cue" projection={story-time} at={copy.story.moment.intro-product}/>
+  <semantic:Window id="segment-competitors" projection={story-time} during={copy.story.segment.competitors}/>
+  <semantic:Instant id="moment-competitor-other-cue" projection={story-time} at={copy.story.moment.competitor-other}/>
+  <semantic:Instant id="moment-competitor-templates-cue" projection={story-time} at={copy.story.moment.competitor-templates}/>
+  <semantic:Instant id="moment-competitor-cases-cue" projection={story-time} at={copy.story.moment.competitor-cases}/>
+  <semantic:Instant id="segment-keyframe-cost-end" projection={story-time} at={copy.story.segment.keyframe-cost} boundary="end"/>
+  <semantic:Instant id="moment-road-editor-cue" projection={story-time} at={copy.story.moment.road-editor}/>
+  <semantic:Instant id="moment-road-operate-cue" projection={story-time} at={copy.story.moment.road-operate}/>
+  <semantic:Instant id="moment-road-capcut-cue" projection={story-time} at={copy.story.moment.road-capcut}/>
+  <semantic:Instant id="moment-road-premiere-cue" projection={story-time} at={copy.story.moment.road-premiere}/>
+  <semantic:Instant id="moment-road-resolve-cue" projection={story-time} at={copy.story.moment.road-resolve}/>
+  <semantic:Instant id="moment-road-same-cue" projection={story-time} at={copy.story.moment.road-same}/>
+  <semantic:Instant id="moment-road-place-cue" projection={story-time} at={copy.story.moment.road-place}/>
+  <semantic:Instant id="moment-road-generated-cue" projection={story-time} at={copy.story.moment.road-generated}/>
+  <semantic:Instant id="moment-road-unstable-cue" projection={story-time} at={copy.story.moment.road-unstable}/>
+  <semantic:Instant id="moment-road-styles-cue" projection={story-time} at={copy.story.moment.road-styles}/>
+  <semantic:Instant id="segment-code-road-start" projection={story-time} at={copy.story.segment.code-road} boundary="start"/>
+  <semantic:Instant id="segment-synthesis-end" projection={story-time} at={copy.story.segment.synthesis} boundary="end"/>
+  <semantic:Instant id="moment-code-remotion-cue" projection={story-time} at={copy.story.moment.code-remotion}/>
+  <semantic:Instant id="moment-code-hyperframes-cue" projection={story-time} at={copy.story.moment.code-hyperframes}/>
+  <semantic:Instant id="moment-code-html-cue" projection={story-time} at={copy.story.moment.code-html}/>
+  <semantic:Instant id="moment-code-once-cue" projection={story-time} at={copy.story.moment.code-once}/>
+  <semantic:Instant id="moment-code-variant-cue" projection={story-time} at={copy.story.moment.code-variant}/>
+  <semantic:Instant id="moment-code-copy-cue" projection={story-time} at={copy.story.moment.code-copy}/>
+  <semantic:Instant id="moment-code-tokens-cue" projection={story-time} at={copy.story.moment.code-tokens}/>
+  <semantic:Instant id="moment-code-time-cue" projection={story-time} at={copy.story.moment.code-time}/>
+  <semantic:Instant id="moment-code-different-cue" projection={story-time} at={copy.story.moment.code-different}/>
+  <semantic:Instant id="moment-code-match-cue" projection={story-time} at={copy.story.moment.code-match}/>
+  <semantic:Instant id="moment-code-retime-cue" projection={story-time} at={copy.story.moment.code-retime}/>
+  <semantic:Instant id="segment-water-break-start" projection={story-time} at={copy.story.segment.water-break} boundary="start"/>
+  <semantic:Instant id="moment-solution-cue" projection={story-time} at={copy.story.moment.solution}/>
+  <semantic:Instant id="moment-solution-roads-cue" projection={story-time} at={copy.story.moment.solution-roads}/>
+  <semantic:Window id="segment-components" projection={story-time} during={copy.story.segment.components}/>
+  <semantic:Instant id="moment-parts-all-cue" projection={story-time} at={copy.story.moment.parts-all}/>
+  <semantic:Instant id="moment-parts-word-cue" projection={story-time} at={copy.story.moment.parts-word}/>
+  <semantic:Instant id="moment-parts-picture-cue" projection={story-time} at={copy.story.moment.parts-picture}/>
+  <semantic:Instant id="moment-parts-color-cue" projection={story-time} at={copy.story.moment.parts-color}/>
+  <semantic:Instant id="segment-semantic-time-start" projection={story-time} at={copy.story.segment.semantic-time} boundary="start"/>
+  <semantic:Instant id="segment-semantic-demo-end" projection={story-time} at={copy.story.segment.semantic-demo} boundary="end"/>
+  <semantic:Instant id="moment-sem-bind-cue" projection={story-time} at={copy.story.moment.sem-bind}/>
+  <semantic:Instant id="moment-sem-examples-cue" projection={story-time} at={copy.story.moment.sem-examples}/>
+  <semantic:Instant id="moment-sem-rewrite-scene-cue" projection={story-time} at={copy.story.moment.sem-rewrite-scene}/>
+  <semantic:Instant id="moment-sem-rewrite-cue" projection={story-time} at={copy.story.moment.sem-rewrite}/>
+  <semantic:Instant id="moment-sem-syntax-cue" projection={story-time} at={copy.story.moment.sem-syntax}/>
+  <semantic:Instant id="segment-result-start" projection={story-time} at={copy.story.segment.result} boundary="start"/>
+  <semantic:Instant id="moment-result-upload-cue" projection={story-time} at={copy.story.moment.result-upload}/>
+  <semantic:Instant id="moment-result-compare-cue" projection={story-time} at={copy.story.moment.result-compare}/>
+  <semantic:Instant id="moment-result-brand-cue" projection={story-time} at={copy.story.moment.result-brand}/>
+  <semantic:Instant id="moment-outro-copy-cue" projection={story-time} at={copy.story.moment.outro-copy}/>
   <!-- Absolute presentation windows are named once; components only consume them. -->
-  <time:Window id="opening-title-window" timeline={program.timeline} from="start" until={story-time.moment-begin-cue}/>
-  <time:Window id="road-flag-window" timeline={program.timeline} from={story-time.moment-road-overview-cue} until={story-time.segment-timing-cost-end}/>
-  <time:Window id="closing-road-flag-window" timeline={program.timeline} from={story-time.segment-synthesis-start} until={story-time.segment-closing-start}/>
-  <time:Window id="series-timer-window" timeline={program.timeline} from={story-time.moment-begin-cue} until="end"/>
-  <time:Window id="opening-montage-window" timeline={program.timeline} from={story-time.segment-opening-end} until={story-time.segment-opening-end-plus-1-5s}/>
-  <time:Window id="montage-image-1-window" timeline={program.timeline} from={story-time.segment-opening-end-plus-0f} until={story-time.segment-opening-end-plus-5f}/>
-  <time:Window id="montage-image-2-window" timeline={program.timeline} from={story-time.segment-opening-end-plus-5f} until={story-time.segment-opening-end-plus-9f}/>
-  <time:Window id="montage-image-3-window" timeline={program.timeline} from={story-time.segment-opening-end-plus-9f} until={story-time.segment-opening-end-plus-14f}/>
-  <time:Window id="montage-image-4-window" timeline={program.timeline} from={story-time.segment-opening-end-plus-14f} until={story-time.segment-opening-end-plus-45f}/>
-  <time:Window id="host-small-from-introduction" timeline={program.timeline} from={story-time.segment-introduction-start} until="end"/>
+  <time:Window id="opening-title-window" timeline={program.timeline} from="start" until={moment-begin-cue}/>
+  <time:Window id="road-flag-window" timeline={program.timeline} from={moment-road-overview-cue} until={segment-timing-cost-end}/>
+  <time:Window id="closing-road-flag-window" timeline={program.timeline} from={segment-synthesis-start} until={segment-closing-start}/>
+  <time:Window id="series-timer-window" timeline={program.timeline} from={moment-begin-cue} until="end"/>
+  <time:Window id="opening-montage-window" timeline={program.timeline} from={segment-opening-end} until={segment-opening-end-plus-1-5s}/>
+  <time:Window id="montage-image-1-window" timeline={program.timeline} from={segment-opening-end-plus-0f} until={segment-opening-end-plus-5f}/>
+  <time:Window id="montage-image-2-window" timeline={program.timeline} from={segment-opening-end-plus-5f} until={segment-opening-end-plus-9f}/>
+  <time:Window id="montage-image-3-window" timeline={program.timeline} from={segment-opening-end-plus-9f} until={segment-opening-end-plus-14f}/>
+  <time:Window id="montage-image-4-window" timeline={program.timeline} from={segment-opening-end-plus-14f} until={segment-opening-end-plus-45f}/>
+  <time:Window id="host-small-from-introduction" timeline={program.timeline} from={segment-introduction-start} until="end"/>
   <time:Window id="opening-pullback-window" timeline={program.timeline} from="0f" until="1s"/>
-  <time:Window id="two-roads-pullback-window" timeline={program.timeline} from={story-time.segment-two-roads-start} until={story-time.segment-two-roads-start-plus-1s}/>
-  <time:Window id="host-upper-road-window" timeline={program.timeline} from={story-time.moment-road-half-cue} until={story-time.moment-road-overview-cue}/>
-  <time:Window id="host-rise-window" timeline={program.timeline} from={story-time.moment-road-half-cue} for="14f"/>
-  <time:Window id="host-small-road-window" timeline={program.timeline} from={story-time.moment-road-overview-cue} until={story-time.segment-two-roads-end}/>
-  <time:Window id="host-small-resume-window" timeline={program.timeline} from={story-time.moment-resume-cue} until="end"/>
-  <time:Window id="host-resume-window" timeline={program.timeline} from={story-time.moment-resume-cue} for="18f"/>
-  <time:Window id="closing-pullback-window" timeline={program.timeline} from={story-time.segment-closing-start} until={story-time.segment-closing-start-plus-1s}/>
-  <time:Window id="host-small-outro-window" timeline={program.timeline} from={story-time.moment-outro-github-cue} until={story-time.moment-outro-bye-cue}/>
-  <time:Window id="host-hidden-result-window" timeline={program.timeline} from={story-time.moment-result-guess-cue} until={story-time.segment-reference-reveal-end}/>
-  <time:Window id="host-fade-window" timeline={program.timeline} from={story-time.segment-closing-end-minus-12f} until={story-time.segment-closing-end}/>
-  <time:Window id="host-hidden-after-closing-window" timeline={program.timeline} from={story-time.segment-closing-end} until="end"/>
-  <time:Window id="editor-journey-window" timeline={program.timeline} from={story-time.segment-two-roads-start} until={story-time.segment-keyframe-cost-end}/>
-  <time:Window id="code-journey-window" timeline={program.timeline} from={story-time.segment-code-road-start} until={story-time.segment-synthesis-end}/>
-  <time:Window id="semantic-workshop-window" timeline={program.timeline} from={story-time.segment-semantic-time-start} until={story-time.segment-semantic-demo-end}/>
-  <time:Window id="delivery-workshop-window" timeline={program.timeline} from={story-time.segment-result-start} until={story-time.segment-reference-reveal-end}/>
-  <time:Window id="outro-scene-window" timeline={program.timeline} from={story-time.segment-closing-start} until="end"/>
-  <time:Window id="sfx-intro-codex-window" timeline={program.timeline} from={story-time.moment-intro-codex-cue} for="0.24s"/>
-  <time:Window id="sfx-intro-claude-window" timeline={program.timeline} from={story-time.moment-intro-claude-cue} for="0.24s"/>
-  <time:Window id="sfx-intro-examples-window" timeline={program.timeline} from={story-time.moment-intro-examples-cue} for="0.36s"/>
-  <time:Window id="sfx-intro-face-window" timeline={program.timeline} from={story-time.moment-intro-face-cue} for="0.48s"/>
-  <time:Window id="sfx-competitor-monthly-window" timeline={program.timeline} from={story-time.moment-competitor-monthly-cue} for="0.12s"/>
-  <time:Window id="sfx-competitor-watermark-window" timeline={program.timeline} from={story-time.moment-competitor-watermark-cue} for="0.65s"/>
-  <time:Window id="sfx-roads-window" timeline={program.timeline} from={story-time.moment-roads-cue} for="0.26s"/>
-  <time:Window id="sfx-road-assets-window" timeline={program.timeline} from={story-time.moment-road-assets-cue} for="0.24s"/>
-  <time:Window id="sfx-road-drag-window" timeline={program.timeline} from={story-time.moment-road-drag-cue} for="0.12s"/>
-  <time:Window id="sfx-road-fail-window" timeline={program.timeline} from={story-time.moment-road-fail-cue} for="0.4s"/>
-  <time:Window id="sfx-road-number-window" timeline={program.timeline} from={story-time.moment-road-number-cue} for="0.24s"/>
-  <time:Window id="sfx-road-image-window" timeline={program.timeline} from={story-time.moment-road-image-cue} for="0.36s"/>
-  <time:Window id="sfx-road-keys-window" timeline={program.timeline} from={story-time.moment-road-keys-cue} for="0.65s"/>
-  <time:Window id="sfx-road-tokens-window" timeline={program.timeline} from={story-time.moment-road-tokens-cue} for="0.65s"/>
-  <time:Window id="sfx-code-play-window" timeline={program.timeline} from={story-time.moment-code-play-cue} for="0.24s"/>
-  <time:Window id="sfx-code-duplicate-window" timeline={program.timeline} from={story-time.moment-code-duplicate-cue} for="0.65s"/>
-  <time:Window id="sfx-solution-keep-window" timeline={program.timeline} from={story-time.moment-solution-keep-cue} for="0.48s"/>
-  <time:Window id="sfx-solution-drop-window" timeline={program.timeline} from={story-time.moment-solution-drop-cue} for="0.36s"/>
-  <time:Window id="sfx-part-caption-window" timeline={program.timeline} from={story-time.moment-part-caption-cue} for="0.12s"/>
-  <time:Window id="sfx-part-ranking-window" timeline={program.timeline} from={story-time.moment-part-ranking-cue} for="0.12s"/>
-  <time:Window id="sfx-part-chart-window" timeline={program.timeline} from={story-time.moment-part-chart-cue} for="0.12s"/>
-  <time:Window id="sfx-part-card-window" timeline={program.timeline} from={story-time.moment-part-card-cue} for="0.12s"/>
-  <time:Window id="sfx-parts-library-window" timeline={program.timeline} from={story-time.moment-parts-library-cue} for="0.26s"/>
-  <time:Window id="sfx-parts-reuse-window" timeline={program.timeline} from={story-time.moment-parts-reuse-cue} for="0.48s"/>
-  <time:Window id="sfx-parts-swap-window" timeline={program.timeline} from={story-time.moment-parts-swap-cue} for="0.36s"/>
-  <time:Window id="sfx-rank-reveal-window" timeline={program.timeline} from={story-time.moment-rank-reveal-cue} for="0.26s"/>
-  <time:Window id="sfx-product-reveal-window" timeline={program.timeline} from={story-time.moment-product-reveal-cue} for="0.24s"/>
-  <time:Window id="sfx-sem-voice-window" timeline={program.timeline} from={story-time.moment-sem-voice-cue} for="0.12s"/>
-  <time:Window id="sfx-sem-adapt-window" timeline={program.timeline} from={story-time.moment-sem-adapt-cue} for="0.48s"/>
-  <time:Window id="sfx-result-assets-window" timeline={program.timeline} from={story-time.moment-result-assets-cue} for="0.72s"/>
-  <time:Window id="sfx-result-meta-window" timeline={program.timeline} from={story-time.moment-result-meta-cue} for="0.36s"/>
-  <time:Window id="sfx-outro-install-window" timeline={program.timeline} from={story-time.moment-outro-install-cue} for="0.12s"/>
-  <time:Window id="sfx-outro-gift-window" timeline={program.timeline} from={story-time.moment-outro-gift-cue} for="0.48s"/>
-  <time:Window id="sfx-outro-bye-window" timeline={program.timeline} from={story-time.moment-outro-bye-cue} for="0.72s"/>
-  <time:Window id="sfx-montage-1-window" timeline={program.timeline} from={story-time.segment-opening-end-plus-0f} until={story-time.segment-opening-end-plus-4f}/>
-  <time:Window id="sfx-montage-2-window" timeline={program.timeline} from={story-time.segment-opening-end-plus-5f} until={story-time.segment-opening-end-plus-9f}/>
-  <time:Window id="sfx-montage-3-window" timeline={program.timeline} from={story-time.segment-opening-end-plus-9f} until={story-time.segment-opening-end-plus-13f}/>
-  <time:Window id="sfx-montage-4-window" timeline={program.timeline} from={story-time.segment-opening-end-plus-14f} until={story-time.segment-opening-end-plus-28f}/>
+  <time:Window id="two-roads-pullback-window" timeline={program.timeline} from={segment-two-roads-start} until={segment-two-roads-start-plus-1s}/>
+  <time:Window id="host-upper-road-window" timeline={program.timeline} from={moment-road-half-cue} until={moment-road-overview-cue}/>
+  <time:Window id="host-rise-window" timeline={program.timeline} from={moment-road-half-cue} for="14f"/>
+  <time:Window id="host-small-road-window" timeline={program.timeline} from={moment-road-overview-cue} until={segment-two-roads-end}/>
+  <time:Window id="host-small-resume-window" timeline={program.timeline} from={moment-resume-cue} until="end"/>
+  <time:Window id="host-resume-window" timeline={program.timeline} from={moment-resume-cue} for="18f"/>
+  <time:Window id="closing-pullback-window" timeline={program.timeline} from={segment-closing-start} until={segment-closing-start-plus-1s}/>
+  <time:Window id="host-small-outro-window" timeline={program.timeline} from={moment-outro-github-cue} until={moment-outro-bye-cue}/>
+  <time:Window id="host-hidden-result-window" timeline={program.timeline} from={moment-result-guess-cue} until={segment-reference-reveal-end}/>
+  <time:Window id="host-fade-window" timeline={program.timeline} from={segment-closing-end-minus-12f} until={segment-closing-end}/>
+  <time:Window id="host-hidden-after-closing-window" timeline={program.timeline} from={segment-closing-end} until="end"/>
+  <time:Window id="editor-journey-window" timeline={program.timeline} from={segment-two-roads-start} until={segment-keyframe-cost-end}/>
+  <time:Window id="code-journey-window" timeline={program.timeline} from={segment-code-road-start} until={segment-synthesis-end}/>
+  <time:Window id="semantic-workshop-window" timeline={program.timeline} from={segment-semantic-time-start} until={segment-semantic-demo-end}/>
+  <time:Window id="delivery-workshop-window" timeline={program.timeline} from={segment-result-start} until={segment-reference-reveal-end}/>
+  <time:Window id="outro-scene-window" timeline={program.timeline} from={segment-closing-start} until="end"/>
+  <time:Window id="sfx-intro-codex-window" timeline={program.timeline} from={moment-intro-codex-cue} for="0.24s"/>
+  <time:Window id="sfx-intro-claude-window" timeline={program.timeline} from={moment-intro-claude-cue} for="0.24s"/>
+  <time:Window id="sfx-intro-examples-window" timeline={program.timeline} from={moment-intro-examples-cue} for="0.36s"/>
+  <time:Window id="sfx-intro-face-window" timeline={program.timeline} from={moment-intro-face-cue} for="0.48s"/>
+  <time:Window id="sfx-competitor-monthly-window" timeline={program.timeline} from={moment-competitor-monthly-cue} for="0.12s"/>
+  <time:Window id="sfx-competitor-watermark-window" timeline={program.timeline} from={moment-competitor-watermark-cue} for="0.65s"/>
+  <time:Window id="sfx-roads-window" timeline={program.timeline} from={moment-roads-cue} for="0.26s"/>
+  <time:Window id="sfx-road-assets-window" timeline={program.timeline} from={moment-road-assets-cue} for="0.24s"/>
+  <time:Window id="sfx-road-drag-window" timeline={program.timeline} from={moment-road-drag-cue} for="0.12s"/>
+  <time:Window id="sfx-road-fail-window" timeline={program.timeline} from={moment-road-fail-cue} for="0.4s"/>
+  <time:Window id="sfx-road-number-window" timeline={program.timeline} from={moment-road-number-cue} for="0.24s"/>
+  <time:Window id="sfx-road-image-window" timeline={program.timeline} from={moment-road-image-cue} for="0.36s"/>
+  <time:Window id="sfx-road-keys-window" timeline={program.timeline} from={moment-road-keys-cue} for="0.65s"/>
+  <time:Window id="sfx-road-tokens-window" timeline={program.timeline} from={moment-road-tokens-cue} for="0.65s"/>
+  <time:Window id="sfx-code-play-window" timeline={program.timeline} from={moment-code-play-cue} for="0.24s"/>
+  <time:Window id="sfx-code-duplicate-window" timeline={program.timeline} from={moment-code-duplicate-cue} for="0.65s"/>
+  <time:Window id="sfx-solution-keep-window" timeline={program.timeline} from={moment-solution-keep-cue} for="0.48s"/>
+  <time:Window id="sfx-solution-drop-window" timeline={program.timeline} from={moment-solution-drop-cue} for="0.36s"/>
+  <time:Window id="sfx-part-caption-window" timeline={program.timeline} from={moment-part-caption-cue} for="0.12s"/>
+  <time:Window id="sfx-part-ranking-window" timeline={program.timeline} from={moment-part-ranking-cue} for="0.12s"/>
+  <time:Window id="sfx-part-chart-window" timeline={program.timeline} from={moment-part-chart-cue} for="0.12s"/>
+  <time:Window id="sfx-part-card-window" timeline={program.timeline} from={moment-part-card-cue} for="0.12s"/>
+  <time:Window id="sfx-parts-library-window" timeline={program.timeline} from={moment-parts-library-cue} for="0.26s"/>
+  <time:Window id="sfx-parts-reuse-window" timeline={program.timeline} from={moment-parts-reuse-cue} for="0.48s"/>
+  <time:Window id="sfx-parts-swap-window" timeline={program.timeline} from={moment-parts-swap-cue} for="0.36s"/>
+  <time:Window id="sfx-rank-reveal-window" timeline={program.timeline} from={moment-rank-reveal-cue} for="0.26s"/>
+  <time:Window id="sfx-product-reveal-window" timeline={program.timeline} from={moment-product-reveal-cue} for="0.24s"/>
+  <time:Window id="sfx-sem-voice-window" timeline={program.timeline} from={moment-sem-voice-cue} for="0.12s"/>
+  <time:Window id="sfx-sem-adapt-window" timeline={program.timeline} from={moment-sem-adapt-cue} for="0.48s"/>
+  <time:Window id="sfx-result-assets-window" timeline={program.timeline} from={moment-result-assets-cue} for="0.72s"/>
+  <time:Window id="sfx-result-meta-window" timeline={program.timeline} from={moment-result-meta-cue} for="0.36s"/>
+  <time:Window id="sfx-outro-install-window" timeline={program.timeline} from={moment-outro-install-cue} for="0.12s"/>
+  <time:Window id="sfx-outro-gift-window" timeline={program.timeline} from={moment-outro-gift-cue} for="0.48s"/>
+  <time:Window id="sfx-outro-bye-window" timeline={program.timeline} from={moment-outro-bye-cue} for="0.72s"/>
+  <time:Window id="sfx-montage-1-window" timeline={program.timeline} from={segment-opening-end-plus-0f} until={segment-opening-end-plus-4f}/>
+  <time:Window id="sfx-montage-2-window" timeline={program.timeline} from={segment-opening-end-plus-5f} until={segment-opening-end-plus-9f}/>
+  <time:Window id="sfx-montage-3-window" timeline={program.timeline} from={segment-opening-end-plus-9f} until={segment-opening-end-plus-13f}/>
+  <time:Window id="sfx-montage-4-window" timeline={program.timeline} from={segment-opening-end-plus-14f} until={segment-opening-end-plus-28f}/>
   <narrative-caption:Timing id="caption-timing" document={copy.story.caption}
-    binding={copy.story.caption-binding} projection={story-time.projection}/>
+    binding={copy.story.caption-binding} projection={story-time}/>
   <mediaop:Normalize id="ranking-clone-media" source={assets.ranking-clone} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
   <mediaop:Normalize id="swap-virtual-media" source={assets.swap-virtual} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
   <mediaop:Normalize id="swap-language-media" source={assets.swap-language} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
@@ -401,10 +413,10 @@
   <mediaop:Normalize id="swap-vehicle-media" source={assets.swap-vehicle} clock={assets.clock} video="primary-moving" audio="none" span-authority="video"/>
 
   <!-- Opening chrome and independent montage -->
-  <gfx:Title id="opening-title" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={opening-title-window} bounce-at={story-time.moment-opening-brand-cue} color="#fa67aa" title-y="0.58" title="Qflow" subtitle="一分钟了解" seconds="60"/>
+  <gfx:Title id="opening-title" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={opening-title-window} bounce-at={moment-opening-brand-cue} color="#fa67aa" title-y="0.58" title="Qflow" subtitle="一分钟了解" seconds="60"/>
   <gfx:Flag id="road-flag" x="0.035" width="0.93" height="0.21" y="0.752" timeline={program.timeline} within={assets.canvas.bounds} logo={assets.flag-logo} during={road-flag-window}/>
   <gfx:Flag id="closing-road-flag" x="0.035" width="0.93" height="0.21" y="0.752" timeline={program.timeline} within={assets.canvas.bounds} logo={assets.flag-logo} during={closing-road-flag-window}/>
-  <gfx:Timer flag-amplitude="0.06" logo={assets.flag-logo} id="series-timer" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={series-timer-window} stop-at={story-time.moment-outro-overtime-cue} flag-color="#fa67aa" title="Qflow" subtitle="VIDEO FRAMEWORK" seconds="60"/>
+  <gfx:Timer flag-amplitude="0.06" logo={assets.flag-logo} id="series-timer" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={series-timer-window} stop-at={moment-outro-overtime-cue} flag-color="#fa67aa" title="Qflow" subtitle="VIDEO FRAMEWORK" seconds="60"/>
   <gfx:Stage id="opening-montage" push-rate="0.025" timeline={program.timeline} within={assets.canvas.bounds} during={opening-montage-window}>
     <gfx:Item id="image-1" image={assets.montage-1} during={montage-image-1-window}/>
     <gfx:Item id="image-2" image={assets.montage-2} during={montage-image-2-window}/>
@@ -443,20 +455,20 @@
     <gfx:Source id="reference-reveal-source" media={reference-reveal-media.media} window={program.reference-reveal}/>
     <gfx:Source id="closing-source" media={closing-media.media} window={program.closing}/>
     <gfx:Use style={host-small} during={host-small-from-introduction}/>
-    <gfx:Use during={story-time.segment-opening} style={host-full}/>
+    <gfx:Use during={segment-opening} style={host-full}/>
     <gfx:Use during={opening-pullback-window} style={opening-pullback}/>
-    <gfx:Use during={story-time.segment-two-roads} style={host-full}/>
+    <gfx:Use during={segment-two-roads} style={host-full}/>
     <gfx:Use during={two-roads-pullback-window} style={opening-pullback}/>
     <gfx:Use during={host-upper-road-window} style={host-upper}/>
     <gfx:Use during={host-rise-window} style={host-rise}/>
     <gfx:Use during={host-small-road-window} style={host-small}/>
-    <gfx:Use during={story-time.segment-water-break} style={host-full}/>
+    <gfx:Use during={segment-water-break} style={host-full}/>
     <gfx:Use during={host-small-resume-window} style={host-small}/>
     <gfx:Use during={host-resume-window} style={host-resume}/>
-    <gfx:Use during={story-time.segment-closing} style={host-full}/>
+    <gfx:Use during={segment-closing} style={host-full}/>
     <gfx:Use during={closing-pullback-window} style={opening-pullback}/>
     <gfx:Use during={host-small-outro-window} style={host-small}/>
-    <gfx:Use during={story-time.segment-timing-cost} style={host-hidden}/>
+    <gfx:Use during={segment-timing-cost} style={host-hidden}/>
     <gfx:Use during={host-hidden-result-window} style={host-hidden}/>
     <gfx:Use during={host-fade-window} style={host-fade}/>
     <gfx:Use during={host-hidden-after-closing-window} style={host-hidden}/>
@@ -539,111 +551,111 @@
   <linecaption:Caption id="captions" timeline={program.timeline}
     document={copy.story.caption} timing={caption-timing} within={assets.canvas.bounds}>
     <linecaption:Use style={caption-base}/>
-    <linecaption:Use during={story-time.segment-opening} style={hidden-captions}/>
+    <linecaption:Use during={segment-opening} style={hidden-captions}/>
   </linecaption:Caption>
   <launch:PosterTitle id="montage-label" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={montage-image-4-window} text="Qflow" subtitle="复刻任何爆款视频" y="0.165" size="180" subtitle-size="46" subtitle-gap="35"/>
 
   <!-- Coordinated scenes: supplied media plus semantic events -->
-  <webscene:Introduction id="intro-scene" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={story-time.segment-introduction} page={web-qflow-media.media} code={code-demo-media.media} readme={readme-demo-media.media} codex={assets.icon-codex} claude={assets.icon-claude} reference-ranking={reference-ranking-media.media} reference-podcast={reference-podcast-media.media} reference-interview={reference-interview-media.media} qflow-ranking={qflow-ranking-media.media} qflow-podcast={qflow-podcast-media.media} qflow-interview={qflow-interview-media.media}>
-    <webscene:Beat name="language" at={story-time.moment-intro-language-cue}/>
-    <webscene:Beat name="install" at={story-time.moment-intro-install-cue}/>
-    <webscene:Beat name="codex" at={story-time.moment-intro-codex-cue}/>
-    <webscene:Beat name="claude" at={story-time.moment-intro-claude-cue}/>
-    <webscene:Beat name="examples" at={story-time.moment-intro-examples-cue}/>
-    <webscene:Beat name="thirty" at={story-time.moment-intro-thirty-cue}/>
-    <webscene:Beat name="face" at={story-time.moment-intro-face-cue}/>
-    <webscene:Beat name="product" at={story-time.moment-intro-product-cue}/>
+  <webscene:Introduction id="intro-scene" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={segment-introduction} page={web-qflow-media.media} code={code-demo-media.media} readme={readme-demo-media.media} codex={assets.icon-codex} claude={assets.icon-claude} reference-ranking={reference-ranking-media.media} reference-podcast={reference-podcast-media.media} reference-interview={reference-interview-media.media} qflow-ranking={qflow-ranking-media.media} qflow-podcast={qflow-podcast-media.media} qflow-interview={qflow-interview-media.media}>
+    <webscene:Beat name="language" at={moment-intro-language-cue}/>
+    <webscene:Beat name="install" at={moment-intro-install-cue}/>
+    <webscene:Beat name="codex" at={moment-intro-codex-cue}/>
+    <webscene:Beat name="claude" at={moment-intro-claude-cue}/>
+    <webscene:Beat name="examples" at={moment-intro-examples-cue}/>
+    <webscene:Beat name="thirty" at={moment-intro-thirty-cue}/>
+    <webscene:Beat name="face" at={moment-intro-face-cue}/>
+    <webscene:Beat name="product" at={moment-intro-product-cue}/>
   </webscene:Introduction>
-  <webscene:Comparison id="competitor-scene" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={story-time.segment-competitors} left={web-creatify-media.media} right={web-higgsfield-media.media} price-a={price-creatify-media.media} price-b={price-higgsfield-media.media} templates-a={templates-creatify-media.media} templates-b={templates-higgsfield-media.media} case-a={case-creatify-media.media} case-b={case-higgsfield-media.media} logo-a={assets.logo-creatify} logo-b={assets.logo-higgsfield}>
-    <webscene:Beat name="other" at={story-time.moment-competitor-other-cue}/>
-    <webscene:Beat name="monthly" at={story-time.moment-competitor-monthly-cue}/>
-    <webscene:Beat name="templates" at={story-time.moment-competitor-templates-cue}/>
-    <webscene:Beat name="cases" at={story-time.moment-competitor-cases-cue}/>
-    <webscene:Beat name="watermark" at={story-time.moment-competitor-watermark-cue}/>
+  <webscene:Comparison id="competitor-scene" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={segment-competitors} left={web-creatify-media.media} right={web-higgsfield-media.media} price-a={price-creatify-media.media} price-b={price-higgsfield-media.media} templates-a={templates-creatify-media.media} templates-b={templates-higgsfield-media.media} case-a={case-creatify-media.media} case-b={case-higgsfield-media.media} logo-a={assets.logo-creatify} logo-b={assets.logo-higgsfield}>
+    <webscene:Beat name="other" at={moment-competitor-other-cue}/>
+    <webscene:Beat name="monthly" at={moment-competitor-monthly-cue}/>
+    <webscene:Beat name="templates" at={moment-competitor-templates-cue}/>
+    <webscene:Beat name="cases" at={moment-competitor-cases-cue}/>
+    <webscene:Beat name="watermark" at={moment-competitor-watermark-cue}/>
   </webscene:Comparison>
   <webscene:Road id="editor-journey" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={editor-journey-window} page={web-qflow-media.media} sample={case-higgsfield-media.media} codex={assets.icon-codex} capcut={assets.icon-capcut} premiere={assets.icon-premiere} resolve={assets.icon-resolve} logo={assets.road-logo} portrait={assets.presenter-reference} thumb-a={assets.gallery-ranking} thumb-b={assets.gallery-podcast} thumb-c={assets.gallery-interview} thumb-d={assets.gallery-original-ranking} thumb-e={assets.gallery-original-interview} thumb-f={assets.gallery-homepage} thumb-g={assets.gallery-code}>
-    <webscene:Beat name="half" at={story-time.moment-road-half-cue}/>
-    <webscene:Beat name="overview" at={story-time.moment-road-overview-cue}/>
-    <webscene:Beat name="editor" at={story-time.moment-road-editor-cue}/>
-    <webscene:Beat name="operate" at={story-time.moment-road-operate-cue}/>
-    <webscene:Beat name="capcut" at={story-time.moment-road-capcut-cue}/>
-    <webscene:Beat name="premiere" at={story-time.moment-road-premiere-cue}/>
-    <webscene:Beat name="resolve" at={story-time.moment-road-resolve-cue}/>
-    <webscene:Beat name="same" at={story-time.moment-road-same-cue}/>
-    <webscene:Beat name="assets" at={story-time.moment-road-assets-cue}/>
-    <webscene:Beat name="drag" at={story-time.moment-road-drag-cue}/>
-    <webscene:Beat name="place" at={story-time.moment-road-place-cue}/>
-    <webscene:Beat name="fail" at={story-time.moment-road-fail-cue}/>
-    <webscene:Beat name="number" at={story-time.moment-road-number-cue}/>
-    <webscene:Beat name="image" at={story-time.moment-road-image-cue}/>
-    <webscene:Beat name="keys" at={story-time.moment-road-keys-cue}/>
-    <webscene:Beat name="tokens" at={story-time.moment-road-tokens-cue}/>
-    <webscene:Beat name="generated" at={story-time.moment-road-generated-cue}/>
-    <webscene:Beat name="unstable" at={story-time.moment-road-unstable-cue}/>
-    <webscene:Beat name="styles" at={story-time.moment-road-styles-cue}/>
+    <webscene:Beat name="half" at={moment-road-half-cue}/>
+    <webscene:Beat name="overview" at={moment-road-overview-cue}/>
+    <webscene:Beat name="editor" at={moment-road-editor-cue}/>
+    <webscene:Beat name="operate" at={moment-road-operate-cue}/>
+    <webscene:Beat name="capcut" at={moment-road-capcut-cue}/>
+    <webscene:Beat name="premiere" at={moment-road-premiere-cue}/>
+    <webscene:Beat name="resolve" at={moment-road-resolve-cue}/>
+    <webscene:Beat name="same" at={moment-road-same-cue}/>
+    <webscene:Beat name="assets" at={moment-road-assets-cue}/>
+    <webscene:Beat name="drag" at={moment-road-drag-cue}/>
+    <webscene:Beat name="place" at={moment-road-place-cue}/>
+    <webscene:Beat name="fail" at={moment-road-fail-cue}/>
+    <webscene:Beat name="number" at={moment-road-number-cue}/>
+    <webscene:Beat name="image" at={moment-road-image-cue}/>
+    <webscene:Beat name="keys" at={moment-road-keys-cue}/>
+    <webscene:Beat name="tokens" at={moment-road-tokens-cue}/>
+    <webscene:Beat name="generated" at={moment-road-generated-cue}/>
+    <webscene:Beat name="unstable" at={moment-road-unstable-cue}/>
+    <webscene:Beat name="styles" at={moment-road-styles-cue}/>
   </webscene:Road>
   <webscene:CodeJourney id="code-journey" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={code-journey-window} codex={assets.icon-codex} remotion={assets.icon-remotion} hyperframes={assets.icon-hyperframes} ranking={reference-ranking-media.media} podcast={reference-podcast-media.media} interview={reference-interview-media.media} target={qflow-ranking-media.media}>
-    <webscene:Beat name="remotion" at={story-time.moment-code-remotion-cue}/>
-    <webscene:Beat name="hyperframes" at={story-time.moment-code-hyperframes-cue}/>
-    <webscene:Beat name="html" at={story-time.moment-code-html-cue}/>
-    <webscene:Beat name="play" at={story-time.moment-code-play-cue}/>
-    <webscene:Beat name="once" at={story-time.moment-code-once-cue}/>
-    <webscene:Beat name="variant" at={story-time.moment-code-variant-cue}/>
-    <webscene:Beat name="copy" at={story-time.moment-code-copy-cue}/>
-    <webscene:Beat name="duplicate" at={story-time.moment-code-duplicate-cue}/>
-    <webscene:Beat name="tokens" at={story-time.moment-code-tokens-cue}/>
-    <webscene:Beat name="time" at={story-time.moment-code-time-cue}/>
-    <webscene:Beat name="different" at={story-time.moment-code-different-cue}/>
-    <webscene:Beat name="match" at={story-time.moment-code-match-cue}/>
-    <webscene:Beat name="retime" at={story-time.moment-code-retime-cue}/>
-    <webscene:Beat name="water" at={story-time.segment-water-break-start}/>
-    <webscene:Beat name="resume" at={story-time.moment-resume-cue}/>
-    <webscene:Beat name="solution" at={story-time.moment-solution-cue}/>
-    <webscene:Beat name="parts" at={story-time.moment-solution-roads-cue}/>
-    <webscene:Beat name="keep" at={story-time.moment-solution-keep-cue}/>
-    <webscene:Beat name="drop" at={story-time.moment-solution-drop-cue}/>
+    <webscene:Beat name="remotion" at={moment-code-remotion-cue}/>
+    <webscene:Beat name="hyperframes" at={moment-code-hyperframes-cue}/>
+    <webscene:Beat name="html" at={moment-code-html-cue}/>
+    <webscene:Beat name="play" at={moment-code-play-cue}/>
+    <webscene:Beat name="once" at={moment-code-once-cue}/>
+    <webscene:Beat name="variant" at={moment-code-variant-cue}/>
+    <webscene:Beat name="copy" at={moment-code-copy-cue}/>
+    <webscene:Beat name="duplicate" at={moment-code-duplicate-cue}/>
+    <webscene:Beat name="tokens" at={moment-code-tokens-cue}/>
+    <webscene:Beat name="time" at={moment-code-time-cue}/>
+    <webscene:Beat name="different" at={moment-code-different-cue}/>
+    <webscene:Beat name="match" at={moment-code-match-cue}/>
+    <webscene:Beat name="retime" at={moment-code-retime-cue}/>
+    <webscene:Beat name="water" at={segment-water-break-start}/>
+    <webscene:Beat name="resume" at={moment-resume-cue}/>
+    <webscene:Beat name="solution" at={moment-solution-cue}/>
+    <webscene:Beat name="parts" at={moment-solution-roads-cue}/>
+    <webscene:Beat name="keep" at={moment-solution-keep-cue}/>
+    <webscene:Beat name="drop" at={moment-solution-drop-cue}/>
   </webscene:CodeJourney>
-  <webscene:ComponentWorkshop id="component-workshop" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={story-time.segment-components} v0={ranking-clone-media.media} v1={swap-virtual-media.media} v2={swap-language-media.media} v3={swap-topic-media.media} v4={swap-product-media.media} v5={swap-vehicle-media.media}>
-    <webscene:Beat name="all" at={story-time.moment-parts-all-cue}/>
-    <webscene:Beat name="caption" at={story-time.moment-part-caption-cue}/>
-    <webscene:Beat name="ranking" at={story-time.moment-part-ranking-cue}/>
-    <webscene:Beat name="chart" at={story-time.moment-part-chart-cue}/>
-    <webscene:Beat name="card" at={story-time.moment-part-card-cue}/>
-    <webscene:Beat name="library" at={story-time.moment-parts-library-cue}/>
-    <webscene:Beat name="reuse" at={story-time.moment-parts-reuse-cue}/>
-    <webscene:Beat name="variants" at={story-time.moment-parts-word-cue}/>
-    <webscene:Beat name="word" at={story-time.moment-parts-word-cue}/>
-    <webscene:Beat name="picture" at={story-time.moment-parts-picture-cue}/>
-    <webscene:Beat name="color" at={story-time.moment-parts-color-cue}/>
-    <webscene:Beat name="swap" at={story-time.moment-parts-swap-cue}/>
+  <webscene:ComponentWorkshop id="component-workshop" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={segment-components} v0={ranking-clone-media.media} v1={swap-virtual-media.media} v2={swap-language-media.media} v3={swap-topic-media.media} v4={swap-product-media.media} v5={swap-vehicle-media.media}>
+    <webscene:Beat name="all" at={moment-parts-all-cue}/>
+    <webscene:Beat name="caption" at={moment-part-caption-cue}/>
+    <webscene:Beat name="ranking" at={moment-part-ranking-cue}/>
+    <webscene:Beat name="chart" at={moment-part-chart-cue}/>
+    <webscene:Beat name="card" at={moment-part-card-cue}/>
+    <webscene:Beat name="library" at={moment-parts-library-cue}/>
+    <webscene:Beat name="reuse" at={moment-parts-reuse-cue}/>
+    <webscene:Beat name="variants" at={moment-parts-word-cue}/>
+    <webscene:Beat name="word" at={moment-parts-word-cue}/>
+    <webscene:Beat name="picture" at={moment-parts-picture-cue}/>
+    <webscene:Beat name="color" at={moment-parts-color-cue}/>
+    <webscene:Beat name="swap" at={moment-parts-swap-cue}/>
   </webscene:ComponentWorkshop>
   <webscene:SemanticWorkshop id="semantic-workshop" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} creatify={assets.ranking-creatify} higgsfield={assets.ranking-higgsfield} during={semantic-workshop-window}>
-    <webscene:Beat name="bind" at={story-time.moment-sem-bind-cue}/>
-    <webscene:Beat name="examples" at={story-time.moment-sem-examples-cue}/>
-    <webscene:Beat name="rank" at={story-time.moment-rank-reveal-cue}/>
-    <webscene:Beat name="product" at={story-time.moment-product-reveal-cue}/>
-    <webscene:Beat name="rewrite-scene" at={story-time.moment-sem-rewrite-scene-cue}/>
-    <webscene:Beat name="rewrite" at={story-time.moment-sem-rewrite-cue}/>
-    <webscene:Beat name="voice" at={story-time.moment-sem-voice-cue}/>
-    <webscene:Beat name="adapt" at={story-time.moment-sem-adapt-cue}/>
-    <webscene:Beat name="syntax" at={story-time.moment-sem-syntax-cue}/>
+    <webscene:Beat name="bind" at={moment-sem-bind-cue}/>
+    <webscene:Beat name="examples" at={moment-sem-examples-cue}/>
+    <webscene:Beat name="rank" at={moment-rank-reveal-cue}/>
+    <webscene:Beat name="product" at={moment-product-reveal-cue}/>
+    <webscene:Beat name="rewrite-scene" at={moment-sem-rewrite-scene-cue}/>
+    <webscene:Beat name="rewrite" at={moment-sem-rewrite-cue}/>
+    <webscene:Beat name="voice" at={moment-sem-voice-cue}/>
+    <webscene:Beat name="adapt" at={moment-sem-adapt-cue}/>
+    <webscene:Beat name="syntax" at={moment-sem-syntax-cue}/>
   </webscene:SemanticWorkshop>
   <webscene:DeliveryWorkshop id="delivery-workshop" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={delivery-workshop-window} film={qflow-ranking-media.media} clone={ranking-clone-media.media} water={water-break-media.media} reference={assets.reference-drink-illustration} host={assets.ranking-host} thumb1={assets.ranking-icon} thumb2={assets.ranking-creatify} thumb3={assets.ranking-higgsfield}>
-    <webscene:Beat name="assets" at={story-time.moment-result-assets-cue}/>
-    <webscene:Beat name="upload" at={story-time.moment-result-upload-cue}/>
-    <webscene:Beat name="compare" at={story-time.moment-result-compare-cue}/>
-    <webscene:Beat name="meta" at={story-time.moment-result-meta-cue}/>
-    <webscene:Beat name="brand" at={story-time.moment-result-brand-cue}/>
-    <webscene:Beat name="guess" at={story-time.moment-result-guess-cue}/>
+    <webscene:Beat name="assets" at={moment-result-assets-cue}/>
+    <webscene:Beat name="upload" at={moment-result-upload-cue}/>
+    <webscene:Beat name="compare" at={moment-result-compare-cue}/>
+    <webscene:Beat name="meta" at={moment-result-meta-cue}/>
+    <webscene:Beat name="brand" at={moment-result-brand-cue}/>
+    <webscene:Beat name="guess" at={moment-result-guess-cue}/>
   </webscene:DeliveryWorkshop>
   <webscene:Outro id="outro-scene" timeline={program.timeline} within={assets.canvas.bounds} font={assets.display-font} during={outro-scene-window} page={readme-demo-media.media} codex={assets.icon-codex} portraits-0={assets.portraits-0} portraits-1={assets.portraits-1} portraits-2={assets.portraits-2} portraits-3={assets.portraits-3} portraits-4={assets.portraits-4}>
-    <webscene:Beat name="overtime" at={story-time.moment-outro-overtime-cue}/>
-    <webscene:Beat name="github" at={story-time.moment-outro-github-cue}/>
-    <webscene:Beat name="copy" at={story-time.moment-outro-copy-cue}/>
-    <webscene:Beat name="install" at={story-time.moment-outro-install-cue}/>
-    <webscene:Beat name="gift" at={story-time.moment-outro-gift-cue}/>
-    <webscene:Beat name="bye" at={story-time.moment-outro-bye-cue}/>
-    <webscene:Beat name="end" at={story-time.segment-closing-end}/>
+    <webscene:Beat name="overtime" at={moment-outro-overtime-cue}/>
+    <webscene:Beat name="github" at={moment-outro-github-cue}/>
+    <webscene:Beat name="copy" at={moment-outro-copy-cue}/>
+    <webscene:Beat name="install" at={moment-outro-install-cue}/>
+    <webscene:Beat name="gift" at={moment-outro-gift-cue}/>
+    <webscene:Beat name="bye" at={moment-outro-bye-cue}/>
+    <webscene:Beat name="end" at={segment-closing-end}/>
   </webscene:Outro>
 
   <!-- Final assembly: contributions and render targets -->

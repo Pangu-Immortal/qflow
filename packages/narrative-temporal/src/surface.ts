@@ -2,14 +2,11 @@ import { sealGraphFragment } from "@qflow/author";
 import type { FragmentOperation, GraphFragment } from "@qflow/author";
 import {
   assertAttributes, assertEmptyElement, localName, textAttribute,
-  type StructuredElement, type StructuredSurfaceHandler, type SurfaceComponentDraft,
-  type SurfaceRecordDraft, type SurfaceResolvedReference,
+  type StructuredElement, type StructuredSurfaceHandler, type SurfaceResolvedReference,
 } from "@qflow/markup";
 import { narrativeTypes } from "@qflow/narrative";
 import { canonicalize, sameType, type TypeRef } from "@qflow/protocol";
 import { temporalProducers, temporalTypes } from "@qflow/temporal";
-import type { TemporalDuration } from "@qflow/temporal";
-import { parseTemporalDuration } from "@qflow/temporal/markup";
 import { timelineTypes } from "@qflow/timeline";
 
 import { narrativeTemporalProducers, narrativeTemporalTypes } from "./manifest.js";
@@ -17,13 +14,34 @@ import { narrativeTemporalProducers, narrativeTemporalTypes } from "./manifest.j
 const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });
 
-function reference(path: unknown, subject: string, type: TypeRef,
+function rawReference(path: unknown, subject: string,
   resolve: (path: string) => SurfaceResolvedReference | undefined): SurfaceResolvedReference {
   if (typeof path !== "object" || path === null || !("kind" in path) || path.kind !== "reference" || !("path" in path)
     || typeof path.path !== "string") throw new Error(`${subject} must be a reference.`);
   const found = resolve(path.path);
-  if (found === undefined || !sameType(found.type, type)) throw new Error(`${subject} has the wrong Type.`);
+  if (found === undefined) throw new Error(`${subject} is unresolved.`);
   return found;
+}
+
+function reference(path: unknown, subject: string, type: TypeRef,
+  resolve: (path: string) => SurfaceResolvedReference | undefined): SurfaceResolvedReference {
+  const found = rawReference(path, subject, resolve);
+  if (!sameType(found.type, type)) throw new Error(`${subject} has the wrong Type.`);
+  return found;
+}
+
+type NarrativeSource = {
+  readonly kind: "selection" | "segment" | "moment";
+  readonly reference: SurfaceResolvedReference;
+};
+
+function narrativeSource(element: StructuredElement, attribute: "at" | "during",
+  resolve: (path: string) => SurfaceResolvedReference | undefined): NarrativeSource {
+  const found = rawReference(element.attributes[attribute], `${element.name}.${attribute}`, resolve);
+  if (sameType(found.type, narrativeTypes.selection)) return { kind: "selection", reference: found };
+  if (sameType(found.type, narrativeTypes.segmentRef)) return { kind: "segment", reference: found };
+  if (sameType(found.type, narrativeTypes.moment)) return { kind: "moment", reference: found };
+  throw new Error(`${element.name}.${attribute} has the wrong Type.`);
 }
 
 type ProjectionMap = {
@@ -31,85 +49,33 @@ type ProjectionMap = {
   readonly domain: SurfaceResolvedReference;
   readonly window: SurfaceResolvedReference;
 };
-type ProjectionOutput = { readonly element: StructuredElement; readonly id: string; readonly kind: "instant" | "window";
-  readonly sourceKind: "selection" | "segment" | "moment"; readonly source: SurfaceResolvedReference;
-  readonly boundary?: "start" | "end"; readonly offset?: TemporalDuration };
 
-function offset(element: StructuredElement): TemporalDuration | undefined {
-  const raw = element.attributes.offset;
-  if (raw === undefined) return undefined;
-  if (typeof raw !== "string" || !/^[+-]?\d+(?:\.\d+)?(?:f|ms|s)$/u.test(raw.trim())) {
-    throw new Error(`${element.name}.offset must be an exact signed duration.`);
-  }
-  const value = raw.trim(), negative = value.startsWith("-");
-  const parsed = parseTemporalDuration(value.replace(/^[+-]/u, ""), `${element.name}.offset`);
-  if (!negative) return parsed;
-  return parsed.unit === "seconds" ? { ...parsed, numerator: -parsed.numerator } : { ...parsed, value: -parsed.value };
-}
-
-function projectionOutput(element: StructuredElement,
-  resolveReference: (path: string) => SurfaceResolvedReference | undefined): ProjectionOutput {
-  const tag = localName(element.name);
-  if (tag === "Window") {
-    assertAttributes(element, ["id", "selection", "segment"], ["id"]); assertEmptyElement(element);
-    const selection = element.attributes.selection, segment = element.attributes.segment;
-    if (Number(selection !== undefined) + Number(segment !== undefined) !== 1) {
-      throw new Error(`${element.name} requires exactly one of selection or segment.`);
-    }
-    return selection !== undefined
-      ? { element, id: textAttribute(element, "id"), kind: "window", sourceKind: "selection",
-          source: reference(selection, `${element.name}.selection`, narrativeTypes.selection, resolveReference) }
-      : { element, id: textAttribute(element, "id"), kind: "window", sourceKind: "segment",
-          source: reference(segment, `${element.name}.segment`, narrativeTypes.segmentRef, resolveReference) };
-  }
-  if (tag !== "Instant") throw new Error(`Projection accepts Map, Window and Instant children only.`);
-  assertAttributes(element, ["id", "selection", "segment", "moment", "boundary", "offset"], ["id"]); assertEmptyElement(element);
-  const sources = ["selection", "segment", "moment"].filter((name) => element.attributes[name] !== undefined);
-  if (sources.length !== 1) throw new Error(`${element.name} requires exactly one of selection, segment or moment.`);
-  const sourceKind = sources[0] as "selection" | "segment" | "moment";
-  const sourceType = sourceKind === "selection" ? narrativeTypes.selection
-    : sourceKind === "segment" ? narrativeTypes.segmentRef : narrativeTypes.moment;
-  const boundaryRaw = element.attributes.boundary;
-  if (sourceKind === "moment") {
-    if (boundaryRaw !== undefined) throw new Error(`${element.name}.boundary is invalid for a Moment.`);
-    const projectedOffset = offset(element);
-    return { element, id: textAttribute(element, "id"), kind: "instant", sourceKind,
-      source: reference(element.attributes.moment, `${element.name}.moment`, sourceType, resolveReference),
-      ...(projectedOffset === undefined ? {} : { offset: projectedOffset }) };
-  }
-  if (boundaryRaw !== "start" && boundaryRaw !== "end") {
-    throw new Error(`${element.name}.boundary must be start or end.`);
-  }
-  const projectedOffset = offset(element);
-  return { element, id: textAttribute(element, "id"), kind: "instant", sourceKind,
-    source: reference(element.attributes[sourceKind], `${element.name}.${sourceKind}`, sourceType, resolveReference),
-    boundary: boundaryRaw, ...(projectedOffset === undefined ? {} : { offset: projectedOffset }) };
-}
-
-function projectionProducer(kind: ProjectionOutput["sourceKind"]) {
+function projectionProducer(kind: NarrativeSource["kind"]) {
   return kind === "selection" ? narrativeTemporalProducers.projectSelectionInstant
     : kind === "segment" ? narrativeTemporalProducers.projectSegmentInstant
       : narrativeTemporalProducers.projectMomentInstant;
 }
 
-function outputFragment(output: ProjectionOutput): GraphFragment {
-  const sourceType = output.sourceKind === "selection" ? narrativeTypes.selection
-    : output.sourceKind === "segment" ? narrativeTypes.segmentRef : narrativeTypes.moment;
+function sourceType(kind: NarrativeSource["kind"]): TypeRef {
+  return kind === "selection" ? narrativeTypes.selection
+    : kind === "segment" ? narrativeTypes.segmentRef : narrativeTypes.moment;
+}
+
+function outputFragment(kind: NarrativeSource["kind"], output: "instant" | "window"): GraphFragment {
   const ports: Array<{ readonly name: string; readonly type: TypeRef }> = [
-    { name: "timeline", type: timelineTypes.timeline },
     { name: "projection", type: narrativeTemporalTypes.narrativeProjection },
-    { name: "source", type: sourceType },
+    { name: "source", type: sourceType(kind) },
     { name: "start-spec", type: narrativeTemporalTypes.narrativeInstantSpec },
   ];
-  const operations: FragmentOperation[] = [{ id: "start", producer: projectionProducer(output.sourceKind), inputs: {
-    timeline: input("timeline"), projection: input("projection"), [output.sourceKind]: input("source"), spec: input("start-spec"),
+  const operations: FragmentOperation[] = [{ id: "start", producer: projectionProducer(kind), inputs: {
+    projection: input("projection"), [kind]: input("source"), spec: input("start-spec"),
   }, result: { kind: "output", name: "instant" } }];
-  if (output.kind === "instant") return sealGraphFragment({ inputs: ports, operations,
+  if (output === "instant") return sealGraphFragment({ inputs: ports, operations,
     exports: [{ name: "instant", type: temporalTypes.instant, root: operation("start") }] });
   ports.push({ name: "end-spec", type: narrativeTemporalTypes.narrativeInstantSpec },
     { name: "window-spec", type: temporalTypes.windowSpec });
-  operations.push({ id: "end", producer: projectionProducer(output.sourceKind), inputs: {
-    timeline: input("timeline"), projection: input("projection"), [output.sourceKind]: input("source"), spec: input("end-spec"),
+  operations.push({ id: "end", producer: projectionProducer(kind), inputs: {
+    projection: input("projection"), [kind]: input("source"), spec: input("end-spec"),
   }, result: { kind: "output", name: "instant" } }, {
     id: "window", producer: temporalProducers.composeWindow,
     inputs: { spec: input("window-spec"), start: operation("start"), end: operation("end") },
@@ -122,28 +88,25 @@ function outputFragment(output: ProjectionOutput): GraphFragment {
   ] });
 }
 
-/** Build one Narrative projection and the explicitly requested absolute values derived from it. */
+/** Build one reusable Narrative interpretation context. Maps are its only owned children. */
 export const decodeNarrativeProjectionSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
   assertAttributes(element, ["id", "narrative", "timeline"]);
   const id = textAttribute(element, "id");
   const narrative = reference(element.attributes.narrative, `${element.name}.narrative`, narrativeTypes.narrative, resolveReference);
   const timeline = reference(element.attributes.timeline, `${element.name}.timeline`, timelineTypes.timeline, resolveReference);
-  const maps: ProjectionMap[] = [], requested: ProjectionOutput[] = [];
-  const outputIds = new Set<string>();
+  const maps: ProjectionMap[] = [];
   for (const child of element.children) {
-    if (child.kind === "text") { if (child.value.trim()) throw new Error(`${element.name} accepts Map, Window and Instant children only.`); continue; }
-    if (localName(child.name) === "Map") {
-      assertAttributes(child, ["alignment", "domain", "window"]); assertEmptyElement(child);
-      maps.push({
-        alignment: reference(child.attributes.alignment, `${child.name}.alignment`, narrativeTemporalTypes.narrativeAlignment, resolveReference),
-        domain: reference(child.attributes.domain, `${child.name}.domain`, temporalTypes.localDomain, resolveReference),
-        window: reference(child.attributes.window, `${child.name}.window`, temporalTypes.window, resolveReference),
-      });
+    if (child.kind === "text") {
+      if (child.value.trim()) throw new Error(`${element.name} accepts Map children only.`);
       continue;
     }
-    const output = projectionOutput(child, resolveReference);
-    if (outputIds.has(output.id)) throw new Error(`${element.name} repeats output ${output.id}.`);
-    outputIds.add(output.id); requested.push(output);
+    if (localName(child.name) !== "Map") throw new Error(`${element.name} accepts Map children only.`);
+    assertAttributes(child, ["alignment", "domain", "window"]); assertEmptyElement(child);
+    maps.push({
+      alignment: reference(child.attributes.alignment, `${child.name}.alignment`, narrativeTemporalTypes.narrativeAlignment, resolveReference),
+      domain: reference(child.attributes.domain, `${child.name}.domain`, temporalTypes.localDomain, resolveReference),
+      window: reference(child.attributes.window, `${child.name}.window`, temporalTypes.window, resolveReference),
+    });
   }
   if (maps.length === 0) throw new Error(`${element.name} requires at least one Map.`);
 
@@ -187,85 +150,121 @@ export const decodeNarrativeProjectionSurface: StructuredSurfaceHandler = ({ ele
   operations.push({ id: "finalize", producer: narrativeTemporalProducers.finalizeProjection,
     inputs: { header: input("header"), narrative: input("narrative"), timeline: input("timeline"), parts: operation(level[0]!) },
     result: { kind: "output", name: "projection" } });
-  const projectionFragment = sealGraphFragment({ inputs: ports, operations,
+  const fragment = sealGraphFragment({ inputs: ports, operations,
     exports: [{ name: "projection", type: narrativeTemporalTypes.narrativeProjection, root: operation("finalize") }] });
-  const records: SurfaceRecordDraft[] = [{ id: `${id}.__header`, type: narrativeTemporalTypes.narrativeProjectionHeader,
-    value: { kind: "inline", value: canonicalize({ id }) }, range: element.range }];
-  const components: SurfaceComponentDraft[] = [{ id, fragment: projectionFragment.id, inputs: bindings,
-    outputs: { projection: `${id}.projection` }, range: element.range }];
-  const fragments: GraphFragment[] = [projectionFragment];
-  const exports = [`${id}.projection`];
-  for (const output of requested) {
-    const subjectId = `${id}.${output.id}`, fragment = outputFragment(output);
-    const startSpecId = `${subjectId}.__start`;
-    const startBoundary = output.kind === "window" ? "start"
-      : output.sourceKind === "moment" ? "cue" : output.boundary!;
-    records.push({ id: startSpecId, type: narrativeTemporalTypes.narrativeInstantSpec,
-      value: { kind: "inline", value: { id: `${subjectId}.start`, subjectId, boundary: startBoundary,
-        ...(output.offset === undefined ? {} : { offset: output.offset }) } }, range: output.element.range });
-    const childBindings: Record<string, SurfaceResolvedReference["ref"] | { kind: "record"; id: string }> = {
-      timeline: timeline.ref, projection: { kind: "component-output", component: id, output: "projection" },
-      source: output.source.ref, "start-spec": { kind: "record", id: startSpecId },
-    };
-    const outputNames = output.kind === "instant"
-      ? { instant: subjectId }
-      : { window: subjectId, start: `${subjectId}.start`, end: `${subjectId}.end` };
-    if (output.kind === "window") {
-      const endSpecId = `${subjectId}.__end`, windowSpecId = `${subjectId}.__window`;
-      records.push({ id: endSpecId, type: narrativeTemporalTypes.narrativeInstantSpec,
-        value: { kind: "inline", value: { id: `${subjectId}.end`, subjectId, boundary: "end" } }, range: output.element.range },
-      { id: windowSpecId, type: temporalTypes.windowSpec,
-        value: { kind: "inline", value: { id: subjectId, subjectId } }, range: output.element.range });
-      childBindings["end-spec"] = { kind: "record", id: endSpecId };
-      childBindings["window-spec"] = { kind: "record", id: windowSpecId };
-    }
-    components.push({ id: `${subjectId}.__projection`, fragment: fragment.id, inputs: childBindings,
-      outputs: outputNames, range: output.element.range });
-    fragments.push(fragment); exports.push(...Object.values(outputNames));
-  }
-  return { records, components, fragments, exports };
+  return {
+    records: [{ id: `${id}.__header`, type: narrativeTemporalTypes.narrativeProjectionHeader,
+      value: { kind: "inline", value: canonicalize({ id }) }, range: element.range }],
+    components: [{ id, fragment: fragment.id, inputs: bindings, outputs: { projection: id }, range: element.range }],
+    fragments: [fragment], exports: [id],
+  };
 };
 
-export const narrativeProjectionMarkupSurface = {
+/** Reveal one semantic point or interval boundary as a named absolute Instant. */
+export const decodeNarrativeInstantSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
+  assertAttributes(element, ["id", "projection", "at", "boundary"], ["id", "projection", "at"]); assertEmptyElement(element);
+  const id = textAttribute(element, "id");
+  const projection = reference(element.attributes.projection, `${element.name}.projection`,
+    narrativeTemporalTypes.narrativeProjection, resolveReference);
+  const source = narrativeSource(element, "at", resolveReference);
+  const rawBoundary = element.attributes.boundary;
+  let boundary: "start" | "end" | "cue";
+  if (source.kind === "moment") {
+    if (rawBoundary !== undefined) throw new Error(`${element.name}.boundary is invalid for a Moment.`);
+    boundary = "cue";
+  } else {
+    if (rawBoundary !== "start" && rawBoundary !== "end") {
+      throw new Error(`${element.name}.boundary must be start or end.`);
+    }
+    boundary = rawBoundary;
+  }
+  const specId = `${id}.__spec`, fragment = outputFragment(source.kind, "instant");
+  return {
+    records: [{ id: specId, type: narrativeTemporalTypes.narrativeInstantSpec,
+      value: { kind: "inline", value: canonicalize({ id, subjectId: id, boundary }) }, range: element.range }],
+    components: [{ id: `${id}.__projection`, fragment: fragment.id, inputs: {
+      projection: projection.ref, source: source.reference.ref, "start-spec": { kind: "record", id: specId },
+    }, outputs: { instant: id }, range: element.range }],
+    fragments: [fragment], exports: [id],
+  };
+};
+
+/** Reveal one authored semantic interval as a named absolute Window. */
+export const decodeNarrativeWindowSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
+  assertAttributes(element, ["id", "projection", "during"], ["id", "projection", "during"]); assertEmptyElement(element);
+  const id = textAttribute(element, "id");
+  const projection = reference(element.attributes.projection, `${element.name}.projection`,
+    narrativeTemporalTypes.narrativeProjection, resolveReference);
+  const source = narrativeSource(element, "during", resolveReference);
+  if (source.kind === "moment") throw new Error(`${element.name}.during must be a Selection or Segment.`);
+  const startSpecId = `${id}.__start`, endSpecId = `${id}.__end`, windowSpecId = `${id}.__window`;
+  const fragment = outputFragment(source.kind, "window");
+  return {
+    records: [
+      { id: startSpecId, type: narrativeTemporalTypes.narrativeInstantSpec,
+        value: { kind: "inline", value: canonicalize({ id: `${id}.start`, subjectId: id, boundary: "start" }) }, range: element.range },
+      { id: endSpecId, type: narrativeTemporalTypes.narrativeInstantSpec,
+        value: { kind: "inline", value: canonicalize({ id: `${id}.end`, subjectId: id, boundary: "end" }) }, range: element.range },
+      { id: windowSpecId, type: temporalTypes.windowSpec,
+        value: { kind: "inline", value: canonicalize({ id, subjectId: id }) }, range: element.range },
+    ],
+    components: [{ id: `${id}.__projection`, fragment: fragment.id, inputs: {
+      projection: projection.ref, source: source.reference.ref,
+      "start-spec": { kind: "record", id: startSpecId }, "end-spec": { kind: "record", id: endSpecId },
+      "window-spec": { kind: "record", id: windowSpecId },
+    }, outputs: { window: id, start: `${id}.start`, end: `${id}.end` }, range: element.range }],
+    fragments: [fragment], exports: [id, `${id}.start`, `${id}.end`],
+  };
+};
+
+export const narrativeProjectionMarkupSurfaces = [{
   name: "narrative-projection", tag: "Projection", mode: "structured",
-  outputs: [narrativeTemporalTypes.narrativeProjectionHeader, narrativeTemporalTypes.narrativeInstantSpec,
-    narrativeTemporalTypes.narrativeProjection, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window],
+  outputs: [narrativeTemporalTypes.narrativeProjectionHeader, narrativeTemporalTypes.narrativeProjection],
   vocabulary: {
-    summary: "Projects explicit NarrativeAlignment values onto one Timeline and publishes requested absolute values.",
+    summary: "Builds one explicit Narrative interpretation context from exact local-domain Maps.",
     attributes: [
       { name: "id", kind: "identifier", required: true, summary: "Names this projection." },
       { name: "narrative", kind: "reference", required: true, accepts: [narrativeTypes.narrative], summary: "Selects the Narrative identity." },
       { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.timeline], summary: "Selects the target Timeline." },
     ],
-    children: [
-      { tag: "Map", cardinality: "many", summary: "Projects one local NarrativeAlignment through an exact domain-to-Window relation.", attributes: [
-        { name: "alignment", kind: "reference", required: true, accepts: [narrativeTemporalTypes.narrativeAlignment], summary: "Local Narrative timing facts." },
-        { name: "domain", kind: "reference", required: true, accepts: [temporalTypes.localDomain], summary: "The Alignment's complete local coordinate domain." },
-        { name: "window", kind: "reference", required: true, accepts: [temporalTypes.window], summary: "Equal-length absolute Window receiving that domain." },
-      ] },
-      { tag: "Window", cardinality: "many", summary: "Publishes one selected Segment or Selection as an absolute Window.", attributes: [
-        { name: "id", kind: "identifier", required: true, summary: "Scoped absolute output name." },
-        { name: "selection", kind: "reference", required: false, accepts: [narrativeTypes.selection], summary: "Selection to project." },
-        { name: "segment", kind: "reference", required: false, accepts: [narrativeTypes.segmentRef], summary: "Segment to project." },
-      ] },
-      { tag: "Instant", cardinality: "many", summary: "Publishes one Narrative boundary as an absolute Instant.", attributes: [
-        { name: "id", kind: "identifier", required: true, summary: "Scoped absolute output name." },
-        { name: "moment", kind: "reference", required: false, accepts: [narrativeTypes.moment], summary: "Moment cue to project." },
-        { name: "selection", kind: "reference", required: false, accepts: [narrativeTypes.selection], summary: "Selection boundary source." },
-        { name: "segment", kind: "reference", required: false, accepts: [narrativeTypes.segmentRef], summary: "Segment boundary source." },
-        { name: "boundary", kind: "literal", required: false, values: ["start", "end"], summary: "Boundary for Selection or Segment." },
-        { name: "offset", kind: "literal", required: false, summary: "Exact signed offset applied after projection." },
-      ] },
-    ],
-    ports: [
-      { name: "projection", type: narrativeTemporalTypes.narrativeProjection, summary: "The explicit Narrative-to-absolute relation." },
-      { name: "<name>", type: temporalTypes.instant, summary: "Requested scoped Instant." },
-      { name: "<name>", type: temporalTypes.window, summary: "Requested scoped Window with .start and .end Instants." },
-    ],
+    children: [{ tag: "Map", cardinality: "many", summary: "Projects one local NarrativeAlignment through an exact domain-to-Window relation.", attributes: [
+      { name: "alignment", kind: "reference", required: true, accepts: [narrativeTemporalTypes.narrativeAlignment], summary: "Local Narrative timing facts." },
+      { name: "domain", kind: "reference", required: true, accepts: [temporalTypes.localDomain], summary: "The Alignment's complete local coordinate domain." },
+      { name: "window", kind: "reference", required: true, accepts: [temporalTypes.window], summary: "Equal-length absolute Window receiving that domain." },
+    ] }],
+    ports: [{ name: "<id>", type: narrativeTemporalTypes.narrativeProjection, summary: "The completed Narrative interpretation context." }],
     example: `<semantic:Projection id="story-time" narrative={story} timeline={film.timeline}>
   <semantic:Map alignment={opening.alignment} domain={opening.domain} window={program.opening}/>
-  <semantic:Window id="proof" selection={story.selection.proof}/>
-  <semantic:Instant id="claim" moment={story.moment.claim}/>
 </semantic:Projection>`,
   },
-} as const;
+}, {
+  name: "narrative-instant", tag: "Instant", mode: "structured",
+  outputs: [narrativeTemporalTypes.narrativeInstantSpec, temporalTypes.instant],
+  vocabulary: {
+    summary: "Reveals one Narrative point or boundary as a named absolute Instant.",
+    attributes: [
+      { name: "id", kind: "identifier", required: true, summary: "Names the absolute Instant." },
+      { name: "projection", kind: "reference", required: true, accepts: [narrativeTemporalTypes.narrativeProjection], summary: "Selects the interpretation context." },
+      { name: "at", kind: "expression", required: true, accepts: [narrativeTypes.moment, narrativeTypes.selection, narrativeTypes.segmentRef], summary: "Chooses the semantic point or interval." },
+      { name: "boundary", kind: "literal", required: false, values: ["start", "end"], summary: "Required boundary for a Selection or Segment." },
+    ],
+    ports: [{ name: "<id>", type: temporalTypes.instant, summary: "The revealed absolute Instant." }],
+    example: '<semantic:Instant id="claim" projection={story-time} at={story.moment.claim}/>',
+  },
+}, {
+  name: "narrative-window", tag: "Window", mode: "structured",
+  outputs: [narrativeTemporalTypes.narrativeInstantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window],
+  vocabulary: {
+    summary: "Reveals one Narrative interval as a named absolute Window.",
+    attributes: [
+      { name: "id", kind: "identifier", required: true, summary: "Names the Window and its boundaries." },
+      { name: "projection", kind: "reference", required: true, accepts: [narrativeTemporalTypes.narrativeProjection], summary: "Selects the interpretation context." },
+      { name: "during", kind: "expression", required: true, accepts: [narrativeTypes.selection, narrativeTypes.segmentRef], summary: "Chooses the semantic interval." },
+    ],
+    ports: [
+      { name: "<id>", type: temporalTypes.window, summary: "The revealed absolute Window." },
+      { name: "<id>.start/end", type: temporalTypes.instant, summary: "Its absolute boundary Instants." },
+    ],
+    example: '<semantic:Window id="proof" projection={story-time} during={story.selection.proof}/>',
+  },
+}] as const;

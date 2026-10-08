@@ -140,8 +140,8 @@ based on the returned source span; neither the event's local offset nor the view
 replaces it. [Component design](component-design.md#let-meaning-drive-the-behavior) distinguishes these
 inputs from internal motion details.
 
-A reusable scene might expose `during={story-time.explanation}` for its lifetime and
-`reveal={story-time.demonstrate}` for its layout change. An upstream Narrative projector publishes
+A reusable scene might expose `during={explanation}` for its lifetime and
+`reveal={demonstrate}` for its layout change. An upstream Narrative projector publishes
 these independently; the Producer receives a Window and an Instant. The installed Distribution's
 `examples/semantic-composition/packages/responsive-explainer` shows this complete package: video
 moves from full screen to a side viewport while a diagram enters, with Caption available as a peer.

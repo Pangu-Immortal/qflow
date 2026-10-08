@@ -22,7 +22,9 @@ Qflow 把视频需要什么，与哪些代码和服务完成它，分别表达�
 
 在适合提取秩序的地方组织空间。Visual Track 可以呈现普通视频或图片；项目组件可以把移动的视频视口、标签和流程图作为一个场景协调起来。独立字幕或叠加层仍可分开。共享行为决定哪些内容属于同一个组件。
 
-对于说话视频，Script Selection 与 Moment 让组件跟随表演的含义；作者主导节奏的动画，则可以在声明的时钟上使用秒或帧。[Film 与渲染](../quickstart/composition.md) 介绍这些贡献如何组成作品。
+对于说话视频，Narrative Projection 可以把 Script Selection 与 Moment 显影成组件消费的绝对
+Window 与 Instant；作者主导节奏的动画，则可以在声明的时钟上从秒或帧直接产生相同类型。
+[Film 与渲染](../quickstart/composition.md) 介绍这些贡献如何组成作品。
 
 新组件通常放在视频项目的 `packages/` 中，使用所有者自己的 scope，由项目的普通包管理器声明。需要跨项目复用时，所有者可以把同一个组件发布为有版本的 npm 或私有 Registry 包。使用方安装选定版本，并将 lockfile 与项目一起保存。
 

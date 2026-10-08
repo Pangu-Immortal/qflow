@@ -209,7 +209,8 @@ Selection 标记是零宽度的，不会出现在任何文本投影中。它们�
 `startAnchorId`/`endAnchorId` 的 `NarrativeSelection`。Script 本身不包含秒数或帧号——时间
 信息来自 Timeline 对齐。
 
-其他组件通过 `{story.selection.problem}` 引用 Selection，将视觉内容绑定到叙事中的语义时刻。
+Narrative Projection 声明通过 `{story.selection.problem}` 引用 Selection，并发布具名绝对
+Window；组件消费这个 Window，不需要认识 Script 身份。
 
 ## Moment
 
@@ -230,7 +231,8 @@ Moment 是具名的时间**点**（不是范围）：
 每个 Moment 名字只出现一次，编译为带有 `anchorId` 的 `NarrativeMoment`。Selection 和 Moment
 共享同一命名空间——同一个 id 不能同时用于两者。
 
-其他组件通过 `{story.moment.ranking}` 引用 Moment。
+Narrative Projection 声明通过 `{story.moment.ranking}` 引用 Moment，并发布具名绝对 Instant；
+组件消费这个 Instant，不需要认识 Script 身份。
 
 ## 注释与转义
 
@@ -292,4 +294,6 @@ Moment 是具名的时间**点**（不是范围）：
 - 三个 Selection：`whole`（整个 Script）、`problem`、`solution`、`emphasis`
 - 一个 Moment：`ranking`（标记 "After the first recap" 这一瞬间）
 
-下游组件通过名称引用这些内容：`{story.segment.hook.dialogue}` 用于生成，`{story.selection.problem}` 用于 B-roll 时间绑定，`{story.moment.ranking}` 用于视觉卡片揭示。
+下游图节点通过名称引用这些内容：`{story.segment.hook.dialogue}` 提供生成文本；Narrative
+Projection 声明显影 `{story.selection.problem}` 供 B-roll 计时，并显影
+`{story.moment.ranking}` 供视觉卡片事件使用。

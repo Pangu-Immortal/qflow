@@ -19,7 +19,11 @@ Each folder owns `index.js` (content and resource slots), `styles.js` (appearanc
 
 ## Inputs and time
 
-Each Surface receives Timeline, Canvas, font, a temporal Window, its explicit assets and named `Beat` children. The Source attaches those events to Script Moments or authored time. The Surface uses the public temporal projection helpers; local animation reads the resulting event frames. Seek any frame directly: pointer paths, springs, typing and transitions derive state from time.
+Each Surface receives Timeline, Canvas, font, an absolute Window, its explicit assets and named `Beat`
+children. Source obtains those values from Narrative Projection or direct time declarations before
+passing them in. The Surface resolves only completed Window and Instant references; local animation
+reads their frames. Seek any frame directly: pointer paths, springs, typing and transitions derive
+state from time.
 
 Prepared video inputs are SynchronizedMedia. Image inputs are Blob artifacts. `DeliveryWorkshop.reference` is the fictional drinking illustration; it is deliberately an image, without fabricating silent performance media or video. Media entries explicitly choose native playback, holding the last frame or looping where the scene needs it.
 

@@ -128,7 +128,7 @@ function instant(
       const reference = typeof spec?.reference === "string"
         ? spec.reference
         : `${kind}.${boundary === "cue" ? "cue" : boundary}`;
-      const point = { ref: reference, ...(spec?.offset === undefined ? {} : { offset: spec.offset }) };
+      const point = { ref: reference };
       if (sourceRecord !== undefined && typeof sourceValue?.id === "string") {
         const identified = identify?.(sourceRecord.type, sourceValue);
         const source = { timelineId: held.timelineId, type: sourceRecord.type,

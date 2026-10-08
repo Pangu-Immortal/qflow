@@ -12,7 +12,7 @@ authored absolute time. Each Use selects a complete Style inside an already reso
 ```svml
 <caption:Hidden id="hidden"/>
 <narrative-caption:Timing id="story-captions" document={story.caption}
-  binding={story.caption-binding} projection={story-time.projection}/>
+  binding={story.caption-binding} projection={story-time}/>
 <time:Window id="impact-window" timeline={program.timeline} from="12s" for="2s"/>
 <caption-fine:Caption id="captions" document={story.caption} timing={story-captions} timeline={program.timeline} within={canvas.bounds}>
   <caption-fine:Use style={base-style}/>

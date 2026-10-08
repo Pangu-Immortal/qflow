@@ -85,14 +85,16 @@ Timeline 声明是无环构造图。`end` 必填；每个具名 Instant 或 Wind
     domain={opening-media.domain} window={speech.opening}/>
   <semantic:Map alignment={answer-alignment.alignment}
     domain={answer-media.domain} window={speech.answer}/>
-  <semantic:Window id="proof" selection={story.selection.proof}/>
-  <semantic:Instant id="claim" moment={story.moment.claim}/>
 </semantic:Projection>
+<semantic:Window id="proof" projection={story-time} during={story.selection.proof}/>
+<semantic:Instant id="claim" projection={story-time} at={story.moment.claim}/>
 ```
 
-显式请求的 `story-time.proof` 与 `story-time.claim` 是普通的绝对 Window 与 Instant。
+显式请求的 `proof` 与 `claim` 是普通的绝对 Window 与 Instant。
 语义时间只是一种可选投影来源；
 直接秒数、帧数以及 Timeline 的具名绝对值同样是一等公民。
+投影只读取准确的语义边界。需要作者偏移时，另行声明绝对关系，例如
+`<time:Instant id="after-claim" timeline={speech.timeline} at={claim} offset="+5f"/>`。
 
 ## 呈现画面与声音
 

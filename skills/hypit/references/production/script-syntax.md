@@ -5,10 +5,10 @@ spaces, Caption grouping and semantic markers. [Script and semantic time](../cre
 owns the creative decisions; [Source syntax](source-syntax.md) owns imports and graph references;
 [Timing](timing.md) explains how components use the resulting identities.
 
-These are the current 0.2 author forms. Package releases and logical Module ABIs are different:
-`@qflow/script@1` remains the import. A syntax error calls for an explicit correction to the source;
-do not reinterpret old bare markers or remove authored spaces to make an inherited example work.
-The installed Script package owns the parser and exact diagnostics.
+These are the author forms owned by the installed Script package. Package releases and logical Module
+ABIs are different: `@qflow/script@1` is the logical import. Correct a syntax error in the Source
+rather than changing authored wording or spaces. The installed package owns the parser and exact
+diagnostics.
 
 ## Keep the languages distinct
 
@@ -18,7 +18,7 @@ The installed Script package owns the parser and exact diagnostics.
 | Script prose | `@{reveal!}` | A semantic Moment; contributes no displayed or spoken text. |
 | Script prose | `clear{emphasis}` | An attribute on the preceding display word. |
 | A model's prompt text | `@image1` | That model's reference notation, when its Kit declares it. |
-| A temporal attribute | `instant="moment.cue + 8f"` | The component's explicit time expression. |
+| An absolute-time declaration | `<time:Instant id="cue" timeline={film.timeline} at={claim}/>` | A named Instant produced from an already resolved value. |
 
 Braces and at-signs have no global substitution rule. The receiving Surface owns its body's grammar.
 

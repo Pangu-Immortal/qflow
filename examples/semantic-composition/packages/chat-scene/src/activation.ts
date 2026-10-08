@@ -105,7 +105,7 @@ const declaration = { name: "scene", tag: "Scene", mode: "structured" as const,
   ], children: [{ tag: "Message", cardinality: "many" as const, summary: "One authored message and the event that reveals it.", attributes: [
     ...["id", "sender", "text", "side"].map(name => ({ name, kind: "literal" as const, required: true, summary: name })), ...temporalInstantAttributeVocabulary,
   ] }], ports: [{ name: "visual", type: compositionTypes.visualTrack, summary: "The complete conversation scene." }],
-    example: '<chat:Scene id="chat" timeline={speech.timeline} within={within} font={font} during={speech.window} title="Conversation"><chat:Message id="answer" sender="Maya" side="left" text="Here it is." at={story-time.answer}/></chat:Scene>',
+    example: '<chat:Scene id="chat" timeline={speech.timeline} within={within} font={font} during={speech.window} title="Conversation"><chat:Message id="answer" sender="Maya" side="left" text="Here it is." at={answer}/></chat:Scene>',
   },
 };
 export const qflowPackage = { format: "qflow.package@1" as const, modules: [{ manifest }],

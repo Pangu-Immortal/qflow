@@ -67,7 +67,6 @@ function projectionFacet(producer: ProducerRef, inputName: "selection" | "segmen
   return { producer, handler: ({ inputs }) => {
     const spec = inline<NarrativeInstantSpec>(inputs.spec?.value, "NarrativeInstantSpec");
     return { outputs: { instant: { kind: "inline" as const, value: canonicalize(projectNarrativeInstant({
-      timeline: inline<Timeline>(inputs.timeline?.value, "Timeline"),
       narrative: inline<NarrativeProjection>(inputs.projection?.value, "NarrativeProjection"),
       source: inline<NarrativeSelectionRef | NarrativeSegmentRef | NarrativeMomentRef>(inputs[inputName]?.value, inputName),
       sourceKind, spec,

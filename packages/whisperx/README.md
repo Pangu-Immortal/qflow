@@ -45,7 +45,7 @@ publishes one `NarrativeAlignment`:
 The result is `opening.alignment`. It contains semantic timing on the media-local domain, not media,
 not a Timeline and not presentation policy. `@qflow/narrative-temporal` Projection explicitly combines
 one or more `NarrativeAlignment + LocalTemporalDomain + equal-length Window` relations for a chosen
-Timeline and publishes absolute values without a durable Placement product.
+Timeline and publishes ordinary absolute values.
 
 When the Segment has no Tokens, omit `language`. Its start and end map directly to the local domain's
 first and final frame, no evidence audio or WhisperX capability is requested, and the same

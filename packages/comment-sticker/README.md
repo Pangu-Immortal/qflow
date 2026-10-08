@@ -1,6 +1,6 @@
 # `@qflow/comment-sticker`
 
-The Track Surface accepts `timeline={program.timeline}`. Each Sticker consumes a previously declared
+The Track Surface accepts `timeline={program.timeline}`. Each Sticker consumes an already declared
 absolute Window; semantic or other domain coordinates are projected upstream.
 
 An author package for timed social-comment cards. It publishes an ordinary `VisualTrack` containing
@@ -10,7 +10,7 @@ The author surface keeps the three independent concerns visible:
 
 - `SpatialFrame` owns placement and size;
 - an SVS Recipe plus an exact `FontStackRef` owns appearance and local motion;
-- the shared Temporal projection owns when an item exists.
+- a named absolute Window owns when an item exists.
 
 ```xml
 <import as="copy" from="@qflow/text@1"/>

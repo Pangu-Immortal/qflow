@@ -22,7 +22,7 @@ semantic roles, select audio, or own multi-Clip transitions.
   <visual:Clip id="speaker" media={speaker-media.media}
     during={program.speaker} frame={full-frame} z="10" fit="cover"/>
   <visual:Clip id="diagram" image={diagram} extent={diagram-extent}
-    during={story-time.explanation} frame={inset-frame} z="20" fit="contain"
+    during={explanation} frame={inset-frame} z="20" fit="contain"
     treatment={recipes.visual.diagram} motion={gentle-push}/>
 </visual:Track>
 ```
@@ -74,7 +74,7 @@ the identical projection:
 ```svml
 <space:Map id="turned" xx="0" xy="-0.5" yx="0.5" yy="0" tx="920" ty="180"/>
 <visual:Clip image={diagram} extent={diagram-extent} mapping={turned}
-  during={story-time.explanation} frame={inset-frame} z="20"/>
+  during={explanation} frame={inset-frame} z="20"/>
 ```
 
 The explicit map is already in program-picture coordinates. `frame` still independently owns the

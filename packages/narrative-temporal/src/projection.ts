@@ -1,5 +1,5 @@
 import type { NarrativeSegmentRef, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
-import { durationInFrames, projectDomainFrame, resolvedInstant } from "@qflow/temporal";
+import { projectDomainFrame } from "@qflow/temporal";
 import type { LocalTemporalDomain, TemporalInstant, TemporalWindow } from "@qflow/temporal";
 import { assertTimelineIdentity, timelineFrameCount } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
@@ -113,18 +113,11 @@ function narrativeBase(boundary: NarrativeInstantSpec["boundary"], projection: N
   return boundary === "start" ? span.startFrame : span.endFrameExclusive;
 }
 
-export function projectNarrativeInstant(input: { readonly timeline: Timeline; readonly narrative: NarrativeProjection;
+export function projectNarrativeInstant(input: { readonly narrative: NarrativeProjection;
   readonly source: NarrativeSelectionRef | NarrativeMomentRef | NarrativeSegmentRef;
   readonly sourceKind: "selection" | "moment" | "segment"; readonly spec: NarrativeInstantSpec }): TemporalInstant {
-  assertTimelineIdentity(input.timeline);
-  assert(input.narrative.timelineId === input.timeline.id, "NarrativeProjection belongs to another Timeline.");
-  const base = narrativeBase(input.spec.boundary, input.narrative, input.source, input.sourceKind);
-  const raw = input.spec.offset === undefined ? base : (() => {
-    const delta = durationInFrames(input.spec.offset, input.timeline);
-    assert(delta.denominator === 1n, "Narrative projection offset must resolve to an exact frame.");
-    return base + Number(delta.numerator);
-  })();
-  assert(Number.isSafeInteger(raw) && raw >= 0 && raw <= timelineFrameCount(input.timeline),
-    "Narrative projection falls outside Timeline.");
-  return resolvedInstant(input.spec, input.timeline, raw);
+  const frame = narrativeBase(input.spec.boundary, input.narrative, input.source, input.sourceKind);
+  assert(Number.isSafeInteger(frame) && frame >= 0, "Narrative projection frame is invalid.");
+  return { id: input.spec.id, subjectId: input.spec.subjectId,
+    timelineId: input.narrative.timelineId, frame };
 }

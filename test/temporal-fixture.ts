@@ -3,8 +3,10 @@ import type { Timeline } from "@qflow/timeline";
 import {
   composeTemporalWindow,
   projectProgramInstant,
+  shiftTemporalInstant,
+  temporalExtentFromDuration,
 } from "@qflow/temporal";
-import type { TemporalInstantExpression } from "@qflow/temporal";
+import type { TemporalDuration, TemporalInstantExpression } from "@qflow/temporal";
 import { projectNarrativeInstant } from "@qflow/narrative-temporal";
 import type { NarrativeProjection } from "@qflow/narrative-temporal";
 
@@ -35,9 +37,9 @@ export function projectMomentInstantFixture(input: {
   readonly moment: NarrativeMomentRef;
   readonly projection: NarrativeInstantExpression;
 }) {
-  return projectNarrativeInstant({ timeline: input.semantic, narrative: input.narrative,
-    source: input.moment, sourceKind: "moment", spec: { id: input.itemId, subjectId: input.subjectId ?? input.itemId,
-      boundary: "cue", ...(input.projection.offset === undefined ? {} : { offset: input.projection.offset }) } });
+  return projectNarrativeFixture({ itemId: input.itemId, subjectId: input.subjectId ?? input.itemId,
+    semantic: input.semantic, narrative: input.narrative, source: input.moment, sourceKind: "moment",
+    expression: input.projection });
 }
 
 export function projectProgramWindow(input: {
@@ -62,10 +64,10 @@ export function projectSelectionWindow(input: {
 }) {
   const subjectId = input.subjectId ?? input.itemId;
   return composeTemporalWindow({ id: input.itemId, subjectId },
-    projectNarrativeInstant({ timeline: input.semantic, narrative: input.narrative,
-      source: input.selection, sourceKind: "selection", spec: narrativeSpec(`${input.itemId}.start`, subjectId, input.projection.start) }),
-    projectNarrativeInstant({ timeline: input.semantic, narrative: input.narrative,
-      source: input.selection, sourceKind: "selection", spec: narrativeSpec(`${input.itemId}.end`, subjectId, input.projection.end) }));
+    projectNarrativeFixture({ itemId: `${input.itemId}.start`, subjectId, semantic: input.semantic,
+      narrative: input.narrative, source: input.selection, sourceKind: "selection", expression: input.projection.start }),
+    projectNarrativeFixture({ itemId: `${input.itemId}.end`, subjectId, semantic: input.semantic,
+      narrative: input.narrative, source: input.selection, sourceKind: "selection", expression: input.projection.end }));
 }
 
 export function projectSegmentWindow(input: {
@@ -78,10 +80,10 @@ export function projectSegmentWindow(input: {
 }) {
   const subjectId = input.subjectId ?? input.itemId;
   return composeTemporalWindow({ id: input.itemId, subjectId },
-    projectNarrativeInstant({ timeline: input.semantic, narrative: input.narrative,
-      source: input.segment, sourceKind: "segment", spec: narrativeSpec(`${input.itemId}.start`, subjectId, input.projection.start) }),
-    projectNarrativeInstant({ timeline: input.semantic, narrative: input.narrative,
-      source: input.segment, sourceKind: "segment", spec: narrativeSpec(`${input.itemId}.end`, subjectId, input.projection.end) }));
+    projectNarrativeFixture({ itemId: `${input.itemId}.start`, subjectId, semantic: input.semantic,
+      narrative: input.narrative, source: input.segment, sourceKind: "segment", expression: input.projection.start }),
+    projectNarrativeFixture({ itemId: `${input.itemId}.end`, subjectId, semantic: input.semantic,
+      narrative: input.narrative, source: input.segment, sourceKind: "segment", expression: input.projection.end }));
 }
 
 export function projectMomentWindow(input: {
@@ -94,14 +96,39 @@ export function projectMomentWindow(input: {
 }) {
   const subjectId = input.subjectId ?? input.itemId;
   return composeTemporalWindow({ id: input.itemId, subjectId },
-    projectNarrativeInstant({ timeline: input.semantic, narrative: input.narrative,
-      source: input.moment, sourceKind: "moment", spec: narrativeSpec(`${input.itemId}.start`, subjectId, input.projection.start) }),
-    projectNarrativeInstant({ timeline: input.semantic, narrative: input.narrative,
-      source: input.moment, sourceKind: "moment", spec: narrativeSpec(`${input.itemId}.end`, subjectId, input.projection.end) }));
+    projectNarrativeFixture({ itemId: `${input.itemId}.start`, subjectId, semantic: input.semantic,
+      narrative: input.narrative, source: input.moment, sourceKind: "moment", expression: input.projection.start }),
+    projectNarrativeFixture({ itemId: `${input.itemId}.end`, subjectId, semantic: input.semantic,
+      narrative: input.narrative, source: input.moment, sourceKind: "moment", expression: input.projection.end }));
 }
 
 function narrativeSpec(id: string, subjectId: string, expression: NarrativeInstantExpression) {
   return { id, subjectId,
-    boundary: expression.ref === "moment.cue" ? "cue" as const : expression.ref.endsWith(".start") ? "start" as const : "end" as const,
-    ...(expression.offset === undefined ? {} : { offset: expression.offset }) };
+    boundary: expression.ref === "moment.cue" ? "cue" as const : expression.ref.endsWith(".start") ? "start" as const : "end" as const };
+}
+
+function positiveDuration(value: TemporalDuration): { readonly direction: 1 | -1; readonly duration: TemporalDuration } {
+  const negative = value.unit === "seconds" ? value.numerator < 0 : value.value < 0;
+  if (!negative) return { direction: 1, duration: value };
+  return { direction: -1, duration: value.unit === "seconds"
+    ? { ...value, numerator: Math.abs(value.numerator) }
+    : { ...value, value: Math.abs(value.value) } };
+}
+
+function projectNarrativeFixture(input: {
+  readonly itemId: string;
+  readonly subjectId: string;
+  readonly semantic: Timeline;
+  readonly narrative: NarrativeProjection;
+  readonly source: NarrativeSelectionRef | NarrativeSegmentRef | NarrativeMomentRef;
+  readonly sourceKind: "selection" | "segment" | "moment";
+  readonly expression: NarrativeInstantExpression;
+}) {
+  const base = projectNarrativeInstant({ narrative: input.narrative, source: input.source, sourceKind: input.sourceKind,
+    spec: narrativeSpec(input.expression.offset === undefined ? input.itemId : `${input.itemId}.__base`,
+      input.subjectId, input.expression) });
+  if (input.expression.offset === undefined) return base;
+  const offset = positiveDuration(input.expression.offset);
+  return shiftTemporalInstant({ id: input.itemId, subjectId: input.subjectId, direction: offset.direction }, input.semantic,
+    base, temporalExtentFromDuration(offset.duration, input.semantic));
 }

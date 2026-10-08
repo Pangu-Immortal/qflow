@@ -84,7 +84,7 @@ media as any other material. Place its picture through a Visual Clip or project 
 through an Audio Clip, each with an explicit absolute Window and sampling choice. Choose what leads the picture
 from the current idea. A direct cut or continuous movement can each express that change. Spatial
 grouping and timing are independent choices, so a whole scene can respond to a Moment and separate
-components can share that Moment. [Voice and performance](references/playbooks/craft/voice-and-performance.md)
+components can share the absolute Instant revealed from it. [Voice and performance](references/playbooks/craft/voice-and-performance.md)
 explains the role; [Visual Clips](references/production/visual-clips.md) explains its use.
 
 ## Direct the material
@@ -308,7 +308,7 @@ practical, revisit that choice and carry the improvement into the work and its n
 | choosing or finding fonts, using local font files, multilingual text, Emoji or Typography | `references/production/fonts-and-text.md` |
 | which installed Surface to use, or whether to write a project component | `references/production/vocabulary.md` |
 | sharing a component, Prompt Kit, Model, or Provider across projects | `references/production/component-sharing.md` |
-| constructing Timeline end, Instants, Windows, Extents, Placements, gaps, overlap or a pure MG work | `references/production/timeline.md` |
+| constructing Timeline end, Instants, Windows, Extents, gaps, overlap or a pure MG work | `references/production/timeline.md` |
 | choosing content ownership and composing visual/audio contributions | `references/production/tracks.md` |
 | placing footage or independent pictures through Visual Clips, or deciding when coordinated behavior needs a component | `references/production/visual-clips.md` |
 | writing a project Track with new layout, semantic events or persistent state | `references/production/track-authoring.md` |

@@ -20,9 +20,14 @@ npm run build
 
 ## 给组件有用的接口
 
-公开另一个视频作者真正会改的决定：内容、素材、位置、外观和有意义的事件。转场可以接收一个 Moment，决定何时改变布局；接收一个 Selection，决定整个场景何时存在。纯动画则可以接收作者指定的事件时间。将这些输入投影到选定时钟，再按得到的调度绘制场景。
+公开另一个视频作者真正会改的决定：内容、素材、位置、外观和有意义的事件。组件使用绝对
+Window 和 Instant 输入来表达场景何时存在、何时变化。Source 可以从 Narrative Projection
+或直接 Timeline 声明取得这些具名值；组件在两种情况下使用同一接口。
 
-呈现已有说话表演时，消费它的 Timeline，让画面采样与口播使用相同的规范化媒体和素材位置。其他视频输入同样以规范化媒体进入时间线。[响应式讲解场景](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/responsive-explainer) 展示持续播放的视频如何在 HTML 场景里从全屏移到侧边竖屏。[聊天示例](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/chat-scene) 展示同一个事件接口如何接受作者时间或 Script Moment。
+呈现已有说话表演时，把规范化媒体、它的绝对 occurrence Window 和呈现所需的源时间关系作为
+彼此独立的输入。其他视频输入使用相同媒体路径；Timeline 不保存 Clip 或素材位置。
+[响应式讲解场景](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/responsive-explainer) 展示持续播放的视频如何在 HTML 场景里从全屏移到侧边竖屏。
+[聊天示例](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/chat-scene) 展示同一个事件接口如何消费由直接声明或语义声明产生的 Instant。
 
 Style 一类 Surface 在裸作者 id 下公开其值，例如 `style={board-style}`；独立输出可以使用 `.visual`、`.audio`、`.track` 等有意义的后缀。在组件自己的 vocabulary 和 README 中说明名称与可用值。
 

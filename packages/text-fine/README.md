@@ -24,17 +24,17 @@ its evidence into an ordinary Window and pass that Window through `during`.
 
 <typo:Point id="chapter" timeline={film.timeline} point={layout.chapter}
   style={label-style} z="40" anchor-inline="start"
-  from="2s" for="90f">CHAPTER ONE</typo:Point>
+  during={chapter-window}>CHAPTER ONE</typo:Point>
 
 <typo:Path id="orbit" timeline={film.timeline} path={layout.orbit}
   style={orbit-style} z="40" motion={orbit-motion}
-  from="timeline.start + 1s" until="timeline.end">
+  during={orbit-window}>
   FOLLOW THE CURVE
 </typo:Path>
 ```
 
-`during` accepts `timeline` or a resolved absolute Window. Otherwise exactly two of `from`, `until`
-and `for` author absolute timing directly. These surfaces deliberately have no `semantic`, `selection`,
+`during` accepts a resolved absolute Window, including the complete `film.window`. Declare direct
+clock ranges through Timeline authoring before passing them here. These surfaces have no `semantic`, `selection`,
 `segment` or `moment` attribute: semantic time is one possible producer of a Window, not a special
 capability every visual component must carry.
 

@@ -342,12 +342,12 @@ export const depthStackMarkupSurfaces = [
   id="proof-stack"
   timeline={speech.timeline}
   frame={layout.proof-stack}
-  until={story-time.proof-end}
+  until={proof-end}
   appearance={recipes.deck.proof}
 >
   <deck:Card id="proof-1" source={proof1.image} extent={proof1.extent}
-    at={story-time.proof1} label={proof-label-style}/>
-  <deck:Card id="proof-2" source={proof2.video} at={story-time.proof2}/>
+    at={proof1} label={proof-label-style}/>
+  <deck:Card id="proof-2" source={proof2.video} at={proof2}/>
 </deck:DepthStack>`,
         notes: [
           "The deck requires at least one Card, and a Card is empty.",

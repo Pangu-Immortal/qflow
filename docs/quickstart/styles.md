@@ -192,7 +192,7 @@ Position remains an explicit graph edge:
   <visual:Pose at="end" y="0" opacity="1"/>
 </visual:Motion>
 <visual:Clip media={product-media.media}
-  during={story-time.demo} frame={product-frame}
+  during={demo} frame={product-frame}
   z="40" fit="contain"
   treatment={recipes.visual.product} motion={product-in}>
   <visual:Map/>

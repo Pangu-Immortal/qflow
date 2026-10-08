@@ -4,7 +4,10 @@ A quick, playful presenter leads an argument from two costly production approach
 
 ## Picture and performance
 
-The presenter usually occupies a circular inset, with full-frame opening, transition and closing passages. Performance Uses move the same playing footage between full, upper-half and inset framing. The drinking break returns to the inset on “我们继续”. A covered passage keeps its spoken material and timing while MG leads the picture.
+The presenter usually occupies a circular inset, with full-frame opening, transition and closing
+passages. Ordinary visual occurrences present the same playing footage in full, upper-half and inset
+Frames. The drinking break returns to the inset on “我们继续”. A covered passage keeps its spoken
+material and timing while MG leads the picture.
 
 The visual language is pale pink and cream, vivid pink accents, dark offset shadows, stepped pixel flags and a persistent countdown. Caption remains an independent, readable single-line contribution. The montage’s fourth picture holds under the title “复刻任何爆款视频”.
 

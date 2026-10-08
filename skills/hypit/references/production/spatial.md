@@ -170,7 +170,7 @@ A typed `Motion` moves or fades the complete framed occurrence, including its bo
 for a moving crop or a slow push-in while a card's outline stays still:
 
 ```svml
-<visual:Clip media={prepared.media} during={story-time.detail}
+<visual:Clip media={prepared.media} during={detail}
   frame={detail-frame} z="20" fit="cover" treatment={look.detail}>
   <visual:Sampling at="start" zoom="1"/>
   <visual:Sampling at="end" zoom="1.08" y="-18"/>

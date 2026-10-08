@@ -129,8 +129,8 @@ Timeline does not require speech or media:
 ```
 
 The component owns its reading rhythm through ordinary absolute time. With no selected AudioTrack,
-the result is silent. A spoken composition can use the same component with semantic Moments or
-Selections projected onto its Timeline.
+the result is silent. In a spoken composition, a Narrative Projection can reveal Moments or
+Selections as the same absolute Instant and Window inputs.
 
 ## Check before execution
 

@@ -191,16 +191,16 @@
     <semantic:Map alignment={manifest-rule-semantic.alignment} domain={manifest-rule-media.domain} window={speech.manifest-rule-semantic}/>
     <semantic:Map alignment={real-estate-rule-semantic.alignment} domain={real-estate-rule-media.domain} window={speech.real-estate-rule-semantic}/>
     <semantic:Map alignment={bitcoin-rule-semantic.alignment} domain={bitcoin-rule-media.domain} window={speech.bitcoin-rule-semantic}/>
-    <semantic:Instant id="moment-manifest-cue" moment={story.moment.manifest}/>
-    <semantic:Instant id="moment-real-estate-cue" moment={story.moment.real-estate}/>
-    <semantic:Instant id="moment-bitcoin-cue" moment={story.moment.bitcoin}/>
   </semantic:Projection>
-  <time:Window id="manifest-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-manifest-cue} for="20f"/>
-  <time:Window id="real-estate-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-real-estate-cue} for="20f"/>
-  <time:Window id="bitcoin-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-bitcoin-cue} for="20f"/>
-  <time:Window id="manifest-flash-window" timeline={speech.timeline} from={story-time.moment-manifest-cue} for="8f"/>
-  <time:Window id="real-estate-flash-window" timeline={speech.timeline} from={story-time.moment-real-estate-cue} for="8f"/>
-  <time:Window id="bitcoin-flash-window" timeline={speech.timeline} from={story-time.moment-bitcoin-cue} for="8f"/>
+  <semantic:Instant id="moment-manifest-cue" projection={story-time} at={story.moment.manifest}/>
+  <semantic:Instant id="moment-real-estate-cue" projection={story-time} at={story.moment.real-estate}/>
+  <semantic:Instant id="moment-bitcoin-cue" projection={story-time} at={story.moment.bitcoin}/>
+  <time:Window id="manifest-reveal-sfx-window" timeline={speech.timeline} from={moment-manifest-cue} for="20f"/>
+  <time:Window id="real-estate-reveal-sfx-window" timeline={speech.timeline} from={moment-real-estate-cue} for="20f"/>
+  <time:Window id="bitcoin-reveal-sfx-window" timeline={speech.timeline} from={moment-bitcoin-cue} for="20f"/>
+  <time:Window id="manifest-flash-window" timeline={speech.timeline} from={moment-manifest-cue} for="8f"/>
+  <time:Window id="real-estate-flash-window" timeline={speech.timeline} from={moment-real-estate-cue} for="8f"/>
+  <time:Window id="bitcoin-flash-window" timeline={speech.timeline} from={moment-bitcoin-cue} for="8f"/>
 
   <region:Evidence id="wojak-heads" within={vertical.bounds} timeline={speech.timeline}
     recipe={wojak-tracking.heads.wojak}/>
@@ -232,7 +232,7 @@
   <caption-fine:Style id="caption-wojak-style" recipe={recipes.caption.wojak}
     font={caption-font}/>
 
-  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time}/>
   <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
     timeline={speech.timeline} within={vertical.bounds} regions={wojak-heads}>
     <caption-fine:Use style={caption-chad-style}/>
@@ -242,9 +242,9 @@
   <emoji:Style id="rule-reveal-style" recipe={recipes.emoji.strip}/>
   <emoji:EmojiReveal id="rule-reveal" timeline={speech.timeline} within={vertical.bounds}
     style={rule-reveal-style} placeholder={rule-placeholder.image} during={speech.window}>
-    <emoji:Item id="manifest" icon={manifest-icon.image} at={story-time.moment-manifest-cue}/>
-    <emoji:Item id="real-estate" icon={real-estate-icon.image} at={story-time.moment-real-estate-cue}/>
-    <emoji:Item id="bitcoin" icon={bitcoin-icon.image} at={story-time.moment-bitcoin-cue}/>
+    <emoji:Item id="manifest" icon={manifest-icon.image} at={moment-manifest-cue}/>
+    <emoji:Item id="real-estate" icon={real-estate-icon.image} at={moment-real-estate-cue}/>
+    <emoji:Item id="bitcoin" icon={bitcoin-icon.image} at={moment-bitcoin-cue}/>
   </emoji:EmojiReveal>
 
   <flash:Flash id="manifest-flash" timeline={speech.timeline} within={vertical.bounds}

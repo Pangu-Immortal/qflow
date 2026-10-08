@@ -187,16 +187,16 @@
   <semantic:Projection id="story-time" narrative={story} timeline={speech.timeline}>
     <semantic:Map alignment={messi-semantic.alignment} domain={messi-media.domain} window={speech.messi-semantic}/>
     <semantic:Map alignment={ronaldo-semantic.alignment} domain={ronaldo-media.domain} window={speech.ronaldo-semantic}/>
-    <semantic:Window id="segment-ronaldo" segment={story.segment.ronaldo}/>
-    <semantic:Window id="segment-messi" segment={story.segment.messi}/>
-    <semantic:Window id="selection-pitch-pov" selection={story.selection.pitch-pov}/>
-    <semantic:Window id="selection-ikea-sign" selection={story.selection.ikea-sign}/>
-    <semantic:Window id="selection-retirement-room" selection={story.selection.retirement-room}/>
-    <semantic:Window id="selection-rent-jump" selection={story.selection.rent-jump}/>
-    <semantic:Window id="selection-nine-hundred-goals" selection={story.selection.nine-hundred-goals}/>
-    <semantic:Window id="selection-laboratory-body" selection={story.selection.laboratory-body}/>
-    <semantic:Window id="selection-museum-jawline" selection={story.selection.museum-jawline}/>
   </semantic:Projection>
+  <semantic:Window id="segment-ronaldo" projection={story-time} during={story.segment.ronaldo}/>
+  <semantic:Window id="segment-messi" projection={story-time} during={story.segment.messi}/>
+  <semantic:Window id="selection-pitch-pov" projection={story-time} during={story.selection.pitch-pov}/>
+  <semantic:Window id="selection-ikea-sign" projection={story-time} during={story.selection.ikea-sign}/>
+  <semantic:Window id="selection-retirement-room" projection={story-time} during={story.selection.retirement-room}/>
+  <semantic:Window id="selection-rent-jump" projection={story-time} during={story.selection.rent-jump}/>
+  <semantic:Window id="selection-nine-hundred-goals" projection={story-time} during={story.selection.nine-hundred-goals}/>
+  <semantic:Window id="selection-laboratory-body" projection={story-time} during={story.selection.laboratory-body}/>
+  <semantic:Window id="selection-museum-jawline" projection={story-time} during={story.selection.museum-jawline}/>
   <audio:Track id="speech-sound" timeline={speech.timeline}>
     <audio:Clip id="messi-semantic-source" source={messi-media.media} during={speech.messi-semantic}/>
     <audio:Clip id="ronaldo-semantic-source" source={ronaldo-media.media} during={speech.ronaldo-semantic}/>
@@ -226,7 +226,7 @@
     appear-sound={ranking-appear-media.media}
     move-sound={ranking-move-media.media}>
     <ranking:ColumnItem id="ronaldo" rank="1" label="Ronaldo"
-      icon={ronaldo-icon.image} during={story-time.segment-ronaldo}/>
+      icon={ronaldo-icon.image} during={segment-ronaldo}/>
     <ranking:ColumnItem id="mbappe" rank="2" label="Mbappe"
       preset="true" icon={mbappe-icon.image}/>
     <ranking:ColumnItem id="haaland" rank="3" label="Haaland"
@@ -244,36 +244,36 @@
     <ranking:ColumnItem id="neymar" rank="9" label="Neymar"
       preset="true" icon={neymar-icon.image}/>
     <ranking:ColumnItem id="messi" rank="10" label="Messi"
-      icon={messi-icon.image} during={story-time.segment-messi}/>
+      icon={messi-icon.image} during={segment-messi}/>
   </ranking:Column>
 
   <visual:Track id="broll" timeline={speech.timeline}>
     <visual:Clip id="pitch-pov" image={broll-pitch-pov.image}
-      extent={pitch-pov-extent} during={story-time.selection-pitch-pov}
+      extent={pitch-pov-extent} during={selection-pitch-pov}
       frame={pitch-pov-frame} z="40" fit="cover" treatment={recipes.media.pitch-pov}
       motion={broll-motion}/>
     <visual:Clip id="ikea-sign" image={broll-ikea-sign.image}
-      extent={ikea-sign-extent} during={story-time.selection-ikea-sign}
+      extent={ikea-sign-extent} during={selection-ikea-sign}
       frame={ikea-sign-frame} z="41" fit="cover" treatment={recipes.media.ikea-sign}
       motion={broll-motion}/>
     <visual:Clip id="retirement-room" image={broll-retirement-room.image}
-      extent={retirement-room-extent} during={story-time.selection-retirement-room}
+      extent={retirement-room-extent} during={selection-retirement-room}
       frame={retirement-room-frame} z="42" fit="cover" treatment={recipes.media.retirement-room}
       motion={broll-motion}/>
     <visual:Clip id="rent-jump" image={broll-rent-jump.image}
-      extent={rent-jump-extent} during={story-time.selection-rent-jump}
+      extent={rent-jump-extent} during={selection-rent-jump}
       frame={rent-jump-frame} z="43" fit="cover" treatment={recipes.media.rent-jump}
       motion={broll-motion}/>
     <visual:Clip id="nine-hundred-goals" image={broll-nine-hundred.image}
-      extent={nine-hundred-extent} during={story-time.selection-nine-hundred-goals}
+      extent={nine-hundred-extent} during={selection-nine-hundred-goals}
       frame={nine-hundred-frame} z="44" fit="cover" treatment={recipes.media.nine-hundred}
       motion={broll-motion}/>
     <visual:Clip id="laboratory-body" image={broll-laboratory-body.image}
-      extent={laboratory-body-extent} during={story-time.selection-laboratory-body}
+      extent={laboratory-body-extent} during={selection-laboratory-body}
       frame={laboratory-body-frame} z="45" fit="cover" treatment={recipes.media.laboratory-body}
       motion={broll-motion}/>
     <visual:Clip id="museum-jawline" image={broll-museum-jawline.image}
-      extent={museum-jawline-extent} during={story-time.selection-museum-jawline}
+      extent={museum-jawline-extent} during={selection-museum-jawline}
       frame={museum-jawline-frame} z="46" fit="cover" treatment={recipes.media.museum-jawline}
       motion={broll-motion}/>
   </visual:Track>
@@ -281,7 +281,7 @@
   <caption-fine:Style id="caption-style" recipe={recipes.caption.primary}
     font={display-font}/>
 
-  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time}/>
   <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
     timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={caption-style}/>

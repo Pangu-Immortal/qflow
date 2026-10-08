@@ -10,7 +10,7 @@ may be absent. Concurrent replacements are ordered by the filesystem, with the l
 supplying the current value.
 
 POSIX uses Node's `rename`. Windows uses `SetFileInformationByHandle(FileRenameInfoEx)` with
-`REPLACE_IF_EXISTS | POSIX_SEMANTICS`, the same primitive previously owned by `build-result`.
+`REPLACE_IF_EXISTS | POSIX_SEMANTICS`.
 This avoids `MoveFileExW` rejecting replacement while another process has the destination open.
 The native structure layout comes from Koffi; constants are Windows API values.
 

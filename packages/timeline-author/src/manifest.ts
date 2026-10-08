@@ -120,18 +120,20 @@ export const timelineAuthorMarkupSurfaces = [{
       { name: "<id>", type: temporalTypes.window, summary: "The resolved Window." },
       { name: "<id>.start/end", type: temporalTypes.instant, summary: "Its resolved boundary Instants." },
     ],
-    example: '<time:Window id="reveal-band" timeline={film.timeline} from={story-time.reveal} until={story-time.answer-end}/>',
+    example: '<time:Window id="reveal-band" timeline={film.timeline} from={reveal} until={answer-end}/>',
   },
 }, {
-  name: "instant", tag: "Instant", mode: "structured", outputs: [temporalTypes.instantSpec, temporalTypes.instant],
+  name: "instant", tag: "Instant", mode: "structured", outputs: [temporalTypes.duration, temporalTypes.extent,
+    temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.instant],
   vocabulary: {
     summary: "Publishes one reusable authored absolute Instant.",
     attributes: [
       { name: "id", kind: "identifier", required: true, summary: "Names the Instant." },
       { name: "timeline", kind: "reference", required: true, accepts: [timelineTypes.timeline], summary: "Selects the absolute coordinate system." },
-      { name: "at", kind: "literal", required: true, summary: "Absolute time or Timeline-boundary expression." },
+      { name: "at", kind: "expression", required: true, accepts: [temporalTypes.instant], summary: "Absolute expression or existing Instant to shift." },
+      { name: "offset", kind: "literal", required: false, summary: "Exact signed offset, valid when at references an existing Instant." },
     ],
     ports: [{ name: "<id>", type: temporalTypes.instant, summary: "The resolved Instant." }],
-    example: '<time:Instant id="credits" timeline={film.timeline} at="timeline.end-2s"/>',
+    example: '<time:Instant id="after-claim" timeline={film.timeline} at={claim} offset="+5f"/>',
   },
 }] as const;

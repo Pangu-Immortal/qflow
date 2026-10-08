@@ -230,22 +230,22 @@
   <semantic:Projection id="story-time" narrative={story} timeline={speech.timeline}>
     <semantic:Map alignment={elon-semantic.alignment} domain={elon-media.domain} window={speech.elon-semantic}/>
     <semantic:Map alignment={sam-semantic.alignment} domain={sam-media.domain} window={speech.sam-semantic}/>
-    <semantic:Window id="segment-elon" segment={story.segment.elon}/>
-    <semantic:Window id="segment-sam" segment={story.segment.sam}/>
-    <semantic:Window id="selection-money-rain" selection={story.selection.money-rain}/>
-    <semantic:Window id="selection-twitter-x" selection={story.selection.twitter-x}/>
-    <semantic:Window id="selection-mars-rocket" selection={story.selection.mars-rocket}/>
-    <semantic:Window id="selection-market-crash" selection={story.selection.market-crash}/>
-    <semantic:Window id="selection-richest-chair" selection={story.selection.richest-chair}/>
-    <semantic:Window id="selection-haircut-x" selection={story.selection.haircut-x}/>
-    <semantic:Window id="selection-fired-friday" selection={story.selection.fired-friday}/>
-    <semantic:Window id="selection-company-quit" selection={story.selection.company-quit}/>
-    <semantic:Window id="selection-back-monday" selection={story.selection.back-monday}/>
-    <semantic:Window id="selection-elon-lawsuit" selection={story.selection.elon-lawsuit}/>
-    <semantic:Window id="selection-google-fears" selection={story.selection.google-fears}/>
-    <semantic:Window id="selection-congress-grilled" selection={story.selection.congress-grilled}/>
-    <semantic:Window id="selection-still-here" selection={story.selection.still-here}/>
   </semantic:Projection>
+  <semantic:Window id="segment-elon" projection={story-time} during={story.segment.elon}/>
+  <semantic:Window id="segment-sam" projection={story-time} during={story.segment.sam}/>
+  <semantic:Window id="selection-money-rain" projection={story-time} during={story.selection.money-rain}/>
+  <semantic:Window id="selection-twitter-x" projection={story-time} during={story.selection.twitter-x}/>
+  <semantic:Window id="selection-mars-rocket" projection={story-time} during={story.selection.mars-rocket}/>
+  <semantic:Window id="selection-market-crash" projection={story-time} during={story.selection.market-crash}/>
+  <semantic:Window id="selection-richest-chair" projection={story-time} during={story.selection.richest-chair}/>
+  <semantic:Window id="selection-haircut-x" projection={story-time} during={story.selection.haircut-x}/>
+  <semantic:Window id="selection-fired-friday" projection={story-time} during={story.selection.fired-friday}/>
+  <semantic:Window id="selection-company-quit" projection={story-time} during={story.selection.company-quit}/>
+  <semantic:Window id="selection-back-monday" projection={story-time} during={story.selection.back-monday}/>
+  <semantic:Window id="selection-elon-lawsuit" projection={story-time} during={story.selection.elon-lawsuit}/>
+  <semantic:Window id="selection-google-fears" projection={story-time} during={story.selection.google-fears}/>
+  <semantic:Window id="selection-congress-grilled" projection={story-time} during={story.selection.congress-grilled}/>
+  <semantic:Window id="selection-still-here" projection={story-time} during={story.selection.still-here}/>
   <audio:Track id="speech-sound" timeline={speech.timeline}>
     <audio:Clip id="elon-semantic-source" source={elon-media.media} during={speech.elon-semantic}/>
     <audio:Clip id="sam-semantic-source" source={sam-media.media} during={speech.sam-semantic}/>
@@ -295,62 +295,62 @@
     <ranking:TierItem id="tim" tier="c" preset="true" icon={tim-icon.image}/>
     <ranking:TierItem id="mark" tier="d" preset="true" icon={mark-icon.image}/>
     <ranking:TierItem id="elon" tier="d" entry="drop"
-      icon={elon-icon.image} during={story-time.segment-elon}/>
+      icon={elon-icon.image} during={segment-elon}/>
     <ranking:TierItem id="sam" tier="s" entry="drop"
-      icon={sam-icon.image} during={story-time.segment-sam}/>
+      icon={sam-icon.image} during={segment-sam}/>
   </ranking:TierBoard>
 
   <visual:Track id="broll" timeline={speech.timeline}>
     <visual:Clip id="money-rain" image={broll-money-rain.image}
-      extent={money-rain-extent} during={story-time.selection-money-rain}
+      extent={money-rain-extent} during={selection-money-rain}
       frame={money-rain-frame} z="40" fit="cover" treatment={recipes.media.money-rain}
       motion={broll-left}/>
     <visual:Clip id="twitter-x" image={broll-twitter-x.image}
-      extent={twitter-x-extent} during={story-time.selection-twitter-x}
+      extent={twitter-x-extent} during={selection-twitter-x}
       frame={twitter-x-frame} z="41" fit="cover" treatment={recipes.media.twitter-x}
       motion={broll-right}/>
     <visual:Clip id="mars-rocket" image={broll-mars-rocket.image}
-      extent={mars-rocket-extent} during={story-time.selection-mars-rocket}
+      extent={mars-rocket-extent} during={selection-mars-rocket}
       frame={mars-rocket-frame} z="42" fit="cover" treatment={recipes.media.mars-rocket}
       motion={broll-left}/>
     <visual:Clip id="market-crash" image={broll-market-crash.image}
-      extent={market-crash-extent} during={story-time.selection-market-crash}
+      extent={market-crash-extent} during={selection-market-crash}
       frame={market-crash-frame} z="43" fit="cover" treatment={recipes.media.market-crash}
       motion={broll-wide}/>
     <visual:Clip id="richest-chair" image={broll-richest-chair.image}
-      extent={richest-chair-extent} during={story-time.selection-richest-chair}
+      extent={richest-chair-extent} during={selection-richest-chair}
       frame={richest-chair-frame} z="44" fit="cover" treatment={recipes.media.richest-chair}
       motion={broll-right}/>
     <visual:Clip id="haircut-x" image={broll-haircut-x.image}
-      extent={haircut-x-extent} during={story-time.selection-haircut-x}
+      extent={haircut-x-extent} during={selection-haircut-x}
       frame={haircut-x-frame} z="45" fit="cover" treatment={recipes.media.haircut-x}
       motion={broll-wide}/>
     <visual:Clip id="fired-friday" image={broll-fired-friday.image}
-      extent={fired-friday-extent} during={story-time.selection-fired-friday}
+      extent={fired-friday-extent} during={selection-fired-friday}
       frame={fired-friday-frame} z="46" fit="cover" treatment={recipes.media.fired-friday}
       motion={broll-left}/>
     <visual:Clip id="company-quit" image={broll-company-quit.image}
-      extent={company-quit-extent} during={story-time.selection-company-quit}
+      extent={company-quit-extent} during={selection-company-quit}
       frame={company-quit-frame} z="47" fit="cover" treatment={recipes.media.company-quit}
       motion={broll-right}/>
     <visual:Clip id="back-monday" image={broll-back-monday.image}
-      extent={back-monday-extent} during={story-time.selection-back-monday}
+      extent={back-monday-extent} during={selection-back-monday}
       frame={back-monday-frame} z="48" fit="cover" treatment={recipes.media.back-monday}
       motion={broll-wide}/>
     <visual:Clip id="elon-lawsuit" image={broll-elon-lawsuit.image}
-      extent={elon-lawsuit-extent} during={story-time.selection-elon-lawsuit}
+      extent={elon-lawsuit-extent} during={selection-elon-lawsuit}
       frame={elon-lawsuit-frame} z="49" fit="cover" treatment={recipes.media.elon-lawsuit}
       motion={broll-left}/>
     <visual:Clip id="google-fears" image={broll-google-fears.image}
-      extent={google-fears-extent} during={story-time.selection-google-fears}
+      extent={google-fears-extent} during={selection-google-fears}
       frame={google-fears-frame} z="50" fit="cover" treatment={recipes.media.google-fears}
       motion={broll-right}/>
     <visual:Clip id="congress-grilled" image={broll-congress-grilled.image}
-      extent={congress-grilled-extent} during={story-time.selection-congress-grilled}
+      extent={congress-grilled-extent} during={selection-congress-grilled}
       frame={congress-grilled-frame} z="51" fit="cover" treatment={recipes.media.congress-grilled}
       motion={broll-left}/>
     <visual:Clip id="still-here" image={broll-still-here.image}
-      extent={still-here-extent} during={story-time.selection-still-here}
+      extent={still-here-extent} during={selection-still-here}
       frame={still-here-frame} z="52" fit="cover" treatment={recipes.media.still-here}
       motion={broll-wide}/>
   </visual:Track>
@@ -358,7 +358,7 @@
   <caption-fine:Style id="caption-style" recipe={recipes.caption.primary}
     font={display-font}/>
 
-  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time.projection}/>
+  <narrative-caption:Timing id="caption-timing" document={story.caption} binding={story.caption-binding} projection={story-time}/>
   <caption-fine:Caption id="captions" document={story.caption} timing={caption-timing}
     timeline={speech.timeline} within={vertical.bounds}>
     <caption-fine:Use style={caption-style}/>

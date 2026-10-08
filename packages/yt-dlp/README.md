@@ -34,7 +34,7 @@ then moves the completed file to the target, copying on a cross-volume `EXDEV` e
 files are removed when the operation ends. Download errors retain the tool's diagnostic output.
 
 The package supplies download behavior, locked material, command arguments and reporting. It uses
-`media-local` only to inspect the finished ordinary file; local media no longer owns network acquisition.
+`media-local` to inspect the finished ordinary file and owns network acquisition itself.
 Production use is described in the Qflow Skill's **Downloading a video
 from a link** page. [`runtime/README.md`](runtime/README.md) covers direct invocation when a source
 needs additional yt-dlp options.
