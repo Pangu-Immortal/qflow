@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseStructuredElement } from "@qflow/markup";
 import type { SurfaceResolvedReference } from "@qflow/markup";
-import { recipeType } from "@qflow/recipe";
+import { formatRecipeValue, parseRecipe, recipeType } from "@qflow/recipe";
 
 import {
   bindText,
@@ -15,8 +15,20 @@ import {
   sealTextBindings,
   sealTextTemplate,
   textTypes,
+  textTemplateFromRecipes,
   verifyTextTemplate,
 } from "@qflow/text";
+
+test("Text Templates keep sheet closing text inside authored prompt text", () => {
+  const prompt = "Show the literal </sheet> tag in the video";
+  const source = `<sheet version="1">
+    text-template.demo {}
+    text-template.demo.block.example { kind: fixed; order: 0; text: ${formatRecipeValue(prompt)}; }
+  </sheet>`;
+  const recipes = parseRecipe("template.svs", source).recipes.map((recipe) => recipe.value);
+  const template = textTemplateFromRecipes(recipes, "demo");
+  assert.equal(renderText(template, sealTextBindings({})).value, prompt);
+});
 
 test("text programs compose nested templates, choices, lists and transforms", () => {
   const template = sealTextTemplate({

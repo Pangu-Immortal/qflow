@@ -333,6 +333,13 @@ test("quoted Recipe values may contain the sheet closing text without ending the
     ),
     (error: unknown) => error instanceof RecipeSyntaxError && error.code === "SVS_TRAILING",
   );
+  assert.throws(
+    () => parseRecipe(
+      "second-close.svs",
+      '<sheet version="1">demo.prompt { text: "write </sheet> literally"; }</sheet></sheet>',
+    ),
+    (error: unknown) => error instanceof RecipeSyntaxError && error.code === "SVS_TRAILING",
+  );
 });
 
 test("SVS parses and serializes canonical arrays and objects as one Recipe value", () => {
