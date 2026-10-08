@@ -111,6 +111,8 @@ try {
     const installed = join(consumer, "node_modules", "@qflow", directory);
     const manifest = JSON.parse(await readFile(join(installed, "package.json"), "utf8"));
     assert.equal(manifest.private, undefined, `${name} must be publishable`);
+    assert.deepEqual(manifest.repository, distributionManifest.repository,
+      `${name} must identify its provenance repository`);
     assert.equal(manifest.exports["."], "./dist/index.js");
     assert.equal(manifest.qflow.activation, "./dist/activation.js");
     assert.deepEqual(manifest.dependencies ?? {},

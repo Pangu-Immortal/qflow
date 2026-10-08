@@ -216,8 +216,12 @@ export async function packIndependentPackage(packageDirectory, outputDirectory, 
   const packageRoot = resolve(repositoryRoot, packageDirectory);
   const output = resolve(repositoryRoot, outputDirectory);
   const manifest = JSON.parse(await readFile(resolve(packageRoot, "package.json"), "utf8"));
+  const rootManifest = JSON.parse(await readFile(resolve(repositoryRoot, "package.json"), "utf8"));
   if (typeof manifest.name !== "string" || typeof manifest.version !== "string") {
     throw new Error(`${packageRoot}/package.json has no package identity`);
+  }
+  if (manifest.repository === undefined && rootManifest.repository === undefined) {
+    throw new Error(`${manifest.name} has no repository identity for npm provenance`);
   }
   if (options.buildPublicTypes !== false) runNpm(["run", "build:public-types"], repositoryRoot);
 
@@ -236,6 +240,7 @@ export async function packIndependentPackage(packageDirectory, outputDirectory, 
     const peerDependencies = await releasedDependencyMap(manifest, manifest.peerDependencies);
     const published = {
       ...manifest,
+      repository: manifest.repository ?? rootManifest.repository,
       exports: publishedTarget(manifest.exports),
       ...(manifest.qflow === undefined ? {} : {
         qflow: { ...manifest.qflow, activation: publishedTarget(manifest.qflow.activation) },
