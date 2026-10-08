@@ -2,12 +2,12 @@ import { compositionTypes } from "@qflow/qflow/composition";
 import type {
   StudioTrackCompanion,
   StudioTrackCompanionContext,
-  StudioEntityDraft,
+  StudioItemDraft,
   StudioInspectorFieldDeclaration,
   StudioMaterialPreview,
   StudioSourceBindingDeclaration,
 } from "@qflow/studio-companion";
-import { artifactPreview, authoredItemTitle, childEntities, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-companion";
+import { artifactPreview, authoredItemTitle, childItems, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-companion";
 import { visualTreatmentDefaults } from "./author.js";
 import { visualTrackMarkupSurfaces, visualTrackModuleRef, visualTrackTypes } from "./manifest.js";
 import type { MediaLayerProgram, VisualTrackProgram } from "./types.js";
@@ -135,7 +135,7 @@ function materialPreview(
   return artifactPreview(layer.source.kind === "still" ? "image" : "video", layer.source.artifact.resource);
 }
 
-function projectVisualClips(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+function projectVisualItems(context: StudioTrackCompanionContext): readonly StudioItemDraft[] {
   const program = requiredSurfaceValue(context, "program") as VisualTrackProgram;
   const clips = program.clips.map((clip) => ({
     id: clip.id,
@@ -147,17 +147,17 @@ function projectVisualClips(context: StudioTrackCompanionContext): readonly Stud
     temporalInput: "window",
     sourceTypes: [visualTrackTypes.clipSpec],
   }));
-  return childEntities(context, clips, "visual-clip", "standard")
-    .map((entity, index) => {
+  return childItems(context, clips, "visual-clip", "standard")
+    .map((projected, index) => {
       const clip = clips[index];
-      if (clip === undefined) return entity;
+      if (clip === undefined) return projected;
       const temporal = temporalLineageFor(context, clip.id, clip.temporalInput);
       const semanticSource = temporalDomainSource(temporal);
       return {
-        ...entity,
+        ...projected,
         display: {
-          ...entity.display,
-          title: authoredItemTitle(context, entity.authoredId, clip.sourceTypes, ["image", "media", "surface"]),
+          ...projected.display,
+          title: authoredItemTitle(context, projected.authoredId, clip.sourceTypes, ["image", "media", "surface"]),
           ...(clip.preview === undefined ? {} : {
             layers: [previewLayer(clip.preview, clip.preview.kind === "video" ? "storyboard" : "repeat-x")],
           }),
@@ -202,7 +202,7 @@ export const visualTrackStudioTrackCompanions: readonly StudioTrackCompanion[] =
       ...directClipInspector,
       ...visualClipTreatmentStudioFields.inspector,
     ],
-    requiredValues: ["program"], project: projectVisualClips,
+    requiredValues: ["program"], project: projectVisualItems,
     lane: { heightPx: 76 },
   },
 ];

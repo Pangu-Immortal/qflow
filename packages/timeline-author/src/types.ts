@@ -4,9 +4,16 @@ export type TimelineAuthorHeader = { readonly id: string };
 export type ConstructionPoint = { readonly frame: number };
 export type ConstructionExtent = { readonly frameCount: number };
 export type ConstructionSpan = { readonly startFrame: number; readonly endFrameExclusive: number };
-export type ConstructionOffsetSpec = { readonly direction: 1 | -1 };
+export type TimelineAuthorBinding = {
+  readonly binding: "end" | "at" | "from" | "until" | "for";
+  readonly declarationId?: string;
+  readonly expression?:
+    | { readonly kind: "absolute" }
+    | { readonly kind: "offset"; readonly base: string };
+};
+export type ConstructionOffsetSpec = { readonly direction: 1 | -1; readonly author?: TimelineAuthorBinding };
 export type ConstructionIdentitySpec = { readonly id: string; readonly subjectId?: string };
-export type ConstructionDurationSpec = TemporalDuration;
+export type ConstructionDurationSpec = { readonly duration: TemporalDuration; readonly author?: TimelineAuthorBinding };
 
 export type TimelineInstantDeclaration = {
   readonly id: string;

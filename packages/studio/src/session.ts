@@ -17,6 +17,8 @@ import { snapshot } from "./snapshot.js";
 import { inspectStudioRun } from "./studio-preflight.js";
 import type { StudioViewRequirement } from "./studio-preflight.js";
 import type { StudioSourceFile } from "./parameters.js";
+import type { BuildState } from "@qflow/qflow/protocol";
+import type { Placement } from "./observe.js";
 
 function sourceFiles(run: RunPlan): readonly StudioSourceFile[] {
   const paths = [run.runPath, run.authorSource, ...run.source.compiled.closure.units.map((unit) => unit.id)];
@@ -52,6 +54,11 @@ export type StudioSession = {
   readonly material: ReadonlyMap<string, ServedFile>;
   readonly observations: Observations;
   readonly projections: readonly StudioViewRequirement[];
+  readonly temporalEdit: {
+    readonly state: BuildState;
+    readonly files: readonly StudioSourceFile[];
+    readonly placements: readonly Placement[];
+  };
 };
 
 export async function readStudioSession(input: {
@@ -112,5 +119,10 @@ export async function readStudioSession(input: {
     material: built.served,
     observations: source.observations,
     projections: inspection.projections,
+    temporalEdit: {
+      state: built.state,
+      files,
+      placements: built.source.observations.placements,
+    },
   };
 }

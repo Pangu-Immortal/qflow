@@ -12,7 +12,7 @@ component.
 ## A minimal project Track Companion
 
 Suppose `@studio/score-strip@1` already owns a `track` Surface that emits a public VisualTrack and
-accepts a literal string `label` attribute. The Companion can reuse generic terminal entities while
+accepts a literal string `label` attribute. The Companion can reuse generic terminal Items while
 adding package-specific presentation and one Inspector field:
 
 ```ts
@@ -46,24 +46,24 @@ export const companions: readonly StudioTrackCompanion[] = [{
 
 The names and lane height are this example's choices. Use the real Module ABI, Surface name,
 nominal output Type and authored input names of the component. A Companion does not create a new
-author attribute. Omitting `project` uses generic terminal entities; `poster` adds the declared
+author attribute. Omitting `project` uses generic terminal Items; `poster` adds the declared
 Surface preview when one exists, without changing the component's rendered video.
 
-Each lane occupies one timeline row. Entities overlap in ascending `stackOrder`,
-with later projected entities above earlier ones when orders tie. Studio keeps
-overlapping entities mounted and raises the selected entity within its lane;
+Each lane occupies one timeline row. Items overlap in ascending `stackOrder`,
+with later projected Items above earlier ones when orders tie. Studio keeps
+overlapping Items mounted and raises the selected Item within its lane;
 selection does not change the rendered composition or write stacking back to Source.
-Expose `presentId` or `renderIds` for visual entities so picture selection can
-address the same entity shown in the timeline. Attached lanes represent distinct
+Expose `presentId` or `renderIds` for visual Items so picture selection can
+address the same Item shown in the timeline. Attached lanes represent distinct
 Companion projections, not extra rows allocated to avoid temporal overlap.
 
-An entity's timeline interval describes the operation being edited; its rendered
+An Item's timeline interval describes the operation being edited; its rendered
 parts may remain visible afterward. Associate every relevant phase through
 `renderIds` (for example, an entrance and the settled object). Studio picks the
-currently visible part in rendered stacking order and selects the same entity,
+currently visible part in rendered stacking order and selects the same Item,
 without extending its editable interval. Give the parent the board or background
 parts and its children their own parts when they should be independently selectable.
-The component decides this granularity. A composite can remain one selectable entity.
+The component decides this granularity. A composite can remain one selectable Item.
 
 Merge the facet into the package's existing activation. In this example `authorContribution`
 exports its existing modules, deterministic component and Markup facets:
@@ -93,7 +93,7 @@ explicit official Companion selection. It qualifies this local id as
 `@studio/score-strip#score-strip`. There is no extra Studio Profile, plugin scan or Core registration.
 Restart the Studio process after changing activation or package code.
 
-## Project domain entities and material
+## Project domain Items and material
 
 A terminal VisualTrack is enough for generic display. When it loses meaningful domain structure,
 publish a deterministic schedule/program output from the same Surface and name its port in
@@ -102,20 +102,20 @@ The port must exist in the Surface's public output mappings; inventing a port na
 does not make an internal Producer value observable. `requiredReferencedValue(context, input, type)`
 instead follows one exact typed author reference, such as a CaptionDocument.
 
-`project` returns `StudioEntityDraft[]`. Each entity has an id, authored identity, display title and
+`project` returns `StudioItemDraft[]`. Each Item has an id, authored identity, display title and
 ordered layers, `startFrame`, `endFrameExclusive` and `stackOrder`. Useful optional fields include:
 
 | Field/helper | Purpose |
 | --- | --- |
-| `selectionGroup` | Link disjoint displayed intervals of one author entity; selection highlights them together without changing their independent timing |
-| `presentation` | Name the entity's role and choose `standard`, `group`, `point` or `compact` chrome (a single-line primary label) |
+| `selectionGroup` | Link disjoint displayed intervals of one author Item; selection highlights them together without changing their independent timing |
+| `presentation` | Name the Item kind and choose `standard`, `group`, `point` or `compact` chrome (a single-line primary label) |
 | `textLayer(text)` | Put explicit domain text in the timeline body |
 | `previewLayer(artifactPreview(kind, resource), layout)` | Show a declared image/video/audio Resource with a finite layout; Studio resolves transport |
-| `renderIds` | Relate an entity to its actual rendered elements |
-| `parameterReferences` | Select exact per-entity authored references, such as the Style really used by this Cue |
+| `renderIds` | Relate an Item to its actual rendered elements |
+| `parameterReferences` | Select exact per-Item authored references, such as the Style really used by this Cue |
 | `temporal` | Carry the executed Instant/Window lineage and its edit authority |
-| `lane` and Companion `attachments` | Put child entities on a declared additional lane, with its own bindings and Inspector |
-| `childEntities` / `authoredChildFor` | Resolve children from public identity and exact Spec Types rather than source order guesses |
+| `lane` and Companion `attachments` | Put child Items on a declared additional lane, with its own bindings and Inspector |
+| `childItems` / `authoredChildFor` | Resolve children from public identity and exact Spec Types rather than source order guesses |
 | `authoredItemTitle` | Prefer an explicit author id, then a source reference from the attributes chosen by the Companion; presentation leaves editing identity unchanged |
 
 Use the program's frame space and half-open intervals. Persistent visibility and its activation are
@@ -132,7 +132,7 @@ Caption Fine's `@qflow/caption-fine/studio` facet for Cue text and Style selecti
 
 `StudioTrackCompanionContext.temporalBindings` exposes the executed Instant/Window records in the selected
 Track closure, including projection expressions, source identity and direct consumer inputs.
-`temporalLineageFor()` joins a domain entity to those edges through the identity of a value consumed
+`temporalLineageFor()` joins a domain Item to those edges through the identity of a value consumed
 beside the projection. No match is read-only, one match is used, and several matches are an error rather
 than a first-result guess. Endpoint authority is already part of that executed lineage: an author syntax
 may declare a parameter inverse on the Spec it creates, while a domain projector declares its own source
@@ -147,7 +147,7 @@ allowed to interpret a value.
 
 Trace references retain the exact author input name and resolved TypeRef. A Companion that needs a
 CaptionDocument or another referenced domain value selects that declared edge; it never scans all
-values for a familiar object shape. Child entities follow the same rule: when an optional Source id
+values for a familiar object shape. Child Items follow the same rule: when an optional Source id
 was omitted, a Companion may name the exact domain Spec Type whose public `id` owns that child.
 Studio then recovers the Source range from the typed observed Record, without ordinal matching.
 
@@ -157,17 +157,71 @@ physical package identity, so executable package code cannot impersonate an
 official Companion. The Source closure selects project packages; Studio does not
 scan `node_modules` for plugins or use Runtime Profiles to select Companions.
 
-The same Studio Companion facet can contribute Film, temporal-domain and parameter Companions. A Film Companion
+The same Studio Companion facet can contribute Film, temporal-domain, temporal-declaration and parameter Companions. A Film Companion
 identifies its Timeline and terminal Tracks. The Timeline supplies only the program range. A
-temporal-domain Companion owns source observation, requests the domain values it needs, projects
-generic anchors plus point/span items onto that Timeline, and receives inverse point/span edits.
+temporal-domain Companion owns source observation, requests the domain values it needs, and returns
+one view for every exact Projection instance. Each view projects package-owned lanes, anchors and
+visible point/span Items onto the absolute Timeline. Domain objects needed only to invert a Track/Item
+edit belong in `editItems`; Studio does not draw them as another lane.
 Script Studio uses this protocol for Narrative, but common Studio neither imports Narrative nor
 reserves segment, word, Selection or Moment slots. Another package can contribute beat, shot or
 motion-event domains through the same protocol.
 
+A temporal-declaration Companion instead matches one author Surface and names only the output ports
+whose primary values are author-visible absolute Windows or Instants. It does not choose their color,
+row or editing behavior. Studio resolves those exact outputs and puts every package's declarations in
+one read-only `Windows & Instants` row. This keeps Surface port knowledge in the owning package while
+letting common Studio understand only the shared absolute temporal types. Do not export a Timeline's
+root range, automatically derived Window boundaries or internal helper values as separate declarations.
+
+```ts
+createStudioCompanionFacet({
+  temporalDeclarations: [{
+    id: "window",
+    match: { module: myModule, surface: "window" },
+    project: ({ placement }) => placement.id === undefined ? [] : [{
+      id: placement.id,
+      output: placement.outputPorts.find((port) => port.name === "window")!.ref,
+      range: placement.range,
+    }],
+  }],
+})
+```
+
+A temporal-relation Companion owns the inverse meaning of one package-private Producer output. It
+receives only the executed input/output values and one desired Point, Extent or Span constraint. It
+may return input constraints and exact author-Spec replacements. Common Studio recursively composes
+those local plans, removes conflicting branches, merges candidates that reach the same exact author
+writes, and commits the sole remaining plan in one transaction. Distinct surviving plans are a real
+ambiguity. The package never receives mutable Studio state or file access through this API.
+
+The same relation may expose `trace` to reconstruct the meaning of its output from exact input
+records. Trace is how a private materialization, offset or domain projection preserves lineage and
+edit authority without making Studio recognize the package's Producer names or input vocabulary.
+
+This is how an author package keeps private construction values private. For example,
+`@qflow/timeline-author` explains how its materialized Window leads to a construction Span, and how
+that Span leads to its Point and Extent inputs. Studio does not import or enumerate those Producer
+names. A relation with no unique inverse returns no plan; a relation with several genuine author
+choices returns several plans. Studio evaluates them through the remaining graph and rejects the
+gesture only if they still produce different valid author decisions.
+
+```ts
+createStudioCompanionFacet({
+  temporalRelations: [{
+    id: "span-between",
+    match: { producer: mySpanProducer, output: "span" },
+    invert: ({ target }) => target.kind !== "span" ? [] : [{ constraints: [
+      { input: "start", target: { kind: "instant", frame: target.startFrame } },
+      { input: "end", target: { kind: "instant", frame: target.endFrameExclusive } },
+    ] }],
+  }],
+})
+```
+
 For a domain item whose Spec is consumed beside a Window or Instant, call
 `temporalLineageFor(context, item.id, "window")` using the actual projection input name. Attach the
-returned lineage to that entity; the input may instead be `activation`, `outer` or another declared
+returned lineage to that Item; the input may instead be `activation`, `outer` or another declared
 port. Studio derives common timeline gestures from endpoint authority. No matching lineage means
 no inferred domain edit; several matching edges require resolving the ambiguity in the component
 projection. Visible frame coincidence is not a source relationship.
@@ -188,7 +242,7 @@ Inspector editing deliberately has two declarations:
 This keeps source traversal, timeline inverses and editor presentation from
 silently becoming one policy. Studio resolves the declarations against the
 current Source closure. Visible read-only bindings render as text alongside editable fields.
-A projected entity can also supply `inspector` values with an `id`, `label`, `domain`, `section`
+A projected Item can also supply `inspector` values with an `id`, `label`, `domain`, `section`
 and `value`, such as its resolved interval. These facts need no Source endpoint.
 Only resolved fields with an `edit` endpoint accept `parameter.adjust`. Studio renders all DOM
 and CSS itself; grouping does not grant edit authority.
@@ -207,60 +261,56 @@ new domain property fails Companion loading instead of inheriting UI from its na
 `referenced` follows declared authored-element references; `recipe` names an explicit path through
 authored references to one SVS Recipe and its admitted properties. These paths are independent of
 the `inspector` field table. Keep shared values shared: editing a Recipe affects its consumers, while
-an entity-specific `parameterReferences` override must identify the actual authored value it uses.
+an Item-specific `parameterReferences` override must identify the actual authored value it uses.
 
-Verify the integration in an ordinary Run: the intended Module/Surface matches, the expected entity
+Verify the integration in an ordinary Run: the intended Module/Surface matches, the expected Item
 is selected, its field reaches the correct Source or Recipe, and changing it recomputes the preview.
 For domain handles, verify the exact point/span identity and its other consumers too. Read-only derived timing
 is preferable to an invented inverse. The Companion explains the component; its Producers remain
 responsible for identical video behavior in Studio, seeking and encoded rendering.
 
 Compact chrome uses `display.title` as its complete single-line content: a Cue can put its subtitle
-text there and a Use can put its Style name there. It has no separate thumbnail/body region or
+text there. It has no separate thumbnail/body region or
 inline duration. Time remains in the tooltip and Companion-selected Inspector facts. Tone and lane
 height are independent declarations; compact does not recognize Caption or Use names.
 
 Choose lane tones explicitly. The `blue-muted`, `green-muted`, `magenta-muted`
 and `orange-muted` palette entries provide quieter rows within the same color
-family. For example, content and its presentation Uses can share a hue while
-the Uses take the muted tone. Studio does not derive tone from attachment depth
-or the entity name.
+family. Studio does not derive tone from attachment depth or the Item kind.
 
-### Internal bands and child Tracks
+### Inspector objects and child Tracks
 
-A Track can place independently timed entities in internal `bands`. These strips share its label
-and meet without gaps. Use them for aspects of the same content, such as a bottom strip of
-presentation rules. Keep `attachments` for independently represented child objects with their own
-labels, such as a ranking board's reveals. These declarations affect Studio presentation only.
+A Track can project authored rules or other non-occurrence objects through `inspectorObjects`.
+They stay out of the Timeline and appear in that Track's Inspector. Keep `attachments` for
+independently represented child content with its own time identity and label, such as a ranking
+board's reveals. Neither form changes the compiled video model.
 
 ```ts
 {
   lane: { heightPx: 60 },
-  bands: [{
+  inspectorObjects: [{
     id: "rules",
-    placement: "after",
-    heightPx: 15,
-    display: "label",
+    label: "Presentation Rules",
     bindings: [{ name: "style" }],
     inspector: [{
       binding: "style", label: "Style", domain: "how", control: "text",
       section: { id: "presentation", label: "Presentation" },
     }],
+    project: (context) => context.placement?.children.flatMap((child) => child.id === undefined ? [] : [{
+      id: `rule:${child.id}`,
+      authoredId: child.id,
+      title: child.id,
+      elementRange: child.range,
+    }]) ?? [],
   }],
 }
 ```
 
-The projection puts `band: "rules"` on the corresponding entity drafts. Other entities remain in
-the main content area. A band can be `before` or `after` that area; declarations retain their order
-within each placement. `display: "label"` fills the strip with entity titles, while `"content"`
-retains the entity's normal chrome and body. An optional `tone` selects another palette entry;
-omission inherits the Track tone. Heights are independent, so a label band can match the 15px
-standard item header.
-
-An entity selects either an internal `band` or a child `lane`. Bands retain their own intervals,
-overlap ordering, selection, Inspector declarations and temporal writeback. A rule spanning three
-content blocks stays one entity; Studio does not split it at content boundaries. Band entities stay
-in the Track's `clips` collection, so ordinary selection and editing use the same identities.
+The projected object has its own source identity and fields but no timeline rectangle. Studio shows
+these objects when an Item on the owning Track is selected. Their fields use the same binding and
+parameter-Companion machinery as Item fields. An independently timed child still uses a declared
+`attachment` and selects that attachment's `lane` in its Item draft; attachments remain ordinary
+Tracks with their own Items, selection and temporal writeback.
 
 ### Parameters owned by referenced objects
 

@@ -7,7 +7,7 @@ function depthOf(range: Range, all: readonly Range[]): number {
   return 1 + all.filter((other) => other.start < range.start && other.end > range.end).length;
 }
 
-/** Stable tones derived from package-contributed source nesting, then reused by clips. */
+/** Stable tones derived from package-contributed source nesting, then reused by Items. */
 export function intentTones(snapshot: StudioSnapshot): ReadonlyMap<string, number> {
   const tones = new Map<string, number>();
   for (const domain of snapshot.temporalDomains) {
@@ -19,17 +19,17 @@ export function intentTones(snapshot: StudioSnapshot): ReadonlyMap<string, numbe
   const seen = new Map<string, number>();
   let spare = 0;
   for (const track of snapshot.tracks) {
-    for (const clip of track.clips) {
-      if (tones.has(clip.authoredId)) continue;
-      const intent = clip.markerId === undefined ? undefined : tones.get(clip.markerId);
+    for (const item of track.items) {
+      if (tones.has(item.authoredId)) continue;
+      const intent = item.markerId === undefined ? undefined : tones.get(item.markerId);
       if (intent === undefined) {
-        tones.set(clip.authoredId, spare % INTENT_TONES);
+        tones.set(item.authoredId, spare % INTENT_TONES);
         spare += 1;
         continue;
       }
-      const index = seen.get(clip.markerId!) ?? 0;
-      seen.set(clip.markerId!, index + 1);
-      tones.set(clip.authoredId, (intent + index) % INTENT_TONES);
+      const index = seen.get(item.markerId!) ?? 0;
+      seen.set(item.markerId!, index + 1);
+      tones.set(item.authoredId, (intent + index) % INTENT_TONES);
     }
   }
   return tones;

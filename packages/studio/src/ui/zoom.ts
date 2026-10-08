@@ -109,7 +109,7 @@ export function createZoom(): Zoom {
     subscribe(listen) { listeners.push(listen); listen(window_); },
     /**
      * Pinching over the strip zooms about the point under the fingers, which is
-     * how every other timeline behaves and the only gesture that keeps the clip
+     * how every other timeline behaves and the only gesture that keeps the Item
      * being read where it was.
      */
     pinch(at: number, factor: number) {

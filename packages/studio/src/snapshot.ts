@@ -2,7 +2,7 @@ import { composeParameterDeclarations } from "./parameters.js";
 /**
  * Turn the resolved Studio projection into what the panels read.
  *
- * The Timeline owns the work range. Companions project selectable entities onto
+ * The Timeline owns the work range. Companions project selectable Items onto
  * that range without extending it or requiring component-specific editor code.
  */
 import { relative } from "node:path";
@@ -10,25 +10,28 @@ import { relative } from "node:path";
 import type { MarkupSurfaceRegistryLike } from "@qflow/qflow/markup";
 import { compositionTypes } from "@qflow/qflow/composition";
 import { timelineFrameCount } from "@qflow/qflow/timeline";
+import { temporalTypes } from "@qflow/qflow/temporal";
+import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
 import { sameModule, sameType } from "@qflow/qflow/protocol";
 
 import type {
   CandidateProvenance,
-  Clip,
+  StudioItem,
   StudioSnapshot,
   Range,
   TemporalDomainView,
-  Track,
+  StudioTrack,
 } from "./shared.js";
 import type { Placement } from "./observe.js";
 import type { StudioProjection } from "./projection.js";
 import {
-  sealStudioClip,
+  sealStudioItem,
 } from "./studio-registry.js";
 import type { StudioCompanionRegistry } from "./studio-registry.js";
-import type { StudioEntityDraft } from "./studio-registry.js";
-import { inspectorFieldsForBindings, resolveTimelineEditHandles, sourceBindingsForDraft, temporalBindingDeclarations } from "./parameters.js";
+import type { StudioItemDraft } from "./studio-registry.js";
+import { inspectorFieldsForBindings, resolveTimelineEditHandles, sourceBindingsForDraft } from "./parameters.js";
 import type { StudioSourceFile } from "./parameters.js";
+import { temporalAuthorBindings } from "./temporal-inverse.js";
 
 type Present = {
   readonly id: string;
@@ -108,11 +111,73 @@ function temporalDomains(
   };
   return built.source.observations.temporalDomains.flatMap((source) => {
     const projected = registry.projectTemporalDomain({ source, values: built.temporalDomainValues, timeline: built.timeline });
-    if (projected === undefined || projected.timelineId !== built.timeline.id) return [];
-    return [{ ...projected, companion: source.companion,
+    return projected.filter((view) => view.timelineId === built.timeline.id).map((view) => ({ ...view, companion: source.companion,
       presentation: registry.temporalDomainPresentation(source.companion), provenance,
-      source: { path: source.sourcePath, content: source.content } }];
+      source: { path: source.sourcePath, content: source.content } }));
   });
+}
+
+/** All package-declared absolute author values share one read-only Timeline row. */
+function temporalDeclarationDomain(
+  registry: StudioCompanionRegistry,
+  built: StudioProjection,
+  source: { readonly path: string; readonly text: string },
+): TemporalDomainView {
+  const values = new Map(built.temporalValues.map((item) => [item.id, item] as const));
+  const declarations = built.source.observations.placements.flatMap((placement) =>
+    registry.projectTemporalDeclarations(placement).map((draft) => ({ placement, draft })));
+  const anchors: TemporalDomainView["anchors"][number][] = [];
+  const items: TemporalDomainView["items"][number][] = [];
+  const seen = new Set<string>();
+  for (const { placement, draft } of declarations) {
+    if (seen.has(draft.output)) continue;
+    const found = values.get(draft.output);
+    if (found === undefined) continue;
+    const range = placement.sourcePath === source.path ? draft.range : undefined;
+    if (sameType(found.type, temporalTypes.window)) {
+      const value = found.value as TemporalWindow;
+      if (value.start.timelineId !== built.timeline.id || value.end.timelineId !== built.timeline.id) continue;
+      const startAnchorId = `${draft.output}:start`;
+      const endAnchorId = `${draft.output}:end`;
+      anchors.push({ id: startAnchorId, kind: "window-start", frame: value.span.startFrame },
+        { id: endAnchorId, kind: "window-end", frame: value.span.endFrameExclusive });
+      items.push({ kind: "span", appearance: "block", id: draft.output, laneId: "declarations",
+        label: draft.label ?? draft.id, startAnchorId, endAnchorId,
+        startFrame: value.span.startFrame, endFrameExclusive: value.span.endFrameExclusive,
+        ...(range === undefined ? {} : { range }) });
+      seen.add(draft.output);
+      continue;
+    }
+    if (!sameType(found.type, temporalTypes.instant)) continue;
+    const value = found.value as TemporalInstant;
+    if (value.timelineId !== built.timeline.id) continue;
+    const anchorId = `${draft.output}:point`;
+    anchors.push({ id: anchorId, kind: "instant", frame: value.frame });
+    items.push({ kind: "point", appearance: "marker", id: draft.output, laneId: "declarations",
+      label: draft.label ?? draft.id, anchorId, frame: value.frame,
+      ...(range === undefined ? {} : { range }) });
+    seen.add(draft.output);
+  }
+  const provenance: CandidateProvenance = {
+    output: built.timingOutput?.name ?? "Timeline",
+    ...(built.timingOutput?.ref === undefined ? {} : { outputRef: built.timingOutput.ref }),
+    ...(built.timingCandidateId === undefined ? {} : { candidateId: built.timingCandidateId }),
+    origin: built.timingCandidateOrigin,
+    status: "resolved",
+    errors: [],
+  };
+  return {
+    id: "absolute-declarations",
+    companion: "studio#absolute-declarations",
+    timelineId: built.timeline.id,
+    presentation: { family: "temporal", tone: "teal", label: "Windows & Instants", icon: "timeline" },
+    lanes: [{ id: "declarations", label: "Windows & Instants", heightPx: 26 }],
+    anchors,
+    items,
+    editItems: [],
+    provenance,
+    source: { path: source.path, content: { start: 0, end: source.text.length } },
+  };
 }
 
 export function snapshot(registry: StudioCompanionRegistry, built: StudioProjection, input: {
@@ -128,8 +193,8 @@ export function snapshot(registry: StudioCompanionRegistry, built: StudioProject
   readonly surfaces: MarkupSurfaceRegistryLike;
 }): StudioSnapshot {
   const located = authored(built.source.observations.placements);
-  const domains = temporalDomains(registry, built);
-  const tracks: Track[] = [];
+  const domains = [...temporalDomains(registry, built), temporalDeclarationDomain(registry, built, input)];
+  const tracks: StudioTrack[] = [];
   for (const item of built.tracks) {
     const projectedSpans = spans(item.value, input.frameRate);
     const binding = registry.bindTrack(item);
@@ -138,7 +203,7 @@ export function snapshot(registry: StudioCompanionRegistry, built: StudioProject
         candidate.id === item.trace.authoredId
         && sameModule(candidate.module, item.trace.module!)
         && candidate.surface === item.trace.surface);
-    const generic = (): readonly StudioEntityDraft[] => projectedSpans.map((span) => {
+    const generic = (): readonly StudioItemDraft[] => projectedSpans.map((span) => {
       const identity = span.subjectId ?? span.id;
       const where = located.find((candidate) => candidate.id === identity);
       return {
@@ -152,7 +217,7 @@ export function snapshot(registry: StudioCompanionRegistry, built: StudioProject
         stackOrder: span.stackOrder,
       };
     });
-    const drafts = registry.projectTrack({
+    const companionContext = {
       track: item,
       ...(placement === undefined ? {} : { placement }),
       ...(item.surfacePreview === undefined ? {} : { surfacePreview: item.surfacePreview }),
@@ -161,23 +226,29 @@ export function snapshot(registry: StudioCompanionRegistry, built: StudioProject
       temporalBindings: built.temporalBindings.get(item.outputRef) ?? [],
       temporalDomains: domains,
       generic,
-    }).map((draft) => {
+    };
+    const drafts = registry.projectTrack(companionContext).map((draft) => {
       const declarations = composeParameterDeclarations({
         placement, draft, placements: built.source.observations.placements, registry,
-        bindings: registry.bindingDeclarations(item, placement, draft.lane, draft.band),
-        inspector: registry.inspectorDeclarations(item, placement, draft.lane, draft.band),
+        bindings: registry.bindingDeclarations(item, draft.lane),
+        inspector: registry.inspectorDeclarations(item, draft.lane),
       });
-      const bindings = sourceBindingsForDraft({
+      const ordinaryBindings = sourceBindingsForDraft({
         root: input.workspaceRoot,
         files: input.sourceFiles,
         placement,
         draft,
-        declarations: [
-          ...declarations.bindings,
-          ...temporalBindingDeclarations(draft.temporal),
-        ],
+        declarations: declarations.bindings,
         placements: built.source.observations.placements,
       });
+      const temporalBindings = draft.temporal === undefined ? [] : temporalAuthorBindings({
+        state: built.state,
+        rootRecord: draft.temporal.record,
+        workspaceRoot: input.workspaceRoot,
+        placements: built.source.observations.placements,
+        files: input.sourceFiles,
+      });
+      const bindings = [...ordinaryBindings, ...temporalBindings];
       const inspector = inspectorFieldsForBindings(
         draft,
         bindings,
@@ -194,9 +265,34 @@ export function snapshot(registry: StudioCompanionRegistry, built: StudioProject
         editHandles,
       };
     });
-    const clips: Clip[] = drafts
+    const inspectorObjects = registry.projectInspectorObjects(companionContext).map(({ label, draft, bindings: declaredBindings, inspector: declaredInspector }) => {
+      const declarations = composeParameterDeclarations({
+        placement,
+        draft,
+        placements: built.source.observations.placements,
+        registry,
+        bindings: declaredBindings,
+        inspector: declaredInspector,
+      });
+      const bindings = sourceBindingsForDraft({
+        root: input.workspaceRoot,
+        files: input.sourceFiles,
+        placement,
+        draft,
+        declarations: declarations.bindings,
+        placements: built.source.observations.placements,
+      });
+      return {
+        id: draft.id.startsWith(`${item.outputRef}:`) ? draft.id : `${item.outputRef}:inspector:${draft.id}`,
+        group: label,
+        title: draft.title,
+        ...(draft.elementRange === undefined ? {} : { elementRange: draft.elementRange }),
+        inspector: inspectorFieldsForBindings(draft, bindings, declarations.inspector),
+      };
+    });
+    const items: StudioItem[] = drafts
       .filter(({ draft }) => draft.lane === undefined)
-      .map(({ draft, inspector, editHandles }) => sealStudioClip(item.outputRef, draft, binding, editHandles, inspector));
+      .map(({ draft, inspector, editHandles }) => sealStudioItem(item.outputRef, draft, binding, editHandles, inspector));
     const provenance: CandidateProvenance = {
       output: item.name,
       outputRef: item.outputRef,
@@ -209,7 +305,8 @@ export function snapshot(registry: StudioCompanionRegistry, built: StudioProject
       id: item.outputRef,
       label: item.name,
       row: 0,
-      clips,
+      items,
+      inspectorObjects,
       binding,
       provenance,
     });
@@ -220,8 +317,9 @@ export function snapshot(registry: StudioCompanionRegistry, built: StudioProject
         id: `${item.outputRef}::studio::${attachment.attachmentId}`,
         label: attachment.label ?? attachment.attachmentId ?? item.name,
         row: 0,
-        clips: attachedDrafts.map(({ draft, inspector, editHandles }) =>
-          sealStudioClip(item.outputRef, draft, attachment, editHandles, inspector)),
+        items: attachedDrafts.map(({ draft, inspector, editHandles }) =>
+          sealStudioItem(item.outputRef, draft, attachment, editHandles, inspector)),
+        inspectorObjects: [],
         binding: attachment,
         provenance,
       });
@@ -229,8 +327,8 @@ export function snapshot(registry: StudioCompanionRegistry, built: StudioProject
   }
   // Root lanes retain Film's authored organizational order. A Present's z is
   // local compositing data and cannot define the order of a Track containing
-  // independently stacked items. Studio-only detail lanes stay beside the
-  // root that produced them in this list.
+  // independently stacked items. Companion-declared Attachment Tracks stay
+  // beside the root Track that produced them in this list.
   const rows = tracks.map((track, row) => ({ ...track, row }));
 
   const frameCount = timelineFrameCount(built.timeline);

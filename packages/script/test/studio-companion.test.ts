@@ -32,14 +32,50 @@ test("Studio observes and edits the compiler's Script body without changing its 
   const values = decoded.records.flatMap(record => record.value.kind === "inline"
     ? [{ id: record.id, type: record.type, value: record.value.value }] : []);
   values.push({ id: "story.projection", type: narrativeTemporalTypes.narrativeProjection, value: {
-    id: "story.projection", narrativeId: "story", timelineId: "film", segments: [], tokens: [],
+    id: "story.projection", narrativeId: "story", timelineId: "film",
+    segments: parsed.segments.map((segment) => ({ segmentId: segment.id,
+      startBoundaryId: segment.startAnchorId, endBoundaryId: segment.endAnchorId })),
+    tokens: parsed.tokens.map((token) => ({ tokenId: token.id, segmentId: token.segmentId, text: token.text,
+      startBoundaryId: token.startAnchorId, endBoundaryId: token.endAnchorId })),
     boundaries: parsed.anchors.map((anchor, index) => ({ id: anchor.id, frame: index * 3 })),
   } });
-  const projection = companion.project({ source: { ...observed, companion: companion.id }, values,
+  const [projection] = companion.project({ source: { ...observed, companion: companion.id }, values,
     timeline: { id: "film", frameCount: 100, frameRate: { numerator: 30, denominator: 1 } },
   });
   assert.ok(projection);
+  assert.deepEqual(projection.lanes.map((lane) => lane.id), ["maps", "evidence"]);
+  assert.equal(projection.items.some((item) => item.laneId === "intent"), false);
+  assert.equal(projection.editItems.some((item) => item.id === "beat"), true);
   const tokens = projection.items.filter((item) => item.kind === "span" && item.appearance === "compact");
   assert.deepEqual(tokens.map(token => token.label), parsed.tokens.map(token => token.text));
   assert.deepEqual(tokens.map(token => token.range), observation.tokens.map(token => token.range));
+});
+
+test("Studio projects every exact Narrative Projection instead of choosing one per Script and Timeline", () => {
+  const body = '<line><host>one two</line>';
+  const prefix = '<script id="story">';
+  const source = `${prefix}${body}</script>`;
+  const companion = scriptStudioTemporalDomains[0]!;
+  const decoded = decodeScriptSurface({ sourceName: "studio.svml", source, tag: "script", attributes: { id: "story" },
+    openingStart: 0, contentStart: prefix.length });
+  const observed = companion.observe({ sourceName: "studio.svml", source, tag: "script", attributes: { id: "story" },
+    range: { start: 0, end: source.length }, contentStart: prefix.length, nextOffset: decoded.nextOffset })!;
+  const parsed = parseScript("body", body);
+  const values = decoded.records.flatMap(record => record.value.kind === "inline"
+    ? [{ id: record.id, type: record.type, value: record.value.value }] : []);
+  for (const [id, offset] of [["story.primary", 0], ["story.alternate", 40]] as const) {
+    values.push({ id, type: narrativeTemporalTypes.narrativeProjection, value: {
+      id, narrativeId: "story", timelineId: "film",
+      segments: parsed.segments.map((segment) => ({ segmentId: segment.id,
+        startBoundaryId: segment.startAnchorId, endBoundaryId: segment.endAnchorId })),
+      tokens: parsed.tokens.map((token) => ({ tokenId: token.id, segmentId: token.segmentId, text: token.text,
+        startBoundaryId: token.startAnchorId, endBoundaryId: token.endAnchorId })),
+      boundaries: parsed.anchors.map((anchor, index) => ({ id: anchor.id, frame: offset + index * 3 })),
+    } });
+  }
+  const projected = companion.project({ source: { ...observed, companion: companion.id }, values,
+    timeline: { id: "film", frameCount: 100, frameRate: { numerator: 30, denominator: 1 } } });
+  assert.deepEqual(projected.map((item) => item.id), ["story.primary", "story.alternate"]);
+  assert.deepEqual(projected.map((item) => item.lanes.map((lane) => lane.id)),
+    [["maps", "evidence"], ["maps", "evidence"]]);
 });

@@ -13,8 +13,8 @@ that may declare an inverse.
 
 | Author form | Move | Leading edge | Trailing edge |
 | --- | --- | --- | --- |
-| `from="2s" for="8f"` | Rewrite `from`; retain `for`. | Rewrite `from`. | Rewrite `for`. |
-| `until="3s" for="8f"` | Rewrite `until`; retain `for`. | Rewrite `for`. | Rewrite `until`. |
+| `from="2s" for="8f"` | Rewrite `from`; retain `for`. | Rewrite `from` and `for` atomically so the end stays fixed. | Rewrite `for`. |
+| `until="3s" for="8f"` | Rewrite `until`; retain `for`. | Rewrite `for`. | Rewrite `until` and `for` atomically so the start stays fixed. |
 | `from="1s" until="3s"` | Shift both values. | Rewrite `from`. | Rewrite `until`. |
 | named Window declared with `from`/`until`/`for` | Rewrite the declaration. | Rewrite its leading relation. | Rewrite its trailing relation. |
 | component `during={named-window}` | Follow the referenced value. | Edit its producer. | Edit its producer. |
@@ -46,4 +46,6 @@ This division is intentional:
 - the component owns only what the value means for its behavior.
 
 There is no automatic inverse, hidden compatibility fallback, or central registry of temporal
-lineage. Unsupported edits remain unavailable instead of mutating a guessed source.
+lineage. An author package may contribute local inverse relations for the private Producers it puts
+in the executed graph; Studio only composes their typed Point, Extent and Span constraints. Unsupported
+or ambiguous edits remain unavailable instead of mutating a guessed source.

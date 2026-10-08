@@ -2,7 +2,7 @@ import { canonicalize } from "@qflow/qflow/protocol";
 import type { ProducerPackage } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
 import type { StoredValue } from "@qflow/qflow/protocol";
-import type { LocalTemporalDomain, TemporalDuration, TemporalExtent, TemporalWindow } from "@qflow/qflow/temporal";
+import type { LocalTemporalDomain, TemporalExtent, TemporalWindow } from "@qflow/qflow/temporal";
 import type { Clock, Timeline } from "@qflow/qflow/timeline";
 
 import { timelineAuthorProducers } from "./manifest.js";
@@ -13,7 +13,7 @@ import {
   finalizeTimeline, materializeInstant, materializeWindow,
 } from "./program.js";
 import type {
-  ConstructionExtent, ConstructionIdentitySpec, ConstructionOffsetSpec,
+  ConstructionDurationSpec, ConstructionExtent, ConstructionIdentitySpec, ConstructionOffsetSpec,
   ConstructionPoint, ConstructionSpan, TimelineAuthorHeader,
 } from "./types.js";
 
@@ -26,7 +26,7 @@ const output = (value: unknown) => ({ kind: "inline" as const, value: canonicali
 export const timelineAuthorComponent = {
   producers: [
     { producer: timelineAuthorProducers.origin, handler: ({ inputs }) => ({ outputs: { point: output(constructionOrigin(inline<Clock>(inputs.clock?.value, "Clock"))) }, needs: {} }) },
-    { producer: timelineAuthorProducers.duration, handler: ({ inputs }) => ({ outputs: { extent: output(constructionDuration(inline<Clock>(inputs.clock?.value, "Clock"), inline<TemporalDuration>(inputs.duration?.value, "ConstructionDurationSpec"))) }, needs: {} }) },
+    { producer: timelineAuthorProducers.duration, handler: ({ inputs }) => ({ outputs: { extent: output(constructionDuration(inline<Clock>(inputs.clock?.value, "Clock"), inline<ConstructionDurationSpec>(inputs.duration?.value, "ConstructionDurationSpec").duration)) }, needs: {} }) },
     { producer: timelineAuthorProducers.resolvedExtent, handler: ({ inputs }) => ({ outputs: { extent: output(constructionResolvedExtent(inline<Clock>(inputs.clock?.value, "Clock"), inline<TemporalExtent>(inputs.extent?.value, "TemporalExtent"))) }, needs: {} }) },
     { producer: timelineAuthorProducers.offset, handler: ({ inputs }) => ({ outputs: { point: output(constructionOffset(inline<ConstructionPoint>(inputs.point?.value, "ConstructionPoint"), inline<ConstructionExtent>(inputs.extent?.value, "ConstructionExtent"), inline<ConstructionOffsetSpec>(inputs.spec?.value, "ConstructionOffsetSpec"))) }, needs: {} }) },
     { producer: timelineAuthorProducers.earliest, handler: ({ inputs }) => ({ outputs: { point: output(constructionEarliest(inline<ConstructionPoint>(inputs.left?.value, "ConstructionPoint"), inline<ConstructionPoint>(inputs.right?.value, "ConstructionPoint"))) }, needs: {} }) },

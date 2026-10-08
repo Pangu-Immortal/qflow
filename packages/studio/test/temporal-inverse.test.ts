@@ -1,0 +1,229 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import type { BuildState, ProducerStep, TypeRef, TypedRecord } from "@qflow/protocol";
+
+import { planTemporalInverse, temporalAuthorBindings } from "../src/temporal-inverse.js";
+import { StudioCompanionRegistry } from "../src/studio-registry.js";
+import { commonTemporalStudioRelations } from "../src/common-temporal-relations.js";
+import { timelineAuthorProducers } from "../../timeline-author/src/manifest.js";
+import { timelineAuthorStudioTemporalRelations } from "../../timeline-author/src/studio.js";
+
+const module = (name: string) => ({ name, version: "1" });
+const type = (owner: string, name: string): TypeRef => ({ module: module(owner), name });
+const record = (id: string, owner: string, name: string, value: unknown): TypedRecord => ({
+  id, type: type(owner, name), value: { kind: "inline", value: value as never },
+});
+const step = (id: string, name: string, inputs: ProducerStep["inputs"], outputs: ProducerStep["outputs"]): ProducerStep => ({
+  id, producer: { module: module("@qflow/temporal"), name }, inputs, outputs, needs: {},
+});
+
+function fixture(): BuildState {
+  const program = [
+    record("timeline", "@qflow/timeline", "Timeline", {
+      id: "main", frameRate: { numerator: 30, denominator: 1 }, frameCount: 100,
+    }),
+    record("start-spec", "@qflow/temporal", "TemporalInstantSpec", {
+      id: "clip.start", subjectId: "clip", projection: { ref: "absolute", at: { unit: "frames", value: 10 } },
+      author: { binding: "from", relation: "direct" },
+    }),
+    record("duration", "@qflow/temporal", "TemporalDuration", { unit: "frames", value: 20 }),
+    record("shift-spec", "@qflow/temporal", "TemporalShiftSpec", {
+      id: "clip.end", subjectId: "clip", direction: 1,
+      author: { binding: "for", relation: "after-start" },
+    }),
+    record("window-spec", "@qflow/temporal", "TemporalWindowSpec", { id: "clip", subjectId: "clip" }),
+  ];
+  const executed = [
+    record("upstream-start", "@qflow/temporal", "TemporalInstant", {
+      id: "clip.start", subjectId: "clip", timelineId: "main", frame: 10,
+    }),
+    record("start", "@qflow/temporal", "TemporalInstant", {
+      id: "clip.start", subjectId: "clip", timelineId: "main", frame: 10,
+    }),
+    record("extent", "@qflow/temporal", "TemporalExtent", {
+      frameRate: { numerator: 30, denominator: 1 }, frameCount: 20,
+    }),
+    record("end", "@qflow/temporal", "TemporalInstant", {
+      id: "clip.end", subjectId: "clip", timelineId: "main", frame: 30,
+    }),
+    record("window", "@qflow/temporal", "TemporalWindow", {
+      id: "clip", subjectId: "clip",
+      start: { id: "clip.start", subjectId: "clip", timelineId: "main", frame: 10 },
+      end: { id: "clip.end", subjectId: "clip", timelineId: "main", frame: 30 },
+      span: { startFrame: 10, endFrameExclusive: 30 },
+    }),
+  ];
+  const steps = [
+    step("project", "project-program-instant", { timeline: "timeline", spec: "start-spec" }, { instant: "upstream-start" }),
+    step("reuse", "reuse-instant", { instant: "upstream-start" }, { instant: "start" }),
+    step("extent", "extent-from-duration", { timeline: "timeline", duration: "duration" }, { extent: "extent" }),
+    step("shift", "shift-instant", { timeline: "timeline", instant: "start", extent: "extent", spec: "shift-spec" }, { instant: "end" }),
+    step("compose", "compose-window", { spec: "window-spec", start: "start", end: "end" }, { window: "window" }),
+  ];
+  return {
+    format: "qflow.build@1",
+    program: { closure: { modules: [] }, records: program },
+    targets: [],
+    plan: { format: "qflow.plan@1", steps, goals: [], outputBindings: [] },
+    status: "complete", records: executed,
+    steps: steps.map(({ id }) => ({ id, status: "complete" as const })),
+    needs: [], outstanding: [], diagnostics: [],
+  } as unknown as BuildState;
+}
+
+const source = '<Clip from="10f" for="20f"/>';
+const fromStart = source.indexOf("10f");
+const forStart = source.indexOf("20f");
+const placement = {
+  sourcePath: "/project/main.svml",
+  authorEndpoints: { from: "author:from", for: "author:for" },
+  records: ["start-spec", "duration", "shift-spec", "window-spec"],
+  attributes: { from: "10f", for: "20f" },
+  referenceAttributes: {},
+  attributeValueRanges: {
+    from: { start: fromStart, end: fromStart + 3 },
+    for: { start: forStart, end: forStart + 3 },
+  },
+  children: [],
+} as unknown as import("../src/observe.js").Placement;
+
+function bindings(state: BuildState) {
+  return temporalAuthorBindings({
+    state,
+    rootRecord: "window",
+    workspaceRoot: "/project",
+    placements: [placement],
+    files: [{ path: "/project/main.svml", text: source, language: "svml" }],
+  });
+}
+
+const plan = (state: BuildState, startFrame: number, endFrameExclusive: number) => planTemporalInverse({
+  state,
+  rootRecord: "window",
+  target: { kind: "window", startFrame, endFrameExclusive },
+  bindings: bindings(state),
+  domainFrame: () => undefined,
+  registry: new StudioCompanionRegistry([], { temporalRelations: commonTemporalStudioRelations }),
+});
+
+test("recursive Temporal inverse crosses reuse and atomically compensates from/for", () => {
+  const state = fixture();
+  assert.deepEqual(bindings(state).map((binding) => [binding.binding, binding.source.endpoint]), [
+    ["start-spec:from", "author:from"],
+    ["shift-spec:for", "author:for"],
+  ]);
+  assert.deepEqual(plan(state, 15, 30).map((write) => [write.source.endpoint, write.replacement]), [
+    ["author:from", "15f"],
+    ["author:for", "15f"],
+  ]);
+});
+
+test("move preserves duration while trim-end changes only the owned extent", () => {
+  const state = fixture();
+  assert.deepEqual(plan(state, 15, 35).map((write) => [write.source.endpoint, write.replacement]), [
+    ["author:from", "15f"],
+  ]);
+  assert.deepEqual(plan(state, 10, 40).map((write) => [write.source.endpoint, write.replacement]), [
+    ["author:for", "30f"],
+  ]);
+});
+
+test("Timeline Author Companion reverses its private Point, Extent and Span graph", () => {
+  const timelineModule = module("@qflow/timeline-author");
+  const authorType = (name: string) => ({ module: timelineModule, name });
+  const program = [
+    record("clock", "@qflow/timeline", "Clock", { frameRate: { numerator: 30, denominator: 1 } }),
+    record("from-duration", "@qflow/timeline-author", "ConstructionDurationSpec", {
+      duration: { unit: "frames", value: 10 },
+    }),
+    record("from-spec", "@qflow/timeline-author", "ConstructionOffsetSpec", {
+      direction: 1, author: { binding: "from", declarationId: "clip", expression: { kind: "absolute" } },
+    }),
+    record("for-spec", "@qflow/timeline-author", "ConstructionDurationSpec", {
+      duration: { unit: "frames", value: 20 }, author: { binding: "for", declarationId: "clip" },
+    }),
+    record("timeline", "@qflow/timeline", "Timeline", {
+      id: "main", frameRate: { numerator: 30, denominator: 1 }, frameCount: 100,
+    }),
+    record("identity", "@qflow/timeline-author", "ConstructionIdentitySpec", { id: "main.clip" }),
+  ];
+  const executed = [
+    { id: "origin", type: authorType("ConstructionPoint"), value: { kind: "inline", value: { frame: 0 } } },
+    { id: "from-extent", type: authorType("ConstructionExtent"), value: { kind: "inline", value: { frameCount: 10 } } },
+    { id: "start-point", type: authorType("ConstructionPoint"), value: { kind: "inline", value: { frame: 10 } } },
+    { id: "clip-extent", type: authorType("ConstructionExtent"), value: { kind: "inline", value: { frameCount: 20 } } },
+    { id: "clip-span", type: authorType("ConstructionSpan"), value: { kind: "inline", value: { startFrame: 10, endFrameExclusive: 30 } } },
+    record("author-window", "@qflow/temporal", "TemporalWindow", {
+      id: "main.clip", subjectId: "main.clip",
+      start: { id: "main.clip.start", subjectId: "main.clip", timelineId: "main", frame: 10 },
+      end: { id: "main.clip.end", subjectId: "main.clip", timelineId: "main", frame: 30 },
+      span: { startFrame: 10, endFrameExclusive: 30 },
+    }),
+  ] as TypedRecord[];
+  const authorStep = (id: string, producer: keyof typeof timelineAuthorProducers,
+    inputs: ProducerStep["inputs"], outputName: string, output: string): ProducerStep => ({
+    id, producer: timelineAuthorProducers[producer], inputs, outputs: { [outputName]: output }, needs: {},
+  });
+  const steps = [
+    authorStep("origin", "origin", { clock: "clock" }, "point", "origin"),
+    authorStep("from-duration", "duration", { clock: "clock", duration: "from-duration" }, "extent", "from-extent"),
+    authorStep("offset", "offset", { point: "origin", extent: "from-extent", spec: "from-spec" }, "point", "start-point"),
+    authorStep("for-duration", "duration", { clock: "clock", duration: "for-spec" }, "extent", "clip-extent"),
+    authorStep("span", "span", { start: "start-point", extent: "clip-extent" }, "span", "clip-span"),
+    authorStep("window", "window", { timeline: "timeline", span: "clip-span", spec: "identity" }, "window", "author-window"),
+  ];
+  const state = {
+    format: "qflow.build@1", program: { closure: { modules: [] }, records: program }, targets: [],
+    plan: { format: "qflow.plan@1", steps, goals: [], outputBindings: [] }, status: "complete",
+    records: executed, steps: steps.map(({ id }) => ({ id, status: "complete" as const })),
+    needs: [], outstanding: [], diagnostics: [],
+  } as unknown as BuildState;
+  const text = '<time:Window id="clip" from="10f" for="20f"/>';
+  const child = {
+    sourcePath: "/project/main.svml", authorEndpoints: { from: "child:from", for: "child:for" },
+    records: ["from-spec", "for-spec"], attributes: { from: "10f", for: "20f" }, referenceAttributes: {},
+    attributeValueRanges: {
+      from: { start: text.indexOf("10f"), end: text.indexOf("10f") + 3 },
+      for: { start: text.indexOf("20f"), end: text.indexOf("20f") + 3 },
+    }, children: [],
+  } as unknown as import("../src/observe.js").Placement;
+  const owned = temporalAuthorBindings({ state, rootRecord: "author-window", workspaceRoot: "/project",
+    placements: [child], files: [{ path: "/project/main.svml", text, language: "svml" }] });
+  const registry = new StudioCompanionRegistry([], { temporalRelations: timelineAuthorStudioTemporalRelations });
+  const writes = planTemporalInverse({ state, rootRecord: "author-window",
+    target: { kind: "window", startFrame: 15, endFrameExclusive: 30 }, bindings: owned,
+    domainFrame: () => undefined, registry });
+  assert.deepEqual(writes.map((write) => [write.source.endpoint, write.replacement]), [
+    ["child:from", "15f"], ["child:for", "15f"],
+  ]);
+});
+
+test("relation candidates are solved by their final author writes", () => {
+  const spec = record("spec", "@example/time", "Spec", { author: { binding: "at" } });
+  const point = record("point", "@qflow/temporal", "TemporalInstant", {
+    id: "point", subjectId: "point", timelineId: "main", frame: 10,
+  });
+  const producer = { module: module("@example/time"), name: "choose-point" };
+  const operation: ProducerStep = { id: "choose", producer, inputs: { spec: "spec" }, outputs: { point: "point" }, needs: {} };
+  const state = {
+    format: "qflow.build@1", program: { closure: { modules: [] }, records: [spec] }, targets: [],
+    plan: { format: "qflow.plan@1", steps: [operation], goals: [], outputBindings: [] }, status: "complete",
+    records: [point], steps: [{ id: "choose", status: "complete" as const }],
+    needs: [], outstanding: [], diagnostics: [],
+  } as unknown as BuildState;
+  const binding = {
+    id: "spec:at", binding: "spec:at", name: "at", value: "10f", language: "svml" as const, writable: true,
+    source: { endpoint: "author:at", path: "main.svml", range: { start: 0, end: 3 }, preimage: "10f" },
+  };
+  const candidates = (replacements: readonly string[]) => new StudioCompanionRegistry([], { temporalRelations: [{
+    id: "choose-point", match: { producer, output: "point" },
+    invert: () => replacements.map((replacement) => ({ writes: [{ input: "spec", binding: "at", replacement }] })),
+  }] });
+  const planWith = (registry: StudioCompanionRegistry) => planTemporalInverse({
+    state, rootRecord: "point", target: { kind: "instant", frame: 12 }, bindings: [binding],
+    domainFrame: () => undefined, registry,
+  });
+  assert.deepEqual(planWith(candidates(["12f", "12f"])).map((write) => write.replacement), ["12f"]);
+  assert.throws(() => planWith(candidates(["12f", "13f"])), /multiple distinct author inverses/u);
+});

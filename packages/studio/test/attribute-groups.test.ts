@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseStructuredElement } from "@qflow/markup";
 import { audioTrackModuleRef } from "@qflow/audio-track";
-import type { StudioPlacement, StudioEntityDraft, StudioTrackCompanion } from "@qflow/studio-companion";
+import type { StudioPlacement, StudioItemDraft, StudioTrackCompanion } from "@qflow/studio-companion";
 import { audioTrackStudioTrackCompanions } from "../../audio-track/src/studio.js";
 import { sourceBindingsForDraft, inspectorFieldsForBindings } from "../src/parameters.js";
 import { serializeAttributeGroup, validateParameterValue } from "../src/parameter-values.js";
@@ -12,7 +12,7 @@ function fields(text: string, companion: Pick<StudioTrackCompanion, "bindings" |
   const placement = { ...element, id: "music", tag: element.name, surface: "item", module: audioTrackModuleRef,
     sourcePath: "main.svml", references: [], referenceAttributes: {}, records: [], outputs: [], outputPorts: [], values: [], children: [],
   } as unknown as StudioPlacement;
-  const draft: StudioEntityDraft = { id: "music", authoredId: "music", display: { title: "Music", layers: [] }, startFrame: 0, endFrameExclusive: 90, stackOrder: 0 };
+  const draft: StudioItemDraft = { id: "music", authoredId: "music", display: { title: "Music", layers: [] }, startFrame: 0, endFrameExclusive: 90, stackOrder: 0 };
   return inspectorFieldsForBindings(draft, sourceBindingsForDraft({ root: "/project", files: [{ path: "main.svml", text, language: "svml" }],
     placement, draft, declarations: companion.bindings! }), companion.inspector!);
 }

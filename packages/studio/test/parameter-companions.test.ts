@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { StudioPlacement, StudioEntityDraft, StudioParameterCompanion } from "@qflow/studio-companion";
+import type { StudioPlacement, StudioItemDraft, StudioParameterCompanion } from "@qflow/studio-companion";
 import { studioContributionFromPackage, createStudioCompanionFacet } from "@qflow/studio-companion";
 import { composeParameterDeclarations, sourceBindingsForDraft, inspectorFieldsForBindings } from "../src/parameters.js";
 import { StudioCompanionRegistry } from "../src/studio-registry.js";
@@ -25,7 +25,7 @@ test("a project object contributes its own parameters to a consumer and inserts 
   const split = text.indexOf('<p:Pan');
   const owner = { ...placement("view", 0, split), referenceAttributes: { style: "pan" }, resolvedReferenceAttributes: { style: "pan" } };
   const style = placement("pan", split, text.length);
-  const draft: StudioEntityDraft = { id: "use", authoredId: "view", display: { title: "Pan", layers: [] }, startFrame: 0, endFrameExclusive: 30, stackOrder: 0 };
+  const draft: StudioItemDraft = { id: "use", authoredId: "view", display: { title: "Pan", layers: [] }, startFrame: 0, endFrameExclusive: 30, stackOrder: 0 };
   const declarations = composeParameterDeclarations({ registry, placement: owner, placements: [owner, style], draft,
     bindings: [{ name: "style", companion: true }], inspector: [] });
   const fields = inspectorFieldsForBindings(draft, sourceBindingsForDraft({ root: "/workspace", files: [{ path: "main.svml", text, language: "svml" }],

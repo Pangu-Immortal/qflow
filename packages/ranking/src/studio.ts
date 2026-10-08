@@ -2,7 +2,7 @@ import { rankingMarkupSurfaces, rankingModuleRef, rankingTypes } from "./index.j
 import type { RankingProgram, RankingSchedule, RankingSoundEventPlan } from "./index.js";
 import { compositionTypes } from "@qflow/qflow/composition";
 import type { AudioTrack } from "@qflow/qflow/composition";
-import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
+import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioItemDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
 import { artifactPreview, authoredChildFor, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-companion";
 
 
@@ -118,7 +118,7 @@ function rankingStyle(surface: "column-style" | "tier-style" | "top-three-style"
   };
 }
 
-function projectRanking(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+function projectRanking(context: StudioTrackCompanionContext): readonly StudioItemDraft[] {
   const placement = context.placement;
   const schedule = requiredSurfaceValue(context, "schedule") as RankingSchedule;
   const program = requiredSurfaceValue(context, "program") as RankingProgram;
@@ -126,8 +126,8 @@ function projectRanking(context: StudioTrackCompanionContext): readonly StudioEn
   const boardId = placement.id ?? context.track.outputRef;
   const outerTemporal = temporalLineageFor(context, boardId, "outer");
   const outerSemanticSource = temporalDomainSource(outerTemporal);
-  const group: StudioEntityDraft = {
-    id: `${context.track.outputRef}:entity:${boardId}`,
+  const group: StudioItemDraft = {
+    id: `${context.track.outputRef}:item:${boardId}`,
     authoredId: boardId,
     ...(outerSemanticSource?.id === undefined ? {} : { markerId: outerSemanticSource.id }),
     display: { title: boardId, layers: [] },
@@ -136,11 +136,11 @@ function projectRanking(context: StudioTrackCompanionContext): readonly StudioEn
     stackOrder: Math.max(...context.spans.map((span) => span.stackOrder), 0),
     elementRange: placement.range,
     renderIds: context.spans.map((span) => span.id),
-    presentation: { entity: "ranking", chrome: "group" },
+    presentation: { kind: "ranking", chrome: "group" },
     ...(outerTemporal === undefined ? {} : { temporal: outerTemporal }),
   };
   const programItems = new Map(program?.items.map((item) => [item.id, item] as const) ?? []);
-  const reveals = schedule.entries.flatMap((entry): readonly StudioEntityDraft[] => {
+  const reveals = schedule.entries.flatMap((entry): readonly StudioItemDraft[] => {
     if ("mode" in entry && entry.mode !== "reveal") return [];
     const child = authoredChildFor(context, entry.itemId, [rankingTypes.itemSpec, rankingTypes.textItemShell]);
     const item = programItems.get(entry.itemId);
@@ -150,7 +150,7 @@ function projectRanking(context: StudioTrackCompanionContext): readonly StudioEn
     const icon = item?.icon;
     const label = item !== undefined && "label" in item ? item.label : child?.attributes.label ?? entry.itemId;
     return [{
-      id: `${context.track.outputRef}:entity:${entry.itemId}`,
+      id: `${context.track.outputRef}:item:${entry.itemId}`,
       authoredId: entry.itemId,
       renderIds: context.spans.filter((span) => span.subjectId === entry.itemId).map((span) => span.id),
       ...(semanticSource?.id === undefined ? {} : { markerId: semanticSource.id }),
@@ -163,11 +163,11 @@ function projectRanking(context: StudioTrackCompanionContext): readonly StudioEn
       stackOrder: group.stackOrder + 1,
       ...(child === undefined ? {} : { elementRange: child.range }),
       lane: "mode" in entry ? "reveal" : "activation",
-      presentation: { entity: "ranking-reveal", chrome: "standard" },
+      presentation: { kind: "ranking-reveal", chrome: "standard" },
       ...(temporal === undefined ? {} : { temporal }),
     }];
   }).sort((left, right) => left.startFrame - right.startFrame || left.id.localeCompare(right.id));
-  const childRenderIds = new Set(reveals.flatMap((entity) => entity.renderIds ?? []));
+  const childRenderIds = new Set(reveals.flatMap((item) => item.renderIds ?? []));
   return [{ ...group, renderIds: group.renderIds!.filter((id) => !childRenderIds.has(id)) }, ...reveals];
 }
 
@@ -175,12 +175,12 @@ const commonBindings: readonly StudioSourceBindingDeclaration[] = [
   { name: "frame", referenced: frameParameters },
 ];
 
-function projectRankingAudio(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+function projectRankingAudio(context: StudioTrackCompanionContext): readonly StudioItemDraft[] {
   const events = requiredSurfaceValue(context, "events") as RankingSoundEventPlan;
   const byId = new Map(events.events.map((event) => [event.id, event]));
   const clips = new Map((context.track.value as AudioTrack).clips.map((clip) => [clip.id, clip]));
   const boardId = context.placement?.id ?? context.track.outputRef;
-  return context.spans.map((span): StudioEntityDraft => {
+  return context.spans.map((span): StudioItemDraft => {
     const event = byId.get(span.id);
     const clip = clips.get(span.id);
     if (event === undefined || clip === undefined) throw new Error(`Ranking sound ${span.id} has no event or audio clip.`);
@@ -188,12 +188,12 @@ function projectRankingAudio(context: StudioTrackCompanionContext): readonly Stu
     const label = child?.attributes.label ?? event.itemId;
     const phase = event.kind === "appear" ? "Appear" : "Move";
     return {
-      id: `${context.track.outputRef}:entity:${event.id}`,
+      id: `${context.track.outputRef}:item:${event.id}`,
       authoredId: boardId,
       display: { title: `${label} · ${phase}`, layers: [previewLayer(artifactPreview("audio", clip.artifact.resource), "waveform")] },
       startFrame: span.startFrame, endFrameExclusive: span.endFrameExclusive, stackOrder: span.stackOrder,
       ...(context.placement === undefined ? {} : { elementRange: context.placement.range }),
-      presentation: { entity: "ranking-sound", chrome: "standard" },
+      presentation: { kind: "ranking-sound", chrome: "standard" },
       inspector: [{
         id: "trigger", label: "Trigger", domain: "when", page: { id: "sound", label: "Sound" }, section: { id: "event", label: "Event" },
         value: `${label} · ${phase} · ${event.frame}f`,

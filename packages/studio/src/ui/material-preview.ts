@@ -83,7 +83,7 @@ function renderStoryboard(target: HTMLElement, storyboard: Storyboard): void {
     const column = index % storyboard.columns;
     const row = Math.floor(index / storyboard.columns);
     const frame = document.createElement("span");
-    frame.className = "clip-video-frame";
+    frame.className = "studio-item-video-frame";
     frame.style.left = `${left}px`;
     // Adjacent frames share the same fractional boundary. Adding a full CSS
     // pixel here lets the next frame overpaint roughly 3% of a 9:16 thumbnail,
@@ -143,7 +143,7 @@ export function audioPreview(url: string): Promise<string | undefined> {
 /** Mount only a real selected artifact; failed decoding deliberately leaves the item plain. */
 export function mountMaterialPreview(target: HTMLElement, preview: StudioMaterialPreview): void {
   const url = previewUrl(preview);
-  target.classList.add(`clip-material-${preview.kind}`);
+  target.classList.add(`studio-item-material-${preview.kind}`);
   if (preview.kind === "video") {
     if (resolvedStoryboards.has(url)) {
       const storyboard = resolvedStoryboards.get(url);

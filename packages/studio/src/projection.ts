@@ -5,6 +5,7 @@ import type { Composition } from "@qflow/qflow/composition";
 import { compositionTypes } from "@qflow/qflow/composition";
 import { timelineTypes, assertTimelineIdentity } from "@qflow/qflow/timeline";
 import type { Timeline } from "@qflow/qflow/timeline";
+import { temporalTypes } from "@qflow/qflow/temporal";
 import type { StudioObservedValue, StudioResolvedTrack, StudioTemporalBinding } from "@qflow/studio-companion";
 import type { CliTransientExecution as RuntimeHostTransientExecution } from "@qflow/qflow/cli";
 
@@ -24,11 +25,14 @@ function playable(type: import("@qflow/qflow/protocol").TypeRef): boolean {
 export type BuiltTrack = StudioResolvedTrack;
 
 export type StudioProjection = {
+  /** Server-only executed graph retained for exact Studio inverse traversal. */
+  readonly state: ExecutionState;
   readonly source: CompiledSource;
   readonly tracks: readonly BuiltTrack[];
   /** Resolved Companion realizations keyed by exact graph output ref. */
   readonly values: ReadonlyMap<string, unknown>;
   readonly temporalDomainValues: readonly StudioObservedValue[];
+  readonly temporalValues: readonly StudioObservedValue[];
   readonly temporalBindings: ReadonlyMap<string, readonly StudioTemporalBinding[]>;
   readonly composition: Composition;
   readonly timingOutput?: { readonly name: string; readonly ref: string };
@@ -205,7 +209,12 @@ export async function resolveStudioProjection(input: {
   });
   const temporalBindings = new Map(tracks.map((track) => [
     track.outputRef,
-    executedTemporalBindings(executed.state, track.outputRef, (type, value) => input.registry.identifyTemporalSource(type, value)),
+    executedTemporalBindings(
+      executed.state,
+      track.outputRef,
+      (type, value) => input.registry.identifyTemporalSource(type, value),
+      (producer, output) => input.registry.temporalRelationFor(producer, output),
+    ),
   ] as const));
   const values = new Map<string, unknown>();
   for (const target of targets) {
@@ -223,19 +232,31 @@ export async function resolveStudioProjection(input: {
   }
   const temporalValueTypes = input.registry.temporalDomainValueTypes();
   const temporalDomainValues: StudioObservedValue[] = [];
+  const temporalValues: StudioObservedValue[] = [];
+  const temporalDomainValueIds = new Set<string>();
+  const temporalValueIds = new Set<string>();
   for (const record of [...executed.state.program.records, ...executed.state.records]) {
-    if (!temporalValueTypes.some((type) => sameType(type, record.type)) || record.value.kind !== "inline") continue;
+    if (record.value.kind !== "inline") continue;
+    if ((sameType(record.type, temporalTypes.instant) || sameType(record.type, temporalTypes.window))
+      && !temporalValueIds.has(record.id)) {
+      temporalValues.push({ id: record.id, type: record.type, value: record.value.value });
+      temporalValueIds.add(record.id);
+    }
+    if (!temporalValueTypes.some((type) => sameType(type, record.type))) continue;
     values.set(record.id, record.value.value);
-    if (!temporalDomainValues.some((item) => item.id === record.id)) {
+    if (!temporalDomainValueIds.has(record.id)) {
       temporalDomainValues.push({ id: record.id, type: record.type, value: record.value.value });
+      temporalDomainValueIds.add(record.id);
     }
   }
   const timingCandidateId = satisfactions.get(input.timeRef);
   return {
+    state: executed.state,
     source: input.source,
     tracks,
     values,
     temporalDomainValues,
+    temporalValues,
     temporalBindings,
     composition,
     timingOutput: { name: timingOutput?.name ?? timeline.id, ref: input.timeRef },

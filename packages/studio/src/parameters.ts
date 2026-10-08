@@ -6,7 +6,8 @@ import type {
   StudioSourceBinding,
   StudioSourceBindingDeclaration,
   StudioRecipeReferenceBindingDeclaration,
-  StudioEntityDraft,
+  StudioItemDraft,
+  StudioInspectorObjectDraft,
   StudioEditSource,
   StudioPlacement,
   StudioEditHandle,
@@ -26,6 +27,8 @@ import type { StudioCompanionRegistry } from "./studio-registry.js";
 
 import type { Range } from "./shared.js";
 import type { Placement } from "./observe.js";
+
+type StudioParameterDraft = StudioItemDraft | StudioInspectorObjectDraft;
 
 export type StudioSourceFile = {
   readonly path: string;
@@ -84,7 +87,7 @@ function sameRange(left: Range | undefined, right: Range | undefined): boolean {
   return left !== undefined && right !== undefined && left.start === right.start && left.end === right.end;
 }
 
-function elementFor(placement: StudioPlacement, draft: StudioEntityDraft): AuthorElement | undefined {
+function elementFor(placement: StudioPlacement, draft: StudioParameterDraft): AuthorElement | undefined {
   const candidates: readonly (AuthorElement & { readonly id?: string; readonly range: Range })[] = [
     {
       ...(placement.authorElement === undefined ? {} : { authorElement: placement.authorElement }),
@@ -138,7 +141,7 @@ function recipeParameters(input: {
   readonly root: string;
   readonly files: readonly StudioSourceFile[];
   readonly current: StudioSourceFile;
-  readonly draft: StudioEntityDraft;
+  readonly draft: StudioParameterDraft;
   readonly referenceName: string;
   readonly referencePath: string;
   readonly referenceRef?: string;
@@ -225,7 +228,7 @@ function recipeParameters(input: {
   });
 }
 
-function attributeGroup(file: StudioSourceFile, target: AuthorElement, draft: StudioEntityDraft,
+function attributeGroup(file: StudioSourceFile, target: AuthorElement, draft: StudioParameterDraft,
   declaration: StudioSourceBindingDeclaration, binding: string, root: string): readonly StudioSourceBinding[] {
   if (declaration.schema === undefined) throw new Error(`Attribute group ${binding} needs a schema.`);
   const tag = parseOpeningTag({ name: file.path, text: file.text }, target.range.start);
@@ -261,7 +264,7 @@ function attributeGroup(file: StudioSourceFile, target: AuthorElement, draft: St
       range: sourceRange, preimage }, attributes: { insertionOffset: opening[0].length, ranges } }];
 }
 
-function omittedAttribute(file: StudioSourceFile, target: AuthorElement, draft: StudioEntityDraft,
+function omittedAttribute(file: StudioSourceFile, target: AuthorElement, draft: StudioParameterDraft,
   declaration: StudioSourceBindingDeclaration, binding: string, root: string): readonly StudioSourceBinding[] {
   const value = typeof declaration.fallback === "function" ? declaration.fallback(target.attributes) : declaration.fallback;
   if (value === undefined) return [];
@@ -279,7 +282,7 @@ function omittedAttribute(file: StudioSourceFile, target: AuthorElement, draft: 
 function referencedParameters(input: {
   readonly root: string;
   readonly files: readonly StudioSourceFile[];
-  readonly draft: StudioEntityDraft;
+  readonly draft: StudioParameterDraft;
   readonly referenceName: string;
   readonly referencePath: string;
   readonly referenceRef?: string;
@@ -342,7 +345,7 @@ function referencedParameters(input: {
 
 function parameterReference(
   element: AuthorElement,
-  draft: StudioEntityDraft,
+  draft: StudioParameterDraft,
   name: string,
 ): { readonly path: string; readonly ref?: string } | undefined {
   const projected = draft.parameterReferences?.[name];
@@ -356,7 +359,7 @@ function parameterReference(
 /** Resolve only references opted into by the consuming Companion. */
 export function composeParameterDeclarations(input: {
   readonly placement: StudioPlacement | undefined;
-  readonly draft: StudioEntityDraft;
+  readonly draft: StudioParameterDraft;
   readonly placements: readonly Placement[];
   readonly registry: StudioCompanionRegistry;
   readonly bindings: readonly StudioSourceBindingDeclaration[];
@@ -393,7 +396,7 @@ export function sourceBindingsForDraft(input: {
   readonly root: string;
   readonly files: readonly StudioSourceFile[];
   readonly placement: StudioPlacement | undefined;
-  readonly draft: StudioEntityDraft;
+  readonly draft: StudioParameterDraft;
   readonly declarations: readonly StudioSourceBindingDeclaration[];
   readonly placements?: readonly Placement[];
 }): readonly StudioSourceBinding[] {
@@ -469,9 +472,9 @@ export function sourceBindingsForDraft(input: {
   return [...direct, ...recipes];
 }
 
-/** Resolve the Companion's visible field table against real bindings and entity facts. */
+/** Resolve the Companion's visible field table against real bindings and Item facts. */
 export function inspectorFieldsForBindings(
-  draft: StudioEntityDraft,
+  draft: StudioParameterDraft,
   bindings: readonly StudioSourceBinding[],
   declarations: readonly StudioInspectorFieldDeclaration[],
 ): readonly StudioInspectorField[] {
@@ -501,19 +504,6 @@ export function inspectorFieldsForBindings(
   }))];
 }
 
-/** Runtime authority, rather than a Companion allowlist, makes timing fields writable. */
-export function temporalBindingDeclarations(
-  temporal?: StudioTemporalLineage,
-): readonly StudioSourceBindingDeclaration[] {
-  if (temporal === undefined) return [];
-  const endpoints = temporal.projection.kind === "instant"
-    ? [temporal.projection]
-    : [temporal.projection.start, temporal.projection.end];
-  return [...new Set(endpoints.flatMap((endpoint) => endpoint.authority.kind === "parameter"
-    ? [endpoint.authority.binding]
-    : []))].map((name) => ({ name, writable: true }));
-}
-
 /** Resolve finite timeline gestures from the exact endpoint authorities in the executed graph. */
 export function resolveTimelineEditHandles(
   bindings: readonly StudioSourceBinding[],
@@ -524,7 +514,7 @@ export function resolveTimelineEditHandles(
   for (const binding of bindings) {
     // Timing source attributes live in SVML. A nested Recipe may legitimately
     // also have a property named `start`; it must never shadow the author
-    // window when a clip is being dragged.
+    // window when a Studio Item is being dragged.
     if (binding.language === "svml" && !byName.has(binding.binding)) byName.set(binding.binding, binding);
   }
   const writable = (binding: StudioSourceBinding | undefined): binding is StudioSourceBinding =>
@@ -552,7 +542,7 @@ export function resolveTimelineEditHandles(
         && candidate.domain?.id === first.domain?.id)) return undefined;
     const view = domains.find((candidate) => candidate.timelineId === first.timelineId
       && candidate.companion === first.domain!.companion && candidate.id === first.domain!.id);
-    const item = view?.items.find((candidate) => candidate.editable === true
+    const item = view?.editItems.find((candidate) => candidate.editable === true
       && candidate.source !== undefined
       && sameType(candidate.source.type, first.type)
       && candidate.source.kind === first.kind && candidate.source.id === first.id);
@@ -568,15 +558,18 @@ export function resolveTimelineEditHandles(
 
   const handle = (
     gesture: StudioTimelineGesture,
-    affected: readonly { readonly endpoint: StudioTemporalInstantProjection; readonly role: "start" | "end" }[],
+    changed: readonly { readonly endpoint: StudioTemporalInstantProjection; readonly role: "start" | "end" }[],
+    constrained: readonly { readonly endpoint: StudioTemporalInstantProjection; readonly role: "start" | "end" }[],
     moveEffect?: "translate-window" | "move-start",
   ): StudioEditHandle => {
-    const unavailable = affected.find(({ endpoint }) => endpoint.authority.kind === "fixed");
+    const unavailable = changed.find(({ endpoint }) => endpoint.authority.kind === "fixed");
     if (unavailable !== undefined) return disabled(gesture, "该时间表达未开放时间轴回写。");
     const projected: ({ readonly missing: string } | StudioEditSource)[] = [];
-    for (const { endpoint, role } of affected) {
+    for (const { endpoint, role } of constrained) {
       if (endpoint.authority.kind !== "parameter") continue;
-      const binding = byName.get(endpoint.authority.binding);
+      if (endpoint.authority.relation === "direct"
+        && !changed.some((candidate) => candidate.endpoint === endpoint)) continue;
+      const binding = byName.get(endpoint.authority.owner ?? endpoint.authority.binding);
       if (!writable(binding)) {
         projected.push({ missing: endpoint.authority.binding });
         continue;
@@ -590,7 +583,7 @@ export function resolveTimelineEditHandles(
     if (missing !== undefined && "missing" in missing) {
       return disabled(gesture, `投影参数 ${missing.missing} 在当前作者源码中不可写。`);
     }
-    const domainEndpoints = affected.filter(({ endpoint }) => endpoint.authority.kind === "domain").map(({ endpoint }) => endpoint);
+    const domainEndpoints = changed.filter(({ endpoint }) => endpoint.authority.kind === "domain").map(({ endpoint }) => endpoint);
     const target = domainTarget(domainEndpoints);
     if (domainEndpoints.length > 0 && target === undefined) {
       return disabled(gesture, "时间域端点在当前 Candidate 中没有可写的作者身份。");
@@ -607,23 +600,19 @@ export function resolveTimelineEditHandles(
       ...(sources.length === 0 ? {} : { sources }),
       ...(target === undefined ? {} : { domain: target }),
       temporal: projection,
+      temporalRecord: temporal.record,
     };
   };
 
   if (projection.kind === "instant") {
-    return [handle("move", [{ endpoint: projection, role: "start" }], "move-start")];
+    const point = [{ endpoint: projection, role: "start" as const }];
+    return [handle("move", point, point, "move-start")];
   }
   const start = { endpoint: projection.start, role: "start" as const };
   const end = { endpoint: projection.end, role: "end" as const };
-  if (projection.end.authority.kind === "parameter" && projection.end.authority.relation === "after-start") {
-    return [handle("move", [start], "translate-window"), handle("trim-end", [end])];
-  }
-  if (projection.start.authority.kind === "parameter" && projection.start.authority.relation === "before-end") {
-    return [handle("move", [end], "translate-window"), handle("trim-start", [start])];
-  }
   return [
-    handle("move", [start, end], "translate-window"),
-    handle("trim-start", [start]),
-    handle("trim-end", [end]),
+    handle("move", [start, end], [start, end], "translate-window"),
+    handle("trim-start", [start], [start, end]),
+    handle("trim-end", [end], [start, end]),
   ];
 }

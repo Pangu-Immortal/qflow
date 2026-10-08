@@ -41,6 +41,9 @@ test("Timeline Surface publishes its range and every named Instant or Window", a
   ]);
   assert.equal(JSON.stringify(output.fragments).includes("speech.end"), false);
   assert.equal(JSON.stringify(output.fragments).includes("3s"), false);
+  const childRecords = output.records.filter((record) => record.range.start !== element.range.start);
+  assert(childRecords.some((record) => record.range.start === source.indexOf('<time:Window id="outro"')));
+  assert(childRecords.every((record) => record.range.start !== source.indexOf('<time:Instant id="private-cue"')));
 });
 
 test("Timeline Window requires exactly two of from, until and for", () => {

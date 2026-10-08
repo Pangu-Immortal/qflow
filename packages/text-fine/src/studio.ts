@@ -1,8 +1,8 @@
 import { textFineMarkupSurfaces, textFineModuleRef, textFineTypes } from "./manifest.js";
 import type { FineTextOccurrence, TextItem } from "./types.js";
 import { compositionTypes } from "@qflow/qflow/composition";
-import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
-import { childEntities, requiredSurfaceValue, temporalLineageFor, textLayer } from "@qflow/studio-companion";
+import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioItemDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
+import { childItems, requiredSurfaceValue, temporalLineageFor, textLayer } from "@qflow/studio-companion";
 
 const typographyProperties = (textFineMarkupSurfaces
   .find((surface) => surface.name === "style")?.vocabulary.attributes
@@ -60,22 +60,22 @@ function textOf(item: Pick<TextItem, "document">): string {
     .trim();
 }
 
-function projectFineText(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+function projectFineText(context: StudioTrackCompanionContext): readonly StudioItemDraft[] {
   const occurrence = requiredSurfaceValue(context, "occurrence") as FineTextOccurrence;
-  const entity = childEntities(context, [{
+  const item = childItems(context, [{
     id: occurrence.id,
     startFrame: occurrence.span.startFrame,
     endFrameExclusive: occurrence.span.endFrameExclusive,
     stackOrder: occurrence.placement.z,
     sourceTypes: [textFineTypes.itemSpec, textFineTypes.plainItemSpec],
   }], "typography-item", "standard")[0];
-  if (entity === undefined) return [];
+  if (item === undefined) return [];
   const label = textOf(occurrence);
   const temporal = temporalLineageFor(context, occurrence.id, "window");
   return [{
-    ...entity,
+    ...item,
     authoredId: context.placement?.id ?? occurrence.id,
-    display: { ...entity.display, title: context.placement?.id ?? occurrence.id, layers: label.length === 0 ? [] : [textLayer(label)] },
+    display: { ...item.display, title: context.placement?.id ?? occurrence.id, layers: label.length === 0 ? [] : [textLayer(label)] },
     ...(context.placement === undefined ? {} : { elementRange: context.placement.range }),
     ...(temporal === undefined ? {} : { temporal }),
   }];
@@ -114,7 +114,7 @@ function fineTextCompanion(form: "flow" | "point" | "path"): StudioTrackCompanio
   return {
     id: form, role: "track",
     output: { type: compositionTypes.visualTrack, surface: form, modules: [textFineModuleRef] },
-    family: "text", tone: "violet", icon: "text",
+    family: "typography", tone: "violet", icon: "text",
     bindings: [
       { name: geometry },
       { name: "content" },

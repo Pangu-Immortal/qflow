@@ -67,6 +67,13 @@ test("Surface planning lowers author Instants and Windows to typed graph operati
   assert(plan.fragment.operations.some((item) => item.producer.name === "latest-point"));
   assert(plan.fragment.operations.some((item) => item.id === "decl:claim:point"));
   assert.deepEqual(plan.extentInputs, [{ name: "voice-extent", declarationId: "speech" }]);
+  assert.deepEqual(plan.inlineInputs.flatMap((item) => item.author === undefined ? [] : [{
+    binding: item.author.binding, declarationId: item.author.declarationId,
+    expression: item.author.expression?.kind,
+  }]), [
+    { binding: "for", declarationId: "outro", expression: undefined },
+    { binding: "at", declarationId: "claim", expression: "offset" },
+  ]);
   assert.equal(JSON.stringify(plan.fragment).includes("speech.end-12f"), false);
   verifyGraphFragment(link(createResolvedClosure([...videoContractManifests, timelineAuthorManifest]), []), plan.fragment);
 });

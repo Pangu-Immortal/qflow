@@ -5,6 +5,7 @@ import { audioTrackTypes } from "@qflow/audio-track";
 import { visualTrackTypes } from "@qflow/visual-track";
 import type { StudioTrackCompanionContext } from "@qflow/studio-companion";
 import { audioTrackStudioTrackCompanions } from "../../audio-track/src/studio.js";
+import { textFineStudioTrackCompanions } from "../../text-fine/src/studio.js";
 import { visualTrackStudioTrackCompanions } from "../../visual-track/src/studio.js";
 
 for (const kind of ["audio", "visual"] as const) {
@@ -35,12 +36,12 @@ for (const kind of ["audio", "visual"] as const) {
     } as unknown as StudioTrackCompanionContext;
     const companion = kind === "audio" ? audioTrackStudioTrackCompanions[0]!
       : visualTrackStudioTrackCompanions.find((entry) => entry.id === "visual")!;
-    const entities = companion.project!(context);
-    assert.deepEqual(entities.map((entry) => entry.display.title), ["my-chosen-name", "assets.shared.material", "assets.shared.material"]);
-    assert.deepEqual(entities.map((entry) => entry.authoredId), subjects);
-    assert.equal(new Set(entities.map((entry) => entry.id)).size, 3);
-    assert.deepEqual(entities.map((entry) => entry.elementRange), subjects.map(child).map((entry) => entry.range));
-    assert.deepEqual(entities.map((entry) => [entry.startFrame, entry.endFrameExclusive]), [[0, 20], [10, 30], [20, 40]]);
+    const items = companion.project!(context);
+    assert.deepEqual(items.map((entry) => entry.display.title), ["my-chosen-name", "assets.shared.material", "assets.shared.material"]);
+    assert.deepEqual(items.map((entry) => entry.authoredId), subjects);
+    assert.equal(new Set(items.map((entry) => entry.id)).size, 3);
+    assert.deepEqual(items.map((entry) => entry.elementRange), subjects.map(child).map((entry) => entry.range));
+    assert.deepEqual(items.map((entry) => [entry.startFrame, entry.endFrameExclusive]), [[0, 20], [10, 30], [20, 40]]);
   });
 }
 
@@ -51,4 +52,12 @@ test("audio source time stays explicit and gain remains a bounded mixing control
   assert.equal(companion.inspector!.some(field => field.binding === sourceTime.name), false);
   const gain = companion.inspector!.find(field => field.binding === "gain")!;
   assert.equal(gain.domain, "how"); assert.equal(gain.number?.scale, 100); assert.equal(gain.number?.maximum, 6400);
+});
+
+test("official Companions expose author families without changing terminal facets", () => {
+  assert.equal(visualTrackStudioTrackCompanions[0]?.family, "visual");
+  assert.equal(audioTrackStudioTrackCompanions[0]?.family, "audio");
+  assert.deepEqual(textFineStudioTrackCompanions.map((companion) => companion.family), [
+    "typography", "typography", "typography",
+  ]);
 });

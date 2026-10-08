@@ -9,7 +9,6 @@ import { pipeline } from "node:stream/promises";
 import type { Plugin, ViteDevServer } from "vite";
 import type { BuildResultFileRange } from "@qflow/qflow/result";
 import type { StudioTemporalInstantProjection } from "@qflow/studio-companion";
-import { sameType } from "@qflow/qflow/protocol";
 
 import type { StudioBuildLibrary } from "./build-library.js";
 import type { ServedFile } from "./compile.js";
@@ -19,11 +18,13 @@ import { loadStudioRun } from "./run.js";
 import { allowsStudioMutation } from "./mutation-origin.js";
 import { parameterAuthorValue, parameterOption, serializeParameterValue, serializeAttributeGroup, validateParameterValue } from "./parameter-values.js";
 import { readStudioSession } from "./session.js";
+import type { StudioSession } from "./session.js";
 import type { Range, StudioFailure, StudioLibraryRequest, StudioLibraryView, StudioMutation, StudioSnapshot } from "./shared.js";
 import { createStudioStoryboard } from "./storyboard.js";
 import type { StudioStoryboard } from "./storyboard.js";
 import { findSurfacePreview } from "./surface-preview.js";
-import { formatTemporalPointEdit, domainGestureSpan } from "./temporal-edit.js";
+import { domainGestureSpan } from "./temporal-edit.js";
+import { planTemporalInverse, temporalAuthorBindings } from "./temporal-inverse.js";
 import { replaceSourceFiles } from "./source-transaction.js";
 
 export type StudioPluginOptions = {
@@ -86,6 +87,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
   let visualDocument: import("@qflow/qflow/html-program").HtmlProgram | undefined;
   let failure: StudioFailure | undefined;
   let material: ReadonlyMap<string, ServedFile> = new Map();
+  let temporalEdit: StudioSession["temporalEdit"] | undefined;
   let revision = 0;
   let server: ViteDevServer | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -165,6 +167,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       visualHtml = result.visualHtml;
       visualDocument = result.document;
       material = result.material;
+      temporalEdit = result.temporalEdit;
       failure = undefined;
       if (notify) server?.ws.send({ type: "custom", event: "studio:snapshot", data: snapshot });
     } catch (error) {
@@ -250,26 +253,39 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
     return new Map([...previousFiles].filter(([absolute]) => nextFiles.has(absolute)));
   };
 
-  const currentClip = (entityId: string): StudioSnapshot["tracks"][number]["clips"][number] => {
-    const found = snapshot?.tracks.flatMap((track) => track.clips).find((clip) => clip.id === entityId);
-    if (found === undefined) throw new Error(`Studio entity ${entityId} no longer exists.`);
+  const currentItem = (itemId: string): StudioSnapshot["tracks"][number]["items"][number] => {
+    const found = snapshot?.tracks.flatMap((track) => track.items).find((item) => item.id === itemId);
+    if (found === undefined) throw new Error(`Studio Item ${itemId} no longer exists.`);
     return found;
+  };
+
+  const currentParameterOwner = (
+    owner: Extract<StudioMutation, { readonly type: "parameter.adjust" }>["owner"],
+  ): { readonly label: string; readonly inspector: StudioSnapshot["tracks"][number]["items"][number]["inspector"] } => {
+    if (owner.kind === "item") {
+      const item = currentItem(owner.itemId);
+      return { label: `Item ${owner.itemId}`, inspector: item.inspector };
+    }
+    const track = snapshot?.tracks.find((candidate) => candidate.id === owner.trackId);
+    const object = track?.inspectorObjects.find((candidate) => candidate.id === owner.objectId);
+    if (object === undefined) throw new Error(`Studio Inspector object ${owner.objectId} no longer exists.`);
+    return { label: `Inspector object ${owner.objectId}`, inspector: object.inspector };
   };
 
   const timelinePatches = async (
     mutation: Extract<StudioMutation, { readonly type: "timeline.adjust" }>,
   ): Promise<readonly Patch[]> => {
-    const clip = currentClip(mutation.entityId);
-    const handle = clip.editHandles.find((candidate) =>
+    const item = currentItem(mutation.itemId);
+    const handle = item.editHandles.find((candidate) =>
       candidate.operation === "timeline.adjust"
       && candidate.gesture === mutation.gesture
       && candidate.enabled);
-    if (handle === undefined) throw new Error(`Entity ${mutation.entityId} does not allow ${mutation.gesture}.`);
+    if (handle === undefined) throw new Error(`Item ${mutation.itemId} does not allow ${mutation.gesture}.`);
 
     const temporal = handle.temporal;
-    if (temporal === undefined) throw new Error("This timeline entity has no authoring authority.");
+    if (temporal === undefined) throw new Error("This timeline Item has no authoring authority.");
     if (temporal.kind !== mutation.target.kind) {
-      throw new Error(`This timeline entity requires a ${temporal.kind} mutation target.`);
+      throw new Error(`This timeline Item requires a ${temporal.kind} mutation target.`);
     }
     const startFrame = mutation.target.kind === "instant" ? mutation.target.frame : mutation.target.startFrame;
     const endFrameExclusive = mutation.target.kind === "instant" ? mutation.target.frame + 1 : mutation.target.endFrameExclusive;
@@ -280,13 +296,13 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
     }
     if (temporal.kind === "window") {
       if (mutation.gesture === "move" && handle.domain?.kind !== "span"
-        && endFrameExclusive - startFrame !== clip.endFrameExclusive - clip.startFrame) {
+        && endFrameExclusive - startFrame !== item.endFrameExclusive - item.startFrame) {
         throw new Error("Move must preserve the Window duration.");
       }
-      if (mutation.gesture === "trim-start" && endFrameExclusive !== clip.endFrameExclusive) {
+      if (mutation.gesture === "trim-start" && endFrameExclusive !== item.endFrameExclusive) {
         throw new Error("Trim start cannot change the Window end.");
       }
-      if (mutation.gesture === "trim-end" && startFrame !== clip.startFrame) {
+      if (mutation.gesture === "trim-end" && startFrame !== item.startFrame) {
         throw new Error("Trim end cannot change the Window start.");
       }
     } else if (mutation.gesture !== "move") {
@@ -301,7 +317,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
         || handle.domain.companion !== domainTarget.companion
         || handle.domain.domainId !== domainTarget.domainId
         || handle.domain.itemId !== domainTarget.itemId) {
-        throw new Error(`Entity ${mutation.entityId} is not bound to the requested temporal-domain item.`);
+        throw new Error(`Item ${mutation.itemId} is not bound to the requested temporal-domain item.`);
       }
       const current = snapshot;
       const domain = current?.temporalDomains.find((candidate) => candidate.companion === domainTarget.companion
@@ -335,9 +351,6 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       });
     }
 
-    const source = (role: "start" | "end" | "duration") =>
-      handle.sources?.find((candidate) => candidate.role === role)?.source;
-    const frame = (value: number): string => `${value}f`;
     const domainFrame = (endpoint: StudioTemporalInstantProjection): number | undefined => {
       if (endpoint.authority.kind !== "domain" || domainTarget === undefined || handle.domain === undefined) return undefined;
       const domain = snapshot?.temporalDomains.find((candidate) => candidate.companion === domainTarget.companion
@@ -353,62 +366,37 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       }
       return undefined;
     };
-    const projectionBaseFrame = (endpoint: StudioTemporalInstantProjection): number | undefined => {
-      if (endpoint.reference === "absolute") return undefined;
-      if (endpoint.reference === "timeline.start") return 0;
-      if (endpoint.reference === "timeline.end") return snapshot?.timeline.frameCount;
-      const domain = endpoint.source.domain;
-      const view = domain === undefined ? undefined : snapshot?.temporalDomains.find((candidate) =>
-        candidate.companion === domain.companion && candidate.id === domain.id);
-      const item = view?.items.find((candidate) => candidate.source !== undefined
-        && sameType(candidate.source.type, endpoint.source.type)
-        && candidate.source.kind === endpoint.source.kind && candidate.source.id === endpoint.source.id);
-      if (item === undefined) return undefined;
-      if (item.kind === "point") return item.frame;
-      return endpoint.authority.kind === "domain" && endpoint.authority.boundary === "start"
-        ? item.startFrame : item.endFrameExclusive;
-    };
-    const projectedPointValue = (endpoint: StudioTemporalInstantProjection, desired: number): string =>
-      formatTemporalPointEdit(endpoint.reference, desired, projectionBaseFrame(endpoint));
-    const writeEndpoint = (
-      endpoint: StudioTemporalInstantProjection,
-      desired: number,
-      role: "start" | "end",
-    ): void => {
-      if (desired === endpoint.frame) return;
-      if (endpoint.authority.kind === "fixed") throw new Error(`The ${role} endpoint has no timeline write target.`);
-      if (endpoint.authority.kind === "domain") {
-        if (domainFrame(endpoint) !== desired) throw new Error(`The ${role} endpoint does not match its temporal-domain Anchor.`);
-        return;
-      }
-      if (endpoint.authority.relation !== "direct") return;
-      const author = source(role);
-      if (author === undefined) throw new Error(`The ${role} projection has no writable Source binding.`);
-      patches.push({ ...author, replacement: projectedPointValue(endpoint, desired) });
-    };
-    if (temporal.kind === "instant") {
-      writeEndpoint(temporal, startFrame, "start");
-    } else {
-      writeEndpoint(temporal.start, startFrame, "start");
-      writeEndpoint(temporal.end, endFrameExclusive, "end");
-      const derived = [temporal.start, temporal.end].find((endpoint) =>
-        endpoint.authority.kind === "parameter" && endpoint.authority.relation !== "direct");
-      if (derived !== undefined
-        && endFrameExclusive - startFrame !== temporal.endFrameExclusive - temporal.startFrame) {
-        const author = source("duration");
-        if (author === undefined) throw new Error("The projected duration has no writable Source binding.");
-        patches.push({ ...author, replacement: frame(endFrameExclusive - startFrame) });
-      }
+    if (temporalEdit === undefined || handle.temporalRecord === undefined) {
+      throw new Error("This timeline Item has no executed Temporal edit graph.");
     }
+    const bindings = temporalAuthorBindings({
+      state: temporalEdit.state,
+      rootRecord: handle.temporalRecord,
+      workspaceRoot: options.workspaceRoot,
+      placements: temporalEdit.placements,
+      files: temporalEdit.files,
+    });
+    const writes = planTemporalInverse({
+      state: temporalEdit.state,
+      rootRecord: handle.temporalRecord,
+      target: temporal.kind === "instant"
+        ? { kind: "instant", frame: startFrame }
+        : { kind: "window", startFrame, endFrameExclusive },
+      bindings,
+      domainFrame,
+      registry: options.registry,
+      identify: (type, value) => options.registry.identifyTemporalSource(type, value),
+    });
+    patches.push(...writes.map((write) => ({ ...write.source, replacement: write.replacement })));
     return patches.filter((patch) => patch.replacement !== patch.preimage);
   };
 
   const mutationPatches = async (mutation: StudioMutation): Promise<readonly Patch[]> => {
     if (mutation.type === "timeline.adjust") return timelinePatches(mutation);
-    const clip = currentClip(mutation.entityId);
-    const parameter = clip.inspector.find((candidate) => candidate.id === mutation.parameterId);
+    const owner = currentParameterOwner(mutation.owner);
+    const parameter = owner.inspector.find((candidate) => candidate.id === mutation.parameterId);
     if (parameter?.edit === undefined) {
-      throw new Error(`Entity ${mutation.entityId} has no writable parameter ${mutation.parameterId}.`);
+      throw new Error(`${owner.label} has no writable parameter ${mutation.parameterId}.`);
     }
     const authorValue = parameterAuthorValue(parameter, mutation.value);
     if (parameter.schema !== undefined) {
@@ -455,11 +443,24 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       const previous = await applyTransaction(patches, mutation.revision);
       const attempt = ++requestedRevision;
       await publish(attempt, false);
-      if (failure?.revision !== attempt) {
+      const temporalMismatch = mutation.type !== "timeline.adjust" || failure?.revision === attempt
+        ? undefined
+        : (() => {
+            const item = snapshot?.tracks.flatMap((track) => track.items)
+              .find((candidate) => candidate.id === mutation.itemId);
+            if (item === undefined) return `Item ${mutation.itemId} disappeared after recompilation.`;
+            return mutation.target.kind === "instant"
+              ? item.startFrame === mutation.target.frame ? undefined
+                : `Item ${mutation.itemId} resolved to frame ${item.startFrame}, not ${mutation.target.frame}.`
+              : item.startFrame === mutation.target.startFrame
+                  && item.endFrameExclusive === mutation.target.endFrameExclusive ? undefined
+                : `Item ${mutation.itemId} resolved to [${item.startFrame}, ${item.endFrameExclusive}), not [${mutation.target.startFrame}, ${mutation.target.endFrameExclusive}).`;
+          })();
+      if (failure?.revision !== attempt && temporalMismatch === undefined) {
         server?.ws.send({ type: "custom", event: "studio:snapshot", data: snapshot });
         return attempt;
       }
-      const rejected = failure.error;
+      const rejected = temporalMismatch ?? failure!.error;
       await replaceSourceFiles(previous);
       await publish(++requestedRevision, false);
       server?.ws.send({ type: "custom", event: "studio:snapshot", data: snapshot });
@@ -569,18 +570,23 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
               for await (const chunk of request) chunks.push(Buffer.from(chunk));
               const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as Partial<StudioMutation>;
               if ((body.type !== "timeline.adjust" && body.type !== "parameter.adjust")
-                || typeof body.revision !== "number"
-                || typeof body.entityId !== "string") {
+                || typeof body.revision !== "number") {
                 json(response, 400, { error: "Expected a Studio author mutation." });
                 return;
               }
               if (body.type === "timeline.adjust"
-                && (typeof body.gesture !== "string" || typeof body.target !== "object" || body.target === null)) {
+                && (typeof body.itemId !== "string" || typeof body.gesture !== "string"
+                  || typeof body.target !== "object" || body.target === null)) {
                 json(response, 400, { error: "Expected a timeline gesture and target." });
                 return;
               }
               if (body.type === "parameter.adjust"
-                && (typeof body.parameterId !== "string" || body.value === undefined)) {
+                && (typeof body.parameterId !== "string" || body.value === undefined
+                  || typeof body.owner !== "object" || body.owner === null
+                  || (body.owner.kind === "item" && typeof body.owner.itemId !== "string")
+                  || (body.owner.kind === "track-object"
+                    && (typeof body.owner.trackId !== "string" || typeof body.owner.objectId !== "string"))
+                  || (body.owner.kind !== "item" && body.owner.kind !== "track-object"))) {
                 json(response, 400, { error: "Expected a parameter identity and value." });
                 return;
               }

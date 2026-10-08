@@ -4,6 +4,7 @@ import { studioContributionFromPackage } from "@qflow/studio-companion";
 
 import { fallbackStudioTrackCompanions } from "./fallback-companions.js";
 import { StudioCompanionRegistry } from "./studio-registry.js";
+import { commonTemporalStudioRelations } from "./common-temporal-relations.js";
 
 /**
  * Assemble the immutable Companion Registry for one Source closure.
@@ -28,6 +29,8 @@ export async function loadStudioCompanionRegistry(input: {
     {
       films: contributions.flatMap((item) => item.films),
       temporalDomains: contributions.flatMap((item) => item.temporalDomains),
+      temporalDeclarations: contributions.flatMap((item) => item.temporalDeclarations),
+      temporalRelations: [...commonTemporalStudioRelations, ...contributions.flatMap((item) => item.temporalRelations)],
       parameters: contributions.flatMap((item) => item.parameters),
     },
   );

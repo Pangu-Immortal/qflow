@@ -3,7 +3,7 @@ import type { StudioTrackCompanion, StudioTrackCompanionContext } from "@qflow/s
 import {
   artifactPreview,
   authoredItemTitle,
-  childEntities,
+  childItems,
   previewLayer,
   requiredSurfaceValue,
   temporalLineageFor,
@@ -24,14 +24,14 @@ function projectAudio(context: StudioTrackCompanionContext) {
     sourceTypes: [audioTrackTypes.clipSpec],
     preview: artifactPreview("audio", clip.source.artifact.resource),
   }));
-  return childEntities(context, clips, "audio-clip", "standard").map((entity, index) => {
+  return childItems(context, clips, "audio-clip", "standard").map((item, index) => {
     const clip = clips[index]!;
     const temporal = temporalLineageFor(context, clip.id, "window");
     const semanticSource = temporalDomainSource(temporal);
     return {
-      ...entity,
+      ...item,
       display: {
-        title: authoredItemTitle(context, entity.authoredId, clip.sourceTypes, ["source"]),
+        title: authoredItemTitle(context, item.authoredId, clip.sourceTypes, ["source"]),
         layers: [previewLayer(clip.preview, "waveform")],
       },
       ...(semanticSource?.id === undefined ? {} : { markerId: semanticSource.id }),

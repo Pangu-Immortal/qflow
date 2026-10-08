@@ -1,6 +1,6 @@
 import { bindDropdown } from "./dropdown.js";
 import { uiLabel, uiAttribute, uiText, uiAttr, userText, languageMenu, initializeI18n, type Message } from "./i18n.js";
-import type { Clip, StudioFailure, StudioInspectorDomain, StudioSnapshot } from "../shared.js";
+import type { StudioItem, StudioFailure, StudioInspectorDomain, StudioMutation, StudioSnapshot } from "../shared.js";
 import type { CanonicalValue, ValueSchema } from "@qflow/qflow/protocol";
 import { parameterAuthorValue, parameterControlForSchema, parameterNumber, parameterOption, parameterRecordSchema, parameterRecordVariants, validateParameterValue } from "../parameter-values.js";
 import { createCodePane } from "./code.js";
@@ -9,7 +9,7 @@ import { createLibraryPane } from "./library.js";
 import { createHandle } from "./resize.js";
 import type { Highlight } from "./code.js";
 import { domainItemAtOffset, spanAtOffset } from "./markers.js";
-import { clipAtOffset, createStore } from "./selection.js";
+import { itemAtOffset, createStore } from "./selection.js";
 import { createStage } from "./stage.js";
 import { domainGestureSpan } from "../temporal-edit.js";
 import type { DomainTarget } from "../temporal-edit.js";
@@ -208,8 +208,8 @@ const domainPresentation: Readonly<Record<StudioInspectorDomain, { readonly labe
   when: { label: "inspector.when", icon: "when" },
 };
 const domainOrder: readonly StudioInspectorDomain[] = ["where", "when", "how"];
-const inspectorDomainByEntity = new Map<string, StudioInspectorDomain>();
-const inspectorPageByEntity = new Map<string, string>();
+const inspectorDomainByItem = new Map<string, StudioInspectorDomain>();
+const inspectorPageByItem = new Map<string, string>();
 
 function defaultWorkspaceHeading(): void {
   workspaceHeading.className = "pane-heading workspace-heading";
@@ -217,7 +217,7 @@ function defaultWorkspaceHeading(): void {
 }
 
 function inspectorHeading(
-  entityId: string,
+  itemId: string,
   domains: readonly StudioInspectorDomain[],
   active: StudioInspectorDomain,
   select: (domain: StudioInspectorDomain) => void,
@@ -232,7 +232,7 @@ function inspectorHeading(
     button.innerHTML = `${icon(presentation.icon)}<strong>${uiLabel(presentation.label)}</strong>`;
     button.setAttribute("aria-pressed", String(domain === active));
     button.addEventListener("click", () => {
-      inspectorDomainByEntity.set(entityId, domain);
+      inspectorDomainByItem.set(itemId, domain);
       select(domain);
     });
     return button;
@@ -247,19 +247,21 @@ function textValue(value: CanonicalValue): string {
   return typeof value === "string" ? value : value === null ? "" : String(value);
 }
 
-function restoreParameterControls(entityId: string): void {
+type ParameterOwner = Extract<StudioMutation, { readonly type: "parameter.adjust" }>["owner"];
+
+function restoreParameterControls(): void {
   const current = store.current();
-  if (current?.selection.kind === "clip" && current.selection.clipId === entityId) {
-    renderInspector(current.snapshot, entityId);
+  if (current?.selection.kind === "item") {
+    renderInspector(current.snapshot, current.selection.itemId);
   }
 }
 
-function commitControl(entityId: string, parameter: Clip["inspector"][number], replacement: CanonicalValue): void {
+function commitControl(owner: ParameterOwner, parameter: StudioItem["inspector"][number], replacement: CanonicalValue): void {
   try {
     if (sameValue(parameterAuthorValue(parameter, replacement), parameter.value)) return;
-    void writeParameter(entityId, parameter, replacement);
+    void writeParameter(owner, parameter, replacement);
   } catch (error) {
-    restoreParameterControls(entityId);
+    restoreParameterControls();
     uiText(status, "common.invalid-value"); status.className = "status error";
     status.title = error instanceof Error ? error.message : String(error);
   }
@@ -283,7 +285,7 @@ document.addEventListener("keydown", (event) => {
 }, true);
 
 function selectControl(
-  parameter: Clip["inspector"][number],
+  parameter: StudioItem["inspector"][number],
   change: (value: CanonicalValue) => void,
 ): HTMLElement {
   const control = document.createElement("div");
@@ -443,7 +445,7 @@ function scalarDraftControl(
   held: CanonicalValue | undefined,
   change: (value: CanonicalValue) => void,
 ): HTMLElement {
-  return parameterControl("", {
+  return parameterControl({ kind: "item", itemId: "" }, {
     id: label, label, domain: "how", section: { id: "record", label: "" },
     control: parameterControlForSchema(schema) ?? "text",
     ...(schema.kind === "string" && schema.enum !== undefined ? { options: schema.enum } : {}),
@@ -471,7 +473,7 @@ function recordDraftControl(
   return fields;
 }
 
-function structuredControl(entityId: string, parameter: Clip["inspector"][number], change: (value: CanonicalValue) => void): HTMLElement {
+function structuredControl(owner: ParameterOwner, parameter: StudioItem["inspector"][number], change: (value: CanonicalValue) => void): HTMLElement {
   const declaredSchema = parameter.schema;
   const shell = document.createElement("div");
   shell.className = "parameter-structured";
@@ -503,7 +505,7 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
     if (schema === undefined) return;
     if (variants.length) {
       const active = variants.find(variant => variant.schema === schema)!;
-      shell.append(parameterControl(entityId, {
+      shell.append(parameterControl(owner, {
         ...parameter, control: "select", value: variants.indexOf(active),
         options: variants.map((variant, index) => ({ value: index, label: textValue(variant.value) })),
       }, (next) => {
@@ -610,14 +612,14 @@ function structuredControl(entityId: string, parameter: Clip["inspector"][number
 }
 
 function parameterControl(
-  entityId: string,
-  parameter: Clip["inspector"][number],
+  owner: ParameterOwner,
+  parameter: StudioItem["inspector"][number],
   change?: (value: CanonicalValue) => void,
 ): HTMLElement {
   const editable = parameter.edit !== undefined || change !== undefined;
-  const commit = change ?? ((value: CanonicalValue) => commitControl(entityId, parameter, value));
+  const commit = change ?? ((value: CanonicalValue) => commitControl(owner, parameter, value));
   if (editable && parameter.control === "record" && parameter.schema !== undefined && parameterRecordVariants(parameter.schema).length) {
-    return structuredControl(entityId, parameter, commit);
+    return structuredControl(owner, parameter, commit);
   }
   const row = document.createElement("div");
   row.className = `parameter-row ${!editable ? "parameter-readonly" : "parameter-editable"} control-${parameter.control}`;
@@ -666,7 +668,7 @@ function parameterControl(
       right.append(palette);
     }
   } else if (parameter.control === "list" || parameter.control === "record") {
-    right.append(structuredControl(entityId, parameter, commit));
+    right.append(structuredControl(owner, parameter, commit));
   } else {
     if (parameter.multiline && parameter.control === "text") {
       const value = document.createElement("textarea"); value.className = "parameter-value parameter-multiline";
@@ -722,8 +724,8 @@ function parameterControl(
   return row;
 }
 
-function parameterGroups(entityId: string, fields: readonly Clip["inspector"][number][]): readonly HTMLElement[] {
-  const groups = new Map<string, Clip["inspector"][number][]>();
+function parameterGroups(owner: ParameterOwner, fields: readonly StudioItem["inspector"][number][]): readonly HTMLElement[] {
+  const groups = new Map<string, StudioItem["inspector"][number][]>();
   for (const field of fields) {
     const key = `${field.section.id}\u0000${field.section.label}`;
     const held = groups.get(key) ?? [];
@@ -732,12 +734,12 @@ function parameterGroups(entityId: string, fields: readonly Clip["inspector"][nu
   }
   return [...groups].map(([key, values]) => {
     const [, label = ""] = key.split("\u0000");
-    return group(label, values.map((parameter) => parameterControl(entityId, parameter)), "parameter-group inspector-field-group");
+    return group(label, values.map((parameter) => parameterControl(owner, parameter)), "parameter-group inspector-field-group");
   });
 }
 
 let parameterWriteState: "" | "common.saving" | "common.saved" | "common.failed" = "";
-async function writeParameter(entityId: string, parameter: Clip["inspector"][number], replacement: CanonicalValue): Promise<void> {
+async function writeParameter(owner: ParameterOwner, parameter: StudioItem["inspector"][number], replacement: CanonicalValue): Promise<void> {
   const state = store.current();
   if (state === undefined) return;
   parameterWriteState = "common.saving";
@@ -748,7 +750,7 @@ async function writeParameter(entityId: string, parameter: Clip["inspector"][num
     await applyStudioMutation({
       type: "parameter.adjust",
       revision: state.snapshot.revision,
-      entityId,
+      owner,
       parameterId: parameter.id,
       value: replacement,
     });
@@ -758,7 +760,7 @@ async function writeParameter(entityId: string, parameter: Clip["inspector"][num
   } catch (error) {
     // Validation and stale-revision rejections do not publish a new snapshot.
     // Restore the accepted value just as a rejected compilation does.
-    restoreParameterControls(entityId);
+    restoreParameterControls();
     parameterWriteState = "common.failed";
     uiText(status, error instanceof Error ? "common.save-failed" : parameterWriteState);
     status.className = "status error";
@@ -766,15 +768,42 @@ async function writeParameter(entityId: string, parameter: Clip["inspector"][num
   }
 }
 
+function trackInspectorGroups(
+  track: StudioSnapshot["tracks"][number],
+  domain: StudioInspectorDomain,
+): readonly HTMLElement[] {
+  const grouped = new Map<string, typeof track.inspectorObjects>();
+  for (const object of track.inspectorObjects) {
+    if (!object.inspector.some((field) => field.domain === domain)) continue;
+    grouped.set(object.group, [...(grouped.get(object.group) ?? []), object]);
+  }
+  return [...grouped].map(([label, objects]) => group(label, objects.map((object) => {
+    const details = document.createElement("details");
+    details.className = "inspector-object";
+    const summary = document.createElement("summary");
+    summary.textContent = object.title;
+    const fields = document.createElement("div");
+    fields.className = "inspector-object-fields";
+    fields.append(...parameterGroups(
+      { kind: "track-object", trackId: track.id, objectId: object.id },
+      object.inspector.filter((field) => field.domain === domain),
+    ));
+    details.append(summary, fields);
+    return details;
+  }), "inspector-object-group"));
+}
+
 /**
  * A single strip between the picture and the timeline. It is a row of the
  * layout rather than a floating card, so it can never cover the frame being
  * inspected or the transport used to reach it.
  */
-function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): void {
-  const clip = clipId === undefined ? undefined : store.clip(clipId);
+function renderInspector(snapshot: StudioSnapshot, itemId: string | undefined): void {
+  const item = itemId === undefined ? undefined : store.item(itemId);
+  const track = item === undefined ? undefined : snapshot.tracks.find((candidate) =>
+    candidate.items.some((candidateItem) => candidateItem.id === item.id));
 
-  if (clip === undefined) {
+  if (item === undefined) {
     defaultWorkspaceHeading();
     const fps = snapshot.timeline.frameRate.numerator / snapshot.timeline.frameRate.denominator;
     inspector.replaceChildren(
@@ -802,7 +831,8 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
     );
     return;
   }
-  const domains = domainOrder.filter((domain) => clip.inspector.some((field) => field.domain === domain));
+  const domains = domainOrder.filter((domain) => item.inspector.some((field) => field.domain === domain)
+    || track?.inspectorObjects.some((object) => object.inspector.some((field) => field.domain === domain)) === true);
   if (domains.length === 0) {
     defaultWorkspaceHeading();
     const empty = document.createElement("div");
@@ -811,12 +841,12 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
     inspector.replaceChildren(empty);
     return;
   }
-  const remembered = inspectorDomainByEntity.get(clip.id);
+  const remembered = inspectorDomainByItem.get(item.id);
   const activeDomain = remembered !== undefined && domains.includes(remembered) ? remembered : domains[0]!;
-  inspectorDomainByEntity.set(clip.id, activeDomain);
-  inspectorHeading(clip.id, domains, activeDomain, () => renderInspector(snapshot, clip.id));
+  inspectorDomainByItem.set(item.id, activeDomain);
+  inspectorHeading(item.id, domains, activeDomain, () => renderInspector(snapshot, item.id));
 
-  const domainFields = clip.inspector.filter((field) => field.domain === activeDomain);
+  const domainFields = item.inspector.filter((field) => field.domain === activeDomain);
   const pages = new Map<string, { readonly label: string; readonly fields: typeof domainFields }>();
   const commonFields = domainFields.filter(field => field.page === undefined);
   for (const field of domainFields.filter(field => field.page !== undefined)) {
@@ -826,13 +856,16 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
   }
   const pageIds = [...pages.keys()];
   if (pageIds.length === 0) {
-    inspector.replaceChildren(...parameterGroups(clip.id, commonFields));
+    inspector.replaceChildren(
+      ...parameterGroups({ kind: "item", itemId: item.id }, commonFields),
+      ...(track === undefined ? [] : trackInspectorGroups(track, activeDomain)),
+    );
     return;
   }
-  const memoryKey = `${clip.id}:${activeDomain}`;
-  const rememberedPage = inspectorPageByEntity.get(memoryKey);
+  const memoryKey = `${item.id}:${activeDomain}`;
+  const rememberedPage = inspectorPageByItem.get(memoryKey);
   const activePage = rememberedPage !== undefined && pages.has(rememberedPage) ? rememberedPage : pageIds[0]!;
-  inspectorPageByEntity.set(memoryKey, activePage);
+  inspectorPageByItem.set(memoryKey, activePage);
   const page = pages.get(activePage);
   const subtabs = document.createElement("div");
   subtabs.className = "inspector-subtabs";
@@ -845,13 +878,17 @@ function renderInspector(snapshot: StudioSnapshot, clipId: string | undefined): 
       label.textContent = pages.get(id)?.label ?? id;
       button.append(label);
       button.addEventListener("click", () => {
-        inspectorPageByEntity.set(memoryKey, id);
-        renderInspector(snapshot, clip.id);
+        inspectorPageByItem.set(memoryKey, id);
+        renderInspector(snapshot, item.id);
       });
       return button;
     }));
   }
-  inspector.replaceChildren(...(pageIds.length > 1 ? [subtabs] : []), ...parameterGroups(clip.id, [...commonFields, ...(page?.fields ?? [])]));
+  inspector.replaceChildren(
+    ...(pageIds.length > 1 ? [subtabs] : []),
+    ...parameterGroups({ kind: "item", itemId: item.id }, [...commonFields, ...(page?.fields ?? [])]),
+    ...(track === undefined ? [] : trackInspectorGroups(track, activeDomain)),
+  );
 }
 
 /** Exact identity choice for coincident anchors, through package-declared domain handles. */
@@ -860,10 +897,10 @@ function renderTemporalDomainInspector(snapshot: StudioSnapshot, companion: stri
   const item = domain?.items.find((candidate) => candidate.id === itemId);
   if (domain === undefined || item === undefined) { inspector.replaceChildren(); return; }
   defaultWorkspaceHeading();
-  const consumers = snapshot.tracks.flatMap((track) => track.clips).flatMap((clip) => clip.editHandles
+  const consumers = snapshot.tracks.flatMap((track) => track.items).flatMap((studioItem) => studioItem.editHandles
     .filter((handle) => handle.enabled && handle.domain?.companion === companion
       && handle.domain.domainId === domainId && handle.domain.itemId === itemId)
-    .map((handle) => ({ clip, handle })));
+    .map((handle) => ({ studioItem, handle })));
   if (item.editable !== true || consumers.length === 0) {
     const empty = document.createElement("div");
     empty.className = "inspector-empty";
@@ -912,7 +949,7 @@ function renderTemporalDomainInspector(snapshot: StudioSnapshot, companion: stri
       control.disabled = true;
       uiText(status, "common.saving"); status.className = "status saving";
       void applyStudioMutation({ type: "timeline.adjust", revision: snapshot.revision,
-        entityId: choice.clip.id, gesture: choice.handle.gesture,
+        itemId: choice.studioItem.id, gesture: choice.handle.gesture,
         target: temporal.kind === "instant" ? { kind: "instant", frame: span.startFrame, domain: choice.target }
           : { kind: "window", ...span, domain: choice.target },
       }).then(() => { uiText(status, "common.saved"); status.className = "status saved"; })
@@ -941,7 +978,7 @@ let scrolledTo = "";
 
 store.subscribe(({ snapshot, selection, playhead }) => {
   const origin = selection.kind === "none" ? undefined : selection.origin;
-  const chosen = selection.kind === "clip" ? store.clip(selection.clipId) : undefined;
+  const chosen = selection.kind === "item" ? store.item(selection.itemId) : undefined;
   const chosenDomain = selection.kind === "temporal-domain"
     ? snapshot.temporalDomains.find((domain) => domain.companion === selection.companion
       && domain.id === selection.domainId)?.items.find((item) => item.id === selection.itemId)
@@ -1000,26 +1037,26 @@ code.element.addEventListener("click", (event) => {
     store.selectTemporalDomainItem(domainItem.companion, domainItem.domainId, domainItem.itemId, "code");
     return;
   }
-  const clip = clipAtOffset(state.snapshot, offset);
+  const item = itemAtOffset(state.snapshot, offset);
 
   // A click inside marked prose lands inside the innermost marker written there,
   // not at the start of whatever encloses it. `@{amount}` places nothing, so
-  // resolving through clips alone would throw the playhead out to `@{fee}`.
+  // resolving through Items alone would throw the playhead out to `@{fee}`.
   const span = spanAtOffset(state.snapshot, offset);
-  // Prose is anywhere a marker was written; whether a clip also covers that
-  // offset only decides which clip to select, not whether the click counts.
+  // Prose is anywhere a marker was written; whether an Item also covers that
+  // offset only decides which Item to select, not whether the click counts.
   const inProse = span !== undefined
-    && (clip?.elementRange === undefined
-      || !(offset >= clip.elementRange.start && offset <= clip.elementRange.end));
+    && (item?.elementRange === undefined
+      || !(offset >= item.elementRange.start && offset <= item.elementRange.end));
   if (inProse) {
-    // A clip is named after itself and remembers what placed it, so a marker
-    // finds the clips it put there through the second, not the first.
+    // An Item is named after itself and remembers what placed it, so a marker
+    // finds the Items it put there through the second, not the first.
     const bound = state.snapshot.tracks
-      .flatMap((track) => track.clips)
+      .flatMap((track) => track.items)
       .find((item) => item.markerId === span.itemId || item.authoredId === span.itemId);
     // A marker that places nothing still sits inside one that does, so the
-    // enclosing clip stays selected rather than leaving the inspector blank.
-    const target = bound?.id ?? clip?.id;
+    // enclosing Item stays selected rather than leaving the inspector blank.
+    const target = bound?.id ?? item?.id;
     if (target === undefined) {
       store.selectTemporalDomainItem(span.companion, span.domainId, span.itemId, "code");
       store.seek(span.startFrame, "code");
@@ -1027,8 +1064,8 @@ code.element.addEventListener("click", (event) => {
     else store.focus(span.startFrame, target, "code");
     return;
   }
-  if (clip === undefined) store.clearSelection();
-  else store.selectClip(clip.id, "code");
+  if (item === undefined) store.clearSelection();
+  else store.selectItem(item.id, "code");
 });
 
 window.addEventListener("keydown", (event) => {
@@ -1090,7 +1127,7 @@ function applyFailure(failure: StudioFailure): void {
   // value visible in the field.
   const current = store.current();
   if (current === undefined) return;
-  if (current.selection.kind === "clip") renderInspector(current.snapshot, current.selection.clipId);
+  if (current.selection.kind === "item") renderInspector(current.snapshot, current.selection.itemId);
   else if (current.selection.kind === "temporal-domain") renderTemporalDomainInspector(current.snapshot,
     current.selection.companion, current.selection.domainId, current.selection.itemId);
 }

@@ -27,7 +27,8 @@ const temporalDomain: StudioTemporalDomainView = {
     { id: "segment:a:token:1:end", kind: "token-end", frame: 12 },
     { id: "segment:a:end", kind: "segment-end", frame: 12 },
   ],
-  items: [{ kind: "span", appearance: "block", id: "claim", laneId: "intent", label: "claim",
+  items: [],
+  editItems: [{ kind: "span", appearance: "block", id: "claim", laneId: "intent", label: "claim",
     source: { type: narrativeSourceIdentity.type, kind: "selection", id: "claim" }, editable: true,
     startAnchorId: "segment:a:token:1:start",
     endAnchorId: "segment:a:token:1:end",
@@ -38,7 +39,7 @@ const temporalDomain: StudioTemporalDomainView = {
   source: { path: "main.svml", content: { start: 0, end: 100 } },
 };
 
-const withMoment: StudioTemporalDomainView = { ...temporalDomain, items: [...temporalDomain.items, {
+const withMoment: StudioTemporalDomainView = { ...temporalDomain, editItems: [...temporalDomain.editItems, {
   kind: "point", appearance: "marker", id: "beat", laneId: "intent", label: "beat",
   source: { type: narrativeSourceIdentity.type, kind: "moment", id: "beat" }, editable: true,
   anchorId: "segment:a:token:1:end", frame: 12,
@@ -53,6 +54,7 @@ test("structured parameter values validate and serialize through the generic SVS
 
 test("timeline gestures resolve through the shared Selection identity", () => {
   const temporal: StudioTemporalLineage = {
+    record: "claim.window",
     projection: {
       kind: "window",
       start: {
@@ -85,6 +87,7 @@ test("timeline gestures resolve through the shared Selection identity", () => {
 
 test("moving a Moment projection resolves to the shared Moment identity", () => {
   const handles = resolveTimelineEditHandles([], {
+    record: "beat.instant",
     projection: {
       kind: "instant", expression: "moment.cue", reference: "moment.cue", frame: 12,
       source: { ...narrativeSourceIdentity, kind: "moment", id: "beat" },
@@ -120,19 +123,23 @@ test("at/for and until/for derive complementary semantic and duration inverses",
     authority: { kind: "parameter" as const, binding: "for", relation: "before-end" as const },
   };
   const atFor = resolveTimelineEditHandles([duration], {
+    record: "beat.after",
     projection: { kind: "window", start: moment, end: after, startFrame: 12, endFrameExclusive: 20 },
   }, [withMoment]);
   assert.deepEqual(atFor.map((handle) => [handle.gesture, handle.domain?.kind, handle.sources?.map((source) => source.role)]), [
-    ["move", "point", undefined],
+    ["move", "point", ["duration"]],
+    ["trim-start", "point", ["duration"]],
     ["trim-end", undefined, ["duration"]],
   ]);
 
   const untilFor = resolveTimelineEditHandles([duration], {
+    record: "beat.before",
     projection: { kind: "window", start: before, end: moment, startFrame: 4, endFrameExclusive: 12 },
   }, [withMoment]);
   assert.deepEqual(untilFor.map((handle) => [handle.gesture, handle.domain?.kind, handle.sources?.map((source) => source.role)]), [
-    ["move", "point", undefined],
+    ["move", "point", ["duration"]],
     ["trim-start", undefined, ["duration"]],
+    ["trim-end", "point", ["duration"]],
   ]);
 });
 
@@ -156,6 +163,7 @@ test("absolute Window edits work without a semantic lane and use the Companion's
   const handles = resolveTimelineEditHandles(
     parameters,
     {
+      record: "absolute.window",
       projection: {
         kind: "window",
         start: {
@@ -199,7 +207,7 @@ test("independent reference endpoints expose local edits without claiming their 
   }));
   const handles = resolveTimelineEditHandles(bindings, { projection: {
     kind: "window", start: endpoints[0]!, end: endpoints[1]!, startFrame: 2, endFrameExclusive: 20,
-  } }, [temporalDomain]);
+  }, record: "references.window" }, [temporalDomain]);
   assert.deepEqual(handles.map(({ gesture, enabled, domain, sources }) => ({ gesture, enabled, domain, roles: sources?.map(source => source.role) })), [
     { gesture: "move", enabled: true, domain: undefined, roles: ["start", "end"] },
     { gesture: "trim-start", enabled: true, domain: undefined, roles: ["start"] },
@@ -225,7 +233,7 @@ test("parameter Source paths stay relative to the author workspace", () => {
       referenceAttributes: {}, referenceTypes: {}, references: [],
     },
     draft: {
-      id: "entity:item", authoredId: "item", display: { title: "item", layers: [] },
+      id: "item:item", authoredId: "item", display: { title: "item", layers: [] },
       startFrame: 1, endFrameExclusive: 2, stackOrder: 0,
       elementRange: { start: 0, end: text.length },
     },
@@ -257,7 +265,7 @@ test("nested declared references reach the font attribute, not the referring Sty
   const parameters = sourceBindingsForDraft({
     root: "/workspace", files: [{ path: "main.svml", text, language: "svml" }],
     placement: track, placements: [track, style, font],
-    draft: { id: "track:entity", authoredId: "track", display: { title: "track", layers: [] },
+    draft: { id: "track:item", authoredId: "track", display: { title: "track", layers: [] },
       startFrame: 0, endFrameExclusive: 10, stackOrder: 0, elementRange: track.range },
     declarations: [{ name: "style", referenced: [{ name: "font", referenced: [{ name: "family", writable: true }] }] }],
   });
@@ -267,7 +275,7 @@ test("nested declared references reach the font attribute, not the referring Sty
   assert.equal(family?.writable, true);
 });
 
-test("a derived entity follows its actual Style and Companion-owned Recipe presentation", () => {
+test("a derived Item follows its actual Style and Companion-owned Recipe presentation", () => {
   const main = "<scene:Track id=\"captions\" layout={baseline-layout}/>";
   const sheet = `<?svml using="@qflow/recipe@1"?>
 <sheet version="1">

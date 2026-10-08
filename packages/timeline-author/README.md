@@ -81,6 +81,22 @@ range are errors.
 The graph may have several roots, branches and leaves. It needs no clip ordering or single content
 root; it needs one resolvable `end`.
 
+## Studio inverse
+
+Timeline Author retains the exact child declaration and binding on private literal Duration and
+Offset Specs. Its Studio Companion owns the inverse relations for private construction Points,
+Extents and Spans. Studio can therefore follow a consumed Window back through the executed author
+graph without learning Timeline Author's Producer vocabulary.
+
+For `from + for`, moving keeps `for` unchanged; trimming the leading edge rewrites `from` and `for`
+atomically so the old end remains fixed. `until + for` is the corresponding end-anchored relation,
+while `from + until` exposes both boundaries. A bare reference follows its upstream producer. An
+explicit offset owns only that offset expression. `earliest` and `latest` remain read-only when a
+change would require choosing among inputs; Studio does not guess which branch the author intended.
+
+These inverse facts are package-local Studio support. They do not change the Timeline value, add an
+editing concern to Core, or create a second author graph.
+
 ## Unknown generated duration
 
 `TemporalExtent` is an unpositioned frame count on one frame rate. Normalization publishes it only

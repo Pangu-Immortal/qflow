@@ -31,12 +31,12 @@ test("audio uses exact event identities and emitted clips, with shared recipe ow
     ] }]]),
     spans: [{ id: "opaque-event-id", startFrame: 90, endFrameExclusive: 99, stackOrder: 0 }],
   } as unknown as StudioTrackCompanionContext;
-  const entities = audio.project!(context);
-  assert.equal(entities.length, 1);
-  assert.equal(entities[0]!.display.title, "Player One · Move");
-  assert.equal(entities[0]!.authoredId, "board");
-  assert.deepEqual(entities[0]!.elementRange, context.placement!.range);
-  assert.equal(entities[0]!.temporal, undefined);
-  assert.equal(entities[0]!.inspector![0]!.value, "Player One · Move · 90f");
-  assert.deepEqual([entities[0]!.startFrame, entities[0]!.endFrameExclusive], [90, 99]);
+  const items = audio.project!(context);
+  assert.equal(items.length, 1);
+  assert.equal(items[0]!.display.title, "Player One · Move");
+  assert.equal(items[0]!.authoredId, "board");
+  assert.deepEqual(items[0]!.elementRange, context.placement!.range);
+  assert.equal(items[0]!.temporal, undefined);
+  assert.equal(items[0]!.inspector![0]!.value, "Player One · Move · 90f");
+  assert.deepEqual([items[0]!.startFrame, items[0]!.endFrameExclusive], [90, 99]);
 });

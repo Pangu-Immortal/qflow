@@ -21,7 +21,7 @@ its color is How, and the object's frame is Where. One field has one owner and o
 shown when selected by the Companion, including read-only bindings. The interface orders available
 domains as Where, When, How. Read-only values and editable controls share the same sections.
 
-A projected entity may supply a few computed `inspector` facts without binding them to Source:
+A projected Item may supply a few computed `inspector` facts without binding them to Source:
 
 ```ts
 inspector: [{ id: "range", label: "Range", domain: "when",
@@ -31,7 +31,7 @@ inspector: [{ id: "range", label: "Range", domain: "when",
 The resolved DTO carries an `edit: { language, source }` only for writable author fields.
 The UI uses plain selectable text otherwise; the server requires that endpoint for writes.
 Choose facts that explain the selected object or its controls. Component headers organize lanes;
-the selected entities own their details. The finite controls are independent of the three domains:
+the selected Items own their details. The finite controls are independent of the three domains:
 
 | Control | Use |
 | --- | --- |

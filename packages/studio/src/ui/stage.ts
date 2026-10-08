@@ -66,19 +66,19 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
   const iframe = element.querySelector<HTMLIFrameElement>("iframe")!;
   let reviewMode = false;
   /**
-   * Measure a clip in the rendered picture.
+   * Measure an Item in the rendered picture.
    *
    * The iframe is sized to the canvas, so coordinates inside its document are
    * canvas pixels already and need no conversion. `getBoundingClientRect`
    * reflects the paused animation's transform, which is the whole point:
-   * lifecycle motion displaces a clip from its Placement Frame for the length
-   * of its enter and exit, and selecting a clip lands the playhead on exactly
+   * lifecycle motion displaces an Item from its Placement Frame for the length
+   * of its enter and exit, and selecting an Item lands the playhead on exactly
    * the frame where that displacement is largest.
    */
-  const measure = (clipId: string): { xPx: number; yPx: number; widthPx: number; heightPx: number; stackOrder: number } | undefined => {
+  const measure = (renderId: string): { xPx: number; yPx: number; widthPx: number; heightPx: number; stackOrder: number } | undefined => {
     const document_ = iframe.contentDocument;
     if (document_ === null) return undefined;
-    const present = document_.querySelector(`[data-qflow-present-id="${CSS.escape(clipId)}"]`);
+    const present = document_.querySelector(`[data-qflow-present-id="${CSS.escape(renderId)}"]`);
     if (present === null) return undefined;
     const current = store.current();
     if (current === undefined) return undefined;
@@ -88,7 +88,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
     if (current.playhead.frame < Math.round(start * frameRate)
       || current.playhead.frame >= Math.round(end * frameRate)) return undefined;
     // The present spans the whole canvas; the drawn box is its frame element.
-    const drawn = present?.querySelector(`[data-qflow-element-id="${CSS.escape(`${clipId}:frame`)}"]`)
+    const drawn = present?.querySelector(`[data-qflow-element-id="${CSS.escape(`${renderId}:frame`)}"]`)
       ?? present?.querySelector("[data-qflow-element-id]");
     if (drawn === null || drawn === undefined) return undefined;
     for (let ancestor: Element | null = drawn; ancestor !== null; ancestor = ancestor.parentElement) {
@@ -110,8 +110,8 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
   // the third way into the same selection.
   scaler.addEventListener("click", (event) => {
     if (reviewMode) { toggle(); return; }
-    const clip = overlay.hitTest(event.clientX, event.clientY);
-    if (clip !== undefined) store.select(clip.id, "video");
+    const item = overlay.hitTest(event.clientX, event.clientY);
+    if (item !== undefined) store.select(item.id, "video");
     else store.clearSelection();
   });
   // A broad component frame can cover smaller elements. Offer all actual
@@ -168,7 +168,7 @@ export function createStage(store: Store, selectedArtifact: (id: string | undefi
   let muted = false;
   let raf = 0;
   // The transport counts frames from where it was last told to be. Jumping to a
-  // clip mid-playback moves that origin rather than stopping, so playback
+  // Item mid-playback moves that origin rather than stopping, so playback
   // carries on from the frame the author asked for.
   let fromFrame = 0;
   let began = 0;

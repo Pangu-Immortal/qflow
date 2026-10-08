@@ -5,11 +5,10 @@
 
 import type {
   Range,
-  StudioEntityDisplay,
+  StudioItemDisplay,
   StudioIcon,
   StudioEditHandle,
   StudioLaneDescription,
-  StudioTrackBand,
   StudioMaterialPreview,
   StudioInspectorField,
   StudioInspectorDomain,
@@ -28,7 +27,7 @@ import type { CanonicalValue } from "@qflow/qflow/protocol";
 
 export type {
   Range,
-  StudioEntityDisplay,
+  StudioItemDisplay,
   StudioIcon,
   StudioEditHandle,
   StudioLaneDescription,
@@ -61,7 +60,6 @@ export type StudioTrackBinding = {
   readonly companion: string;
   /** Studio-local partition key for an attached projection. */
   readonly attachmentId?: string;
-  readonly bands?: readonly Omit<StudioTrackBand, "bindings" | "inspector">[];
   readonly lane: StudioLaneDescription;
   readonly authoredTag?: string;
   readonly references: readonly { readonly name: string; readonly type: string }[];
@@ -87,18 +85,17 @@ export type CandidateProvenance = {
  * measured from the rendered picture rather than restated here, because motion
  * moves it and only the picture knows where it ended up.
  */
-export type Clip = {
-  /** Studio identity. Output-qualified so sibling Track clips cannot collide. */
+export type StudioItem = {
+  /** Studio identity. Output-qualified so sibling Track Items cannot collide. */
   readonly id: string;
-  /** Renderer identity, present only when this clip paints a Visual Present. */
+  /** Renderer identity, present only when this Item paints a Visual Present. */
   readonly presentId?: string;
   /** The authored id this Present is named after, when it names one. */
   readonly authoredId: string;
   readonly selectionGroup?: string;
-  readonly band?: string;
   /** The Script marker that placed it, when something said put it there. */
   readonly markerId?: string;
-  readonly display: StudioEntityDisplay;
+  readonly display: StudioItemDisplay;
   readonly startFrame: number;
   readonly endFrameExclusive: number;
   /** Where that authored tag was written. */
@@ -106,20 +103,31 @@ export type Clip = {
   readonly stackOrder: number;
   readonly presentation: StudioTimelinePresentation;
   readonly temporal?: StudioTemporalLineage;
-  /** Rendering identities implementing this author entity; optional for non-visual entities. */
+  /** Rendering identities implementing this author Item; optional for non-visual Items. */
   readonly renderIds: readonly string[];
   /** Companion-selected writable fields; hidden source bindings never cross into this surface. */
   readonly inspector: readonly StudioInspectorField[];
   readonly editHandles: readonly StudioEditHandle[];
 };
 
-export type Track = {
+export type StudioInspectorObject = {
+  readonly id: string;
+  /** Package-owned grouping label, such as Presentation Rules. */
+  readonly group: string;
+  readonly title: string;
+  readonly elementRange?: Range;
+  readonly inspector: readonly StudioInspectorField[];
+};
+
+export type StudioTrack = {
   /** Exact LogicalOutput ref; labels are not identities. */
   readonly id: string;
   readonly label: string;
   /** Render order in the timeline; 0 is the top row. */
   readonly row: number;
-  readonly clips: readonly Clip[];
+  readonly items: readonly StudioItem[];
+  /** Track-owned author objects that are rules or parameters, not timeline occurrences. */
+  readonly inspectorObjects: readonly StudioInspectorObject[];
   readonly binding: StudioTrackBinding;
   /** Which resolved Run candidate produced this Track, or why it did not. */
   readonly provenance: CandidateProvenance;
@@ -229,7 +237,7 @@ export type StudioSnapshot = {
     readonly frameCount: number;
     readonly durationSec: number;
   };
-  readonly tracks: readonly Track[];
+  readonly tracks: readonly StudioTrack[];
   /** Package-contributed temporal views projected onto the same absolute ruler. */
   readonly temporalDomains: readonly TemporalDomainView[];
   /** The Tracks, compiled into the document the renderer photographs. */
@@ -246,7 +254,7 @@ export type StudioMutation =
   | {
       readonly type: "timeline.adjust";
       readonly revision: number;
-      readonly entityId: string;
+      readonly itemId: string;
       readonly gesture: StudioTimelineGesture;
       readonly target:
         | {
@@ -264,7 +272,9 @@ export type StudioMutation =
   | {
       readonly type: "parameter.adjust";
       readonly revision: number;
-      readonly entityId: string;
+      readonly owner:
+        | { readonly kind: "item"; readonly itemId: string }
+        | { readonly kind: "track-object"; readonly trackId: string; readonly objectId: string };
       readonly parameterId: string;
       readonly value: CanonicalValue;
     };

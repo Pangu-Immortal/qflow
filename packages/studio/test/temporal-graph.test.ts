@@ -4,6 +4,8 @@ import test from "node:test";
 import type { BuildState, ProducerStep, TypeRef, TypedRecord } from "@qflow/protocol";
 
 import { executedTemporalBindings } from "../src/temporal-graph.js";
+import { commonTemporalStudioRelations } from "../src/common-temporal-relations.js";
+import { narrativeStudioTemporalRelations } from "../../narrative-temporal/src/studio.js";
 
 const module = (name: string) => ({ name, version: "1" });
 const type = (owner: string, name: string): TypeRef => ({ module: module(owner), name });
@@ -14,6 +16,12 @@ const producer = (owner: string, name: string) => ({ module: module(owner), name
 const step = (id: string, owner: string, name: string, inputs: ProducerStep["inputs"], outputs: ProducerStep["outputs"]): ProducerStep => ({
   id, producer: producer(owner, name), inputs, outputs, needs: {},
 });
+const relationFor = (relations: typeof commonTemporalStudioRelations) =>
+  (candidate: ProducerStep["producer"], output: string) => relations.find((relation) =>
+    relation.match.producer.module.name === candidate.module.name
+    && relation.match.producer.module.version === candidate.module.version
+    && relation.match.producer.name === candidate.name
+    && relation.match.output === output);
 
 test("Studio reads Instant lineage and author authority from executed graph edges", () => {
   const program = [
@@ -52,7 +60,18 @@ test("Studio reads Instant lineage and author authority from executed graph edge
     needs: [], outstanding: [], diagnostics: [],
   } as unknown as BuildState;
 
-  const bindings = executedTemporalBindings(state, "visual");
+  const opaque = executedTemporalBindings(state, "visual");
+  assert.deepEqual(opaque[0]?.projection, {
+    kind: "instant", expression: "42f", reference: "absolute", frame: 42,
+    source: { timelineId: "speech", type: type("@qflow/temporal", "TemporalInstant"), kind: "resolved", id: "deck.card::cue" },
+    authority: { kind: "fixed" },
+  });
+  const bindings = executedTemporalBindings(state, "visual", (sourceType, value) => {
+    const held = value as { readonly id?: unknown };
+    return sourceType.module.name === "@qflow/narrative" && typeof held.id === "string"
+      ? { companion: "narrative", id: "story-on-speech", kind: sourceType.name === "NarrativeMoment" ? "moment" : "source", itemId: held.id }
+      : undefined;
+  }, relationFor(narrativeStudioTemporalRelations));
   assert.equal(bindings.length, 1);
   assert.deepEqual(bindings[0], {
     record: "point",
@@ -60,8 +79,10 @@ test("Studio reads Instant lineage and author authority from executed graph edge
     id: "deck.card::cue",
     projection: {
       kind: "instant", expression: "moment.cue", reference: "moment.cue", frame: 42,
-      source: { timelineId: "speech", type: type("@qflow/narrative", "NarrativeMoment"), kind: "moment", id: "cue" },
-      authority: { kind: "domain", source: { timelineId: "speech", type: type("@qflow/narrative", "NarrativeMoment"), kind: "moment", id: "cue" }, boundary: "cue" },
+      source: { timelineId: "speech", type: type("@qflow/narrative", "NarrativeMoment"), kind: "moment", id: "cue",
+        domain: { companion: "narrative", id: "story-on-speech" } },
+      authority: { kind: "domain", source: { timelineId: "speech", type: type("@qflow/narrative", "NarrativeMoment"), kind: "moment", id: "cue",
+        domain: { companion: "narrative", id: "story-on-speech" } }, boundary: "cue" },
     },
     consumers: [{
       step: "append",
@@ -113,7 +134,7 @@ test("Studio reads author parameter authority declared by the Temporal Spec", ()
     needs: [], outstanding: [], diagnostics: [],
   } as unknown as BuildState;
 
-  const bindings = executedTemporalBindings(state, "visual");
+  const bindings = executedTemporalBindings(state, "visual", undefined, relationFor(commonTemporalStudioRelations));
   assert.equal(bindings.length, 1);
   assert.deepEqual(bindings[0]?.projection, {
     kind: "instant",
@@ -126,6 +147,6 @@ test("Studio reads author parameter authority declared by the Temporal Spec", ()
       kind: "timeline",
       id: "main",
     },
-    authority: { kind: "parameter", binding: "at", relation: "direct" },
+    authority: { kind: "parameter", binding: "at", owner: "point-spec:at", relation: "direct" },
   });
 });

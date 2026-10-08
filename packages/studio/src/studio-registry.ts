@@ -3,7 +3,8 @@ import type {
   StudioParameterCompanion,
   StudioTrackCompanionContext,
   StudioEditHandle,
-  StudioEntityDraft,
+  StudioItemDraft,
+  StudioInspectorObjectDraft,
   StudioFilmCompanion,
   StudioLaneAttachment,
   StudioViewRole,
@@ -11,6 +12,9 @@ import type {
   StudioTemporalDomainAdjustment,
   StudioTemporalDomainProjectionInput,
   StudioTemporalDomainCompanion,
+  StudioTemporalDeclarationCompanion,
+  StudioTemporalDeclarationDraft,
+  StudioTemporalRelationCompanion,
   StudioTemporalDomainSourceMap,
   StudioSourceBindingDeclaration,
   StudioSpan,
@@ -19,12 +23,12 @@ import { studioParameterControls } from "@qflow/studio-companion";
 import { parameterOption } from "./parameter-values.js";
 import { compositionTypes } from "@qflow/qflow/composition";
 import { sameModule, sameType } from "@qflow/qflow/protocol";
-import type { ModuleRef, TypeRef } from "@qflow/qflow/protocol";
+import type { ModuleRef, ProducerRef, TypeRef } from "@qflow/qflow/protocol";
 
 import type { Placement } from "./observe.js";
-import type { Clip, StudioTrackBinding } from "./shared.js";
+import type { StudioItem, StudioTrackBinding } from "./shared.js";
 
-export type { StudioEntityDraft, StudioViewRole, StudioSpan } from "@qflow/studio-companion";
+export type { StudioItemDraft, StudioViewRole, StudioSpan } from "@qflow/studio-companion";
 
 const flatLane = {
   heightPx: 52,
@@ -101,16 +105,14 @@ function validateCompanionVocabulary(companion: StudioTrackCompanion): void {
     throw new Error(`Studio Track Companion ${companion.id} selects unsupported icon ${companion.icon}`);
   }
   validateInspector(`Studio Track Companion ${companion.id}`, companion.bindings, companion.inspector);
-  const bandIds = new Set<string>();
-  for (const band of companion.bands ?? []) {
-    if (!band.id.trim() || bandIds.has(band.id)) throw new Error(`Studio Companion ${companion.id} has a duplicate or empty band id`);
-    bandIds.add(band.id);
-    if (!Number.isFinite(band.heightPx) || band.heightPx <= 0
-      || !["before", "after"].includes(band.placement) || !["label", "content"].includes(band.display)) {
-      throw new Error(`Studio Companion ${companion.id} band ${band.id} has invalid layout`);
+  const inspectorObjectIds = new Set<string>();
+  for (const object of companion.inspectorObjects ?? []) {
+    if (!object.id.trim() || inspectorObjectIds.has(object.id)) {
+      throw new Error(`Studio Companion ${companion.id} has a duplicate or empty Inspector object id`);
     }
-    if (band.tone !== undefined && !tones.has(band.tone)) throw new Error(`Studio Companion ${companion.id} band ${band.id} has unsupported tone`);
-    validateInspector(`Studio Companion ${companion.id} band ${band.id}`, band.bindings, band.inspector);
+    inspectorObjectIds.add(object.id);
+    if (!object.label.trim()) throw new Error(`Studio Companion ${companion.id} Inspector object ${object.id} has no label`);
+    validateInspector(`Studio Companion ${companion.id} Inspector object ${object.id}`, object.bindings, object.inspector);
   }
   for (const attachment of companion.attachments ?? []) {
     if (attachment.tone !== undefined && !tones.has(attachment.tone)) {
@@ -123,40 +125,37 @@ function validateCompanionVocabulary(companion: StudioTrackCompanion): void {
   }
 }
 
-function validateDraftVocabulary(companion: StudioTrackCompanion, draft: StudioEntityDraft): void {
-  if (draft.band !== undefined && (draft.lane !== undefined || !companion.bands?.some(band => band.id === draft.band))) {
-    throw new Error(`Studio Companion ${companion.id} entity ${draft.id} must select one declared band within its own Track`);
-  }
-
+function validateItemDraftVocabulary(companion: StudioTrackCompanion, draft: StudioItemDraft): void {
   if (draft.display === undefined || typeof draft.display.title !== "string" || draft.display.title.trim().length === 0) {
-    throw new Error(`Studio Track Companion ${companion.id} entity ${draft.id} has no display title`);
+    throw new Error(`Studio Track Companion ${companion.id} Item ${draft.id} has no display title`);
   }
   if (!Array.isArray(draft.display.layers)) {
-    throw new Error(`Studio Track Companion ${companion.id} entity ${draft.id} has invalid display layers`);
+    throw new Error(`Studio Track Companion ${companion.id} Item ${draft.id} has invalid display layers`);
   }
-  if (draft.presentation !== undefined && !chromes.has(draft.presentation.chrome)) {
-    throw new Error(`Studio Track Companion ${companion.id} entity ${draft.id} selects unsupported chrome ${draft.presentation.chrome}`);
+  if (draft.presentation !== undefined
+    && (!draft.presentation.kind.trim() || !chromes.has(draft.presentation.chrome))) {
+    throw new Error(`Studio Track Companion ${companion.id} Item ${draft.id} has invalid presentation`);
   }
   for (const [index, layer] of draft.display.layers.entries()) {
     if (layer.kind === "text") {
       if (layer.role !== "content" || typeof layer.text !== "string") {
-        throw new Error(`Studio Track Companion ${companion.id} entity ${draft.id} has invalid text layer ${index}`);
+        throw new Error(`Studio Track Companion ${companion.id} Item ${draft.id} has invalid text layer ${index}`);
       }
       continue;
     }
     if (layer.kind !== "preview" || (layer.role !== "content" && layer.role !== "decoration")
       || !layouts.has(layer.layout)
       || !(["image", "video", "audio"] as const).includes(layer.preview.kind)) {
-      throw new Error(`Studio Track Companion ${companion.id} entity ${draft.id} has invalid preview layer ${index}`);
+      throw new Error(`Studio Track Companion ${companion.id} Item ${draft.id} has invalid preview layer ${index}`);
     }
     const source = layer.preview.source;
     if (source.kind === "artifact") {
       if (typeof source.resource !== "string" || source.resource.length === 0) {
-        throw new Error(`Studio Track Companion ${companion.id} entity ${draft.id} has invalid Artifact source`);
+        throw new Error(`Studio Track Companion ${companion.id} Item ${draft.id} has invalid Artifact source`);
       }
     } else if (source.kind !== "surface-preview"
       || source.module.length === 0 || source.version.length === 0 || source.surface.length === 0) {
-      throw new Error(`Studio Track Companion ${companion.id} entity ${draft.id} has invalid Surface preview source`);
+      throw new Error(`Studio Track Companion ${companion.id} Item ${draft.id} has invalid Surface preview source`);
     }
   }
 }
@@ -188,12 +187,16 @@ export class StudioCompanionRegistry {
   readonly #tracks: readonly StudioTrackCompanion[];
   readonly #films: readonly StudioFilmCompanion[];
   readonly #temporalDomains: readonly StudioTemporalDomainCompanion[];
+  readonly #temporalDeclarations: readonly StudioTemporalDeclarationCompanion[];
+  readonly #temporalRelations: readonly StudioTemporalRelationCompanion[];
 
   constructor(
     tracks: readonly StudioTrackCompanion[],
     options: {
       readonly films?: readonly StudioFilmCompanion[];
       readonly temporalDomains?: readonly StudioTemporalDomainCompanion[];
+      readonly temporalDeclarations?: readonly StudioTemporalDeclarationCompanion[];
+      readonly temporalRelations?: readonly StudioTemporalRelationCompanion[];
       readonly parameters?: readonly StudioParameterCompanion[];
     } = {},
   ) {
@@ -205,7 +208,10 @@ export class StudioCompanionRegistry {
     }
     const films = [...(options.films ?? [])];
     const temporalDomains = [...(options.temporalDomains ?? [])];
-    for (const [label, companions] of [["Film", films], ["Temporal Domain", temporalDomains]] as const) {
+    const temporalDeclarations = [...(options.temporalDeclarations ?? [])];
+    const temporalRelations = [...(options.temporalRelations ?? [])];
+    for (const [label, companions] of [["Film", films], ["Temporal Domain", temporalDomains],
+      ["Temporal Declaration", temporalDeclarations], ["Temporal Relation", temporalRelations]] as const) {
       const companionIds = new Set<string>();
       for (const companion of companions) {
         if (companionIds.has(companion.id) || ids.has(companion.id)) {
@@ -224,6 +230,19 @@ export class StudioCompanionRegistry {
     this.#tracks = Object.freeze([...tracks]);
     this.#films = Object.freeze(films);
     this.#temporalDomains = Object.freeze(temporalDomains);
+    this.#temporalDeclarations = Object.freeze(temporalDeclarations);
+    this.#temporalRelations = Object.freeze(temporalRelations);
+  }
+
+  temporalRelationFor(producer: ProducerRef, output: string): StudioTemporalRelationCompanion | undefined {
+    const found = this.#temporalRelations.filter((companion) =>
+      sameModule(companion.match.producer.module, producer.module)
+      && companion.match.producer.name === producer.name
+      && companion.match.output === output);
+    if (found.length > 1) {
+      throw new Error(`Studio Temporal Relation companions are ambiguous for ${producer.module.name}@${producer.module.version}#${producer.name}.${output}.`);
+    }
+    return found[0];
   }
 
   parameterCompanionFor(module: ModuleRef, surface: string): StudioParameterCompanion | undefined {
@@ -268,6 +287,15 @@ export class StudioCompanionRegistry {
     const companion = this.#temporalDomains.find(item => item.id === input.source.companion);
     if (companion === undefined) throw new Error(`Temporal Domain Companion ${input.source.companion} is unavailable.`);
     return companion.project(input);
+  }
+
+  projectTemporalDeclarations(placement: Placement): readonly StudioTemporalDeclarationDraft[] {
+    const found = this.#temporalDeclarations.filter((companion) =>
+      sameModule(companion.match.module, placement.module) && companion.match.surface === placement.surface);
+    if (found.length > 1) {
+      throw new Error(`Studio Temporal Declaration companions are ambiguous for ${placement.module.name}@${placement.module.version}#${placement.surface}.`);
+    }
+    return found[0]?.project({ placement }) ?? [];
   }
 
   adjustTemporalDomain(input: {
@@ -383,22 +411,21 @@ export class StudioCompanionRegistry {
       icon: companion.icon ?? (sameType(track.typeRef, compositionTypes.audioTrack) ? "waveform" : "layers"),
       companion: companion.id,
       lane: companion.lane ?? flatLane,
-      ...(companion.bands === undefined ? {} : { bands: companion.bands.map(({ bindings: _bindings, inspector: _inspector, ...band }) => band) }),
       ...(track.trace.placement === undefined ? {} : { authoredTag: track.trace.placement }),
       references: track.trace.references.map(({ name, type }) => ({ name, type })),
     };
   }
 
-  projectTrack(input: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+  projectTrack(input: StudioTrackCompanionContext): readonly StudioItemDraft[] {
     const companion = this.#trackCompanion(input.track);
     const drafts = companion.project?.(input) ?? input.generic();
     const preview = input.surfacePreview;
-    const surfaceLayer: StudioEntityDraft["display"]["layers"][number] | undefined = preview === undefined
+    const surfaceLayer: StudioItemDraft["display"]["layers"][number] | undefined = preview === undefined
       ? undefined
       : { kind: "preview", role: "decoration", preview, layout: "repeat-x" };
-    const projected: readonly StudioEntityDraft[] = companion.poster?.source !== "surface-preview" || surfaceLayer === undefined
+    const projected: readonly StudioItemDraft[] = companion.poster?.source !== "surface-preview" || surfaceLayer === undefined
       ? drafts
-      : drafts.map((draft) => draft.lane !== undefined || draft.band !== undefined
+      : drafts.map((draft) => draft.lane !== undefined
       ? draft
       : {
           ...draft,
@@ -407,18 +434,39 @@ export class StudioCompanionRegistry {
             layers: [surfaceLayer, ...draft.display.layers],
           },
         });
-    for (const draft of projected) validateDraftVocabulary(companion, draft);
+    for (const draft of projected) validateItemDraftVocabulary(companion, draft);
     return projected;
+  }
+
+  projectInspectorObjects(input: StudioTrackCompanionContext): readonly {
+    readonly companionId: string;
+    readonly label: string;
+    readonly draft: StudioInspectorObjectDraft;
+    readonly bindings: readonly StudioSourceBindingDeclaration[];
+    readonly inspector: NonNullable<StudioTrackCompanion["inspector"]>;
+  }[] {
+    const companion = this.#trackCompanion(input.track);
+    const result = (companion.inspectorObjects ?? []).flatMap((object) => object.project(input).map((draft) => ({
+      companionId: object.id,
+      label: object.label,
+      draft,
+      bindings: object.bindings ?? [],
+      inspector: object.inspector ?? [],
+    })));
+    const ids = new Set<string>();
+    for (const { draft } of result) {
+      if (!draft.id.trim() || ids.has(draft.id)) throw new Error(`Studio Companion ${companion.id} repeats Inspector object ${draft.id}`);
+      if (!draft.authoredId.trim() || !draft.title.trim()) throw new Error(`Studio Companion ${companion.id} Inspector object ${draft.id} is incomplete`);
+      ids.add(draft.id);
+    }
+    return result;
   }
 
   bindingDeclarations(
     track: StudioResolvedTrack,
-    placement: Placement | undefined,
     lane?: string,
-    band?: string,
   ) {
     const companion = this.#trackCompanion(track);
-    if (band !== undefined) return companion.bands?.find(item => item.id === band)?.bindings ?? [];
     if (lane !== undefined) {
       return companion.attachments?.find((attachment) => attachment.id === lane)?.bindings ?? [];
     }
@@ -427,12 +475,9 @@ export class StudioCompanionRegistry {
 
   inspectorDeclarations(
     track: StudioResolvedTrack,
-    placement: Placement | undefined,
     lane?: string,
-    band?: string,
   ) {
     const companion = this.#trackCompanion(track);
-    if (band !== undefined) return companion.bands?.find(item => item.id === band)?.inspector ?? [];
     if (lane !== undefined) {
       return companion.attachments?.find((attachment) => attachment.id === lane)?.inspector ?? [];
     }
@@ -441,18 +486,17 @@ export class StudioCompanionRegistry {
 
 }
 
-export function sealStudioClip(
+export function sealStudioItem(
   outputRef: string,
-  draft: StudioEntityDraft,
+  draft: StudioItemDraft,
   fallback: StudioTrackBinding,
   editHandles: readonly StudioEditHandle[] = [],
-  inspector: Clip["inspector"] = [],
-): Clip {
+  inspector: StudioItem["inspector"] = [],
+): StudioItem {
   return {
     id: draft.id.startsWith(`${outputRef}:`) ? draft.id : `${outputRef}:${draft.id}`,
     ...(draft.presentId === undefined ? {} : { presentId: draft.presentId }),
     authoredId: draft.authoredId,
-    ...(draft.band === undefined ? {} : { band: draft.band }),
     ...(draft.selectionGroup === undefined ? {} : { selectionGroup: draft.selectionGroup }),
     ...(draft.markerId === undefined ? {} : { markerId: draft.markerId }),
     display: draft.display,
@@ -461,7 +505,7 @@ export function sealStudioClip(
     ...(draft.elementRange === undefined ? {} : { elementRange: draft.elementRange }),
     stackOrder: draft.stackOrder,
     presentation: draft.presentation ?? {
-      entity: fallback.facet === "audio" ? "audio-clip" : "present",
+      kind: fallback.facet === "audio" ? "audio-clip" : "present",
       chrome: "standard",
     },
     ...(draft.temporal === undefined ? {} : { temporal: draft.temporal }),

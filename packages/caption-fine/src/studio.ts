@@ -7,10 +7,11 @@ import type { FineCaptionSchedule } from "./types.js";
 import type {
   StudioTrackCompanion,
   StudioTrackCompanionContext,
-  StudioEntityDraft,
+  StudioItemDraft,
+  StudioInspectorObjectDraft,
   StudioInspectorFieldDeclaration,
 } from "@qflow/studio-companion";
-import { authoredChildFor, temporalLineageFor, temporalDomainSource, requiredReferencedValue, requiredSurfaceValue } from "@qflow/studio-companion";
+import { authoredChildFor, requiredReferencedValue, requiredSurfaceValue } from "@qflow/studio-companion";
 
 const styleSurface = captionFineMarkupSurfaces.find((surface) => surface.name === "style");
 
@@ -114,41 +115,57 @@ function cueText(document: CaptionDocument | undefined, unitIds: readonly string
     .join("");
 }
 
-export function projectCaptionContents(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
-  const content = requiredReferencedValue(context, "timing", captionTypes.timing) as CaptionTiming;
+export function projectCaptionContents(context: StudioTrackCompanionContext): readonly StudioItemDraft[] {
+  const timing = requiredReferencedValue(context, "timing", captionTypes.timing) as CaptionTiming;
   const schedule = requiredSurfaceValue(context, "schedule") as FineCaptionSchedule;
   const document = requiredReferencedValue(context, "document", captionTypes.document) as CaptionDocument;
-  if (document.id !== content.documentId) throw new Error("Caption content belongs to another CaptionDocument.");
-  const cues = new Map<string, FineCaptionSchedule["cues"][number]>();
-  for (const cue of schedule.cues) if (!cues.has(cue.cueId)) cues.set(cue.cueId, cue);
-  return [...cues.values()].map((cue, index): StudioEntityDraft => ({
-    id: `${context.track.outputRef}:cue:${cue.cueId}`, authoredId: cue.cueId,
-    display: { title: `#${index + 1}`, layers: [{ kind: "text", role: "content", text: cueText(document, cue.units.map(unit => unit.unitId)) }] },
-    startFrame: cue.timedStartFrame, endFrameExclusive: cue.timedEndFrameExclusive, stackOrder: 0,
-    renderIds: schedule.cues.filter(item => item.cueId === cue.cueId).map(item => item.id),
-    presentation: { entity: "caption-cue", chrome: "standard" },
-    inspector: [{ id: "range", label: "Range", domain: "when", section: { id: "cue", label: "Cue" }, value: `${cue.timedStartFrame}–${cue.timedEndFrameExclusive}`, unit: "f" }],
-  }));
+  if (document.id !== timing.documentId) throw new Error("Caption timing belongs to another CaptionDocument.");
+  const units = new Map(timing.units.map((unit) => [unit.unitId, unit]));
+  return document.cues.map((cue, index): StudioItemDraft => {
+    const timed = cue.unitIds.map((unitId) => {
+      const unit = units.get(unitId);
+      if (unit === undefined) throw new Error(`Caption Cue ${cue.id} has no timing for Unit ${unitId}.`);
+      return unit;
+    });
+    if (timed.length === 0) throw new Error(`Caption Cue ${cue.id} contains no Units.`);
+    const startFrame = Math.min(...timed.map((unit) => unit.startFrame));
+    const endFrameExclusive = Math.max(...timed.map((unit) => unit.endFrameExclusive));
+    return {
+      id: `${context.track.outputRef}:cue:${cue.id}`, authoredId: cue.id,
+      display: { title: `#${index + 1}`, layers: [{ kind: "text", role: "content", text: cueText(document, cue.unitIds) }] },
+      startFrame, endFrameExclusive, stackOrder: 0,
+      renderIds: schedule.cues.filter(item => item.cueId === cue.id).map(item => item.id),
+      presentation: { kind: "caption-cue", chrome: "standard" },
+      inspector: [
+        { id: "range", label: "Range", domain: "when", section: { id: "cue", label: "Cue" }, value: `${startFrame}–${endFrameExclusive}`, unit: "f" },
+        ...(cue.role === undefined ? [] : [{ id: "role", label: "Role", domain: "how" as const, section: { id: "cue", label: "Cue" }, value: cue.role }]),
+      ],
+    };
+  });
 }
 
-export function projectCaption(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+export function projectCaption(context: StudioTrackCompanionContext): readonly StudioItemDraft[] {
+  return projectCaptionContents(context);
+}
+
+export function projectCaptionUses(context: StudioTrackCompanionContext): readonly StudioInspectorObjectDraft[] {
   const program = requiredSurfaceValue(context, "program") as CaptionProgram;
-  const uses: StudioEntityDraft[] = program.uses.flatMap((use, index) => {
-    if (use.window === undefined) return [];
+  return program.uses.map((use, index) => {
     const child = authoredChildFor(context, use.id, []);
-    const temporal = temporalLineageFor(context, use.window.subjectId, "window");
-    const semantic = temporalDomainSource(temporal);
-    return [{
-      id: `${context.track.outputRef}:use:${use.id}`, authoredId: use.id,
-      display: { title: use.styleId, layers: [] },
-      ...use.window.span, stackOrder: index, ...(child === undefined ? {} : { elementRange: child.range }),
-      ...(temporal === undefined ? {} : { temporal }),
-      ...(semantic === undefined ? {} : { markerId: semantic.id }),
-      presentation: { entity: "caption-use", chrome: "standard" }, band: "uses",
-      inspector: [{ id: "range", label: "Range", domain: "when", section: { id: "placement", label: "Placement" }, value: `${use.window.span.startFrame}–${use.window.span.endFrameExclusive}`, unit: "f" }],
-    }];
+    return {
+      id: `use:${use.id}`,
+      authoredId: use.id,
+      title: use.styleId,
+      ...(child === undefined ? {} : { elementRange: child.range }),
+      parameterReferences: { style: use.styleId },
+      inspector: [
+        { id: "order", label: "Order", domain: "how", section: { id: "rule", label: "Rule" }, value: index + 1 },
+        { id: "scope", label: "Scope", domain: "when", section: { id: "rule", label: "Rule" },
+          value: use.window === undefined ? "All matching cues" : use.window.subjectId },
+        { id: "role", label: "Role", domain: "how", section: { id: "rule", label: "Rule" }, value: use.role ?? "Any" },
+      ],
+    };
   });
-  return [...projectCaptionContents(context), ...uses];
 }
 
 export const captionFineStudioTrackCompanions: readonly StudioTrackCompanion[] = [
@@ -157,10 +174,11 @@ export const captionFineStudioTrackCompanions: readonly StudioTrackCompanion[] =
     output: { type: compositionTypes.visualTrack, surface: "caption", modules: [captionFineModuleRef] },
     family: "caption", tone: "magenta", icon: "captions",
     lane: { heightPx: 36 },
-    bands: [{
-      id: "uses", placement: "after", heightPx: 15, display: "label",
+    inspectorObjects: [{
+      id: "uses", label: "Presentation Rules",
       bindings: [{ name: "style", companion: true }],
       inspector: [{ binding: "style", label: "Style", domain: "how", section: { id: "style", label: "Style" }, control: "text" }],
+      project: projectCaptionUses,
     }],
     requiredValues: ["schedule", "program"], project: projectCaption,
 

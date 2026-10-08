@@ -29,20 +29,25 @@ const choose = (h: StudioEditHandle, from: number, to: number, list = anchors) =
   anchors: list, handle: h, pointerStart: from, pointerNow: to, frameCount: 100,
 });
 
-test("Selection move advances both ends one stop, changes duration, and writes back through Script", () => {
-  const target = choose(handle, 0, 5)!;
+test("Selection move requires one exact frame delta at both semantic endpoints", () => {
+  const movingAnchors = anchors.filter((anchor, index) =>
+    ![0, 20, 40].includes(anchor.frame)
+    || (anchor.frame === 0 && anchor.id === selection.startAnchorId)
+    || (anchor.frame === 20 && anchor.id === selection.endAnchorId)
+    || (anchor.frame === 40 && index === anchors.findIndex((candidate) => candidate.frame === 40)));
+  const target = choose(handle, 0, 20, movingAnchors)!;
   assert.equal(target.kind, "span");
   if (target.kind !== "span") return;
-  assert.deepEqual(domainGestureSpan(anchors, handle, target), { startFrame: 5, endFrameExclusive: 40 });
+  assert.deepEqual(domainGestureSpan(movingAnchors, handle, target), { startFrame: 20, endFrameExclusive: 40 });
   const rewritten = adjustScriptSelection({ sourceName: "gesture", source, parsed: narrative, adjustment: { id: "proof", ...target } });
   const next = parseScript("gesture", rewritten).selections[0]!;
   assert.equal(next.startAnchorId, target.startAnchorId);
   assert.equal(next.endAnchorId, target.endAnchorId);
   const moved: StudioEditHandle = { ...handle, domain: target, temporal: {
-    kind: "window", start: endpoint("start", 5), end: endpoint("end", 40), startFrame: 5, endFrameExclusive: 40,
+    kind: "window", start: endpoint("start", 20), end: endpoint("end", 40), startFrame: 20, endFrameExclusive: 40,
   } };
-  const back = choose(moved, 5, 0)!;
-  assert.deepEqual(domainGestureSpan(anchors, moved, back), { startFrame: 0, endFrameExclusive: 20 });
+  const back = choose(moved, 20, 0, movingAnchors)!;
+  assert.deepEqual(domainGestureSpan(movingAnchors, moved, back), { startFrame: 0, endFrameExclusive: 20 });
 });
 
 test("coincident anchors preserve the current identity without preferring starts to ends", () => {
@@ -50,6 +55,12 @@ test("coincident anchors preserve the current identity without preferring starts
     startAnchorId: selection.startAnchorId, endAnchorId: selection.endAnchorId });
   const point: StudioEditHandle = { ...handle, temporal: endpoint("end", 20) };
   assert.equal(choose(point, 20, 40)?.kind, "span");
+});
+
+test("a drag does not silently choose between distinct identities at a new coincident stop", () => {
+  const duplicate = { ...anchors[0]!, id: "another-anchor", frame: 40 };
+  const point: StudioEditHandle = { ...handle, temporal: endpoint("end", 20) };
+  assert.equal(choose(point, 20, 40, [...anchors, duplicate]), undefined);
 });
 
 test("a directly selected boundary remains editable even when the raw range reverses in time", () => {
@@ -73,6 +84,19 @@ test("dragging a bound Moment keeps an event-and-duration Window intact", () => 
   } };
   const target = choose(timed, 20, 40)!;
   assert.deepEqual(domainGestureSpan(anchors, timed, target), { startFrame: 40, endFrameExclusive: 48 });
+});
+
+test("trimming a point-anchored Window moves only the selected boundary", () => {
+  const momentSource = { ...temporalSource, kind: "moment", id: "beat" } as const;
+  const moment: StudioTemporalInstantProjection = { kind: "instant", frame: 20, expression: "moment.cue", reference: "moment.cue", source: momentSource,
+    authority: { kind: "domain", source: momentSource, boundary: "cue" } };
+  const timed: StudioEditHandle = { ...handle, gesture: "trim-start", domain: { kind: "point", companion: "script", domainId: "story",
+    itemId: "beat", anchorId: selection.endAnchorId }, temporal: {
+    kind: "window", start: moment, end: { ...moment, frame: 28, authority: { kind: "parameter", binding: "for", relation: "after-start" } },
+    startFrame: 20, endFrameExclusive: 28,
+  } };
+  const target = choose(timed, 20, 5)!;
+  assert.deepEqual(domainGestureSpan(anchors, timed, target), { startFrame: 5, endFrameExclusive: 28 });
 });
 
 

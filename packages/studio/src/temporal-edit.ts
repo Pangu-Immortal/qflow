@@ -20,13 +20,19 @@ export function domainGestureSpan(
     const next = byId.get(target.anchorId);
     if (!previous || !next) return undefined;
     const delta = next.frame - previous.frame;
-    span = temporal.kind === "instant"
-      ? { startFrame: temporal.frame + delta, endFrameExclusive: temporal.frame + delta + 1 }
-      : { startFrame: temporal.startFrame + delta, endFrameExclusive: temporal.endFrameExclusive + delta };
+    if (temporal.kind === "instant") {
+      span = { startFrame: temporal.frame + delta, endFrameExclusive: temporal.frame + delta + 1 };
+    } else if (handle.gesture === "trim-start") {
+      span = { startFrame: temporal.startFrame + delta, endFrameExclusive: temporal.endFrameExclusive };
+    } else if (handle.gesture === "trim-end") {
+      span = { startFrame: temporal.startFrame, endFrameExclusive: temporal.endFrameExclusive + delta };
+    } else {
+      span = { startFrame: temporal.startFrame + delta, endFrameExclusive: temporal.endFrameExclusive + delta };
+    }
   } else if (domain.kind === "span" && target.kind === "span") {
     const start = byId.get(target.startAnchorId);
     const end = byId.get(target.endAnchorId);
-    if (!start || !end || start.order > end.order) return undefined;
+    if (!start || !end) return undefined;
     if (temporal.kind === "instant") {
       if (temporal.authority.kind !== "domain") return undefined;
       if (temporal.authority.boundary === "start" && target.endAnchorId !== domain.endAnchorId
@@ -37,12 +43,10 @@ export function domainGestureSpan(
       if (handle.gesture === "trim-start" && target.endAnchorId !== domain.endAnchorId
         || handle.gesture === "trim-end" && target.startAnchorId !== domain.startAnchorId) return undefined;
       if (handle.gesture === "move") {
-        const stops = [...new Set(anchors.map((anchor) => anchor.frame))].sort((a, b) => a - b);
         const previousStart = byId.get(domain.startAnchorId);
         const previousEnd = byId.get(domain.endAnchorId);
         if (!previousStart || !previousEnd
-          || stops.indexOf(start.frame) - stops.indexOf(previousStart.frame)
-            !== stops.indexOf(end.frame) - stops.indexOf(previousEnd.frame)) return undefined;
+          || start.frame - previousStart.frame !== end.frame - previousEnd.frame) return undefined;
       }
       span = { startFrame: start.frame, endFrameExclusive: end.frame };
     }
@@ -76,6 +80,10 @@ export function chooseDomainGesture(input: {
     Number(a.id !== preferred.id) - Number(b.id !== preferred.id)
     || Number(a.kind !== preferred.kind) - Number(b.kind !== preferred.kind)
     || order.get(a.id)! - order.get(b.id)!);
+  const identified = (choices: readonly StudioTemporalDomainAnchor[], preferred: StudioTemporalDomainAnchor) => {
+    const current = choices.find((candidate) => candidate.id === preferred.id);
+    return current === undefined ? [...choices] : [current];
+  };
   const valid = (target: DomainTarget) => {
     const span = domainGestureSpan(anchors, handle, target);
     return span !== undefined && (temporal.kind === "instant" ? span.startFrame : span.endFrameExclusive) <= input.frameCount;
@@ -84,10 +92,16 @@ export function chooseDomainGesture(input: {
   if (domain.kind === "point") {
     const current = byId.get(domain.anchorId);
     if (!current) return undefined;
-    const candidates = ranked(anchors, current).sort((a, b) =>
-      Math.abs(a.frame - current.frame - delta) - Math.abs(b.frame - current.frame - delta));
-    return candidates.map((anchor): DomainTarget => ({ kind: "point", companion: domain.companion,
-      domainId: domain.domainId, itemId: domain.itemId, anchorId: anchor.id })).find(valid);
+    const frames = stops.sort((a, b) => Math.abs(a - current.frame - delta) - Math.abs(b - current.frame - delta));
+    for (const frame of frames) {
+      const candidates = identified(ranked(at.get(frame)!, current), current)
+        .map((anchor): DomainTarget => ({ kind: "point", companion: domain.companion,
+          domainId: domain.domainId, itemId: domain.itemId, anchorId: anchor.id }))
+        .filter(valid);
+      if (candidates.length > 1) return undefined;
+      if (candidates.length === 1) return candidates[0];
+    }
+    return undefined;
   }
   const start = byId.get(domain.startAnchorId);
   const end = byId.get(domain.endAnchorId);
@@ -97,28 +111,31 @@ export function chooseDomainGesture(input: {
     startAnchorId: a.id, endAnchorId: b.id,
   });
   if (handle.gesture === "move" && temporal.kind === "window") {
-    const first = stops.indexOf(start.frame);
-    const last = stops.indexOf(end.frame);
-    const shifts = stops.map((_, index) => index - first)
-      .filter((shift) => last + shift >= 0 && last + shift < stops.length)
-      .sort((a, b) => Math.abs(stops[first + a]! - start.frame - delta)
-        - Math.abs(stops[first + b]! - start.frame - delta) || Math.abs(a) - Math.abs(b));
+    const available = new Set(stops);
+    const shifts = stops.map((frame) => frame - start.frame)
+      .filter((shift) => available.has(end.frame + shift))
+      .sort((a, b) => Math.abs(a - delta) - Math.abs(b - delta) || Math.abs(a) - Math.abs(b));
     for (const shift of shifts) {
-      for (const a of ranked(at.get(stops[first + shift]!)!, start)) {
-        for (const b of ranked(at.get(stops[last + shift]!)!, end)) {
-          const candidate = target(a, b);
-          if (valid(candidate)) return candidate;
-        }
-      }
+      const starts = identified(ranked(at.get(start.frame + shift)!, start), start);
+      const ends = identified(ranked(at.get(end.frame + shift)!, end), end);
+      if (starts.length * ends.length > 1) return undefined;
+      const a = starts[0], b = ends[0];
+      if (a !== undefined && b !== undefined && valid(target(a, b))) return target(a, b);
     }
     return undefined;
   }
   const boundary = temporal.kind === "instant" && temporal.authority.kind === "domain"
     ? temporal.authority.boundary : handle.gesture === "trim-start" ? "start" : "end";
   const current = boundary === "start" ? start : end;
-  const candidates = ranked(anchors, current).sort((a, b) =>
-    Math.abs(a.frame - current.frame - delta) - Math.abs(b.frame - current.frame - delta));
-  return candidates.map((anchor) => boundary === "start" ? target(anchor, end) : target(start, anchor)).find(valid);
+  const frames = stops.sort((a, b) => Math.abs(a - current.frame - delta) - Math.abs(b - current.frame - delta));
+  for (const frame of frames) {
+    const candidates = identified(ranked(at.get(frame)!, current), current)
+      .map((anchor) => boundary === "start" ? target(anchor, end) : target(start, anchor))
+      .filter(valid);
+    if (candidates.length > 1) return undefined;
+    if (candidates.length === 1) return candidates[0];
+  }
+  return undefined;
 }
 
 

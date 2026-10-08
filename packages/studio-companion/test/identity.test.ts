@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { authoredChildFor } from "../src/index.js";
+import { authoredChildFor, createStudioCompanionFacet, studioContributionFromPackage } from "../src/index.js";
 import type { StudioTrackCompanionContext } from "../src/index.js";
 
 const itemType = { module: { name: "@example/media", version: "1" }, name: "ItemSpec" } as const;
@@ -21,4 +21,13 @@ test("typed child values recover an omitted authored id without ordinal guessing
   } as unknown as StudioTrackCompanionContext;
   assert.equal(authoredChildFor(context, "track.item.0001", [itemType]), child);
   assert.equal(authoredChildFor(context, "track.item.0001", [{ ...itemType, module: { ...itemType.module, version: "2" } }]), undefined);
+});
+
+test("temporal relation identities are qualified by the selected physical package", () => {
+  const producer = { module: { name: "@example/author", version: "1" }, name: "point" } as const;
+  const contribution = studioContributionFromPackage("@project/author", [createStudioCompanionFacet({
+    temporalRelations: [{ id: "point", match: { producer, output: "point" }, invert: () => [] }],
+  })]);
+  assert.equal(contribution.temporalRelations[0]?.id, "@project/author#point");
+  assert.deepEqual(contribution.temporalRelations[0]?.match, { producer, output: "point" });
 });

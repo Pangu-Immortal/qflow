@@ -1537,6 +1537,9 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@qflow/studio-companion':
+        specifier: workspace:*
+        version: link:../studio-companion
       '@qflow/temporal':
         specifier: workspace:*
         version: link:../temporal
@@ -2433,6 +2436,9 @@ importers:
       '@qflow/script':
         specifier: workspace:*
         version: link:../script
+      '@qflow/studio-companion':
+        specifier: workspace:*
+        version: link:../studio-companion
       '@qflow/temporal':
         specifier: workspace:*
         version: link:../temporal

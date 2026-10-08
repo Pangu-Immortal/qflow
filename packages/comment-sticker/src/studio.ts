@@ -1,8 +1,8 @@
 import { commentStickerMarkupSurfaces, commentStickerModuleRef, commentStickerTypes } from "./index.js";
 import type { CommentStickerProgram } from "./index.js";
 import { compositionTypes } from "@qflow/qflow/composition";
-import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
-import { artifactPreview, childEntities, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource, textLayer } from "@qflow/studio-companion";
+import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioItemDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
+import { artifactPreview, childItems, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource, textLayer } from "@qflow/studio-companion";
 
 const frameParameters: readonly StudioSourceBindingDeclaration[] = [
   { name: "within" },
@@ -68,7 +68,7 @@ const commentInspector: readonly StudioInspectorFieldDeclaration[] = commentProp
   };
 });
 
-function projectComments(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+function projectComments(context: StudioTrackCompanionContext): readonly StudioItemDraft[] {
   const program = requiredSurfaceValue(context, "program") as CommentStickerProgram;
   const items = program.items.map((item) => ({
     id: item.id,
@@ -78,15 +78,15 @@ function projectComments(context: StudioTrackCompanionContext): readonly StudioE
     stackOrder: item.style.stackingOrder,
     sourceTypes: [commentStickerTypes.itemSpec],
   }));
-  return childEntities(context, items, "comment-sticker", "standard").map((entity, index) => {
+  return childItems(context, items, "comment-sticker", "standard").map((projected, index) => {
     const item = program.items[index];
-    if (item === undefined) return entity;
+    if (item === undefined) return projected;
     const temporal = temporalLineageFor(context, item.id, "window");
     const semanticSource = temporalDomainSource(temporal);
     return {
-      ...entity,
+      ...projected,
       display: {
-        title: entity.display.title,
+        title: projected.display.title,
         layers: [
           ...(item.avatar === undefined ? [] : [previewLayer(artifactPreview("image", item.avatar.resource), "contain", "decoration")]),
           textLayer(item.content.comment),

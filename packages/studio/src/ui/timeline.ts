@@ -151,7 +151,7 @@ export function createTimeline(store: Store): Timeline {
   });
   element.addEventListener("keydown", event => { if (event.key === "Escape") closeOverlapMenu(); });
   body.addEventListener("scroll", closeOverlapMenu);
-  let clipNodes: readonly {
+  let itemNodes: readonly {
     readonly node: HTMLElement;
     readonly start: number;
     readonly end: number;
@@ -198,9 +198,9 @@ export function createTimeline(store: Store): Timeline {
       if (next < distance) { nearest = candidate; distance = next; }
     };
     for (const anchor of state.snapshot.temporalDomains.flatMap((domain) => domain.anchors)) consider(anchor.frame);
-    for (const clip of state.snapshot.tracks.flatMap((track) => track.clips)) {
-      consider(clip.startFrame);
-      consider(clip.endFrameExclusive);
+    for (const item of state.snapshot.tracks.flatMap((track) => track.items)) {
+      consider(item.startFrame);
+      consider(item.endFrameExclusive);
     }
     return distance <= threshold ? nearest : frame;
   };
@@ -226,7 +226,7 @@ export function createTimeline(store: Store): Timeline {
   let pointerDownX = 0;
   let pointerDownOnItem = false;
   let activeEdit: {
-    readonly clip: StudioSnapshot["tracks"][number]["clips"][number];
+    readonly item: StudioSnapshot["tracks"][number]["items"][number];
     readonly handle: StudioEditHandle;
     readonly startFrame: number;
     readonly pointerId: number;
@@ -251,23 +251,23 @@ export function createTimeline(store: Store): Timeline {
     nextFrame: number,
   ): { readonly startFrame: number; readonly endFrameExclusive: number } => {
     if (state === undefined) return {
-      startFrame: edit.clip.startFrame,
-      endFrameExclusive: edit.clip.endFrameExclusive,
+      startFrame: edit.item.startFrame,
+      endFrameExclusive: edit.item.endFrameExclusive,
     };
     const rawDelta = nextFrame - edit.startFrame;
-    const delta = Math.max(-edit.clip.startFrame,
-      Math.min(state.snapshot.timeline.frameCount - edit.clip.endFrameExclusive, rawDelta));
+    const delta = Math.max(-edit.item.startFrame,
+      Math.min(state.snapshot.timeline.frameCount - edit.item.endFrameExclusive, rawDelta));
     if (edit.handle.gesture === "move") return {
-      startFrame: edit.clip.startFrame + delta,
-      endFrameExclusive: edit.clip.endFrameExclusive + delta,
+      startFrame: edit.item.startFrame + delta,
+      endFrameExclusive: edit.item.endFrameExclusive + delta,
     };
     if (edit.handle.gesture === "trim-start") return {
-      startFrame: Math.min(edit.clip.endFrameExclusive - 1, nextFrame),
-      endFrameExclusive: edit.clip.endFrameExclusive,
+      startFrame: Math.min(edit.item.endFrameExclusive - 1, nextFrame),
+      endFrameExclusive: edit.item.endFrameExclusive,
     };
     return {
-      startFrame: edit.clip.startFrame,
-      endFrameExclusive: Math.max(edit.clip.startFrame + 1, nextFrame),
+      startFrame: edit.item.startFrame,
+      endFrameExclusive: Math.max(edit.item.startFrame + 1, nextFrame),
     };
   };
 
@@ -283,7 +283,7 @@ export function createTimeline(store: Store): Timeline {
   };
   lanes.addEventListener("pointerdown", (event) => {
     pointerDownOnItem = (event.target as HTMLElement).closest(
-      ".clip, .temporal-domain-block, .temporal-domain-compact, .temporal-domain-span, .temporal-domain-point",
+      ".studio-item, .temporal-domain-block, .temporal-domain-compact, .temporal-domain-span, .temporal-domain-point",
     ) !== null;
     pointerDownX = event.clientX;
     pointerArmed = true;
@@ -355,23 +355,23 @@ export function createTimeline(store: Store): Timeline {
       && resolvedDomainTarget.startAnchorId === edit.handle.domain.startAnchorId
       && resolvedDomainTarget.endAnchorId === edit.handle.domain.endAnchorId
       && (target.kind === "instant"
-        ? target.frame === edit.clip.startFrame
-        : target.startFrame === edit.clip.startFrame && target.endFrameExclusive === edit.clip.endFrameExclusive)) return;
+        ? target.frame === edit.item.startFrame
+        : target.startFrame === edit.item.startFrame && target.endFrameExclusive === edit.item.endFrameExclusive)) return;
     if (resolvedDomainTarget?.kind === "point"
       && edit.handle.domain?.kind === "point"
       && resolvedDomainTarget.anchorId === edit.handle.domain.anchorId
       && (target.kind === "instant"
-        ? target.frame === edit.clip.startFrame
-        : target.startFrame === edit.clip.startFrame && target.endFrameExclusive === edit.clip.endFrameExclusive)) return;
+        ? target.frame === edit.item.startFrame
+        : target.startFrame === edit.item.startFrame && target.endFrameExclusive === edit.item.endFrameExclusive)) return;
     if (resolvedDomainTarget === undefined
       && (target.kind === "instant"
-        ? target.frame === edit.clip.startFrame
-        : target.startFrame === edit.clip.startFrame && target.endFrameExclusive === edit.clip.endFrameExclusive)) return;
+        ? target.frame === edit.item.startFrame
+        : target.startFrame === edit.item.startFrame && target.endFrameExclusive === edit.item.endFrameExclusive)) return;
     element.dispatchEvent(new CustomEvent("studio:write", { detail: { state: "saving" } }));
     void applyStudioMutation({
       type: "timeline.adjust",
       revision: state.snapshot.revision,
-      entityId: edit.clip.id,
+      itemId: edit.item.id,
       gesture: edit.handle.gesture,
       target,
     }).then(() => {
@@ -496,13 +496,13 @@ export function createTimeline(store: Store): Timeline {
     snapshot: StudioSnapshot,
     domain: StudioSnapshot["temporalDomains"][number],
   ): void => {
-    if (domain.items.length === 0 || domain.lanes.length === 0) return;
+    if (domain.lanes.length === 0) return;
     const laneHeight = domain.lanes.reduce((height, lane) => height + lane.heightPx, itemMetrics.insetYPx * 2);
     const label = createTrackLabel(domain.presentation.label ?? domain.id, domain.presentation.tone,
       domain.presentation.icon, "", laneHeight);
     label.title = `${domain.items.length} temporal items`;
     label.classList.add("track-label-temporal-domain");
-    label.style.height = `calc(var(--timeline-ruler-height) + ${laneHeight}px)`;
+    label.style.height = `${laneHeight}px`;
     labels.append(label);
 
     const lane = document.createElement("div");
@@ -604,20 +604,12 @@ export function createTimeline(store: Store): Timeline {
   const buildTrack = (
     snapshot: StudioSnapshot,
     track: StudioSnapshot["tracks"][number],
-    nextClipNodes: { node: HTMLElement; start: number; end: number; id: string; selectionGroup?: string }[],
+    nextItemNodes: { node: HTMLElement; start: number; end: number; id: string; selectionGroup?: string }[],
     attached = false,
   ): void => {
-    const trackBands = track.binding.bands ?? [];
-    const banded = trackBands.length > 0;
-    const layout = [
-      ...trackBands.filter(band => band.placement === "before"),
-      { id: undefined, heightPx: track.binding.lane.heightPx, display: "content" as const, tone: track.binding.tone },
-      ...trackBands.filter(band => band.placement === "after"),
-    ];
-    const totalHeight = layout.reduce((sum, band) => sum + band.heightPx, 0)
-      + (banded ? 2 * itemMetrics.insetYPx : 0);
+    const totalHeight = track.binding.lane.heightPx;
     const tone = track.binding.tone;
-    const displayedItems = track.clips.length;
+    const displayedItems = track.items.length;
     const label = createTrackLabel(
       displayTrackName(track),
       tone,
@@ -630,65 +622,60 @@ export function createTimeline(store: Store): Timeline {
     labels.append(label);
 
     const trackBody = document.createElement("div");
-    trackBody.className = banded ? "timeline-track timeline-track-banded" : "timeline-track";
+    trackBody.className = "timeline-track";
     trackBody.dataset.track = track.id;
     trackBody.style.height = `${totalHeight}px`;
     const materialMounts: {
       readonly target: HTMLElement;
-      readonly preview: Extract<StudioSnapshot["tracks"][number]["clips"][number]["display"]["layers"][number], { readonly kind: "preview" }>["preview"];
+      readonly preview: Extract<StudioSnapshot["tracks"][number]["items"][number]["display"]["layers"][number], { readonly kind: "preview" }>["preview"];
     }[] = [];
-    for (const band of layout) {
-      const tone = band.tone ?? track.binding.tone;
-      const laneHeight = band.heightPx;
-      const lane = document.createElement("div");
-      lane.className = `lane track-tone-${tone} track-facet-${track.binding.facet}${attached ? " lane-attached" : ""}`;
-      lane.style.height = `${laneHeight}px`;
-      if (banded) lane.classList.add("track-band", `track-band-${band.display}`);
-      if (band.id !== undefined) lane.dataset.band = band.id;
-      lane.style.setProperty("--lane-height", `${laneHeight}px`);
-      const laneWidth = lanes.clientWidth;
-      // Stable order preserves Companion projection order when stack levels tie.
-      for (const clip of track.clips.filter(clip => clip.band === band.id).sort((a, b) => a.stackOrder - b.stackOrder)) {
-        const from = place(clip.startFrame, snapshot.timeline.frameCount, zoom.window());
-        const to = place(clip.endFrameExclusive, snapshot.timeline.frameCount, zoom.window());
+    const lane = document.createElement("div");
+    lane.className = `lane track-tone-${tone} track-facet-${track.binding.facet}${attached ? " lane-attached" : ""}`;
+    lane.style.height = `${totalHeight}px`;
+    lane.style.setProperty("--lane-height", `${totalHeight}px`);
+    const laneWidth = lanes.clientWidth;
+    // Stable order preserves Companion projection order when stack levels tie.
+    for (const item of [...track.items].sort((a, b) => a.stackOrder - b.stackOrder)) {
+        const from = place(item.startFrame, snapshot.timeline.frameCount, zoom.window());
+        const to = place(item.endFrameExclusive, snapshot.timeline.frameCount, zoom.window());
         if (to <= 0 || from >= 1) continue;
         const node = document.createElement("button");
         node.type = "button";
-        node.className = `clip clip-tone-${tone} clip-facet-${track.binding.facet} clip-chrome-${clip.presentation.chrome}`;
-        node.classList.toggle("clip-editable", clip.editHandles.some((handle) => handle.enabled));
-        node.dataset.clip = clip.id;
-        node.setAttribute("aria-label", clip.display.title);
+        node.className = `studio-item studio-item-tone-${tone} studio-item-facet-${track.binding.facet} studio-item-chrome-${item.presentation.chrome}`;
+        node.classList.toggle("studio-item-editable", item.editHandles.some((handle) => handle.enabled));
+        node.dataset.item = item.id;
+        node.setAttribute("aria-label", item.display.title);
         node.style.left = `${from * 100}%`;
         node.style.width = `max(2px, ${Math.max(0, to - from) * 100}%)`;
         const visibleWidthPx = visibleItemWidth(from, to, laneWidth);
-        node.classList.toggle("clip-preview-wide", visibleWidthPx >= 92);
-        node.title = `${clip.display.title} · ${clip.startFrame}-${clip.endFrameExclusive}f`;
-        node.innerHTML = `<span class="clip-head"><span class="clip-name"></span><span class="clip-meta"></span></span><span class="clip-body"><span class="clip-layers" aria-hidden="true"></span></span><span class="clip-boundary" aria-hidden="true"></span><span class="clip-selection" aria-hidden="true"></span>`;
-        const layers = node.querySelector<HTMLElement>(".clip-layers")!;
-        clip.display.layers.forEach((layer, index) => {
+        node.classList.toggle("studio-item-preview-wide", visibleWidthPx >= 92);
+        node.title = `${item.display.title} · ${item.startFrame}-${item.endFrameExclusive}f`;
+        node.innerHTML = `<span class="studio-item-head"><span class="studio-item-name"></span><span class="studio-item-meta"></span></span><span class="studio-item-body"><span class="studio-item-layers" aria-hidden="true"></span></span><span class="studio-item-boundary" aria-hidden="true"></span><span class="studio-item-selection" aria-hidden="true"></span>`;
+        const layers = node.querySelector<HTMLElement>(".studio-item-layers")!;
+        item.display.layers.forEach((layer, index) => {
           const layerNode = document.createElement("span");
-          layerNode.className = `clip-layer clip-layer-${layer.kind} clip-layer-role-${layer.role}`;
+          layerNode.className = `studio-item-layer studio-item-layer-${layer.kind} studio-item-layer-role-${layer.role}`;
           layerNode.style.zIndex = String(index + 1);
           if (layer.kind === "text") {
             layerNode.textContent = layer.text;
           } else {
-            layerNode.classList.add(`clip-layer-layout-${layer.layout}`);
+            layerNode.classList.add(`studio-item-layer-layout-${layer.layout}`);
             materialMounts.push({ target: layerNode, preview: layer.preview });
           }
           layers.append(layerNode);
         });
-        const metaText = clip.presentation.chrome === "point"
-          ? `${(clip.startFrame / fps(snapshot)).toFixed(2)}s`
-          : `${((clip.endFrameExclusive - clip.startFrame) / fps(snapshot)).toFixed(2)}s`;
-        const headerLabel = node.querySelector<HTMLElement>(".clip-name")!;
-        node.querySelector(".clip-meta")!.textContent = metaText;
-        headerLabel.textContent = clip.display.title;
+        const metaText = item.presentation.chrome === "point"
+          ? `${(item.startFrame / fps(snapshot)).toFixed(2)}s`
+          : `${((item.endFrameExclusive - item.startFrame) / fps(snapshot)).toFixed(2)}s`;
+        const headerLabel = node.querySelector<HTMLElement>(".studio-item-name")!;
+        node.querySelector(".studio-item-meta")!.textContent = metaText;
+        headerLabel.textContent = item.display.title;
         node.addEventListener("pointerdown", (event) => {
           const rect = node.getBoundingClientRect();
           const edge = Math.min(8, Math.max(4, rect.width / 3));
           const nearStart = event.clientX - rect.left <= edge;
           const nearEnd = rect.right - event.clientX <= edge;
-          const handle = clip.editHandles.find((candidate) =>
+          const handle = item.editHandles.find((candidate) =>
             candidate.enabled
             && ((candidate.gesture === "trim-start" && nearStart)
               || (candidate.gesture === "trim-end" && nearEnd)
@@ -700,7 +687,7 @@ export function createTimeline(store: Store): Timeline {
               ? rawFrameAt(event.clientX)
               : frameAt(event.clientX);
             activeEdit = {
-              clip,
+              item,
               handle,
               startFrame: pointerFrame,
               pointerId: event.pointerId,
@@ -710,17 +697,16 @@ export function createTimeline(store: Store): Timeline {
             };
             node.classList.add("editing");
             try { lanes.setPointerCapture(event.pointerId); } catch { /* local pointer */ }
-            store.select(clip.id, "timeline");
+            store.select(item.id, "timeline");
             return;
           }
-          store.select(clip.id, "timeline");
+          store.select(item.id, "timeline");
         });
-        node.addEventListener("dblclick", () => store.seek(clip.startFrame, "timeline"));
-        nextClipNodes.push({ node, start: clip.startFrame, end: clip.endFrameExclusive, id: clip.id, ...(clip.selectionGroup === undefined ? {} : { selectionGroup: clip.selectionGroup }) });
-        lane.append(node);
-      }
-      trackBody.append(lane);
+        node.addEventListener("dblclick", () => store.seek(item.startFrame, "timeline"));
+        nextItemNodes.push({ node, start: item.startFrame, end: item.endFrameExclusive, id: item.id, ...(item.selectionGroup === undefined ? {} : { selectionGroup: item.selectionGroup }) });
+      lane.append(node);
     }
+    trackBody.append(lane);
     rows.append(trackBody);
     // Cached storyboards render synchronously and need connected, measurable targets.
     for (const item of materialMounts) mountMaterialPreview(item.target, item.preview);
@@ -735,20 +721,20 @@ export function createTimeline(store: Store): Timeline {
     const corner = document.createElement("div");
     corner.className = "label-corner";
     userText(corner, "");
-    if (snapshot.temporalDomains.every((domain) => domain.items.length === 0)) labels.append(corner);
+    labels.append(corner);
     for (const domain of snapshot.temporalDomains) buildTemporalDomainLane(snapshot, domain);
-    const nextClipNodes: { node: HTMLElement; start: number; end: number; id: string; selectionGroup?: string }[] = [];
+    const nextItemNodes: { node: HTMLElement; start: number; end: number; id: string; selectionGroup?: string }[] = [];
     for (const track of snapshot.tracks) {
       const attachedTo = track.binding.lane.attachedTo;
       if (attachedTo !== undefined) continue;
-      buildTrack(snapshot, track, nextClipNodes);
+      buildTrack(snapshot, track, nextItemNodes);
       const slot = track.binding.lane.groupId ?? track.binding.groupId;
       const attachments = attachedTracks(snapshot, slot, track.binding.groupId);
       for (const attachment of attachments) {
-        buildTrack(snapshot, attachment, nextClipNodes, true);
+        buildTrack(snapshot, attachment, nextItemNodes, true);
       }
     }
-    clipNodes = nextClipNodes;
+    itemNodes = nextItemNodes;
     drawRuler(snapshot);
     // Replacing every row briefly collapses the scroll surface. Preserve the
     // vertical reading position when a horizontal pan rebuilds the window.
@@ -768,8 +754,8 @@ export function createTimeline(store: Store): Timeline {
     playhead.classList.toggle("outside", position < 0 || position > lanes.clientWidth);
     playheadGrip.classList.toggle("outside", position < 0 || position > lanes.clientWidth);
     timelineTime.textContent = frameTimecode(snapshot, head.frame);
-    const chosen = selection.kind === "clip" ? store.clip(selection.clipId) : undefined;
-    for (const item of clipNodes) {
+    const chosen = selection.kind === "item" ? store.item(selection.itemId) : undefined;
+    for (const item of itemNodes) {
       const selected = chosen !== undefined && (chosen.id === item.id
         || (chosen.selectionGroup !== undefined && chosen.selectionGroup === item.selectionGroup));
       item.node.classList.toggle("selected", selected);

@@ -18,6 +18,7 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/temporal": "workspace:*",
     "@qflow/timeline": "workspace:*",
-    "@qflow/admission": "workspace:*"
+    "@qflow/admission": "workspace:*",
+    "@qflow/studio-companion": "workspace:*"
   }
 }

@@ -6,7 +6,7 @@ import type { TemporalDuration } from "@qflow/qflow/temporal";
 import { timelineTypes } from "@qflow/qflow/timeline";
 
 import { timelineAuthorProducers, timelineAuthorTypes } from "./manifest.js";
-import type { TimelineAuthorDeclaration, TimelineAuthorFragmentOptions } from "./types.js";
+import type { TimelineAuthorBinding, TimelineAuthorDeclaration, TimelineAuthorFragmentOptions } from "./types.js";
 
 const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string): FragmentOperationRef => ({ kind: "fragment-operation", operation: id });
@@ -15,6 +15,7 @@ export type TimelineAuthorInlineInput = {
   readonly name: string;
   readonly type: TypeRef;
   readonly value: unknown;
+  readonly author?: TimelineAuthorBinding;
 };
 
 export type TimelineAuthorFragmentPlan = {
@@ -117,10 +118,10 @@ export function compileTimelineAuthorFragment(options: TimelineAuthorFragmentOpt
     }
     return operation(value.id);
   };
-  const addInline = (type: TypeRef, value: unknown, stem: string): ReturnType<typeof input> => {
+  const addInline = (type: TypeRef, value: unknown, stem: string, author?: TimelineAuthorBinding): ReturnType<typeof input> => {
     const name = `${stem}-${++generated}`;
     inputs.push({ name, type });
-    inlineInputs.push({ name, type, value });
+    inlineInputs.push({ name, type, value, ...(author === undefined ? {} : { author }) });
     return input(name);
   };
   const identitySpec = (id: string, subjectId = id) =>
@@ -129,9 +130,10 @@ export function compileTimelineAuthorFragment(options: TimelineAuthorFragmentOpt
     id: "point:start", producer: timelineAuthorProducers.origin,
     inputs: { clock: input("clock") }, result: { kind: "output", name: "point" },
   });
-  const durationExtent = (raw: string): FragmentOperationRef => {
+  const durationExtent = (raw: string, author?: TimelineAuthorBinding): FragmentOperationRef => {
     const duration = parseDuration(raw, "Timeline construction duration");
-    const durationInput = addInline(timelineAuthorTypes.duration, duration, "duration");
+    const durationInput = addInline(timelineAuthorTypes.duration,
+      { duration, ...(author === undefined ? {} : { author }) }, "duration", author);
     return addOperation({ id: `extent:duration:${generated}`, producer: timelineAuthorProducers.duration,
       inputs: { clock: input("clock"), duration: durationInput }, result: { kind: "output", name: "extent" } });
   };
@@ -144,7 +146,8 @@ export function compileTimelineAuthorFragment(options: TimelineAuthorFragmentOpt
       inputs: { clock: input("clock"), extent: input(name) }, result: { kind: "output", name: "extent" } });
   };
   const declarationExtent = (declaration: Extract<TimelineAuthorDeclaration, { readonly kind: "window" }>): FragmentOperationRef => {
-    if (declaration.duration !== undefined) return durationExtent(declaration.duration);
+    if (declaration.duration !== undefined) return durationExtent(declaration.duration,
+      { binding: "for", declarationId: declaration.id });
     assert(declaration.extentInput !== undefined, `Timeline Window ${declaration.id} requires for.`);
     return resolvedExtent(declaration.id, declaration.extentInput);
   };
@@ -158,14 +161,16 @@ export function compileTimelineAuthorFragment(options: TimelineAuthorFragmentOpt
       producer: boundary === "start" ? timelineAuthorProducers.spanStart : timelineAuthorProducers.spanEnd,
       inputs: { span: spanRef(id) }, result: { kind: "output", name: "point" } });
   };
-  const pointExpression = (source: string): FragmentOperationRef => {
+  const pointExpression = (source: string, author?: TimelineAuthorBinding): FragmentOperationRef => {
     const { base, direction, duration } = splitOffset(source);
     let ref: FragmentOperationRef;
     if (base === "start") ref = originRef();
     else if (base === "end") ref = operation("point:end");
     else if (/^\d+(?:\.\d+)?(?:f|ms|s)$/u.test(base)) {
       const extent = durationExtent(base);
-      const spec = addInline(timelineAuthorTypes.offset, { direction: 1 }, "offset");
+      const owned = author === undefined ? undefined : { ...author, expression: { kind: "absolute" as const } };
+      const spec = addInline(timelineAuthorTypes.offset,
+        { direction: 1, ...(owned === undefined ? {} : { author: owned }) }, "offset", owned);
       ref = addOperation({ id: `point:absolute:${generated}`, producer: timelineAuthorProducers.offset,
         inputs: { point: originRef(), extent, spec }, result: { kind: "output", name: "point" } });
     } else {
@@ -192,7 +197,9 @@ export function compileTimelineAuthorFragment(options: TimelineAuthorFragmentOpt
     if (direction === undefined) return ref;
     assert(duration !== undefined && duration.length > 0, `Timeline expression ${source} has no offset duration.`);
     const extent = durationExtent(duration);
-    const spec = addInline(timelineAuthorTypes.offset, { direction }, "offset");
+    const owned = author === undefined ? undefined : { ...author, expression: { kind: "offset" as const, base } };
+    const spec = addInline(timelineAuthorTypes.offset,
+      { direction, ...(owned === undefined ? {} : { author: owned }) }, "offset", owned);
     return addOperation({ id: `point:offset:${++generated}`, producer: timelineAuthorProducers.offset,
       inputs: { point: ref, extent, spec }, result: { kind: "output", name: "point" } });
   };
@@ -200,7 +207,7 @@ export function compileTimelineAuthorFragment(options: TimelineAuthorFragmentOpt
   for (const declaration of options.declarations) {
     if (declaration.kind === "instant") {
       addOperation({ id: `decl:${declaration.id}:point`, producer: timelineAuthorProducers.aliasPoint,
-        inputs: { point: pointExpression(declaration.at) }, result: { kind: "output", name: "point" } });
+        inputs: { point: pointExpression(declaration.at, { binding: "at", declarationId: declaration.id }) }, result: { kind: "output", name: "point" } });
       continue;
     }
     const hasFrom = declaration.from !== undefined;
@@ -210,21 +217,24 @@ export function compileTimelineAuthorFragment(options: TimelineAuthorFragmentOpt
       `Timeline Window ${declaration.id} requires exactly two of from, until and for.`);
     if (hasFrom && hasUntil) {
       addOperation({ id: `decl:${declaration.id}:span`, producer: timelineAuthorProducers.spanBetween,
-        inputs: { start: pointExpression(declaration.from!), end: pointExpression(declaration.until!) },
+        inputs: {
+          start: pointExpression(declaration.from!, { binding: "from", declarationId: declaration.id }),
+          end: pointExpression(declaration.until!, { binding: "until", declarationId: declaration.id }),
+        },
         result: { kind: "output", name: "span" } });
     } else if (hasFrom) {
       addOperation({ id: `decl:${declaration.id}:span`, producer: timelineAuthorProducers.span,
-        inputs: { start: pointExpression(declaration.from!), extent: declarationExtent(declaration) },
+        inputs: { start: pointExpression(declaration.from!, { binding: "from", declarationId: declaration.id }), extent: declarationExtent(declaration) },
         result: { kind: "output", name: "span" } });
     } else {
       addOperation({ id: `decl:${declaration.id}:span`, producer: timelineAuthorProducers.spanEnding,
-        inputs: { end: pointExpression(declaration.until!), extent: declarationExtent(declaration) },
+        inputs: { end: pointExpression(declaration.until!, { binding: "until", declarationId: declaration.id }), extent: declarationExtent(declaration) },
         result: { kind: "output", name: "span" } });
     }
   }
 
   addOperation({ id: "point:end", producer: timelineAuthorProducers.aliasPoint,
-    inputs: { point: pointExpression(options.end) }, result: { kind: "output", name: "point" } });
+    inputs: { point: pointExpression(options.end, { binding: "end" }) }, result: { kind: "output", name: "point" } });
   addOperation({ id: "timeline", producer: timelineAuthorProducers.finalize,
     inputs: { header: input("header"), clock: input("clock"), end: operation("point:end") },
     result: { kind: "output", name: "timeline" } });

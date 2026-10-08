@@ -1,7 +1,7 @@
 import { depthStackMarkupSurfaces, depthStackModuleRef } from "./index.js";
 import type { DepthStackProgram } from "./index.js";
 import { compositionTypes } from "@qflow/qflow/composition";
-import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioEntityDraft, StudioInspectorFieldDeclaration } from "@qflow/studio-companion";
+import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioItemDraft, StudioInspectorFieldDeclaration } from "@qflow/studio-companion";
 import { requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-companion";
 
 const deckProperties = (depthStackMarkupSurfaces
@@ -76,12 +76,12 @@ function cardTitle(card: DepthStackProgram["cards"][number]): string {
   return text || card.id;
 }
 
-function projectDeck(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
+function projectDeck(context: StudioTrackCompanionContext): readonly StudioItemDraft[] {
   const program = requiredSurfaceValue(context, "program") as DepthStackProgram;
   if (context.placement === undefined) return context.generic();
   const children = new Map(context.placement.children.flatMap((child) =>
     child.id === undefined ? [] : [[child.id, child] as const]));
-  return program.cards.map((card, index): StudioEntityDraft => {
+  return program.cards.map((card, index): StudioItemDraft => {
     const child = children.get(card.id);
     const temporal = temporalLineageFor(context, card.id, "activation");
     const markerId = temporalDomainSource(temporal)?.id;
@@ -91,7 +91,7 @@ function projectDeck(context: StudioTrackCompanionContext): readonly StudioEntit
     const appearance = child?.referenceAttributes.appearance
       ?? context.placement?.referenceAttributes.appearance;
     return {
-      id: `${context.track.outputRef}:entity:${card.id}`,
+      id: `${context.track.outputRef}:item:${card.id}`,
       authoredId: card.id,
       ...(markerId === undefined ? {} : { markerId }),
       display: { title: cardTitle(card), layers: [] },
@@ -101,7 +101,7 @@ function projectDeck(context: StudioTrackCompanionContext): readonly StudioEntit
       ...(child === undefined ? {} : { elementRange: child.range }),
       ...(render === undefined ? {} : { presentId: render.id, renderIds: renders.map((span) => span.id) }),
       ...(appearance === undefined ? {} : { parameterReferences: { appearance } }),
-      presentation: { entity: "deck-card", chrome: "standard" },
+      presentation: { kind: "deck-card", chrome: "standard" },
       ...(temporal === undefined ? {} : { temporal }),
     };
   });

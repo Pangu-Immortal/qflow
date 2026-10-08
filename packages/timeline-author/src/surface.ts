@@ -83,11 +83,20 @@ export const decodeTimelineAuthorSurface: StructuredSurfaceHandler = ({ element,
   }
 
   const plan = compileTimelineAuthorFragment({ id, end, declarations });
+  const authoredRange = (item: (typeof plan.inlineInputs)[number]) => {
+    if (item.author?.declarationId === undefined) return element.range;
+    const child = element.children.find((candidate) => candidate.kind === "element"
+      && candidate.attributes.id === item.author!.declarationId);
+    if (child === undefined || child.kind !== "element") {
+      throw new Error(`Timeline declaration ${item.author.declarationId} has no author element.`);
+    }
+    return child.range;
+  };
   const headerRecord = `${id}.__header`;
   const records = [{ id: headerRecord, type: timelineAuthorTypes.header,
     value: { kind: "inline" as const, value: canonicalize({ id }) }, range: element.range },
   ...plan.inlineInputs.map((item) => ({ id: `${id}.__${item.name}`, type: item.type,
-    value: { kind: "inline" as const, value: canonicalize(item.value) }, range: element.range }))];
+    value: { kind: "inline" as const, value: canonicalize(item.value) }, range: authoredRange(item) }))];
   const inputs = {
     header: { kind: "record" as const, id: headerRecord },
     clock: clock.ref,

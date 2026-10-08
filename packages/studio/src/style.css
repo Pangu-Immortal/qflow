@@ -769,6 +769,22 @@ button:focus-visible, textarea:focus-visible {
 .property-code > strong { font: 11px/18px var(--font-mono); }
 .property-number > strong { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .parameter-group .property-grid { display: flex; flex-direction: column; gap: 7px; }
+.inspector-object-group > .property-grid { display: flex; flex-direction: column; gap: 7px; }
+.inspector-object {
+  min-width: 0;
+  border: 1px solid light-dark(#e5e2dd, #2b2e34);
+  border-radius: 4px;
+  background: light-dark(#faf9f7, #191a1e);
+}
+.inspector-object > summary {
+  padding: 8px 10px;
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.inspector-object-fields { border-top: 1px solid var(--line); }
+.inspector-object-fields > .property-group:last-child { border-bottom: 0; }
 .parameter-row {
   min-width: 0;
   min-height: 30px;
@@ -1171,7 +1187,7 @@ button:focus-visible, textarea:focus-visible {
 .tick-last { padding-right: 4px; padding-left: 0; border-right: 1px solid light-dark(#c4c0b9, #45484e); border-left: 0; transform: translateX(-100%); }
 .lanes { min-height: 0; cursor: default; }
 .lane { position: relative; isolation: isolate; min-height: 0; overflow: hidden; border-bottom: 1px solid light-dark(#ebe8e4, #191b1f); background: var(--lane); }
-.temporal-domain-lane { position: sticky; top: var(--timeline-ruler-height); z-index: 8; min-height: 0; border-bottom: 1px solid var(--line); background: var(--lane); }
+.temporal-domain-lane { position: relative; min-height: 0; border-bottom: 1px solid var(--line); background: var(--lane); }
 .temporal-domain-band {
   position: absolute;
   right: 0;
@@ -1280,7 +1296,7 @@ button:focus-visible, textarea:focus-visible {
   background: var(--temporal-domain-point);
 }
 .temporal-domain-point:focus-visible { outline: 0; }
-.track-label-temporal-domain { position: sticky; top: 0; z-index: 8; border-bottom: 1px solid var(--line); background: light-dark(#faf9f7, #111216); }
+.track-label-temporal-domain { position: relative; border-bottom: 1px solid var(--line); background: light-dark(#faf9f7, #111216); }
 .track-label-temporal-domain::before { display: none; }
 .track-label-attached {
   /* The branch marker occupies the same 18px prefix as a root icon;
@@ -1289,7 +1305,7 @@ button:focus-visible, textarea:focus-visible {
   background: transparent;
 }
 .track-label-attached::before { inset: var(--timeline-item-inset-y) 6px; background: light-dark(#f0eeea, #181a1f); }
-.clip {
+.studio-item {
   z-index: 0;
   --track: var(--visual);
   --item-head: color-mix(in srgb, var(--track) 58%, var(--lane));
@@ -1313,13 +1329,13 @@ button:focus-visible, textarea:focus-visible {
   cursor: default;
 }
 /* On light surfaces an item is a tint of its track hue; its text is a deep shade of the same hue. */
-:root[data-theme="light"] .clip {
+:root[data-theme="light"] .studio-item {
   --item-head: color-mix(in srgb, var(--track) 42%, #fff);
   --item-body: color-mix(in srgb, var(--track) 20%, #fff);
 }
 /* Only Companion-declared editable intervals enable edge gestures. */
-#app .clip::before,
-#app .clip::after {
+#app .studio-item::before,
+#app .studio-item::after {
   content: "";
   position: absolute;
   z-index: 8;
@@ -1330,23 +1346,23 @@ button:focus-visible, textarea:focus-visible {
   background: transparent;
   cursor: default !important;
 }
-#app .clip::before { left: 0; }
-#app .clip::after { right: 0; }
-#app .clip-editable::before,
-#app .clip-editable::after {
+#app .studio-item::before { left: 0; }
+#app .studio-item::after { right: 0; }
+#app .studio-item-editable::before,
+#app .studio-item-editable::after {
   pointer-events: auto;
   cursor: ew-resize !important;
 }
-.clip.selected {
+.studio-item.selected {
   z-index: 1;
   overflow: visible;
   box-shadow: none;
   color: var(--item-ink);
 }
-.clip.editing { box-shadow: 0 0 0 1px var(--item-ink); }
-.clip:focus-visible { outline: 0; }
+.studio-item.editing { box-shadow: 0 0 0 1px var(--item-ink); }
+.studio-item:focus-visible { outline: 0; }
 /* Draw above thumbnails and text without changing interval geometry. */
-.clip-boundary {
+.studio-item-boundary {
   position: absolute;
   z-index: 5;
   inset: 0;
@@ -1354,7 +1370,7 @@ button:focus-visible, textarea:focus-visible {
   border-radius: inherit;
   pointer-events: none;
 }
-.clip-selection {
+.studio-item-selection {
   position: absolute;
   z-index: 6;
   inset: 0;
@@ -1363,7 +1379,7 @@ button:focus-visible, textarea:focus-visible {
   border-radius: var(--timeline-selection-radius);
   pointer-events: none;
 }
-.clip-selection::before, .clip-selection::after {
+.studio-item-selection::before, .studio-item-selection::after {
   content: "";
   position: absolute;
   top: 0;
@@ -1371,17 +1387,17 @@ button:focus-visible, textarea:focus-visible {
   width: var(--timeline-selection-edge);
   background: var(--timeline-selection-color);
 }
-.clip-selection::before {
+.studio-item-selection::before {
   left: 0;
   border-radius: var(--timeline-selection-radius) 0 0 var(--timeline-selection-radius);
 }
-.clip-selection::after {
+.studio-item-selection::after {
   right: 0;
   border-radius: 0 var(--timeline-selection-radius) var(--timeline-selection-radius) 0;
 }
-.clip.selected > .clip-selection { display: block; }
-.clip.selected > .clip-boundary { border-color: var(--timeline-selection-color); }
-.clip-head {
+.studio-item.selected > .studio-item-selection { display: block; }
+.studio-item.selected > .studio-item-boundary { border-color: var(--timeline-selection-color); }
+.studio-item-head {
   position: absolute;
   z-index: 3;
   top: 0;
@@ -1397,7 +1413,7 @@ button:focus-visible, textarea:focus-visible {
   background: var(--item-head);
   border-radius: var(--timeline-item-radius) var(--timeline-item-radius) 0 0;
 }
-.clip-body {
+.studio-item-body {
   position: absolute;
   z-index: 1;
   top: var(--timeline-item-header-height);
@@ -1408,36 +1424,36 @@ button:focus-visible, textarea:focus-visible {
   background: var(--item-body);
   border-radius: 0 0 var(--timeline-item-radius) var(--timeline-item-radius);
 }
-.clip-layers { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.clip-layer { position: absolute; inset: 0; display: block; overflow: hidden; pointer-events: none; }
-.clip-material-image, .clip-material-video {
+.studio-item-layers { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.studio-item-layer { position: absolute; inset: 0; display: block; overflow: hidden; pointer-events: none; }
+.studio-item-material-image, .studio-item-material-video {
   background-position: left center;
   background-size: auto 100%;
   opacity: 1;
 }
-.clip-layer-layout-repeat-x { background-repeat: repeat-x; background-position: left center; background-size: auto 100%; }
-.clip-layer-layout-cover { background-repeat: no-repeat; background-position: center; background-size: cover; }
-.clip-layer-layout-contain { background-repeat: no-repeat; background-position: left center; background-size: contain; }
-.clip-material-video { background: none; }
-.clip-video-frame {
+.studio-item-layer-layout-repeat-x { background-repeat: repeat-x; background-position: left center; background-size: auto 100%; }
+.studio-item-layer-layout-cover { background-repeat: no-repeat; background-position: center; background-size: cover; }
+.studio-item-layer-layout-contain { background-repeat: no-repeat; background-position: left center; background-size: contain; }
+.studio-item-material-video { background: none; }
+.studio-item-video-frame {
   position: absolute;
   top: 0;
   bottom: 0;
   background-repeat: no-repeat;
 }
-.clip-layer-layout-waveform {
+.studio-item-layer-layout-waveform {
   inset: 2px 5px;
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100% 100%;
   opacity: .9;
 }
-.clip-material-audio { background-image: var(--waveform); }
-:root[data-theme="light"] .clip-material-audio {
+.studio-item-material-audio { background-image: var(--waveform); }
+:root[data-theme="light"] .studio-item-material-audio {
   background: color-mix(in srgb, var(--track) 70%, #000);
   mask: var(--waveform) center / 100% 100% no-repeat;
 }
-.clip-layer-text {
+.studio-item-layer-text {
   display: flex;
   height: 100%;
   align-items: center;
@@ -1450,34 +1466,34 @@ button:focus-visible, textarea:focus-visible {
   text-overflow: clip;
   white-space: nowrap;
 }
-.clip-phase { position: absolute; bottom: 0; height: 3px; border-left: 1px solid light-dark(rgba(0, 0, 0, .14), rgba(255, 255, 255, .17)); }
-.clip-phase-active, .clip-phase-enter, .clip-phase-exit { background: light-dark(rgba(0, 0, 0, .2), rgba(255, 255, 255, .24)); }
-.clip-phase-settled, .clip-phase-body { background: light-dark(rgba(0, 0, 0, .08), rgba(255, 255, 255, .10)); }
-.clip-phase-preferred { border-top: 1px dashed light-dark(rgba(0, 0, 0, .4), rgba(255, 255, 255, .48)); background: transparent; }
-.clip-name, .clip-meta { display: block; flex: 0 0 auto; white-space: nowrap; }
-.clip-name { color: light-dark(var(--item-ink), #eef0f3); font-size: 11px; font-weight: 500; }
-.clip-meta {
+.studio-item-phase { position: absolute; bottom: 0; height: 3px; border-left: 1px solid light-dark(rgba(0, 0, 0, .14), rgba(255, 255, 255, .17)); }
+.studio-item-phase-active, .studio-item-phase-enter, .studio-item-phase-exit { background: light-dark(rgba(0, 0, 0, .2), rgba(255, 255, 255, .24)); }
+.studio-item-phase-settled, .studio-item-phase-body { background: light-dark(rgba(0, 0, 0, .08), rgba(255, 255, 255, .10)); }
+.studio-item-phase-preferred { border-top: 1px dashed light-dark(rgba(0, 0, 0, .4), rgba(255, 255, 255, .48)); background: transparent; }
+.studio-item-name, .studio-item-meta { display: block; flex: 0 0 auto; white-space: nowrap; }
+.studio-item-name { color: light-dark(var(--item-ink), #eef0f3); font-size: 11px; font-weight: 500; }
+.studio-item-meta {
   color: light-dark(color-mix(in srgb, var(--item-ink) 72%, transparent), rgba(255, 255, 255, .75));
   font: 500 11px/1 var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
-.clip-tone-blue { --track: var(--tone-blue); }
-.clip-tone-blue-muted { --track: var(--tone-blue-muted); }
-.clip-tone-green { --track: var(--tone-green); }
-.clip-tone-green-muted { --track: var(--tone-green-muted); }
-.clip-tone-teal { --track: var(--tone-teal); }
-.clip-tone-violet { --track: var(--tone-violet); }
-.clip-tone-magenta { --track: var(--tone-magenta); }
-.clip-tone-magenta-muted { --track: var(--tone-magenta-muted); }
-.clip-tone-orange { --track: var(--tone-orange); }
-.clip-tone-orange-muted { --track: var(--tone-orange-muted); }
-.clip-tone-neutral { --track: var(--tone-neutral); }
-.clip-chrome-group {
+.studio-item-tone-blue { --track: var(--tone-blue); }
+.studio-item-tone-blue-muted { --track: var(--tone-blue-muted); }
+.studio-item-tone-green { --track: var(--tone-green); }
+.studio-item-tone-green-muted { --track: var(--tone-green-muted); }
+.studio-item-tone-teal { --track: var(--tone-teal); }
+.studio-item-tone-violet { --track: var(--tone-violet); }
+.studio-item-tone-magenta { --track: var(--tone-magenta); }
+.studio-item-tone-magenta-muted { --track: var(--tone-magenta-muted); }
+.studio-item-tone-orange { --track: var(--tone-orange); }
+.studio-item-tone-orange-muted { --track: var(--tone-orange-muted); }
+.studio-item-tone-neutral { --track: var(--tone-neutral); }
+.studio-item-chrome-group {
   border: 0;
   background: var(--item-body);
   box-shadow: none;
 }
-.clip-chrome-group > .clip-body { background: var(--item-body); }
+.studio-item-chrome-group > .studio-item-body { background: var(--item-body); }
 .timeline-hover {
   position: absolute;
   top: 0;
@@ -1682,36 +1698,12 @@ button:focus-visible, textarea:focus-visible {
 .selection-menu button:focus-visible { background: var(--field); outline: none; }
 
 /* Compact authored rules keep interval geometry without a thumbnail body. */
-.clip-chrome-compact > .clip-head {
+.studio-item-chrome-compact > .studio-item-head {
   height: 100%;
   border-bottom: 0;
   border-radius: var(--timeline-item-radius);
   background: var(--item-head);
 }
-.clip-chrome-compact > .clip-body,
-.clip-chrome-compact .clip-meta { display: none; }
-.clip-chrome-compact .clip-name { font-size: 11px; font-weight: 500; }
-
-/* Track-internal bands share one label and meet without child-track gutters. */
-.timeline-track-banded { padding: var(--timeline-item-inset-y) 0; }
-.timeline-track-banded > .track-band { border-bottom: 0; }
-.timeline-track-banded > .track-band > .clip {
-  height: 100%;
-  margin-top: 0;
-  border-radius: 0;
-}
-.timeline-track-banded > .track-band:first-child > .clip {
-  border-top-left-radius: var(--timeline-item-radius);
-  border-top-right-radius: var(--timeline-item-radius);
-}
-.timeline-track-banded > .track-band:last-child > .clip {
-  border-bottom-left-radius: var(--timeline-item-radius);
-  border-bottom-right-radius: var(--timeline-item-radius);
-}
-.track-band .clip-head, .track-band .clip-body { border-radius: inherit; }
-.track-band-label .clip-head {
-  height: 100%;
-  border-bottom: 0;
-  background: var(--item-head);
-}
-.track-band-label .clip-body, .track-band-label .clip-meta { display: none; }
+.studio-item-chrome-compact > .studio-item-body,
+.studio-item-chrome-compact .studio-item-meta { display: none; }
+.studio-item-chrome-compact .studio-item-name { font-size: 11px; font-weight: 500; }

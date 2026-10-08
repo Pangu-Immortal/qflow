@@ -1,6 +1,6 @@
 import type { Facet } from "@qflow/qflow/facet";
 import { sameType } from "@qflow/qflow/protocol";
-import type { CanonicalValue, ModuleRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
+import type { CanonicalValue, ModuleRef, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
 
 export const studioCompanionFacetAbi = "qflow.studio-companion@1";
 
@@ -33,7 +33,8 @@ export type StudioTimelineTone =
   | "neutral";
 
 export type StudioTimelinePresentation = {
-  readonly entity: string;
+  /** Package-owned item kind used only for presentation and diagnostics. */
+  readonly kind: string;
   /** Studio-owned shell. Compact presents the primary label in one line, with time in details. */
   readonly chrome: "standard" | "group" | "point" | "compact";
 };
@@ -57,6 +58,8 @@ export type StudioTemporalAuthority =
   | {
       readonly kind: "parameter";
       readonly binding: string;
+      /** Exact executed Spec that owns this author parameter. */
+      readonly owner?: string;
       readonly relation: "direct" | "after-start" | "before-end";
     }
   | { readonly kind: "fixed" };
@@ -82,6 +85,8 @@ export type StudioTemporalWindowProjection = {
 export type StudioTemporalProjection = StudioTemporalInstantProjection | StudioTemporalWindowProjection;
 
 export type StudioTemporalLineage = {
+  /** Exact executed Temporal value. Studio keeps this identity for inverse traversal. */
+  readonly record: string;
   readonly projection: StudioTemporalProjection;
 };
 
@@ -143,7 +148,7 @@ export type StudioAttributeGroupEdit = {
 /** A real author endpoint. Its existence never implies Inspector visibility. */
 export type StudioSourceBinding = {
   readonly id: string;
-  /** Companion-owned path, stable across source files and projected entities. */
+  /** Companion-owned path, stable across source files and projected Items. */
   readonly binding: string;
   /** Author vocabulary name at the terminal source element. */
   readonly name: string;
@@ -197,7 +202,7 @@ export type StudioInspectorFieldDeclaration = {
   readonly swatches?: readonly string[];
 };
 
-/** A selected entity's package-owned fact, with no author write endpoint. */
+/** A selected Item's package-owned fact, with no author write endpoint. */
 export type StudioInspectorValue = Pick<StudioInspectorFieldDeclaration,
   "label" | "domain" | "page" | "section" | "summary" | "unit"> & {
   readonly id: string;
@@ -301,7 +306,7 @@ export type StudioEditHandle = {
   readonly enabled: boolean;
   /** Coordinate space in which the central gesture resolver measures intent. */
   readonly coordinate?: StudioEditCoordinate;
-  /** How moving a domain Point changes the visible entity before recompilation. */
+  /** How moving a domain Point changes the visible Item before recompilation. */
   readonly moveEffect?: "translate-window" | "move-start";
   /** Snap policy is data, not a timeline-wide guess. */
   readonly snapTo?: readonly StudioSnapTarget[];
@@ -310,6 +315,8 @@ export type StudioEditHandle = {
   readonly domain?: StudioTemporalDomainEditTarget;
   /** Exact endpoint authority used to validate and execute this inverse. */
   readonly temporal?: StudioTemporalProjection;
+  /** Exact executed Temporal value traversed by the server-side inverse planner. */
+  readonly temporalRecord?: string;
   readonly disabledReason?: string;
 };
 
@@ -342,7 +349,7 @@ export type StudioDisplayLayer =
       readonly layout: "repeat-x" | "cover" | "contain" | "storyboard" | "waveform";
     };
 
-export type StudioEntityDisplay = {
+export type StudioItemDisplay = {
   /** Primary label: a header in standard chrome, the complete single-line content in compact chrome. */
   readonly title: string;
   /** Ordered back-to-front body layers. */
@@ -350,7 +357,7 @@ export type StudioEntityDisplay = {
 };
 
 export type StudioLaneDescription = {
-  /** Height of this single timeline lane; overlapping entities share it. */
+  /** Height of this single timeline lane; overlapping Items share it. */
   readonly heightPx: number;
   readonly groupId?: string;
   readonly attachedTo?: string;
@@ -408,7 +415,7 @@ export type StudioTemporalDomainItem = {
 });
 
 export type StudioTemporalDomainView = {
-  /** Domain identity supplied by its package, such as one Narrative id. */
+  /** Exact projected-view identity supplied by its package, such as one Projection id. */
   readonly id: string;
   /** Qualified Companion identity; together with id this is globally unambiguous. */
   readonly companion: string;
@@ -421,7 +428,10 @@ export type StudioTemporalDomainView = {
   };
   readonly lanes: readonly StudioTemporalDomainLane[];
   readonly anchors: readonly StudioTemporalDomainAnchor[];
+  /** Items visible on the shared Timeline. */
   readonly items: readonly StudioTemporalDomainItem[];
+  /** Domain-owned inverse targets retained for Track/Item editing but not drawn as Timeline rows. */
+  readonly editItems: readonly StudioTemporalDomainItem[];
   readonly provenance: StudioCandidateProvenance;
   /** Exact package-owned author source used only for inverse dispatch. */
   readonly source: {
@@ -531,10 +541,10 @@ export type StudioSpan = {
   readonly stackOrder: number;
 };
 
-export type StudioEntityDraft = {
+export type StudioItemDraft = {
   readonly id: string;
   readonly authoredId: string;
-  readonly display: StudioEntityDisplay;
+  readonly display: StudioItemDisplay;
   readonly startFrame: number;
   readonly endFrameExclusive: number;
   /** Back-to-front timeline order. Ties preserve projection order. Selection raises only the timeline item. */
@@ -542,11 +552,11 @@ export type StudioEntityDraft = {
   readonly elementRange?: Range;
   readonly markerId?: string;
   readonly presentId?: string;
-  /** Rendered parts belonging to this entity. */
+  /** Rendered parts belonging to this Item. */
   readonly renderIds?: readonly string[];
-  /** Resolved author references that differ per derived entity, such as one Cue's actual Style. */
+  /** Resolved author references that differ per derived Item, such as one Cue's actual Style. */
   readonly parameterReferences?: Readonly<Record<string, string>>;
-  /** Disjoint displayed intervals belonging to one selectable author entity. */
+  /** Disjoint displayed intervals belonging to one selectable author Item. */
   readonly selectionGroup?: string;
   /** Deliberately selected facts, presented beside bound Inspector fields. */
   readonly inspector?: readonly StudioInspectorValue[];
@@ -554,8 +564,16 @@ export type StudioEntityDraft = {
   readonly temporal?: StudioTemporalLineage;
   /** Independent child Track partition; omitted means this Track. */
   readonly lane?: string;
-  /** Internal band of this Track; mutually exclusive with lane. */
-  readonly band?: string;
+};
+
+/** One non-timeline author object owned by a Track and presented in Inspector. */
+export type StudioInspectorObjectDraft = {
+  readonly id: string;
+  readonly authoredId: string;
+  readonly title: string;
+  readonly elementRange?: Range;
+  readonly parameterReferences?: Readonly<Record<string, string>>;
+  readonly inspector?: readonly StudioInspectorValue[];
 };
 
 export type StudioTrackCompanionContext = {
@@ -568,7 +586,16 @@ export type StudioTrackCompanionContext = {
   /** Temporal values in this Track's actual executed dependency closure. */
   readonly temporalBindings: readonly StudioTemporalBinding[];
   readonly temporalDomains: readonly StudioTemporalDomainView[];
-  readonly generic: () => readonly StudioEntityDraft[];
+  readonly generic: () => readonly StudioItemDraft[];
+};
+
+/** Package-owned projection of Track rules or other author objects that are not timeline occurrences. */
+export type StudioInspectorObjectCompanion = {
+  readonly id: string;
+  readonly label: string;
+  readonly bindings?: readonly StudioSourceBindingDeclaration[];
+  readonly inspector?: readonly StudioInspectorFieldDeclaration[];
+  readonly project: (context: StudioTrackCompanionContext) => readonly StudioInspectorObjectDraft[];
 };
 
 export type StudioTrackCompanion = {
@@ -585,11 +612,11 @@ export type StudioTrackCompanion = {
   readonly tone?: StudioTimelineTone;
   readonly label?: string;
   readonly icon?: StudioIcon;
-  /** Opts root timeline entities into the component's package-owned Surface preview. */
+  /** Opts root timeline Items into the component's package-owned Surface preview. */
   readonly poster?: { readonly source: "surface-preview" };
   readonly attachments?: readonly StudioLaneAttachment[];
-  /** Internal bands share this Track’s label and contain independently timed entities. */
-  readonly bands?: readonly StudioTrackBand[];
+  /** Non-timeline author objects shown only in this Track's Inspector. */
+  readonly inspectorObjects?: readonly StudioInspectorObjectCompanion[];
   /** Same-Surface output values required to project this Track for Studio. */
   readonly requiredValues?: readonly string[];
   readonly lane?: StudioLaneDescription;
@@ -597,7 +624,7 @@ export type StudioTrackCompanion = {
   readonly bindings?: readonly StudioSourceBindingDeclaration[];
   /** Visible field table. Undeclared bindings remain invisible. */
   readonly inspector?: readonly StudioInspectorFieldDeclaration[];
-  readonly project?: (context: StudioTrackCompanionContext) => readonly StudioEntityDraft[];
+  readonly project?: (context: StudioTrackCompanionContext) => readonly StudioItemDraft[];
 };
 
 /** Parameters owned by an authored object, independently of its consumers. */
@@ -613,6 +640,8 @@ export type StudioCompanionContribution = {
   readonly tracks: readonly StudioTrackCompanion[];
   readonly films?: readonly StudioFilmCompanion[];
   readonly temporalDomains?: readonly StudioTemporalDomainCompanion[];
+  readonly temporalDeclarations?: readonly StudioTemporalDeclarationCompanion[];
+  readonly temporalRelations?: readonly StudioTemporalRelationCompanion[];
   readonly parameters?: readonly StudioParameterCompanion[];
 };
 
@@ -646,7 +675,8 @@ export type StudioTemporalDomainAdjustment =
   | { readonly kind: "span"; readonly itemId: string; readonly startAnchorId: string; readonly endAnchorId: string }
   | { readonly kind: "point"; readonly itemId: string; readonly anchorId: string };
 
-export type StudioTemporalDomainProjection = Pick<StudioTemporalDomainView, "id" | "timelineId" | "lanes" | "anchors" | "items">;
+export type StudioTemporalDomainProjection = Pick<StudioTemporalDomainView,
+  "id" | "timelineId" | "lanes" | "anchors" | "items" | "editItems">;
 export type StudioTemporalDomainProjectionInput = {
   readonly source: StudioTemporalDomainSourceMap;
   readonly values: readonly StudioObservedValue[];
@@ -689,12 +719,82 @@ export type StudioTemporalDomainCompanion = {
     readonly nextOffset?: number;
     readonly attributes: Readonly<Record<string, unknown>>;
   }) => Omit<StudioTemporalDomainSourceMap, "companion"> | undefined;
-  readonly project: (input: StudioTemporalDomainProjectionInput) => StudioTemporalDomainProjection | undefined;
+  readonly project: (input: StudioTemporalDomainProjectionInput) => readonly StudioTemporalDomainProjection[];
   readonly adjust: (input: {
     readonly sourceName: string;
     readonly source: string;
     readonly adjustment: StudioTemporalDomainAdjustment;
   }) => string;
+};
+
+/** One package-owned author declaration whose primary result is an absolute Window or Instant. */
+export type StudioTemporalDeclarationDraft = {
+  readonly id: string;
+  readonly label?: string;
+  /** Exact qualified output record selected by the owning Surface Companion. */
+  readonly output: string;
+  readonly range?: Range;
+};
+
+/** Declares author-visible temporal outputs without choosing their common Studio presentation. */
+export type StudioTemporalDeclarationCompanion = {
+  readonly id: string;
+  readonly match: { readonly module: ModuleRef; readonly surface: string };
+  readonly project: (input: { readonly placement: StudioPlacement }) => readonly StudioTemporalDeclarationDraft[];
+};
+
+/** A desired value propagated while Studio reverses one executed temporal author graph. */
+export type StudioTemporalConstraint =
+  | { readonly kind: "instant"; readonly frame: number }
+  | { readonly kind: "extent"; readonly frameCount: number }
+  | { readonly kind: "span"; readonly startFrame: number; readonly endFrameExclusive: number };
+
+export type StudioTemporalRelationValue = {
+  readonly record: string;
+  readonly type: TypeRef;
+  readonly value: unknown;
+};
+
+export type StudioTemporalRelationInversePlan = {
+  readonly constraints?: readonly { readonly input: string; readonly target: StudioTemporalConstraint }[];
+  readonly writes?: readonly {
+    readonly input: string;
+    readonly binding: string;
+    readonly replacement: string;
+  }[];
+};
+
+export type StudioTemporalExtentTrace = {
+  readonly kind: "extent";
+  readonly frameCount: number;
+  readonly authority?: Extract<StudioTemporalAuthority, { readonly kind: "parameter" }>;
+};
+
+export type StudioTemporalRelationTrace = StudioTemporalProjection | StudioTemporalExtentTrace;
+
+/** Package-owned inverse semantics for one Producer relation. */
+export type StudioTemporalRelationCompanion = {
+  readonly id: string;
+  readonly match: { readonly producer: ProducerRef; readonly output: string };
+  readonly invert: (input: {
+    readonly target: StudioTemporalConstraint;
+    readonly output: StudioTemporalRelationValue;
+    readonly inputs: Readonly<Record<string, StudioTemporalRelationValue>>;
+    /** Constraint already imposed on a shared input by another output path. */
+    readonly desired: (input: string) => StudioTemporalConstraint | undefined;
+  }) => readonly StudioTemporalRelationInversePlan[];
+  /** Reconstruct package-owned lineage without exposing its private Producer vocabulary to Studio. */
+  readonly trace?: (input: {
+    readonly output: StudioTemporalRelationValue;
+    readonly inputs: Readonly<Record<string, StudioTemporalRelationValue>>;
+    readonly trace: (input: string) => StudioTemporalRelationTrace | undefined;
+    readonly identify: (input: string) => {
+      readonly companion: string;
+      readonly domainId: string;
+      readonly kind: string;
+      readonly itemId: string;
+    } | undefined;
+  }) => StudioTemporalRelationTrace | undefined;
 };
 
 export type StudioCompanionFacet = Facet & {
@@ -713,6 +813,8 @@ export function createStudioCompanionFacet(input: {
   readonly tracks?: readonly StudioTrackCompanion[];
   readonly films?: readonly StudioFilmCompanion[];
   readonly temporalDomains?: readonly StudioTemporalDomainCompanion[];
+  readonly temporalDeclarations?: readonly StudioTemporalDeclarationCompanion[];
+  readonly temporalRelations?: readonly StudioTemporalRelationCompanion[];
   readonly parameters?: readonly StudioParameterCompanion[];
 }): StudioCompanionFacet {
   return {
@@ -722,6 +824,8 @@ export function createStudioCompanionFacet(input: {
       tracks: input.tracks ?? [],
       ...(input.films === undefined ? {} : { films: input.films }),
       ...(input.temporalDomains === undefined ? {} : { temporalDomains: input.temporalDomains }),
+      ...(input.temporalDeclarations === undefined ? {} : { temporalDeclarations: input.temporalDeclarations }),
+      ...(input.temporalRelations === undefined ? {} : { temporalRelations: input.temporalRelations }),
       ...(input.parameters === undefined ? {} : { parameters: input.parameters }),
     },
   };
@@ -731,6 +835,8 @@ export type StudioPackageContribution = {
   readonly tracks: readonly StudioTrackCompanion[];
   readonly films: readonly StudioFilmCompanion[];
   readonly temporalDomains: readonly StudioTemporalDomainCompanion[];
+  readonly temporalDeclarations: readonly StudioTemporalDeclarationCompanion[];
+  readonly temporalRelations: readonly StudioTemporalRelationCompanion[];
   readonly parameters: readonly StudioParameterCompanion[];
 };
 
@@ -749,6 +855,8 @@ export function studioContributionFromPackage(
   const tracks: StudioTrackCompanion[] = [];
   const films: StudioFilmCompanion[] = [];
   const temporalDomains: StudioTemporalDomainCompanion[] = [];
+  const temporalDeclarations: StudioTemporalDeclarationCompanion[] = [];
+  const temporalRelations: StudioTemporalRelationCompanion[] = [];
   const parameters: StudioParameterCompanion[] = [];
   for (const facet of facets) {
     if (facet.abi !== studioCompanionFacetAbi) continue;
@@ -771,8 +879,16 @@ export function studioContributionFromPackage(
       ...domain,
       id: qualify(owner, domain.id, "Studio Temporal Domain companion"),
     })));
+    temporalDeclarations.push(...(contribution.temporalDeclarations ?? []).map((declaration) => ({
+      ...declaration,
+      id: qualify(owner, declaration.id, "Studio Temporal Declaration companion"),
+    })));
+    temporalRelations.push(...(contribution.temporalRelations ?? []).map((relation) => ({
+      ...relation,
+      id: qualify(owner, relation.id, "Studio Temporal Relation companion"),
+    })));
   }
-  return { tracks, films, temporalDomains, parameters };
+  return { tracks, films, temporalDomains, temporalDeclarations, temporalRelations, parameters };
 }
 
 /**
@@ -785,18 +901,6 @@ export function studioTrackCompanionsFromPackage(
 ): readonly StudioTrackCompanion[] {
   return studioContributionFromPackage(owner, facets).tracks;
 }
-
-/** A contiguous internal strip, not a child Track. Declaration order is visual order. */
-export type StudioTrackBand = {
-  readonly id: string;
-  readonly placement: "before" | "after";
-  readonly heightPx: number;
-  /** Label bands use the whole strip for each entity's title; content bands retain its chrome. */
-  readonly display: "label" | "content";
-  readonly tone?: StudioTimelineTone;
-  readonly bindings?: readonly StudioSourceBindingDeclaration[];
-  readonly inspector?: readonly StudioInspectorFieldDeclaration[];
-};
 
 export type StudioLaneAttachment = {
   readonly id: string;
@@ -860,7 +964,7 @@ export function textLayer(text: string): StudioDisplayLayer {
   return { kind: "text", role: "content", text };
 }
 
-/** Find the executed projection that explicitly names this domain entity as its subject. */
+/** Find the executed projection that explicitly names this domain Item as its subject. */
 export function temporalBindingsFor(
   context: StudioTrackCompanionContext,
   subjectId: string,
@@ -902,7 +1006,7 @@ export function temporalLineageFor(
     throw new Error(`Studio Temporal lineage is ambiguous for ${subjectId}${input === undefined ? "" : ` at ${input}`}.`);
   }
   const binding = found[0];
-  return binding === undefined ? undefined : { projection: binding.projection };
+  return binding === undefined ? undefined : { record: binding.record, projection: binding.projection };
 }
 
 /** Unique domain-owned author identity carried by one projection, when there is one. */
@@ -940,12 +1044,12 @@ export function authoredItemTitle(
   return authoredId;
 }
 
-export function childEntities(
+export function childItems(
   context: StudioTrackCompanionContext,
   items: readonly {
     /** Exact identity of the projected domain item consumed by Temporal/renderer bindings. */
     readonly id: string;
-    /** Exact author-owned entity realized by this projected item, when the identities differ. */
+    /** Exact author-owned Item realized by this projected item, when the identities differ. */
     readonly subjectId?: string;
     readonly startFrame: number;
     readonly endFrameExclusive: number;
@@ -953,9 +1057,9 @@ export function childEntities(
     /** Exact domain Spec types that may carry an omitted Source id. */
     readonly sourceTypes?: readonly TypeRef[];
   }[],
-  entity: StudioTimelinePresentation["entity"],
+  kind: StudioTimelinePresentation["kind"],
   chrome: StudioTimelinePresentation["chrome"],
-): readonly StudioEntityDraft[] {
+): readonly StudioItemDraft[] {
   return items.map((item) => {
     const authoredId = item.subjectId ?? item.id;
     const child = authoredChildFor(context, authoredId, item.sourceTypes ?? []);
@@ -965,7 +1069,7 @@ export function childEntities(
     const renders = context.spans.filter((span) => span.id === item.id || span.subjectId === authoredId);
     const render = renders[0];
     return {
-      id: `${context.track.outputRef}:entity:${item.id}`,
+      id: `${context.track.outputRef}:item:${item.id}`,
       authoredId,
       display: { title: authoredId, layers: [] },
       startFrame: item.startFrame,
@@ -973,7 +1077,7 @@ export function childEntities(
       stackOrder: item.stackOrder,
       ...(child === undefined ? {} : { elementRange: child.range }),
       ...(render === undefined ? {} : { presentId: render.id, renderIds: renders.map((span) => span.id) }),
-      presentation: { entity, chrome },
+      presentation: { kind, chrome },
     };
   });
 }

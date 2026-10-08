@@ -1,11 +1,11 @@
-import type { Clip, StudioSnapshot } from "../shared.js";
+import type { StudioItem, StudioSnapshot } from "../shared.js";
 import { intentTones } from "./markers.js";
 import type { Store } from "./selection.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 /**
- * Where a clip is actually drawn, in canvas pixels, or undefined when the
+ * Where an Item is actually drawn, in canvas pixels, or undefined when the
  * picture has not mounted yet.
  */
 /** A box on the canvas, in canvas pixels. */
@@ -14,13 +14,13 @@ export type Box = {
   readonly widthPx: number; readonly heightPx: number;
 };
 
-export type Measure = (clipId: string) => (Box & { readonly stackOrder: number }) | undefined;
+export type Measure = (renderId: string) => (Box & { readonly stackOrder: number }) | undefined;
 
 export type Overlay = {
   readonly element: SVGSVGElement;
-  /** The topmost clip drawn at a point, in client coordinates. */
-  hitTest(clientX: number, clientY: number): Clip | undefined;
-  hitsAt(clientX: number, clientY: number): readonly Clip[];
+  /** The topmost Item drawn at a point, in client coordinates. */
+  hitTest(clientX: number, clientY: number): StudioItem | undefined;
+  hitsAt(clientX: number, clientY: number): readonly StudioItem[];
   /** Redraw against the picture, once it has mounted or moved. */
   refresh(): void;
 };
@@ -44,14 +44,14 @@ function inside(box: Box, x: number, y: number): boolean {
 }
 
 /**
- * The box drawn over the picture for the selected clip.
+ * The box drawn over the picture for the selected Item.
  *
  * The overlay shares the composition's own coordinate system through its
  * viewBox, so a box is written in canvas pixels with no transform to keep in
  * step with the iframe's scale.
  *
  * The box itself is measured from the rendered picture rather than recomputed
- * from the Placement Frame. Two things move a clip away from that Frame:
+ * from the Placement Frame. Two things move an Item away from that Frame:
  * lifecycle motion displaces it for the length of its enter and exit, and the
  * frame paint fills the Frame while padded material does not. Measuring what
  * was drawn is exact for both, and stays exact for whatever the renderer does
@@ -63,24 +63,24 @@ export function createOverlay(store: Store, measure: Measure): Overlay {
   element.setAttribute("class", "stage-overlay");
   element.setAttribute("preserveAspectRatio", "none");
 
-  let entities: readonly Clip[] = [];
+  let items: readonly StudioItem[] = [];
   let canvas = { width: 1, height: 1 };
-  let last: { snapshot: StudioSnapshot; selected: Clip | undefined } | undefined;
+  let last: { snapshot: StudioSnapshot; selected: StudioItem | undefined } | undefined;
 
   /**
    * The box is measured off the picture rather than restated from the Source:
    * motion moves an element across its span, so only what was drawn knows where
    * it ended up. A Present that has not mounted has no box to draw.
    */
-  const drawnParts = (clip: Clip) => {
-    const ids = clip.renderIds.length > 0 ? clip.renderIds : clip.presentId === undefined ? [] : [clip.presentId];
+  const drawnParts = (item: StudioItem) => {
+    const ids = item.renderIds.length > 0 ? item.renderIds : item.presentId === undefined ? [] : [item.presentId];
     return ids.flatMap((id) => {
       const found = measure(id);
       return found === undefined ? [] : [found];
     });
   };
-  const drawnBox = (clip: Clip): Box | undefined => {
-    const boxes = drawnParts(clip);
+  const drawnBox = (item: StudioItem): Box | undefined => {
+    const boxes = drawnParts(item);
     if (boxes.length === 0) return undefined;
     const left = Math.min(...boxes.map((box) => box.xPx));
     const top = Math.min(...boxes.map((box) => box.yPx));
@@ -97,7 +97,7 @@ export function createOverlay(store: Store, measure: Measure): Overlay {
     element.replaceChildren();
     // An editing interval can end before its visual representation disappears.
     // The renderer decides which associated parts are visible at this frame.
-    entities = snapshot.tracks.flatMap((track) => track.clips);
+    items = snapshot.tracks.flatMap((track) => track.items);
 
     if (selected === undefined) return;
     const tones = intentTones(snapshot);
@@ -123,22 +123,22 @@ export function createOverlay(store: Store, measure: Measure): Overlay {
   store.subscribe(({ snapshot, selection }) => {
     last = {
       snapshot,
-      selected: selection.kind === "clip" ? store.clip(selection.clipId) : undefined,
+      selected: selection.kind === "item" ? store.item(selection.itemId) : undefined,
     };
     draw();
   });
 
-  const hitsAt = (clientX: number, clientY: number): readonly Clip[] => {
+  const hitsAt = (clientX: number, clientY: number): readonly StudioItem[] => {
       const box = element.getBoundingClientRect();
       if (box.width === 0 || box.height === 0) return [];
       const x = (clientX - box.left) / box.width * canvas.width;
       const y = (clientY - box.top) / box.height * canvas.height;
       // Hit individual parts, not the empty space inside a group's union box.
-      const hits = entities.flatMap((clip) => drawnParts(clip)
+      const hits = items.flatMap((item) => drawnParts(item)
         .filter((part) => inside(part, x, y))
-        .map((part) => ({ clip, order: part.stackOrder })))
+        .map((part) => ({ item, order: part.stackOrder })))
         .sort((left, right) => right.order - left.order);
-      return [...new Map(hits.map(({ clip }) => [clip.id, clip])).values()];
+      return [...new Map(hits.map(({ item }) => [item.id, item])).values()];
   };
   return {
     element,

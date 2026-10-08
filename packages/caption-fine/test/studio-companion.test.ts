@@ -5,9 +5,9 @@ import type { FineCaptionSchedule } from "../src/index.js";
 import { captionTypes } from "@qflow/caption";
 import type { CaptionDocument } from "@qflow/caption";
 import { compositionTypes } from "@qflow/composition";
-import type { StudioTrackCompanionContext, StudioEntityDraft } from "@qflow/studio-companion";
+import type { StudioTrackCompanionContext, StudioItemDraft } from "@qflow/studio-companion";
 
-import { captionFineInspectorFields, projectCaptionContents } from "../src/studio.js";
+import { captionFineInspectorFields, projectCaptionContents, projectCaptionUses } from "../src/studio.js";
 
 test("Caption Companion owns Inspector grouping", () => {
   const declared = (name: string) => captionFineInspectorFields.find((field) => field.binding === `style.${name}`);
@@ -34,14 +34,14 @@ test("Caption Companion projects Cue text and Style from public domain values", 
   };
   const document: CaptionDocument = {
     id: "story.caption",
-    units: [{ id: "unit-1", groupId: "segment-1:turn-1", wordIds: ["word-1", "word-2"] }],
+    units: [{ id: "unit-1", wordIds: ["word-1", "word-2"] }],
     words: [
       { id: "word-1", unitId: "unit-1", text: "真实", separatorBefore: "", attributes: [] },
       { id: "word-2", unitId: "unit-1", text: "字幕", separatorBefore: "", attributes: [] },
     ],
-    cueBreaks: [],
+    cues: [{ id: "cue-1", unitIds: ["unit-1"] }],
   };
-  const base: StudioEntityDraft = {
+  const base: StudioItemDraft = {
     id: "captions.track:cue-1", authoredId: "captions", display: { title: "cue-1", layers: [] },
     startFrame: 8, endFrameExclusive: 24, stackOrder: 70, presentId: "cue-1",
     elementRange: { start: 0, end: 80 },
@@ -94,22 +94,25 @@ test("Caption Companion projects Cue text and Style from public domain values", 
   assert.deepEqual([cue?.startFrame, cue?.endFrameExclusive], [10, 20]);
 });
 
-test("Caption Uses keep authored windows and child ownership even with no rendered content", async () => {
+test("Caption Uses stay in Inspector while Cues remain independent of rendered content", async () => {
   const { projectCaption } = await import("../src/studio.js");
-  const { temporalTypes } = await import("@qflow/temporal");
   const { timelineFixture } = await import("../../../test/timeline-fixture.js");
   const { projectProgramWindow } = await import("../../../test/temporal-fixture.js");
   const timeline = timelineFixture({id:"film",frameCount: 180, frameRate: { numerator: 30, denominator: 1 }}, {segments:[{id:"a",frameCount:90},{id:"b",frameCount:90}]});
-  const uses = ["base", "hidden"].map(id=>({id,styleId:id,window:projectProgramWindow({itemId:id,semantic:timeline,projection:{start:{ref:"timeline.start"},end:{ref:"timeline.end"}}})}));
+  const uses = [
+    { id: "base", styleId: "base" },
+    { id: "hidden", styleId: "hidden", window: projectProgramWindow({itemId:"hidden",semantic:timeline,projection:{start:{ref:"timeline.start"},end:{ref:"timeline.end"}}}) },
+  ];
   const context = {
     track:{outputRef:"captions.track",trace:{references:[{input:"document",typeRef:captionTypes.document,ref:"document"},{input:"timing",typeRef:captionTypes.timing,ref:"timing"}],outputPorts:[{name:"schedule",ref:"schedule"},{name:"program",ref:"program"}]}},
     placement:{children:uses.map((use,i)=>({id:use.id,range:{start:i*10,end:i*10+8},referenceAttributes:{style:use.styleId},values:[]}))},
-    values:new Map<string,unknown>([["document",{id:"document",units:[],words:[]}],["timing",{timelineId:"film",documentId:"document",units:[]}],["schedule",{cues:[]}],["program",{uses}]]),
+    values:new Map<string,unknown>([["document",{id:"document",units:[],words:[],cues:[]}],["timing",{timelineId:"film",documentId:"document",units:[]}],["schedule",{cues:[]}],["program",{uses}]]),
     spans:[],temporalBindings:[],
   } as unknown as StudioTrackCompanionContext;
-  const entities=projectCaption(context);
-  assert.deepEqual(entities.map(item=>[item.display.title,item.startFrame,item.endFrameExclusive,item.elementRange]),[
-    ["base",0,180,{start:0,end:8}],["hidden",0,180,{start:10,end:18}],
+  assert.deepEqual(projectCaption(context), []);
+  const objects=projectCaptionUses(context);
+  assert.deepEqual(objects.map(item=>[item.title,item.elementRange,item.inspector?.find(field=>field.id==="scope")?.value]),[
+    ["base",{start:0,end:8},"All matching cues"],["hidden",{start:10,end:18},"hidden"],
   ]);
-  assert.ok(entities.every(item=>item.band==="uses" && item.presentation?.chrome==="standard"));
+  assert.ok(objects.every(item=>item.parameterReferences?.style===item.title));
 });
