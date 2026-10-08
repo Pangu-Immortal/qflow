@@ -38,7 +38,7 @@ export const scriptMarkupSurfaces = [
         { name: "", type: narrativeType,
           summary: "The complete authored Narrative, including speech structure, semantic anchors and its CaptionDocument, addressed by the element's own id." },
         { name: "segment.<id>", type: narrativeSegmentRefType,
-          summary: "One Segment as a narrow Excerpt, used to associate a generated Take with that Segment." },
+          summary: "One Segment as a narrow Excerpt, used to associate generated or supplied performance media with that Segment." },
         { name: "segment.<id>.dialogue", type: textTypes.text,
           summary: "One Segment as display-independent dialogue, keeping Role Cue labels and the spoken side of Dual Text." },
         { name: "segment.<id>.speech", type: textTypes.text,

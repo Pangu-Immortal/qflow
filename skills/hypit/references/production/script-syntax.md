@@ -45,7 +45,7 @@ A Script contains one or more uniquely named Segments matching `[a-z][a-z0-9_-]{
 carries a wordless passage. A Role Cue is a bare turn marker: the next Role Cue begins the next turn,
 and closing the Segment ends the final turn
 and resets its Role. When a Segment uses Roles, place the first Role before that Segment's first
-spoken text. One Segment can contain several Role turns without requiring several generated Takes. A bare tag
+spoken text. One Segment can contain several Role turns without requiring several generated clips. A bare tag
 inside a Segment is a Role Cue by context, not by capitalization: `<host>`, `<主持人>` and
 `<진행자>` can name speakers. The label directs the request through dialogue; it selects no voice
 or character asset by itself.

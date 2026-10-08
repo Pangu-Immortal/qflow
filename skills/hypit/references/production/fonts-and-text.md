@@ -105,9 +105,9 @@ The following excerpt assumes the named Fonts, layout Frames, Timeline and Recip
 ```
 
 Include `opening-title.visual` in Film. The Style supplies reusable typography and Paint; the
-occurrence supplies content, placement, form-specific layout, layer order and absolute time. Use `during="timeline"` for a title that
-lasts throughout the program, a named Timeline Window such as `speech.opening`, or the
-component's direct `at/for`, `until/for` and `start/end` forms for a shorter appearance. A semantic
+occurrence supplies content, placement, form-specific layout, layer order and absolute time. Use the
+Timeline's named full Window for a title that lasts throughout the program, or another named Window
+such as `speech.opening` for a shorter appearance. A semantic
 or musical domain projects its own evidence to a Window before a fine-text occurrence consumes it.
 
 For the example above, `look.text.title` can be the Recipe

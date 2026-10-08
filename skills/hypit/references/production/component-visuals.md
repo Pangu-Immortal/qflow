@@ -147,5 +147,4 @@ these independently; the Producer receives a Window and an Instant. The installe
 moves from full screen to a side viewport while a diagram enters, with Caption available as a peer.
 
 The HTML visual format belongs to the renderer package. `qflow.html-visual@1` runs in the
-HTML renderer browser; another renderer implements the formats it supports. Core still schedules
-ordinary Needs and has no knowledge of scenes, video windows or browser layout.
+HTML renderer browser; another renderer implements the formats it supports.

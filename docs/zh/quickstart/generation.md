@@ -106,7 +106,7 @@ Seedance 2.5 复用同样的 Surface，而不是由 Runtime 把别的模型偷�
 <seedance:TextVideo id="ambient" model="mini"
   prompt={ambient-direction} duration="5" web-search="false"/>
 ```
-对于反复出现的人物、产品或场景，先制作参考图能给视频模型明确的视觉方向。多个 Take 可以复用这些参考，再由 Script 与 action Prompt 指导各段表演。当场景可以直接描述、不需要保持特定视觉身份时，也可以使用 TextVideo。
+对于反复出现的人物、产品或场景，先制作参考图能给视频模型明确的视觉方向。多个生成片段可以复用这些参考，再由 Script 与 action Prompt 指导各段表演。当场景可以直接描述、不需要保持特定视觉身份时，也可以使用 TextVideo。
 
 
 ### seedance:FrameVideo
@@ -313,5 +313,5 @@ dialogue/action 由普通 Text 模块组装，结果再像其他生成任务一�
 </seedance:ReferenceVideo>
 ```
 
-每个 `seedance:ReferenceVideo` 产出 `{*.video}`，进入下一阶段的 `time:Timeline`。不同 Take
+每个 `seedance:ReferenceVideo` 产出 `{*.video}`，进入下一阶段的 `time:Timeline`。不同生成片段
 可以使用不同参考图，同时共享相同的音色与 Prompt Recipe。

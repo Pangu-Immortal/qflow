@@ -13,10 +13,11 @@ description: 修改产生绝对 Instant 或 Window 的声明。
 | `from="2s" for="8f"` | 改 `from`，时长仍为八帧 | `from` 或 `for` |
 | `until="3s" for="8f"` | 改 `until`，时长仍为八帧 | `for` 或 `until` |
 | `from="1s" until="3s"` | 两个端点移动相同帧数 | 被选择的端点 |
-| `during="timeline"` | 不提供局部写回 | 不提供局部写回 |
-| `during={named-window}` | 修改具名值的生产者 | 修改具名值的生产者 |
+| 使用 `from`/`until`/`for` 声明的具名 Window | 修改该具名声明 | 修改所选端点关系 |
+| 组件 `during={named-window}` | 修改具名值的生产者 | 修改具名值的生产者 |
 
-Instant 引用遵循同样规则：`at={claim}` 跟随产生 `claim` 的声明；`at="2s"` 修改自己的时钟值。
+Instant 引用遵循同样规则：组件的 `at={claim}` 跟随产生 `claim` 的声明。时钟字面量写在
+Timeline 子声明或独立具名声明上，不写在组件表面。
 
 ## 领域产生的时间值
 

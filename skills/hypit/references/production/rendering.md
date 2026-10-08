@@ -35,27 +35,30 @@ Layer order is authored in the Visual Tracks' Presents, so moving these Film chi
 reorder the picture.
 
 `main.composition` is the assembled work, usable in Studio. `final.video` asks for an encoded video.
-A compatible Composition from another component can also feed the render Surface. Pure A-roll may
+A compatible Composition from another component can also feed the HTML Video Surface. Pure A-roll may
 need only one Visual Clip and one Audio Clip, with Caption when wanted. Additional coverage
 and graphics in this excerpt illustrate optional independent contributions.
 
 ## Compose an authored animation
 
 A Film needs a time axis, whether or not it contains speech or prepared media. For a speech-led piece,
-continue to pass `timeline={speech.timeline}`: it provides both the real performance time and the
+continue to pass `timeline={speech.timeline}`: it provides both the complete film time and the
 context in which Tracks resolve Script references. For a pure MG piece, author a Timeline with an
-explicit end and pass it to the components, Film and Render:
+explicit end and pass it to the components, Film and HTML Video:
 
 ```svml
 <import as="time" from="@qflow/timeline-author@1"/>
 <time:Clock id="animation-clock" frame-rate="30"/>
-<time:Timeline id="animation" clock={animation-clock} end="8s"/>
+<time:Timeline id="animation" clock={animation-clock} end="8s">
+  <time:Instant id="question" at="0.5s"/>
+  <time:Instant id="answer" at="2s"/>
+</time:Timeline>
 
 <!-- conversation is the project's own visual component. -->
 <chat:Scene id="conversation" timeline={animation.timeline} within={canvas.bounds} font={font}
-  during="timeline" title="Launch crew">
-  <chat:Message id="question" sender="Maya" side="left" at="0.5s" text="Ready?"/>
-  <chat:Message id="answer" sender="Leo" side="right" at="2s" text="Let's go."/>
+  during={animation.window} title="Launch crew">
+  <chat:Message id="question" sender="Maya" side="left" at={animation.question} text="Ready?"/>
+  <chat:Message id="answer" sender="Leo" side="right" at={animation.answer} text="Let's go."/>
 </chat:Scene>
 <film:Film id="main" canvas={canvas.canvas} timeline={animation.timeline} appearance={look.film.main}>
   <film:Track source={conversation.visual}/>

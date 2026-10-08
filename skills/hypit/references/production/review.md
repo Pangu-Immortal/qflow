@@ -58,11 +58,11 @@ a person actually moves and speaks. A working preview can support either discuss
 current scope clear so the user can give useful direction, and continue the remaining work within
 the agreed commission. [Service selection](../environment/model-and-provider.md#choose-the-practical-capability-path-with-the-user) owns unresolved service choices.
 
-Read missing behavior through its material and presentation together. For intended speech, listen to
+Read missing behavior through its material and use together. For intended speech, listen to
 the selected Film: an available audio file establishes material, while admission and the chosen
 Audio contribution establish whether that material reaches the Film. For intended physical
 action, examine the footage itself as well as the viewport animation. Use
-[media admission](media.md), [sound presentation](audio-clips.md) and [Film assembly](rendering.md)
+[media admission](media.md), [Audio Clips](audio-clips.md) and [Film assembly](rendering.md)
 to complete those relationships. Silence or stillness can equally be intentional when they serve the Brief.
 
 Look at the complete Film at its intended delivery size as well as the components inside it. A component that looks
@@ -97,7 +97,7 @@ media supplies that evidence.
 Inspect the relationships that make the composition work:
 
 - **performance** — the selected footage actually contains the intended speech, action and reaction;
-  presentation motion does not substitute for missing action in the material;
+  Clip or component motion does not substitute for missing action in the material;
 - **picture and coverage** — B-roll supports the passage and its display window carries the intended
   explanation or handoff;
 - **semantic timing and motion** — cuts, Caption Cues, MG states and Effects occur on the

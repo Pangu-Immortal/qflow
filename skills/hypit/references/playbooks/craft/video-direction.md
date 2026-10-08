@@ -11,13 +11,15 @@ outgoing or restrained.
 
 ## Let footage carry temporal behavior that matters
 
-Choose generation inputs from what the new shot must actually realize. A still can establish a
-person, object, place or composition; prose can direct an action and its expressive purpose. When a
-particular unfolding in time is essential to the result—its performed rhythm, path, contact,
-coordination or camera relationship—and prose and stills would lose that information, use the
-relevant source footage as a video reference to a model that accepts it. This judgment follows the
-action the work needs, whether or not the user names a generation method. A broadly described action
-can leave more freedom to the model when its exact movement is not the point.
+Reference footage is evidence before it is a generation input. Watch and listen to understand the
+work, whether or not any of its frames will enter a model request. Choose generation inputs from what
+the new shot must actually realize. A still can establish a person, object, place or composition;
+prose can direct an action and its expressive purpose. When a particular unfolding in time is
+essential to the result—its performed rhythm, path, contact, coordination, effect evolution or
+camera relationship—and prose, stills or authored components would lose that information, use the
+relevant source footage as a video reference to a model that accepts it. The fact that a task is
+called a clone does not by itself make the whole reference video a generation input. A broadly
+described action can leave more freedom to the model when its exact movement is not the point.
 
 Replacing a person is a common case; the target may instead change an object, world, words or sound.
 A comic speaking performance can depend on the relation between vocal phrasing, face, gesture and
@@ -30,15 +32,21 @@ establish the new visible facts and the prompt directs their relationship.
 new work keeps and reshapes. Watching a reference to understand a work is distinct from connecting
 a selected excerpt as an actual generation input.
 
+Name the relationship the excerpt contributes. In **reference transfer**, it supplies a temporal
+property such as motion, camera behavior, performance rhythm or effect evolution while the request
+creates new material. In **strict source editing**, the supplied footage is itself the material being
+changed, and the direction states what changes and which motion, framing, timing or sound remains.
+A request can combine evidence from several materials, but each one still needs a stated job. These
+are model-input relationships, not separate kinds of Qflow work. An accepted result is ordinary Media
+and enters normalization, Timeline and presentation like any other material.
+
 Choose an excerpt that contains the useful action and, when relevant, its preparation or settling.
 Its range follows the relationship to preserve, the intended new duration and the selected model's
 reference limits. Connect the actual footage in Source; describing it in prose does not supply
 its temporal behavior to the model. The selected model and Provider determine supported combinations
 and media requirements; read their installed vocabulary and package documentation for the exact
-request. Seedance requires `person-reference="true|false"` on each image/video reference: true if
-the supplied material contains a person, false otherwise.
-Inspect the selected excerpt, not just its first frame. Audio must omit the field; the installed
-Seedance README owns the corresponding required first/last-frame attributes.
+request, including reference metadata and any strict-edit duration or aspect contract. Inspect the
+selected excerpt, not just its first frame.
 
 For a longer action, distinguish the duration of source footage the model can accept from the
 duration it can produce in one request. Use one request when the model's capability and the work's
@@ -93,7 +101,7 @@ in the new Script. This preserves the expressive relationship while letting the 
 their own movements and phrasing. Phrase-level emphasis should fit the performed language's tones
 and cadence; a source-language stress pattern is not a universal performance instruction.
 
-Carry the character, voice and useful physical relationships across Takes while directing the
+Carry the character, voice and useful physical relationships across generated clips while directing the
 attitude each passage calls for. The same speaker can invite, question, tease and persuade as the
 argument develops. Shared direction can preserve their manner; the passage supplies the particular
 response. Carry forward production continuity, and reconsider the expressive intention whenever the
@@ -236,6 +244,8 @@ useful images can already establish people, scenes, products, composition and vi
 requested performance then makes that world move. Text-directed or first-/last-frame generation remains
 useful when its relationship is genuinely the one the shot needs; a last frame belongs when arriving
 at that exact image is part of the intended action.
+Reference transfer and strict source editing are two uses within reference-directed generation, not
+additional invocation shapes or finished-work categories.
 
 Model-specific Surfaces and Prompt Kits are implementations of these relationships, not the Craft
 itself. Kits produce ordinary Text; Source connects that Text and the actual references to the selected
@@ -260,7 +270,7 @@ guest and use the interviewer view for a reaction. An unfolding action or a held
 its effect from a continuous shot; choose that temporal shape when it serves the passage.
 
 One generated video can contain multiple shots, several speaking turns or a split-screen composition.
-One Segment is not one speaker turn or one camera shot. Conversely, several Takes can reuse the same
+One Segment is not one speaker turn or one camera shot. Conversely, several generated clips can reuse the same
 character-and-scene image and meet at natural editorial cuts. A genuinely continuous shot calls for
 the model relationship and direction that preserve that action. See
 [Reference relationships](generated-dependencies.md) when deciding which visual or motion evidence
@@ -298,6 +308,7 @@ question and answer may belong together, a short line may gain a meaningful reac
 exchange may divide where its thought turns. Preserve the intended meaning and energy, then choose a
 supported duration.
 
-After production, normalized media supplies the real envelope and alignment supplies word positions.
-Use that material and timing to compose the piece. [Composition review](../../production/review.md)
+After production, normalized media supplies the real envelope. When the composition needs word
+positions, alignment supplies them from the accepted performance. Use the material and any required
+timing to compose the piece. [Composition review](../../production/review.md)
 owns judging how Caption, MG, B-roll and other layers work with the produced performance.

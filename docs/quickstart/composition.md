@@ -110,12 +110,15 @@ Timeline does not require speech or media:
 <import as="time" from="@qflow/timeline-author@1"/>
 
 <time:Clock id="animation-clock" frame-rate="30"/>
-<time:Timeline id="animation" clock={animation-clock} end="8s"/>
+<time:Timeline id="animation" clock={animation-clock} end="8s">
+  <time:Instant id="question" at="0.5s"/>
+  <time:Instant id="answer" at="2s"/>
+</time:Timeline>
 
 <chat:Scene id="conversation" timeline={animation.timeline} within={canvas.bounds}
-  during="timeline">
-  <chat:Message id="question" at="0.5s" sender="Maya" text="Ready?"/>
-  <chat:Message id="answer" at="2s" sender="Leo" text="Let's go."/>
+  during={animation.window}>
+  <chat:Message id="question" at={animation.question} sender="Maya" text="Ready?"/>
+  <chat:Message id="answer" at={animation.answer} sender="Leo" text="Let's go."/>
 </chat:Scene>
 
 <film:Film id="main" canvas={canvas.canvas} timeline={animation.timeline}

@@ -15,7 +15,7 @@ to keep their earlier words on screen.
 
 Measure whichever available picture lets those relationships be mapped accurately:
 
-- A supplied clip or prepared Take gives source-local positions that must follow its placement,
+- A supplied or prepared clip gives source-local positions that must follow its placement,
   playback, crop and any moving view into the composition.
 - A composed view already contains its camera framing and program time, provided graphics do not
   obscure the person being measured.
@@ -55,7 +55,7 @@ the first or largest face alone can attach the guest's Caption to the interviewe
 Transform the useful observations into ordinary project data, with these decisions explicit:
 
 - **Clock:** sample the observations on the Timeline's frame clock using the actual source playback
-  mapping. For a prepared Take on the same clock at native speed, add its actual placement start,
+  mapping. For prepared media on the same clock at native speed, add its actual placement start,
   including any gap or overlap. Apply any source trim or rate change when measuring other footage.
   Final-video measurements already use that rendered program's clock.
 - **Geometry:** convert detector edges to `[x, y, width, height]` using width `right - left` and height

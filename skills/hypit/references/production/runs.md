@@ -44,7 +44,7 @@ not Run declarations.
 </svrun>
 ```
 
-Replace `bld_...` with the actual Build id found through Results. The historical `output` is the
+Replace `bld_...` with the actual Build id found through Results. The `output` from the earlier Result is the
 name in that Result; the `satisfy output` is the current Author Output. These selections preserve
 media, its duration and its NarrativeAlignment without pretending they are one compound object.
 A changed Caption or MG can then recompute downstream. Marker and display-only edits may also
@@ -67,7 +67,7 @@ A file can replace a byte-producing Output:
 
 Here the file replaces the generated video bytes. Normalization and alignment still follow it.
 Selecting completed normalized media, local-domain and alignment Outputs preserves those facts
-without preserving their later Timeline placement or presentation. Choose the Outputs whose meaning
+without preserving their later Timeline placement or Visual/Audio Clip use. Choose the Outputs whose meaning
 matches what should stay; the receiving Type identifies which kind of value fits each position.
 
 ## Use a Fragment when a Candidate needs computation

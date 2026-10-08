@@ -52,9 +52,9 @@ and evaluate its state at the requested frame. Keep separately useful overlays a
 ```text
 Script → CaptionDocument (displayed words, Cue breaks and word attributes)
 NarrativeCaptionBinding + NarrativeProjection → CaptionTiming
-CaptionDocument + CaptionTiming → complete timed Cues and original word times
 Track Uses → resolved time windows, Styles and optional speaker filters
-complete Cues + Uses + family parameters → family schedule → VisualTrack
+CaptionDocument + complete unit Timing + Uses + family parameters
+  → family-owned Cues and schedule → VisualTrack
 ```
 
 Consume each display word's `separatorBefore` with its `text`; never rebuild wording by joining
@@ -63,10 +63,11 @@ a displayed Cue/line. Use the same authored boundaries in base glyphs, active la
 Separators are display content, not timed Tokens.
 
 Use `@qflow/qflow/caption` for content timing and Use coverage, and `@qflow/qflow/narrative` for
-Script document types. A family Track accepts `document`, `timeline` and ordered `Use` children:
+Script document types. A family Track accepts `document`, resolved `timing`, `timeline` and ordered
+`Use` children:
 
 ```svml
-<keyword:Track id="captions" document={story.caption} timeline={program.timeline}>
+<keyword:Track id="captions" document={story.caption} timing={story-captions} timeline={program.timeline}>
   <keyword:Use style={base-style}/>
   <keyword:Use role="GUEST" style={guest-style}/>
   <keyword:Use during={story-time.punchline} style={punchline-style}/>
@@ -96,10 +97,11 @@ Its layout then computes the two groups together. Decide what happens with no ke
 keywords, long text and an N:M pronunciation span. Make author correction possible through word
 attributes, `||` and Style configuration instead of inventing missing text or dropping words.
 
-The common projection respects authored Cue breaks and structural boundaries. Visual line wrapping
-is a separate operation. A narrow width should not silently rewrite the Script into new spoken Cues.
-If the family needs an additional grouping rule, give that rule explicit parameters and preserve the
-original word/unit associations in the schedule.
+The projection publishes every complete Unit's absolute boundaries and does not form Cues. The
+family schedule respects authored Cue breaks and structural boundaries while forming its readable
+groups. Visual line wrapping is a separate operation. A narrow width should not silently rewrite the
+Script into new spoken Cues. If the family needs an additional grouping rule, give that rule explicit
+parameters and preserve the original word/unit associations in the schedule.
 
 Display Words reflect Script's lexical units: a Han character is normally one Word, while an
 English word is normally one Word. Keep that timing granularity separate from visual grouping.

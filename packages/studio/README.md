@@ -176,8 +176,8 @@ parsed anchors and preserve unrelated prose, whitespace and word attributes; the
 words are not a replacement text source. Recipe parameter reads use the same Source Header preparation
 as compilation, preserving UTF-16 offsets for the exact property being edited.
 
-The Timeline owns the editor's complete range; displayed objects do not extend it. Take placement
-and complete extent are reference information in Studio.
+The Timeline owns the editor's complete range; displayed objects do not extend it. Placed media and
+their complete extents are reference information in Studio.
 
 Timeline gestures use explicit temporal authority. Moving a shared Selection or
 Moment edits Script and moves its consumers after recompilation. A parameter-based

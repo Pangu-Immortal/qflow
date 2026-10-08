@@ -29,7 +29,7 @@ This existing answer-strip vocabulary illustrates a concrete choice:
 
 ```svml
 <emoji:EmojiReveal id="answers" timeline={speech.timeline} within={canvas.bounds}
-  style={answer-style} placeholder={question-icon} during="timeline">
+  style={answer-style} placeholder={question-icon} during={speech.window}>
   <emoji:Item id="known" icon={known-icon} preset="true"/>
   <emoji:Item id="surprise" icon={answer-icon} at={story-time.reveal}/>
 </emoji:EmojiReveal>
@@ -39,11 +39,11 @@ Its outer Window owns visibility; source order owns slots; preset answers exist 
 each activation Instant changes only its slot and the answer persists. A chart or scoreboard can instead own
 repeated updates or simultaneous events.
 
-## Keep domain projection and consumption distinct
+## Keep selection projection and consumption distinct
 
 Script names Narrative meaning: a Selection, Segment or Moment. `@qflow/narrative-temporal`
 combines Alignment, its local domain and an equal-length Window and publishes requested absolute Instants or Windows. The
-component's Surface accepts those values—or constructs direct clock values—and its Fragment and
+component's Surface accepts those values, and its Fragment and
 Producers decide what to do with them.
 
 ```text
@@ -60,14 +60,14 @@ component to search for a word, carry a projector or inspect the Script parser.
 
 Use `resolveTemporalContext` from `@qflow/qflow/temporal/markup` to resolve the component's
 `timeline` input. Pass that same Timeline to its Fragment and Producers, alongside projected
-Instants/Windows. A component can combine literal times and domain-produced events without switching time
-models. The installed `examples/semantic-composition/packages/chat-scene` demonstrates repeated
+Instants/Windows. A component can combine directly authored and domain-produced named values without switching
+time models. The installed `examples/semantic-composition/packages/chat-scene` demonstrates repeated
 content children with their own events and a picture drawn entirely in code.
 
-For a Window consumer, `during={story-time.example}` reuses a projected interval.
-`from={story-time.answer} for="8f"` starts a short effect at a projected event. An Instant consumer
-may accept `at={story-time.answer}` with no duration because it owns a state transition. Read the
-actual Surface: Window and Instant consumers deliberately expose different vocabulary.
+For a Window consumer, `during={story-time.example}` reuses a projected interval. To start a short
+effect at an Instant, first declare a named Window from that Instant, then pass it through `during`.
+An Instant consumer may accept `at={story-time.answer}` because it owns a state transition. Read the
+actual Surface: Window and Instant consumers deliberately expose different reference vocabulary.
 [Timing](timing.md) describes the shared forms.
 
 ## Separate lifetime, activation and persistent state
@@ -75,7 +75,7 @@ actual Surface: Window and Instant consumers deliberately expose different vocab
 For a board that stays on screen, author its outer Window independently of individual reveals.
 Then decide what its children mean:
 
-- an Item window may mean “draw only during this interval,” as with ordinary Media;
+- an Item window may mean “draw only during this interval,” as with an ordinary Clip;
 - an activation window may stage an item's entrance and movement, after which it remains in a board;
 - a Moment may replace a question mark with an answer that persists until the outer Window ends;
 - a preset item may already occupy the initial state and need no reveal trigger.
@@ -88,15 +88,14 @@ The interview's project emoji strip illustrates this design: one outer Window, o
 items, a placeholder asset and one icon per answer. Each Moment changes its own slot. The Track does
 not decide when the spoken answer occurred; it consumes the already projected event.
 
-## Use absolute time without turning Timeline into a media container
+## Use absolute time with explicit media inputs
 
 The [Timeline](timeline.md) resolves Instants and Windows from literal or typed Extents. A domain
 projector may translate a complete local domain through an equal-length Window, then publish ordinary
 absolute values and discard that relation. Media is not bound to this projection; a Visual or Audio
 Clip declares its own ordinary media occurrence with an absolute Window. Sequential ranges,
-head/interior/tail space and simultaneous branches therefore remain temporal relationships rather
-than a central list of clips. A project scene consumes the Timeline, media and the Instants or Windows
-its behavior actually needs.
+head/interior/tail space and simultaneous branches remain temporal relationships. A project scene
+consumes the Timeline, media and the Instants or Windows its behavior actually needs.
 
 A different material operation, such as trimming or retiming a performance, changes the local media
 and its preparation. A display operation, such as crossfading two available sources, belongs to the
@@ -111,8 +110,8 @@ per-frame regions already resolved in the program picture plane. These are disti
 which owns the complete time range.
 
 Keep image dimensions, placement and crop transformations visible so a measured head or a reserved
-MG area maps into the actual composition. Take the production's Canvas and the placement inputs the role needs. Derive related internal
-geometry from their common owner. A project scene may keep a fixed layout and speaker arrangement;
+MG area maps into the actual composition. Take the production's Canvas and the placement inputs the
+role needs. Derive related internal geometry from their common owner. A project scene may keep a fixed layout and speaker arrangement;
 a reusable behavior exposes the variation its real uses require. Keep renderer viewport selection
 and any detector in their own execution or measurement boundary.
 
@@ -135,7 +134,7 @@ The Surface exposes author intent and lowers absolute temporal forms through
 `createTemporalWindowConstruction` or `createTemporalInstantConstruction`. The Fragment wires the
 completed value, the shared Timeline, explicit placement Frames and authored values into the
 component's Producers. Narrative, beat or other domain packages project their own values upstream;
-the component does not accept those projectors. The Producer owns the visual/state behavior, while
+the component accepts their projected absolute values. The Producer owns the visual/state behavior, while
 Studio follows the graph back to the value's actual declaration for editing.
 
 Wire supplied media, Script content and event references through Source. Expose other content or
@@ -160,8 +159,7 @@ The useful pieces of a project package are:
 
 Resolve the Track's `timeline` through `resolveTemporalContext` and wire `context.timeline.ref`
 directly to its Timeline input. Source footage is supplied explicitly through media inputs. The
-visual Producer consumes Timeline and absolute time values, not Script syntax, a NarrativeProjection,
-or media hidden inside Timeline.
+visual Producer consumes Timeline, explicit media and absolute time values.
 
 For each Window, call `createTemporalWindowConstruction`; for an event, use
 `createTemporalInstantConstruction`. Pass the resolved context, the child element and
@@ -171,8 +169,9 @@ returned `ref` into the domain Fragment. Window consumers support `during` or ex
 or absolute expressions only. A Narrative package must publish its selected boundary first.
 
 Keep each child's `subjectId` meaningful for inspection while qualifying graph ids by its owning
-Track, so multiple instances can coexist. Do not use it to reject a deliberately shared Window. A finite create/append/finalize graph supports any authored
-number of messages or cards with ordinary fixed Producer ports. The exact helpers and vocabulary
+Track, so multiple instances can coexist. Do not use it to reject a deliberately shared Window. A
+finite create/append/finalize graph supports any authored number of messages or cards with ordinary
+fixed Producer ports. The exact helpers and vocabulary
 live in `@qflow/qflow/temporal/markup`; the `@example/chat-scene` package demonstrates authored and semantic events on one Timeline.
 
 A scene may publish computed event times when another component needs them, just as it publishes a
@@ -184,7 +183,7 @@ draw nothing; inside it, each slot shows its preset/activated answer or its plac
 entrance motion relative to that slot's activation frame. Deriving state directly from declared inputs
 and the requested frame keeps Studio scrubbing and partial or concurrent rendering deterministic.
 
-Emit the public VisualTrack representation through `@qflow/qflow/composition` and `@qflow/qflow/composition`.
+Emit the public VisualTrack representation through `@qflow/qflow/composition`.
 [Component visuals](component-visuals.md) explains Presents, element trees, local animation,
 prepared surfaces and a complete drawing function. [Spatial layout](spatial.md) explains incoming
 Frames, and [Fonts and text](fonts-and-text.md) explains font resources.
@@ -198,7 +197,7 @@ Document which Outputs are public, including useful deterministic program values
 
 ## Verify the behavior the component introduced
 
-When the new role needs its own timeline presentation or Inspector, read
+When the new role needs its own timeline entities or Inspector, read
 [Companion authoring](studio-companions.md). Expose the domain
 schedule and temporal identities at their actual boundaries so the editor consumes them directly
 instead of reconstructing them from pixels.
@@ -219,7 +218,6 @@ those exercise the new behavior.
 When behavior spans several source occurrences, make that relation the component's own vocabulary.
 A continuing Presenter may own explicit Source and Use children; a crossfade may own outgoing and
 incoming roles; a slideshow may own its replacement policy. The component receives Timeline, Frames,
-media and events through normal typed inputs and publishes an ordinary VisualTrack. Its local grammar
-does not add Presentation, Sequence or effect kinds to [Visual Track](visual-clips.md), and a larger
-scene coordinating footage and graphics can remain one project component. Both paths use the same
-rendering capabilities.
+media and events through normal typed inputs and publishes an ordinary VisualTrack. Its package owns
+the local grammar for that relation, while a larger scene coordinating footage and graphics can remain
+one project component. Both paths use the same rendering capabilities.

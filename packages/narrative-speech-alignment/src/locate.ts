@@ -17,7 +17,7 @@ export type LocalTimedSpeechToken = NarrativeAlignmentTiming["tokens"][number];
 export type LocalSemanticTimePoint = NarrativeAlignmentTiming["boundaries"][number];
 export type LocalSemanticTiming = NarrativeAlignmentTiming;
 
-/** Package-private clock used while aligning exactly one normalized Segment Take. */
+/** Package-private clock used while aligning exactly one Segment's normalized media. */
 export type AlignmentBasis = {
   readonly domainId: string;
   readonly frameDomain: {
@@ -103,7 +103,7 @@ function validateBasis(narrative: Narrative, basis: AlignmentBasis): void {
   }
   const frameCount = basis.frameDomain.frameCount;
   if (narrative.segments.length !== 1 || basis.segments.length !== 1) {
-    fail("SPEECH_BASIS_SEGMENTS", "Speech alignment accepts exactly one normalized Segment Take.");
+    fail("SPEECH_BASIS_SEGMENTS", "Speech alignment accepts normalized media for exactly one Segment.");
   }
   let previousEnd = 0;
   for (const [index, segment] of basis.segments.entries()) {

@@ -6,16 +6,17 @@ Adapt those relationships to a new work; its scene list and styling are choices 
 
 | Example | What to learn | Starting material |
 | --- | --- | --- |
-| [Football ranking](ranking-football/README.md) | Independent speaking Takes, a persistent tier board and timed reveals | Generate from `reference.svrun` |
+| [Football ranking](ranking-football/README.md) | Independent speaking clips, a persistent tier board and timed reveals | Generate from `reference.svrun` |
 | [Podcast](podcast/README.md) | Related host views, product references, motivated cuts and a lifestyle montage | Generate from `reference.svrun` |
 | [Street interview](interview/README.md) | A shared encounter, derived close views, coordinated Moments and Caption tracking | Generate from `reference.svrun` |
-| [Complex spoken explainer](complex-explainer/README.md) | Coordinated project scenes, moving presenter framing, independent Caption, semantic graphic events and Take-free intervals | Download its accepted media/Result bundle; render locally |
+| [Complex spoken explainer](complex-explainer/README.md) | Coordinated project scenes, moving presenter framing, independent Caption, semantic graphic events and graphics-only intervals | Download its accepted media/Result bundle; render locally |
 
 The three generation entries use `reference.svml` and an adjacent `reference.svrun`. They generate
-their main images, recurring voice references and video Takes, then normalize media, align the Script
-and compose the video. They need no earlier Build Result or manually supplied presenter, host or scene
-image. The explainer instead opens a complete 137-second production with 17 accepted Takes, recorded
-demonstrations, pixel graphics and sound; its default Run reuses the supplied material.
+their main images, recurring voice references and generated clips, then normalize media, align the
+Script where needed, and compose the video. They need no earlier Build Result or manually supplied
+presenter, host or scene image. The explainer instead opens a complete 137-second production with 17
+accepted performance clips, recorded demonstrations, pixel graphics and sound; its default Run reuses
+the supplied material.
 
 Self-contained here means a project directory: SVML, its imported SVS/Kits and the selected local
 assets. The installed Qflow Distribution supplies the imported packages. A Runtime Profile and

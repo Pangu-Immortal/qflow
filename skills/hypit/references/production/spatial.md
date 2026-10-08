@@ -11,14 +11,14 @@ the destination geometry for Visual Clips and project scenes alike.
 The Canvas gives the final image's pixel dimensions. The shared `@1` picture-plane convention gives
 the coordinate basis. Introduce Frames and
 component scopes where they help organize the picture; they need not tile the canvas or remain
-separate rectangles. Components can overlap, share motion and own local trees. Canvas itself does
-not contain a central list of layers. Each rendered Present supplies its own paint order.
+separate rectangles. Components can overlap, share motion and own local trees. Each visual
+contribution publishes Presents with its own paint order.
 
 An IntrinsicExtent gives a source image's actual dimensions. A Frame gives the destination rectangle
 a consumer should occupy. A landscape image can retain its real extent while appearing in a portrait
 composition. An A-roll source has no prescribed Frame or crop. For performance remaining mostly
 full-screen, its intended final aspect can guide source direction; later insets or splits remain
-presentation choices. Translate required source framing into visible camera facts before generation.
+visual placement choices. Translate required source framing into visible camera facts before generation.
 
 ```svml
 <import as="space" from="@qflow/spatial@1"/>
@@ -59,8 +59,8 @@ Visual Clips keep three different spatial facts separate:
 - A **SpatialMap2D** maps positions from that local plane into the program picture plane.
 - The destination **Frame** owns the Clip's outer treatment and clipping boundary.
 
-There is no second authored “content Frame”. Ordinary `fit` controls are a concise way to derive the
-SpatialMap2D after the source Extent and Clip Frame are both known. The resolved Visual Program keeps
+Ordinary `fit` controls derive the SpatialMap2D after the source Extent and Clip Frame are both
+known. The resolved Visual Program keeps
 that mapping, not a parallel fitted rectangle. A still image therefore needs an Extent; prepared
 moving media and compositable Surfaces already carry their dimensions. Border and padding produce a
 deterministic inset used by the fit calculation, rather than another independently authored Frame.
@@ -68,7 +68,7 @@ deterministic inset used by the fit calculation, rather than another independent
 For example, with no border or padding, a `1600 × 900` image fitted into a `600 × 600` Frame becomes
 `600 × 337.5` under `contain`, leaving room above and below when centered. Under `cover`, it becomes
 about `1066.7 × 600`; a frame clip shows the middle square. Moving the destination moves the whole
-presentation; changing content alignment changes which part of that image occupies the square.
+Clip; changing content alignment changes which part of that image occupies the square.
 
 Choose ordinary fitting directly on the Clip:
 
@@ -165,7 +165,7 @@ the frame's paint and decoration have their own appearance.
 
 ## Move the frame or move its contents
 
-A typed `Motion` moves or fades the complete framed presentation, including its border and paint.
+A typed `Motion` moves or fades the complete framed occurrence, including its border and paint.
 `Sampling` children pan, zoom or rotate the mapped picture under that frame. Use Sampling
 for a moving crop or a slow push-in while a card's outline stays still:
 
@@ -184,19 +184,17 @@ degrees, and `at` follows the source unit's active span from `start` to `end`, w
 intermediate keys. Sampling acts after the resolved static mapping; its movement can expose space inside the
 Frame. Choose the crop and motion together for the intended coverage.
 
-[Visual Track](visual-clips.md) places explicit footage through Clips. A scene that
+[Visual Track](visual-clips.md) places explicit footage through Clips and owns their source-time
+inputs. Read its installed vocabulary for complete appearance and motion fields. A scene that
 coordinates the viewport with surrounding graphics can own the shared motion in its
 [component program](component-visuals.md#compose-video-and-graphics-in-one-html-visual).
-
-[Visual Track](visual-clips.md) owns its content and source-time inputs. Read its installed
-vocabulary for complete appearance and motion fields.
 
 ## Carry measured regions through explicit peer evidence
 
 Region Evidence contains already prepared boxes indexed by Timeline Frame. It is not part of static
 Spatial geometry. Its Recipe uses normalized `[x, y, width, height]` boxes and `null` for absent
 measurements, resolved inside an explicit Frame. Source-local measurements need their actual time
-placement and the source-to-picture mapping produced by the real presentation before they can
+placement and the source-to-picture mapping used by the actual visual occurrence before they can
 position text correctly.
 
 [Caption tracking](../playbooks/craft/caption-tracking.md) explains producing and applying head

@@ -73,7 +73,7 @@ selected model's supported values in mind.
 `SpeechEstimatePolicy` holds the language, pace or rate, rounding and optional padding used by the
 estimation API. `speechEstimatePolicyFromRecipe` reads those values from a Recipe for package authors.
 The calculation produces a duration estimate for authoring; actual word positions come from the
-performed media's semantic preparation.
+performed media's semantic preparation when downstream relationships need those positions.
 
 ```ts
 import { estimateSpeechDuration, sealSpeechEstimatePolicy, speechEstimatePolicyFromRecipe } from "@qflow/speech-estimate";

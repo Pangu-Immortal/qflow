@@ -6,12 +6,12 @@ description: Construct absolute program time, then present media and project opt
 Qflow has one program-time axis: `Timeline`. It is only `{ id, frameRate, frameCount }`.
 It contains no clips, words, Tracks or central event registry.
 
-For spoken work, four independent facts meet around that axis:
+For spoken work, independent facts meet around that axis:
 
 1. Normalize accepted media into `SynchronizedMedia` plus a finite local temporal domain.
-2. Align a Script Segment on that local domain, producing `NarrativeAlignment`.
-3. Construct Timeline from a DAG of named Instants, Windows and Extents with one required `end`.
-4. Project each Alignment through its equal-length Window; present ordinary media through independent Visual and Audio sources.
+2. Construct Timeline from a DAG of named Instants, Windows and Extents with one required `end`.
+3. When a consumer needs positions inside performed speech, align its Script Segment on the local domain.
+4. Project requested semantic values through the equal-length Window; present ordinary media through independent Visual and Audio sources.
 
 This separation is useful: moving a passage changes absolute relationships without changing its media or local
 word evidence; reframing picture does not change audio; a pure animation needs Timeline but no media
@@ -41,7 +41,11 @@ The Clock fixes the frame rate shared by the final Timeline and every local doma
 
 Normalization establishes media facts. It contains no Script meaning or program placement.
 
-## Align meaning on each local domain
+## Align meaning when the composition consumes it
+
+Timeline construction needs the media Extent, not semantic alignment. Add Alignment when Caption,
+semantic picture changes, sound events or another consumer needs Script positions inside the
+accepted performance:
 
 ```svml
 <whisperx:Alignment id="opening-alignment" narrative={story}
@@ -110,8 +114,7 @@ optional projection source; direct seconds, frames and named Timeline values rem
 </audio:Track>
 ```
 
-There is no separate Performance, Sound or generic Presentation protocol. Visual and Audio Clips are
-peer occurrences. The same normalized media can feed both, but selecting its picture never makes its audio
+Visual and Audio Clips are peer occurrences. The same normalized media can feed both, but selecting its picture never makes its audio
 audible automatically.
 
 ```text

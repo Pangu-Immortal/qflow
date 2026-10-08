@@ -14,11 +14,12 @@ the source domain.
 | `from="2s" for="8f"` | `from`; duration remains eight frames | `from` or `for` |
 | `until="3s" for="8f"` | `until`; duration remains eight frames | `for` or `until` |
 | `from="1s" until="3s"` | both endpoints by the same delta | the selected endpoint |
-| `during="timeline"` | no local write | no local write |
-| `during={named-window}` | the named value's producer | the named value's producer |
+| named Window declared with `from`/`until`/`for` | the named declaration | the selected relation |
+| component `during={named-window}` | the named value's producer | the named value's producer |
 
-An Instant reference behaves the same way: `at={claim}` follows the declaration that produced
-`claim`; `at="2s"` edits its own clock literal.
+An Instant reference behaves the same way: component `at={claim}` follows the declaration that
+produced `claim`. Clock literals belong on named Timeline or standalone declarations, not on the
+component surface.
 
 ## Domain-produced values
 

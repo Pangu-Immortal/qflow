@@ -14,7 +14,8 @@ Track 的作者语法。
 
 ```text
 Script → CaptionDocument + NarrativeCaptionBinding
-绑定 + NarrativeProjection → CaptionTiming → Use 呈现
+绑定 + NarrativeProjection → 完整 Unit CaptionTiming
+CaptionDocument + CaptionTiming + Uses → 家族 Cue Schedule → VisualTrack
 ```
 
 ```svml
@@ -24,8 +25,8 @@ Script → CaptionDocument + NarrativeCaptionBinding
 <import as="fonts" from="@qflow/fontsource@1"/>
 ```
 
-公共 Caption 负责 CaptionDocument、完整 Alignment Unit 的 Selection/Role 投影、样式分配与
-Timeline 时间拼接。Fine 是一种样式族，负责自己的几何、字形/Cue/Pill Paint 与局部动画。
+公共 Caption 负责 CaptionDocument、完整 Alignment Unit 的 Selection/Role 投影、样式分配与扁平
+Timeline 时间连接。Fine 是一种样式族，负责形成 Cue，并拥有自己的几何、字形/Cue/Pill Paint 与局部动画。
 
 ### caption-fine:Style
 
@@ -184,7 +185,7 @@ Clip 模型也能表达全屏切换、分屏和角落小窗。公开 Clip 只有
   video="none" audio="default" span-authority="audio" clock={clock}/>
 
 <audio:Track id="music-bed" timeline={speech.timeline}>
-  <audio:Clip source={music-media.media} during="timeline"
+  <audio:Clip source={music-media.media} during={speech.window}
     gain="0.28" fade-in="600ms" fade-out="800ms">
     <audio:Map target-at="end" source-at="end" rate="1"
       wrap-from="start" wrap-until="end"/>
@@ -225,7 +226,7 @@ Track 都会作为独立输入进入 Film。输出 `{music-bed.audio}` 是普通
 <fonts:Face id="title-font" package="@fontsource-variable/inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
 <text:Flow id="title" timeline={speech.timeline} within={title-frame}
-  style={title-style} z="90" align="center" during="timeline">
+  style={title-style} z="90" align="center" during={speech.window}>
   EDIT MEANING, NOT TIMELINES
 </text:Flow>
 ```
@@ -234,7 +235,7 @@ Track 都会作为独立输入进入 Film。输出 `{music-bed.audio}` 是普通
 |---|---|---|
 | `id` | 是 | 唯一标识符 |
 | `timeline` | 是 | 拥有 occurrence 窗口的绝对 Timeline |
-| `during`、`at`/`for` 或 `start`/`end` | 三选一 | 绝对 Window、Instant 加时长，或作者声明的边界 |
+| `during` | 是 | 一个具名绝对 Window |
 | `within`、`point` 或 `path` | 是 | 与 `Flow`、`Point` 或 `Path` 对应的位置 |
 | `style` | 是 | 由 SVS Recipe 与精确字体字节编译出的 Style |
 | `z` | 是 | 这个 occurrence 的绝对层叠顺序；它不属于 Style |
@@ -245,7 +246,7 @@ Track 都会作为独立输入进入 Film。输出 `{music-bed.audio}` 是普通
 
 ```svml
 <text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
-  style={title-style} z="90" align="center" during="timeline">
+  style={title-style} z="90" align="center" during={speech.window}>
   MEANING
 </text:Flow>
 ```
@@ -254,13 +255,13 @@ Track 都会作为独立输入进入 Film。输出 `{music-bed.audio}` 是普通
 |---|---|---|
 | `id` | 是 | 稳定的文字 occurrence 身份 |
 | 子内容或 `content` | 是 | 内联纯文本/富文本，或普通图 `Text` 引用；两种形式互斥 |
-| 时间 | 是 | `during="timeline"`、绝对 Window，或 `at`/`for`、`until`/`for`、`start`/`end` |
+| 时间 | 是 | `during={具名 Window}` |
 | 位置 | 是 | 与 occurrence 形式匹配的 `SpatialPoint`、`SpatialFrame` 或 `SpatialPath` |
 | `style` | 是 | 由 SVS Recipe 与精确字体字节共同编译出的 `text:Style` |
 | `z` | 是 | 这个 occurrence 的绝对层叠顺序 |
 | 形式布局 | 否 | 所选 `Flow`、`Point` 或 `Path` 直接声明的布局属性 |
 
-`during="timeline"` 表示完整 Timeline。作者声明的 Timeline Window，或者上游语义、节拍等
+`speech.window` 表示完整 Timeline。作者声明的 Timeline Window，或者上游语义、节拍等
 领域的投影，也可以提供普通的绝对 Window；细粒度文字组件不认识这个 Window 来自哪个领域：
 
 ```svml
@@ -276,7 +277,7 @@ Track 都会作为独立输入进入 Film。输出 `{music-bed.audio}` 是普通
 ```svml
 <wording:Value id="headline">EXACTLY THE RIGHT MOMENT</wording:Value>
 <text:Flow id="callout-copy" timeline={speech.timeline} content={headline}
-  within={callout-frame} style={callout-style} z="90" during="timeline"/>
+  within={callout-frame} style={callout-style} z="90" during={speech.window}/>
 ```
 
 通用 `Text` 只提供字符；Typography 仍然拥有文档包装、位置、时间、样式与动画。作者需要富文本
@@ -455,7 +456,7 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 <!-- Text: persistent title overlay -->
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
 <text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
-  style={title-style} z="90" align="center" during="timeline">
+  style={title-style} z="90" align="center" during={speech.window}>
   MEANING
 </text:Flow>
 
@@ -464,7 +465,7 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 <mediaop:Normalize id="music-media" source={music}
   video="none" audio="default" span-authority="audio" clock={clock}/>
 <audio:Track id="music-bed" timeline={speech.timeline}>
-  <audio:Clip source={music-media.media} during="timeline"
+  <audio:Clip source={music-media.media} during={speech.window}
     gain="0.28" fade-in="600ms" fade-out="800ms">
     <audio:Map target-at="end" source-at="end" rate="1"
       wrap-from="start" wrap-until="end"/>

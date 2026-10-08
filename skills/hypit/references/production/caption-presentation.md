@@ -4,21 +4,22 @@ Read this to apply subtitle treatments, change them during a passage, or hide th
 [Caption craft](../playbooks/craft/captions.md) owns visual direction;
 [Caption authoring](caption-authoring.md) explains creating a new family.
 
-**Script organizes content; Use organizes presentation in time.** `||` determines which words belong
-together. An upstream adapter resolves the document's unit timing once; the Track consumes that
-`CaptionTiming` without knowing whether it came from Narrative, SRT/VTT or authored absolute time.
-Each Use selects a complete Style inside an already resolved time window.
+**Script organizes content; the family forms Cues; Use organizes presentation in time.** `||` gives
+the family a hard content break. An upstream adapter resolves every document Unit's timing once; the
+Track consumes that flat `CaptionTiming` without knowing whether it came from Narrative, SRT/VTT or
+authored absolute time. Each Use selects a complete Style inside an already resolved time window.
 
 ```svml
 <caption:Hidden id="hidden"/>
 <narrative-caption:Timing id="story-captions" document={story.caption}
   binding={story.caption-binding} projection={story-time.projection}/>
+<time:Window id="impact-window" timeline={program.timeline} from="12s" for="2s"/>
 <caption-fine:Caption id="captions" document={story.caption} timing={story-captions} timeline={program.timeline} within={canvas.bounds}>
   <caption-fine:Use style={base-style}/>
   <caption-fine:Use role="GUEST" style={guest-style}/>
   <caption-fine:Use during={answer-window} style={answer-style}/>
   <caption-fine:Use during={demonstration-window} style={hidden}/>
-  <caption-fine:Use from="12s" for="2s" style={impact-style}/>
+  <caption-fine:Use during={impact-window} style={impact-style}/>
 </caption-fine:Caption>
 ```
 
@@ -33,8 +34,8 @@ caption can use a project family with its own layout and behavior.
 | Follow a semantic passage | Project it once, then `during={answer-window}` |
 | Follow a placed Segment | Project it once, then `during={answer-window}` |
 | Start at a meaningful word, for a fixed duration | Project it once, then use the resolved Window |
-| End at a meaningful event | Project it once, then `until={story-time.key} for="12f"` |
-| Explicit window | `from="8s" until="10s"` |
+| End at a meaningful event | Declare a named Window from that event, then consume it |
+| Explicit window | Declare it once with `time:Window`, then `during={named-window}` |
 | A particular speaker | Add `role="GUEST"` to any of these |
 
 [Timing](timing.md) owns the shared expressions and semantic references.

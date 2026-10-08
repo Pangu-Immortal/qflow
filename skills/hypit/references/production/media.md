@@ -1,7 +1,7 @@
 # Preparing media for a production
 
 Read this when admitting files, connecting generated media, choosing streams, or editing a clip
-before using it in a component or a model reference. [Media presentation](visual-clips.md)
+before using it in a component or a model reference. [Visual Clips](visual-clips.md)
 owns independent picture placement and playback; [Tracks](tracks.md) routes other content relationships.
 For a source video at a link, read [video download](video-downloads.md).
 For acquiring website screenshots, page recordings or local HTML graphics, read
@@ -9,7 +9,7 @@ For acquiring website screenshots, page recordings or local HTML graphics, read
 
 ## Choose preparation from the intended use
 
-Keep source facts, preparation and presentation distinct:
+Keep source facts, preparation and use distinct:
 
 | Material or use | What the next consumer needs |
 | --- | --- |
@@ -62,12 +62,14 @@ qflow media cut assets/voice.wav --keep 0.3:4.1 --keep 4.6:9.2 --to assets/narra
 The first form retains one interval; repeated `--keep` joins selected parts of the *same* recording.
 The command keeps existing audio and picture together and can write an ordinary MP4 or audio-only
 WAV. Import that output as `asset:Video` or `asset:Audio` for its intended use. If the edited
-delivery is a Script performance, normalize it and align its local domain as described below.
-Independent footage can instead enter Media or another visual component, with source sound included
+delivery is a Script performance, normalize it; align its local domain when another contribution
+needs positions inside that performance, as described below.
+Independent footage can instead enter a Visual Clip or another visual component, with source sound included
 when the work needs it. A file cut does not choose Script or Segment boundaries. The installed Video
 CLI README owns exact options and output behavior. `qflow transcribe` accepts either audio or video
 when a transcript helps inspect the recording; its word times refer to that input file, while a
-retained edited performance receives its own semantic alignment in the Build.
+retained edited performance receives its own semantic alignment in the Build when the composition
+consumes that timing.
 
 An image reference can enter a model directly. A still placed as a Visual Clip needs its actual
 IntrinsicExtent as well. Inspect its dimensions with `qflow media probe <file>` and declare them
@@ -92,7 +94,7 @@ The following excerpt prepares a performance and an independent soundtrack:
 ```
 
 The Clock is an authored rate; the prepared media supplies the resulting length. Share the Clock
-across Takes that will join one program.
+across media that will join one program.
 
 - `video` selects the moving-picture stream, or `none` for audio-only material.
 - `audio` selects the embedded audio, or `none` when the material should carry no sound.
@@ -107,9 +109,10 @@ with an exact local frame count, optional picture and optional audio on the chos
 prepared as a 48 kHz render stem with its level preserved. Balance, fades and music ducking remain
 mix decisions in [Audio Track and sound mix](../playbooks/craft/sound-mix.md).
 
-## Associate a performance with Script
+## Associate a performance with Script when its timing is consumed
 
-For performance-led work, Script preserves wording and meaningful events while alignment locates
+Script preserves wording and meaningful events for performance-led work. When Caption, semantic
+picture changes, sound events or another consumer needs their actual positions, alignment locates
 them on the accepted media's local domain:
 
 ```svml
@@ -140,10 +143,14 @@ semantic projection:
 
 After projection, picture and sound use the ordinary normalized media with explicit absolute Windows.
 They do not retain or inspect this semantic relation. Audio-only A-roll uses the same projection chain
-without a dummy picture. A wordless Segment can align directly to its local
-domain boundaries without transcription; it contributes the real Segment start/end identities and
-no Tokens. A silent action inside that passage needs its own authored or measured event if another
-component must respond to it.
+without a dummy picture.
+
+## Project a wordless Segment when its identity is consumed
+
+A wordless Segment can align directly to its complete local domain without transcription when a
+consumer needs that Segment's boundaries. The alignment contributes the real Segment start/end
+identities and no Tokens; the media Extent can construct Timeline without it. A silent action inside
+that passage needs its own authored or measured event if another component must respond to it.
 
 ## Give a still a duration when that is its role
 
@@ -177,7 +184,8 @@ is assigned by the downstream Source relationships just like any other video.
 
 Transform applies its operations in order. These Outputs are Blobs; normalize an edited
 clip again when feeding it into a prepared-media input, and realign the edited performance when its
-timing changed. Extracted audio or a frame can directly feed a compatible model reference port.
+timing changed and downstream consumers use that alignment. Extracted audio or a frame can directly
+feed a compatible model reference port.
 `ExtractFrame` also accepts `first`, `frame:<index>` and `time:<seconds>`.
 
 Use graph operations for repeatable preparation belonging to the production. `qflow media` commands
@@ -188,11 +196,11 @@ the operation that matches the asset's intended use.
 ## Keep original and processed material explicit
 
 A crop, background removal or flattened composite produces a selected asset. Normalization prepares
-that output; it does not make original pixels recoverable through another presentation Style. A
-transparent video enters the same normalization and presentation paths as opaque video. A circular clip or
-rounded Frame instead masks presentation geometry; it does not remove the source background.
+that output; retain the original whenever the production may still need its pixels. A transparent
+video enters the same normalization and Visual Clip path as opaque video. A circular Clip or
+rounded Frame instead masks Clip geometry; it does not remove the source background.
 
-When original and processed pictures both appear, retain both and bind each as an explicit media
+When original and processed pictures both appear, retain both and connect each as an explicit media
 input. If a picture-only transformation preserves the same frame correspondence, a project
 preparation component may reuse the accepted local domain and alignment while publishing a new
 visual source. This is an authored relation, never automatic variant inheritance.
@@ -213,9 +221,10 @@ preserves input alpha, while its Transform emits opaque MP4. When using that Tra
 or retiming a cutout performance, perform it before matting. Read the selected operation's output
 behavior rather than assuming every video operation preserves transparency.
 
-Trimming, retiming or replacing the performance changes the temporal relation and requires a new
-local domain and timing prepared for that result. [Reuse boundaries](authoring.md#reuse-produced-work-explicitly)
-explain which completed Output can remain selected.
+Trimming, retiming or replacing the performance changes its local temporal relation and requires a
+new local domain. Prepare new semantic timing as well when downstream consumers use it.
+[Reuse boundaries](authoring.md#reuse-produced-work-explicitly) explain which completed Output can
+remain selected.
 
 Choose source proportions and framing for the actual footage the work needs. A full-frame spoken
 piece can start from the final aspect ratio; a later inset or split does not dictate the generated

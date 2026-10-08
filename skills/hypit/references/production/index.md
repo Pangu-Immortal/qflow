@@ -4,10 +4,11 @@ Enter at the question the current work raises. These groups locate knowledge; th
 that every task must complete. [System relationships](system.md) explains the common model.
 Creation and the relevant [Format/Craft](../playbooks/index.md) supply the creative decisions.
 
-For performance-led work, including pure A-roll and short drama, prefer Script plus normalized media
-and NarrativeAlignment. Place each local domain in Timeline, project its semantic boundaries, then
-present explicit placed picture and sound through Visual and Audio Tracks. Caption and other
-contributions join where useful. Semantic organization remains valuable even with no MG.
+For performance-led work, including pure A-roll and short drama, author the intended passage in
+Script and let accepted normalized media establish its real extent. Place that extent in Timeline,
+then present explicit picture and sound through Visual and Audio Tracks. Add NarrativeAlignment when
+Caption, semantic timing or another consumer needs positions inside the performed passage. Semantic
+organization remains valuable even when no consumer needs word-level timing or MG.
 For a standalone asset edit, follow the actual material operation and deliver its output.
 
 ## Express the work

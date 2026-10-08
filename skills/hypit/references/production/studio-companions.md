@@ -19,7 +19,7 @@ AudioTrack entities are enough for ordinary Clip occurrences. Use `project(conte
 domain meaning that the terminal drawing no longer contains. A Surface preview supplies a useful
 static recognition image; live entities and editable bindings come from the Companion.
 
-Generic presentation recognizes the terminal Type, not the component's creative role. A custom
+Generic Studio projection recognizes the terminal Type, not the component's creative role. A custom
 Caption can therefore render correct subtitles yet appear as a generic blue visual lane with
 opaque ids when its package has no matching Companion. Inspect the selected Companion and its
 Module/Surface match before treating this as misplaced content or moving visuals between Tracks.
@@ -65,7 +65,7 @@ bands: [{ id: "uses", placement: "after", heightPx: 15, display: "label" }]
 ```
 
 Use `attachments` for independent child objects such as Ranking reveals. Use a Band for another
-aspect of the same Track such as its presentation choices. Both use ordinary entity selection,
+aspect of the same Track such as its appearance choices. Both use ordinary entity selection,
 overlap order, field declarations and time editing. Each entity chooses one declared band or lane.
 
 ## Connect the picture to the entity
@@ -131,7 +131,7 @@ A Style can own its controls independently of the Track that consumes it. The Tr
 `createStudioCompanionFacet({ parameters: [{ id, match: { module, surface }, bindings, inspector }] })`.
 Its field names are local to that Style. Studio follows the reference and combines those fields
 with the Use's time controls. This works for a new project motion Style as well as a familiar
-framed presentation. Shared Style edits continue to affect its other Uses.
+framed visual. Shared Style edits continue to affect its other Uses.
 
 A binding's typed `fallback` exposes an omitted default; first editing it writes the property or
 attribute into its owning source. A fallback function can express a dependent default from the

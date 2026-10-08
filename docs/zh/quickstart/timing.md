@@ -6,12 +6,12 @@ description: 先构造绝对节目时间，再显式放置媒体并按需投影�
 Qflow 只有一条节目时间轴：`Timeline`。它只是 `{ id, frameRate, frameCount }`，不包含素材、
 单词、Track 或中央事件注册表。
 
-对于语音作品，四类独立事实围绕这条绝对时间轴组合：
+对于语音作品，几类独立事实围绕这条绝对时间轴组合：
 
 1. 把已接受素材规范化为 `SynchronizedMedia` 与有限的局部时间域；
-2. 在该局部时间域上对齐 Script Segment，得到 `NarrativeAlignment`；
-3. 用具名 Instant、Window 与 Extent 构造一个包含必需 `end` 的 Timeline DAG；
-4. 把每个 Alignment 通过等长 Window 投影，并让普通媒体独立进入 Visual 与 Audio Source。
+2. 用具名 Instant、Window 与 Extent 构造一个包含必需 `end` 的 Timeline DAG；
+3. 当消费者需要表演内部的语义位置时，在局部时间域上对齐对应 Script Segment；
+4. 把所需语义值通过等长 Window 投影，并让普通媒体独立进入 Visual 与 Audio Source。
 
 这种分离很重要：移动一段内容不改变媒体和局部词时序；改变画面构图不改变声音；纯动效
 只需要 Timeline，不需要媒体或 Script。
@@ -40,7 +40,10 @@ Clock 固定最终 Timeline 与所有局部时间域共享的帧率：
 
 规范化只建立媒体事实，不包含 Script 含义或节目中的位置。
 
-## 在局部时间域上对齐语义
+## 在作品消费语义位置时进行对齐
+
+Timeline 构造只需要媒体 Extent，不要求语义对齐。只有 Caption、语义画面变化、声音事件或其他消费者
+需要已接受表演内部的 Script 位置时，才增加 Alignment：
 
 ```svml
 <whisperx:Alignment id="opening-alignment" narrative={story}
@@ -107,8 +110,7 @@ Timeline 声明是无环构造图。`end` 必填；每个具名 Instant 或 Wind
 </audio:Track>
 ```
 
-不再存在独立的 Performance、Sound 或通用 Presentation 协议。Visual 与 Audio Clip 是
-平等的媒体出现关系。同一份规范化媒体可以同时供两边使用，但选择画面绝不会自动让声音
+Visual 与 Audio Clip 是平等的媒体出现关系。同一份规范化媒体可以同时供两边使用，但选择画面绝不会自动让声音
 进入成片。
 
 ```text

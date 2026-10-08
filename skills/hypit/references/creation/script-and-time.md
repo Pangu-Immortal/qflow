@@ -136,23 +136,24 @@ Script also represents passages without speech:
 ```
 
 `empty` is an ordinary Segment name; a name such as `product-detail` can express the passage's role.
-No words does not mean no semantics: the Segment retains its identity. Associated normalized media
-provides a local duration, and its NarrativeAlignment can have an empty unit array while still mapping
-the Segment boundaries.
+No words does not mean no semantics: the Segment retains its identity, and associated normalized
+media can provide its local duration. When a consumer needs that identity projected through the
+actual media, NarrativeAlignment can have an empty unit array while still mapping the Segment
+boundaries; the Segment's existence alone does not require Alignment.
 The same Timeline and Track timing vocabulary apply to a wordless passage or an entire
 piece made from prepared media. The empty tag itself declares neither a zero-length interval nor a duration.
 For an interval made only of component animation, use Timeline placement and extent instead; it
 needs no media-backed Segment. Spoken, wordless-media and graphics-only passages can share one work.
 
 Choose Segment boundaries from natural production passages and delivery length, not from every
-picture cut. One Segment and Take can carry several speaking turns, camera cuts or a split-screen
+picture cut. One Segment and one generated clip can carry several speaking turns, camera cuts or a split-screen
 conversation. One continuous narration can carry many B-roll changes through Selections. Edited UGC
-can deliberately use several Takes driven by the same character-and-scene image; a natural cut is
+can deliberately use several generated clips driven by the same character-and-scene image; a natural cut is
 often part of its appeal. A Role change or `||` does not require another generation.
 When retained recorded speech carries the passage, a file cut changes that performed material but
 does not automatically create a Segment. Several retained stretches can form one passage; distinct
-passages can use separate Takes. Write the Script for the final performed words and align the
-prepared result on its own local clock.
+passages can use separate performance clips. Write the Script for the final performed words and,
+when downstream relationships need their positions, align the prepared result on its own local clock.
 
 ## Time an authored animation
 
@@ -218,11 +219,12 @@ energy while finding a performable shape, then estimate the affected wording aga
 applies this judgment to the selected model's request range.
 
 The estimate balances the intended speaking density and sizes generation; it supplies no timeline
-anchors. Once a generated clip is accepted, normalize it, align its actual speech to its Script Segment,
-construct an equal-length Timeline Window and map the alignment through that domain/Window relation. The literal duration answers how much
-media to request. The aligned words answer where Caption, B-roll, MG, and Effects belong in that actual
-media. Alignment measures real word positions inside that media envelope; it does not reproduce an
-estimated distribution of words.
+anchors. Once a generated clip is accepted, normalize it and use its actual extent to construct an
+equal-length Timeline Window. When Caption, B-roll, MG, Effects or another consumer needs word
+positions, align the actual speech to its Script Segment and map that evidence through the
+domain/Window relation. The literal duration answers how much media to request. Alignment answers
+where words occurred inside accepted media; it does not reproduce an estimated distribution of words
+and is not required when no downstream relationship consumes those positions.
 
 For a wordless Segment, choose the requested duration from the action, music or visual rhythm.
 Speech-rate estimation has no role there; the resulting media still determines its Segment span.
@@ -250,5 +252,5 @@ the target or preserve an incidental lead/lag unless that offset itself is part 
 Timing seen in Studio or a real Result may expose one of several different problems. A wrong Cue or
 semantic anchor changes Script. A sound performance that changes the intended rhythm may change the
 duration choice or Treatment. A correct Selection rendered badly changes the component or Recipe. An
-unusable generated Take changes its prompt, reference, Candidate, or shot design. Put each correction
+unusable generated clip changes its prompt, reference, Candidate, or shot design. Put each correction
 where its fact is owned.

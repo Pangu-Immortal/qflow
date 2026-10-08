@@ -14,7 +14,8 @@ Caption uses a source-neutral document produced by Script and a replaceable Styl
 
 ```text
 Script → CaptionDocument + NarrativeCaptionBinding
-Binding + NarrativeProjection → CaptionTiming → Use presentation
+Binding + NarrativeProjection → complete Unit CaptionTiming
+CaptionDocument + CaptionTiming + Uses → family Cue schedule → VisualTrack
 ```
 
 ```svml
@@ -25,8 +26,8 @@ Binding + NarrativeProjection → CaptionTiming → Use presentation
 ```
 
 `@qflow/caption` owns the common CaptionDocument contract, complete-unit Selection/Role projection,
-Style assignment and the timing join. `@qflow/caption-fine` is one Style family: it owns geometry,
-glyph/Cue/Pill Paint and layered local motion.
+Style assignment and the flat timing join. `@qflow/caption-fine` is one Style family: it forms Cues
+and owns their geometry, glyph/Cue/Pill Paint and layered local motion.
 
 ### caption-fine:Style
 
@@ -240,7 +241,7 @@ then choose its exact program Window and source-time relation:
   video="none" audio="default" span-authority="audio" clock={clock}/>
 
 <audio:Track id="music-bed" timeline={speech.timeline}>
-  <audio:Clip source={music-media.media} during="timeline"
+  <audio:Clip source={music-media.media} during={speech.window}
     gain="0.28" fade-in="600ms" fade-out="800ms">
     <audio:Map target-at="end" source-at="end" rate="1"
       wrap-from="start" wrap-until="end"/>
@@ -253,7 +254,7 @@ then choose its exact program Window and source-time relation:
 | `Track.id` | yes | Stable Audio Track identity |
 | `Track.timeline` | yes | Timeline that defines the exact sample and frame domain |
 | `Clip.source` | yes | Explicitly selected and normalized `SynchronizedMedia` |
-| `during`, `at`/`for`, or `start`/`end` | exactly one form | Whole-program, Selection, Moment, or explicit window |
+| `during` | yes | A named absolute Window |
 | `source-time` or `Map` children | no | Reusable or inline partial target-to-source relation; omission is bounded partial identity |
 | `gain`, `fade-in`, `fade-out` | no | Explicit per-Clip mix values |
 
@@ -282,7 +283,7 @@ piece of editorial copy is one occurrence and one ordinary VisualTrack contribut
 <fonts:Face id="title-font" package="@fontsource-variable/inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
 <text:Flow id="title" timeline={speech.timeline} within={title-frame}
-  style={title-style} z="90" align="center" during="timeline">
+  style={title-style} z="90" align="center" during={speech.window}>
   EDIT MEANING, NOT TIMELINES
 </text:Flow>
 ```
@@ -291,7 +292,7 @@ piece of editorial copy is one occurrence and one ordinary VisualTrack contribut
 |---|---|---|
 | `id` | yes | Unique identifier |
 | `timeline` | yes | Absolute Timeline that owns the occurrence window |
-| `during`, `at`/`for`, or `start`/`end` | exactly one form | An absolute Window, Instant plus duration, or authored boundaries |
+| `during` | yes | A named absolute Window |
 | `within`, `point`, or `path` | yes | Placement matching `Flow`, `Point`, or `Path` |
 | `style` | yes | Style compiled from an SVS Recipe plus exact font bytes |
 | `z` | yes | Absolute stacking for this occurrence; it is not part of Style |
@@ -302,7 +303,7 @@ Each occurrence has one explicit placement form, one exact Style and one absolut
 
 ```svml
 <text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
-  style={title-style} z="90" align="center" during="timeline">
+  style={title-style} z="90" align="center" during={speech.window}>
   MEANING
 </text:Flow>
 ```
@@ -311,14 +312,14 @@ Each occurrence has one explicit placement form, one exact Style and one absolut
 |---|---|---|
 | `id` | yes | Stable item identity |
 | child content or `content` | yes | Inline plain/rich content, or an ordinary graph `Text` reference; the two forms are exclusive |
-| timing | yes | `during="timeline"`, an absolute Window, or `at`/`for`, `until`/`for`, `start`/`end` |
+| timing | yes | `during={named-window}` |
 | placement | yes | `SpatialPoint`, `SpatialFrame` or `SpatialPath`, matching the occurrence form |
 | `style` | yes | A `text:Style` compiled from an SVS Recipe plus exact font bytes |
 | `z` | yes | Absolute stacking for this occurrence |
 | form layout | no | Direct layout attributes declared by the selected `Flow`, `Point` or `Path` form |
 
-`during="timeline"` covers the complete Timeline. An authored Timeline Window or an upstream semantic,
-beat or other projection can instead supply an ordinary absolute Window. The fine-text component
+`speech.window` covers the complete Timeline. An authored Timeline Window or an upstream semantic,
+beat or other projection can supply any other ordinary absolute Window. The fine-text component
 does not know which domain produced it:
 
 ```svml
@@ -334,7 +335,7 @@ Graph-produced copy remains visible as an edge:
 ```svml
 <wording:Value id="headline">EXACTLY THE RIGHT MOMENT</wording:Value>
 <text:Flow id="callout-copy" timeline={speech.timeline} content={headline}
-  within={callout-frame} style={callout-style} z="90" during="timeline"/>
+  within={callout-frame} style={callout-style} z="90" during={speech.window}/>
 ```
 
 The generic Text value supplies only characters. Typography still owns the item document wrapper,
@@ -535,7 +536,7 @@ All four track families together in one source file:
 <!-- Text: persistent title overlay -->
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
 <text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
-  style={title-style} z="90" align="center" during="timeline">
+  style={title-style} z="90" align="center" during={speech.window}>
   MEANING
 </text:Flow>
 
@@ -544,7 +545,7 @@ All four track families together in one source file:
 <mediaop:Normalize id="music-media" source={music}
   video="none" audio="default" span-authority="audio" clock={clock}/>
 <audio:Track id="music-bed" timeline={speech.timeline}>
-  <audio:Clip source={music-media.media} during="timeline"
+  <audio:Clip source={music-media.media} during={speech.window}
     gain="0.28" fade-in="600ms" fade-out="800ms">
     <audio:Map target-at="end" source-at="end" rate="1"
       wrap-from="start" wrap-until="end"/>

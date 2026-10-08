@@ -30,9 +30,10 @@ It changes the interface, while your Script, video captions and comments keep th
 | `--project <directory>` | Set the project boundary for Source access and edits. |
 | `--port <number>` | Request a browser-server port; the default is `5179`. |
 
-The selected target must lead to one Film and its Timeline. Placed Takes add their semantic anchors;
-an animation can use a Timeline with an explicit end and no Takes. Both support visual components and
-property editing. The material needed to display the composition must already be available through
+The selected target must lead to one Film and its Timeline. Prepared media can establish Timeline
+extent, and optional semantic projection can add Script anchors when the composition uses them. An
+animation can use a Timeline with an explicit end and no performance media. Both support visual
+components and property editing. The material needed to display the composition must already be available through
 the Run. Studio can perform media preparation supported by the selected Runtime; submit generation
 and encoded renders through `qflow build`.
 

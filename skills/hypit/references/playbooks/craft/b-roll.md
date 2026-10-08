@@ -12,7 +12,7 @@ Creator-led video often shows the speaker's life while their performed words con
 studying, travelling, using a product or reacting in another situation. Those pictures make the
 person and world more tangible. The person visible in a lifestyle image or silent clip may be the
 same person whose voice is heard; the placed performance still owns the words. A different passage
-may use a visible speaking Take whose own delivery carries the words. [Voice and performance](voice-and-performance.md)
+may use a visible speaking performance whose own delivery carries the words. [Voice and performance](voice-and-performance.md)
 owns that distinction.
 
 An image can hold a product fact while the speaker makes a claim. A moving demonstration can show

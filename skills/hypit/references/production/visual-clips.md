@@ -1,17 +1,15 @@
 # Place pictures through Visual Track
 
-Read this when an existing image, normalized video or compositable Surface should appear in the
-finished picture. [Media preparation](media.md) owns incoming material, [spatial layout](spatial.md)
-owns destination Frames, and [timing](timing.md) owns absolute and projected event time.
+Read this when an image, normalized video or compositable Surface should appear in the finished
+picture. [Media preparation](media.md) owns source facts, [spatial layout](spatial.md) owns destination
+Frames, and [timing](timing.md) owns absolute and projected time.
 
-## The ordinary relation is one Clip occurrence
-
-Visual Track has one base child form:
+## Place one ordinary Clip occurrence
 
 ```text
-Visual Clip = one picture source + absolute Window + Frame
-            + z + spatial mapping + source-time + optional treatment + optional typed Motion
-Visual Track = ordered set of Visual Clips
+Visual Clip = picture source + absolute Window + Frame
+            + z + spatial mapping + source-time + optional treatment + optional Motion
+Visual Track = a set of Visual Clips
 ```
 
 ```svml
@@ -29,31 +27,36 @@ Visual Track = ordered set of Visual Clips
 </visual:Track>
 ```
 
-An A-roll picture, B-roll insert, generated shot and imported graphic are equal after their inputs
-exist. A medium may earlier have supplied Timeline extent or local-domain evidence; that contribution
-does not create a special rendering route. The Clip names the source again because rendering is a
-separate relation: the author explicitly chooses what becomes visible.
+An A-roll picture, B-roll insert, generated shot and imported graphic use the same occurrence model.
+The Clip explicitly chooses what becomes visible, even when the source earlier supplied Timeline
+extent or semantic evidence.
 
-A Clip takes exactly one direct source form—`image` with `extent`, normalized `media`, or a typed
-`surface`. `during` consumes an absolute Window or the complete
-Timeline. The alternate temporal form supplies exactly two of `from`, `until` and `for`.
+A Clip takes one source form:
 
-Spatially, ordinary fit and alignment attributes derive a source-local-to-program `SpatialMap2D`.
-If that vocabulary is insufficient, pass an explicitly authored `<space:Map>` through `mapping`.
-The Clip Frame remains the independent treatment and clipping boundary. See
-[spatial layout](spatial.md#map-a-source-plane-and-treat-its-frame) for the complete relation.
+- `image` with its pixel `extent` for a still;
+- normalized `media` for timed picture;
+- a typed `surface` for compositable pixels.
+
+`during` accepts a resolved Window or the complete Timeline. The alternate form supplies exactly two
+of `from`, `until` and `for`.
+
+Ordinary fit and alignment attributes derive the source-to-picture SpatialMap2D. Supply an authored
+`space:Map` through `mapping` when the production already owns the exact relation. The Clip Frame
+remains the treatment and clipping boundary. [Spatial layout](spatial.md#map-a-source-plane-and-treat-its-frame)
+explains the relation.
 
 ## Keep destination time and source sampling distinct
 
-The Window says when the occurrence may contribute. It does not silently prove an anchor mapping.
-For moving media, omission means bounded partial identity: target start maps to source start at native
-rate, and excess destination time is empty.
+The Window states when the occurrence contributes. For moving media, omission uses bounded native
+playback from source start; source that ends before the Window leaves the remaining picture empty.
 
-Use `visual:Map` children when the temporal relation differs. `target-from`/`target-until` select Clip-local target
-frames; `source-from`/`source-until` select source frames; `target-at`, `source-at` and an exact `rate`
-relate the clocks. `wrap-from`/`wrap-until` makes a source interval periodic. A Map with only source
-and target bounds fits one interval across the other. Multiple non-overlapping Maps create one
-piecewise relation and gaps stay transparent.
+Use `visual:Map` children for another relation. Target bounds select Clip-local time; source bounds
+select source frames; paired anchors and an exact rate relate the two clocks. `wrap-from` and
+`wrap-until` make a source interval periodic. Multiple non-overlapping Maps form one piecewise
+relation and retain transparent gaps.
+
+Use rate zero to hold a frame and a negative rate for reverse traversal. A Map with source and
+target bounds but no rate, anchors or wrap fits the selected source interval across its target.
 
 ```svml
 <visual:Clip media={shot.media} during={story.outro} frame={layout.full} z="10">
@@ -61,36 +64,23 @@ piecewise relation and gaps stay transparent.
 </visual:Clip>
 ```
 
-Stills reject `visual:Map` because they have no source clock. This temporal child is unrelated to a
-`space:Map` supplied through the `mapping` attribute. `z`, spatial mapping and source time are direct
-occurrence facts. A treatment Recipe contains only image/Frame paint. A typed Motion contains affine
-and opacity Pose keyframes over the Clip-local clock; it is not an enter/sustain/exit effect catalogue.
+Stills have no source clock and therefore use no temporal Map. `space:Map` and `visual:Map` answer
+different questions.
 
-Use distinct `z` values whenever the relative paint relation matters. Equal-`z` Clips are legal and
-follow stable declaration and identity order; choosing that tie is the author's responsibility.
-Sampling children move the crop inside the Frame; Pose children or `motion={Motion}` move the complete
-framed Clip.
+Use distinct `z` values when relative paint order matters. Equal-`z` Clips are legal and use stable
+declaration and identity order. Sampling changes which source pixels appear; Pose or `motion` moves
+the complete framed occurrence.
 
-Exact one-to-one mapping is required only when another package claims that local semantic endpoints
-project exactly into an absolute Window. Ordinary picture placement is not that proof operation.
+## Put shared behavior in a component
 
-## Relationships spanning Clips are components
+A continuing presenter, crossfade, slideshow or coordinated reveal owns behavior across several
+occurrences. Implement that relationship as a project or reusable component, using Visual Track
+builders where useful and publishing a VisualTrack for Film.
 
-Visual Track has no generic Presentation, Style/Use, Sequence or Handoff ontology. A continuing
-presenter, crossfade, slideshow or coordinated reveal owns behavior across several occurrences, so
-it belongs to a project or reusable author component. The component may use Visual Track's public
-builders and publish the same terminal `VisualTrack`; Film and Core do not learn a catalogue of roles
-or effects.
+Components can define local author vocabularies that fit their shared content. Caption, for example,
+uses a persistent document and timed Uses; a presenter component may similarly expose its own roles
+and treatments. These are component relationships, not requirements for an ordinary Clip.
 
-This does not ban a component-local child named `Use`. Caption retains Use because one persistent
-CaptionDocument and Timing stream is real shared content. A project Presenter may also define Source
-and Use because continuing presenter identity is its behavior. Those local grammars do not become
-base Visual Track syntax.
-
-Visual Track emits `.visual` and `.program`, never audio. Place desired sound independently through
-[Audio Track](audio-clips.md). Using both streams from one normalized medium therefore remains an
-explicit author decision.
-
-When footage and graphics form one coordinated scene, author a project component whose boundary owns
-that relationship. [Track authoring](track-authoring.md) explains how components publish ordinary
-terminal tracks without changing Core.
+Visual Track publishes `.visual` for Film and `.program` for declared tooling. It emits picture only;
+place desired sound independently through [Audio Track](audio-clips.md). [Track authoring](track-authoring.md)
+explains how a component publishes a visual contribution.

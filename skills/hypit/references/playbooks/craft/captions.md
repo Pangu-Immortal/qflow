@@ -43,9 +43,10 @@ performed speech. The following sections connect these decisions to the actual p
 ## Keep wording and timing in their owners
 
 Script owns display words, speaking Roles, Dual Text units, attributes and `||` Cue Breaks. Its
-CaptionDocument contains no seconds or frames. A source-domain adapter produces CaptionTiming on the actual Timeline;
-a visual family then presents the timed units. Reuse those units rather than retyping spoken words
-into independent Typography merely because it can draw the desired shape.
+CaptionDocument contains no seconds or frames. A source-domain adapter produces complete, flat Unit
+CaptionTiming on the actual Timeline; a visual family then forms and presents its Cues from those
+timed units. Reuse those units rather than retyping spoken words into independent Typography merely
+because it can draw the desired shape.
 
 Use the produced performance's normalized and aligned audio. A change to that audio, its speed or
 its cuts can change word timing and requires corresponding alignment. A visual-only restyle can

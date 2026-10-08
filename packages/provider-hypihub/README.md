@@ -94,7 +94,8 @@ For moving portraits, [Volcengine Matting](../volcengine-matting/README.md) maps
 Both formats carry transparency. The source video uses the same upload transport as other video
 references; the returned job uses the same polling and asset collection lifecycle. The selected
 account's `/v1/models` establishes availability. The processed video enters ordinary Normalize,
-then either semantic alignment for a Script performance or a Visual Clip for independently timed footage.
+then a Visual Clip or another ordinary media consumer; add semantic alignment separately when a
+Script relationship needs positions inside that performance.
 
 Runtime Profile example:
 

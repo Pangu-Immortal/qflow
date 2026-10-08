@@ -88,7 +88,7 @@ Script Segment's `.dialogue` Text, retaining pronunciation and Role turns. Optio
 this passage's attitude, vocal delivery, attention, interaction and any motivated cuts admitted by
 the Kit. In Speaker, `performance` selects the recurring approach to voice and visible expression;
 `gesture` selects body language, while `action` directs the particular thought and response.
-Do not retype the complete spoken text into action or treat each Role turn as a required new Take.
+Do not retype the complete spoken text into action or treat each Role turn as a required new generated clip.
 For B-roll, `story` carries the silent visual events rather than spoken dialogue.
 
 These files are reusable packaged authoring material. When one production needs a different prompt
@@ -104,8 +104,8 @@ For ordinary direct-to-camera social video, explicitly select
 for the directing judgment, and the [Speaker template](kits/speaker-v1.svs) for the exact wording of
 its Recipe choices. Choose `performance` and `gesture` for the character's intended presence.
 
-Reuse the same person-and-scene image and voice for ordinary Takes belonging to one UGC performance.
-Each Take can begin from that shared reference and meet the others at a natural cut. There is no
+Reuse the same person-and-scene image and voice for ordinary generated clips belonging to one UGC performance.
+Each clip can begin from that shared reference and meet the others at a natural cut. There is no
 required previous-tail-frame chain. Independent generation follows the intended edited form.
 
 For example, a lively ranking host can use:

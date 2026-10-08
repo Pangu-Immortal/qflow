@@ -6,7 +6,7 @@ owns who performs the words and where that voice comes from.
 
 ## Start with the sound the material already carries
 
-In speaking-video A-roll, the person's picture, words and voice belong to the same performed Take.
+In speaking-video A-roll, the person's picture, words and voice belong to the same performed media.
 Its sound continues at the current Timeline position while B-roll, graphics or a different view
 changes the picture. Audio-only A-roll likewise supplies performed speech, with its picture authored
 separately. A wordless performance may carry its own sound or be silent. Present the selected source's
@@ -60,7 +60,7 @@ their exact playback, trigger and gain syntax.
 ## Preserve continuity across picture changes
 
 A picture cut need not cut the acoustic world. Room tone can continue across views of one place,
-music can bind a montage, and a speaking Take can remain audible as another picture takes the frame.
+music can bind a montage, and a speaking performance can remain audible as another picture takes the frame.
 A change of place, speaker perspective or narrative state may instead call for an audible handoff
 even when the picture changes gently. Follow the listener's sense of the encounter.
 

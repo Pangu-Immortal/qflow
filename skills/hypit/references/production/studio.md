@@ -16,7 +16,7 @@ qflow studio --run build.svrun
 Supply `--runtime <profile>` when intentionally using a different Profile from the project's
 `qflow runtime use` selection. Studio needs a Run whose selected targets reach one Film with resolved
 composition and time. The Timeline supplies the clock and any placed Script anchors for component
-lanes, including a pure animation with no Takes. An image-generation-only Run is not a Film view; several distinct
+lanes, including a pure animation with no performance clips. An image-generation-only Run is not a Film view; several distinct
 Films need separate Runs or sessions.
 
 Open the URL actually printed by the process and retain it with the Run it serves. For review, open
@@ -95,7 +95,7 @@ seconds, `text`, and optional `resolved` (false when omitted). For example:
 
 The UI displays notes in time order; its `#` labels follow submission order within that Run. Identify
 file edits by `id` and preserve the array order and unrelated entries. Clicking a note seeks to its
-saved time. Interpret that time with its words and the reviewed composition: changing Script or Take
+saved time. Interpret that time with its words and the reviewed composition: changing Script or media
 placement can move the intended event. Comments retain the reviewed seconds rather than silently
 following new semantic timing.
 
@@ -243,7 +243,7 @@ Composition edits return to the ordinary Sources; they do not create a second St
 
 A Companion makes the component's own production relationships legible and editable: a board's
 lifetime, a reveal event, a Cue's actual Style, or a scene's layout choices. Its Producers still own
-the rendered work. Generic Track presentation is useful when no additional authoring concepts are
+the rendered work. Generic Track projection is useful when no additional authoring concepts are
 needed; a component with meaningful child events or controls can publish those directly.
 
 Read [Companion authoring](studio-companions.md) for entities and child lanes, picture selection,

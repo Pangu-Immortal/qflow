@@ -99,7 +99,7 @@ For existing Track composition, read [Tracks](tracks.md). For a new Track,
 state, preset content and peer visual/audio outputs. [Caption authoring](caption-authoring.md) covers
 a new speech-text family without rebuilding its transcript or timing.
 
-[Studio and Companions](studio.md) covers timeline presentation and Inspector editing for the new
+[Studio and Companions](studio.md) covers timeline entities and Inspector editing for the new
 component.
 
 [Component visuals](component-visuals.md) explains the actual Track and element representation,

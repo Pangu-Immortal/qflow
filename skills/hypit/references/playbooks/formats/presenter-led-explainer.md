@@ -28,8 +28,9 @@ number or comparison helps the viewer read that demonstration.
 ## Compose the performance and its presentation independently
 
 A generated clip supplies accepted performance media. Normalization supplies its local domain and
-Extent; alignment supplies local word timing; an equal-length Window locates it in Timeline and lets
-the projector publish absolute meaning. The picture's arrangement can change several times during
+Extent; an equal-length Window locates it in Timeline. When demonstrations or graphics follow the
+performed words, alignment supplies local word timing and lets the projector publish their absolute
+values. The picture's arrangement can change several times during
 that same Window. A new layout usually calls for a
 presentation change, while a different spoken line or acted beat may call for new material. One
 scene may also develop across several source occurrences. Spoken Segment boundaries do not prescribe
@@ -144,7 +145,7 @@ review the changed action and its handoffs; export the encoded film when that de
 ## Study one complete production
 
 The [complex spoken explainer](https://github.com/qflow-ai/qflow/tree/main/examples/complex-explainer)
-is a finished 137-second example with 17 accepted Takes. Its guide links the film, editable sources,
+is a finished 137-second example with 17 accepted performance clips. Its guide links the film, editable sources,
 media archive and project packages. Reading its code and notes needs no media download; opening the
 full picture uses the supplied media/Result archive. The default Run reuses that accepted material.
 

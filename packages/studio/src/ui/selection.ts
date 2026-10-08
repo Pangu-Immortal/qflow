@@ -49,7 +49,7 @@ export type Store = {
  *
  * A Script intent wins over the element that binds it: `@{claim} … @{/claim}` sits
  * inside the `<script>` element, so without that preference every click in the
- * prose would select the Speech Take instead of the B-roll. Ties break toward
+ * prose would select the speech performance instead of the B-roll. Ties break toward
  * the tightest range, which is the most specific thing under the cursor.
  */
 export function clipAtOffset(snapshot: StudioSnapshot, offset: number): Clip | undefined {

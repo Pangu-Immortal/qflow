@@ -1,54 +1,47 @@
-# Choose and compose contributions
+# Choose and compose picture and sound
 
-Read this to decide how content enters picture or sound. [System](system.md) explains the model;
-[media preparation](media.md), [timing](timing.md) and [spatial layout](spatial.md) own shared inputs.
-A new shared behavior belongs in a [project component](component-design.md).
+Read this to decide how content enters the finished picture or mix. [System](system.md) explains the
+whole model; [media preparation](media.md), [timing](timing.md) and [spatial layout](spatial.md) own
+shared inputs.
 
 ## Choose by relationship
 
 | Relationship | Starting point | Output |
 | --- | --- | --- |
-| Place an image, normalized video or surface | [Visual Clip](visual-clips.md) | `.visual` |
-| Place speech, music, narration, ambience or effects | [Audio Clip](audio-clips.md) | `.audio` |
-| Coordinate continuing sources, transitions, ducking or richer layout | [Project component](track-authoring.md) | declared `.visual` and/or `.audio` |
-| Present authored display words at resolved Cue times | [Caption](caption-presentation.md) | package-owned VisualTrack |
+| Place an image, normalized video or surface | [Visual Clip](visual-clips.md) | VisualTrack |
+| Place speech, music, narration, ambience or effects | [Audio Clip](audio-clips.md) | AudioTrack |
+| Present Script display words at resolved Cue times | [Caption](caption-presentation.md) | package-owned VisualTrack |
 | Supply independent writing | [Typography/Text](fonts-and-text.md) | package-owned VisualTrack |
-| Coordinate new layout, state or motion | [Project component](track-authoring.md) | declared VisualTrack and/or AudioTrack |
+| Coordinate continuing sources, transitions, ducking, layout or state | [Project component](track-authoring.md) | declared VisualTrack and/or AudioTrack |
 
-This is not a closed catalogue. A board, effect or whole scene is a component whose behavior owns
-its inputs and outputs. Images, text and video may share one scene when their behavior is shared.
+These are starting points, not a catalogue of visual roles. Images, text and video can share a scene
+when they share behavior.
 
-## Reuse one normalized source without binding picture and sound
+## Use synchronized media through independent occurrences
 
-Normalization can establish synchronized visual and audio streams on one local domain. Timeline may
-use its Extent, while Visual and Audio Clips independently pair the same media with an absolute
-Window:
+Normalization can establish picture and sound streams on one local domain. Timeline may use its
+Extent, while Visual and Audio Clips independently pair the media with an absolute Window:
 
 ```text
 normalized media + Window + visual sampling -> Visual Clip -> VisualTrack
 normalized media + Window + audio sampling  -> Audio Clip  -> AudioTrack
 ```
 
-This makes the common A-roll case concise without giving Timeline hidden media contents. Picture may
-be covered or reframed while speech continues; audio-only and picture-only material need no dummy
-peer. Do not route one voice through two selected audio contributions.
+This supports A-roll without coupling picture and sound. The picture can be covered or reframed
+while speech continues; audio-only and picture-only material need only their real contribution.
 
-## Let events and behavior determine organization
+## Let shared behavior determine scope
 
 A picture can occupy a projected Selection, a sound can follow a Moment, and a board can retain its
-answer after a reveal. All ultimately consume absolute Timeline Instants or Windows. Semantic meaning
-arrives through an explicit projection relation, not through a special kind of Track.
+answer after a reveal. Components receive the resolved absolute values they need. Shared motion or
+state can justify one component; independent contributions can remain peers while using the same
+event.
 
-An outer Window describes component lifetime. Separate meaningful internal events keep their own
-triggers; persistent state may continue after one event. Shared movement or state can justify one
-component. Independent contributions may remain peers while consuming the same Moment.
+## Assemble the intended film
 
-## Assemble only what the film needs
-
-Film receives Canvas, Timeline and each selected visual/audio output. Timeline establishes the finite
-extent; components establish appearances and paint order. Including picture never includes sibling
-sound automatically. Film child order does not move a picture to the front: every Present owns its
-absolute stacking and internal tree.
+Film receives Canvas, Timeline and each selected visual/audio output. Components establish appearance
+and paint order. Include picture and sound explicitly, and select one intended route for each audible
+source.
 
 [Rendering](rendering.md#assemble-the-picture-and-sound) shows Film assembly and delivery.
-[Review](review.md) judges the selected picture, performance boundaries and complete mix.
+[Review](review.md) judges the resulting picture, performance and complete mix.

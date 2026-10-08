@@ -67,10 +67,10 @@ Use correction to express a known production choice. A prompt problem remains ow
 direction and its Prompt Kit; a different composition remains owned by the shot or reference
 relationship.
 
-## Keep operation and presentation distinct
+## Keep operation and Clip use distinct
 
-Composing or correcting image bytes changes the reusable image itself. A Visual Clip instead places
-an image in a Frame for a Window and may animate that presentation. Choose the former when several
+Composing or correcting image bytes changes the reusable image itself. A Visual Clip places
+an image in a Frame for a Window and may animate that occurrence. Choose the former when several
 downstream consumers should receive the same prepared pixels; choose the latter when the change
 belongs only to how this video presents the image.
 

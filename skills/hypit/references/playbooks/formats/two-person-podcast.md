@@ -33,7 +33,7 @@ Source.
 [Podcast and interview image examples](../craft/examples/conversation-images.md) preserve the
 concrete English production directions and explain what each reference is responsible for.
 
-## Direct conversation inside a Take
+## Direct conversation inside a generated clip
 
 `podcast-v1` takes two final camera views and two voices, in matching A/B order. Map the Script's
 actual Role names to those hosts explicitly in action direction. Script remains the sole dialogue
@@ -76,9 +76,9 @@ toward him as she listens. She remains silent. Let both panels feel like the sam
 already underway, without large gestures or a frozen listener.
 ```
 
-The split reference and its matching video direction form one authored opening Take that can carry
+The split reference and its matching video direction form one authored opening clip that can carry
 both people and a speaker change. The ordinary two-view Podcast Kit suits the later exchange. Use a
-split-screen opening when that attention device serves the work; use another component or Take shape
+split-screen opening when that attention device serves the work; use another component or request shape
 for a different layout.
 
 ## Coverage can follow a thought rather than every noun

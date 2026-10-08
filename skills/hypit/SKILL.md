@@ -73,6 +73,10 @@ answers or payoffs. This is Qflow's strong production prior: a new wording or de
 presentation with its meaning. Preserve what each event responds to. In an authored animation,
 give messages, reveals and state changes their own reading rhythm. Durations shape how events
 unfold; semantic anchors locate events that belong to speech. A piece can use both relationships.
+Treat reference footage as evidence first. Connect a selected passage to a generation request only
+when the new material must preserve or transfer continuous temporal behavior that prose, stills or
+authored components would lose. [Video direction](references/playbooks/craft/video-direction.md#let-footage-carry-temporal-behavior-that-matters)
+owns that decision and the distinction between understanding footage and using it as model input.
 
 A-roll names the performance carrying a passage. Its normalized Extent may construct Timeline and its
 local domain may project meaning; after those contributions, picture and sound use the same ordinary
@@ -186,8 +190,9 @@ runs. Plan shared framing needs in Treatment and direction; judge the actual ove
 graphics once the production media is available.
 
 Build around the directed material and existing Outputs. Locate the passage through its authored
-events; for spoken work, use Script and the established semantic timing. Watch how MG, Caption, B-roll, Typography
-and Effects work together in the current picture. Prefer [snapshots](references/production/snapshots.md)
+events; for spoken work, use Script and any semantic timing the current composition actually
+consumes. Watch how MG, Caption, B-roll, Typography and Effects work together in the current picture.
+Prefer [snapshots](references/production/snapshots.md)
 for detailed states and continuous frame grids, and Studio playback for the passage with sound: the graphics make the idea clear,
 the Caption is easy to read, and the pictures and effects appear where and when they serve the
 passage. Adjust the owning Source or component to improve those relationships. Reuse produced media

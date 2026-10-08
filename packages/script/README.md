@@ -41,8 +41,8 @@ numbers; capitalization does not distinguish Roles from Segments.
 An empty Segment such as `<empty></empty>` (or `<empty/>`) is valid. `empty` is an ordinary
 author-chosen name, not a reserved keyword. It retains the Segment identity and both boundary anchors
 while contributing no Tokens or spoken text. This supports wordless passages in the same semantic
-model: an associated local temporal domain determines duration, while NarrativeAlignment supplies
-the Segment boundary relation with no word units.
+model: associated prepared media can determine duration, and NarrativeAlignment can supply the
+Segment boundary relation with no word units when another contribution consumes that identity.
 
 The package exports its Manifest, `parseScript`, semantic/source-map projection helpers, a
 semantic-preserving formatter and the raw `decodeScriptSurface` handler. Source ranges and parser
@@ -63,7 +63,7 @@ The Surface exports one full Narrative plus narrow, immutable views:
 
 `@qflow/narrative-caption` relates the separately exported Caption units to Narrative Tokens and
 projects them through explicit Narrative time. Seedance consumes dialogue `Text`,
-Estimate and TTS consume speech `Text`, and semantic preparation consumes the Segment excerpt. None imports
+Estimate and TTS consume speech `Text`, and optional semantic preparation consumes the Segment excerpt. None imports
 Script's parser AST. Another authoring package may produce the same ordinary Text, Narrative and
 CaptionDocument contracts.
 
@@ -102,8 +102,8 @@ side is invalid. This adds no new public value type or protocol version.
 ## Segments, turns and Cues are different boundaries
 
 A Segment names a structural production passage. It can contain several Role turns and be performed
-by one Take with several edited shots. A Role Cue changes who speaks; it neither creates a character
-asset nor requires another generated Take. `||` changes Caption grouping between complete Alignment
+in one generated clip with several edited shots. A Role Cue changes who speaks; it neither creates a character
+asset nor requires another generated clip. `||` changes Caption grouping between complete Alignment
 Units; it does not split the Segment, cut the picture or end a Selection.
 
 ```svml

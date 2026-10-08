@@ -230,7 +230,7 @@ Compiled with exact font bytes into a `text:Style`, then referenced by a concret
 <fonts:Face id="title-font" package="@fontsource-variable/inter" weight="900" style="normal"/>
 <text:Style id="title-style" recipe={recipes.text.title} font={title-font}/>
 <text:Flow id="meaning" timeline={speech.timeline} within={title-frame}
-  style={title-style} z="90" align="center" during="timeline">
+  style={title-style} z="90" align="center" during={speech.window}>
   MEANING
 </text:Flow>
 ```

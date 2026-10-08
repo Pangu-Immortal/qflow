@@ -24,10 +24,30 @@ All three preserve the remote result as one atomic `GeneratedVideoSet`, then exp
 member as an ordinary `Blob`. Their prompt ports consume ordinary `Text`, so a Script projection,
 generic Text Template or third-party author module can feed them without becoming part of Seedance.
 
-`standard`, `fast`, `mini` and `2.5` select model variants independently of the invocation shape. Duration is
-the author's literal, in whole seconds inside the model's declared range; measure the spoken line first
-with `qflow estimate` and write the number here. Nothing in the graph computes it, so a Build plan is
-complete before it starts.
+`standard`, `fast`, `mini` and `2.5` select model variants independently of the invocation shape.
+Duration is the author's literal inside the model's declared range: `standard`, `fast` and `mini`
+accept 4–15 whole seconds, while `2.5` accepts 4–30 whole seconds or `-1` for its automatic source-edit
+contract. Measure a spoken line first with `qflow estimate` when the request is sized by delivery and
+write the number here. Nothing in the graph computes it, so a Build plan is complete before it starts.
+
+## Video reference relationships
+
+All four variants expose video references through `ReferenceVideo`. A video reference can transfer a
+named temporal property—such as motion, camera behavior, performance rhythm or effect evolution—while
+the request creates new material. Seedance 2.5 can also treat a supplied video as the material being
+edited while preserving the relationships the prompt does not ask to change. For that strict
+source-edit relationship, author `duration="-1"` and `aspect-ratio="adaptive"`:
+
+```xml
+<seedance:ReferenceVideo id="edit" model="2.5" prompt={direction}
+  duration="-1" aspect-ratio="adaptive">
+  <seedance:Reference video={source.video} person-reference="true"/>
+</seedance:ReferenceVideo>
+```
+
+This pair is not a default for every video reference or every clone. Use an ordinary authored
+duration and aspect ratio when the request is transferring selected behavior into newly generated
+material. The selected Provider owns whether and how it implements each exact model contract.
 
 ## Reference audio
 

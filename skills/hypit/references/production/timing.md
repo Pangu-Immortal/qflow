@@ -1,18 +1,17 @@
-# Timing authored relationships
+# Author timing relationships
 
-Read this when deciding when a component acts. [Script syntax](script-syntax.md) names Narrative
-relationships; [Timeline](timeline.md) constructs the complete absolute domain. Components consume
-absolute Instants and Windows.
+Read this when deciding when a component exists or acts. [Script syntax](script-syntax.md) names
+Narrative relationships; [Timeline](timeline.md) constructs the finite absolute domain. Components
+consume absolute Instants and Windows.
 
-## Start from the production decision
+## Choose the time source that matches the event
 
 Use Narrative time when a picture or event should follow meaning as wording or performance changes.
-Use absolute time when it should follow the film clock. Both choices eventually produce the same
-absolute value types; neither is mandatory for the other.
+Use direct Timeline time when it should follow the film clock. Both choices resolve to the same
+absolute value types.
 
-NarrativeAlignment locates Script boundaries in a source-local domain. `semantic:Projection` maps
-that domain exactly onto an equal-length Timeline Window and publishes only the Narrative
-Instants and Windows the production asks for:
+`semantic:Projection` maps aligned local evidence into Timeline and publishes only the values this
+production asks to reuse:
 
 ```svml
 <semantic:Projection id="story-time" narrative={story} timeline={film.timeline}>
@@ -23,58 +22,50 @@ Instants and Windows the production asks for:
 </semantic:Projection>
 ```
 
-General components then use `story-time.proof`, `story-time.claim`, and `story-time.answer-end` as
-ordinary `TemporalWindow` or `TemporalInstant` values. They do not receive `story-time.projection`
-and do not interpret Script objects.
+Components then use `story-time.proof`, `story-time.claim` and `story-time.answer-end` as ordinary
+Window and Instant values.
 
-## Window forms
+## Declare, then consume
 
-Surfaces using the common Window vocabulary accept one of these forms:
+Timeline authoring and domain projectors produce named values. Components only consume them:
 
 | Form | Result |
 | --- | --- |
-| `during="timeline"` | The complete film Window. |
-| `during={story-time.proof}` | An already resolved Window. |
-| `from="2s" for="12f"` | A Window beginning at two seconds and lasting twelve frames. |
-| `until="3s" for="250ms"` | A 250 ms Window ending at three seconds. |
-| `from={story-time.claim} until={story-time.answer-end}` | A Window between two resolved Instants. |
+| `<time:Window id="beat" timeline={film.timeline} from="2s" for="12f"/>` | A named absolute Window |
+| `<time:Window id="answer" timeline={film.timeline} from={story-time.claim} until={story-time.answer-end}/>` | A named Window between projected Instants |
+| `during={story-time.proof}` | Consume a projected Window |
+| `during={beat}` | Consume a directly authored Window |
 
-Outside `during`, supply exactly two of `from`, `until`, and `for`. `for` may also reference a
-`TemporalExtent`, including the measured duration of generated media. This does not put media on
-Timeline; it only lets an ordinary graph result determine an interval.
+Window declarations supply exactly two of `from`, `until` and `for`. `for` can also reference a
+TemporalExtent, including generated media duration. The complete film is already named as
+`film.window`.
 
 ## Instant forms
 
-An event component uses one Instant:
-
 | Form | Result |
 | --- | --- |
-| `at={story-time.claim}` | A domain-projected event. |
-| `at="2s"` or `at="12f"` | An absolute clock event. |
-| `at="timeline.end-12f"` | An event relative to a Timeline boundary. |
+| `at={story-time.claim}` | A projected event |
+| `<time:Instant id="cut" timeline={film.timeline} at="2s"/>` | A named direct clock event |
+| `<time:Instant id="credits" timeline={film.timeline} at="timeline.end-12f"/>` | A named event relative to the Timeline boundary |
+| `at={cut}` | Consume the named event |
 
-The component decides what the event does. A card may remain visible, a slideshow component may switch pictures,
-or a motion may begin. The Instant itself has no visible duration.
+The component decides what the event changes and whether that state persists.
 
-## Name only what needs a name
+## Name shared values
 
-Write timing directly on a single consumer when it is local to that occurrence. Publish a named
-Timeline Window/Instant when it helps determine the film end or is deliberately shared. Publish a
-domain-projected value when its source identity matters. Do not copy every possible semantic anchor
-into a central table.
+Name even a single-use absolute value outside the consuming component. Put it in Timeline when it
+helps determine film extent; otherwise use a standalone declaration against the completed Timeline.
+Publish a projected value when its domain identity matters to the production.
 
-## Editing
+## Choose what a later edit changes
 
-Studio follows the producer of the value:
+The authored value determines the editing relationship:
 
-- an absolute literal edits that literal;
-- a named Timeline value edits its Timeline declaration;
-- a Narrative-produced value edits the declared Narrative mapping that produced it;
-- a reused value is edited once at its producer, so every consumer follows after recompilation.
+- editing a direct literal changes that literal;
+- editing a named Timeline value changes its Timeline declaration;
+- editing a Narrative-produced value changes the mapping or Narrative source that produced it;
+- editing a reused value changes its producer and all consumers follow after recompilation.
 
-The consumer does not carry an inverse projector. If a source domain offers no declared inverse,
-Studio does not guess one. A resolved value remains fully usable even when it is not editable.
-
-Frames use the selected film clock. Seconds and milliseconds express clock duration. Keep semantic
-relationships, absolute offsets, and response duration as separate author decisions rather than
-collapsing them into one hidden policy.
+Studio can display any resolved value. It offers source editing only where the package declares a
+meaningful author relation. Keep semantic relationships, absolute offsets and response duration as
+separate decisions.

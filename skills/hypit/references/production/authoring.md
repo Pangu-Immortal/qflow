@@ -40,10 +40,10 @@ with [motion graphics](../playbooks/craft/motion-graphics.md) for changes within
 These pages establish what the authored relationship should accomplish. Installed vocabulary then
 supplies the exact language for expressing it.
 
-For a performance-led work, including pure A-roll or short drama, prefer Script and semantic
-preparation even when the presentation is simple. Preserve the actual event relationships when
-additional Caption, sound or visual direction is introduced. A standalone asset edit can instead
-end at its requested media Output.
+For a performance-led work, including pure A-roll or short drama, keep the intended passages in
+Script and let accepted media establish their actual extent. Add semantic preparation when Caption,
+sound or visual relationships need positions inside that performance. A standalone asset edit can
+instead end at its requested media Output.
 
 Author those relationships explicitly. Script Selections and Moments carry meaning through placed
 performances into real time; authored positions locate independently timed events on the same Timeline.
@@ -105,7 +105,7 @@ imports select author vocabulary; Runtime configuration selects external facilit
 
 A Target marks where this Run asks the graph to become real. For ordinary commissioned production,
 the demanded Output is usually the finished video, and the Build produces its required media
-dependencies through the same graph. A public image, Take, audio item, or other intermediate Output
+dependencies through the same graph. A public image, prepared video, audio item, or other intermediate Output
 is also a normal Target when the user requested that deliverable or the work genuinely needs it
 independently now.
 
@@ -194,7 +194,7 @@ Do not satisfy a changed Track or final composition with its old rendered Output
 the current edit. Type compatibility alone cannot establish that an old performance or timing still fits.
 
 After a person or product swap, review existing Candidate selections against the new target. A Run
-that still selects the old presenter's Take will keep that person on screen even after the image
+that still selects the old presenter's video will keep that person on screen even after the image
 prompt changes. Preserve unrelated work while selecting or generating the media the adaptation needs.
 
 For example, correcting three wrong B-roll selections means replacing those selections while keeping
