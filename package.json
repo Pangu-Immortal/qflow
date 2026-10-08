@@ -293,6 +293,8 @@
     "check:distribution": "node scripts/check-distribution.mjs",
     "pack:release-candidate": "node scripts/pack-release-candidate.mjs",
     "check:release-candidate": "node scripts/check-release-candidate.mjs",
+    "publish:release-dependencies": "node scripts/publish-release-candidate.mjs dist/release/release-plan.json --independent-only",
+    "trust:release-dependencies": "npm exec --yes --package=npm@^11.15.0 -- node scripts/configure-release-publishers.mjs dist/release/release-plan.json",
     "build:public-types": "node scripts/build-public-types.mjs",
     "check": "tsc -p tsconfig.json --noEmit",
     "docs:dev": "vitepress dev docs",

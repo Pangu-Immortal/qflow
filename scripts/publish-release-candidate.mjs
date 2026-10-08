@@ -4,9 +4,11 @@ import { readFile } from "node:fs/promises";
 import { basename, dirname, resolve, sep } from "node:path";
 
 const arguments_ = process.argv.slice(2);
-const unknownOption = arguments_.find((value) => value.startsWith("--") && value !== "--preflight-only");
+const knownOptions = new Set(["--preflight-only", "--independent-only"]);
+const unknownOption = arguments_.find((value) => value.startsWith("--") && !knownOptions.has(value));
 if (unknownOption !== undefined) throw new Error(`Unknown option: ${unknownOption}`);
 const preflightOnly = arguments_.includes("--preflight-only");
+const independentOnly = arguments_.includes("--independent-only");
 const planPath = resolve(arguments_.find((value) => !value.startsWith("--")) ?? "dist/release/release-plan.json");
 const releaseDirectory = dirname(planPath);
 const plan = JSON.parse(await readFile(planPath, "utf8"));
@@ -68,7 +70,7 @@ async function inspect(item) {
   return { item, path, exists: false };
 }
 
-const ordered = [...plan.independent, plan.distribution];
+const ordered = independentOnly ? [...plan.independent] : [...plan.independent, plan.distribution];
 const identities = new Set();
 for (const item of ordered) {
   const identity = `${item.name}@${item.version}`;

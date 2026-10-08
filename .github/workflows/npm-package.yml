@@ -11,7 +11,7 @@ on:
     outputs:
       version:
         description: Version of the installed and executed tarball
-        value: ${{ jobs.package.outputs.version }}
+        value: ${{ jobs.build.outputs.version }}
 
 permissions:
   contents: read
@@ -21,15 +21,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  package:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Read the package version
+        id: version
+        run: node --input-type=module -e 'import { readFileSync, appendFileSync } from "node:fs"; const { version } = JSON.parse(readFileSync("package.json", "utf8")); appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);'
+      - name: Build the release candidate without publishing
+        run: npm run pack:release-candidate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-package
+          path: |
+            dist/release/*.tgz
+            dist/release/README.md
+            dist/release/release-plan.json
+          if-no-files-found: error
+
+  verify:
+    needs: build
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
     timeout-minutes: 25
-    outputs:
-      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,19 +76,9 @@ jobs:
       - name: Prepare the local media toolchain on Windows
         if: runner.os == 'Windows'
         run: choco install ffmpeg --yes --no-progress
-      - name: Read the package version
-        id: version
-        run: node --input-type=module -e 'import { readFileSync, appendFileSync } from "node:fs"; const { version } = JSON.parse(readFileSync("package.json", "utf8")); appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);'
-      - name: Build the release candidate without publishing
-        run: npm run pack:release-candidate
-      - name: Install the complete candidate, render and export outside the checkout
-        run: npm run check:release-candidate
-      - uses: actions/upload-artifact@v4
-        if: runner.os == 'Linux'
+      - uses: actions/download-artifact@v4
         with:
           name: npm-package
-          path: |
-            dist/release/*.tgz
-            dist/release/README.md
-            dist/release/release-plan.json
-          if-no-files-found: error
+          path: dist/release
+      - name: Install the complete candidate, render and export outside the checkout
+        run: npm run check:release-candidate

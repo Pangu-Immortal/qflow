@@ -68,12 +68,12 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   package:
-    needs: [version, checks]
+    needs: version
     uses: ./.github/workflows/npm-package.yml
 
   publish:
     if: github.event_name == 'release' || inputs.publish
-    needs: package
+    needs: [checks, package]
     runs-on: ubuntu-latest
     permissions:
       contents: read
