@@ -100,5 +100,5 @@ A Build executes the demanded graph and records completed public Outputs in its 
 Profiles select already installed Providers, Endpoints and credentials for external work.
 
 Studio reads the authored and executed relationships exposed by the selected packages. Companions
-give useful entities and controls to a component by following its real inputs and outputs.
+give useful Items and controls to a component by following its real inputs and outputs.
 [Authoring](authoring.md), [Runs](runs.md), [Builds](builds.md) and [Studio](studio.md) own those workflows.

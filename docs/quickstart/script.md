@@ -78,7 +78,7 @@ Role Cues produce different text projections:
 The dialogue `Text` includes Role Cue prefixes. Speech `Text` and the CaptionDocument strip them.
 Prompt programs feeding `seedance:ReferenceVideo` may use `{story.segment.dialogue.dialogue}` (with labels).
 Script emits `{story.caption}` as one CaptionDocument containing Display Words, N:M Alignment Units
-and authored Cue Breaks. It contains no seconds or frames.
+and authored Cues. It contains no seconds or frames.
 
 ## Dual Text
 
@@ -126,7 +126,7 @@ Here the left side also supplies speech, so markers can be written and moved the
 still owns its own markers. The explicit or shared speech must contain a spoken word; a form such
 as `<API|...>` supplies no timed correspondence and is invalid.
 
-`||` is the **Caption Cue Break** syntax. It records a boundary between complete Alignment Units;
+`||` is the **Caption Cue separator**. It ends the current Cue after a complete Alignment Unit;
 it cannot appear inside Dual Text or split an N:M unit. Cue timing is still obtained later by
 projecting its peer NarrativeCaptionBinding through explicit Narrative time.
 
@@ -160,7 +160,8 @@ Caption Style; attributes do not split, wrap or retime a Dual Alignment Unit.
 
 - **Display Word** — one rendered lexical surface, including display punctuation;
 - **Alignment Unit** — the smallest display-to-speech correspondence, including N:M Dual Text;
-- **Cue Break** — an authored boundary after a complete Alignment Unit, written `||`.
+- **Cue** — one ordered group of complete Alignment Units. Segment and Role boundaries end Cues;
+  `||` explicitly ends the current Cue inside a turn.
 
 Punctuation is not a speech token and never receives its own timing window. Closing punctuation after
 a Dual Text attaches to the preceding Display Word (`<test | now>. here` displays as `test. here`),

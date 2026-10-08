@@ -45,9 +45,9 @@ qflow studio --run build.svrun
 
 中央 Preview 求值编排生成的 `HtmlProgram`；组件布局、素材采样和动作与编码成片来自同一份编排。调整字幕位置、图形重点或覆盖画面时，可以对照真实素材查看。
 
-Timeline 把组件的出现放在同一时钟上。语义编排还会显示 Segment、Word、Selection 和 Moment。选择实体即可定位；播放、逐帧、缩放和滚动便于查看具体转场或版面。
+Timeline 把组件的出现放在同一时钟上。领域投影还可以贡献映射行与证据行，作者声明的 Instant 和 Window 则共享一条时间行。选择 Item 即可定位；播放、逐帧、缩放和滚动便于查看具体转场或版面。
 
-Inspector 显示所选实体的属性。可编辑字段与时间线手柄由组件的 **Studio Companion** 提供，它负责向 Studio 描述组件。项目组件可以随绘制代码一起提供自己的 Companion。组件能够渲染，与它开放了哪些编辑控件，是两件事：字段或手势需要明确可修改的 Source 值。
+Inspector 显示所选 Item 的属性。可编辑字段与时间线手柄由组件的 **Studio Companion** 提供，它负责向 Studio 描述组件。项目组件可以随绘制代码一起提供自己的 Companion。组件能够渲染，与它开放了哪些编辑控件，是两件事：字段或手势需要明确可修改的 Source 值。
 
 ## 修改作品
 
@@ -59,6 +59,6 @@ Source 编辑修改所选 `.svml`、`.svs` 或 `.svrun` 文件。支持的 Inspe
 
 预览播放包含 Film 选中的 AudioTrack，例如口播、音乐与音效。导出视频的音频由渲染的媒体管线装配。作品准备好交付后，运行导出 Build 得到编码后的成片；Studio 与 Comments 仍可用于查看可编辑作品、沟通后续修改。
 
-组件作者可以阅读 [Studio 中的时间编辑](../guide/studio-temporal-windows.md) 了解语义编辑，以及 [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md) 了解如何公开组件实体和控件。
+组件作者可以阅读 [Studio 中的时间编辑](../guide/studio-temporal-windows.md) 了解时间关系编辑，以及 [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md) 了解如何公开组件 Item 和控件。
 
 需要其他界面语言时，可以通过 `--locale-pack ./language.json` 加载本地 JSON 译文。[本地化指南](https://github.com/qflow-ai/qflow/blob/main/packages/studio/LOCALIZATION.md) 介绍译文格式、缺项检查和语言包分享方法。

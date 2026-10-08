@@ -24,7 +24,7 @@ These roles can be organized into files that suit the component's size:
 | Value and Style helpers | Validate inputs, apply documented defaults and decode the accepted Recipe properties |
 | Schedule and drawing | Project events and draw the scene at each frame |
 | Activation | Publish the contributions the selected package offers |
-| Studio Companion | Describe timeline entities and editable properties for Studio |
+| Studio Companion | Describe timeline Items and editable properties for Studio |
 
 The [Author Package guide](./author-packages.md) and included example route each exact object shape to
 its owning API. A small component can keep related roles together;

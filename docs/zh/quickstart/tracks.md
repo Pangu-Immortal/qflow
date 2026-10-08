@@ -15,7 +15,7 @@ Track 的作者语法。
 ```text
 Script → CaptionDocument + NarrativeCaptionBinding
 绑定 + NarrativeProjection → 完整 Unit CaptionTiming
-CaptionDocument + CaptionTiming + Uses → 家族 Cue Schedule → VisualTrack
+作者 Cues + CaptionTiming + Uses → 家族呈现 Schedule → VisualTrack
 ```
 
 ```svml
@@ -25,8 +25,7 @@ CaptionDocument + CaptionTiming + Uses → 家族 Cue Schedule → VisualTrack
 <import as="fonts" from="@qflow/fontsource@1"/>
 ```
 
-公共 Caption 负责 CaptionDocument、完整 Alignment Unit 的 Selection/Role 投影、样式分配与扁平
-Timeline 时间连接。Fine 是一种样式族，负责形成 Cue，并拥有自己的几何、字形/Cue/Pill Paint 与局部动画。
+公共 Caption 负责包含有序 Word、对应 Unit 和作者 Cue 的 CaptionDocument，以及完整 Alignment Unit 的 Selection/Role 查询、样式分配与扁平 Timeline 时间连接。Fine 是一种样式族，负责呈现这些 Cue，并拥有自己的几何、字形/Cue/Pill Paint 与局部动画。
 
 ### caption-fine:Style
 
@@ -64,7 +63,7 @@ caption.primary {
 
 必填的 `font=` 边携带一个按字节复现的 `FontStackRef`。字体家族、字重和字形只在这条边上声明一次；每个 Fallback 保留自己的真实字体信息。省略字体栈会在编译时失败，不会退回当前机器上的同名字体。
 
-Cue 边界由 Script 的 Segment、Role、样式变化和作者写出的 `||` 决定。Fine 不声明任何
+Cue 成员由 Script 的 Segment、Role 和作者写出的 `||` 决定；样式变化不改写 Cue。Fine 不声明任何
 逐词规划字段；其他字幕包可以定义完全不同的渲染方式，无需修改公共 Caption。
 
 Fine 不是一组互斥预设。基础/激活渐变、描边、阴影、长阴影、外发光、下划线、Pill

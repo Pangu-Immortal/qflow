@@ -59,4 +59,4 @@ Unedited expressions retain their units: `2s` remains two seconds when frame rat
 current Timeline.
 
 [Studio](../quickstart/preview.md) explains the editing interface. The
-[Companion guide](./studio-companion-architecture.md) explains package-owned entities and controls.
+[Companion guide](./studio-companion-architecture.md) explains package-owned Items and controls.

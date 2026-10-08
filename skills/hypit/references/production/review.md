@@ -84,7 +84,7 @@ Use whichever view can answer the current question:
 - On an encoded Result, focused media operations such as frames, cut, and tile can expose exact
   pixels, adjacent frames, or a short passage.
 - Open Studio when interactive playback, parameter editing or a component's Companion helps the
-  current work. Seek or select semantic entities to inspect their place in the composition.
+  current work. Seek projected domain evidence or select Track Items to inspect their place in the composition.
 - Use a [range render](rendering.md#choose-a-render-interval-in-frames) when the question requires
   an encoded clip with sound, such as testing an export setting or delivering a passage.
 - Watch the whole deliverable when the question concerns Hook clarity, story movement, payoff,
@@ -155,7 +155,7 @@ which of those choices belong in this piece.
 | What the review reveals | Where the correction belongs |
 | --- | --- |
 | The intended story, shot logic, or visual system is wrong | `TREATMENT.md` |
-| Words, speakers, Cue breaks, Selections, or Moments are wrong | the Author Source's Script |
+| Words, speakers, Cue membership, Selections, or Moments are wrong | the Author Source's Script |
 | Composition, authored parameters, or semantic/clock relation is wrong | Author Source or Recipe |
 | The wrong file or earlier Output is selected | Run Source |
 | A reusable visual role cannot express or render its intended design | the project Author Package |

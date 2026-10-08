@@ -1,7 +1,7 @@
 # Reading and writing Source syntax
 
 Read this for the language around a production: imports, references, literal values, Recipes and
-Run choices. [Script syntax](script-syntax.md) owns prose, Roles, Dual Text, Cue breaks, display
+Run choices. [Script syntax](script-syntax.md) owns prose, Roles, Dual Text, authored Cues, display
 attributes and markers. [Timing](timing.md) explains how components consume those identities.
 [System relationships](system.md) explains authored values and computed Outputs.
 

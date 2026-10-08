@@ -60,7 +60,7 @@ actual composition too, where its content, space and timing have a purpose.
 
 For richer interactive editing, add a Studio Companion. The
 [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md)
-shows how to expose timeline entities, properties and source bindings. The rendering code and
+shows how to expose timeline Items, properties and source bindings. The rendering code and
 Companion are separate contributions in the same package.
 
 ## Use and share it

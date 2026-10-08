@@ -216,6 +216,6 @@ An empty parameter panel alone is no reason to widen the component interface.
 [Companion authoring](studio-companions.md) owns those bindings.
 
 If the current project deliberately installed `@qflow/ranking`, its README is one example of
-semantic reveals, settled state, layout and editor entities. Do not assume that optional package is
+semantic reveals, settled state, layout and editor Items. Do not assume that optional package is
 part of the Distribution or install it merely to begin a component. Carry only a relationship that
 answers the current video's need into the project component's own design.

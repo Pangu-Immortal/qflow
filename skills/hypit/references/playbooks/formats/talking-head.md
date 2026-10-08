@@ -68,7 +68,7 @@ See [Generated video direction](../craft/video-direction.md) for listeners, gest
 Write natural stages in Script. For newly generated clips, estimate each Segment before choosing a
 literal generation duration. When the work retains recorded speech, its edited delivery supplies
 the actual duration; [media preparation](../../production/media.md) explains how to prepare and
-align it. A Segment can contain several edited shots, Caption Cue Breaks, graphic changes and
+align it. A Segment can contain several edited shots, Caption Cue separators, graphic changes and
 speaking turns. Choose its boundaries from the performance it carries.
 
 Normalize the produced speaking media, align its own audio to its Segment, construct its equal-length

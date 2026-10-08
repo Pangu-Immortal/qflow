@@ -54,7 +54,7 @@ A-roll-only or B-roll-only.
 | How do I connect Surface, projections, Fragment and Producers? | [Track authoring](track-authoring.md) |
 | How do I draw elements, video, graphics and frame-driven motion? | [Component visuals](component-visuals.md) |
 | How do I create a new Caption layout using existing wording and timing? | [Caption authoring](caption-authoring.md) |
-| How do I expose meaningful Studio entities and actual author controls? | [Studio Companions](studio-companions.md) |
+| How do I expose meaningful Studio Items and actual author controls? | [Studio Companions](studio-companions.md) |
 | How does an owner distribute and update a package across projects? | [Component sharing](component-sharing.md) |
 
 ## Execute, revise and deliver

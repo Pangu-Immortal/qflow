@@ -276,7 +276,7 @@ practical, revisit that choice and carry the improvement into the work and its n
 | defining the target: what the user asked for, and what the new piece will be | `references/creation/brief.md` |
 | reshaping a reference while changing a person, object, world, performance, Script or sound; combining references | `references/creation/transformations.md` |
 | choosing wording, pronunciation, performable passages, semantic relationships or measured delivery | `references/creation/script-and-time.md` |
-| writing `<script>`: current syntax, display/speech, spaces, grouping, Roles, Cue breaks, attributes or marker affinities | `references/production/script-syntax.md` |
+| writing `<script>`: current syntax, display/speech, spaces, grouping, Roles, authored Cues, attributes or marker affinities | `references/production/script-syntax.md` |
 | placing a component in time: semantic bindings, authored clock positions, offsets, durations or what a timeline edit changes | `references/production/timing.md` |
 | project layout, picking work back up, or handing an editable production to someone else | `references/creation/project-files.md` |
 | directing a generated person, setting, product, B-roll image, camera view, visual reference or image prompt | `references/playbooks/craft/image-direction.md` |
@@ -316,7 +316,7 @@ practical, revisit that choice and carry the improvement into the work and its n
 | writing a Caption family with new word relationships, scheduling or layout | `references/production/caption-authoring.md` |
 | `plan`, Provider pricing information, `build`, a retry or interrupted submission, following work, Results and exports | `references/production/builds.md` |
 | showing the editable work before export: Comments, Studio timeline, parameters, timestamped feedback and interface language | `references/production/studio.md` |
-| giving a component useful timeline entities, picture selection and author controls | `references/production/studio-companions.md` |
+| giving a component useful timeline Items, picture selection and author controls | `references/production/studio-companions.md` |
 | Film assembly, pure MG with authored time, picture and sound, final rendering or a selected frame interval | `references/production/rendering.md` |
 | exact frames or paginated grids of an existing production, without a new render Build | `references/production/snapshots.md` |
 | judging the preview or finished Result and deciding what to fix | `references/production/review.md` |

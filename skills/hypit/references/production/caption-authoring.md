@@ -155,8 +155,8 @@ Expose the family with useful vocabulary and a designed preview. Keep wording, f
 and authored word roles editable in the project. The package adds its rendering language while
 consuming the existing Script, Caption and semantic-time owners.
 
-For live Cue entities and Inspector editing, add a [Studio Companion](studio.md#give-a-project-component-a-useful-companion)
-that presents complete Cue content and authored Uses as separate lanes. Read the Track's resolved
-Use collection, retain each child's Source range and temporal lineage, and expose the referenced
-Style on that Use. Caption Fine's
+For live Cue Items and Inspector editing, add a [Studio Companion](studio.md#give-a-project-component-a-useful-companion)
+that presents complete Cue content on the Timeline and authored Uses as Inspector objects. Read the
+Track's resolved Use collection, retain each Use's Source range and temporal lineage, and expose the
+referenced Style on that Use. Caption Fine's
 Companion is a useful example of these relationships; the new family's layout stays in its renderer.

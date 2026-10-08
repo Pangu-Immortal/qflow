@@ -209,7 +209,7 @@ relevant parts of its Brief and Treatment and the affected Source, Recipe or Run
 Runtime activity when reuse or active execution matters. Read the relevant diff and preserve unrelated work.
 
 - Revise Treatment when the creative design changed.
-- Revise Script when words, Cue breaks, Selections, or Moments changed.
+- Revise Script when words, Cue membership, Selections, or Moments changed.
 - Revise Source or Recipe when composition, parameters, or authored timing relations changed.
 - Revise the Run when the demanded deliverable or selected Candidate changed.
 - Revise a project package when its fixed or reusable behavior needs to change; an unexposed local

@@ -1,6 +1,6 @@
 ---
 title: Studio Companions
-description: Give a component useful timeline entities and editing controls in Studio.
+description: Give a component useful timeline Items and editing controls in Studio.
 ---
 
 A component draws the video. Its **Studio Companion** explains that component to the editor: which
@@ -22,20 +22,27 @@ the installed code so the new contribution is loaded.
 ## Describe the author-facing objects
 
 A Track Companion matches the component's terminal Type and authored Surface. It describes timeline
-entities, labels, material previews and Inspector fields using the component's public values.
+Items, labels, material previews and Inspector fields using the component's public values.
 A graphic can expose its appearance, content, placement and event timing without exposing every
 internal drawing value.
 
 Studio supplies the controls and interactions. A Companion selects scalar, list or record controls
 and binds them to source values. A Film Companion identifies the Film's time source and Tracks;
-a Script Companion supports the source mapping needed to relocate Selection and Moment markers.
-The same Timeline supports animation with no performance media or Script lane; its authored end defines the extent.
+domain Companions can contribute mapping and evidence rows for each exact projection. A Temporal
+relation Companion describes how one package's producer traces to its inputs and, where meaningful,
+how an edit constrains its authored inputs. The same Timeline supports animation with no performance
+media or domain projection; its authored end defines the extent.
+
+Track-owned rules that are not occurrences belong in Inspector objects. Caption Uses, for example,
+remain editable without becoming draggable Timeline Items. Independently represented child content
+can still use an attached Track with its own Items.
 
 ## Make edits meaningful
 
-Timeline editing follows the chosen temporal relationship. Moving a shared Script event changes the
-marker and its consumers. A parameter-based handle changes that authored parameter. Values with no
-supported inverse remain available for inspection.
+Timeline editing follows the chosen temporal relationship. Studio solves the requested move or trim
+through the executed relation graph and writes every required author endpoint together. Shared
+upstream changes naturally update all consumers after recompilation. Values with no unique supported
+inverse remain available for inspection.
 
 Inspector fields bind to the author values they change. A shared Recipe or Frame may affect several
 uses, so the property represents that shared decision. Studio applies the edit to the corresponding

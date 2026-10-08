@@ -53,7 +53,7 @@ or character asset by itself.
 Dual Text can contain several visible or spoken words on either side; its display side feeds Caption
 and its spoken side feeds pronunciation. An empty display side intentionally omits those spoken words
 from Caption while keeping them in the Narrative and semantic timing. Selections and Moments can be
-placed on the spoken side because that side owns the speech anchors. Place Cue Breaks around the
+placed on the spoken side because that side owns the speech anchors. End a Cue before or after the
 complete Dual Text unit, not inside it. Attributes for a displayed Dual Text word belong on the
 display side before the pipe. Inside that display side, use `\@` when the visible text itself needs an
 at-sign.
@@ -104,7 +104,7 @@ escaping described in [Source syntax](../production/source-syntax.md).
 Script derives speech tokens from words and numbers. Punctuation remains attached to the displayed
 word it belongs with and does not create another speech time unit. CJK prose commonly contributes
 one Han, Hiragana or Katakana character per lexical unit; compounds, decimal numbers and the spoken
-side of Dual Text preserve their own lexical structure. This is why Cue breaks, word attributes and
+side of Dual Text preserve their own lexical structure. This is why Cue boundaries, word attributes and
 semantic markers attach to complete authored units instead of punctuation or visual line positions.
 Character-level timing does not call for character-sized Cues: use `||` for meaningful reading
 phrases. [Caption craft](../playbooks/craft/captions.md#language-changes-the-reading-unit) explains

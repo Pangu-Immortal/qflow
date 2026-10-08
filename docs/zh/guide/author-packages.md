@@ -37,7 +37,7 @@ Style 一类 Surface 在裸作者 id 下公开其值，例如 `style={board-styl
 
 preview Source 为作者提供可打开或渲染的小例子。查看能说明行为的状态：进入、关键变化、停留布局和退出。也要在实际编排中查看，这时内容、空间和时机才有具体用途。
 
-需要更丰富的交互编辑时，可以添加 Studio Companion。[Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md) 介绍如何公开时间线实体、属性和 Source 绑定。绘制代码和 Companion 是同一个包中分别提供的贡献。
+需要更丰富的交互编辑时，可以添加 Studio Companion。[Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md) 介绍如何公开时间线 Item、属性和 Source 绑定。绘制代码和 Companion 是同一个包中分别提供的贡献。
 
 ## 使用与分享
 

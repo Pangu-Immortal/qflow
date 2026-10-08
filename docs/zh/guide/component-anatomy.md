@@ -20,7 +20,7 @@ description: 将场景的创作接口变成可复用的图贡献。
 | 值与样式辅助函数 | 验证输入、应用已说明的默认值、解析接受的 Recipe 属性 |
 | 调度与绘制 | 投影事件，并在每一帧绘制场景 |
 | Activation | 公开所选包提供的贡献 |
-| Studio Companion | 描述时间线实体与可编辑属性 |
+| Studio Companion | 描述时间线 Item 与可编辑属性 |
 
 精确对象形状由 [Author Package 指南](./author-packages.md) 和随包示例指向各自所有者。小组件可以把相关职责放在一起；大组件则可以分离可复用的调度、样式和绘制逻辑。
 

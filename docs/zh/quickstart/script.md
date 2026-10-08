@@ -71,7 +71,7 @@ Role Cue 会产生不同的文本投影：
 dialogue `Text` 包含 Role Cue 前缀，speech `Text` 和 CaptionDocument 会去除前缀。给
 `seedance:ReferenceVideo` 提供输入的 Prompt Program 可以使用 `{story.segment.dialogue.dialogue}`
 （带标签）。Script 输出一份 `{story.caption}` CaptionDocument，里面有显示词、N:M 对齐单元
-和作者写出的 Cue 分界；里面没有秒数或帧数。
+和作者 Cue；里面没有秒数或帧数。
 
 ## Dual Text
 
@@ -116,7 +116,7 @@ Cue 的切换。这同样适用于其他语言的短语或名字，例如 `<Git 
 `<组@{beat!}件化|>`。标记和显示属性不会成为口播内容。若明确写了右侧口播，标记仍然属于
 右侧。明确或共享的口播都必须包含可说出的词；`<API|...>` 只有标点，无法建立时间对应，因此无效。
 
-`||` 是 **Caption Cue Break** 语法，只能位于完整对齐单元之间，不能写进 Dual Text 或切开
+`||` 是 **Caption Cue 分隔符**，它在一个完整对齐单元之后结束当前 Cue，不能写进 Dual Text 或切开
 N:M 单元。字幕稍后通过独立 NarrativeCaptionBinding 与 NarrativeProjection 得到绝对帧时间。
 
 ### 空格与拼写
@@ -143,11 +143,11 @@ N:M 单元。字幕稍后通过独立 NarrativeCaptionBinding 与 NarrativeProje
 
 ### CaptionDocument 的组成
 
-`CaptionDocument` 是 Caption 拥有、Script 可由同一源码生成的显示值，包含三种明确的语法对象：
+`CaptionDocument` 是 Caption 拥有、Script 可由同一源码生成的显示值，包含三种明确的内容对象：
 
 - **Display Word（显示词）**：一个用于渲染的词面，包含应该显示的标点；
 - **Alignment Unit（对齐单元）**：最小的显示-口播对应关系，Dual Text 的 N:M 映射也保持为一个单元；
-- **Cue Break（Cue 分界）**：作者写出的 `||`，只能放在完整对齐单元之后。
+- **Cue**：由完整对齐单元组成的有序组。Segment 和 Role 边界会结束 Cue；`||` 可以在同一轮话语内显式结束当前 Cue。
 
 标点不是口播 token，也不会获得独立时间窗。Dual Text 后面的句号会吸附到前一个显示词：
 `<test | now>. here` 显示为 `test. here`，口播投影仍是 `now. here`。英文按词拆分；汉字、

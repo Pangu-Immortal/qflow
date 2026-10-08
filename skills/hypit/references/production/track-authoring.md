@@ -127,7 +127,7 @@ Frame, fit and source-time relations. Optional examples are evidence, not prereq
 
 Ranking's repository README links its implementation: `surface.ts` resolves authored time references,
 `fragment.ts` connects typed inputs, `schedule.ts` computes reveal and settled spans, `render.ts`
-draws them, and `studio.ts` turns the same program into editor entities. Read it only when that
+draws them, and `studio.ts` turns the same program into editor Items. Read it only when that
 example is relevant and available; a new project component may use fewer operations or different state.
 
 The Surface exposes author intent and resolves absolute temporal inputs through
@@ -156,7 +156,7 @@ The useful pieces of a project package are:
 | Producer | Compute the immutable state or render program from declared inputs |
 | Activation | Register the Manifest, deterministic handlers and Markup facets with their matching Facet ABI |
 | Vocabulary and preview | Explain the role and show a recognizable, configured example |
-| Optional Studio Companion | Project meaningful editor entities, real parameter bindings and temporal lineage without changing video rendering |
+| Optional Studio Companion | Project meaningful editor Items, real parameter bindings and temporal lineage without changing video rendering |
 
 Resolve the Track's `timeline` through `resolveTemporalContext` and wire `context.timeline.ref`
 directly to its Timeline input. Source footage is supplied explicitly through media inputs. The
@@ -197,7 +197,7 @@ Document which Outputs are public, including useful deterministic program values
 
 ## Verify the behavior the component introduced
 
-When the new role needs its own timeline entities or Inspector, read
+When the new role needs its own timeline Items or Inspector, read
 [Companion authoring](studio-companions.md). Expose the domain
 schedule and temporal identities at their actual boundaries so the editor consumes them directly
 instead of reconstructing them from pixels.
