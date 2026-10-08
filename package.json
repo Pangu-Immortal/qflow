@@ -252,9 +252,6 @@
   "files": [
     "bin",
     "dist/public/**/*.d.ts",
-    "packages/{blob,result,caption,cli,compiler,producer,composition,kernel,executor,author,endpoint,atomic-file,generation,facet,html-program,markup,media,narrative,narrative-caption,narrative-temporal,loader,project,protocol,region-evidence,run,runtime,source,spatial,speech-evidence,recipe,temporal,text,timeline,admission,workspace}/src/**/*",
-    "packages/{blob,result,caption,cli,compiler,producer,composition,kernel,executor,author,endpoint,atomic-file,generation,facet,html-program,markup,media,narrative,narrative-caption,narrative-temporal,loader,project,protocol,region-evidence,run,runtime,source,spatial,speech-evidence,recipe,temporal,text,timeline,admission,workspace}/package.json",
-    "packages/{blob,result,caption,cli,compiler,producer,composition,kernel,executor,author,endpoint,atomic-file,generation,facet,html-program,markup,media,narrative,narrative-caption,narrative-temporal,loader,project,protocol,region-evidence,run,runtime,source,spatial,speech-evidence,recipe,temporal,text,timeline,admission,workspace}/README.md",
     "docs/public/qflow-logo-dark.svg",
     "docs/public/qflow-logo-light.svg",
     "examples/minimal-author-package/README.md",

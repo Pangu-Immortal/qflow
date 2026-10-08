@@ -41,7 +41,7 @@ export async function distributionEmbeddedPackageDirectories(repositoryRoot) {
   const paths = [
     ...globSync("packages/*/package.json", { cwd: repositoryRoot }),
     ...globSync("services/*/package.json", { cwd: repositoryRoot }),
-  ].sort();
+  ].map((path) => path.replaceAll("\\", "/")).sort();
   const packages = await Promise.all(paths.map(async (path) => ({
     path,
     manifest: await manifest(repositoryRoot, path),

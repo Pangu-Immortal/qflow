@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
+import { register } from "tsx/esm/api";
 import { readFileSync, realpathSync } from "node:fs";
 import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { spawnSync } from "node:child_process";
 
 if (process.argv.length === 3 && ["--version", "-v"].includes(process.argv[2])) {
   const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
@@ -19,22 +19,22 @@ process.emitWarning = function qflowWarning(warning, ...args) {
 };
 
 // Bootstrap and package activation must agree on the physical Distribution root. Windows short
-// paths can survive Node's ordinary resolution. Enter the TypeScript host only from the physical
-// path so its loader and every later package import share one file identity.
+// paths can survive Node's ordinary resolution while package lookup expands them through libuv.
 const distributionRoot = realpathSync.native(resolve(dirname(fileURLToPath(import.meta.url)), ".."));
-const args = process.argv.slice(2);
-const canonicalLauncher = resolve(distributionRoot, "bin", "qflow.mjs");
-if (fileURLToPath(import.meta.url) !== canonicalLauncher) {
-  const child = spawnSync(process.execPath, [...process.execArgv, canonicalLauncher, ...args], {
-    stdio: "inherit",
-    windowsHide: true,
-  });
-  if (child.error !== undefined) throw child.error;
-  process.exit(child.status ?? 1);
-}
 const distributionUrl = pathToFileURL(distributionRoot + sep);
-const { runQflow } = await import(new URL("bin/run.mjs", distributionUrl).href);
-await runQflow(args, {
-  distributionRoot,
-  launcher: canonicalLauncher,
+register();
+const { installDistributionPackageResolution } =
+  await import(new URL("packages/loader/src/node/distribution-resolution.ts", distributionUrl).href);
+installDistributionPackageResolution([distributionRoot]);
+const args = process.argv.slice(2);
+const { runInstalledCliApplication, runNodeCli } = await import(new URL("packages/cli/src/index.ts", distributionUrl).href);
+const { createVideoDistribution } = await import("@qflow/video");
+const videoDistribution = createVideoDistribution({
+  packageRoot: distributionRoot,
+  launcher: fileURLToPath(import.meta.url),
 });
+await runNodeCli(args, async (argv, io) => await runInstalledCliApplication(argv, io, {
+  distribution: videoDistribution,
+  distributionRoot,
+  launcher: fileURLToPath(import.meta.url),
+}));

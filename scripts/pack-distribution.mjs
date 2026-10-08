@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,15 +41,6 @@ async function releaseDependencyVersion(owner, name, declared) {
 npm(["run", "build:public-types"], root);
 const [inventory] = JSON.parse(npm(["pack", "--dry-run", "--ignore-scripts", "--json"], root, true));
 const embeddedPackageDirectories = await distributionEmbeddedPackageDirectories(root);
-const inventoriedPackageDirectories = new Set(inventory.files.flatMap(({ path }) => {
-  const match = /^packages\/([^/]+)\//u.exec(path);
-  return match === null ? [] : [match[1]];
-}));
-for (const directory of embeddedPackageDirectories) {
-  if (!inventoriedPackageDirectories.has(directory)) {
-    throw new Error(`Embedded Distribution package @qflow/${directory} has no npm files`);
-  }
-}
 let readme = await readFile(resolve(root, "README.md"), "utf8");
 const examples = readme.indexOf("## Examples\n");
 const next = readme.indexOf("## Use the Qflow skill\n", examples);
@@ -77,9 +68,25 @@ try {
     await mkdir(dirname(target), { recursive: true });
     await copyFile(resolve(root, path), target);
   }
+  for (const directory of [...embeddedPackageDirectories].sort()) {
+    const source = resolve(root, "packages", directory);
+    const target = resolve(stage, "packages", directory);
+    await mkdir(target, { recursive: true });
+    await cp(resolve(source, "src"), resolve(target, "src"), { recursive: true });
+    await copyFile(resolve(source, "package.json"), resolve(target, "package.json"));
+    await copyFile(resolve(source, "README.md"), resolve(target, "README.md"));
+  }
   await writeFile(resolve(stage, "README.md"), readme);
   const stagedManifestPath = resolve(stage, "package.json");
   const stagedManifest = JSON.parse(await readFile(stagedManifestPath, "utf8"));
+  stagedManifest.files = [
+    ...(stagedManifest.files ?? []).filter((path) => !path.startsWith("packages/")),
+    ...[...embeddedPackageDirectories].sort().flatMap((directory) => [
+      `packages/${directory}/src/**/*`,
+      `packages/${directory}/package.json`,
+      `packages/${directory}/README.md`,
+    ]),
+  ];
   const independentDefaults = Object.entries(stagedManifest.dependencies ?? {})
     .filter(([, version]) => typeof version === "string" && version.startsWith("workspace:"))
     .map(([name]) => name);
@@ -102,6 +109,14 @@ try {
   }
   await mkdir(output, { recursive: true });
   const packed = npm(["pack", "--ignore-scripts", "--pack-destination", output, "--json"], stage, true);
+  const [packedInventory] = JSON.parse(packed);
+  const packedPaths = new Set(packedInventory.files.map(({ path }) => path));
+  for (const directory of embeddedPackageDirectories) {
+    if (!packedPaths.has(`packages/${directory}/package.json`)
+      || ![...packedPaths].some((path) => path.startsWith(`packages/${directory}/src/`))) {
+      throw new Error(`Embedded Distribution package @qflow/${directory} is incomplete in the npm tarball`);
+    }
+  }
   await writeFile(resolve(output, "README.md"), readme);
   console.log(packed);
 } finally {
