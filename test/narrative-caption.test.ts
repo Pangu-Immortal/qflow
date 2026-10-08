@@ -91,9 +91,8 @@ for (const grouped of [false, true]) test(`Chinese Script projects Caption timin
   const timing = projectNarrativeCaptionTiming(document, binding, narrativeProjection);
   const wordText = new Map(document.words.map((word) => [word.id, word.text]));
   const unitText = new Map(document.units.map((unit) => [unit.id, unit.wordIds.map((id) => wordText.get(id)!).join("")]));
-  assert.deepEqual(timing.cues.map((cue) => cue.units.map((unit) => unitText.get(unit.unitId)).join("")),
-    ["用ElevenLabs做视频，", "真方便。", "今年2026年，這個很好。"]);
-  const units = timing.cues.flatMap((cue) => cue.units);
+  assert.equal("cues" in timing, false);
+  const units = timing.units;
   const windowsFor = (text: string) => units.filter((unit) => unitText.get(unit.unitId) === text)
     .map((unit) => [unit.startFrame, unit.endFrameExclusive]);
   const first = evidenceWindows[0]!;
@@ -112,4 +111,60 @@ for (const grouped of [false, true]) test(`Chinese Script projects Caption timin
   assert.deepEqual(windowsFor("這"), [[4000 + second[7]![0], 4000 + second[7]![1]]]);
   assert.deepEqual(windowsFor("個"), [[4000 + second[8]![0], 4000 + second[8]![1]]]);
   assert.equal(document.units[0]!.role, "HOST");
+});
+
+test("Caption timing joins named units, preserves overlaps and never repairs projection evidence", () => {
+  const document = {
+    id: "caption",
+    units: [
+      { id: "unit-a", wordIds: ["word-a"] },
+      { id: "unit-b", wordIds: ["word-b"] },
+    ],
+    words: [
+      { id: "word-a", unitId: "unit-a", text: "A", separatorBefore: "" as const, attributes: [] },
+      { id: "word-b", unitId: "unit-b", text: "B", separatorBefore: " " as const, attributes: [] },
+    ],
+    cueBreaks: [],
+  };
+  const binding = {
+    id: "binding", narrativeId: "story", documentId: document.id,
+    // Deliberately reversed: identity, not array position, owns the join.
+    units: [
+      { unitId: "unit-b", sourceTokenIds: ["token-b"] },
+      { unitId: "unit-a", sourceTokenIds: ["token-a"] },
+    ],
+  };
+  const projection = {
+    id: "projection", narrativeId: "story", timelineId: "film",
+    segments: [{ segmentId: "segment", startBoundaryId: "segment-start", endBoundaryId: "segment-end" }],
+    tokens: [
+      { tokenId: "token-a", segmentId: "segment", text: "A", startBoundaryId: "a-start", endBoundaryId: "a-end" },
+      { tokenId: "token-b", segmentId: "segment", text: "B", startBoundaryId: "b-start", endBoundaryId: "b-end" },
+    ],
+    boundaries: [
+      { id: "segment-start", frame: 0 }, { id: "a-start", frame: 0 },
+      { id: "b-start", frame: 5 }, { id: "a-end", frame: 10 },
+      { id: "b-end", frame: 15 }, { id: "segment-end", frame: 15 },
+    ],
+  };
+  assert.deepEqual(projectNarrativeCaptionTiming(document, binding, projection).units, [
+    { unitId: "unit-a", startFrame: 0, endFrameExclusive: 10 },
+    { unitId: "unit-b", startFrame: 5, endFrameExclusive: 15 },
+  ]);
+
+  const missingToken = { ...projection, tokens: projection.tokens.slice(0, 1) };
+  assert.throws(() => projectNarrativeCaptionTiming(document, binding, missingToken),
+    /CaptionDocument caption -> Unit unit-b -> Binding binding -> Token token-b is absent/u);
+  const zeroLength = { ...projection, boundaries: projection.boundaries.map((boundary) =>
+    boundary.id === "a-end" ? { ...boundary, frame: 0 } : boundary) };
+  assert.throws(() => projectNarrativeCaptionTiming(document, binding, zeroLength),
+    /Unit unit-a resolves to invalid absolute boundaries 0\.\.0/u);
+});
+
+test("an empty CaptionDocument projects to one complete empty timing table", () => {
+  assert.deepEqual(projectNarrativeCaptionTiming(
+    { id: "empty", units: [], words: [], cueBreaks: [] },
+    { id: "binding", narrativeId: "story", documentId: "empty", units: [] },
+    { id: "projection", narrativeId: "story", timelineId: "film", segments: [], tokens: [], boundaries: [] },
+  ), { timelineId: "film", documentId: "empty", units: [] });
 });

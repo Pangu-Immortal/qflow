@@ -96,21 +96,11 @@ function fixture(script = "<line>one two || three four</line>") {
   const projection: CaptionTiming = {
     timelineId: "test-space",
     documentId: document.id,
-    cues: [
-      {
-        id: "captions:cue:1", startFrame: 10, endFrameExclusive: 30,
-        units: [
-          { unitId: first.id, startFrame: 10, endFrameExclusive: 20 },
-          { unitId: second.id, startFrame: 20, endFrameExclusive: 30 },
-        ],
-      },
-      {
-        id: "captions:cue:2", startFrame: 36, endFrameExclusive: 56,
-        units: [
-          { unitId: third.id, startFrame: 36, endFrameExclusive: 46 },
-          { unitId: fourth.id, startFrame: 46, endFrameExclusive: 56 },
-        ],
-      },
+    units: [
+      { unitId: first.id, startFrame: 10, endFrameExclusive: 20 },
+      { unitId: second.id, startFrame: 20, endFrameExclusive: 30 },
+      { unitId: third.id, startFrame: 36, endFrameExclusive: 46 },
+      { unitId: fourth.id, startFrame: 46, endFrameExclusive: 56 },
     ],
   };
   return { document, program, projection };
@@ -274,12 +264,19 @@ test("Fine Caption gives a hidden Style no Cue, background or decoration", () =>
   const hidden = { id: "hidden", rendering: null };
   const hiddenProgram: CaptionProgram = { ...program, styles: [hidden],
     uses: program.uses.map(use => ({ ...use, styleId: hidden.id })) };
-  const hiddenProjection = { ...projection, cues: [] };
-  const schedule = scheduleFineCaption(hiddenProjection, hiddenProgram, document);
+  const schedule = scheduleFineCaption(projection, hiddenProgram, document);
   const visual = renderCaption(schedule, hiddenProgram, document,
     sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }));
   assert.deepEqual(schedule.cues, []);
   assert.deepEqual(visual.presents, []);
+});
+
+test("Fine Caption accepts one complete empty document as an ordinary no-content result", () => {
+  const document = { id: "empty-caption", units: [], words: [], cueBreaks: [] };
+  const program: CaptionProgram = { id: "empty", documentId: document.id, styles: [], uses: [] };
+  assert.deepEqual(scheduleFineCaption({ timelineId: "test-space", documentId: document.id, units: [] }, program, document), {
+    timelineId: "test-space", documentId: document.id, cues: [],
+  });
 });
 
 test("Fine Caption gives overlapping acoustic Words one current Karaoke owner", () => {
@@ -289,16 +286,9 @@ test("Fine Caption gives overlapping acoustic Words one current Karaoke owner", 
     properties: { ...recipe.properties, karaoke: "current", "karaoke-transition": "step" },
   }, [font]);
   const karaokeProgram: CaptionProgram = { ...program, styles: [style] };
-  const firstCue = projection.cues[0]!;
   const overlapped: CaptionTiming = {
     ...projection,
-    cues: [{
-      ...firstCue,
-      units: [
-        { ...firstCue.units[0]!, endFrameExclusive: 21 },
-        firstCue.units[1]!,
-      ],
-    }, projection.cues[1]!],
+    units: projection.units.map((unit, index) => index === 0 ? { ...unit, endFrameExclusive: 21 } : unit),
   };
   const track = renderCaption(
     scheduleFineCaption(overlapped, karaokeProgram, document),
@@ -325,10 +315,8 @@ function unevenChineseCaption(properties: Recipe["properties"] = {}) {
   const windows = [[10, 13], [13, 32], [36, 42], [42, 55]] as const;
   const timed: CaptionTiming = {
     ...projection,
-    cues: [{ ...projection.cues[0]!, endFrameExclusive: 55,
-      units: document.units.map((unit, index) => ({ unitId: unit.id,
-        startFrame: windows[index]![0], endFrameExclusive: windows[index]![1] })),
-    }],
+    units: document.units.map((unit, index) => ({ unitId: unit.id,
+      startFrame: windows[index]![0], endFrameExclusive: windows[index]![1] })),
   };
   const styled = { ...program, styles: [style] };
   const track = renderCaption(scheduleFineCaption(timed, styled, document), styled, document,
@@ -439,13 +427,11 @@ test("Typewriter keeps combining graphemes whole and preserves unequal-width Lat
 
 test("Caption handoff follows placed time and retains simultaneous spoken envelopes", () => {
   const { document, program, projection } = fixture();
-  const first = projection.cues[0]!;
-  const second = projection.cues[1]!;
-  const overlapping = { ...second, startFrame: 20, endFrameExclusive: 40,
-    units: second.units.map(unit => ({ ...unit, startFrame: unit.startFrame - 16,
-      endFrameExclusive: unit.endFrameExclusive - 16 })) };
-  // Reverse declaration order: placement decides temporal neighbors, not Script order.
-  const schedule = scheduleFineCaption({ ...projection, cues: [overlapping, first] }, program, document);
+  const first = projection.units.slice(0, 2);
+  const overlapping = projection.units.slice(2).map(unit => ({ ...unit, startFrame: unit.startFrame - 16,
+    endFrameExclusive: unit.endFrameExclusive - 16 }));
+  // Reverse timing-table order: identities join content, while placed time decides temporal neighbors.
+  const schedule = scheduleFineCaption({ ...projection, units: [...overlapping, ...first] }, program, document);
   assert.deepEqual(schedule.cues.map(cue => [cue.timedStartFrame, cue.timedEndFrameExclusive]), [[10, 30], [20, 40]]);
   assert.deepEqual(schedule.cues.map(cue => [cue.visibleStartFrame, cue.visibleEndFrameExclusive]), [[6, 36], [16, 46]]);
   const track = renderCaption(schedule, program, document,
@@ -486,16 +472,14 @@ test("a Use beginning inside a Cue changes presentation without changing words o
   const { document, program } = fixture("<line>test1 || test2 @{select} test3 || test4 @{/select}</line>");
   const timeline = sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } });
   const unit = (index: number) => ({ unitId: document.units[index]!.id, startFrame: 10 + index * 10, endFrameExclusive: 20 + index * 10 });
-  const projection: CaptionTiming = { timelineId: timeline.id, documentId: document.id, cues: [
-    { id: "c1", startFrame: 10, endFrameExclusive: 20, units: [unit(0)] },
-    { id: "c2", startFrame: 20, endFrameExclusive: 40, units: [unit(1), unit(2)] },
-    { id: "c3", startFrame: 40, endFrameExclusive: 50, units: [unit(3)] },
-  ] };
+  const projection: CaptionTiming = { timelineId: timeline.id, documentId: document.id,
+    units: [unit(0), unit(1), unit(2), unit(3)] };
   const emphasis = fineCaptionStyle("emphasis", { ...recipe, properties: { ...recipe.properties, "active-fill": "#FF6347", karaoke: "trail" } }, [font]);
   const window = (id:string,start:number,end:number) => projectProgramWindow({itemId:id,semantic:timeline,projection:{start:{ref:"absolute",at:{unit:"frames",value:start}},end:{ref:"absolute",at:{unit:"frames",value:end}}}});
   const changed: CaptionProgram = { ...program, styles: [...program.styles, emphasis], uses: [...program.uses, { styleId: emphasis.id, window: window("emphasis",30,50) }] };
   const schedule = scheduleFineCaption(projection, changed, document);
-  const parts = schedule.cues.filter(cue=>cue.cueId==="c2");
+  const cueId = `${document.id}:cue:2`;
+  const parts = schedule.cues.filter(cue=>cue.cueId===cueId);
   assert.equal(parts.length,2);
   assert.deepEqual(parts.map(cue=>cue.units), [[unit(1),unit(2)],[unit(1),unit(2)]]);
   assert.deepEqual(parts.map(cue=>cue.visibility), [[{startFrame:20,endFrameExclusive:30}],[{startFrame:30,endFrameExclusive:40}]]);
@@ -506,7 +490,7 @@ test("a Use beginning inside a Cue changes presentation without changing words o
   assert.deepEqual(entered.visibility,[{startFrame:30,endFrameExclusive:40}]);
   // Rendering the same Style over the whole timeline has identical animation data for this Cue.
   const whole: CaptionProgram = {...changed,uses:[{styleId:emphasis.id,window:window("whole",0,90)}]};
-  const original = renderCaption(scheduleFineCaption(projection,whole,document),whole,document,timeline).presents.find(p=>p.id.endsWith(":c2"))!;
+  const original = renderCaption(scheduleFineCaption(projection,whole,document),whole,document,timeline).presents.find(p=>p.id.endsWith(`:${cueId}`))!;
   assert.deepEqual(entered.elements,original.elements);
 
   const hidden: CaptionProgram = {...changed,styles:[...changed.styles,{id:"hidden",rendering:null}],uses:[...changed.uses,{styleId:"hidden",window:window("hide",32,35)}]};
@@ -519,18 +503,15 @@ test("a Use beginning inside a Cue changes presentation without changing words o
 test("Caption time windows select presentation, while Role filters preserve simultaneous speakers", () => {
   const { document, program, projection } = fixture("<line><A>one two || <B>three four</line>");
   const timeline = sealTimeline({id:"test-space",frameCount: 90, frameRate: { numerator: 30, denominator: 1 }});
-  const overlap: CaptionTiming = {...projection,cues:[projection.cues[0]!,{
-    ...projection.cues[1]!,startFrame:15,endFrameExclusive:35,
-    units:projection.cues[1]!.units.map((u,i)=>({...u,startFrame:15+i*10,endFrameExclusive:25+i*10})),
-  }]};
+  const overlap: CaptionTiming = {...projection,units:projection.units.map((unit,index)=>index < 2 ? unit
+    : {...unit,startFrame:15+(index-2)*10,endFrameExclusive:25+(index-2)*10})};
   const hidden: CaptionProgram = {...program,styles:[...program.styles,{id:"hidden",rendering:null}],uses:[...program.uses,{
     role:"A",styleId:"hidden",window:projectProgramWindow({itemId:"hideA",semantic:timeline,projection:{start:{ref:"timeline.start"},end:{ref:"timeline.end"}}}),
   }]};
   const schedule = scheduleFineCaption(overlap,hidden,document);
   assert.equal(schedule.cues.length,1);
-  assert.deepEqual(schedule.cues[0]!.units,overlap.cues[1]!.units);
-  const noContent = scheduleFineCaption({...projection,cues:[]},program,document);
-  assert.deepEqual(noContent.cues,[]);
+  assert.deepEqual(schedule.cues[0]!.units,overlap.units.slice(2));
+  assert.throws(() => scheduleFineCaption({...projection,units:[]},program,document), /must cover CaptionDocument units exactly/u);
   assert.deepEqual(scheduleFineCaption(projection,{...program,uses:[],styles:[]},document).cues,[]);
 });
 
@@ -572,10 +553,8 @@ test("Fine uses author separators in ordinary text, shared groups, active copies
   const styled = { ...program, styles: [style] };
   const render = (source: string) => {
     const document = captionDocument(parseScript("spacing", `<line>${source}</line>`), "story.caption", "story");
-    const timed: CaptionTiming = { ...projection, cues: [{ ...projection.cues[0]!,
-      startFrame: 10, endFrameExclusive: 70,
-      units: document.units.map((unit, index) => ({ unitId: unit.id, startFrame: 10 + index * 5, endFrameExclusive: 15 + index * 5 })),
-    }] };
+    const timed: CaptionTiming = { ...projection,
+      units: document.units.map((unit, index) => ({ unitId: unit.id, startFrame: 10 + index * 5, endFrameExclusive: 15 + index * 5 })) };
     return renderCaption(scheduleFineCaption(timed, styled, document), styled, document,
       sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } })).presents[0]!.elements;
   };

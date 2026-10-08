@@ -38,10 +38,16 @@ export function assertNarrativeCaptionBindingFor(
     throw new Error("NarrativeCaptionBinding disagrees with its Narrative or CaptionDocument.");
   }
   const tokenIds = new Set(narrative.tokens.map((token) => token.id));
-  const documentUnitIds = document.units.map((unit) => unit.id);
-  if (value.units.length !== documentUnitIds.length
-    || value.units.some((unit, index) => unit.unitId !== documentUnitIds[index]
-      || unit.sourceTokenIds.some((tokenId) => !tokenIds.has(tokenId)))) {
-    throw new Error("NarrativeCaptionBinding must cover the document in order using known Narrative Tokens.");
+  const documentUnitIds = new Set(document.units.map((unit) => unit.id));
+  const bindingUnitIds = new Set(value.units.map((unit) => unit.unitId));
+  if (documentUnitIds.size !== bindingUnitIds.size
+    || [...documentUnitIds].some((unitId) => !bindingUnitIds.has(unitId))
+    || [...bindingUnitIds].some((unitId) => !documentUnitIds.has(unitId))) {
+    throw new Error("NarrativeCaptionBinding must cover CaptionDocument units exactly.");
+  }
+  const unknownToken = value.units.flatMap((unit) => unit.sourceTokenIds)
+    .find((tokenId) => !tokenIds.has(tokenId));
+  if (unknownToken !== undefined) {
+    throw new Error(`NarrativeCaptionBinding references unknown Narrative Token ${unknownToken}.`);
   }
 }

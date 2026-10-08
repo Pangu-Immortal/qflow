@@ -294,9 +294,8 @@ test("Fine Caption Cues stay isolated over Picture during reverse seeks and inde
     { styleId: "green", window: useWindow("green-use", 30, 60) },
     { styleId: "blue", window: useWindow("blue-use", 60, 90) },
   ] };
-  const timing = { timelineId: timeline.id, documentId: document.id, cues: document.units.map((unit, index) => ({
-    id: `cue-${index + 1}`, startFrame: index * 30, endFrameExclusive: index * 30 + 30,
-    units: [{ unitId: unit.id, startFrame: index * 30, endFrameExclusive: index * 30 + 30 }],
+  const timing = { timelineId: timeline.id, documentId: document.id, units: document.units.map((unit, index) => ({
+    unitId: unit.id, startFrame: index * 30, endFrameExclusive: index * 30 + 30,
   })) };
   const captions = renderFineCaption(scheduleFineCaption(timing, program, document), program, document,
     timeline, { xPx: 0, yPx: 0, widthPx: 320, heightPx: 180 });

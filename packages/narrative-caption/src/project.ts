@@ -1,68 +1,62 @@
-import { assertCaptionDocument, assertCaptionTiming } from "@qflow/caption";
-import type { CaptionDocument, CaptionTiming, CaptionTimingCue, CaptionTimingUnit } from "@qflow/caption";
-import { tokenFrameSpan } from "@qflow/narrative-temporal";
+import { assertCaptionDocumentIdentity, assertCaptionTimingForDocument } from "@qflow/caption";
+import type { CaptionDocument, CaptionTiming, CaptionTimingUnit } from "@qflow/caption";
 import type { NarrativeProjection } from "@qflow/narrative-temporal";
 
 import type { NarrativeCaptionBinding } from "./types.js";
 import { NarrativeCaptionTimingError } from "./error.js";
+import { assertNarrativeCaptionBindingIdentity } from "./identity.js";
 
 export function projectNarrativeCaptionTiming(
   document: CaptionDocument,
   binding: NarrativeCaptionBinding,
   projection: NarrativeProjection,
 ): CaptionTiming {
-  assertCaptionDocument(document);
+  assertCaptionDocumentIdentity(document);
+  assertNarrativeCaptionBindingIdentity(binding);
   if (binding.documentId !== document.id || binding.narrativeId !== projection.narrativeId) {
     throw new NarrativeCaptionTimingError("CAPTION_BINDING", "Caption binding disagrees with its document or NarrativeProjection.");
   }
-  const sourceTokens = new Map(binding.units.map((unit) => [unit.unitId, unit.sourceTokenIds] as const));
-  const breaks = new Set(document.cueBreaks.map((cueBreak) => cueBreak.afterUnitId));
-  const timed: Array<{ unit: CaptionDocument["units"][number]; timing: CaptionTimingUnit }> = [];
-  const previousByRole = new Map<string | undefined, { timing: CaptionTimingUnit }>();
+  const bindings = new Map(binding.units.map((unit) => [unit.unitId, unit.sourceTokenIds] as const));
+  const documentIds = new Set(document.units.map((unit) => unit.id));
+  const missingBinding = document.units.find((unit) => !bindings.has(unit.id));
+  const unknownBinding = binding.units.find((unit) => !documentIds.has(unit.unitId));
+  if (missingBinding !== undefined || unknownBinding !== undefined || bindings.size !== documentIds.size) {
+    const path = missingBinding === undefined ? unknownBinding!.unitId : missingBinding.id;
+    throw new NarrativeCaptionTimingError("CAPTION_BINDING",
+      `CaptionDocument ${document.id} -> Binding ${binding.id} does not connect Unit ${path} exactly.`);
+  }
+  const tokens = new Map(projection.tokens.map((token) => [token.tokenId, token] as const));
+  const boundaries = new Map(projection.boundaries.map((boundary) => [boundary.id, boundary.frame] as const));
+  const timed: CaptionTimingUnit[] = [];
   for (const unit of document.units) {
-    const window = tokenFrameSpan(projection, sourceTokens.get(unit.id) ?? []);
-    if (window === undefined) continue;
-    if (window.endFrameExclusive < window.startFrame) {
-      throw new NarrativeCaptionTimingError("CAPTION_TOKEN_ORDER", `Caption unit ${unit.id} references Narrative Tokens in reverse order.`);
-    }
-    const startFrame = window.startFrame;
-    const endFrameExclusive = Math.max(startFrame + 1, window.endFrameExclusive);
-    const previous = previousByRole.get(unit.role);
-    if (previous !== undefined && startFrame > previous.timing.startFrame && startFrame < previous.timing.endFrameExclusive) {
-      previous.timing = { ...previous.timing, endFrameExclusive: startFrame };
-    }
-    const entry = { unit, timing: { unitId: unit.id, startFrame, endFrameExclusive } };
-    previousByRole.set(unit.role, entry);
-    timed.push(entry);
-  }
-  const cues: CaptionTimingCue[] = [];
-  let current: { units: CaptionTimingUnit[]; groupId?: string } | undefined;
-  const flush = (): void => {
-    if (current === undefined || current.units.length === 0) return;
-    cues.push({
-      id: `${document.id}:cue:${cues.length + 1}`,
-      startFrame: current.units[0]!.startFrame,
-      endFrameExclusive: current.units.at(-1)!.endFrameExclusive,
-      units: current.units,
+    const sourceTokenIds = bindings.get(unit.id)!;
+    const sourceTokens = sourceTokenIds.map((tokenId) => {
+      const token = tokens.get(tokenId);
+      if (token === undefined) {
+        throw new NarrativeCaptionTimingError("CAPTION_PROJECTION",
+          `CaptionDocument ${document.id} -> Unit ${unit.id} -> Binding ${binding.id} -> Token ${tokenId} is absent from NarrativeProjection ${projection.id}.`);
+      }
+      return token;
     });
-    current = undefined;
-  };
-  const documentOrder = new Map(document.units.map((unit, index) => [unit.id, index]));
-  for (const [index, entry] of timed.entries()) {
-    const previousDocumentUnit = index === 0 ? undefined : timed[index - 1]!.unit;
-    const mustBreak = current !== undefined && (
-      current.groupId !== entry.unit.groupId
-      || (previousDocumentUnit !== undefined && (breaks.has(previousDocumentUnit.id)
-        || documentOrder.get(entry.unit.id)! !== documentOrder.get(previousDocumentUnit.id)! + 1))
-    );
-    if (mustBreak) flush();
-    if (current === undefined) {
-      current = { units: [], ...(entry.unit.groupId === undefined ? {} : { groupId: entry.unit.groupId }) };
+    const first = sourceTokens[0]!;
+    const last = sourceTokens.at(-1)!;
+    const startFrame = boundaries.get(first.startBoundaryId);
+    if (startFrame === undefined) {
+      throw new NarrativeCaptionTimingError("CAPTION_PROJECTION",
+        `CaptionDocument ${document.id} -> Unit ${unit.id} -> Token ${first.tokenId} -> Boundary ${first.startBoundaryId} is absent from NarrativeProjection ${projection.id}.`);
     }
-    current.units.push(entry.timing);
+    const endFrameExclusive = boundaries.get(last.endBoundaryId);
+    if (endFrameExclusive === undefined) {
+      throw new NarrativeCaptionTimingError("CAPTION_PROJECTION",
+        `CaptionDocument ${document.id} -> Unit ${unit.id} -> Token ${last.tokenId} -> Boundary ${last.endBoundaryId} is absent from NarrativeProjection ${projection.id}.`);
+    }
+    if (endFrameExclusive <= startFrame) {
+      throw new NarrativeCaptionTimingError("CAPTION_UNIT_WINDOW",
+        `CaptionDocument ${document.id} -> Unit ${unit.id} resolves to invalid absolute boundaries ${startFrame}..${endFrameExclusive} on Timeline ${projection.timelineId}.`);
+    }
+    timed.push({ unitId: unit.id, startFrame, endFrameExclusive });
   }
-  flush();
-  const result: CaptionTiming = { timelineId: projection.timelineId, documentId: document.id, cues };
-  assertCaptionTiming(result);
+  const result: CaptionTiming = { timelineId: projection.timelineId, documentId: document.id, units: timed };
+  assertCaptionTimingForDocument(result, document);
   return result;
 }

@@ -64,7 +64,7 @@ test("Caption Companion projects Cue text and Style from public domain values", 
       value: { visualIr: "qflow.visual-ir@1", id: "captions", presents: [] },
     },
     spans: [{ id: "cue-1", startFrame: 8, endFrameExclusive: 24, stackOrder: 70 }],
-    values: new Map<string, unknown>([["captions.schedule", schedule], ["captions.timing", {timelineId:"speech",documentId:document.id, cues:[{id:"cue-1",startFrame:10,endFrameExclusive:20,units:schedule.cues[0]!.units}]}], ["story.caption", document]]),
+    values: new Map<string, unknown>([["captions.schedule", schedule], ["captions.timing", {timelineId:"speech",documentId:document.id,units:schedule.cues[0]!.units}], ["story.caption", document]]),
     temporalBindings: [],
     temporalDomains: [],
     generic: () => [base],
@@ -104,7 +104,7 @@ test("Caption Uses keep authored windows and child ownership even with no render
   const context = {
     track:{outputRef:"captions.track",trace:{references:[{input:"document",typeRef:captionTypes.document,ref:"document"},{input:"timing",typeRef:captionTypes.timing,ref:"timing"}],outputPorts:[{name:"schedule",ref:"schedule"},{name:"program",ref:"program"}]}},
     placement:{children:uses.map((use,i)=>({range:{start:i*10,end:i*10+8},referenceAttributes:{style:use.styleId},values:[{type:temporalTypes.windowSpec,value:{id:use.window.subjectId}}]}))},
-    values:new Map<string,unknown>([["document",{id:"document",units:[],words:[]}],["timing",{timelineId:"film",documentId:"document",cues:[]}],["schedule",{cues:[]}],["program",{uses}]]),
+    values:new Map<string,unknown>([["document",{id:"document",units:[],words:[]}],["timing",{timelineId:"film",documentId:"document",units:[]}],["schedule",{cues:[]}],["program",{uses}]]),
     spans:[],temporalBindings:[],
   } as unknown as StudioTrackCompanionContext;
   const entities=projectCaption(context);

@@ -120,13 +120,15 @@ export function projectCaptionContents(context: StudioTrackCompanionContext): re
   const schedule = requiredSurfaceValue(context, "schedule") as FineCaptionSchedule;
   const document = requiredReferencedValue(context, "document", captionTypes.document) as CaptionDocument;
   if (document.id !== content.documentId) throw new Error("Caption content belongs to another CaptionDocument.");
-  return content.cues.map((cue, index): StudioEntityDraft => ({
-    id: `${context.track.outputRef}:cue:${cue.id}`, authoredId: cue.id,
+  const cues = new Map<string, FineCaptionSchedule["cues"][number]>();
+  for (const cue of schedule.cues) if (!cues.has(cue.cueId)) cues.set(cue.cueId, cue);
+  return [...cues.values()].map((cue, index): StudioEntityDraft => ({
+    id: `${context.track.outputRef}:cue:${cue.cueId}`, authoredId: cue.cueId,
     display: { title: `#${index + 1}`, layers: [{ kind: "text", role: "content", text: cueText(document, cue.units.map(unit => unit.unitId)) }] },
-    startFrame: cue.startFrame, endFrameExclusive: cue.endFrameExclusive, stackOrder: 0,
-    renderIds: schedule.cues.filter(item => item.cueId === cue.id).map(item => item.id),
+    startFrame: cue.timedStartFrame, endFrameExclusive: cue.timedEndFrameExclusive, stackOrder: 0,
+    renderIds: schedule.cues.filter(item => item.cueId === cue.cueId).map(item => item.id),
     presentation: { entity: "caption-cue", chrome: "standard" },
-    inspector: [{ id: "range", label: "Range", domain: "when", section: { id: "cue", label: "Cue" }, value: `${cue.startFrame}–${cue.endFrameExclusive}`, unit: "f" }],
+    inspector: [{ id: "range", label: "Range", domain: "when", section: { id: "cue", label: "Cue" }, value: `${cue.timedStartFrame}–${cue.timedEndFrameExclusive}`, unit: "f" }],
   }));
 }
 

@@ -50,9 +50,10 @@ One SVS Recipe freezes three public dimensions:
 - **When**: the visible lead/tail envelope, handoff, Cue/Atom motion, reveal, Karaoke and loops.
 
 An upstream adapter supplies absolute Caption unit timing. Fine then produces an explicit visible
-Schedule and renders that Schedule. Lead and tail never change the source timing
-times used by Karaoke. Later Uses mask earlier presentation, including Hidden. The final visibility
-is clipped to the winning Use Window while the original Cue envelope and animations are preserved.
+Schedule: it forms Cues from document order, hard breaks and complete Unit timing, then renders that
+Schedule. Lead and tail never change the source times used by Karaoke. Later Uses mask earlier
+presentation, including Hidden. The final visibility is clipped to the winning Use Window while the
+original Cue envelope and animations are preserved.
 
 The Fine Schedule preserves the CaptionTiming's Timeline and document identities. It contains no
 Narrative identity. The renderer rejects any mismatched Timeline or document. Studio may expose

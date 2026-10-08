@@ -4,14 +4,15 @@ External components import `@qflow/qflow/caption`. Source uses the `@qflow/capti
 identity for shared declarations such as `Hidden`.
 
 Caption has independent content, timing and presentation structures: CaptionDocument organizes
-displayed words into Cues, CaptionTiming locates those units, and timed Uses
-choose how those Cues appear. A Use may begin inside a Cue. It changes presentation without changing
-that Cue's text or restarting its word timing.
+display units and hard content breaks, CaptionTiming locates every unit, and each rendering family
+forms its own Cues before timed Uses choose how those Cues appear. A Use may begin inside a Cue. It
+changes presentation without changing that Cue's text or restarting its word timing.
 
 `CaptionDocument` owns displayed words with authored separators, display units, word attributes and
-Cue breaks. It contains no Narrative identities or time. `CaptionTiming` independently owns complete
-Cues and absolute unit windows on one Timeline. A domain adapter can produce that timing from speech,
-SRT/VTT can publish it directly, and authored absolute timing can use the same renderer.
+hard breaks. It contains no Narrative identities or time. `CaptionTiming` independently owns one
+complete, flat table of absolute unit boundaries on one Timeline. A domain adapter can produce that
+timing from speech, SRT/VTT can publish it directly, and authored absolute timing can use the same
+renderer. Cue grouping, visibility envelopes and handoff belong to the selected rendering family.
 
 A rendering family's Track accepts `document`, `timing`, `timeline`, the spatial inputs its renderer
 actually needs and ordered `Use` children. Fine takes one placement Frame:
@@ -49,7 +50,7 @@ The public helpers and Types are in [index.ts](src/index.ts):
   typed Windows. The Track may export it for its Companion, like Visual and Audio Clips.
 - `captionUseVisibility(program, index, role, envelope)` intersects a Cue envelope with a Use and
   subtracts later matching windows. Hidden participates even though it renders nothing.
-- `CaptionTiming` retains only `timelineId`, `documentId`, Cue identities and absolute unit windows.
+- `CaptionTiming` retains only `timelineId`, `documentId` and complete absolute unit boundaries.
   Narrative-specific binding and projection belong to `@qflow/narrative-caption`.
 
 Derive layout and animation from complete Cue content and original timing. Apply Use coverage as a

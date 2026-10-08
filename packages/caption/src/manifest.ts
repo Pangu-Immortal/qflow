@@ -54,10 +54,7 @@ const timedUnit = object({ unitId: { schema: string }, startFrame: { schema: int
 export const captionTimingSchema: ValueSchema = object({
   timelineId: { schema: string },
   documentId: { schema: string },
-  cues: { schema: { kind: "array", items: object({
-    id: { schema: string }, startFrame: { schema: integer }, endFrameExclusive: { schema: integer },
-    units: { schema: { kind: "array", minItems: 1, items: timedUnit } },
-  }) } },
+  units: { schema: { kind: "array", items: timedUnit } },
 });
 
 export const captionMarkupSurfaces = [{

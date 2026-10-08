@@ -25,10 +25,8 @@ function cueHtml(source: string, width: number, extra: Recipe["properties"]): st
   const program = { id: "p", documentId: document.id, styles: [style], uses: [{ styleId: "plain",
     window: projectProgramWindow({ itemId: "use", semantic: timeline, projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } } }),
   }] };
-  const timed = { timelineId: timeline.id, documentId: document.id, cues: [{ id: "cue", startFrame: 0,
-    endFrameExclusive: document.units.length * 5,
-    units: document.units.map((unit, index) => ({ unitId: unit.id, startFrame: index * 5, endFrameExclusive: index * 5 + 5 })),
-  }] };
+  const timed = { timelineId: timeline.id, documentId: document.id,
+    units: document.units.map((unit, index) => ({ unitId: unit.id, startFrame: index * 5, endFrameExclusive: index * 5 + 5 })) };
   const track = renderFineCaption(scheduleFineCaption(timed, program, document), program, document, timeline,
     { xPx: 0, yPx: 0, widthPx: width, heightPx: 500 });
   const compiled = compileHtmlProgram(sealComposition({ id: "test",

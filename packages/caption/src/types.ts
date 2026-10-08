@@ -65,16 +65,10 @@ export type CaptionTimingUnit = {
   readonly endFrameExclusive: number;
 };
 
-export type CaptionTimingCue = {
-  readonly id: string;
-  readonly startFrame: number;
-  readonly endFrameExclusive: number;
-  readonly units: readonly CaptionTimingUnit[];
-};
-
 export type CaptionTiming = {
-  /** Absolute Timeline on which every unit Window is resolved. */
+  /** Absolute Timeline on which every unit boundary is resolved. */
   readonly timelineId: string;
   readonly documentId: string;
-  readonly cues: readonly CaptionTimingCue[];
+  /** Complete, source-neutral timing for the selected CaptionDocument. */
+  readonly units: readonly CaptionTimingUnit[];
 };

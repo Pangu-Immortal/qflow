@@ -28,7 +28,7 @@ export {
   sealCaptionProgram,
   sealCaptionStyle,
 } from "./style.js";
-export { assertCaptionTiming } from "./temporalize.js";
+export { assertCaptionTiming, assertCaptionTimingForDocument } from "./temporalize.js";
 export type * from "./types.js";
 
 export { captionUseVisibility } from "./visibility.js";

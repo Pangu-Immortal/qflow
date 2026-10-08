@@ -1,4 +1,4 @@
-import { assertCaptionProgramForDocument, assertCaptionTiming, captionUseVisibility } from "@qflow/qflow/caption";
+import { assertCaptionProgramForDocument, assertCaptionTimingForDocument, captionUseVisibility } from "@qflow/qflow/caption";
 import type { CaptionProgram, CaptionTiming } from "@qflow/qflow/caption";
 import type { CaptionDocument } from "@qflow/qflow/caption";
 
@@ -7,6 +7,41 @@ import type { FineCaptionParameters, FineCaptionSchedule, FineCaptionScheduledCu
 
 function assertIntegerFrame(value: number, label: string): void {
   if (!Number.isSafeInteger(value) || value < 0) throw new Error(`${label} must be a non-negative integer Frame`);
+}
+
+type FineCaptionContentCue = {
+  readonly id: string;
+  readonly startFrame: number;
+  readonly endFrameExclusive: number;
+  readonly units: CaptionTiming["units"];
+};
+
+/** Fine owns how complete timed Units become readable Cues. */
+function fineCaptionContentCues(timing: CaptionTiming, document: CaptionDocument): readonly FineCaptionContentCue[] {
+  const timingByUnit = new Map(timing.units.map((unit) => [unit.unitId, unit] as const));
+  const breaks = new Set(document.cueBreaks.map((item) => item.afterUnitId));
+  const cues: FineCaptionContentCue[] = [];
+  let current: CaptionTiming["units"][number][] = [];
+  let groupId: string | undefined;
+  const flush = (): void => {
+    if (current.length === 0) return;
+    cues.push({
+      id: `${document.id}:cue:${cues.length + 1}`,
+      startFrame: Math.min(...current.map((unit) => unit.startFrame)),
+      endFrameExclusive: Math.max(...current.map((unit) => unit.endFrameExclusive)),
+      units: current,
+    });
+    current = [];
+    groupId = undefined;
+  };
+  for (const [index, unit] of document.units.entries()) {
+    const previous = index === 0 ? undefined : document.units[index - 1];
+    if (current.length > 0 && (groupId !== unit.groupId || (previous !== undefined && breaks.has(previous.id)))) flush();
+    if (current.length === 0) groupId = unit.groupId;
+    current.push(timingByUnit.get(unit.id)!);
+  }
+  flush();
+  return cues;
 }
 
 /**
@@ -21,9 +56,8 @@ export function scheduleFineCaption(
   program: CaptionProgram,
   document: CaptionDocument,
 ): FineCaptionSchedule {
-  assertCaptionTiming(timing);
   assertCaptionProgramForDocument(program, document);
-  if (timing.documentId !== document.id) throw new Error("Fine Caption Schedule received another CaptionDocument");
+  assertCaptionTimingForDocument(timing, document);
   const parameters = new Map<string, FineCaptionParameters>();
   const activeStyles = new Set(program.uses.map(use => use.styleId));
   for (const style of program.styles) {
@@ -38,12 +72,13 @@ export function scheduleFineCaption(
   }
 
   const units = new Map(document.units.map(unit => [unit.id, unit]));
+  const contentCues = fineCaptionContentCues(timing, document);
   const cues: FineCaptionScheduledCue[] = [];
   for (const [index, use] of program.uses.entries()) {
     if (use.window.start.timelineId !== timing.timelineId) throw new Error("Caption Use belongs to another Timeline");
     const style = parameters.get(use.styleId);
     if (style === undefined) continue; // Hidden still participates in coverage below.
-    const desired = timing.cues.filter(cue => use.role === undefined || units.get(cue.units[0]!.unitId)?.role === use.role).map((cue): FineCaptionScheduledCue => ({
+    const desired = contentCues.filter(cue => use.role === undefined || units.get(cue.units[0]!.unitId)?.role === use.role).map((cue): FineCaptionScheduledCue => ({
       id: `${use.window.subjectId}:${cue.id}`, cueId: cue.id, styleId: use.styleId,
       timedStartFrame: cue.startFrame, timedEndFrameExclusive: cue.endFrameExclusive,
       visibleStartFrame: Math.max(0, cue.startFrame - style.timing.leadFrames),

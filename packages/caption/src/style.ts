@@ -1,6 +1,6 @@
 import { canonicalStringify, canonicalize } from "@qflow/protocol";
 
-import { assertCaptionDocument } from "./display.js";
+import { assertCaptionDocumentIdentity } from "./identity.js";
 import { assertTemporalWindowFor } from "@qflow/temporal";
 import type { TemporalWindow } from "@qflow/temporal";
 import type { CaptionDocument, CaptionProgram, CaptionStyleIntent } from "./types.js";
@@ -45,7 +45,7 @@ export function assertCaptionProgram(value: CaptionProgram): void {
 }
 export function assertCaptionProgramForDocument(value: CaptionProgram, document: CaptionDocument): void {
   assertCaptionProgram(value);
-  assertCaptionDocument(document);
+  assertCaptionDocumentIdentity(document);
   assert(value.documentId === document.id, "Caption Uses belong to another CaptionDocument");
 }
 export function appendCaptionUse(program: CaptionProgram, window: TemporalWindow, style: CaptionStyleIntent, role?: string): CaptionProgram {
