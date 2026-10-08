@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
-import { register } from "tsx/esm/api";
 import { readFileSync, realpathSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, resolve, sep } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 if (process.argv.length === 3 && ["--version", "-v"].includes(process.argv[2])) {
   const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
@@ -19,21 +18,13 @@ process.emitWarning = function qflowWarning(warning, ...args) {
 };
 
 // Bootstrap and package activation must agree on the physical Distribution root. Windows short
-// paths can survive Node's ordinary resolution while package lookup expands them through libuv.
+// paths can survive Node's ordinary resolution. Enter the TypeScript host only from the physical
+// path so its loader and every later package import share one file identity.
 const distributionRoot = realpathSync.native(resolve(dirname(fileURLToPath(import.meta.url)), ".."));
-register();
-const { installDistributionPackageResolution } =
-  await import("#loader/distribution-resolution");
-installDistributionPackageResolution([distributionRoot]);
 const args = process.argv.slice(2);
-const { runInstalledCliApplication, runNodeCli } = await import("#cli");
-const { createVideoDistribution } = await import("@qflow/video");
-const videoDistribution = createVideoDistribution({
-  packageRoot: distributionRoot,
-  launcher: fileURLToPath(import.meta.url),
-});
-await runNodeCli(args, async (argv, io) => await runInstalledCliApplication(argv, io, {
-  distribution: videoDistribution,
+const distributionUrl = pathToFileURL(distributionRoot + sep);
+const { runQflow } = await import(new URL("bin/run.mjs", distributionUrl).href);
+await runQflow(args, {
   distributionRoot,
-  launcher: fileURLToPath(import.meta.url),
-}));
+  launcher: resolve(distributionRoot, "bin", "qflow.mjs"),
+});
