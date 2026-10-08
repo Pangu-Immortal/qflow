@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { encodeOAuth2Credential } from "@qflow/runtime";
 
@@ -17,6 +18,10 @@ import { whisperXCapabilities, whisperXRequestForEvidenceAudio } from "@qflow/wh
 import { portraitMattingEndpoint, sealPortraitMattingRequest } from "@qflow/volcengine-matting";
 
 import { createQflowHubProvider, diagnoseQflowHubProvider } from "../src/provider.js";
+
+const packageVersion = (JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+) as { readonly version: string }).version;
 
 function need(constraints: CanonicalValue): Need {
   return {
@@ -239,7 +244,7 @@ test("QflowHub returns its current model-pricing document", async () => {
       assert.equal(String(input), "https://qflow.ai/v1/pricing?model=seedance-2");
       assert.equal((init?.headers as Record<string, string>).authorization, "Bearer test-key");
       assert.equal((init?.headers as Record<string, string>)["user-agent"],
-        "qflow-provider-qflowhub/0.1.0");
+        `qflow-provider-qflowhub/${packageVersion}`);
       return Response.json({
         object: "model_pricing",
         model: "seedance-2",
