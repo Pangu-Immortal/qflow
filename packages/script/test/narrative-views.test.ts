@@ -88,7 +88,7 @@ test("Script exports Narrative and CaptionDocument as independent views from one
   assert.match(document.words.map((word) => word.text).join(""), /声工坊/);
   assert.ok(!document.words.some((word) => word.text.includes("indeed")));
   assert.ok(narrative.tokens.some((token) => token.text === "indeed"));
-  assert.equal(document.cueBreaks.length, 1);
+  assert.equal(document.cues.length, 2);
 });
 
 test("Narrative selections query authored speech while Caption preserves display correspondence", () => {

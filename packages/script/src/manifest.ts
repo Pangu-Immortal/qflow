@@ -44,7 +44,7 @@ export const scriptMarkupSurfaces = [
         { name: "segment.<id>.speech", type: textTypes.text,
           summary: "One Segment as pronunciation only, with Role Cue labels dropped." },
         { name: "caption", type: captionDocumentType,
-          summary: "A source-neutral CaptionDocument: display Words, grouping units and Cue breaks." },
+          summary: "A source-neutral CaptionDocument: display Words, correspondence Units and authored Cues." },
         { name: "caption-binding", type: narrativeCaptionBindingType,
           summary: "The explicit relation from Caption units to this Narrative's speech Tokens." },
         { name: "selection.<id>", type: narrativeSelectionType,

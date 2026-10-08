@@ -54,10 +54,10 @@ The Surface exports one full Narrative plus narrow, immutable views:
 
 - `script.segment.<id>` is a narrow `NarrativeSegmentRef` used to align generated or supplied media with one Segment;
 - `script.segment.<id>.dialogue` is ordinary `Text`: display-independent dialogue, including optional
-  Role cues and right-side Dual Text pronunciation, for a speech-video model;
+  Role annotations and right-side Dual Text pronunciation, for a speech-video model;
 - `script.segment.<id>.speech` is ordinary pronunciation-only `Text` for duration estimation or TTS;
 - `script.caption` is one complete `CaptionDocument`: ordered display Words, N:M Alignment Units,
-  and authored Cue Breaks, empty when the Script has no visible Caption words;
+  and authored Cues, empty when the Script has no visible Caption words;
 - `script.selection.<id>` is a reusable explicit Selection;
 - `script.moment.<id>` is a reusable explicit Moment.
 
@@ -77,14 +77,14 @@ CaptionDocument contracts.
 - **Selection marker**: a named semantic range, written `@{name} ... @{/name}`.
 - **Moment marker**: a named semantic point, written `@{name!}`.
 - **CaptionDocument**: a Caption-owned value produced by Script; it contains **Display Words**,
-  **Alignment Units** and **Cue Breaks**. It contains no seconds or frames.
+  **Alignment Units** and authored **Cues**. It contains no seconds or frames.
 - **Token attribute**: a flat postfix display-word annotation such as `really{emphasis}` or
   `really{emphasis,importance=2,tone=warm}`. Values may be strings, finite numbers or booleans. It
   becomes `CaptionDisplayWord.attributes`; it is not a Selection and does not carry timing.
 
 Within Dual Text, an unescaped `@` belongs to the source of spoken text: the right side when supplied,
 or the shared left side in `<display text|>`. Write `\@` if an at-sign must be shown. An empty display side, such as `< | spoken words>`, keeps the speech
-tokens and omits them from Caption. `||` is an authored Caption Cue Break and must occur between
+tokens and omits them from Caption. `||` ends the current authored Caption Cue and must occur between
 complete Alignment Units.
 
 `<组件化|>` is shorthand for `<组件化|组件化>`, using the same exported Caption Alignment Unit.
@@ -117,7 +117,7 @@ Units; it does not split the Segment, cut the picture or end a Selection.
 ```
 
 Dual Text preserves display spelling while supplying an explicit pronunciation. Its N:M Alignment
-Unit is indivisible for Caption timing and authored Cue Breaks. Roles are lexical speaking cues;
+Unit is indivisible for Caption timing and Cue membership. Roles are lexical speaking cues;
 the Source's model references and action direction bind them to the intended performers.
 
 English words and numbers normally form lexical units; Han characters form individual units, as do

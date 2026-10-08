@@ -1,35 +1,14 @@
 import type { CaptionDocument } from "./types.js";
+import { assertCaptionDocumentIdentity } from "./identity.js";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
 export function assertCaptionDocument(value: CaptionDocument): void {
-  assert(value.id.length > 0, "CaptionDocument identity is invalid");
-  assert(value.units.length > 0 && value.words.length > 0, "CaptionDocument is empty");
+  assertCaptionDocumentIdentity(value);
+  assert(value.units.length > 0, "CaptionDocument is empty");
   for (const word of value.words) assert(word.separatorBefore === "" || word.separatorBefore === " ", "Caption word must declare its authored separator");
-  const words = new Map(value.words.map((word) => [word.id, word]));
-  assert(words.size === value.words.length, "CaptionDocument word ids are repeated");
-  const units = new Set<string>();
-  const orderedWordIds: string[] = [];
-  for (const unit of value.units) {
-    assert(unit.id.length > 0 && !units.has(unit.id), "CaptionDocument unit ids are repeated");
-    units.add(unit.id);
-    assert(unit.wordIds.length > 0, `Caption unit ${unit.id} is empty`);
-    for (const wordId of unit.wordIds) {
-      const word = words.get(wordId);
-      assert(word !== undefined && word.unitId === unit.id, `Caption unit ${unit.id} references a foreign word`);
-      orderedWordIds.push(wordId);
-    }
-  }
-  assert(orderedWordIds.join("\0") === value.words.map((word) => word.id).join("\0"),
-    "CaptionDocument words must be partitioned by units in order");
-  const breakIds = new Set<string>();
-  for (const cueBreak of value.cueBreaks) {
-    assert(units.has(cueBreak.afterUnitId) && !breakIds.has(cueBreak.afterUnitId),
-      "CaptionDocument cue break names an unknown or repeated unit");
-    breakIds.add(cueBreak.afterUnitId);
-  }
 }
 
 export type CaptionUnitSubset = {
@@ -39,7 +18,8 @@ export type CaptionUnitSubset = {
 
 export function captionUnitsForRole(document: CaptionDocument, role: string): CaptionUnitSubset {
   assertCaptionDocument(document);
-  const unitIds = document.units.filter((unit) => unit.role === role).map((unit) => unit.id);
+  const selected = new Set(document.cues.filter((cue) => cue.role === role).flatMap((cue) => cue.unitIds));
+  const unitIds = document.units.filter((unit) => selected.has(unit.id)).map((unit) => unit.id);
   if (unitIds.length === 0) throw new Error(`Caption Role ${role} selects no display unit`);
   return { documentId: document.id, unitIds };
 }

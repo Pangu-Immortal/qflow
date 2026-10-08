@@ -1097,6 +1097,7 @@ export function renderFineCaption(
   const styles = new Map(program.styles.map((style) => [style.id, style]));
   const wordText = new Map(document.words.map((word) => [word.id, word]));
   const atomById = new Map(document.units.map((atom) => [atom.id, atom]));
+  const cueById = new Map(document.cues.map((cue) => [cue.id, cue]));
   for (const style of styles.values()) {
     if (style.rendering === null) continue;
     if (style.rendering.family !== FINE_CAPTION_FAMILY) {
@@ -1114,6 +1115,8 @@ export function renderFineCaption(
     return new Map(regions.series.map((series) => [series.id, series]));
   })();
   const presents = schedule.cues.flatMap((cue, order) => {
+    const authoredCue = cueById.get(cue.cueId);
+    if (authoredCue === undefined) throw new Error(`Fine Caption Schedule references unknown authored Cue ${cue.cueId}`);
     const atoms = cue.units.map((timing) => atomById.get(timing.unitId));
     if (atoms.some((atom) => atom === undefined)) throw new Error(`Fine Caption Cue ${cue.id} references unknown Atom`);
     const resolvedAtoms = atoms.map((atom) => atom!);
@@ -1127,10 +1130,8 @@ export function renderFineCaption(
     if (startFrame >= totalFrames || endFrameExclusive <= startFrame) return [];
     const durationFrames = endFrameExclusive - startFrame;
     const trackedPlacement = regionSeriesById === undefined ? undefined : (() => {
-      const role = resolvedAtoms[0]?.role;
-      if (role === undefined || resolvedAtoms.some((atom) => atom.role !== role)) {
-        throw new Error(`Fine Caption Cue ${cue.id} must contain exactly one Script Role to follow regions`);
-      }
+      const role = authoredCue.role;
+      if (role === undefined) throw new Error(`Fine Caption Cue ${cue.id} must have one Script Role to follow regions`);
       const series = regionSeriesById.get(role);
       if (series === undefined) return undefined;
       return {

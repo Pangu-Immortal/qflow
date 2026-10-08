@@ -11,37 +11,25 @@ function assertIntegerFrame(value: number, label: string): void {
 
 type FineCaptionContentCue = {
   readonly id: string;
+  readonly role?: string;
   readonly startFrame: number;
   readonly endFrameExclusive: number;
   readonly units: CaptionTiming["units"];
 };
 
-/** Fine owns how complete timed Units become readable Cues. */
+/** Join authored Cues to their complete absolute Unit timing. */
 function fineCaptionContentCues(timing: CaptionTiming, document: CaptionDocument): readonly FineCaptionContentCue[] {
   const timingByUnit = new Map(timing.units.map((unit) => [unit.unitId, unit] as const));
-  const breaks = new Set(document.cueBreaks.map((item) => item.afterUnitId));
-  const cues: FineCaptionContentCue[] = [];
-  let current: CaptionTiming["units"][number][] = [];
-  let groupId: string | undefined;
-  const flush = (): void => {
-    if (current.length === 0) return;
-    cues.push({
-      id: `${document.id}:cue:${cues.length + 1}`,
-      startFrame: Math.min(...current.map((unit) => unit.startFrame)),
-      endFrameExclusive: Math.max(...current.map((unit) => unit.endFrameExclusive)),
-      units: current,
-    });
-    current = [];
-    groupId = undefined;
-  };
-  for (const [index, unit] of document.units.entries()) {
-    const previous = index === 0 ? undefined : document.units[index - 1];
-    if (current.length > 0 && (groupId !== unit.groupId || (previous !== undefined && breaks.has(previous.id)))) flush();
-    if (current.length === 0) groupId = unit.groupId;
-    current.push(timingByUnit.get(unit.id)!);
-  }
-  flush();
-  return cues;
+  return document.cues.map((cue) => {
+    const units = cue.unitIds.map((unitId) => timingByUnit.get(unitId)!);
+    return {
+      id: cue.id,
+      ...(cue.role === undefined ? {} : { role: cue.role }),
+      startFrame: Math.min(...units.map((unit) => unit.startFrame)),
+      endFrameExclusive: Math.max(...units.map((unit) => unit.endFrameExclusive)),
+      units,
+    };
+  });
 }
 
 /**
@@ -71,14 +59,14 @@ export function scheduleFineCaption(
     parameters.set(style.id, value);
   }
 
-  const units = new Map(document.units.map(unit => [unit.id, unit]));
   const contentCues = fineCaptionContentCues(timing, document);
+  const roleByCue = new Map(contentCues.map((cue) => [cue.id, cue.role] as const));
   const cues: FineCaptionScheduledCue[] = [];
   for (const [index, use] of program.uses.entries()) {
     if (use.window !== undefined && use.window.start.timelineId !== timing.timelineId) throw new Error("Caption Use belongs to another Timeline");
     const style = parameters.get(use.styleId);
     if (style === undefined) continue; // Hidden still participates in coverage below.
-    const desired = contentCues.filter(cue => use.role === undefined || units.get(cue.units[0]!.unitId)?.role === use.role).map((cue): FineCaptionScheduledCue => ({
+    const desired = contentCues.filter(cue => use.role === undefined || cue.role === use.role).map((cue): FineCaptionScheduledCue => ({
       id: `${use.id}:${cue.id}`, cueId: cue.id, styleId: use.styleId,
       timedStartFrame: cue.startFrame, timedEndFrameExclusive: cue.endFrameExclusive,
       visibleStartFrame: Math.max(0, cue.startFrame - style.timing.leadFrames),
@@ -91,7 +79,7 @@ export function scheduleFineCaption(
     const envelopes: FineCaptionScheduledCue[] = [];
     for (const wanted of desired) {
       let cue = wanted;
-      const role = units.get(cue.units[0]!.unitId)?.role;
+      const role = roleByCue.get(cue.cueId);
       const previousIndex = previousByRole.get(role);
       const previous = previousIndex === undefined ? undefined : envelopes[previousIndex];
       if (previous !== undefined && style.timing.handoff === "cut" && previous.timedEndFrameExclusive <= cue.timedStartFrame) {
@@ -103,7 +91,7 @@ export function scheduleFineCaption(
       envelopes.push(cue);
     }
     for (const cue of envelopes) {
-      const role = units.get(cue.units[0]!.unitId)?.role;
+      const role = roleByCue.get(cue.cueId);
       const visibility = captionUseVisibility(program, index, role, { startFrame: cue.visibleStartFrame, endFrameExclusive: cue.visibleEndFrameExclusive });
       if (visibility.length) cues.push({ ...cue, visibility });
     }

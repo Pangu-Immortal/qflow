@@ -3,16 +3,19 @@
 External components import `@qflow/qflow/caption`. Source uses the `@qflow/caption@1` Module
 identity for shared declarations such as `Hidden`.
 
-Caption has independent content, timing and presentation structures: CaptionDocument organizes
-display units and hard content breaks, CaptionTiming locates every unit, and each rendering family
-forms its own Cues before timed Uses choose how those Cues appear. A Use may begin inside a Cue. It
-changes presentation without changing that Cue's text or restarting its word timing.
+Caption has independent content, timing and presentation structures: CaptionDocument owns display
+Words, correspondence Units and authored Cues; CaptionTiming locates every Unit; and each rendering
+family presents those Cues before timed Uses choose how they appear. A Use may begin inside a Cue. It
+changes presentation without changing that Cue's content or restarting its Unit timing.
 
 `CaptionDocument` owns displayed words with authored separators, display units, word attributes and
-hard breaks. It contains no Narrative identities or time. `CaptionTiming` independently owns one
+complete Cue membership. Every Word belongs to exactly one Unit and every Unit belongs to exactly
+one Cue, in document order. A Cue may carry one Role. The document contains no Narrative token or
+Segment identities and no time. `CaptionTiming` independently owns one
 complete, flat table of absolute unit boundaries on one Timeline. A domain adapter can produce that
 timing from speech, SRT/VTT can publish it directly, and authored absolute timing can use the same
-renderer. Cue grouping, visibility envelopes and handoff belong to the selected rendering family.
+renderer. Cue membership belongs to the document; visibility envelopes, handoff, layout and motion
+belong to the selected rendering family.
 
 A rendering family's Track accepts `document`, `timing`, `timeline`, the spatial inputs its renderer
 actually needs and ordered `Use` children. Fine takes one placement Frame:
@@ -54,11 +57,12 @@ The public helpers and Types are in [index.ts](src/index.ts):
 - `CaptionTiming` retains only `timelineId`, `documentId` and complete absolute unit boundaries.
   Narrative-specific binding and projection belong to `@qflow/narrative-caption`.
 
-Derive layout and animation from complete Cue content and original timing. Apply Use coverage as a
+Derive layout and animation from authored Cue content and original timing. Apply Use coverage as a
 visibility mask. Fine keeps the original Present span and element animations, with separate
 `visibility` intervals; changing or briefly hiding a Style does not restart karaoke, typing or motion.
-A family may define lead/tail and handoff behavior, but its resulting visibility stays inside the
-winning Use window. Empty content produces no drawing.
+A family may define lead/tail, handoff, lines, pages and local states, but it does not split or merge
+authored Cues. Its resulting visibility stays inside the winning Use window. Empty content produces
+no drawing.
 
 Word attributes remain on `CaptionDocument.words`. A structural family can interpret an explicit
 attribute as a keyword role while retaining complete display/alignment units. Time selection does

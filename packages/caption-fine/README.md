@@ -49,9 +49,9 @@ One SVS Recipe freezes three public dimensions:
 - **How**: the exact font stack, typography, base/active glyph Paint, Cue box and decoration.
 - **When**: the visible lead/tail envelope, handoff, Cue/Atom motion, reveal, Karaoke and loops.
 
-An upstream adapter supplies absolute Caption unit timing. Fine then produces an explicit visible
-Schedule: it forms Cues from document order, hard breaks and complete Unit timing, then renders that
-Schedule. Lead and tail never change the source times used by Karaoke. Later Uses mask earlier
+An upstream adapter supplies absolute Caption Unit timing. Fine then joins the document's authored
+Cues to that complete timing and produces an explicit visible Schedule. It never splits or merges a
+Cue. Lead and tail never change the source times used by Karaoke. Later Uses mask earlier
 presentation, including Hidden. The final visibility is clipped to the winning Use Window while the
 original Cue envelope and animations are preserved.
 

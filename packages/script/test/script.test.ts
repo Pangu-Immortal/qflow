@@ -80,16 +80,41 @@ test("Script keeps speech, dialogue and CaptionDocument as separate projections"
   assert.equal(document.units.length, 3);
   assert.equal(document.units[1]!.wordIds.length, 1);
   assert.equal(narrativeCaptionBinding(parsed, "story.caption", "story").units[1]!.sourceTokenIds.length, 4);
-  assert.deepEqual(document.cueBreaks, []);
+  assert.equal(document.cues.length, 1);
+  assert.deepEqual(document.cues[0]!.unitIds, document.units.map((unit) => unit.id));
   assert.equal((narrativeValue(parsed, "story") as { anchors: unknown[] }).anchors.length,
     2 * parsed.tokens.length + 2 * parsed.segments.length);
 });
 
-test("Cue breaks are authored between complete units", () => {
+test("Dual Text binds several display Words through one Unit to several Narrative Tokens", () => {
+  const parsed = parseScript("dual-n-m.svml", "<line><test1 test2 | test3 test4 test5></line>");
+  const document = captionDocument(parsed, "story.caption", "story");
+  const binding = narrativeCaptionBinding(parsed, document.id, "story");
+  assert.deepEqual(document.words.map((word) => word.text), ["test1", "test2"]);
+  assert.equal(document.units.length, 1);
+  assert.deepEqual(document.units[0]!.wordIds, document.words.map((word) => word.id));
+  assert.deepEqual(parsed.tokens.map((token) => token.text), ["test3", "test4", "test5"]);
+  assert.deepEqual(binding.units[0]!.sourceTokenIds, parsed.tokens.map((token) => token.id));
+  assert.deepEqual(document.cues[0]!.unitIds, [document.units[0]!.id]);
+});
+
+test("Role turns and Segments author Cue boundaries without leaking Narrative groups into Units", () => {
+  const parsed = parseScript("cue-structure.svml", "<one><A>first <B>second</one><two>third</two>");
+  const document = captionDocument(parsed, "story.caption", "story");
+  assert.deepEqual(document.cues.map((cue) => cue.role), ["A", "B", undefined]);
+  assert.equal(document.cues.length, 3);
+  assert.deepEqual(document.cues.flatMap((cue) => cue.unitIds), document.units.map((unit) => unit.id));
+  assert.equal(document.units.some((unit) => "groupId" in unit || "role" in unit), false);
+});
+
+test("Cues partition complete units at authored breaks", () => {
   const parsed = parseScript("break.svml", "<line>one two || three four</line>");
   const document = captionDocument(parsed, "story.caption", "story");
-  assert.equal(document.cueBreaks.length, 1);
-  assert.equal(document.cueBreaks[0]!.afterUnitId, document.units[1]!.id);
+  assert.equal(document.cues.length, 2);
+  assert.deepEqual(document.cues.map((cue) => cue.unitIds), [
+    document.units.slice(0, 2).map((unit) => unit.id),
+    document.units.slice(2).map((unit) => unit.id),
+  ]);
 });
 
 test("Caption punctuation is display-only and CJK uses lexical character units", () => {
@@ -123,7 +148,7 @@ test("Mixed-script brand names preserve following character units and authored C
   assert.deepEqual(document.words.slice(0, 6).map((word) => word.text), [
     "用", "Qflow", "生", "成", "视", "频，",
   ]);
-  assert.equal(document.cueBreaks[0]?.afterUnitId, document.units[5]?.id);
+  assert.deepEqual(document.cues[0]?.unitIds, document.units.slice(0, 6).map((unit) => unit.id));
 });
 
 test("Script keeps ordinary compounds and formatted numbers lexical", () => {
@@ -143,7 +168,7 @@ test("Script keeps ordinary compounds and formatted numbers lexical", () => {
 test("A single pipe is literal and a double pipe is an authored Cue Break", () => {
   const parsed = parseScript("pipes.svml", "<line>one | two || three \\|\\| four</line>");
   const document = captionDocument(parsed, "story.caption", "story");
-  assert.equal(document.cueBreaks.length, 1);
+  assert.equal(document.cues.length, 2);
   assert.equal(serializeCaption(parsed), "one | two three || four");
   assert.deepEqual(document.words.map((word) => word.text), ["one |", "two", "three ||", "four"]);
 });

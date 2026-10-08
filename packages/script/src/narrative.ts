@@ -1,6 +1,6 @@
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { CanonicalValue } from "@qflow/qflow/protocol";
-import type { CaptionDocument, CaptionDisplayWord, CaptionUnit } from "@qflow/qflow/caption";
+import type { CaptionCue, CaptionDocument, CaptionDisplayWord, CaptionUnit } from "@qflow/qflow/caption";
 import type { NarrativeCaptionBinding } from "@qflow/qflow/narrative-caption";
 import { sealText } from "@qflow/qflow/text";
 
@@ -25,6 +25,7 @@ function projectCaption(
   bindingId = `${documentId}.binding`,
 ): CaptionViews {
   const units: CaptionUnit[] = [];
+  const unitContexts: Array<{ readonly groupId: string; readonly role?: string }> = [];
   const bindings: Array<{ unitId: string; sourceTokenIds: readonly string[] }> = [];
   const words: CaptionDisplayWord[] = [];
   for (const region of parsed.captionProjection.regions) {
@@ -65,10 +66,10 @@ function projectCaption(
       if (sourceTokenIds.length === 0) throw new Error(`Caption Unit ${unitId} has no authored speech correspondence`);
       units.push({
         id: unitId,
-        groupId: `${region.segmentId}:${turn.id}`,
-        ...(turn.role === undefined ? {} : { role: turn.role }),
         wordIds: unitWordIds,
       });
+      unitContexts.push({ groupId: `${region.segmentId}:${turn.id}`,
+        ...(turn.role === undefined ? {} : { role: turn.role }) });
       bindings.push({ unitId, sourceTokenIds });
       sourceCursor = sourceEnd;
     }
@@ -102,13 +103,27 @@ function projectCaption(
   // Keep explicit breaks, but de-duplicate the boundary when `||` was placed
   // immediately before `</segment>`.
   const breaks = new Set(cueBreaks.map((item) => item.afterUnitId));
-  for (let index = 0; index < units.length - 1; index += 1) {
-    if (units[index]!.groupId === units[index + 1]!.groupId) continue;
-    breaks.add(units[index]!.id);
+  const cues: CaptionCue[] = [];
+  let cueUnits: string[] = [];
+  let cueContext: typeof unitContexts[number] | undefined;
+  const flushCue = (): void => {
+    if (cueUnits.length === 0) return;
+    cues.push({ id: `${documentId}:cue:${cues.length + 1}`, unitIds: cueUnits,
+      ...(cueContext?.role === undefined ? {} : { role: cueContext.role }) });
+    cueUnits = [];
+    cueContext = undefined;
+  };
+  for (const [index, unit] of units.entries()) {
+    const context = unitContexts[index]!;
+    const previous = units[index - 1];
+    if (cueUnits.length > 0 && (cueContext?.groupId !== context.groupId
+      || (previous !== undefined && breaks.has(previous.id)))) flushCue();
+    cueContext ??= context;
+    cueUnits.push(unit.id);
   }
+  flushCue();
   return {
-    document: { id: documentId, units, words,
-      cueBreaks: units.filter((unit) => breaks.has(unit.id)).map((unit) => ({ afterUnitId: unit.id })) },
+    document: { id: documentId, units, words, cues },
     binding: { id: bindingId, narrativeId, documentId, units: bindings },
   };
 }

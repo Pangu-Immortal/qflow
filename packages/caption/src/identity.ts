@@ -17,10 +17,11 @@ function unique(values: readonly string[], subject: string): Set<string> {
 /** Validate the source-neutral document identity, including the valid wordless document. */
 export function assertCaptionDocumentIdentity(value: CaptionDocument): void {
   nonempty(value.id, "CaptionDocument id");
-  if ((value.units.length === 0) !== (value.words.length === 0)) {
-    throw new Error("CaptionDocument units and words must be empty together.");
+  if (!([value.words.length, value.units.length, value.cues.length].every((length) => length === 0)
+    || [value.words.length, value.units.length, value.cues.length].every((length) => length > 0))) {
+    throw new Error("CaptionDocument words, units and Cues must be empty together.");
   }
-  const unitIds = unique(value.units.map((item) => item.id), "CaptionDocument unit id");
+  unique(value.units.map((item) => item.id), "CaptionDocument unit id");
   const wordIds = unique(value.words.map((item) => item.id), "CaptionDocument word id");
   const words = new Map(value.words.map((word) => [word.id, word] as const));
   const orderedWords: string[] = [];
@@ -38,8 +39,15 @@ export function assertCaptionDocumentIdentity(value: CaptionDocument): void {
     || orderedWords.some((id, index) => id !== value.words[index]?.id)) {
     throw new Error("CaptionDocument units must partition words in order.");
   }
-  unique(value.cueBreaks.map((item) => item.afterUnitId), "CaptionDocument Cue Break");
-  if (value.cueBreaks.some((item) => !unitIds.has(item.afterUnitId))) {
-    throw new Error("CaptionDocument Cue Break names an unknown unit.");
+  unique(value.cues.map((item) => item.id), "CaptionDocument Cue id");
+  const orderedUnits: string[] = [];
+  for (const cue of value.cues) {
+    if (cue.unitIds.length === 0) throw new Error(`Caption Cue ${cue.id} is empty.`);
+    if (cue.role !== undefined) nonempty(cue.role, `Caption Cue ${cue.id} Role`);
+    orderedUnits.push(...cue.unitIds);
+  }
+  if (orderedUnits.length !== value.units.length
+    || orderedUnits.some((id, index) => id !== value.units[index]?.id)) {
+    throw new Error("CaptionDocument Cues must partition units in order.");
   }
 }

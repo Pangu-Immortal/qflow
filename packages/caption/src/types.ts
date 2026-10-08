@@ -20,21 +20,22 @@ export type CaptionWordAttribute = {
 /** The smallest author-declared N:M display unit. It owns no source-domain identity. */
 export type CaptionUnit = {
   readonly id: string;
-  readonly groupId?: string;
-  readonly role?: string;
   readonly wordIds: readonly string[];
 };
 
-export type CaptionCueBreak = {
-  readonly afterUnitId: string;
+/** One authored reading group made from complete consecutive display units. */
+export type CaptionCue = {
+  readonly id: string;
+  readonly unitIds: readonly string[];
+  readonly role?: string;
 };
 
-/** Complete display truth. It contains neither semantic identities nor measured time. */
+/** Complete display truth. It contains neither source token identities nor measured time. */
 export type CaptionDocument = {
   readonly id: string;
   readonly units: readonly CaptionUnit[];
   readonly words: readonly CaptionDisplayWord[];
-  readonly cueBreaks: readonly CaptionCueBreak[];
+  readonly cues: readonly CaptionCue[];
 };
 
 export type CaptionStyleIntent = {

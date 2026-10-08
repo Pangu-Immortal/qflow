@@ -272,7 +272,7 @@ test("Fine Caption gives a hidden Style no Cue, background or decoration", () =>
 });
 
 test("Fine Caption accepts one complete empty document as an ordinary no-content result", () => {
-  const document = { id: "empty-caption", units: [], words: [], cueBreaks: [] };
+  const document = { id: "empty-caption", units: [], words: [], cues: [] };
   const program: CaptionProgram = { id: "empty", documentId: document.id, styles: [], uses: [] };
   assert.deepEqual(scheduleFineCaption({ timelineId: "test-space", documentId: document.id, units: [] }, program, document), {
     timelineId: "test-space", documentId: document.id, cues: [],

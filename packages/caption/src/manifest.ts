@@ -28,14 +28,18 @@ const captionDisplayWord = object({
   }) } },
 });
 const captionUnit = object({
-  id: { schema: string }, groupId: { schema: string, optional: true }, role: { schema: string, optional: true },
+  id: { schema: string },
   wordIds: { schema: { kind: "array", minItems: 1, items: string } },
+});
+const captionCue = object({
+  id: { schema: string }, unitIds: { schema: { kind: "array", minItems: 1, items: string } },
+  role: { schema: string, optional: true },
 });
 export const captionDocumentSchema: ValueSchema = object({
   id: { schema: string },
   units: { schema: { kind: "array", items: captionUnit } },
   words: { schema: { kind: "array", items: captionDisplayWord } },
-  cueBreaks: { schema: { kind: "array", items: object({ afterUnitId: { schema: string } }) } },
+  cues: { schema: { kind: "array", items: captionCue } },
 });
 export const captionStyleSchema: ValueSchema = object({
   id: { schema: string },

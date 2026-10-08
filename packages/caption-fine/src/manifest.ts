@@ -38,7 +38,7 @@ export const captionFineMarkupSurfaces = [
         summary: "Resolves one SVS Recipe and one exact font stack into a complete fine-grained Caption Style.",
         attributes: [
           { name: "id", kind: "identifier", required: true,
-            summary: "Names this Style so a timed Use can select it." },
+            summary: "Names this Style so a Use can select it." },
           { name: "recipe", kind: "reference", required: true, accepts: [recipeType],
             summary: "Chooses the Recipe that carries Cue geometry, Paint and local motion.",
             recipe: [
@@ -316,7 +316,7 @@ export const captionFineMarkupSurfaces = [
           { name: "regions", kind: "reference", required: false, accepts: [regionEvidenceTypes.evidence],
             summary: "Optionally follows external, frame-exact regions whose ids equal Script Roles, placing a Cue at its measured speaker region's top center and hiding it on null Frames." },
         ],
-        children: [{ tag: "Use", cardinality: "many", summary: "Presents complete Cues inside a time window. Later matching Uses replace earlier ones.", attributes: [
+        children: [{ tag: "Use", cardinality: "many", summary: "Presents matching complete Cues. A Window can narrow its scope; later matching Uses replace earlier ones.", attributes: [
           { name: "id", kind: "identifier", required: false, summary: "Optional occurrence identity." },
           { name: "style", kind: "reference", required: true, accepts: [captionTypes.style], summary: "Complete Caption Style, including Hidden." },
           { name: "role", kind: "literal", required: false, summary: "Optional speaker filter, independent of the time window." },
@@ -333,8 +333,8 @@ export const captionFineMarkupSurfaces = [
   <caption-fine:Use during={answer} style={answer-caption}/>
 </caption-fine:Caption>`,
         notes: [
-          "Use without time attributes covers the whole Timeline. Role filters content without changing the window.",
-          "Script Cue breaks organize text; Use windows change presentation without cutting Cues or restarting word timing. A hidden Use still replaces earlier presentation.",
+          "Use without time attributes applies to every matching Cue in the CaptionDocument. Role filters content without changing a Window.",
+          "Script authors complete Cues; Use windows change presentation without cutting those Cues or restarting Unit timing. A hidden Use still replaces earlier presentation.",
           "Without regions, Recipe x/y placement is unchanged. With regions, a measured region overrides x/y for that Frame; a null Frame in that Role series hides the Cue, while a missing Role series retains authored x/y.",
           "The tracked point replaces Recipe x/y while width and the Recipe anchor still decide the Caption box geometry; anchor-x=center and anchor-y=bottom place the box immediately above the measured region.",
         ],

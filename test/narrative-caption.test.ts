@@ -12,7 +12,7 @@ import { interpretWhisperXTranscript } from "@qflow/whisperx";
 
 import { fixtureResource } from "./fixture-resource.js";
 
-test("Caption uses complete Narrative selections and authored cue breaks", () => {
+test("Caption uses complete Narrative selections and authored Cues", () => {
   const parsed = parseScript("caption.svml", "<line>one @{focus} two three @{/focus} || four</line>");
   const narrative = narrativeValue(parsed, "story") as unknown as Narrative;
   const document = captionDocument(parsed, "story.caption", "story");
@@ -20,7 +20,8 @@ test("Caption uses complete Narrative selections and authored cue breaks", () =>
   const selection = narrative.selections[0]!;
   const subset = captionUnitsForNarrativeSelection(document, binding, narrative, selection);
   assert.equal(subset.unitIds.length, 2);
-  assert.equal(document.cueBreaks.length, 1);
+  assert.equal(document.cues.length, 2);
+  assert.deepEqual(document.cues.map((cue) => cue.unitIds.length), [3, 1]);
 });
 
 test("Caption selects complete Segments and the program through structural anchors", () => {
@@ -36,7 +37,7 @@ test("Caption selects complete Segments and the program through structural ancho
   assert.deepEqual(captionUnitsForNarrativeSelection(document, binding, narrative, whole).unitIds,
     document.units.map((unit) => unit.id));
   assert.deepEqual(captionUnitsForNarrativeSelection(document, binding, narrative, opening).unitIds,
-    document.units.filter((unit) => unit.groupId?.startsWith("intro:")).map((unit) => unit.id));
+    document.cues[0]!.unitIds);
 });
 
 for (const grouped of [false, true]) test(`Chinese Script projects Caption timing through explicit alignments and domain Windows (shared groups: ${grouped})`, () => {
@@ -110,7 +111,7 @@ for (const grouped of [false, true]) test(`Chinese Script projects Caption timin
   assert.deepEqual(windowsFor("2026"), [[4000 + second[2]![0], 4000 + second[5]![1]]]);
   assert.deepEqual(windowsFor("這"), [[4000 + second[7]![0], 4000 + second[7]![1]]]);
   assert.deepEqual(windowsFor("個"), [[4000 + second[8]![0], 4000 + second[8]![1]]]);
-  assert.equal(document.units[0]!.role, "HOST");
+  assert.equal(document.cues[0]!.role, "HOST");
 });
 
 test("Caption timing joins named units, preserves overlaps and never repairs projection evidence", () => {
@@ -124,7 +125,7 @@ test("Caption timing joins named units, preserves overlaps and never repairs pro
       { id: "word-a", unitId: "unit-a", text: "A", separatorBefore: "" as const, attributes: [] },
       { id: "word-b", unitId: "unit-b", text: "B", separatorBefore: " " as const, attributes: [] },
     ],
-    cueBreaks: [],
+    cues: [{ id: "cue", unitIds: ["unit-a", "unit-b"] }],
   };
   const binding = {
     id: "binding", narrativeId: "story", documentId: document.id,
@@ -163,7 +164,7 @@ test("Caption timing joins named units, preserves overlaps and never repairs pro
 
 test("an empty CaptionDocument projects to one complete empty timing table", () => {
   assert.deepEqual(projectNarrativeCaptionTiming(
-    { id: "empty", units: [], words: [], cueBreaks: [] },
+    { id: "empty", units: [], words: [], cues: [] },
     { id: "binding", narrativeId: "story", documentId: "empty", units: [] },
     { id: "projection", narrativeId: "story", timelineId: "film", segments: [], tokens: [], boundaries: [] },
   ), { timelineId: "film", documentId: "empty", units: [] });

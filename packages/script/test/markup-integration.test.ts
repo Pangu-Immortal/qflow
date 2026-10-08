@@ -239,6 +239,6 @@ test("a wordless Script publishes its Segment and an empty CaptionDocument", asy
   assert.ok(result.records.some((record) => record.id === "story.segment.empty"));
   assert.deepEqual(result.records.find((record) => record.id === "story.caption")?.value, {
     kind: "inline",
-    value: { id: "story.caption", units: [], words: [], cueBreaks: [] },
+    value: { id: "story.caption", units: [], words: [], cues: [] },
   });
 });
