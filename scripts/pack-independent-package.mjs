@@ -189,6 +189,23 @@ async function releasedDependencyVersion(owner, name, declared) {
   throw new Error(`${owner} release dependency ${name} is not a workspace package`);
 }
 
+async function releasedDependencyMap(manifest, values) {
+  return Object.fromEntries(await Promise.all(Object.entries(values ?? {}).map(async ([name, version]) => {
+    if (typeof version !== "string") throw new Error(`${manifest.name} dependency ${name} has no version`);
+    return [name, await releasedDependencyVersion(manifest.name, name, version)];
+  })));
+}
+
+/** The dependency map npm consumers receive after workspace ownership is translated to release ranges. */
+export async function releasedPackageDependencyMap(packageDirectory, field) {
+  if (field !== "dependencies" && field !== "peerDependencies") {
+    throw new Error(`Unsupported release dependency field ${field}`);
+  }
+  const packageRoot = resolve(repositoryRoot, packageDirectory);
+  const manifest = JSON.parse(await readFile(resolve(packageRoot, "package.json"), "utf8"));
+  return releasedDependencyMap(manifest, manifest[field]);
+}
+
 export async function packIndependentPackage(packageDirectory, outputDirectory, options = {}) {
   const packageRoot = resolve(repositoryRoot, packageDirectory);
   const output = resolve(repositoryRoot, outputDirectory);
@@ -209,12 +226,8 @@ export async function packIndependentPackage(packageDirectory, outputDirectory, 
     const license = await stat(localLicense).then(() => localLicense).catch(() => resolve(repositoryRoot, "LICENSE"));
     await cp(license, resolve(stage, "LICENSE"));
 
-    const releaseVersions = async (values) => Object.fromEntries(await Promise.all(Object.entries(values ?? {}).map(async ([name, version]) => {
-      if (typeof version !== "string") throw new Error(`${manifest.name} dependency ${name} has no version`);
-      return [name, await releasedDependencyVersion(manifest.name, name, version)];
-    })));
-    const dependencies = await releaseVersions(manifest.dependencies);
-    const peerDependencies = await releaseVersions(manifest.peerDependencies);
+    const dependencies = await releasedDependencyMap(manifest, manifest.dependencies);
+    const peerDependencies = await releasedDependencyMap(manifest, manifest.peerDependencies);
     const published = {
       ...manifest,
       exports: publishedTarget(manifest.exports),

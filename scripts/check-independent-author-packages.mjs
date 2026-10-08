@@ -13,7 +13,7 @@ import { admissionPackagesFromFacets } from "../packages/admission/src/index.ts"
 import { producerPackagesFromFacets } from "../packages/producer/src/index.ts";
 import { studioContributionFromPackage } from "../packages/studio-companion/src/index.ts";
 
-import { packIndependentPackage } from "./pack-independent-package.mjs";
+import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 import { distributionEmbeddedPackageDirectories } from "./distribution-ownership.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -59,13 +59,10 @@ try {
     assert.equal(manifest.private, undefined);
     assert.equal(manifest.exports["."], "./dist/index.js");
     assert.equal(manifest.qflow.activation, "./dist/activation.js");
-    assert.deepEqual(manifest.dependencies, name === "html-video"
-      ? { "@qflow/media-operations": "0.0.0-dev" }
-      : {});
+    assert.deepEqual(manifest.dependencies,
+      await releasedPackageDependencyMap(`packages/${name}`, "dependencies"));
     assert.deepEqual(manifest.peerDependencies,
-      name === "script" || name === "film"
-        ? { "@qflow/qflow": "^0.3.0", "@qflow/studio-companion": "0.0.0-dev" }
-        : { "@qflow/qflow": "^0.3.0" });
+      await releasedPackageDependencyMap(`packages/${name}`, "peerDependencies"));
     await access(join(packageRoot, "dist", "activation.js"));
     await access(join(packageRoot, "README.md"));
     await assert.rejects(access(join(packageRoot, "src", "activation.ts")));
@@ -143,7 +140,7 @@ try {
   assert.equal(filmStudio.films[0]?.id, "@qflow/film#film");
 
   const lock = await readFile(join(consumer, "package-lock.json"), "utf8");
-  for (const name of names) assert.match(lock, new RegExp(`qflow-${name}-0\\.0\\.0-dev\\.tgz`, "u"));
+  for (const tarball of tarballs) assert.ok(lock.includes(tarball.split(/[\\/]/u).at(-1)));
   passed = true;
   console.log(`Independent author package consumers passed: ${tarballs.join(", ")}`);
 } finally {

@@ -12,7 +12,7 @@ import {
 import { compositionTypes } from "../packages/composition/src/index.ts";
 import { studioContributionFromPackage } from "../packages/studio-companion/src/index.ts";
 
-import { packIndependentPackage } from "./pack-independent-package.mjs";
+import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const npmCli = process.env.npm_execpath;
@@ -65,11 +65,10 @@ try {
   assert.equal(installedComment.manifest.exports["."], "./dist/index.js");
   assert.equal(installedComment.manifest.exports["./studio"], "./dist/studio.js");
   assert.equal(installedComment.manifest.qflow.activation, "./dist/activation.js");
-  assert.deepEqual(installedComment.manifest.dependencies, {});
-  assert.deepEqual(installedComment.manifest.peerDependencies, {
-    "@qflow/qflow": "^0.3.0",
-    "@qflow/studio-companion": "0.0.0-dev",
-  });
+  assert.deepEqual(installedComment.manifest.dependencies,
+    await releasedPackageDependencyMap("packages/comment-sticker", "dependencies"));
+  assert.deepEqual(installedComment.manifest.peerDependencies,
+    await releasedPackageDependencyMap("packages/comment-sticker", "peerDependencies"));
   await access(join(installedComment.root, "dist", "studio.js"));
   await access(join(installedComment.root, "preview", "Track.png"));
   await assert.rejects(access(join(installedComment.root, "src", "activation.ts")));
@@ -79,11 +78,10 @@ try {
   assert.equal(installedDepth.manifest.exports["."], "./dist/index.js");
   assert.equal(installedDepth.manifest.exports["./studio"], "./dist/studio.js");
   assert.equal(installedDepth.manifest.qflow.activation, "./dist/activation.js");
-  assert.deepEqual(installedDepth.manifest.dependencies, { "@qflow/visual-track": "0.0.0-dev" });
-  assert.deepEqual(installedDepth.manifest.peerDependencies, {
-    "@qflow/qflow": "^0.3.0",
-    "@qflow/studio-companion": "0.0.0-dev",
-  });
+  assert.deepEqual(installedDepth.manifest.dependencies,
+    await releasedPackageDependencyMap("packages/depth-stack", "dependencies"));
+  assert.deepEqual(installedDepth.manifest.peerDependencies,
+    await releasedPackageDependencyMap("packages/depth-stack", "peerDependencies"));
   await access(join(installedDepth.root, "dist", "studio.js"));
   await access(join(installedDepth.root, "preview", "DepthStack.png"));
   await assert.rejects(access(join(installedDepth.root, "src", "activation.ts")));
@@ -92,8 +90,10 @@ try {
   assert.equal(installedEmoji.manifest.private, undefined);
   assert.equal(installedEmoji.manifest.exports["."], "./dist/index.js");
   assert.equal(installedEmoji.manifest.qflow.activation, "./dist/activation.js");
-  assert.deepEqual(installedEmoji.manifest.dependencies, {});
-  assert.deepEqual(installedEmoji.manifest.peerDependencies, { "@qflow/qflow": "^0.3.0" });
+  assert.deepEqual(installedEmoji.manifest.dependencies,
+    await releasedPackageDependencyMap("packages/interview-emoji-reveal", "dependencies"));
+  assert.deepEqual(installedEmoji.manifest.peerDependencies,
+    await releasedPackageDependencyMap("packages/interview-emoji-reveal", "peerDependencies"));
   await access(join(installedEmoji.root, "preview", "Track.png"));
   await assert.rejects(access(join(installedEmoji.root, "src", "activation.ts")));
 
@@ -146,10 +146,9 @@ try {
   assert.equal(emojiStudio.tracks.length, 0);
 
   const lock = await readFile(join(consumer, "package-lock.json"), "utf8");
-  assert.match(lock, /qflow-comment-sticker-0\.0\.0-dev\.tgz/u);
-  assert.match(lock, /qflow-depth-stack-0\.0\.0-dev\.tgz/u);
-  assert.match(lock, /qflow-visual-track-0\.0\.0-dev\.tgz/u);
-  assert.match(lock, /qflow-interview-emoji-reveal-0\.0\.0-dev\.tgz/u);
+  for (const tarball of [comment, depth, visualTrack, emoji]) {
+    assert.ok(lock.includes(tarball.split(/[\\/]/u).at(-1)));
+  }
   passed = true;
   console.log(`Independent component consumers passed: ${comment}, ${depth}, ${emoji}`);
 } finally {

@@ -11,7 +11,7 @@ import {
   resolveNodePackageSource,
 } from "../packages/loader/src/node/index.ts";
 
-import { packIndependentPackage } from "./pack-independent-package.mjs";
+import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const npmCli = process.env.npm_execpath;
@@ -55,8 +55,10 @@ try {
   assert.equal(installedManifest.private, undefined);
   assert.equal(installedManifest.exports["."], "./dist/index.js");
   assert.equal(installedManifest.qflow.activation, "./dist/activation.js");
-  assert.deepEqual(installedManifest.dependencies, {});
-  assert.deepEqual(installedManifest.peerDependencies, { "@qflow/qflow": "^0.3.0" });
+  assert.deepEqual(installedManifest.dependencies,
+    await releasedPackageDependencyMap("packages/seedance", "dependencies"));
+  assert.deepEqual(installedManifest.peerDependencies,
+    await releasedPackageDependencyMap("packages/seedance", "peerDependencies"));
   const installedSeedanceRoot = join(consumer, "node_modules", "@qflow", "seedance");
   await access(join(installedSeedanceRoot, "dist", "activation.js"));
   await access(join(installedSeedanceRoot, "LICENSE"));
@@ -98,8 +100,8 @@ try {
   assert.equal(source.package, "@qflow/seedance-kits");
   assert.match(await readFile(source.source, "utf8"), /speaker-v1/u);
   const lock = await readFile(join(consumer, "package-lock.json"), "utf8");
-  assert.match(lock, /qflow-seedance-0\.0\.0-dev\.tgz/u);
-  assert.match(lock, /qflow-seedance-kits-0\.0\.0-dev\.tgz/u);
+  assert.ok(lock.includes(seedance.split(/[\\/]/u).at(-1)));
+  assert.ok(lock.includes(kits.split(/[\\/]/u).at(-1)));
   passed = true;
   console.log(`Independent Seedance consumer passed: ${seedance}, ${kits}`);
 } finally {

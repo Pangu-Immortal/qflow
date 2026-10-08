@@ -14,7 +14,7 @@ import { admissionPackagesFromFacets } from "../packages/admission/src/index.ts"
 import { producerPackagesFromFacets } from "../packages/producer/src/index.ts";
 import { studioContributionFromPackage } from "../packages/studio-companion/src/index.ts";
 
-import { packIndependentPackage } from "./pack-independent-package.mjs";
+import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 import { distributionEmbeddedPackageDirectories } from "./distribution-ownership.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -56,11 +56,10 @@ try {
   assert.equal(installedManifest.exports["."], "./dist/index.js");
   assert.equal(installedManifest.exports["./studio"], "./dist/studio.js");
   assert.equal(installedManifest.qflow.activation, "./dist/activation.js");
-  assert.deepEqual(installedManifest.dependencies, {});
-  assert.deepEqual(installedManifest.peerDependencies, {
-    "@qflow/qflow": "^0.3.0",
-    "@qflow/studio-companion": "0.0.0-dev",
-  });
+  assert.deepEqual(installedManifest.dependencies,
+    await releasedPackageDependencyMap("packages/visual-track", "dependencies"));
+  assert.deepEqual(installedManifest.peerDependencies,
+    await releasedPackageDependencyMap("packages/visual-track", "peerDependencies"));
   await access(join(installedRoot, "dist", "activation.js"));
   await access(join(installedRoot, "dist", "studio.js"));
   await access(join(installedRoot, "README.md"));
@@ -98,7 +97,7 @@ try {
   assert.equal(studio.tracks[0]?.output.surface, "track");
 
   const lock = await readFile(join(consumer, "package-lock.json"), "utf8");
-  assert.match(lock, /qflow-visual-track-0\.0\.0-dev\.tgz/u);
+  assert.ok(lock.includes(tarball.split(/[\\/]/u).at(-1)));
   passed = true;
   console.log(`Independent Visual Track consumer passed: ${tarball}`);
 } finally {

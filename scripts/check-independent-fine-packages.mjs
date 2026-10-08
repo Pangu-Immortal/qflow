@@ -14,7 +14,7 @@ import { admissionPackagesFromFacets } from "../packages/admission/src/index.ts"
 import { producerPackagesFromFacets } from "../packages/producer/src/index.ts";
 import { studioContributionFromPackage } from "../packages/studio-companion/src/index.ts";
 
-import { packIndependentPackage } from "./pack-independent-package.mjs";
+import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 import { distributionEmbeddedPackageDirectories } from "./distribution-ownership.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -66,11 +66,11 @@ try {
     assert.equal(item.manifest.exports["."], "./dist/index.js");
     assert.equal(item.manifest.exports["./studio"], "./dist/studio.js");
     assert.equal(item.manifest.qflow.activation, "./dist/activation.js");
-    assert.deepEqual(item.manifest.dependencies, {});
-    assert.deepEqual(item.manifest.peerDependencies, {
-      "@qflow/qflow": "^0.3.0",
-      "@qflow/studio-companion": "0.0.0-dev",
-    });
+    const name = item.manifest.name.slice("@qflow/".length);
+    assert.deepEqual(item.manifest.dependencies,
+      await releasedPackageDependencyMap(`packages/${name}`, "dependencies"));
+    assert.deepEqual(item.manifest.peerDependencies,
+      await releasedPackageDependencyMap(`packages/${name}`, "peerDependencies"));
     await access(join(item.root, "dist", "activation.js"));
     await access(join(item.root, "dist", "studio.js"));
     await access(join(item.root, "README.md"));
@@ -140,8 +140,8 @@ try {
   ).tracks.length, 1);
 
   const lock = await readFile(join(consumer, "package-lock.json"), "utf8");
-  assert.match(lock, /qflow-caption-fine-0\.0\.0-dev\.tgz/u);
-  assert.match(lock, /qflow-text-fine-0\.0\.0-dev\.tgz/u);
+  assert.ok(lock.includes(caption.split(/[\\/]/u).at(-1)));
+  assert.ok(lock.includes(text.split(/[\\/]/u).at(-1)));
   passed = true;
   console.log(`Independent Fine consumers passed: ${caption}, ${text}`);
 } finally {

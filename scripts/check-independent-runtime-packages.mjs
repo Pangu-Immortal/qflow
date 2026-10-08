@@ -10,7 +10,7 @@ import {
   loadNodePackageSelection,
 } from "../packages/loader/src/node/index.ts";
 
-import { packIndependentPackage } from "./pack-independent-package.mjs";
+import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const npmCli = process.env.npm_execpath;
@@ -113,7 +113,10 @@ try {
     assert.equal(manifest.private, undefined, `${name} must be publishable`);
     assert.equal(manifest.exports["."], "./dist/index.js");
     assert.equal(manifest.qflow.activation, "./dist/activation.js");
-    assert.equal(manifest.peerDependencies["@qflow/qflow"], "^0.3.0");
+    assert.deepEqual(manifest.dependencies ?? {},
+      await releasedPackageDependencyMap(`packages/${directory}`, "dependencies"));
+    assert.deepEqual(manifest.peerDependencies ?? {},
+      await releasedPackageDependencyMap(`packages/${directory}`, "peerDependencies"));
     for (const version of Object.values({
       ...(manifest.dependencies ?? {}),
       ...(manifest.peerDependencies ?? {}),
@@ -149,9 +152,7 @@ try {
   }
 
   const lock = await readFile(join(consumer, "package-lock.json"), "utf8");
-  for (const directory of packageDirectories) {
-    assert.match(lock, new RegExp(`qflow-${directory}-0\\.0\\.0-dev\\.tgz`, "u"));
-  }
+  for (const tarball of tarballs) assert.ok(lock.includes(tarball.split(/[\\/]/u).at(-1)));
   passed = true;
   console.log(`Independent Runtime packages passed: ${packageNames.join(", ")}`);
 } finally {

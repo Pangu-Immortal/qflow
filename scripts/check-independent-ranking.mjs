@@ -12,7 +12,7 @@ import {
 import { compositionTypes } from "../packages/composition/src/index.ts";
 import { studioContributionFromPackage } from "../packages/studio-companion/src/index.ts";
 
-import { packIndependentPackage } from "./pack-independent-package.mjs";
+import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const npmCli = process.env.npm_execpath;
@@ -53,11 +53,10 @@ try {
   assert.equal(installedManifest.exports["."], "./dist/index.js");
   assert.equal(installedManifest.exports["./studio"], "./dist/studio.js");
   assert.equal(installedManifest.qflow.activation, "./dist/activation.js");
-  assert.deepEqual(installedManifest.dependencies, {});
-  assert.deepEqual(installedManifest.peerDependencies, {
-    "@qflow/qflow": "^0.3.0",
-    "@qflow/studio-companion": "0.0.0-dev",
-  });
+  assert.deepEqual(installedManifest.dependencies,
+    await releasedPackageDependencyMap("packages/ranking", "dependencies"));
+  assert.deepEqual(installedManifest.peerDependencies,
+    await releasedPackageDependencyMap("packages/ranking", "peerDependencies"));
   await access(join(installedRoot, "dist", "activation.js"));
   await access(join(installedRoot, "dist", "studio.js"));
   await access(join(installedRoot, "preview", "Column.svg"));
@@ -97,7 +96,7 @@ try {
   }
 
   const lock = await readFile(join(consumer, "package-lock.json"), "utf8");
-  assert.match(lock, /qflow-ranking-0\.0\.0-dev\.tgz/u);
+  assert.ok(lock.includes(ranking.split(/[\\/]/u).at(-1)));
   passed = true;
   console.log(`Independent Ranking consumer passed: ${ranking}`);
 } finally {
