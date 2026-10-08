@@ -33,7 +33,7 @@ import type { NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative
 import { narrativeManifest } from "@qflow/narrative";
 import { compileAudioProgramPlan } from "@qflow/media-operations";
 import type { ModuleManifest } from "@qflow/protocol";
-import { temporalProducers } from "@qflow/temporal";
+import { temporalDependency, temporalTypes } from "@qflow/temporal";
 import type { TemporalDuration } from "@qflow/temporal";
 import { speechEvidenceManifest } from "@qflow/speech-evidence";
 import { narrativeTemporalManifest } from "@qflow/narrative-temporal";
@@ -312,13 +312,13 @@ test("the self-described Audio Surface parses into the same finite Producer grap
   const fixtureSurfaceDigest = fixtureResource("example.audio-inputs/surface@1");
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
-    outputs: [mediaTypes.synchronized, timelineTypes.timeline],
+    outputs: [mediaTypes.synchronized, timelineTypes.timeline, temporalTypes.window],
   } as const;
   const fixtureManifest: ModuleManifest = {
     format: "qflow.module@1",
     name: fixtureModule.name,
     version: fixtureModule.version,
-    dependencies: [mediaDependency, timelineDependency],
+    dependencies: [mediaDependency, timelineDependency, temporalDependency],
     types: [],
     capabilities: [],
     producers: [],
@@ -342,6 +342,8 @@ test("the self-described Audio Surface parses into the same finite Producer grap
     records: [
       { id: "source", type: mediaTypes.synchronized, value: { kind: "inline", value: media("surface", 48_000) }, range: element.range },
       { id: "semantic", type: timelineTypes.timeline, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "whole", type: temporalTypes.window, value: { kind: "inline", value: projectProgramWindow({ itemId: "whole",
+        semantic, projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } } }) }, range: element.range },
     ],
     components: [],
     fragments: [],
@@ -368,7 +370,7 @@ test("the self-described Audio Surface parses into the same finite Producer grap
         <import as="audio" from="@qflow/audio-track@1"/>
         <fixture:Inputs/>
         <audio:Track id="sound" timeline={semantic}>
-          <audio:Clip source={source} during="timeline" gain="0.5" fade-in="2f" fade-out="3f">
+          <audio:Clip source={source} during={whole} gain="0.5" fade-in="2f" fade-out="3f">
             <audio:Map target-at="end" source-at="end" rate="1" wrap-from="start" wrap-until="end"/>
           </audio:Clip>
         </audio:Track>
@@ -388,9 +390,6 @@ test("the self-described Audio Surface parses into the same finite Producer grap
     audioTrackProducers.createSet.name,
     audioTrackProducers.appendClip.name,
     audioTrackProducers.finalize.name,
-    temporalProducers.projectProgramInstant.name,
-    temporalProducers.projectProgramInstant.name,
-    temporalProducers.composeWindow.name,
         audioTrackProducers.render.name,
   ].sort());
 });

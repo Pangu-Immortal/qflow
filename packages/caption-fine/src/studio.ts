@@ -1,4 +1,3 @@
-import { temporalTypes } from "@qflow/qflow/temporal";
 import type { CaptionDocument, CaptionProgram, CaptionTiming } from "@qflow/qflow/caption";
 import { captionTypes } from "@qflow/qflow/caption";
 import { compositionTypes } from "@qflow/qflow/composition";
@@ -134,21 +133,20 @@ export function projectCaptionContents(context: StudioTrackCompanionContext): re
 
 export function projectCaption(context: StudioTrackCompanionContext): readonly StudioEntityDraft[] {
   const program = requiredSurfaceValue(context, "program") as CaptionProgram;
-  const uses: StudioEntityDraft[] = program.uses.map((use, index) => {
-    const authoredId = use.window.subjectId;
-    const child = authoredChildFor(context, authoredId, [temporalTypes.windowSpec]);
-    if (child === undefined) throw new Error(`Caption Use ${authoredId} has no author provenance.`);
-    const temporal = temporalLineageFor(context, authoredId, "window");
+  const uses: StudioEntityDraft[] = program.uses.flatMap((use, index) => {
+    if (use.window === undefined) return [];
+    const child = authoredChildFor(context, use.id, []);
+    const temporal = temporalLineageFor(context, use.window.subjectId, "window");
     const semantic = temporalDomainSource(temporal);
-    return {
-      id: `${context.track.outputRef}:use:${authoredId}`, authoredId,
+    return [{
+      id: `${context.track.outputRef}:use:${use.id}`, authoredId: use.id,
       display: { title: use.styleId, layers: [] },
-      ...use.window.span, stackOrder: index, elementRange: child.range,
+      ...use.window.span, stackOrder: index, ...(child === undefined ? {} : { elementRange: child.range }),
       ...(temporal === undefined ? {} : { temporal }),
       ...(semantic === undefined ? {} : { markerId: semantic.id }),
       presentation: { entity: "caption-use", chrome: "standard" }, band: "uses",
       inspector: [{ id: "range", label: "Range", domain: "when", section: { id: "placement", label: "Placement" }, value: `${use.window.span.startFrame}–${use.window.span.endFrameExclusive}`, unit: "f" }],
-    };
+    }];
   });
   return [...projectCaptionContents(context), ...uses];
 }

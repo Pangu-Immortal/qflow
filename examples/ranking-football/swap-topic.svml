@@ -274,7 +274,7 @@
     <visual:Clip id="sam-semantic-source" media={sam-media.media} during={speech.sam-semantic} frame={speech-frame} z="0" fit="cover"/>
   </visual:Track>
   <audio-track:Track id="music-bed" timeline={speech.timeline}>
-    <audio-track:Clip source={soundtrack-media.media} during="timeline"
+    <audio-track:Clip source={soundtrack-media.media} during={speech.window}
       gain="0.12" fade-in="300ms" fade-out="600ms"/>
   </audio-track:Track>
 
@@ -284,7 +284,7 @@
     font={tier-font}/>
   <ranking:TierBoard id="tech-tiers" timeline={speech.timeline}
     within={vertical.bounds} frame={tier-frame}
-    during="timeline" style={tier-style}
+    during={speech.window} style={tier-style}
     appear-sound={ranking-appear-media.media}
     move-sound={ranking-move-media.media}>
     <ranking:TierItem id="jensen" tier="s" preset="true" icon={jensen-icon.image}/>

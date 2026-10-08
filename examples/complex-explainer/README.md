@@ -68,7 +68,7 @@ explains joining exported parts. The archive also includes `productions/explaine
 | What is said, and which words motivate a change? | [Script](productions/explainer/authors/script.svml) |
 | Which raw resources, clock and canvas are used? | [Assets](productions/explainer/authors/assets.svml) |
 | What directed the accepted performance? | [Direction](productions/explainer/authors/direction.svml), [performance Recipe](productions/explainer/recipes/performance.svs) |
-| How are Takes, Uses, events and contributions assembled? | [Main Source](productions/explainer/authors/main.svml) |
+| How are media occurrences, Uses, events and contributions assembled? | [Main Source](productions/explainer/authors/main.svml) |
 | How does the Caption look? | [Composition Recipe](productions/explainer/recipes/composition.svs) |
 | How does each coordinated scene behave? | [Web scenes](packages/web-scenes/README.md) |
 | How do the presenter and opening graphics move? | [Opening system](packages/opening-system/README.md) |
@@ -78,7 +78,7 @@ explains joining exported parts. The archive also includes `productions/explaine
 
 Generated and normalized Outputs remain in the entry Source where the Run can satisfy them explicitly.
 Changing a cue break or graphic event does not require replacing the performance. A rewrite of the
-spoken words is different: supply a new Take with timing for that Script and select it in the Run.
+spoken words is different: supply new performance media with timing for that Script and select it in the Run.
 The retained generation declarations show the original direction but are not invoked by the default
 Run. Configure an explicitly chosen Model/Provider path before requesting new material.
 

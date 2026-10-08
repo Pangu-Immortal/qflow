@@ -5,12 +5,12 @@ import type { CaptionProgram } from "./types.js";
 export function captionUseVisibility(program: CaptionProgram, index: number, role: string | undefined, envelope: FrameSpan): FrameSpan[] {
   const use = program.uses[index]!;
   if (use.role !== undefined && use.role !== role) return [];
-  const startFrame = Math.max(envelope.startFrame, use.window.span.startFrame);
-  const endFrameExclusive = Math.min(envelope.endFrameExclusive, use.window.span.endFrameExclusive);
+  const startFrame = Math.max(envelope.startFrame, use.window?.span.startFrame ?? envelope.startFrame);
+  const endFrameExclusive = Math.min(envelope.endFrameExclusive, use.window?.span.endFrameExclusive ?? envelope.endFrameExclusive);
   let visible = endFrameExclusive > startFrame ? [{ startFrame, endFrameExclusive }] : [];
   for (const later of program.uses.slice(index + 1)) {
     if (later.role !== undefined && later.role !== role) continue;
-    const cut = later.window.span;
+    const cut = later.window?.span ?? envelope;
     visible = visible.flatMap(span => {
       if (cut.startFrame >= span.endFrameExclusive || cut.endFrameExclusive <= span.startFrame) return [span];
       return [

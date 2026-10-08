@@ -21,19 +21,20 @@ actually needs and ordered `Use` children. Fine takes one placement Frame:
 <caption:Hidden id="hidden"/>
 <narrative-caption:Timing id="story-captions" document={story.caption}
   binding={story.caption-binding} projection={story-time.projection}/>
+<time:Window id="impact-window" timeline={film.timeline} from="12s" for="2s"/>
 <caption-fine:Caption id="captions" document={story.caption} timing={story-captions}
   timeline={film.timeline} within={vertical.bounds}>
   <caption-fine:Use style={plain}/>
   <caption-fine:Use role="GUEST" style={guest}/>
   <caption-fine:Use during={demo-window} style={hidden}/>
-  <caption-fine:Use from="12s" for="2s" style={impact}/>
+  <caption-fine:Use during={impact-window} style={impact}/>
 </caption-fine:Caption>
 ```
 
-Time attributes come from `@qflow/temporal/markup`: `during`, or exactly two of `from`, `until`, and
-`for`, including resolved temporal references and explicit frame/second expressions. Omitted time
-attributes mean the whole Timeline. Domain adapters must resolve semantic or other domain references
-to ordinary absolute Windows/Instants before a Caption family consumes them. `role` filters content independently of time. Later matching
+Each bounded Use consumes one resolved Window through `during`. Omitted time means the Use applies
+to the complete Caption document; it is the deliberate batch-caption form, not an anonymous Timeline
+Window. Domain adapters must resolve semantic or other domain references to ordinary absolute values
+before a Caption family consumes them. `role` filters content independently of time. Later matching
 Uses replace earlier presentation inside their windows, including a Hidden Style. Separate Tracks
 remain independent and can intentionally display simultaneous captions.
 

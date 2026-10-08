@@ -10,7 +10,7 @@ import { spatialTypes } from "@qflow/qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 import type { Recipe } from "@qflow/qflow/recipe";
 import { temporalTypes } from "@qflow/qflow/temporal";
-import { createTemporalWindowConstruction, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalWindowReference, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
 
 import {
   decodeMediaFit,
@@ -593,8 +593,6 @@ export const decodeVisualTrackSurface: StructuredSurfaceHandler = ({ element, re
   state.addRecord("header", headerId, visualTrackTypes.header,
     sealVisualTrackHeader({ id: trackId }), element.range);
   const clips: FragmentClip[] = [];
-  const temporalComponents: SurfaceComponentDraft[] = [];
-  const temporalFragments: ReturnType<typeof createTemporalWindowConstruction>["fragments"][number][] = [];
   let clipIndex = 0;
   for (const child of element.children) {
     if (child.kind === "text") {
@@ -629,8 +627,7 @@ export const decodeVisualTrackSurface: StructuredSurfaceHandler = ({ element, re
           state.addReference(motionName, reference(child.attributes.motion, `${child.name}.motion`, visualTrackTypes.motion, resolveReference));
         }
       }
-      const temporal = createTemporalWindowConstruction({ id, element: child, ...context, resolveReference });
-      state.records.push(...temporal.records); temporalComponents.push(...temporal.components); temporalFragments.push(...temporal.fragments);
+      const window = resolveTemporalWindowReference({ element: child, resolveReference });
       const directSource = declaredVisualSource(child, resolveReference, true)!;
       const sourceTime = sourceTimeFrom(child, resolveReference);
       const mapping = child.attributes.mapping === undefined ? undefined
@@ -644,7 +641,7 @@ export const decodeVisualTrackSurface: StructuredSurfaceHandler = ({ element, re
         allowFramePaint: true }, resolveReference);
       const specName = `clip-${clipSuffix}-spec`;
       const windowName = `clip-${clipSuffix}-window`;
-      state.addValue(windowName, temporal.ref, temporalTypes.window);
+      state.addValue(windowName, window.ref, temporalTypes.window);
       state.addRecord(specName, `${trackId}.clip.${clipSuffix}.spec`, visualTrackTypes.clipSpec,
         decodeVisualClipSpec(treatment, { id, z: integerValue(child, "z") }), child.range);
       const frameName = `clip-${clipSuffix}-frame`;
@@ -662,14 +659,14 @@ export const decodeVisualTrackSurface: StructuredSurfaceHandler = ({ element, re
   const fragment = createVisualTrackSurfaceFragment(state.inputTypes, clips);
   return {
     records: state.records,
-    components: [...temporalComponents, {
+    components: [{
       id: trackId,
       fragment: fragment.id,
       inputs: state.inputs,
       outputs: { visual: `${trackId}.visual`, program: `${trackId}.program` },
       range: element.range,
     }],
-    fragments: [...temporalFragments, fragment],
+    fragments: [fragment],
     exports: [
       `${trackId}.program`,
       `${trackId}.visual`,

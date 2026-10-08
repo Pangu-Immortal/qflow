@@ -290,9 +290,9 @@ test("Fine Caption Cues stay isolated over Picture during reverse seeks and inde
     span: { startFrame, endFrameExclusive },
   });
   const program = { id: "captions", documentId: document.id, styles, uses: [
-    { styleId: "red", window: useWindow("red-use", 0, 30) },
-    { styleId: "green", window: useWindow("green-use", 30, 60) },
-    { styleId: "blue", window: useWindow("blue-use", 60, 90) },
+    { id: "red-use", styleId: "red", window: useWindow("red-use", 0, 30) },
+    { id: "green-use", styleId: "green", window: useWindow("green-use", 30, 60) },
+    { id: "blue-use", styleId: "blue", window: useWindow("blue-use", 60, 90) },
   ] };
   const timing = { timelineId: timeline.id, documentId: document.id, units: document.units.map((unit, index) => ({
     unitId: unit.id, startFrame: index * 30, endFrameExclusive: index * 30 + 30,

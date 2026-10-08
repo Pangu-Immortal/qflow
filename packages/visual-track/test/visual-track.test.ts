@@ -667,13 +667,14 @@ test("the Visual author Surface emits explicit graph edges for layers, absolute 
     ["surface", plain("surface", mediaTypes.compositableSurface)],
     ["selection", plain("selection", temporalTypes.window)],
     ["answer-segment", plain("answer-segment", temporalTypes.window)],
+    ["inset-window", plain("inset-window", temporalTypes.window)],
     ["still-style", appearance("still-style", {})],
     ["card-style", appearance("card-style", { clip: "frame", "frame-paint": "#111111" })],
     ["surface-style", appearance("surface-style", {})],
     ["motion", plain("motion", visualTrackTypes.motion)],
   ]);
   const root = node("visual:Track", { id: "editorial", timeline: ref("semantic") }, [
-    node("visual:Clip", { id: "still-card", image: ref("still"), extent: ref("extent"), frame: ref("frame"), clip: ref("clip-path"), treatment: ref("still-style"), z: "20", fit: "contain", during: "timeline" }),
+    node("visual:Clip", { id: "still-card", image: ref("still"), extent: ref("extent"), frame: ref("frame"), clip: ref("clip-path"), treatment: ref("still-style"), z: "20", fit: "contain", during: ref("selection") }),
     node("visual:Clip", { id: "segment-card", image: ref("still"), extent: ref("extent"), frame: ref("frame"), mapping: ref("mapping"), treatment: ref("still-style"), z: "21", during: ref("answer-segment") }),
     node("visual:Clip", { id: "proof", media: ref("video"), frame: ref("frame"), treatment: ref("card-style"), motion: ref("motion"), z: "30", fit: "cover", during: ref("selection") }, [
       node("visual:Map", { rate: "1", "wrap-from": "start", "wrap-until": "end" }),
@@ -686,8 +687,8 @@ test("the Visual author Surface emits explicit graph edges for layers, absolute 
       node("visual:Pose", { at: "start", opacity: "0" }),
       node("visual:Pose", { at: "end", opacity: "1" }),
     ]),
-    node("visual:Clip", { image: ref("still"), extent: ref("extent"), id: "inset", frame: ref("frame"), treatment: ref("still-style"), z: "32", from: "12f", for: "2s" }),
-    node("visual:Clip", { surface: ref("surface"), id: "alpha-overlay", frame: ref("frame"), treatment: ref("surface-style"), z: "35", fit: "cover", during: "timeline" }, [
+    node("visual:Clip", { image: ref("still"), extent: ref("extent"), id: "inset", frame: ref("frame"), treatment: ref("still-style"), z: "32", during: ref("inset-window") }),
+    node("visual:Clip", { surface: ref("surface"), id: "alpha-overlay", frame: ref("frame"), treatment: ref("surface-style"), z: "35", fit: "cover", during: ref("selection") }, [
       node("visual:Map", { rate: "1", "wrap-from": "start", "wrap-until": "end" }),
     ]),
   ]);

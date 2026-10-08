@@ -1,7 +1,7 @@
 # Football ranking
 
 [reference.svml](reference.svml) generates a goth football commentator and all eight comedy B-roll
-images, then makes two independent speaking Takes from the same presenter image and designed voice.
+images, then makes two independent speaking clips from the same presenter image and designed voice.
 A tier board preserves its state while the argument, Caption and overlapping image inserts unfold.
 [reference.svrun](reference.svrun) targets `final.video` without earlier Results or replacement files.
 
@@ -9,7 +9,7 @@ A tier board preserves its state while the argument, Caption and overlapping ima
 
 - `presenter.image`: the striking goth host, seated to the right in a sky-blue football classroom.
 - Eight `broll-*.image` outputs: independent text-to-image jokes for the annotated Script passages.
-- `presenter-voice.reference`: one Fish Audio Voice Design request reused by both Takes.
+- `presenter-voice.reference`: one Fish Audio Voice Design request reused by both clips.
 - `ronaldo-take.video` and `messi-take.video`: Seedance Mini performances with audio, followed by
   normalization and WhisperX alignment. Both use the same presenter image; there is no tail-frame chain.
 - Eleven supplied player photographs identify the board entries. Nine are presets and two enter

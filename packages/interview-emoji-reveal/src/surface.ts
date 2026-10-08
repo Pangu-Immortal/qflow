@@ -5,7 +5,7 @@ import { sameType, type CanonicalValue, type TypeRef } from "@qflow/qflow/protoc
 import { spatialTypes } from "@qflow/qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 import type { Recipe } from "@qflow/qflow/recipe";
-import { createTemporalInstantConstruction, createTemporalWindowConstruction, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalInstantReference, resolveTemporalWindowReference, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
 
 import { createEmojiRevealFragment } from "./fragment.js";
 import { emojiRevealTypes } from "./manifest.js";
@@ -50,14 +50,12 @@ export const decodeEmojiRevealTrackSurface: StructuredSurfaceHandler = ({ elemen
   const within = reference(element.attributes.within, `${element.name}.within`, spatialTypes.frame, resolveReference);
   const style = reference(element.attributes.style, `${element.name}.style`, emojiRevealTypes.style, resolveReference);
   const placeholder = reference(element.attributes.placeholder, `${element.name}.placeholder`, blobTypes.blob, resolveReference);
-  const outer = createTemporalWindowConstruction({ id, subjectId: id, element, ...context, resolveReference });
+  const outer = resolveTemporalWindowReference({ element, resolveReference });
   const headerId = `${id}.header`;
-  const records: SurfaceRecordDraft[] = [...outer.records, {
+  const records: SurfaceRecordDraft[] = [{
     id: headerId, type: emojiRevealTypes.header,
     value: { kind: "inline", value: sealEmojiRevealHeader({ id }) as unknown as CanonicalValue }, range: element.range,
   }];
-  const temporalComponents: SurfaceComponentDraft[] = [...outer.components];
-  const temporalFragments = [...outer.fragments];
   const items: { specName: string; iconName: string; activationName?: string }[] = [];
   const inputs: Record<string, typeof context.timeline.ref> = {
     header: { kind: "record", id: headerId }, timeline: context.timeline.ref, within: within.ref, style: style.ref,
@@ -85,11 +83,7 @@ export const decodeEmojiRevealTrackSurface: StructuredSurfaceHandler = ({ elemen
     inputs[specName] = { kind: "record", id: specId }; inputs[iconName] = icon.ref;
     if (preset) items.push({ specName, iconName });
     else {
-      const activation = createTemporalInstantConstruction({
-        id: `${id}.item.${suffix}.activation`, subjectId: itemId,
-        element: child, ...context, resolveReference, attribute: "at",
-      });
-      records.push(...activation.records); temporalComponents.push(...activation.components); temporalFragments.push(...activation.fragments);
+      const activation = resolveTemporalInstantReference({ element: child, resolveReference });
       const activationName = `item-${suffix}-activation`;
       inputs[activationName] = activation.ref;
       items.push({ specName, iconName, activationName });
@@ -99,7 +93,7 @@ export const decodeEmojiRevealTrackSurface: StructuredSurfaceHandler = ({ elemen
   const fragment = createEmojiRevealFragment(items);
   return {
     records,
-    components: [...temporalComponents, { id, fragment: fragment.id, inputs, outputs: { program: `${id}.program`, visual: `${id}.visual` }, range: element.range }],
-    fragments: [...temporalFragments, fragment], exports: [`${id}.program`, `${id}.visual`],
+    components: [{ id, fragment: fragment.id, inputs, outputs: { program: `${id}.program`, visual: `${id}.visual` }, range: element.range }],
+    fragments: [fragment], exports: [`${id}.program`, `${id}.visual`],
   };
 };

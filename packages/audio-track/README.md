@@ -12,21 +12,23 @@ destination Window. The Track publishes `.program` for declared tooling and `.au
 peer contribution to Film.
 
 ```svml
+<time:Window id="reveal-hit-window" timeline={program.timeline}
+  from={story-time.reveal} for="600ms"/>
+
 <audio:Track id="mix" timeline={program.timeline}>
   <audio:Clip id="voice" source={speaker-media.media} during={program.speaker}/>
-  <audio:Clip id="music" source={music-media.media} during="timeline"
+  <audio:Clip id="music" source={music-media.media} during={program.window}
     gain="0.18" fade-in="12f" fade-out="18f">
     <audio:Map target-at="end" source-at="end" rate="1"
       wrap-from="start" wrap-until="end"/>
   </audio:Clip>
   <audio:Clip id="reveal-hit" source={hit-media.media}
-    from={story-time.reveal} for="600ms" gain="0.45"/>
+    during={reveal-hit-window} gain="0.45"/>
 </audio:Track>
 ```
 
-`during` consumes a resolved Window or the whole Timeline. The alternative absolute form supplies
-exactly two of `from`, `until` and `for`. Semantic, beat or other domain coordinates are projected to
-Instants/Windows upstream; Audio Track does not recognize those domains.
+`during` consumes a resolved Window. Timeline authoring or a domain projector declares that value
+upstream; Audio Track neither constructs time ranges nor recognizes semantic, beat or other domains.
 
 `gain` is a linear multiplier and fades default to zero. Omitting Map means bounded partial identity:
 target start maps to source start at native rate, and excess Window time is silent. One `Map` relates

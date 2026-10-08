@@ -16,7 +16,7 @@ import { parseStructuredElement } from "@qflow/markup";
 import type { SurfaceResolvedReference } from "@qflow/markup";
 import { sealText } from "@qflow/text";
 import { textTypes } from "@qflow/text";
-import { temporalProducers } from "@qflow/temporal";
+import { temporalTypes } from "@qflow/temporal";
 
 import {
   appendProjectedCommentSticker,
@@ -172,11 +172,13 @@ test("Track Surface lowers mixed literal and resolved-Window Stickers to a finit
     ["social", authored("social", commentStickerTypes.style, style)],
     ["avatar", authored("avatar", blobTypes.blob, blob)],
     ["copy", authored("copy", textTypes.text, sealText("This is graph-supplied comment content."))],
+    ["whole", authored("whole", temporalTypes.window, projectProgramWindow({ itemId: "whole", semantic,
+      projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } } }))],
   ]);
   const result = await decodeCommentStickerTrackSurface({
     sourceName: "fixture.svml",
     element: parsed(`<comment:Track id="comments" timeline={video.timeline}>
-      <comment:Sticker id="one" comment={copy} frame={layout.comment} style={social} avatar={avatar} author="@viewer" meta="Featured" during="timeline"/>
+      <comment:Sticker id="one" comment={copy} frame={layout.comment} style={social} avatar={avatar} author="@viewer" meta="Featured" during={whole}/>
     </comment:Track>`),
     resolveReference: (path) => refs.get(path),
     resolveAsset: noAsset,
@@ -189,9 +191,6 @@ test("Track Surface lowers mixed literal and resolved-Window Stickers to a finit
     commentStickerProducers.setContentMeta.name,
     commentStickerProducers.appendItemAvatar.name,
     commentStickerProducers.finalize.name,
-    temporalProducers.projectProgramInstant.name,
-    temporalProducers.projectProgramInstant.name,
-    temporalProducers.composeWindow.name,
         commentStickerProducers.render.name,
   ].sort());
   assert.equal(result.components.find((component) => component.outputs.visual !== undefined)?.outputs.visual, "comments.visual");

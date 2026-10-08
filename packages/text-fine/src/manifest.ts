@@ -402,7 +402,7 @@ export const textFineMarkupSurfaces = [
         notes: ["A PathMotion needs at least two ordered Keyframes and is accepted only by a Path occurrence."],
       },
     },
-    { name: "flow", tag: "Flow", mode: "structured", outputs: [textFineTypes.itemSpec, textFineTypes.plainItemSpec, textFineTypes.motion, textFineTypes.flowPlacementPolicy, textFineTypes.placement, temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, textFineTypes.occurrence, compositionTypes.visualTrack],
+    { name: "flow", tag: "Flow", mode: "structured", outputs: [textFineTypes.itemSpec, textFineTypes.plainItemSpec, textFineTypes.motion, textFineTypes.flowPlacementPolicy, textFineTypes.placement, textFineTypes.occurrence, compositionTypes.visualTrack],
       vocabulary: {
         summary: "One independently timed fine-text occurrence flowing inside a SpatialFrame; no aggregate Text Track is created.",
         attributes: [
@@ -425,14 +425,14 @@ export const textFineMarkupSurfaces = [
         children: documentChildren,
         text: "Direct text is the occurrence's whole document, read as one paragraph.",
         ports: fineTextPorts,
-        example: `<text:Flow id="title" timeline={film.timeline} within={title-frame} style={title-style} z="40" align="center" block-align="center" during="timeline">EDIT MEANING</text:Flow>`,
+        example: `<text:Flow id="title" timeline={film.timeline} within={title-frame} style={title-style} z="40" align="center" block-align="center" during={film.window}>EDIT MEANING</text:Flow>`,
         notes: [
           "This is one occurrence, not a container. Compose its `.visual` beside media, captions and other visual outputs.",
-          "Timing is absolute: use an existing Window with `during`, or author exactly two of `from`, `until` and `for`. A semantic package may project its own anchor into a Window first.",
+          "Timing is absolute: `during` consumes an existing Window. Timeline or domain author packages declare the Window first.",
         ],
       },
     },
-    { name: "point", tag: "Point", mode: "structured", outputs: [textFineTypes.itemSpec, textFineTypes.plainItemSpec, textFineTypes.motion, textFineTypes.pointPlacementPolicy, textFineTypes.placement, temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, textFineTypes.occurrence, compositionTypes.visualTrack],
+    { name: "point", tag: "Point", mode: "structured", outputs: [textFineTypes.itemSpec, textFineTypes.plainItemSpec, textFineTypes.motion, textFineTypes.pointPlacementPolicy, textFineTypes.placement, textFineTypes.occurrence, compositionTypes.visualTrack],
       vocabulary: {
         summary: "One independently timed fine-text occurrence anchored at a SpatialPoint; no aggregate Text Track is created.",
         attributes: [
@@ -444,11 +444,11 @@ export const textFineMarkupSurfaces = [
         children: documentChildren,
         text: "Direct text is the occurrence's whole document, read as one paragraph.",
         ports: fineTextPorts,
-        example: `<text:Point id="label" timeline={film.timeline} point={label-point} style={label-style} z="40" anchor-inline="start" from="2s" for="90f">ORBIT</text:Point>`,
+        example: `<text:Point id="label" timeline={film.timeline} point={label-point} style={label-style} z="40" anchor-inline="start" during={label-window}>ORBIT</text:Point>`,
         notes: ["This is one occurrence, not a container; semantic sources can supply a resolved Window without becoming part of this text surface."],
       },
     },
-    { name: "path", tag: "Path", mode: "structured", outputs: [textFineTypes.itemSpec, textFineTypes.plainItemSpec, textFineTypes.motion, textFineTypes.pathMotion, textFineTypes.pathPlacementPolicy, textFineTypes.placement, temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, textFineTypes.occurrence, compositionTypes.visualTrack],
+    { name: "path", tag: "Path", mode: "structured", outputs: [textFineTypes.itemSpec, textFineTypes.plainItemSpec, textFineTypes.motion, textFineTypes.pathMotion, textFineTypes.pathPlacementPolicy, textFineTypes.placement, textFineTypes.occurrence, compositionTypes.visualTrack],
       vocabulary: {
         summary: "One independently timed fine-text occurrence set along a SpatialPath; no aggregate Text Track is created.",
         attributes: [
@@ -466,7 +466,7 @@ export const textFineMarkupSurfaces = [
         children: documentChildren,
         text: "Direct text is the occurrence's whole document, read as one paragraph.",
         ports: fineTextPorts,
-        example: `<text:Path id="orbit-copy" timeline={film.timeline} path={orbit} style={orbit-style} z="40" path-motion={orbit-travel} from="timeline.start + 1s" until="timeline.end">FOLLOW THE CURVE</text:Path>`,
+        example: `<text:Path id="orbit-copy" timeline={film.timeline} path={orbit} style={orbit-style} z="40" path-motion={orbit-travel} during={orbit-window}>FOLLOW THE CURVE</text:Path>`,
         notes: ["This is one occurrence, not a container; Path-specific layout and margin motion belong here, not to the reusable Style or general Motion."],
       },
     },

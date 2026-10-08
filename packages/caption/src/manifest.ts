@@ -5,6 +5,7 @@ export const captionModuleRef = { name: "@qflow/caption", version: "1" } as cons
 export const captionProducers = {
   create: { module: captionModuleRef, name: "create-caption-uses" },
   append: { module: captionModuleRef, name: "append-caption-use" },
+  appendUnbounded: { module: captionModuleRef, name: "append-unbounded-caption-use" },
 } satisfies Record<string, ProducerRef>;
 export const captionTypes = {
   document: { module: captionModuleRef, name: "CaptionDocument" },
@@ -47,7 +48,8 @@ export const captionProgramSchema: ValueSchema = object({
   id: { schema: string }, documentId: { schema: string },
   styles: { schema: { kind: "array", items: captionStyleSchema } },
   uses: { schema: { kind: "array", items: object({
-    window: { schema: temporalWindowSchema }, styleId: { schema: string }, role: { schema: string, optional: true },
+    id: { schema: string }, window: { schema: temporalWindowSchema, optional: true },
+    styleId: { schema: string }, role: { schema: string, optional: true },
   }) } },
 });
 const timedUnit = object({ unitId: { schema: string }, startFrame: { schema: integer }, endFrameExclusive: { schema: integer } });
@@ -79,6 +81,11 @@ export const captionManifest: ModuleManifest = {
   }, {
     name: captionProducers.append.name,
     inputs: [{ name: "program", type: captionTypes.program }, { name: "window", type: temporalTypes.window },
+      { name: "style", type: captionTypes.style }, { name: "filter", type: captionTypes.filter }],
+    outputs: [{ name: "program", type: captionTypes.program }], needs: [],
+  }, {
+    name: captionProducers.appendUnbounded.name,
+    inputs: [{ name: "program", type: captionTypes.program },
       { name: "style", type: captionTypes.style }, { name: "filter", type: captionTypes.filter }],
     outputs: [{ name: "program", type: captionTypes.program }], needs: [],
   }],

@@ -24,7 +24,7 @@ import {
 } from "@qflow/qflow/temporal";
 import type { TemporalWindow } from "@qflow/qflow/temporal";
 import {
-  createTemporalWindowConstruction,
+  resolveTemporalWindowReference,
   resolveTemporalContext,
   temporalContextAttributeVocabulary,
   temporalWindowAttributeNames,
@@ -211,9 +211,7 @@ const decodeFlash: StructuredSurfaceHandler = ({ element, resolveReference }) =>
   if (within === undefined || !sameType(within.type, spatialTypes.frame)) {
     throw new Error("Flash.within has the wrong Type.");
   }
-  const window = createTemporalWindowConstruction({
-    id: `${id}.window`, subjectId: id, element, ...context, resolveReference,
-  });
+  const window = resolveTemporalWindowReference({ element, resolveReference });
   const options: FlashOptions = {
     id,
     color: textAttribute(element, "color"),
@@ -251,12 +249,10 @@ const decodeFlash: StructuredSurfaceHandler = ({ element, resolveReference }) =>
   });
   return {
     records: [
-      ...window.records,
       { id: optionsId, type: optionsType, value: { kind: "inline", value: canonicalize(options) }, range: element.range },
     ],
-    fragments: [...window.fragments, fragment],
+    fragments: [fragment],
     components: [
-      ...window.components,
       {
         id,
         fragment: fragment.id,
@@ -280,11 +276,6 @@ const declaration = {
   mode: "structured" as const,
   outputs: [
     compositionTypes.visualTrack,
-    temporalTypes.window,
-    temporalTypes.duration,
-    temporalTypes.extent,
-    temporalTypes.shiftSpec,
-    temporalTypes.windowSpec,
     optionsType,
   ],
   vocabulary: {
@@ -299,7 +290,7 @@ const declaration = {
       })),
     ],
     ports: [{ name: "visual", type: compositionTypes.visualTrack, summary: "The flash as an ordinary VisualTrack." }],
-    example: '<flash:Flash id="hit" timeline={speech.timeline} within={vertical.bounds} from={cue} for="8f" z="80" color="#FFFFFF" intensity="0.28" attack="2" hold="1" decay="5"/>',
+    example: '<flash:Flash id="hit" timeline={speech.timeline} within={vertical.bounds} during={hit-window} z="80" color="#FFFFFF" intensity="0.28" attack="2" hold="1" decay="5"/>',
   },
 };
 

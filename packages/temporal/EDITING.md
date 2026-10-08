@@ -9,19 +9,19 @@ derived from a duration. Studio reads that fact from the executed graph; it does
 attribute names. A reference has no local parameter authority: its producer remains the only place
 that may declare an inverse.
 
-## Direct absolute construction
+## Named absolute declarations
 
 | Author form | Move | Leading edge | Trailing edge |
 | --- | --- | --- | --- |
 | `from="2s" for="8f"` | Rewrite `from`; retain `for`. | Rewrite `from`. | Rewrite `for`. |
 | `until="3s" for="8f"` | Rewrite `until`; retain `for`. | Rewrite `for`. | Rewrite `until`. |
 | `from="1s" until="3s"` | Shift both values. | Rewrite `from`. | Rewrite `until`. |
-| `during="timeline"` | No local write. | No local write. | No local write. |
-| `during={named-window}` | Follow the referenced value. | Edit its producer. | Edit its producer. |
+| named Window declared with `from`/`until`/`for` | Rewrite the declaration. | Rewrite its leading relation. | Rewrite its trailing relation. |
+| component `during={named-window}` | Follow the referenced value. | Edit its producer. | Edit its producer. |
 
-`from` and `until` may also reference completed Instants. Those references remain fixed at the
-consumer; editing follows the Instant's producer. A resolved value does not grant the consumer an
-inverse operation over its source domain.
+`from` and `until` may reference completed Instants on the named declaration. The component has no
+local time constructor or parameter authority; editing follows the Window or Instant producer. A
+resolved value does not grant the consumer an inverse operation over its source domain.
 
 Frames and milliseconds are integral. Seconds may be rational decimals. Timeline conversion uses
 exact arithmetic and whole frame boundaries. Unedited values retain their authored unit.

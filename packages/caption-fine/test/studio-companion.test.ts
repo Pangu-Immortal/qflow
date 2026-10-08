@@ -100,10 +100,10 @@ test("Caption Uses keep authored windows and child ownership even with no render
   const { timelineFixture } = await import("../../../test/timeline-fixture.js");
   const { projectProgramWindow } = await import("../../../test/temporal-fixture.js");
   const timeline = timelineFixture({id:"film",frameCount: 180, frameRate: { numerator: 30, denominator: 1 }}, {segments:[{id:"a",frameCount:90},{id:"b",frameCount:90}]});
-  const uses = ["base", "hidden"].map(id=>({styleId:id,window:projectProgramWindow({itemId:id,semantic:timeline,projection:{start:{ref:"timeline.start"},end:{ref:"timeline.end"}}})}));
+  const uses = ["base", "hidden"].map(id=>({id,styleId:id,window:projectProgramWindow({itemId:id,semantic:timeline,projection:{start:{ref:"timeline.start"},end:{ref:"timeline.end"}}})}));
   const context = {
     track:{outputRef:"captions.track",trace:{references:[{input:"document",typeRef:captionTypes.document,ref:"document"},{input:"timing",typeRef:captionTypes.timing,ref:"timing"}],outputPorts:[{name:"schedule",ref:"schedule"},{name:"program",ref:"program"}]}},
-    placement:{children:uses.map((use,i)=>({range:{start:i*10,end:i*10+8},referenceAttributes:{style:use.styleId},values:[{type:temporalTypes.windowSpec,value:{id:use.window.subjectId}}]}))},
+    placement:{children:uses.map((use,i)=>({id:use.id,range:{start:i*10,end:i*10+8},referenceAttributes:{style:use.styleId},values:[]}))},
     values:new Map<string,unknown>([["document",{id:"document",units:[],words:[]}],["timing",{timelineId:"film",documentId:"document",units:[]}],["schedule",{cues:[]}],["program",{uses}]]),
     spans:[],temporalBindings:[],
   } as unknown as StudioTrackCompanionContext;

@@ -27,9 +27,19 @@ export const captionComponent = {
     producer: captionProducers.append,
     handler: ({ inputs }) => ({ outputs: { program: { kind: "inline", value: canonicalize(appendCaptionUse(
       inline<CaptionProgram>(inputs.program?.value, "CaptionProgram"),
+      inline<{id:string}>(inputs.filter?.value, "CaptionContentFilter").id,
       inline<TemporalWindow>(inputs.window?.value, "TemporalWindow"),
       inline<CaptionStyleIntent>(inputs.style?.value, "CaptionStyle"),
-      inline<{role?:string}>(inputs.filter?.value, "CaptionContentFilter").role,
+      inline<{id:string;role?:string}>(inputs.filter?.value, "CaptionContentFilter").role,
+    )) } }, needs: {} }),
+  }, {
+    producer: captionProducers.appendUnbounded,
+    handler: ({ inputs }) => ({ outputs: { program: { kind: "inline", value: canonicalize(appendCaptionUse(
+      inline<CaptionProgram>(inputs.program?.value, "CaptionProgram"),
+      inline<{id:string}>(inputs.filter?.value, "CaptionContentFilter").id,
+      undefined,
+      inline<CaptionStyleIntent>(inputs.style?.value, "CaptionStyle"),
+      inline<{id:string;role?:string}>(inputs.filter?.value, "CaptionContentFilter").role,
     )) } }, needs: {} }),
   }],
   validators: [

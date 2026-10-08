@@ -80,7 +80,7 @@ import type {
 import { spatialTypes } from "@qflow/spatial";
 import { recipeType } from "@qflow/recipe";
 import { sealText, textManifest, textTypes } from "@qflow/text";
-import { temporalProducers, temporalTypes } from "@qflow/temporal";
+import { temporalTypes } from "@qflow/temporal";
 import type { TemporalWindow } from "@qflow/temporal";
 import type {
   StructuredElement,
@@ -562,7 +562,7 @@ test("all three author Surfaces preserve absolute temporal, spatial, font, image
   }
   const cases = [
     [decodeTierBoardSurface, node("ranking:TierBoard", {
-      id: "tier", timeline: ref("semantic"), within: ref("frame"), frame: ref("frame"), during: "timeline",
+      id: "tier", timeline: ref("semantic"), within: ref("frame"), frame: ref("frame"), during: ref("outer"),
       style: ref("tier-style"),
     }, [node("ranking:TierItem", { id: "tier-one", tier: "s", entry: "drop", icon: ref("icon-1"), during: ref("ranking-segment") })])],
     [decodeColumnSurface, node("ranking:Column", {
@@ -600,8 +600,8 @@ test("all three author Surfaces preserve absolute temporal, spatial, font, image
   });
   const tierFragment = programTier.fragments.find((candidate) => candidate.exports.some((output) => output.name === "visual"))!;
   assert.equal(tierFragment.inputs.find((input) => input.name === "outer")?.type.name, "TemporalWindow");
-  assert.ok(programTier.fragments.some((fragment) => fragment.operations.some((operation) =>
-    operation.producer.name === temporalProducers.projectProgramInstant.name)));
+  assert.equal(programTier.fragments.some((fragment) => fragment.operations.some((operation) =>
+    operation.producer.module.name === "@qflow/temporal")), false);
   assert.equal(programTier.fragments.some((fragment) => fragment.operations.some((operation) =>
     operation.producer.module.name === "@qflow/narrative-temporal")), false);
   const column = await decodeColumnSurface({
@@ -651,17 +651,17 @@ test("Ranking author Surfaces fail closed on impossible image and sound combinat
     ["style", plain("style", rankingTypes.tierStyle)], ["style.sound", plain("style.sound", rankingTypes.soundStyle)],
     ["move", plain("move", mediaTypes.synchronized)],
   ]);
-  const common = { id: "bad", timeline: ref("semantic"), within: ref("frame"), frame: ref("frame"), during: "timeline", style: ref("style") };
+  const common = { id: "bad", timeline: ref("semantic"), within: ref("frame"), frame: ref("frame"), during: ref("outer"), style: ref("style") };
   const context = (element: StructuredElement) => ({
     sourceName: "ranking.svml", element, resolveReference: (path: string) => references.get(path),
     resolveAsset: async () => { throw new Error("no asset resolution expected"); },
   });
   assert.throws(() => decodeTierBoardSurface(context({
     kind: "element", name: "ranking:TierBoard", attributes: common,
-    children: [{ kind: "element", name: "ranking:TierItem", attributes: { tier: "s", entry: "direct", during: "timeline" }, children: [], range }], range,
+    children: [{ kind: "element", name: "ranking:TierItem", attributes: { tier: "s", entry: "direct", during: ref("outer") }, children: [], range }], range,
   })), /icon/u);
   assert.throws(() => decodeTierBoardSurface(context({
     kind: "element", name: "ranking:TierBoard", attributes: { ...common, "move-sound": ref("move") },
-    children: [{ kind: "element", name: "ranking:TierItem", attributes: { tier: "s", entry: "direct", icon: ref("icon"), during: "timeline" }, children: [], range }], range,
+    children: [{ kind: "element", name: "ranking:TierItem", attributes: { tier: "s", entry: "direct", icon: ref("icon"), during: ref("outer") }, children: [], range }], range,
   })), /move-sound/u);
 });

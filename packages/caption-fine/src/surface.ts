@@ -12,7 +12,7 @@ import { sealGraphFragment } from "@qflow/qflow/author";
 import type { FragmentOperation } from "@qflow/qflow/author";
 import type { SurfaceRecordDraft, SurfaceComponentDraft } from "@qflow/qflow/markup";
 import { assertEmptyElement, optionalTextAttribute } from "@qflow/qflow/markup";
-import { createTemporalWindowConstruction, resolveTemporalContext, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalContext, resolveTemporalWindowReference, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
 import { temporalTypes } from "@qflow/qflow/temporal";
 import { compositionTypes } from "@qflow/qflow/composition";
 import { captionFineProducers, captionFineTypes } from "./manifest.js";
@@ -141,19 +141,23 @@ export const decodeFineCaptionTrackSurface: StructuredSurfaceHandler = ({ elemen
     assertEmptyElement(child);
     index += 1;
     const useId = optionalTextAttribute(child, "id") ?? `${id}.use.${index}`;
-    const hasTime = temporalWindowAttributeNames.some(name => child.attributes[name] !== undefined);
-    const temporal = createTemporalWindowConstruction({ id: useId, ...context, resolveReference,
-      element: hasTime ? child : { ...child, attributes: { ...child.attributes, during: "timeline" } } });
-    records.push(...temporal.records); components.push(...temporal.components); fragments.push(...temporal.fragments);
+    const window = child.attributes.during === undefined
+      ? undefined
+      : resolveTemporalWindowReference({ element: child, resolveReference });
     const style = reference(child, "style", captionTypes.style, resolveReference);
     const role = optionalTextAttribute(child, "role");
     const filterId = `${useId}.filter`;
-    records.push({ id: filterId, type: captionTypes.filter, value: { kind: "inline", value: role === undefined ? {} : { role } }, range: child.range });
+    records.push({ id: filterId, type: captionTypes.filter, value: { kind: "inline", value: {
+      id: useId, ...(role === undefined ? {} : { role }),
+    } }, range: child.range });
     const key = `use-${index}`;
-    inputs.push({ name: `${key}-window`, type: temporalTypes.window }, { name: `${key}-style`, type: captionTypes.style }, { name: `${key}-filter`, type: captionTypes.filter });
-    bindings[`${key}-window`] = temporal.ref; bindings[`${key}-style`] = style.ref; bindings[`${key}-filter`] = { kind: "record", id: filterId };
-    operations.push({ id: key, producer: captionProducers.append,
-      inputs: { program: operation(previous), window: input(`${key}-window`), style: input(`${key}-style`), filter: input(`${key}-filter`) }, result: { kind: "output", name: "program" } });
+    inputs.push(...(window === undefined ? [] : [{ name: `${key}-window`, type: temporalTypes.window }]),
+      { name: `${key}-style`, type: captionTypes.style }, { name: `${key}-filter`, type: captionTypes.filter });
+    if (window !== undefined) bindings[`${key}-window`] = window.ref;
+    bindings[`${key}-style`] = style.ref; bindings[`${key}-filter`] = { kind: "record", id: filterId };
+    operations.push({ id: key, producer: window === undefined ? captionProducers.appendUnbounded : captionProducers.append,
+      inputs: { program: operation(previous), ...(window === undefined ? {} : { window: input(`${key}-window`) }),
+        style: input(`${key}-style`), filter: input(`${key}-filter`) }, result: { kind: "output", name: "program" } });
     previous = key;
   }
   operations.push({ id: "schedule", producer: captionFineProducers.schedule,

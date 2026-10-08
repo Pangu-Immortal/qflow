@@ -12,8 +12,8 @@ import { spatialTypes } from "@qflow/qflow/spatial";
 import { temporalTypes, assertTemporalInstantFor } from "@qflow/qflow/temporal";
 import {
   resolveTemporalContext,
-  createTemporalWindowConstruction,
-  createTemporalInstantConstruction,
+  resolveTemporalWindowReference,
+  resolveTemporalInstantReference,
   temporalWindowAttributeNames,
   temporalWindowAttributeVocabulary,
   temporalContextAttributeVocabulary,
@@ -147,13 +147,7 @@ function decode(tag) {
     ]);
     const id = textAttribute(element, "id"),
       context = resolveTemporalContext({ element, resolveReference }),
-      window = createTemporalWindowConstruction({
-        id: id + ".window",
-        subjectId: id,
-        element,
-        ...context,
-        resolveReference,
-      });
+      window = resolveTemporalWindowReference({ element, resolveReference });
     const ref = (el, n, t) => {
       const raw = el.attributes[n];
       if (typeof raw !== "object" || raw.kind !== "reference")
@@ -170,16 +164,13 @@ function decode(tag) {
     }
     if (!Number.isSafeInteger(opts.z)) throw Error("z must be integer");
     const records = [
-        ...window.records,
         {
           id: id + ".options",
           type: options,
           value: value(opts),
           range: element.range,
         },
-      ],
-      components = [...window.components],
-      fragments = [...window.fragments];
+      ];
     const inputs = ins(tag).filter((p) => p.name !== "events"),
       bindings = {
         timeline: context.timeline.ref,
@@ -212,21 +203,13 @@ function decode(tag) {
       const name = textAttribute(ch, "name"),
         key = "beat" + ++count,
         eid = id + "." + key,
-        at = createTemporalInstantConstruction({
-          id: eid,
-          subjectId: eid,
-          element: ch,
-          ...context,
-          resolveReference,
-        });
-      records.push(...at.records, {
+        at = resolveTemporalInstantReference({ element: ch, resolveReference });
+      records.push({
         id: eid + ".options",
         type: options,
         value: value({ id: eid, name }),
         range: ch.range,
       });
-      components.push(...at.components);
-      fragments.push(...at.fragments);
       inputs.push(port(key, options), port(key + "-at", temporalTypes.instant));
       bindings[key] = { kind: "record", id: eid + ".options" };
       bindings[key + "-at"] = at.ref;
@@ -269,9 +252,8 @@ function decode(tag) {
     });
     return {
       records,
-      fragments: [...fragments, fragment],
+      fragments: [fragment],
       components: [
-        ...components,
         {
           id,
           fragment: fragment.id,
@@ -302,11 +284,6 @@ export const qflowPackage = {
             options,
             events,
             compositionTypes.visualTrack,
-            temporalTypes.window,
-            temporalTypes.instant,
-            temporalTypes.windowSpec,
-            temporalTypes.instantSpec,
-            temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec,
           ],
           vocabulary: {
             summary: "Project launch scene with phrase-driven visual beats.",

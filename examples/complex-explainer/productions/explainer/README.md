@@ -1,6 +1,6 @@
 # Complex spoken explainer
 
-A 137-second Chinese explainer built from 17 accepted Takes, recorded demonstrations, project-owned MG, independent Caption and sound. The example demonstrates useful component boundaries without turning every design constant into a public parameter.
+A 137-second Chinese explainer built from 17 accepted performance clips, recorded demonstrations, project-owned MG, independent Caption and sound. The example demonstrates useful component boundaries without turning every design constant into a public parameter.
 
 ## Start here
 
@@ -21,7 +21,7 @@ The current production Run explicitly selects accepted Outputs. Read the plan be
 | Spoken words, cue breaks, Moments and Selections | `authors/script.svml` |
 | Input images, recordings, fonts and clock/canvas | `authors/assets.svml` |
 | Performance prompt and selected speaker Kit | `authors/direction.svml`, `recipes/performance.svs` |
-| Material outputs, Take placement, Uses, scene events and Film | `authors/main.svml` |
+| Material outputs, media placement, Uses, scene events and Film | `authors/main.svml` |
 | Caption appearance and ordinary presentation | `recipes/composition.svs` |
 | A coordinated visual behavior | The owning project package under `../../packages/` |
 | Which accepted output is used | `runs/render.svrun` |

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fixtureResource } from "../../../test/fixture-resource.js";
 import { narrativeProjectionFixture, timelineFixture } from "../../../test/timeline-fixture.js";
-import { projectSelectionWindow } from "../../../test/temporal-fixture.js";
+import { projectProgramWindow, projectSelectionWindow } from "../../../test/temporal-fixture.js";
 
 import { spatialComponent, videoContractManifests } from "../../../test/support/video-domain.js";
 import { registerTypeValidatorFacets } from "@qflow/admission";
@@ -48,6 +48,7 @@ import { sealText, textComponent, textDependency, textManifest, textTypes } from
 import { MarkupSurfaceRegistry, createMarkupAuthorFrontend } from "@qflow/markup";
 import { createRecordAdmitter, TypeValidatorRegistry } from "@qflow/admission";
 import { resolveSelfDescribedTextSource } from "@qflow/source/text";
+import { temporalDependency, temporalTypes } from "@qflow/temporal";
 
 const space = sealTimeline({ id: "test-space", frameCount: 150, frameRate: { numerator: 30, denominator: 1 },
 });
@@ -268,6 +269,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
     outputs: [
       recipeType,
       timelineTypes.timeline,
+      temporalTypes.window,
       spatialTypes.point,
       spatialTypes.frame,
       spatialTypes.path,
@@ -282,6 +284,7 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
     version: fixtureModule.version,
     dependencies: [
       timelineDependency,
+      temporalDependency,
       spatialDependency,
       mediaDependency,
       {
@@ -329,6 +332,10 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
         range: element.range,
       },
       { id: "semantic", type: timelineTypes.timeline, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "whole-window", type: temporalTypes.window, value: { kind: "inline", value: projectProgramWindow({ itemId: "whole-window", semantic,
+        projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } } }) }, range: element.range },
+      { id: "point-window", type: temporalTypes.window, value: { kind: "inline", value: projectProgramWindow({ itemId: "point-window", semantic,
+        projection: { start: { ref: "absolute", at: { unit: "frames", value: 30 } }, end: { ref: "absolute", at: { unit: "frames", value: 60 } } } }) }, range: element.range },
       { id: "title-point", type: spatialTypes.point, value: { kind: "inline", value: { xPx: 540, yPx: 120 } }, range: element.range },
       { id: "body-frame", type: spatialTypes.frame, value: { kind: "inline", value: { xPx: 80, yPx: 220, widthPx: 920, heightPx: 520 } }, range: element.range },
       { id: "arc", type: spatialTypes.path, value: { kind: "inline", value: { commands: [
@@ -386,19 +393,19 @@ test("the self-described Markup Surfaces compile Style, Motion and all three spa
           <text:Keyframe at="0" margin="0"/>
           <text:Keyframe at="150" margin="120" easing="ease-in-out"/>
         </text:PathMotion>
-        <text:Flow id="standalone-flow" timeline={semantic} within={body-frame} style={poster} z="70" overflow="shrink" minimum-scale="0.65" during="timeline">
+        <text:Flow id="standalone-flow" timeline={semantic} within={body-frame} style={poster} z="70" overflow="shrink" minimum-scale="0.65" during={whole-window}>
           Independent flow
         </text:Flow>
-        <text:Point id="standalone-point" timeline={semantic} point={title-point} style={poster} z="70" content={copy} from="1s" for="30f"/>
-        <text:Path id="standalone-path" timeline={semantic} path={arc} style={poster} z="70" motion={arrive} path-motion={orbit-travel} from="0f" until="150f">
+        <text:Point id="standalone-point" timeline={semantic} point={title-point} style={poster} z="70" content={copy} during={point-window}/>
+        <text:Path id="standalone-path" timeline={semantic} path={arc} style={poster} z="70" motion={arrive} path-motion={orbit-travel} during={whole-window}>
           Independent path
         </text:Path>
-        <text:Point id="hook" timeline={semantic} content={copy} point={title-point} style={poster} z="70" during="timeline"/>
-        <text:Flow id="body" timeline={semantic} within={body-frame} style={poster} z="70" overflow="shrink" minimum-scale="0.65" motion={arrive} during="timeline">
+        <text:Point id="hook" timeline={semantic} content={copy} point={title-point} style={poster} z="70" during={whole-window}/>
+        <text:Flow id="body" timeline={semantic} within={body-frame} style={poster} z="70" overflow="shrink" minimum-scale="0.65" motion={arrive} during={whole-window}>
           <text:P id="first">Rich <text:Span style={poster}>inline text</text:Span><text:Break/>wraps.</text:P>
         </text:Flow>
-        <text:Path id="arc-title" timeline={semantic} path={arc} style={poster} z="70" during="timeline">Along the path</text:Path>
-        <text:Flow id="mask-shape" timeline={semantic} within={body-frame} style={mask-shape-style} z="75" wrap="none" during="timeline">MASK</text:Flow>
+        <text:Path id="arc-title" timeline={semantic} path={arc} style={poster} z="70" during={whole-window}>Along the path</text:Path>
+        <text:Flow id="mask-shape" timeline={semantic} within={body-frame} style={mask-shape-style} z="75" wrap="none" during={whole-window}>MASK</text:Flow>
         <text:Mask id="masked-titles" timeline={semantic} text={mask-shape.occurrence} material={material}/>
       </svml>`,
     }),
@@ -448,7 +455,7 @@ test("fine Text occurrences expose only absolute timing vocabulary", () => {
     assert.equal(attributes.includes("segment"), false);
     assert.equal(attributes.includes("moment"), false);
     assert.deepEqual(attributes.filter((attribute) => ["during", "from", "until", "for"].includes(attribute)),
-      ["during", "from", "until", "for"]);
+      ["during"]);
   }
   const mask = textFineMarkupSurfaces.find((item) => item.name === "mask");
   assert.ok(mask);
@@ -584,13 +591,13 @@ test("a paragraph's source indentation is not part of its words", async () => {
   const fixtureSurface = {
     name: "inputs", tag: "Inputs", mode: "structured",
     outputs: [
-      recipeType, timelineTypes.timeline, spatialTypes.frame,
+      recipeType, timelineTypes.timeline, temporalTypes.window, spatialTypes.frame,
       mediaTypes.fontArtifact, textTypes.text,
     ],
   } as const;
   const fixtureManifest: ModuleManifest = {
     format: "qflow.module@1", name: fixtureModule.name, version: fixtureModule.version,
-    dependencies: [timelineDependency, spatialDependency, mediaDependency,
+    dependencies: [timelineDependency, temporalDependency, spatialDependency, mediaDependency,
       { module: { name: recipeManifest.name, version: recipeManifest.version } }, textDependency],
     types: [], capabilities: [], producers: [],
   };
@@ -604,6 +611,8 @@ test("a paragraph's source indentation is not part of its words", async () => {
           path: "text.editorial", properties: { size: 44, "line-height": 1.15 } } },
         range: element.range },
       { id: "semantic", type: timelineTypes.timeline, value: { kind: "inline", value: semantic }, range: element.range },
+      { id: "whole-window", type: temporalTypes.window, value: { kind: "inline", value: projectProgramWindow({ itemId: "whole-window", semantic,
+        projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } } }) }, range: element.range },
       { id: "body-frame", type: spatialTypes.frame, value: { kind: "inline", value: { xPx: 80, yPx: 220, widthPx: 920, heightPx: 520 } }, range: element.range },
       { id: "exact-font", type: mediaTypes.fontArtifact, value: { kind: "inline", value: exactTestFont }, range: element.range },
     ],
@@ -630,7 +639,7 @@ test("a paragraph's source indentation is not part of its words", async () => {
           <text:Style id="poster" recipe={editorial} font={exact-font}>
             <text:Fill color="#f8fafc"/>
           </text:Style>
-          <text:Flow id="body" timeline={semantic} within={body-frame} style={poster} z="70" overflow="shrink" minimum-scale="0.65" during="timeline">
+          <text:Flow id="body" timeline={semantic} within={body-frame} style={poster} z="70" overflow="shrink" minimum-scale="0.65" during={whole-window}>
             <text:P id="first">
               Top 5 Most Popular
               Ways to <text:Span style={poster}>learn AI</text:Span>

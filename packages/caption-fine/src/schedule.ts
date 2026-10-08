@@ -75,11 +75,11 @@ export function scheduleFineCaption(
   const contentCues = fineCaptionContentCues(timing, document);
   const cues: FineCaptionScheduledCue[] = [];
   for (const [index, use] of program.uses.entries()) {
-    if (use.window.start.timelineId !== timing.timelineId) throw new Error("Caption Use belongs to another Timeline");
+    if (use.window !== undefined && use.window.start.timelineId !== timing.timelineId) throw new Error("Caption Use belongs to another Timeline");
     const style = parameters.get(use.styleId);
     if (style === undefined) continue; // Hidden still participates in coverage below.
     const desired = contentCues.filter(cue => use.role === undefined || units.get(cue.units[0]!.unitId)?.role === use.role).map((cue): FineCaptionScheduledCue => ({
-      id: `${use.window.subjectId}:${cue.id}`, cueId: cue.id, styleId: use.styleId,
+      id: `${use.id}:${cue.id}`, cueId: cue.id, styleId: use.styleId,
       timedStartFrame: cue.startFrame, timedEndFrameExclusive: cue.endFrameExclusive,
       visibleStartFrame: Math.max(0, cue.startFrame - style.timing.leadFrames),
       visibleEndFrameExclusive: cue.endFrameExclusive + style.timing.tailFrames,

@@ -202,6 +202,12 @@
     <semantic:Instant id="moment-shortcuts-cue" moment={story.moment.shortcuts}/>
     <semantic:Instant id="moment-first-place-cue" moment={story.moment.first-place}/>
   </semantic:Projection>
+  <time:Window id="uber-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-uber-cue} for="20f"/>
+  <time:Window id="shortcuts-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-shortcuts-cue} for="20f"/>
+  <time:Window id="first-place-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-first-place-cue} for="20f"/>
+  <time:Window id="uber-flash-window" timeline={speech.timeline} from={story-time.moment-uber-cue} for="8f"/>
+  <time:Window id="shortcuts-flash-window" timeline={speech.timeline} from={story-time.moment-shortcuts-cue} for="8f"/>
+  <time:Window id="first-place-flash-window" timeline={speech.timeline} from={story-time.moment-first-place-cue} for="8f"/>
   <audio:Track id="speech-sound" timeline={speech.timeline}>
     <audio:Clip id="uber-rule-semantic-source" source={uber-rule-media.media} during={speech.uber-rule-semantic}/>
     <audio:Clip id="shortcuts-rule-semantic-source" source={shortcuts-rule-media.media} during={speech.shortcuts-rule-semantic}/>
@@ -214,14 +220,14 @@
   </visual:Track>
 
   <audio-track:Track id="music-bed" timeline={speech.timeline}>
-    <audio-track:Clip source={soundtrack-media.media} during="timeline"
+    <audio-track:Clip source={soundtrack-media.media} during={speech.window}
       gain="0.12" fade-in="300ms" fade-out="600ms"/>
   </audio-track:Track>
 
   <audio-track:Track id="rule-reveal-sfx" timeline={speech.timeline}>
-    <audio-track:Clip id="uber-reveal-sfx" source={rule-reveal-sound-media.media} from={story-time.moment-uber-cue} for="20f" gain="0.20"/>
-    <audio-track:Clip id="shortcuts-reveal-sfx" source={rule-reveal-sound-media.media} from={story-time.moment-shortcuts-cue} for="20f" gain="0.20"/>
-    <audio-track:Clip id="first-place-reveal-sfx" source={rule-reveal-sound-media.media} from={story-time.moment-first-place-cue} for="20f" gain="0.20"/>
+    <audio-track:Clip id="uber-reveal-sfx" source={rule-reveal-sound-media.media} during={uber-reveal-sfx-window} gain="0.20"/>
+    <audio-track:Clip id="shortcuts-reveal-sfx" source={rule-reveal-sound-media.media} during={shortcuts-reveal-sfx-window} gain="0.20"/>
+    <audio-track:Clip id="first-place-reveal-sfx" source={rule-reveal-sound-media.media} during={first-place-reveal-sfx-window} gain="0.20"/>
   </audio-track:Track>
 
   <fonts:Face id="caption-font" package="@fontsource-variable/league-spartan" weight="900" style="normal"/>
@@ -241,20 +247,20 @@
 
   <emoji:Style id="rule-reveal-style" recipe={recipes.emoji.strip}/>
   <emoji:EmojiReveal id="rule-reveal" timeline={speech.timeline} within={vertical.bounds}
-    style={rule-reveal-style} placeholder={rule-placeholder.image} during="timeline">
+    style={rule-reveal-style} placeholder={rule-placeholder.image} during={speech.window}>
     <emoji:Item id="uber" icon={uber-icon.image} at={story-time.moment-uber-cue}/>
     <emoji:Item id="shortcuts" icon={shortcuts-icon.image} at={story-time.moment-shortcuts-cue}/>
     <emoji:Item id="first-place" icon={first-place-icon.image} at={story-time.moment-first-place-cue}/>
   </emoji:EmojiReveal>
 
   <flash:Flash id="uber-flash" timeline={speech.timeline} within={vertical.bounds}
-    from={story-time.moment-uber-cue} for="8f" z="80"
+    during={uber-flash-window} z="80"
     color="#2A9DFF" intensity="0.28" attack="2" hold="1" decay="5"/>
   <flash:Flash id="shortcuts-flash" timeline={speech.timeline} within={vertical.bounds}
-    from={story-time.moment-shortcuts-cue} for="8f" z="80"
+    during={shortcuts-flash-window} z="80"
     color="#A855F7" intensity="0.28" attack="2" hold="1" decay="5"/>
   <flash:Flash id="first-place-flash" timeline={speech.timeline} within={vertical.bounds}
-    from={story-time.moment-first-place-cue} for="8f" z="80"
+    during={first-place-flash-window} z="80"
     color="#F2B832" intensity="0.28" attack="2" hold="1" decay="5"/>
 
   <film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline}

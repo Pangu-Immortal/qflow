@@ -244,7 +244,7 @@
     <visual:Clip id="messi-semantic-source" media={messi-media.media} during={speech.messi-semantic} frame={speech-frame} z="0" fit="cover"/>
   </visual:Track>
   <audio-track:Track id="music-bed" timeline={speech.timeline}>
-    <audio-track:Clip source={soundtrack-media.media} during="timeline"
+    <audio-track:Clip source={soundtrack-media.media} during={speech.window}
       gain="0.12" fade-in="300ms" fade-out="600ms"/>
   </audio-track:Track>
 
@@ -253,7 +253,7 @@
   <ranking:ColumnStyle id="column-style" recipe={recipes.ranking.football-column}
     font={column-font}/>
   <ranking:Column id="football-column" timeline={speech.timeline}
-    within={vertical.bounds} frame={column-frame} during="timeline" style={column-style}
+    within={vertical.bounds} frame={column-frame} during={speech.window} style={column-style}
     appear-sound={ranking-appear-media.media}
     move-sound={ranking-move-media.media}>
     <ranking:ColumnItem id="ronaldo" rank="1" label="Ronaldo"

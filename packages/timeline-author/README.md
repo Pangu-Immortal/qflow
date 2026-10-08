@@ -111,10 +111,10 @@ projection does not clip, loop, hold, stretch, resample or hide a source tail. T
 ordinary absolute Instants and Windows and erases the construction relation. Visual and Audio then
 place ordinary normalized media independently.
 
-A one-off component Window can still be authored directly on that component or supplied by another
-domain projection. Put a named child in Timeline when it participates in the construction DAG. When
-the Timeline is already complete and several consumers deliberately share a newly composed absolute
-range, publish it independently:
+A component consumes a completed Window or Instant; it never authors an anonymous time value on its
+own surface. Put a named child in Timeline when it participates in the construction DAG. When the
+Timeline is already complete, publish an independent named value or consume a value supplied by a
+domain projection:
 
 ```svml
 <time:Window id="reveal-band" timeline={film.timeline}

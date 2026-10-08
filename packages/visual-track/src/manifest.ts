@@ -253,8 +253,7 @@ export const visualTrackMarkupSurfaces = [{
     name: "track", tag: "Track", mode: "structured",
     outputs: [spatialTypes.fit, visualTrackTypes.header, visualTrackTypes.paintLayerSpec, visualTrackTypes.sampleLayerSpec,
       visualTrackTypes.layerSet, visualTrackTypes.clipSpec, visualTrackTypes.set,
-      temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec,
-      temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, visualTrackTypes.program,
+      visualTrackTypes.program,
       compositionTypes.visualTrack],
     vocabulary: {
       summary: "Places ordinary visual Clips on one completed Timeline and composes them by explicit stack order.",
@@ -319,7 +318,7 @@ export const visualTrackMarkupSurfaces = [{
 </visual:Motion>
 
 <visual:Track id="cutaways" timeline={speech.timeline}>
-  <visual:Clip media={prepared.media} during="timeline" frame={full} z="10" fit="cover"/>
+  <visual:Clip media={prepared.media} during={program.window} frame={full} z="10" fit="cover"/>
   <visual:Clip id="bags" media={cutaway-bags.media} during={story-time.bags}
     frame={full} z="20" fit="cover" treatment={recipes.visual.cutaway} motion={gentle-push}/>
 </visual:Track>`,

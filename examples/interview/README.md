@@ -12,11 +12,11 @@ edge, preserving their spatial relationship. All three are generated; the old `h
 and `guy.png` are not inputs to this entry. Two Fish Audio Voice Design requests supply recurring voices.
 
 The street-interview Kit consumes interviewer, guest and shared images in that order, followed by
-the corresponding interviewer/guest voice references. Three Seedance Mini Takes carry eleven, eight
+the corresponding interviewer/guest voice references. Three Seedance Mini clips carry eleven, eight
 and eight seconds of dialogue. The first starts with the guest occupied with her bag as the
 interviewer approaches. Answers favor her close view; neutral questions can use the shared view,
 and surprised questions can cut to him. The final answer ends with her beginning to turn away.
-These cuts and actions are authored within the Takes, with no serial tail-frame chain.
+These cuts and actions are authored within the generated clips, with no serial tail-frame chain.
 
 Each reveal uses the same Script Moment for the answer strip, sound and colored flash. Prepared
 question-mark, sparkles, building and Bitcoin PNGs remain local assets. Their palette works with
@@ -47,12 +47,12 @@ performance, cuts, reading and reveal timing.
 
 The published video used externally measured head positions. A fresh generation changes motion,
 cuts and actual length, so this Source does not import the original 783-frame `tracking.svs`.
-That file describes the old footage only. Supplying it to new Takes would attach plausible-looking
+That file describes the old footage only. Supplying it to new requests would attach plausible-looking
 numbers to the wrong video.
 
 After the first Build, export its `final.video` and measure that actual footage, using Google Video
 Intelligence with face bounding boxes, another suitable detector, or manual observation. If graphics
-obstruct the detector, render a clean picture pass from the same normalized Takes. Use the actual
+obstruct the detector, render a clean picture pass from the same normalized media. Use the actual
 program frame count and 30 fps clock; identify WIFE across camera cuts, expand face boxes to include
 her hair, and write one normalized `[x,y,width,height]` or `null` per frame into a new
 `reference-heads.svs`. Keep interpolation within a continuous shot and one identity.

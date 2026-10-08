@@ -6,7 +6,7 @@ import { visualTrackTypes } from "@qflow/visual-track";
 import type { TypeRef } from "@qflow/qflow/protocol";
 import { spatialTypes } from "@qflow/qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
-import { createTemporalInstantConstruction, temporalInstantAttributeNames } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalInstantReference, temporalInstantAttributeNames } from "@qflow/qflow/temporal/markup";
 import type { Recipe } from "@qflow/qflow/recipe";
 import { sealText, textTypes } from "@qflow/qflow/text";
 import { sealGraphFragment } from "@qflow/qflow/author";
@@ -179,13 +179,8 @@ export const decodeDepthStackSurface: StructuredSurfaceHandler = ({ element, res
   const context = resolveTemporalContext({ element, resolveReference });
   const frame = reference(element.attributes.frame, `${element.name}.frame`, spatialTypes.frame, resolveReference);
   const appearance = recipe(element.attributes.appearance, `${element.name}.appearance`, resolveReference);
-  const terminal = createTemporalInstantConstruction({
-    id: `${id}.terminal`, subjectId: id, element, ...context, resolveReference,
-    attribute: "until",
-  });
-  const records: SurfaceRecordDraft[] = [...terminal.records];
-  const temporalComponents: SurfaceComponentDraft[] = [...terminal.components];
-  const temporalFragments = [...terminal.fragments];
+  const terminal = resolveTemporalInstantReference({ element, resolveReference, attribute: "until" });
+  const records: SurfaceRecordDraft[] = [];
   const headerId = `${id}.header`;
   const specId = `${id}.spec`;
   records.push(
@@ -216,8 +211,7 @@ export const decodeDepthStackSurface: StructuredSurfaceHandler = ({ element, res
       : reference(child.attributes.extent, `${child.name}.extent`, spatialTypes.extent, resolveReference);
     if (sourceKind === "still" && extent === undefined) throw new Error(`${child.name}.extent is required for a still image.`);
     if (sourceKind !== "still" && extent !== undefined) throw new Error(`${child.name}.extent belongs only to a still image.`);
-    const activation = createTemporalInstantConstruction({ id: `${id}.${cardId}`, subjectId: cardId, element: child, ...context, resolveReference });
-    records.push(...activation.records); temporalComponents.push(...activation.components); temporalFragments.push(...activation.fragments);
+    const activation = resolveTemporalInstantReference({ element: child, resolveReference });
     const cardAppearance = child.attributes.appearance === undefined
       ? appearance : recipe(child.attributes.appearance, `${child.name}.appearance`, resolveReference);
     const material = decodeDepthStackMaterial(cardAppearance, `${id}.${cardId}`, sourceKind);
@@ -270,8 +264,8 @@ export const decodeDepthStackSurface: StructuredSurfaceHandler = ({ element, res
   const fragment = createDepthStackFragment(cards, "terminal");
   return {
     records,
-    components: [...temporalComponents, { id, fragment: fragment.id, inputs, outputs: { program: `${id}.program`, visual: `${id}.visual` }, range: element.range }],
-    fragments: [...temporalFragments, fragment],
+    components: [{ id, fragment: fragment.id, inputs, outputs: { program: `${id}.program`, visual: `${id}.visual` }, range: element.range }],
+    fragments: [fragment],
     exports: [`${id}.program`, `${id}.visual`],
   };
 };

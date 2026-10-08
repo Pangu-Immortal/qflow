@@ -13,7 +13,7 @@ For speech-led work, bind the message to the words that introduce it:
 </chat:Scene>
 ```
 
-The same component can receive a zero-Take `timeline={animation.timeline}` and `at="2s"` for authored animation. A Scene
+The same component can receive a graphics-only `timeline={animation.timeline}` and `at="2s"` for authored animation. A Scene
 has an outer Window; its message Instants trigger persistent state. `entrance-frames` controls arrival
 and scrolling duration independently of those triggers (default 10). Messages stay visible or scroll
 up as the conversation develops. Message times are on the film clock and must fall inside the Scene.

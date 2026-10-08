@@ -157,7 +157,6 @@ export const depthStackMarkupSurfaces = [
       depthStackTypes.header, depthStackTypes.spec, depthStackTypes.cardSpec,
       spatialTypes.fit, visualTrackTypes.sampleLayerSpec, visualTrackTypes.paintLayerSpec,
       depthStackTypes.cardLabel, depthStackTypes.cardLabelStyle, textTypes.text,
-      temporalTypes.instantSpec, temporalTypes.instant,
       depthStackTypes.program, compositionTypes.visualTrack,
     ],
       vocabulary: {

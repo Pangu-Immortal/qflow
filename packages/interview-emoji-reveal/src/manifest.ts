@@ -109,7 +109,7 @@ export const emojiRevealMarkupSurfaces = [
       notes: ["The Style owns appearance and placement, but never event timing."],
     } },
   { name: "emojiReveal", tag: "EmojiReveal", mode: "structured",
-    outputs: [emojiRevealTypes.header, emojiRevealTypes.itemSpec, temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, emojiRevealTypes.program, compositionTypes.visualTrack],
+    outputs: [emojiRevealTypes.header, emojiRevealTypes.itemSpec, emojiRevealTypes.program, compositionTypes.visualTrack],
     vocabulary: {
       summary: "Draws one adaptive row of preset or progressively revealed icon slots.",
       appearance: "A compact rounded rectangle centered near the top of the frame, with a dark outline and a hard lower-right shadow. Its width is computed from the number of fixed-size slots. Preset slots are settled from the first frame. Every other slot starts with the same supplied placeholder icon, then its activation Instant replaces that slot with a brief overshoot and settle while earlier answers remain visible and later slots remain unanswered.",
@@ -132,7 +132,7 @@ export const emojiRevealMarkupSurfaces = [
         { name: "program", type: emojiRevealTypes.program, summary: "The adaptive strip with its outer Window and fully traced activation Instants." },
         { name: "visual", type: compositionTypes.visualTrack, summary: "That Program rendered as an ordinary VisualTrack." },
       ],
-      example: `<emoji:EmojiReveal id="rules" timeline={speech.timeline} within={vertical.bounds} style={emoji-strip} placeholder={question-icon} during="timeline">
+      example: `<emoji:EmojiReveal id="rules" timeline={speech.timeline} within={vertical.bounds} style={emoji-strip} placeholder={question-icon} during={speech.window}>
   <emoji:Item id="manifest" icon={manifest-icon} preset="true"/>
   <emoji:Item id="real-estate" icon={real-estate-icon} at={story-time.real-estate}/>
   <emoji:Item id="bitcoin" icon={bitcoin-icon} at={story-time.bitcoin}/>

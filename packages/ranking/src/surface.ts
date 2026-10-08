@@ -1,5 +1,5 @@
 import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
-import { assertEmptyElement as empty, assertAttributes as allowed, localName, textAttribute as text, optionalTextAttribute as optionalText, type StructuredElement, type StructuredSurfaceHandler, type SurfaceComponentDraft, type SurfaceRecordDraft, type SurfaceResolvedReference, type MarkupAttributeValue } from "@qflow/qflow/markup";
+import { assertEmptyElement as empty, assertAttributes as allowed, localName, textAttribute as text, optionalTextAttribute as optionalText, type StructuredElement, type StructuredSurfaceHandler, type SurfaceRecordDraft, type SurfaceResolvedReference, type MarkupAttributeValue } from "@qflow/qflow/markup";
 import { sameType, type CanonicalValue, type TypeRef } from "@qflow/qflow/protocol";
 import { mediaTypes } from "@qflow/qflow/media";
 import type { FontArtifactRef, FontStackRef } from "@qflow/qflow/media";
@@ -7,7 +7,7 @@ import { spatialTypes } from "@qflow/qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 import type { Recipe } from "@qflow/qflow/recipe";
 import { textTypes } from "@qflow/qflow/text";
-import { createTemporalInstantConstruction, createTemporalWindowConstruction, temporalInstantAttributeNames } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalInstantReference, resolveTemporalWindowReference, temporalInstantAttributeNames } from "@qflow/qflow/temporal/markup";
 
 import { createRankingFragment } from "./fragment.js";
 import type { RankingFragmentItem, RankingFragmentSound } from "./fragment.js";
@@ -199,18 +199,13 @@ function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
       ? reference(element.attributes.within, `${element.name}.within`, spatialTypes.frame, resolveReference)
       : undefined;
     const frame = reference(element.attributes.frame, `${element.name}.frame`, spatialTypes.frame, resolveReference);
-    const outerTemporal = createTemporalWindowConstruction({ id: `${id}.outer`, subjectId: id, element, ...context, resolveReference });
+    const outerTemporal = resolveTemporalWindowReference({ element, resolveReference });
     const terminalTemporal = variant === "top-three"
-      ? createTemporalInstantConstruction({
-          id: `${id}.terminal`, subjectId: id, element, ...context, resolveReference,
-          attribute: "terminal",
-        })
+      ? resolveTemporalInstantReference({ element, resolveReference, attribute: "terminal" })
       : undefined;
     const styleRaw = element.attributes.style;
     const style = reference(styleRaw, `${element.name}.style`, selected.style, resolveReference);
-    const records: SurfaceRecordDraft[] = [...outerTemporal.records, ...(terminalTemporal?.records ?? [])];
-    const temporalComponents: SurfaceComponentDraft[] = [...outerTemporal.components, ...(terminalTemporal?.components ?? [])];
-    const temporalFragments = [...outerTemporal.fragments, ...(terminalTemporal?.fragments ?? [])];
+    const records: SurfaceRecordDraft[] = [];
     const headerId = `${id}.header`;
     records.push({
       id: headerId, type: rankingTypes.header,
@@ -247,13 +242,8 @@ function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
       const contentName = authored.content === undefined ? undefined : `item-${suffix}-content`;
       if (authored.content !== undefined) inputs[contentName!] = authored.content.ref;
       const itemTemporal = !authored.timed ? undefined : variant === "top-three"
-        ? createTemporalInstantConstruction({ id: `${id}.item.${suffix}`, subjectId: spec.id, element: child, ...context, resolveReference })
-        : createTemporalWindowConstruction({ id: `${id}.item.${suffix}`, subjectId: spec.id, element: child, ...context, resolveReference });
-      if (itemTemporal !== undefined) {
-        records.push(...itemTemporal.records);
-        temporalComponents.push(...itemTemporal.components);
-        temporalFragments.push(...itemTemporal.fragments);
-      }
+        ? resolveTemporalInstantReference({ element: child, resolveReference })
+        : resolveTemporalWindowReference({ element: child, resolveReference });
       const timingName = itemTemporal === undefined ? undefined : `item-${suffix}-timing`;
       if (itemTemporal !== undefined) inputs[timingName!] = itemTemporal.ref;
       let iconName: string | undefined;
@@ -290,7 +280,7 @@ function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
     const fragment = createRankingFragment(variant, items, sound);
     return {
       records,
-      components: [...temporalComponents, {
+      components: [{
         id, fragment: fragment.id, inputs,
         outputs: {
           schedule: `${id}.schedule`, program: `${id}.program`, visual: `${id}.visual`,
@@ -298,7 +288,7 @@ function rankingSurface(variant: RankingVariant): StructuredSurfaceHandler {
         },
         range: element.range,
       }],
-      fragments: [...temporalFragments, fragment],
+      fragments: [fragment],
       exports: [`${id}.schedule`, `${id}.program`, `${id}.visual`, ...(sound.appearName === undefined && sound.moveName === undefined ? [] : [`${id}.events`, `${id}.audio`])],
     };
   };

@@ -7,7 +7,7 @@ import { spatialTypes } from "@qflow/qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 import { temporalTypes, assertTemporalWindowFor } from "@qflow/qflow/temporal";
 import {
-  createTemporalWindowConstruction,
+  resolveTemporalWindowReference,
   resolveTemporalContext,
   temporalWindowAttributeNames,
   temporalWindowAttributeVocabulary,
@@ -226,7 +226,7 @@ export function installPresenter(module, manifest, component) {
     });
     const stackingOrder = recipeValue.properties["stack-order"];
     if (!Number.isSafeInteger(stackingOrder)) throw Error(`Presenter appearance ${recipeValue.path} requires integer stack-order.`);
-    const sampleKeys = [...visualMaterialKeys.fit, ...visualMaterialKeys.sample, ...visualMaterialKeys.sourceTime, ...visualMaterialKeys.frame];
+    const sampleKeys = [...visualMaterialKeys.fit, ...visualMaterialKeys.sample, ...visualMaterialKeys.frame];
     const treatmentKeys = [...visualMaterialKeys.sample, ...visualMaterialKeys.frame];
     const style = presenterStyle(ordinaryFragment, {
       frame,
@@ -244,13 +244,6 @@ export function installPresenter(module, manifest, component) {
       types.sourceSpec,
       types.sources,
       types.program,
-      temporalTypes.duration,
-      temporalTypes.extent,
-      temporalTypes.shiftSpec,
-      temporalTypes.instantSpec,
-      temporalTypes.windowSpec,
-      temporalTypes.instant,
-      temporalTypes.window,
       compositionTypes.visualTrack,
     ],
     vocabulary: { summary: "Continuing presenter role owned by the explainer project.", attributes: [
@@ -320,10 +313,7 @@ export function installPresenter(module, manifest, component) {
     for (const [index, child] of uses.entries()) {
       assertAttributes(child, ["id", "style", ...temporalWindowAttributeNames]); assertEmptyElement(child);
       const useId = optionalTextAttribute(child, "id") ?? `${id}.use.${index + 1}`;
-      const hasTime = temporalWindowAttributeNames.some((name) => child.attributes[name] !== undefined);
-      const temporal = createTemporalWindowConstruction({ id: useId, ...context, resolveReference,
-        element: hasTime ? child : { ...child, attributes: { ...child.attributes, during: "timeline" } } });
-      records.push(...temporal.records); components.push(...temporal.components); fragments.push(...temporal.fragments);
+      const temporal = resolveTemporalWindowReference({ element: child, resolveReference });
       const style = authored(ref(child, "style", types.style, resolveReference), "Presenter Style");
       fragments.push(style.fragment);
       const needsWithin = style.fragment.inputs.some((port) => port.name === "within");

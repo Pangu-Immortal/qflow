@@ -486,7 +486,7 @@ const allRankingMarkupSurfaces = [
           "Every other property is refused by name.",
         ],
       } },
-    { name: "tier", tag: "TierBoard", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, rankingTypes.schedule, rankingTypes.tierProgram, compositionTypes.visualTrack, rankingTypes.soundEvents, compositionTypes.audioTrack],
+    { name: "tier", tag: "TierBoard", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, rankingTypes.schedule, rankingTypes.tierProgram, compositionTypes.visualTrack, rankingTypes.soundEvents, compositionTypes.audioTrack],
       vocabulary: {
         summary: "Places Items into tier rows from preset state or explicit reveal Selections, and publishes the board and the Tracks it renders to.",
         appearance:
@@ -543,7 +543,7 @@ const allRankingMarkupSurfaces = [
         ],
         example: `<ranking:TierBoardStyle id="tier-style" recipe={recipes.ranking.tier} font={ui-font}/>
 <ranking:TierBoard id="tiers" timeline={speech.timeline} within={vertical.bounds} frame={board-frame}
-  during="timeline"
+  during={speech.window}
   style={tier-style}>
   <ranking:TierItem id="row-regen" tier="s" preset="true" icon={icon-regen}/>
   <ranking:TierItem id="row-remini" tier="a" entry="drop" icon={icon-remini} during={story-time.remini}/>
@@ -556,7 +556,7 @@ const allRankingMarkupSurfaces = [
           "Authoring either sound also connects the Style's `.sound` output, so `style` must name a TierBoardStyle written in this Source.",
         ],
       } },
-    { name: "column", tag: "Column", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, rankingTypes.textItemShell, temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, rankingTypes.schedule, rankingTypes.columnProgram, compositionTypes.visualTrack, rankingTypes.soundEvents, compositionTypes.audioTrack],
+    { name: "column", tag: "Column", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, rankingTypes.textItemShell, rankingTypes.schedule, rankingTypes.columnProgram, compositionTypes.visualTrack, rankingTypes.soundEvents, compositionTypes.audioTrack],
       vocabulary: {
         summary: "Places rows by explicit rank, reveals each non-preset row in its own Segment or Selection, and publishes the board and the Tracks it renders to.",
         appearance:
@@ -627,7 +627,7 @@ const allRankingMarkupSurfaces = [
           "Authoring either sound also connects the Style's `.sound` output, so `style` must name a ColumnStyle written in this Source.",
         ],
       } },
-    { name: "top-three", tag: "TopThree", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, rankingTypes.textItemShell, temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec, temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window, rankingTypes.schedule, rankingTypes.topThreeProgram, compositionTypes.visualTrack, rankingTypes.soundEvents, compositionTypes.audioTrack],
+    { name: "top-three", tag: "TopThree", mode: "structured", outputs: [rankingTypes.header, rankingTypes.itemSpec, rankingTypes.textItemShell, rankingTypes.schedule, rankingTypes.topThreeProgram, compositionTypes.visualTrack, rankingTypes.soundEvents, compositionTypes.audioTrack],
       vocabulary: {
         summary: "Fills a podium one slot at a time at the Moment owned by each Item, and publishes the board and the Tracks it renders to.",
         appearance:

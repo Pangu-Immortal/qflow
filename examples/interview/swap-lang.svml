@@ -194,6 +194,12 @@
     <semantic:Instant id="moment-real-estate-cue" moment={story.moment.real-estate}/>
     <semantic:Instant id="moment-bitcoin-cue" moment={story.moment.bitcoin}/>
   </semantic:Projection>
+  <time:Window id="manifest-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-manifest-cue} for="20f"/>
+  <time:Window id="real-estate-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-real-estate-cue} for="20f"/>
+  <time:Window id="bitcoin-reveal-sfx-window" timeline={speech.timeline} from={story-time.moment-bitcoin-cue} for="20f"/>
+  <time:Window id="manifest-flash-window" timeline={speech.timeline} from={story-time.moment-manifest-cue} for="8f"/>
+  <time:Window id="real-estate-flash-window" timeline={speech.timeline} from={story-time.moment-real-estate-cue} for="8f"/>
+  <time:Window id="bitcoin-flash-window" timeline={speech.timeline} from={story-time.moment-bitcoin-cue} for="8f"/>
 
   <region:Evidence id="wife-heads" within={vertical.bounds} timeline={speech.timeline}
     recipe={tracking.heads.wife}/>
@@ -209,14 +215,14 @@
   </visual:Track>
 
   <audio-track:Track id="music-bed" timeline={speech.timeline}>
-    <audio-track:Clip source={soundtrack-media.media} during="timeline"
+    <audio-track:Clip source={soundtrack-media.media} during={speech.window}
       gain="0.12" fade-in="300ms" fade-out="600ms"/>
   </audio-track:Track>
 
   <audio-track:Track id="rule-reveal-sfx" timeline={speech.timeline}>
-    <audio-track:Clip id="manifest-reveal-sfx" source={rule-reveal-sound-media.media} from={story-time.moment-manifest-cue} for="20f" gain="0.20"/>
-    <audio-track:Clip id="real-estate-reveal-sfx" source={rule-reveal-sound-media.media} from={story-time.moment-real-estate-cue} for="20f" gain="0.20"/>
-    <audio-track:Clip id="bitcoin-reveal-sfx" source={rule-reveal-sound-media.media} from={story-time.moment-bitcoin-cue} for="20f" gain="0.20"/>
+    <audio-track:Clip id="manifest-reveal-sfx" source={rule-reveal-sound-media.media} during={manifest-reveal-sfx-window} gain="0.20"/>
+    <audio-track:Clip id="real-estate-reveal-sfx" source={rule-reveal-sound-media.media} during={real-estate-reveal-sfx-window} gain="0.20"/>
+    <audio-track:Clip id="bitcoin-reveal-sfx" source={rule-reveal-sound-media.media} during={bitcoin-reveal-sfx-window} gain="0.20"/>
   </audio-track:Track>
 
   <fonts:Face id="caption-font" package="@fontsource-variable/league-spartan" weight="900" style="normal"/>
@@ -234,20 +240,20 @@
 
   <emoji:Style id="rule-reveal-style" recipe={recipes.emoji.strip}/>
   <emoji:EmojiReveal id="rule-reveal" timeline={speech.timeline} within={vertical.bounds}
-    style={rule-reveal-style} placeholder={rule-placeholder.image} during="timeline">
+    style={rule-reveal-style} placeholder={rule-placeholder.image} during={speech.window}>
     <emoji:Item id="manifest" icon={manifest-icon.image} at={story-time.moment-manifest-cue}/>
     <emoji:Item id="real-estate" icon={real-estate-icon.image} at={story-time.moment-real-estate-cue}/>
     <emoji:Item id="bitcoin" icon={bitcoin-icon.image} at={story-time.moment-bitcoin-cue}/>
   </emoji:EmojiReveal>
 
   <flash:Flash id="manifest-flash" timeline={speech.timeline} within={vertical.bounds}
-    from={story-time.moment-manifest-cue} for="8f" z="80"
+    during={manifest-flash-window} z="80"
     color="#FF4D6D" intensity="0.28" attack="2" hold="1" decay="5"/>
   <flash:Flash id="real-estate-flash" timeline={speech.timeline} within={vertical.bounds}
-    from={story-time.moment-real-estate-cue} for="8f" z="80"
+    during={real-estate-flash-window} z="80"
     color="#14A68A" intensity="0.28" attack="2" hold="1" decay="5"/>
   <flash:Flash id="bitcoin-flash" timeline={speech.timeline} within={vertical.bounds}
-    from={story-time.moment-bitcoin-cue} for="8f" z="80"
+    during={bitcoin-flash-window} z="80"
     color="#F59E0B" intensity="0.28" attack="2" hold="1" decay="5"/>
 
   <film:Film id="main" canvas={vertical.canvas} timeline={speech.timeline}

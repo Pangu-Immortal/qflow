@@ -22,7 +22,7 @@ function cueHtml(source: string, width: number, extra: Recipe["properties"]): st
     "anchor-x": "left", "anchor-y": "top", padding: "0", radius: 0, "stack-order": 1, size: 36, width: 1, x: 0, y: 0, "word-gap": 14, "inline-size": "fixed",
     karaoke: "trail", "active-box": "trail", "active-box-continuity": "joined", "active-box-padding": "0", "active-box-background": "#00800080", "active-box-radius": 0, ...extra,
   } }, [{ sources: [{ artifact: { kind: "blob", resource: fixtureResource("font"), size: 1, mediaType: "font/woff2" } }], weight: 400, style: "normal" }]);
-  const program = { id: "p", documentId: document.id, styles: [style], uses: [{ styleId: "plain",
+  const program = { id: "p", documentId: document.id, styles: [style], uses: [{ id: "use", styleId: "plain",
     window: projectProgramWindow({ itemId: "use", semantic: timeline, projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } } }),
   }] };
   const timed = { timelineId: timeline.id, documentId: document.id,

@@ -15,8 +15,8 @@ import { spatialTypes } from "@qflow/qflow/spatial";
 import { temporalTypes } from "@qflow/qflow/temporal";
 import { visualTrackModuleRef } from "@qflow/visual-track";
 import {
-  createTemporalWindowConstruction,
-  createTemporalInstantConstruction,
+  resolveTemporalWindowReference,
+  resolveTemporalInstantReference,
   resolveTemporalContext,
   temporalWindowAttributeNames,
   temporalWindowAttributeVocabulary,
@@ -198,13 +198,7 @@ function decode(kind) {
     ]);
     const id = textAttribute(element, "id"),
       context = resolveTemporalContext({ element, resolveReference });
-    const win = createTemporalWindowConstruction({
-      id: id + ".window",
-      subjectId: id,
-      element,
-      ...context,
-      resolveReference,
-    });
+    const win = resolveTemporalWindowReference({ element, resolveReference });
     const ref = (el, name, t) => {
       const raw = el.attributes[name];
       if (typeof raw !== "object" || raw.kind !== "reference")
@@ -262,16 +256,13 @@ function decode(kind) {
         "Veil needs mesh/dots/hatch, positive cell size, opacity from zero to one, and a nonnegative fade frame count",
       );
     const records = [
-        ...win.records,
         {
           id: id + ".options",
           type: optionsType,
           value: val(o),
           range: element.range,
         },
-      ],
-      components = [...win.components],
-      fragments = [...win.fragments];
+      ];
     const inputs = [...common],
       bindings = {
         timeline: context.timeline.ref,
@@ -280,17 +271,11 @@ function decode(kind) {
         options: { kind: "record", id: id + ".options" },
       };
     if (kind === "Title") {
-      const bounce = createTemporalInstantConstruction({
-        id: id + ".bounce", subjectId: id + ".bounce",
-        element: { ...element, attributes: { at: element.attributes["bounce-at"] ?? "timeline.start" } },
-        ...context, resolveReference,
-      });
-      records.push(...bounce.records); components.push(...bounce.components); fragments.push(...bounce.fragments);
+      const bounce = resolveTemporalInstantReference({ element, resolveReference, attribute: "bounce-at" });
       inputs.push(port("bounce", temporalTypes.instant)); bindings.bounce = bounce.ref;
     }
     if (kind === "Timer") {
-      const stop = createTemporalInstantConstruction({id:id+".stop",subjectId:id+".stop",element:{...element,attributes:{at:element.attributes["stop-at"]??"timeline.end"}},...context,resolveReference});
-      records.push(...stop.records);components.push(...stop.components);fragments.push(...stop.fragments);
+      const stop = resolveTemporalInstantReference({ element, resolveReference, attribute: "stop-at" });
       inputs.push(port("stop",temporalTypes.instant));bindings.stop=stop.ref;
     }
     const input = (name) => ({ kind: "fragment-input", name }),
@@ -324,16 +309,7 @@ function decode(kind) {
           isImage = child.attributes.image !== undefined;
         if (isImage === (child.attributes.video !== undefined))
           throw Error("Item needs exactly one image or normalized video");
-        const iw = createTemporalWindowConstruction({
-          id: `${id}.${cid}.window`,
-          subjectId: cid,
-          element: child,
-          ...context,
-          resolveReference,
-        });
-        records.push(...iw.records);
-        components.push(...iw.components);
-        fragments.push(...iw.fragments);
+        const iw = resolveTemporalWindowReference({ element: child, resolveReference });
         const key = "item" + ++n,
           optsId = id + "." + key,
           sourceStart = Number(child.attributes["source-start-frame"] ?? 0);
@@ -414,9 +390,8 @@ function decode(kind) {
     });
     return {
       records,
-      fragments: [...fragments, fragment],
+      fragments: [fragment],
       components: [
-        ...components,
         {
           id,
           fragment: fragment.id,
@@ -437,12 +412,6 @@ const declarations = Object.keys(defaults).map((tag) => ({
     optionsType,
     itemsType,
     compositionTypes.visualTrack,
-    timelineTypes.timeline,
-    temporalTypes.window,
-    temporalTypes.instant,
-    temporalTypes.windowSpec,
-    temporalTypes.instantSpec,
-    temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec,
   ],
   vocabulary: {
     summary: {
@@ -456,8 +425,8 @@ const declarations = Object.keys(defaults).map((tag) => ({
         "Clear foreground media with the same moving picture enlarged, blurred and dimmed behind it.",
     }[tag],
     attributes: [
-      ...(tag === "Title" ? [{ name: "bounce-at", kind: "expression", required: false, summary: "Moment or time when the title jumps." }] : []),
-      ...(tag === "Timer" ? [{name:"stop-at",kind:"expression",required:false,summary:"Freeze the overtime display and flash on this instant."}] : []),
+      ...(tag === "Title" ? [{ name: "bounce-at", kind: "reference", required: true, accepts: [temporalTypes.instant], summary: "Resolved Instant when the title jumps." }] : []),
+      ...(tag === "Timer" ? [{name:"stop-at",kind:"reference",required:true,accepts:[temporalTypes.instant],summary:"Resolved Instant that freezes the overtime display and flashes."}] : []),
       ...temporalContextAttributeVocabulary,
       ...temporalWindowAttributeVocabulary,
       ...[

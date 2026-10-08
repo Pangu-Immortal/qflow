@@ -19,25 +19,21 @@ type ExtentDraft =
   | { readonly kind: "duration"; readonly duration: TemporalDuration; readonly author?: TemporalAuthorParameter }
   | { readonly kind: "reference"; readonly reference: SurfaceResolvedReference };
 
-/** Absolute-only author vocabulary for a Window consumer. */
+/** Reference-only vocabulary for a Window consumer. */
 export const temporalWindowAttributeVocabulary: readonly SurfaceAttributeVocabulary[] = [
-  { name: "during", kind: "expression", required: false, values: ["timeline"], accepts: [temporalTypes.window],
-    summary: "Uses the whole Timeline or an already resolved Window." },
-  { name: "from", kind: "expression", required: false, accepts: [temporalTypes.instant],
-    summary: "Sets the inclusive absolute start boundary." },
-  { name: "until", kind: "expression", required: false, accepts: [temporalTypes.instant],
-    summary: "Sets the exclusive absolute end boundary." },
-  { name: "for", kind: "expression", required: false, accepts: [temporalTypes.extent],
-    summary: "Sets an exact duration or resolved Extent." },
+  { name: "during", kind: "expression", required: false, accepts: [temporalTypes.window],
+    summary: "Uses an already resolved Window." },
 ];
 export const temporalWindowAttributeNames = temporalWindowAttributeVocabulary.map(({ name }) => name);
 
-/** Absolute-only author vocabulary for an Instant consumer. */
+/** Reference-only vocabulary for an Instant consumer. */
 export const temporalInstantAttributeVocabulary: readonly SurfaceAttributeVocabulary[] = [
   { name: "at", kind: "expression", required: false, accepts: [temporalTypes.instant],
-    summary: "Uses an already resolved Instant or an absolute authored position." },
+    summary: "Uses an already resolved Instant." },
 ];
 export const temporalInstantAttributeNames = temporalInstantAttributeVocabulary.map(({ name }) => name);
+
+const temporalWindowAuthorAttributeNames = ["from", "until", "for"] as const;
 
 export type TemporalMarkupConstruction = {
   readonly records: readonly SurfaceRecordDraft[];
@@ -112,7 +108,7 @@ function extentDraft(raw: MarkupAttributeValue, label: string, binding: string, 
 
 function rejectUnused(element: StructuredElement, allowed: readonly string[]): void {
   const accepted = new Set(allowed);
-  const unused = temporalWindowAttributeNames.filter((name) => element.attributes[name] !== undefined && !accepted.has(name));
+  const unused = temporalWindowAuthorAttributeNames.filter((name) => element.attributes[name] !== undefined && !accepted.has(name));
   if (unused.length > 0) throw new Error(`${element.name} timing form does not accept ${unused.join(", ")}.`);
 }
 
@@ -208,27 +204,16 @@ function constructWindow(value: {
     endRef: { kind: "component-output", component: componentId, output: "end" } };
 }
 
-/** Construct or pass through one absolute Window. */
+/** Construct one named absolute Window for an author declaration. */
 export function createTemporalWindowConstruction(value: {
   readonly id: string; readonly subjectId?: string; readonly element: StructuredElement;
   readonly timeline: SurfaceResolvedReference; readonly resolveReference: ResolveReference;
 }): TemporalMarkupConstruction {
   const { element, resolveReference } = value;
-  const during = element.attributes.during, from = element.attributes.from;
+  const from = element.attributes.from;
   const until = element.attributes.until, length = element.attributes.for;
-  if (during !== undefined) {
-    rejectUnused(element, ["during"]);
-    if (typeof during !== "string") {
-      const found = resolvedReference(during, `${element.name}.during`, temporalTypes.window, resolveReference);
-      return { records: [], components: [], fragments: [], ref: found.ref };
-    }
-    if (during.trim() !== "timeline") throw new Error(`${element.name}.during text must be timeline.`);
-    return constructWindow({ ...value, subjectId: value.subjectId ?? value.id,
-      start: { kind: "expression", expression: { ref: "timeline.start" } },
-      end: { kind: "expression", expression: { ref: "timeline.end" } } });
-  }
   if (Number(from !== undefined) + Number(until !== undefined) + Number(length !== undefined) !== 2) {
-    throw new Error(`${element.name} requires during or exactly two of from, until and for.`);
+    throw new Error(`${element.name} requires exactly two of from, until and for.`);
   }
   rejectUnused(element, ["from", "until", "for"]);
   const subjectId = value.subjectId ?? value.id;
@@ -245,7 +230,7 @@ export function createTemporalWindowConstruction(value: {
     extent: extentDraft(length, `${element.name}.for`, "for", resolveReference), direction: -1 });
 }
 
-/** Construct or pass through one absolute Instant. */
+/** Construct one named absolute Instant for an author declaration. */
 export function createTemporalInstantConstruction(value: {
   readonly id: string; readonly subjectId?: string; readonly element: StructuredElement;
   readonly timeline: SurfaceResolvedReference; readonly resolveReference: ResolveReference; readonly attribute?: string;
@@ -271,4 +256,28 @@ export function createTemporalInstantConstruction(value: {
     inputs: { timeline: value.timeline.ref, spec: { kind: "record", id: specId } },
     outputs: { instant: `${value.id}.__temporal.instant.value` }, range: value.element.range }], fragments: [fragment],
   ref: { kind: "component-output", component: componentId, output: "instant" } };
+}
+
+/** Resolve one already declared Window at a consumer boundary. */
+export function resolveTemporalWindowReference(value: {
+  readonly element: StructuredElement;
+  readonly resolveReference: ResolveReference;
+  readonly attribute?: string;
+}): SurfaceResolvedReference {
+  const attribute = value.attribute ?? "during";
+  const raw = value.element.attributes[attribute];
+  if (raw === undefined) throw new Error(`${value.element.name}.${attribute} is required.`);
+  return resolvedReference(raw, `${value.element.name}.${attribute}`, temporalTypes.window, value.resolveReference);
+}
+
+/** Resolve one already declared Instant at a consumer boundary. */
+export function resolveTemporalInstantReference(value: {
+  readonly element: StructuredElement;
+  readonly resolveReference: ResolveReference;
+  readonly attribute?: string;
+}): SurfaceResolvedReference {
+  const attribute = value.attribute ?? "at";
+  const raw = value.element.attributes[attribute];
+  if (raw === undefined) throw new Error(`${value.element.name}.${attribute} is required.`);
+  return resolvedReference(raw, `${value.element.name}.${attribute}`, temporalTypes.instant, value.resolveReference);
 }

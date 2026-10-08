@@ -15,7 +15,7 @@ import { spatialTypes } from "@qflow/qflow/spatial";
 import type { SpatialFrame } from "@qflow/qflow/spatial";
 import { assertTemporalInstantFor, temporalTypes } from "@qflow/qflow/temporal";
 import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
-import { createTemporalInstantConstruction, createTemporalWindowConstruction, resolveTemporalContext,
+import { resolveTemporalInstantReference, resolveTemporalWindowReference, resolveTemporalContext,
   temporalContextAttributeVocabulary, temporalInstantAttributeNames, temporalInstantAttributeVocabulary,
   temporalWindowAttributeNames, temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal/markup";
 import { renderChat } from "./render.js";
@@ -57,7 +57,7 @@ const component: ProducerPackage & AdmissionPackage = { producers: [
 export const decodeSurface: StructuredSurfaceHandler = ({ element, resolveReference }) => {
   assertAttributes(element, ["id", "timeline", "within", "font", "title", "entrance-frames", ...temporalWindowAttributeNames]);
   const id = textAttribute(element, "id"), context = resolveTemporalContext({ element, resolveReference });
-  const window = createTemporalWindowConstruction({ id: `${id}.window`, subjectId: id, element, ...context, resolveReference });
+  const window = resolveTemporalWindowReference({ element, resolveReference });
   const reference = (name: string, type: TypeRef): SurfaceResolvedReference => {
     const raw = element.attributes[name];
     if (typeof raw !== "object" || raw.kind !== "reference") throw new Error(`${name} must be a reference.`);
@@ -66,8 +66,7 @@ export const decodeSurface: StructuredSurfaceHandler = ({ element, resolveRefere
     return found;
   };
   const options: ChatOptions = { id, title: textAttribute(element, "title"), entranceFrames: Number(element.attributes["entrance-frames"] ?? "10") };
-  const records = [...window.records, { id: `${id}.options`, type: types.Options, value: value(options), range: element.range }];
-  const components = [...window.components], fragments = [...window.fragments];
+  const records = [{ id: `${id}.options`, type: types.Options, value: value(options), range: element.range }];
   const inputs = [{ name: "timeline", type: timelineTypes.timeline }, { name: "within", type: spatialTypes.frame },
     { name: "font", type: mediaTypes.fontStack }, { name: "window", type: temporalTypes.window }, { name: "options", type: types.Options }];
   const bindings: Record<string, SurfaceResolvedReference["ref"]> = { timeline: context.timeline.ref, within: reference("within", spatialTypes.frame).ref,
@@ -82,8 +81,7 @@ export const decodeSurface: StructuredSurfaceHandler = ({ element, resolveRefere
     assertAttributes(child, ["id", "sender", "text", "side", ...temporalInstantAttributeNames]); assertEmptyElement(child);
     const messageId = textAttribute(child, "id"), side = textAttribute(child, "side");
     if (side !== "left" && side !== "right") throw new Error("Message side must be left or right.");
-    const at = createTemporalInstantConstruction({ id: `${id}.${messageId}`, subjectId: messageId, element: child, ...context, resolveReference });
-    records.push(...at.records); components.push(...at.components); fragments.push(...at.fragments);
+    const at = resolveTemporalInstantReference({ element: child, resolveReference });
     const key = `message-${++index}`;
     records.push({ id: `${id}.${key}`, type: types.Message, value: value({ id: messageId, sender: textAttribute(child, "sender"), text: textAttribute(child, "text"), side }), range: child.range });
     inputs.push({ name: key, type: types.Message }, { name: `${key}-at`, type: temporalTypes.instant });
@@ -95,11 +93,11 @@ export const decodeSurface: StructuredSurfaceHandler = ({ element, resolveRefere
   operations.push({ id: "render", producer: producers.render, inputs: { messages: operation(previous), options: input("options"),
     timeline: input("timeline"), within: input("within"), font: input("font"), window: input("window") }, result: { kind: "output", name: "visual" } });
   const fragment = sealGraphFragment({ inputs, operations, exports: [{ name: "visual", type: compositionTypes.visualTrack, root: operation("render") }] });
-  return { records, fragments: [...fragments, fragment], components: [...components,
-    { id, fragment: fragment.id, inputs: bindings, outputs: { visual: `${id}.visual` }, range: element.range }], exports: [`${id}.visual`] };
+  return { records, fragments: [fragment], components:
+    [{ id, fragment: fragment.id, inputs: bindings, outputs: { visual: `${id}.visual` }, range: element.range }], exports: [`${id}.visual`] };
 };
 const declaration = { name: "scene", tag: "Scene", mode: "structured" as const,
-  outputs: [compositionTypes.visualTrack, timelineTypes.timeline, temporalTypes.window, temporalTypes.instant, temporalTypes.windowSpec, temporalTypes.instantSpec, ...Object.values(types)],
+  outputs: [compositionTypes.visualTrack, ...Object.values(types)],
   vocabulary: { summary: "A conversation whose message arrivals and scrolling form one visual scene.", attributes: [
     ...temporalContextAttributeVocabulary, ...temporalWindowAttributeVocabulary,
     ...["id", "title", "within", "font"].map(name => ({ name, kind: "expression" as const, required: true, summary: name })),
@@ -107,7 +105,7 @@ const declaration = { name: "scene", tag: "Scene", mode: "structured" as const,
   ], children: [{ tag: "Message", cardinality: "many" as const, summary: "One authored message and the event that reveals it.", attributes: [
     ...["id", "sender", "text", "side"].map(name => ({ name, kind: "literal" as const, required: true, summary: name })), ...temporalInstantAttributeVocabulary,
   ] }], ports: [{ name: "visual", type: compositionTypes.visualTrack, summary: "The complete conversation scene." }],
-    example: '<chat:Scene id="chat" timeline={speech.timeline} within={within} font={font} during="timeline" title="Conversation"><chat:Message id="answer" sender="Maya" side="left" text="Here it is." at={story-time.answer}/></chat:Scene>',
+    example: '<chat:Scene id="chat" timeline={speech.timeline} within={within} font={font} during={speech.window} title="Conversation"><chat:Message id="answer" sender="Maya" side="left" text="Here it is." at={story-time.answer}/></chat:Scene>',
   },
 };
 export const qflowPackage = { format: "qflow.package@1" as const, modules: [{ manifest }],

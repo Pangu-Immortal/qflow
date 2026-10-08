@@ -34,7 +34,7 @@ creatine packaging. [reference.svs](reference.svs) owns this entry's appearance 
 
 ## Performance and coverage
 
-Two Fish Audio Voice Design requests establish recurring voices. Three Seedance Mini Takes carry the
+Two Fish Audio Voice Design requests establish recurring voices. Three Seedance Mini clips carry the
 Script: a five-second split opening, an eight-second product explanation, and a six-second handoff.
 The opening uses its own small Text Template in `kits/split-opening.svs`, with dialogue bound from
 Script. The other two use the podcast Kit. A silent listener still glances, adjusts posture and reacts.
@@ -49,7 +49,7 @@ not freeze the last frame or retime to fill the Window. Inspect the newly aligne
 the Selection if the actual montage needs more reading time. Exact word-to-scene reconstruction
 would use separate Clips and adjoining Selections instead.
 
-`shared-soundtrack.m4a` is the only supplied media asset on the final route. Images, voices and Takes
+`shared-soundtrack.m4a` is the only supplied media asset on the final route. Images, voices and generated clips
 are generated; normalization, alignment, Caption and Film composition are explicit downstream work.
 
 ## Run and refine

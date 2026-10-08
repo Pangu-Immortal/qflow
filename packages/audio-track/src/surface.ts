@@ -2,7 +2,7 @@ import { mediaTypes } from "@qflow/qflow/media";
 import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceRecordDraft, SurfaceResolvedReference } from "@qflow/qflow/markup";
 import type { TemporalDuration } from "@qflow/qflow/temporal";
 import {
-  createTemporalWindowConstruction,
+  resolveTemporalWindowReference,
   resolveTemporalContext,
   temporalWindowAttributeNames,
 } from "@qflow/qflow/temporal/markup";
@@ -211,8 +211,6 @@ export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, res
     value: { kind: "inline", value: sealAudioTrackHeader({ id }) },
     range: element.range,
   }];
-  const components = [] as ReturnType<typeof createTemporalWindowConstruction>["components"][number][];
-  const fragments = [] as ReturnType<typeof createTemporalWindowConstruction>["fragments"][number][];
   const clips: Parameters<typeof createAudioTrackFragment>[0][number][] = [];
   const inputs: Record<string, SurfaceResolvedReference["ref"] | { readonly kind: "record"; readonly id: string }> = {
     header: { kind: "record", id: headerId },
@@ -239,10 +237,7 @@ export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, res
     const suffix = String(clipIndex).padStart(4, "0");
     const clipId = optionalText(child, "id") ?? `${id}.clip.${suffix}`;
     const source = resolved(child.attributes.source, `${child.name}.source`, mediaTypes.synchronized, resolveReference);
-    const temporal = createTemporalWindowConstruction({ id: clipId, element: child, ...context, resolveReference });
-    records.push(...temporal.records);
-    components.push(...temporal.components);
-    fragments.push(...temporal.fragments);
+    const window = resolveTemporalWindowReference({ element: child, resolveReference });
     const sourceTime = sourceTimeFrom(child, resolveReference);
     const spec = sealAudioClipSpec({
       id: clipId,
@@ -258,7 +253,7 @@ export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, res
     const specName = `clip-${suffix}-spec`;
     const specId = `${id}.clip.${suffix}.spec`;
     records.push({ id: specId, type: audioTrackTypes.clipSpec, value: { kind: "inline", value: spec }, range: child.range });
-    inputs[windowName] = temporal.ref;
+    inputs[windowName] = window.ref;
     inputs[mediaName] = source.ref;
     inputs[specName] = { kind: "record", id: specId };
     clips.push({ mediaName, specName, windowName });
@@ -267,14 +262,14 @@ export const decodeAudioTrackSurface: StructuredSurfaceHandler = ({ element, res
   const fragment = createAudioTrackFragment(clips);
   return {
     records,
-    components: [...components, {
+    components: [{
       id,
       fragment: fragment.id,
       inputs,
       outputs: { program: `${id}.program`, audio: `${id}.audio` },
       range: element.range,
     }],
-    fragments: [...fragments, fragment],
+    fragments: [fragment],
     exports: [`${id}.audio`, `${id}.program`],
   };
 };

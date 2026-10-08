@@ -36,9 +36,10 @@ export function assertCaptionProgram(value: CaptionProgram): void {
   const styles = new Map(value.styles.map(style => [style.id, style]));
   assert(styles.size === value.styles.length, "Caption Styles are repeated");
   value.styles.forEach(assertCaptionStyle);
-  assert(new Set(value.uses.map(use => use.window.subjectId)).size === value.uses.length, "Caption Use ids are repeated");
+  assert(new Set(value.uses.map(use => use.id)).size === value.uses.length, "Caption Use ids are repeated");
   for (const use of value.uses) {
-    assertTemporalWindowFor(use.window, { subjectId: use.window.subjectId });
+    assert(ID.test(use.id), "Caption Use identity is invalid");
+    if (use.window !== undefined) assertTemporalWindowFor(use.window, {});
     assert(styles.has(use.styleId), "Caption Use references an unknown Style");
     assert(use.role === undefined || use.role.trim().length > 0, "Caption Role is empty");
   }
@@ -48,11 +49,11 @@ export function assertCaptionProgramForDocument(value: CaptionProgram, document:
   assertCaptionDocumentIdentity(document);
   assert(value.documentId === document.id, "Caption Uses belong to another CaptionDocument");
 }
-export function appendCaptionUse(program: CaptionProgram, window: TemporalWindow, style: CaptionStyleIntent, role?: string): CaptionProgram {
+export function appendCaptionUse(program: CaptionProgram, id: string, window: TemporalWindow | undefined, style: CaptionStyleIntent, role?: string): CaptionProgram {
   const previous = program.styles.find(item => item.id === style.id);
   assert(previous === undefined || canonicalStringify(previous) === canonicalStringify(style), `Caption Style ${style.id} has conflicting definitions`);
   return sealCaptionProgram({ ...program,
     styles: previous === undefined ? [...program.styles, style] : program.styles,
-    uses: [...program.uses, { window, styleId: style.id, ...(role === undefined ? {} : { role }) }],
+    uses: [...program.uses, { id, ...(window === undefined ? {} : { window }), styleId: style.id, ...(role === undefined ? {} : { role }) }],
   });
 }

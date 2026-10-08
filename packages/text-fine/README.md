@@ -62,10 +62,10 @@ Content has two explicit author forms:
 <copy:Value id="headline-copy">A useful idea, clearly shown.</copy:Value>
 
 <typo:Flow id="headline" timeline={film.timeline} content={headline-copy}
-  within={layout.headline} style={title-style} z="40" during="timeline"/>
+  within={layout.headline} style={title-style} z="40" during={film.window}/>
 
 <typo:Flow id="editorial" timeline={film.timeline} within={layout.editorial}
-  style={body-style} z="40" during="timeline">
+  style={body-style} z="40" during={film.window}>
   <typo:P>Rich <typo:Span style={accent}>authored</typo:Span> typography.</typo:P>
 </typo:Flow>
 ```

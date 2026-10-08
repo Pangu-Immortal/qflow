@@ -86,7 +86,7 @@ function fixture(script = "<line>one two || three four</line>") {
     id: "captions",
     documentId: document.id,
     styles: [style],
-    uses: [{ styleId: style.id, window: projectProgramWindow({ itemId: "captions.use.1",
+    uses: [{ id: "captions.use.1", styleId: style.id, window: projectProgramWindow({ itemId: "captions.use.1",
       semantic: sealTimeline({ id: "test-space", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } }),
       projection: { start: { ref: "timeline.start" }, end: { ref: "timeline.end" } },
     }) }],
@@ -476,7 +476,7 @@ test("a Use beginning inside a Cue changes presentation without changing words o
     units: [unit(0), unit(1), unit(2), unit(3)] };
   const emphasis = fineCaptionStyle("emphasis", { ...recipe, properties: { ...recipe.properties, "active-fill": "#FF6347", karaoke: "trail" } }, [font]);
   const window = (id:string,start:number,end:number) => projectProgramWindow({itemId:id,semantic:timeline,projection:{start:{ref:"absolute",at:{unit:"frames",value:start}},end:{ref:"absolute",at:{unit:"frames",value:end}}}});
-  const changed: CaptionProgram = { ...program, styles: [...program.styles, emphasis], uses: [...program.uses, { styleId: emphasis.id, window: window("emphasis",30,50) }] };
+  const changed: CaptionProgram = { ...program, styles: [...program.styles, emphasis], uses: [...program.uses, { id: "emphasis", styleId: emphasis.id, window: window("emphasis",30,50) }] };
   const schedule = scheduleFineCaption(projection, changed, document);
   const cueId = `${document.id}:cue:2`;
   const parts = schedule.cues.filter(cue=>cue.cueId===cueId);
@@ -489,11 +489,11 @@ test("a Use beginning inside a Cue changes presentation without changing words o
   assert.equal(entered.span.startFrame,20);
   assert.deepEqual(entered.visibility,[{startFrame:30,endFrameExclusive:40}]);
   // Rendering the same Style over the whole timeline has identical animation data for this Cue.
-  const whole: CaptionProgram = {...changed,uses:[{styleId:emphasis.id,window:window("whole",0,90)}]};
+  const whole: CaptionProgram = {...changed,uses:[{id:"whole",styleId:emphasis.id,window:window("whole",0,90)}]};
   const original = renderCaption(scheduleFineCaption(projection,whole,document),whole,document,timeline).presents.find(p=>p.id.endsWith(`:${cueId}`))!;
   assert.deepEqual(entered.elements,original.elements);
 
-  const hidden: CaptionProgram = {...changed,styles:[...changed.styles,{id:"hidden",rendering:null}],uses:[...changed.uses,{styleId:"hidden",window:window("hide",32,35)}]};
+  const hidden: CaptionProgram = {...changed,styles:[...changed.styles,{id:"hidden",rendering:null}],uses:[...changed.uses,{id:"hide",styleId:"hidden",window:window("hide",32,35)}]};
   const resumed = scheduleFineCaption(projection,hidden,document).cues.find(cue=>cue.id===parts[1]!.id)!;
   assert.deepEqual(resumed.visibility,[{startFrame:30,endFrameExclusive:32},{startFrame:35,endFrameExclusive:40}]);
   assert.deepEqual(resumed.units,parts[1]!.units);
@@ -506,7 +506,7 @@ test("Caption time windows select presentation, while Role filters preserve simu
   const overlap: CaptionTiming = {...projection,units:projection.units.map((unit,index)=>index < 2 ? unit
     : {...unit,startFrame:15+(index-2)*10,endFrameExclusive:25+(index-2)*10})};
   const hidden: CaptionProgram = {...program,styles:[...program.styles,{id:"hidden",rendering:null}],uses:[...program.uses,{
-    role:"A",styleId:"hidden",window:projectProgramWindow({itemId:"hideA",semantic:timeline,projection:{start:{ref:"timeline.start"},end:{ref:"timeline.end"}}}),
+    id:"hideA",role:"A",styleId:"hidden",window:projectProgramWindow({itemId:"hideA",semantic:timeline,projection:{start:{ref:"timeline.start"},end:{ref:"timeline.end"}}}),
   }]};
   const schedule = scheduleFineCaption(overlap,hidden,document);
   assert.equal(schedule.cues.length,1);
@@ -515,7 +515,7 @@ test("Caption time windows select presentation, while Role filters preserve simu
   assert.deepEqual(scheduleFineCaption(projection,{...program,uses:[],styles:[]},document).cues,[]);
 });
 
-test("Caption Uses share the temporal author language and reject the removed Program edge", async () => {
+test("Caption Uses are either unbounded or consume one declared Window", async () => {
   const { decodeFineCaptionTrackSurface } = await import("../src/surface.js");
   const { parseStructuredElement } = await import("@qflow/markup");
   const { timelineTypes } = await import("@qflow/timeline");
@@ -530,18 +530,21 @@ test("Caption Uses share the temporal author language and reject the removed Pro
     resolveReference(path){const type=refs[path];return type===undefined?undefined:{path,type,ref:{kind:"record" as const,id:path}};},
     resolveAsset(){throw new Error("No assets");},
   });
-  for (const time of ['', 'during={window}', 'from="2s" for="2s"', 'until="3s" for="12f"', 'from="2s" until="5s"']) {
+  for (const time of ['', 'during={window}']) {
     const result=await decode(`<fine:Use style={style} ${time}/>`);
     const track=result.components.find(component=>component.id==="captions")!;
     assert.ok(track.outputs.program);
     const fragment=result.fragments!.find(fragment=>fragment.id===track.fragment)!;
     assert.equal(fragment.inputs.find(port=>port.name==="timing")?.type.name,"CaptionTiming");
-    assert.ok(fragment.inputs.some(port=>port.name.endsWith("-window")));
+    assert.equal(fragment.inputs.some(port=>port.name.endsWith("-window")), time !== "");
     assert.equal(fragment.inputs.some(port=>port.name==="program"),false);
+  }
+  for (const time of ['during="timeline"', 'from="2s" for="2s"', 'until="3s" for="12f"', 'from="2s" until="5s"']) {
+    await assert.rejects(()=>decode(`<fine:Use style={style} ${time}/>`));
   }
   await assert.rejects(()=>decode('<fine:Use style={style}/>', 'semantic={window}'));
   await assert.rejects(()=>decode('', 'program={old}'),/requires id, document, timing, timeline, within/);
-  await assert.rejects(()=>decode('<fine:Use style={style} selection={window}/>'),/optional id, role, during, from, until, for/);
+  await assert.rejects(()=>decode('<fine:Use style={style} selection={window}/>'),/optional id, role, during/);
 });
 
 test("Fine uses author separators in ordinary text, shared groups, active copies and joined boxes", () => {

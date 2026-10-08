@@ -5,7 +5,13 @@ import type { MarkupAttributeValue, StructuredElement, SurfaceResolvedReference 
 import { temporalTypes } from "@qflow/temporal";
 import { timelineTypes } from "@qflow/timeline";
 
-import { createTemporalInstantConstruction, createTemporalWindowConstruction, resolveTemporalContext } from "../src/markup/index.js";
+import {
+  createTemporalInstantConstruction,
+  createTemporalWindowConstruction,
+  resolveTemporalContext,
+  resolveTemporalInstantReference,
+  resolveTemporalWindowReference,
+} from "../src/markup/index.js";
 
 const range = { source: "main.svml", start: 0, end: 1 };
 const reference = (path: string): MarkupAttributeValue => ({ kind: "reference", path });
@@ -28,14 +34,7 @@ const inlineValues = (construction: ReturnType<typeof createTemporalWindowConstr
   .filter((record) => record.type.name === typeName)
   .map((record) => record.value.kind === "inline" ? record.value.value : undefined);
 
-test("whole Timeline and absolute literals lower without any domain projector", () => {
-  const whole = createTemporalWindowConstruction({ id: "whole", element: element({ during: "timeline" }), timeline, resolveReference });
-  assert.deepEqual(inlineValues(whole, "TemporalInstantSpec"), [
-    { id: "whole.start", subjectId: "whole", projection: { ref: "timeline.start" } },
-    { id: "whole.end", subjectId: "whole", projection: { ref: "timeline.end" } },
-  ]);
-  assert.equal(whole.fragments[0]!.inputs.some((port) => port.type.module.name.includes("narrative")), false);
-
+test("absolute author declarations lower without any domain projector", () => {
   const literal = createTemporalWindowConstruction({ id: "literal", element: element({ from: "2.5s", for: "8f" }), timeline, resolveReference });
   assert.deepEqual(inlineValues(literal, "TemporalDuration"), [{ unit: "frames", value: 8 }]);
   assert.deepEqual(inlineValues(literal, "TemporalInstantSpec"), [{
@@ -65,10 +64,12 @@ test("resolved Instants compose a Window and an Extent shifts either boundary", 
 });
 
 test("resolved Window and Instant references pass directly through", () => {
-  const window = createTemporalWindowConstruction({ id: "use", element: element({ during: reference("window") }), timeline, resolveReference });
-  assert.deepEqual(window, { records: [], components: [], fragments: [], ref: references.get("window")!.ref });
-  const instant = createTemporalInstantConstruction({ id: "cue", element: element({ at: reference("start-instant") }), timeline, resolveReference });
-  assert.deepEqual(instant, { records: [], components: [], fragments: [], ref: references.get("start-instant")!.ref });
+  const window = resolveTemporalWindowReference({ element: element({ during: reference("window") }), resolveReference });
+  assert.deepEqual(window, references.get("window"));
+  const instant = resolveTemporalInstantReference({ element: element({ at: reference("start-instant") }), resolveReference });
+  assert.deepEqual(instant, references.get("start-instant"));
+  assert.throws(() => resolveTemporalWindowReference({ element: element({ during: "timeline" }), resolveReference }), /must be a reference/u);
+  assert.throws(() => resolveTemporalInstantReference({ element: element({ at: "2.5s" }), resolveReference }), /must be a reference/u);
 });
 
 test("Instant literals use common Timeline arithmetic", () => {

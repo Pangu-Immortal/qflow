@@ -11,7 +11,7 @@ already available:
 
 <explainer:Scene id="scene" timeline={speech.timeline}
   within={canvas.bounds} font={font} media={speaker-media.media} source-window={speech.speaker}
-  during="timeline" reveal={story-time.demonstrate} title="Make room for meaning"
+  during={speech.window} reveal={story-time.demonstrate} title="Make room for meaning"
   transition-frames="24" stack-order="0"/>
 
 <film:Film id="main" canvas={canvas.canvas} timeline={speech.timeline} appearance={look.film}>
@@ -21,8 +21,7 @@ already available:
 </film:Film>
 ```
 
-`during` also accepts a resolved Window; the shared Window syntax supports authored absolute
-intervals. `reveal` accepts an absolute Instant, such as the output projected from
+`during` accepts a resolved Window. `reveal` accepts an absolute Instant, such as the output projected from
 `@{demonstrate!}` before the relevant word. Rewriting the Script or using another delivery changes
 the upstream projected frame while retaining the layout behavior.
 `transition-frames` is the duration of that change, separate from the scene's lifetime. `stack-order`

@@ -6,8 +6,8 @@ import { spatialTypes } from "@qflow/qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 import type { Recipe } from "@qflow/qflow/recipe";
 import { sealText, textTypes } from "@qflow/qflow/text";
-import type { StructuredElement, StructuredSurfaceHandler, SurfaceComponentDraft, SurfaceRecordDraft, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/qflow/markup";
-import { createTemporalWindowConstruction, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
+import type { StructuredElement, StructuredSurfaceHandler, SurfaceRecordDraft, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/qflow/markup";
+import { resolveTemporalWindowReference, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
 
 import { decodeCommentStickerStyle } from "./author.js";
 import { createCommentStickerFragment } from "./fragment.js";
@@ -91,8 +91,6 @@ export const decodeCommentStickerTrackSurface: StructuredSurfaceHandler = ({ ele
     value: { kind: "inline", value: sealCommentStickerHeader({ id }) },
     range: element.range,
   }];
-  const temporalComponents: SurfaceComponentDraft[] = [];
-  const temporalFragments: ReturnType<typeof createTemporalWindowConstruction>["fragments"][number][] = [];
   const inputs: Record<string, typeof context.timeline.ref> = { header: { kind: "record", id: headerId }, timeline: context.timeline.ref };
   const items: Parameters<typeof createCommentStickerFragment>[0][number][] = [];
   for (const child of element.children) {
@@ -104,8 +102,7 @@ export const decodeCommentStickerTrackSurface: StructuredSurfaceHandler = ({ ele
     if (child.children.some((node) => node.kind === "element")) throw new Error(`${child.name} accepts plain comment text only.`);
     allowed(child, ["id", "comment", "frame", "style", "avatar", "author", "header", "meta", ...TIMING], ["id", "frame", "style"]);
     const itemId = text(child, "id");
-    const temporal = createTemporalWindowConstruction({ id: itemId, element: child, ...context, resolveReference });
-    records.push(...temporal.records); temporalComponents.push(...temporal.components); temporalFragments.push(...temporal.fragments);
+    const window = resolveTemporalWindowReference({ element: child, resolveReference });
     const suffix = String(items.length + 1).padStart(4, "0");
     const frame = reference(child.attributes.frame, `${child.name}.frame`, spatialTypes.frame, resolveReference);
     const style = reference(child.attributes.style, `${child.name}.style`, commentStickerTypes.style, resolveReference);
@@ -132,7 +129,7 @@ export const decodeCommentStickerTrackSurface: StructuredSurfaceHandler = ({ ele
     });
     const windowName = `item-${suffix}-window`;
     const specName = `item-${suffix}-spec`; const frameName = `item-${suffix}-frame`; const styleName = `item-${suffix}-style`;
-    inputs[specName] = { kind: "record", id: specId }; inputs[windowName] = temporal.ref;
+    inputs[specName] = { kind: "record", id: specId }; inputs[windowName] = window.ref;
     inputs[frameName] = frame.ref; inputs[styleName] = style.ref;
     const attachText = (field: string, value: string | SurfaceResolvedReference): string => {
       const name = `item-${suffix}-${field}`;
@@ -156,8 +153,8 @@ export const decodeCommentStickerTrackSurface: StructuredSurfaceHandler = ({ ele
   const fragment = createCommentStickerFragment(items);
   return {
     records,
-    components: [...temporalComponents, { id, fragment: fragment.id, inputs, outputs: { program: `${id}.program`, visual: `${id}.visual` }, range: element.range }],
-    fragments: [...temporalFragments, fragment],
+    components: [{ id, fragment: fragment.id, inputs, outputs: { program: `${id}.program`, visual: `${id}.visual` }, range: element.range }],
+    fragments: [fragment],
     exports: [`${id}.program`, `${id}.visual`],
   };
 };

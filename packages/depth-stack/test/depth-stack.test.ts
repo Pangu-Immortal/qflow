@@ -95,7 +95,6 @@ test("DepthStack Surface declares every sealed Record it may emit", () => {
     depthStackTypes.cardLabel,
     depthStackTypes.cardLabelStyle,
     textTypes.text,
-    temporalTypes.instantSpec,
     depthStackTypes.program,
     compositionTypes.visualTrack,
   ]) {

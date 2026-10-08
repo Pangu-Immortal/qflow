@@ -76,8 +76,6 @@ const clipInputs = [
 export const audioTrackMarkupSurfaces = [{
   name: "track", tag: "Track", mode: "structured",
   outputs: [audioTrackTypes.header, audioTrackTypes.sourceTime, audioTrackTypes.clipSpec,
-    temporalTypes.duration, temporalTypes.extent, temporalTypes.shiftSpec, temporalTypes.instantSpec,
-    temporalTypes.windowSpec, temporalTypes.instant, temporalTypes.window,
     audioTrackTypes.program, compositionTypes.audioTrack],
   vocabulary: {
     summary: "Places ordinary audio Clips on one completed Timeline and mixes them into one AudioTrack.",
@@ -104,7 +102,7 @@ export const audioTrackMarkupSurfaces = [{
     ],
     example: `<audio:Track id="mix" timeline={program.timeline}>
   <audio:Clip source={voice-media.media} during={program.voice}/>
-  <audio:Clip source={music-media.media} during="timeline" gain="0.18">
+  <audio:Clip source={music-media.media} during={program.window} gain="0.18">
     <audio:Map rate="1" wrap-from="start" wrap-until="end"/>
   </audio:Clip>
 </audio:Track>`,

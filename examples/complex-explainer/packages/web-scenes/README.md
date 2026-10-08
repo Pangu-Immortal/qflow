@@ -21,7 +21,7 @@ Each folder owns `index.js` (content and resource slots), `styles.js` (appearanc
 
 Each Surface receives Timeline, Canvas, font, a temporal Window, its explicit assets and named `Beat` children. The Source attaches those events to Script Moments or authored time. The Surface uses the public temporal projection helpers; local animation reads the resulting event frames. Seek any frame directly: pointer paths, springs, typing and transitions derive state from time.
 
-Prepared video inputs are SynchronizedMedia. Image inputs are Blob artifacts. `DeliveryWorkshop.reference` is the fictional drinking illustration; it is deliberately an image, without fabricating a silent Take or video. Media entries explicitly choose native playback, holding the last frame or looping where the scene needs it.
+Prepared video inputs are SynchronizedMedia. Image inputs are Blob artifacts. `DeliveryWorkshop.reference` is the fictional drinking illustration; it is deliberately an image, without fabricating silent performance media or video. Media entries explicitly choose native playback, holding the last frame or looping where the scene needs it.
 
 Shared ordinary modules under `src/shared/` own html-visual assembly and media sampling, visual primitives, the route cards, terminal behavior and editor artwork. `@explainer/visual-language` supplies common palette and motion helpers. These code dependencies are not automatically separate Film Tracks.
 
