@@ -7,10 +7,12 @@ import {
   resolveTemporalContext,
 } from "@qflow/qflow/temporal/markup";
 import { timelineTypes } from "@qflow/qflow/timeline";
+import type { Clock } from "@qflow/qflow/timeline";
 
 import { compileTimelineAuthorFragment } from "./fragment.js";
 import { timelineAuthorTypes } from "./manifest.js";
-import type { TimelineAuthorDeclaration } from "./types.js";
+import { constructionDuration } from "./program.js";
+import type { ConstructionDurationSpec, TimelineAuthorDeclaration } from "./types.js";
 
 function reference(
   element: StructuredElement,
@@ -83,6 +85,21 @@ export const decodeTimelineAuthorSurface: StructuredSurfaceHandler = ({ element,
   }
 
   const plan = compileTimelineAuthorFragment({ id, end, declarations });
+  const staticClock = clock.record?.value.kind === "inline"
+    ? clock.record.value.value as unknown as Clock
+    : undefined;
+  if (staticClock !== undefined) {
+    for (const item of plan.inlineInputs) {
+      if (!sameType(item.type, timelineAuthorTypes.duration)) continue;
+      try {
+        constructionDuration(staticClock, (item.value as ConstructionDurationSpec).duration);
+      } catch (error) {
+        if (!(error instanceof Error)) throw error;
+        const { numerator, denominator } = staticClock.frameRate;
+        throw new Error(`Timeline ${id} at ${numerator}/${denominator} fps: ${error.message}`);
+      }
+    }
+  }
   const authoredRange = (item: (typeof plan.inlineInputs)[number]) => {
     if (item.author?.declarationId === undefined) return element.range;
     const child = element.children.find((candidate) => candidate.kind === "element"

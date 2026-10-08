@@ -18,6 +18,19 @@ const absoluteReferences = new Map([
   ["answer-end", { path: "answer-end", type: temporalTypes.instant, ref: { kind: "record" as const, id: "answer-end" } }],
 ]);
 
+function clockReference(numerator: number, denominator = 1) {
+  return {
+    path: "clock",
+    type: timelineTypes.clock,
+    ref: { kind: "record" as const, id: "clock" },
+    record: {
+      id: "clock",
+      type: timelineTypes.clock,
+      value: { kind: "inline" as const, value: { frameRate: { numerator, denominator } } },
+    },
+  };
+}
+
 test("Timeline Surface publishes its range and every named Instant or Window", async () => {
   const source = `<time:Timeline id="film" clock={clock} end="latest(speech.end,outro.end)">
     <time:Window id="outro" from="private-cue" for="3s"/>
@@ -54,6 +67,48 @@ test("Timeline Window requires exactly two of from, until and for", () => {
     resolveReference: () => ({ path: "clock", type: timelineTypes.clock, ref: { kind: "record", id: "clock" } }),
     resolveAsset: async () => { throw new Error("unused"); },
   }), /exactly two/);
+});
+
+test("Timeline Surface rejects every static duration literal between frame boundaries", () => {
+  for (const source of [
+    '<time:Timeline id="film" clock={clock} end="4.25s"/>',
+    '<time:Timeline id="film" clock={clock} end="3s"><time:Window id="tail" from="start" for="250ms"/></time:Timeline>',
+    '<time:Timeline id="film" clock={clock} end="3s"><time:Instant id="cue" at="start+250ms"/></time:Timeline>',
+  ]) {
+    const element = parseStructuredElement({ name: "timeline.svml", text: source }, 0).element;
+    assert.throws(() => decodeTimelineAuthorSurface({
+      sourceName: "timeline.svml", element,
+      resolveReference: () => clockReference(30),
+      resolveAsset: async () => { throw new Error("unused"); },
+    }), /Timeline film at 30\/1 fps: Timeline construction duration must resolve to a non-negative exact frame extent/);
+  }
+});
+
+test("Timeline Surface accepts exact static frame boundaries at rational rates", async () => {
+  const source = `<time:Timeline id="film" clock={clock} end="1001ms">
+    <time:Window id="tail" until="end" for="1001ms"/>
+  </time:Timeline>`;
+  const element = parseStructuredElement({ name: "timeline.svml", text: source }, 0).element;
+  const output = await decodeTimelineAuthorSurface({
+    sourceName: "timeline.svml", element,
+    resolveReference: () => clockReference(30_000, 1_001),
+    resolveAsset: async () => { throw new Error("unused"); },
+  });
+  assert.equal(output.exports?.includes("film.timeline"), true);
+  assert.equal(output.exports?.includes("film.tail"), true);
+});
+
+test("Timeline Surface defers frame-boundary validation for runtime Clock values", async () => {
+  const source = '<time:Timeline id="film" clock={clock} end="4.25s"/>';
+  const element = parseStructuredElement({ name: "timeline.svml", text: source }, 0).element;
+  const output = await decodeTimelineAuthorSurface({
+    sourceName: "timeline.svml", element,
+    resolveReference: () => ({
+      path: "clock", type: timelineTypes.clock, ref: { kind: "component-output", component: "runtime-clock", output: "clock" },
+    }),
+    resolveAsset: async () => { throw new Error("unused"); },
+  });
+  assert.equal(output.exports?.includes("film.timeline"), true);
 });
 
 test("standalone Window publishes one reusable value and its boundaries", async () => {
