@@ -3,7 +3,11 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { basename, dirname, resolve, sep } from "node:path";
 
-const planPath = resolve(process.argv[2] ?? "dist/release/release-plan.json");
+const arguments_ = process.argv.slice(2);
+const unknownOption = arguments_.find((value) => value.startsWith("--") && value !== "--preflight-only");
+if (unknownOption !== undefined) throw new Error(`Unknown option: ${unknownOption}`);
+const preflightOnly = arguments_.includes("--preflight-only");
+const planPath = resolve(arguments_.find((value) => !value.startsWith("--")) ?? "dist/release/release-plan.json");
 const releaseDirectory = dirname(planPath);
 const plan = JSON.parse(await readFile(planPath, "utf8"));
 if (plan.format !== "qflow.release-plan@1" || !Array.isArray(plan.independent)
@@ -44,7 +48,7 @@ async function registryVersion(name, version) {
   return await response.json();
 }
 
-async function publish(item) {
+async function inspect(item) {
   const path = tarballPath(item);
   const manifest = tarballManifest(path);
   if (manifest.name !== item.name || manifest.version !== item.version) {
@@ -59,10 +63,9 @@ async function publish(item) {
       ? existing.dist.integrity === integrity
       : existing.dist?.shasum === shasum;
     if (!same) throw new Error(`${item.name}@${item.version} already exists with different immutable bytes`);
-    console.log(`${item.name}@${item.version} already exists with the same npm integrity; skipping.`);
-    return;
+    return { item, path, exists: true };
   }
-  execFileSync("npm", ["publish", path, "--access", "public", "--tag", "latest"], { stdio: "inherit" });
+  return { item, path, exists: false };
 }
 
 const ordered = [...plan.independent, plan.distribution];
@@ -71,5 +74,20 @@ for (const item of ordered) {
   const identity = `${item.name}@${item.version}`;
   if (identities.has(identity)) throw new Error(`Release plan repeats ${identity}`);
   identities.add(identity);
-  await publish(item);
+}
+
+// Inspect the complete immutable candidate before the first external write. A conflict or registry
+// outage late in the dependency order must not leave an avoidable partial publication behind.
+const inspected = [];
+for (const item of ordered) inspected.push(await inspect(item));
+console.log(`Preflight passed for ${inspected.length} npm packages.`);
+
+if (!preflightOnly) {
+  for (const candidate of inspected) {
+    if (candidate.exists) {
+      console.log(`${candidate.item.name}@${candidate.item.version} already exists with the same npm integrity; skipping.`);
+      continue;
+    }
+    execFileSync("npm", ["publish", candidate.path, "--access", "public", "--tag", "latest"], { stdio: "inherit" });
+  }
 }

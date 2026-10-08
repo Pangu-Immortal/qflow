@@ -72,20 +72,30 @@ diagnostics, and prepares the browser in an isolated cache. It uses a separate Q
 and retains the temporary project on failure. The `npm package execution` workflow runs this on PRs
 and is reused by publication; publication uploads the same tarball that was installed and executed.
 
-For a formal release, use the existing GitHub Release workflow. Commit the next stable npm version
-in `package.json` to `main`. Open
+For a formal release, use the existing GitHub workflows. Commit the next stable npm version in
+`package.json` to `main`, then first run **Actions → Publish npm → Run workflow** on `main` with
+that version and **Publish to npm** unchecked. This exercises the complete immutable candidate on
+Linux and Windows and retains it as a downloadable artifact without changing npm. After that exact
+commit succeeds, open
 **Releases → Draft a new release**, choose that commit with tag `v<version>` (for example `v0.1.8`),
 write the release notes, and publish the Release. The tagged commit must contain this workflow.
 `Publish npm` verifies the tag/version match and that the commit belongs to main's history, runs
-Linux/Windows checks, builds and checks the packaged CLI, then publishes to npm as `latest` and
-attaches the tarball to the Release. Checks and packaging use the triggering commit, even if main
-advances meanwhile. This path supports stable releases, not prereleases.
+Linux/Windows checks, builds and checks the packaged CLI, preflights every package in the release
+plan against npm, then publishes dependencies first and the Distribution last as `latest` and
+attaches the tarball to the Release. No npm write occurs unless every check, package installation and
+registry preflight succeeds. Checks and packaging use the triggering commit, even if main advances
+meanwhile. This path supports stable releases, not prereleases.
 
 **Actions → Publish npm → Run workflow** on `main` remains available: enter the committed version
 and leave **Publish to npm** unchecked for checks and downloadable packaging only; check it for a
 manual npm publication. To finish a failed Release publication, fix the external problem and rerun
-that Release's workflow. If code must change, prepare a new version and Release. An existing npm
-version is skipped without changing `latest`; an existing Release attachment is retained.
+that Release's workflow. A failed check or package preflight does not consume the npm version. If no
+package from the candidate reached npm, the Release and tag may be withdrawn, the code fixed while
+retaining the intended version, and the complete candidate validated again. If publication stops
+after some independent packages, rerun the same immutable candidate: matching versions are skipped
+and publication resumes in dependency order. Only after the root Distribution version exists on npm
+does a root code change require a new patch version; a failed asset upload or other external step can
+still be rerun without one. An existing Release attachment is retained.
 Pushing main, pushing a tag alone, or saving a draft Release does not publish npm. The workflow
 does not edit versions or create tags. A visible Release can precede successful npm publication;
 check its Actions result before announcing that the npm version is available.

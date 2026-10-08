@@ -93,7 +93,7 @@ jobs:
         with:
           name: npm-package
           path: release
-      - name: Publish dependencies first and the Distribution last
+      - name: Preflight every package, then publish dependencies first and the Distribution last
         run: node scripts/publish-release-candidate.mjs release/release-plan.json
 
   release-assets:
