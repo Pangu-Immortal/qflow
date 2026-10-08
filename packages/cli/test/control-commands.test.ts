@@ -12,6 +12,8 @@ import { createLocalCredentialControl } from "@qflow/runtime-local";
 import { cliCommandModules } from "../../runtime-local/src/cli.js";
 import { commandHint } from "../src/command-hint.js";
 
+const applicationCwd = tmpdir();
+
 const runCli = async (argv: readonly string[], output: CliIo, selected: CliDistribution) => await runCliApplication(
   argv,
   output,
@@ -24,7 +26,7 @@ const runCli = async (argv: readonly string[], output: CliIo, selected: CliDistr
         await selected.openRuntimeHost(path, options),
     } as CliDistribution,
     commandModules: cliCommandModules,
-    cwd: tmpdir(),
+    cwd: applicationCwd,
     resolveProjectRoot: async (explicit) => await realpath(explicit ?? tmpdir()),
   },
 );
@@ -331,7 +333,7 @@ test("status preserves Runtime decision and attention when its Result Store is u
   assert.equal(result.build.result.state, "unavailable");
   assert.equal(result.build.attention.message, "S3 unavailable");
   assert.equal(result.build.attention.action, commandHint(["result", "finish", view.id], {
-    projectRoot: await realpath(tmpdir()), runtimeProfile: resolve("/tmp/runtime with space.json"),
+    projectRoot: await realpath(applicationCwd), runtimeProfile: resolve(applicationCwd, "/tmp/runtime with space.json"),
   }));
   assert.deepEqual((result.build as { operations?: unknown }).operations, [{
     endpoint: "images.internal", state: "failed", failure: { code: "REMOTE", message: "provider detail" },

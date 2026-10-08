@@ -17,6 +17,14 @@ const launcher = fileURLToPath(new URL("../../../bin/qflow.mjs", import.meta.url
  */
 const isLinux = process.platform === "linux";
 
+async function declareProject(project: string): Promise<void> {
+  await writeFile(join(project, "package.json"), `${JSON.stringify({
+    name: "qflow-runtime-platform-test",
+    private: true,
+    qflow: { project: true },
+  }, null, 2)}\n`);
+}
+
 test("the interview example authenticates on Linux, without editing its Profile",
   { skip: !isLinux, timeout: 120_000 }, async (t) => {
     const root = await mkdtemp(join(tmpdir(), "qflow-platform-example-"));
@@ -24,6 +32,7 @@ test("the interview example authenticates on Linux, without editing its Profile"
     const project = join(root, "project");
     const state = join(root, "host");
     await mkdir(project, { recursive: true });
+    await declareProject(project);
     const profile = fileURLToPath(new URL("../../../examples/interview/qflow.runtime.json", import.meta.url));
     const run = (...args: string[]) => exec(process.execPath, [launcher, ...args, "--json"], {
       cwd: project, env: { ...process.env, QFLOW_STATE_HOME: state }, timeout: 60_000, windowsHide: true,
@@ -55,6 +64,7 @@ test("the Profile runtime init writes authenticates on Linux, without editing it
     const project = join(root, "project");
     const state = join(root, "host");
     await mkdir(project, { recursive: true });
+    await declareProject(project);
     const run = (...args: string[]) => exec(process.execPath, [launcher, ...args, "--json"], {
       cwd: project, env: { ...process.env, QFLOW_STATE_HOME: state }, timeout: 60_000, windowsHide: true,
     });

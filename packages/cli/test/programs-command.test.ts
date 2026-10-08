@@ -13,6 +13,7 @@ import type { ManagedProgramProgress as CliManagedProgramProgress, ManagedProgra
 import type { RuntimeController as CliRuntimeController } from "../../runtime-local/src/host-api.js";
 
 const io = { write: () => {} };
+const applicationCwd = tmpdir();
 const runCli = async (argv: readonly string[], output: CliIo, selected: CliDistribution) =>
   await runCliApplication(argv, output, {
     // This suite mounts the Local Runtime command contribution onto deliberately
@@ -24,7 +25,7 @@ const runCli = async (argv: readonly string[], output: CliIo, selected: CliDistr
         await selected.openRuntimeHost(path, options),
     } as CliDistribution,
     commandModules: cliCommandModules,
-    cwd: tmpdir(),
+    cwd: applicationCwd,
     resolveProjectRoot: async (explicit) => await realpath(explicit ?? tmpdir()),
   });
 
@@ -73,7 +74,7 @@ test("programs dispatches lifecycle through the selected Runtime Controller", as
   await runCli(["programs", "status", "/p/qflow.runtime.json"], io, distribution(calls));
   // The CLI resolves the profile it is given, and what resolving produces is the platform's own
   // spelling. Asserting the argument back verbatim would only be asserting that this is POSIX.
-  const profile = resolve("/p/qflow.runtime.json");
+  const profile = resolve(applicationCwd, "/p/qflow.runtime.json");
   assert.deepEqual(calls, [
     `up ${profile} {"maxWaitMs":1000}`,
     `down ${profile}`,
@@ -400,5 +401,5 @@ test("Worker stop suggests Program control in the same project and Profile", asy
 test("programs prepare provisions resources through the controller without starting a worker", async () => {
   const calls: string[] = [];
   await runCli(["programs", "prepare", "/p/qflow.runtime.json", "--endpoint", "speech"], io, distribution(calls));
-  assert.deepEqual(calls, [`prepare ${resolve("/p/qflow.runtime.json")} {"endpoints":["speech"]}`]);
+  assert.deepEqual(calls, [`prepare ${resolve(applicationCwd, "/p/qflow.runtime.json")} {"endpoints":["speech"]}`]);
 });
