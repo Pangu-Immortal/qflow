@@ -1,7 +1,7 @@
-import type { CaptionStyleIntent } from "@qflow/qflow/caption";
-import { sealCaptionStyle } from "@qflow/qflow/caption";
-import { assertFontArtifactRef } from "@qflow/qflow/media";
-import type { FontArtifactRef } from "@qflow/qflow/media";
+import type { CaptionStyleIntent } from "@qflow/caption";
+import { sealCaptionStyle } from "@qflow/caption";
+import { assertFontArtifactRef } from "@qflow/media";
+import type { FontArtifactRef } from "@qflow/media";
 import { canonicalStringify } from "@qflow/qflow/protocol";
 import type { Recipe } from "@qflow/qflow/recipe";
 

@@ -1,6 +1,6 @@
-import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
-import { compositionTypes } from "@qflow/qflow/composition";
-import { mediaTypes, verifyMediaFrameRange } from "@qflow/qflow/media";
+import { resolveTemporalContext } from "@qflow/temporal/markup";
+import { compositionTypes } from "@qflow/composition";
+import { mediaTypes, verifyMediaFrameRange } from "@qflow/media";
 import type { StructuredElement, StructuredSurfaceHandler, MarkupAttributeValue } from "@qflow/qflow/markup";
 
 import { createHtmlVideoFragment } from "./fragment.js";

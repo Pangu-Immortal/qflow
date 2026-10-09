@@ -4,7 +4,7 @@ Explicit WhisperX model-family capability for speech alignment. Importing this p
 WhisperX; Runtime registration binds the resulting evidence Need to a concrete Endpoint. The package
 contains no credentials, Python environment or queue.
 
-The package implementation consumes only public `@qflow/qflow/*` author/domain APIs and can be
+The package implementation consumes public Qflow author APIs and the owning domain packages and can be
 released independently from the Host. Providers that interpret this exact capability may declare a
 normal compatible dependency or peer range on this package; npm/pnpm and the project lockfile own the
 resolved physical version. The logical capability remains `@qflow/whisperx@1`.

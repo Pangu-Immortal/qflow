@@ -1,13 +1,13 @@
-import { sealGenerationPortTable } from "@qflow/qflow/generation";
+import { sealGenerationPortTable } from "@qflow/generation";
 import type {
   GenerationPortTable,
   GenerationPortValue,
   GenerationRequest,
-} from "@qflow/qflow/generation";
+} from "@qflow/generation";
 import { blobTypes } from "@qflow/qflow/blob";
 import type { ResourceId } from "@qflow/qflow/protocol";
 import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/qflow/markup";
-import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { defineExactModelModule } from "@qflow/generation/model";
 import { textTypes } from "@qflow/qflow/text";
 import { validateSeedanceInputs } from "./validation.js";
 

@@ -1,6 +1,6 @@
-import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
+import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/protocol";
 import { spatialDependency, spatialTypes } from "@qflow/spatial";
-import { recipeType } from "@qflow/recipe";
+import { recipeType } from "@qflow/qflow/recipe";
 import { timelineDependency, timelineTypes } from "@qflow/timeline";
 
 export const regionEvidenceModuleRef = { name: "@qflow/region-evidence", version: "1" } as const;

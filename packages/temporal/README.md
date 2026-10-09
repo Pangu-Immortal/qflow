@@ -25,7 +25,7 @@ the pure exact-projection helper. This total one-to-one operation keeps every lo
 projectable and publishes only resolved absolute values.
 
 Author syntax does not live in the main contract entry. The same owner exposes
-`@qflow/qflow/temporal/markup`: declaration packages use its construction helpers, while component
+`@qflow/temporal/markup`: declaration packages use its construction helpers, while component
 surfaces use its reference-only Instant and Window resolvers.
 Domain packages such as `@qflow/narrative-temporal` project their own values into these
 common types. Visual, audio, caption, typography and project components receive only the completed
@@ -33,7 +33,11 @@ Instant or Window plus the Timeline they already consume.
 
 Temporal rejects Instants outside Timeline, Windows whose endpoint Timelines or stored span disagree,
 reversed or empty Windows, non-exact local-domain projection, and incompatible frame rates. It does not
-clip, repair, infer meaning, perform rendering, or define Studio behavior.
+clip, repair, infer meaning or perform rendering.
+
+The package's separate `studio` entry and activation facet describe how its own Producers are
+traced and inverted by Studio. The domain computations do not import Studio; the adapter uses the
+Companion interface. Studio owns recursive solving and atomic writes, not the Temporal operation rules.
 
 Author-directed editing follows the declaration that produced a value rather than asking a consumer
 to invert an arbitrary projection; see [EDITING.md](EDITING.md).

@@ -11,7 +11,7 @@ import type {
   PackageContribution,
 } from "../types.js";
 import type { NodePackageLoadOptions, NodePackageSelectionRequest } from "./types.js";
-import { distributionPackageDirectory, locateNodePackage } from "./location.js";
+import { embeddedPackageDirectory, distributionPackageRoots, locateNodePackage } from "./location.js";
 
 type PackageJson = {
   readonly name: string;
@@ -82,9 +82,9 @@ function resolutionRoots(
 ): readonly string[] {
   // Protect only exact packages physically embedded by the active Distribution. Its ordinary npm
   // dependencies are independently versioned extensions, so an explicit project install wins.
-  return distributionRoots.some((root) => distributionPackageDirectory(root, specifier) !== undefined)
+  return distributionRoots.some((root) => embeddedPackageDirectory(root, specifier) !== undefined)
     ? distributionRoots
-    : [...projectRoots, ...distributionRoots];
+    : [...projectRoots, ...distributionRoots.flatMap(distributionPackageRoots)];
 }
 
 function activationPath(item: ResolvedPackage): string {
@@ -102,13 +102,13 @@ function embeddedByDistribution(
   distributionRoots: readonly string[],
 ): boolean {
   return distributionRoots.some((root) => {
-    const directory = distributionPackageDirectory(root, item.json.name);
+    const directory = embeddedPackageDirectory(root, item.json.name);
     return directory !== undefined && realpathSync.native(directory) === item.root;
   });
 }
 
 function embeddedPackageNamed(name: string, distributionRoots: readonly string[]): boolean {
-  return distributionRoots.some((root) => distributionPackageDirectory(root, name) !== undefined);
+  return distributionRoots.some((root) => embeddedPackageDirectory(root, name) !== undefined);
 }
 
 async function importContribution(

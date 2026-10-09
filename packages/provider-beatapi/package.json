@@ -4,12 +4,19 @@
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "files": ["dist", "README.md"],
-  "qflow": { "activation": "./src/activation.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^",
-    "@qflow/runtime-local": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1",
+    "@qflow/runtime-local": "workspace:^0.1.1"
   },
   "devDependencies": {
     "@qflow/endpoint": "workspace:*",
@@ -23,5 +30,8 @@
     "@qflow/minimax-h3": "workspace:*",
     "@qflow/nano-banana": "workspace:*",
     "@qflow/seedance": "workspace:*"
+  },
+  "dependencies": {
+    "@qflow/generation": "workspace:^0.1.0"
   }
 }

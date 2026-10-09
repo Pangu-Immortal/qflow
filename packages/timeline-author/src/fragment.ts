@@ -1,9 +1,9 @@
 import { sealGraphFragment } from "@qflow/qflow/author";
 import type { FragmentOperation, FragmentOperationRef, GraphFragment } from "@qflow/qflow/author";
 import type { TypeRef } from "@qflow/qflow/protocol";
-import { temporalTypes } from "@qflow/qflow/temporal";
-import type { TemporalDuration } from "@qflow/qflow/temporal";
-import { timelineTypes } from "@qflow/qflow/timeline";
+import { temporalTypes } from "@qflow/temporal";
+import type { TemporalDuration } from "@qflow/temporal";
+import { timelineTypes } from "@qflow/timeline";
 
 import { timelineAuthorProducers, timelineAuthorTypes } from "./manifest.js";
 import type { TimelineAuthorBinding, TimelineAuthorDeclaration, TimelineAuthorFragmentOptions } from "./types.js";

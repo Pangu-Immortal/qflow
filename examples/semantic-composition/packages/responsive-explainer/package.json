@@ -3,9 +3,31 @@
   "version": "0.0.0-dev",
   "private": true,
   "type": "module",
-  "qflow": { "activation": "./dist/activation.js" },
-  "exports": { ".": "./dist/render.js" },
-  "files": ["dist", "README.md"],
-  "scripts": { "build": "tsc -p tsconfig.json", "prepack": "npm run build" },
-  "devDependencies": { "@qflow/qflow": "workspace:*", "typescript": "5.9.3", "@types/node": "24.10.1" }
+  "qflow": {
+    "activation": "./dist/activation.js"
+  },
+  "exports": {
+    ".": "./dist/render.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@qflow/qflow": "workspace:*",
+    "typescript": "5.9.3",
+    "@types/node": "24.10.1"
+  },
+  "dependencies": {
+    "@qflow/composition": "workspace:^0.1.0",
+    "@qflow/media": "workspace:^0.1.0",
+    "@qflow/timeline": "workspace:^0.1.0",
+    "@qflow/spatial": "workspace:^0.1.0",
+    "@qflow/temporal": "workspace:^0.1.0",
+    "@qflow/html-program": "workspace:^0.1.0"
+  }
 }

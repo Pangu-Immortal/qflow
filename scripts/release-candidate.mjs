@@ -87,6 +87,17 @@ export function npmTarballFilename(name, version) {
   return `${name.replace(/^@/u, "").replaceAll("/", "-")}-${version}.tgz`;
 }
 
+/** Publishing is an explicit subset of the verified installation candidate. */
+export function selectReleasePackages(plan, names = [], independentOnly = false) {
+  const available = independentOnly ? [...plan.independent] : [...plan.independent, plan.distribution];
+  if (names.length === 0) return available;
+  const requested = new Set(names);
+  for (const name of requested) {
+    if (!available.some((item) => item.name === name)) throw new Error(`Release candidate does not contain ${name}`);
+  }
+  return available.filter((item) => requested.has(item.name));
+}
+
 export async function releaseCandidateTarballs(outputDirectory = "dist/release") {
   const plan = await releaseCandidatePackages();
   const output = resolve(repositoryRoot, outputDirectory);

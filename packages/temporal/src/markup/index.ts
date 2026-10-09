@@ -1,10 +1,10 @@
-import { sealGraphFragment } from "@qflow/author";
-import type { FragmentOperation, FragmentOperationRef, GraphFragment } from "@qflow/author";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import type { FragmentOperation, FragmentOperationRef, GraphFragment } from "@qflow/qflow/author";
 import type {
   MarkupAttributeValue, StructuredElement, SurfaceAttributeVocabulary, SurfaceComponentDraft,
   SurfaceRecordDraft, SurfaceResolvedReference,
-} from "@qflow/markup";
-import { sameType, type TypeRef } from "@qflow/protocol";
+} from "@qflow/qflow/markup";
+import { sameType, type TypeRef } from "@qflow/qflow/protocol";
 import { temporalProducers, temporalTypes } from "@qflow/temporal";
 import type { TemporalAuthorParameter, TemporalDuration, TemporalInstantExpression } from "@qflow/temporal";
 import { timelineTypes } from "@qflow/timeline";

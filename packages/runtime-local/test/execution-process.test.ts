@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,6 +41,8 @@ test("isolated Builds load fresh transitive code and Profile choices, share capa
   async function packageAt(directory: string, revision: string) {
     const pkg = join(directory, "node_modules", "fixture-components");
     await mkdir(pkg, { recursive: true });
+    await mkdir(join(directory, "node_modules", "@qflow"), { recursive: true });
+    await symlink(join(repository, "packages", "runtime-local"), join(directory, "node_modules", "@qflow", "runtime-local"), process.platform === "win32" ? "junction" : "dir");
     await writeFile(join(directory, "package.json"), JSON.stringify({ private: true, qflow: { project: true } }));
     await writeFile(join(pkg, "package.json"), JSON.stringify({ name: "fixture-components", version: "1.0.0", type: "module", qflow: { activation: "./activation.ts" } }));
     await writeFile(join(pkg, "revision.ts"), `export const revision: string = ${JSON.stringify(revision)};`);

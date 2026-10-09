@@ -1,7 +1,7 @@
 import { blobTypes } from "@qflow/qflow/blob";
 import type { CanonicalValue } from "@qflow/qflow/protocol";
 import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { spatialTypes } from "@qflow/spatial";
 
 import { createImageComposeFragment } from "./compose-fragment.js";
 import { sealImageComposeLayerSpec, sealImageComposeOptions } from "./compose-program.js";

@@ -1,13 +1,16 @@
 {
   "name": "@qflow/provider-html-local",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "qflow": {
     "activation": "./src/activation.ts",
     "htmlBrowser": {
@@ -15,13 +18,15 @@
     }
   },
   "dependencies": {
+    "@qflow/html-program": "workspace:^0.1.0",
+    "@qflow/media": "workspace:^0.1.0",
     "@puppeteer/browsers": "3.2.2",
     "puppeteer-core": "25.10.0",
     "tsx": "4.21.0"
   },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^",
-    "@qflow/runtime-local": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1",
+    "@qflow/runtime-local": "workspace:^0.1.1"
   },
   "devDependencies": {
     "@fontsource-variable/inter": "5.3.0",

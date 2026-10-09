@@ -1,4 +1,4 @@
-import { mediaTypes } from "@qflow/qflow/media";
+import { mediaTypes } from "@qflow/media";
 import { blobTypes } from "@qflow/qflow/blob";
 import {
   executeExtractAudio,
@@ -14,7 +14,7 @@ import {
 import type { MediaExecutionEnvironment, MediaOperationResult } from "./execute.js";
 import { mediaOperationsCapabilities } from "@qflow/media-operations";
 import { isStreamingResourceStore } from "@qflow/qflow/endpoint";
-import { speechEvidenceCapabilities, speechEvidenceTypes } from "@qflow/qflow/speech-evidence";
+import { speechEvidenceCapabilities, speechEvidenceTypes } from "@qflow/speech-evidence";
 import { defineEndpoint } from "@qflow/qflow/endpoint";
 import type { EndpointFulfillment, EndpointInvocationContext } from "@qflow/qflow/endpoint";
 

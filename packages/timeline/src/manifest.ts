@@ -1,4 +1,4 @@
-import type { ModuleManifest, TypeRef, ValueSchema } from "@qflow/protocol";
+import type { ModuleManifest, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
 
 export const timelineModuleRef = { name: "@qflow/timeline", version: "1" } as const;
 export const timelineTypes = {

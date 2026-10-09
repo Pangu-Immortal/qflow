@@ -1,7 +1,7 @@
-import type { CanonicalValue } from "@qflow/protocol";
+import type { CanonicalValue } from "@qflow/qflow/protocol";
 import { assertSpatialFrame } from "@qflow/spatial";
 import type { SpatialFrame } from "@qflow/spatial";
-import type { Recipe } from "@qflow/recipe";
+import type { Recipe } from "@qflow/qflow/recipe";
 import { assertTimelineIdentity, timelineFrameCount } from "@qflow/timeline";
 import type { Timeline } from "@qflow/timeline";
 

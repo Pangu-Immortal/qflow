@@ -3,8 +3,8 @@ import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow
 import {
   compileWireRequest, generationTypes, mappingSupportsRequest,
   sealGeneratedVideoSet, selectWireModelForRequest,
-} from "@qflow/qflow/generation";
-import type { GenerationRequest, GenerationWireMapping } from "@qflow/qflow/generation";
+} from "@qflow/generation";
+import type { GenerationRequest, GenerationWireMapping } from "@qflow/generation";
 
 export const providerModule = { name: "@example/provider-videos", version: "1" } as const;
 export const capability = { module: { name: "@qflow/seedance", version: "1" }, name: "seedance-2-mini" } as const;

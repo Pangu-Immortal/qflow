@@ -154,6 +154,54 @@ export function distributionPackageDirectory(root: string, name: string): string
   return undefined;
 }
 
+/** Root public exports, not the contents of a checkout, define embedded implementation ownership. */
+export function embeddedPackageDirectory(root: string, name: string): string | undefined {
+  const manifestPath = join(root, "package.json");
+  if (!existsSync(manifestPath)) return undefined;
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { exports?: unknown };
+  const targets = (value: unknown): string[] => typeof value === "string" ? [value]
+    : value !== null && typeof value === "object" ? Object.values(value).flatMap(targets) : [];
+  for (const target of targets(manifest.exports)) {
+    const match = /^\.\/(packages|services)\/([^/]+)\//u.exec(target);
+    if (match === null) continue;
+    const directory = join(root, match[1]!, match[2]!);
+    if (readPackage(directory, name) !== undefined) return directory;
+  }
+  return undefined;
+}
+
+/** Explicit installed default owners. This never searches for plugins or loads their code. */
+export function distributionPackageRoots(root: string): readonly string[] {
+  const roots: string[] = [];
+  const visit = (candidate: string): void => {
+    const current = resolve(candidate);
+    if (roots.includes(current)) return;
+    roots.push(current);
+    const path = join(current, "package.json");
+    if (!existsSync(path)) return;
+    const manifest = JSON.parse(readFileSync(path, "utf8")) as {
+      dependencies?: Readonly<Record<string, string>>;
+      qflow?: { packageSources?: unknown };
+    };
+    const sources = manifest.qflow?.packageSources;
+    if (sources === undefined) return;
+    if (!Array.isArray(sources) || sources.some((name) => typeof name !== "string")) {
+      throw new Error(`${path}.qflow.packageSources must be package names`);
+    }
+    for (const source of sources as string[]) {
+      const name = packageName(source);
+      if (manifest.dependencies?.[name] === undefined) {
+        throw new Error(`${path} must declare default package source ${name} as a dependency`);
+      }
+      const located = ancestorPackage(name, join(current, "__qflow_defaults__.mjs"));
+      if (located === undefined) throw new NodePackageNotFoundError(name);
+      visit(located.root);
+    }
+  };
+  visit(root);
+  return roots;
+}
+
 function distributionPackage(root: string, name: string): LocatedNodePackage | undefined {
   const directory = distributionPackageDirectory(root, name);
   return directory === undefined ? nodeModulesPackage(root, name) : readPackage(directory, name);
@@ -174,7 +222,7 @@ export function locateNodePackage(nameValue: string, options: LocateNodePackageO
 
   if (name.startsWith("@qflow/")) {
     for (const root of distributionRoots) {
-      const directory = distributionPackageDirectory(root, name);
+      const directory = embeddedPackageDirectory(root, name);
       const embedded = directory === undefined ? undefined : readPackage(directory, name);
       if (embedded !== undefined) return embedded;
     }
@@ -186,8 +234,11 @@ export function locateNodePackage(nameValue: string, options: LocateNodePackageO
     if (found !== undefined) return found;
   }
   for (const root of distributionRoots) {
-    const found = distributionPackage(root, name);
-    if (found !== undefined) return found;
+    for (const source of distributionPackageRoots(root)) {
+      const embedded = embeddedPackageDirectory(source, name);
+      const found = embedded === undefined ? nodeModulesPackage(source, name) : readPackage(embedded, name);
+      if (found !== undefined) return found;
+    }
   }
   throw new NodePackageNotFoundError(name);
 }

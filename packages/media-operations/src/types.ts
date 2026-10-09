@@ -1,6 +1,6 @@
-import type { AudioLevelAutomation } from "@qflow/qflow/composition";
+import type { AudioLevelAutomation } from "@qflow/composition";
 import type { BlobRef } from "@qflow/qflow/protocol";
-import type { MediaFrameRange, MediaInspection, MediaRational, MediaStreamSelection, TimelineVisual, TimelineAudio } from "@qflow/qflow/media";
+import type { MediaFrameRange, MediaInspection, MediaRational, MediaStreamSelection, TimelineVisual, TimelineAudio } from "@qflow/media";
 
 export type MediaSelectionRequest = {
   readonly video:
@@ -92,7 +92,7 @@ export type StillVideoRequest = {
 };
 
 export type TransformMediaNeed = {
-  readonly media: import("@qflow/qflow/media").SynchronizedMedia;
+  readonly media: import("@qflow/media").SynchronizedMedia;
   readonly program: MediaTransformProgram;
 };
 

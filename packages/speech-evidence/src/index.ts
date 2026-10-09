@@ -1,7 +1,7 @@
-import { isResourceId } from "@qflow/protocol";
+import { isResourceId } from "@qflow/qflow/protocol";
 import { mediaDependency, mediaTypes } from "@qflow/media";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
-import type { BlobRef, CapabilityRef, ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
+import type { BlobRef, CapabilityRef, ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
 export { parseTranscriptWords, phraseRanges, transcriptDocumentFromEvidence, wordsAt } from "./transcript-document.js";
 export type { FrameWords, TranscriptWord } from "./transcript-document.js";
 

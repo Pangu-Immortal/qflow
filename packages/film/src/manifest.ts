@@ -1,10 +1,10 @@
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
-import { audioTrackSchema, compositionDependency, compositionTypes, visualTrackSchema } from "@qflow/qflow/composition";
-import { spatialDependency, spatialTypes } from "@qflow/qflow/spatial";
+import { audioTrackSchema, compositionDependency, compositionTypes, visualTrackSchema } from "@qflow/composition";
+import { spatialDependency, spatialTypes } from "@qflow/spatial";
 import { recipeManifest, recipeModuleRef, recipeType } from "@qflow/qflow/recipe";
-import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal/markup";
-import { timelineTypes, timelineDependency } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
+import { temporalContextAttributeVocabulary } from "@qflow/temporal/markup";
+import { timelineTypes, timelineDependency } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 
 export const filmModuleRef = { name: "@qflow/film", version: "1" } as const;
 export const filmTypes = {

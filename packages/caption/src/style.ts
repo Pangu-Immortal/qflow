@@ -1,4 +1,4 @@
-import { canonicalStringify, canonicalize } from "@qflow/protocol";
+import { canonicalStringify, canonicalize } from "@qflow/qflow/protocol";
 
 import { assertCaptionDocumentIdentity } from "./identity.js";
 import { assertTemporalWindowFor } from "@qflow/temporal";

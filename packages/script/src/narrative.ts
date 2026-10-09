@@ -1,7 +1,7 @@
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { CanonicalValue } from "@qflow/qflow/protocol";
-import type { CaptionCue, CaptionDocument, CaptionDisplayWord, CaptionUnit } from "@qflow/qflow/caption";
-import type { NarrativeCaptionBinding } from "@qflow/qflow/narrative-caption";
+import type { CaptionCue, CaptionDocument, CaptionDisplayWord, CaptionUnit } from "@qflow/caption";
+import type { NarrativeCaptionBinding } from "@qflow/narrative-caption";
 import { sealText } from "@qflow/qflow/text";
 
 import type { ParsedCaptionRegion, ParsedNarrative } from "./types.js";

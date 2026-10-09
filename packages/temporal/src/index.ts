@@ -1,4 +1,4 @@
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
 import { timelineDependency, timelineTypes } from "@qflow/timeline";
 
 const string = { kind: "string", minLength: 1 } as const;

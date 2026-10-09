@@ -12,6 +12,8 @@ import {
 import { compositionTypes } from "../packages/composition/src/index.ts";
 import { studioContributionFromPackage } from "../packages/studio-companion/src/index.ts";
 
+import { packConsumerDependencies, consumerHostManifest } from "./independent-consumer.mjs";
+
 import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -27,6 +29,7 @@ const distribution = join(root, "distribution");
 let passed = false;
 try {
   const ranking = await packIndependentPackage("packages/ranking", output);
+  const dependencies = await packConsumerDependencies(["ranking"], output);
   await mkdir(consumer);
   await writeFile(join(consumer, "package.json"), `${JSON.stringify({
     name: "ranking-independent-consumer",
@@ -40,6 +43,7 @@ try {
     "--no-audit",
     "--no-fund",
     "--legacy-peer-deps",
+    ...dependencies,
     ranking,
   ], {
     cwd: consumer,
@@ -64,9 +68,7 @@ try {
   await assert.rejects(access(join(installedRoot, "src", "activation.ts")));
 
   await mkdir(join(distribution, "packages"), { recursive: true });
-  await writeFile(join(distribution, "package.json"), await readFile(
-    join(repositoryRoot, "package.json"), "utf8",
-  ));
+  await writeFile(join(distribution, "package.json"), JSON.stringify(await consumerHostManifest()));
   for (const entry of await readdir(join(repositoryRoot, "packages"), { withFileTypes: true })) {
     if (!entry.isDirectory() || entry.name === "ranking" || entry.name === "ranking-studio") continue;
     await symlink(join(repositoryRoot, "packages", entry.name), join(distribution, "packages", entry.name),

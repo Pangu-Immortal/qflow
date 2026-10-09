@@ -1,6 +1,6 @@
 import { captionDependency, captionTypes } from "@qflow/caption";
 import { narrativeDependency } from "@qflow/narrative";
-import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
+import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/protocol";
 import { narrativeTemporalDependency, narrativeTemporalTypes } from "@qflow/narrative-temporal";
 
 export const narrativeCaptionModuleRef = { name: "@qflow/narrative-caption", version: "1" } as const;

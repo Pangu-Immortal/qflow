@@ -1,8 +1,8 @@
-import type { Composition } from "@qflow/qflow/composition";
-import { compileHtmlProgram, materializeHtmlProgram } from "@qflow/qflow/html-program";
-import type { HtmlProgram } from "@qflow/qflow/html-program";
+import type { Composition } from "@qflow/composition";
+import { compileHtmlProgram, materializeHtmlProgram } from "@qflow/html-program";
+import type { HtmlProgram } from "@qflow/html-program";
 import { compileAudioProgramPlan } from "@qflow/media-operations";
-import type { Timeline } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 
 import { injectRuntimeShim } from "./runtime-shim.js";
 

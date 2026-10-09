@@ -18,7 +18,7 @@ const placement = (surface: string, outputPorts: StudioPlacement["outputPorts"],
   children, attributes: {}, attributeValueRanges: {}, referenceAttributes: {}, referenceTypes: {}, references: [],
 });
 
-test("Timeline author companions expose only primary authored temporal declarations", () => {
+test("Timeline author companions expose primary Instants without Window boundaries", () => {
   const timeline = placement("timeline", [
     { name: "timeline", ref: "program.timeline" },
     { name: "window", ref: "program.window" },
@@ -33,7 +33,7 @@ test("Timeline author companions expose only primary authored temporal declarati
   { tag: "time:Instant", sourcePath: "main.svml", id: "cue", range: { start: 31, end: 45 },
     attributes: {}, attributeValueRanges: {}, references: [], referenceAttributes: {}, referenceTypes: {}, values: [] }]);
   const companion = timelineAuthorStudioTemporalDeclarations.find((item) => item.match.surface === "timeline")!;
-  assert.deepEqual(companion.project({ placement: timeline }), [{ id: "speech", label: "speech",
-    output: "program.speech", range: { start: 10, end: 30 } }, { id: "cue", label: "cue",
+  assert.deepEqual(companion.project({ placement: timeline }), [{ id: "cue", label: "cue",
     output: "program.cue", range: { start: 31, end: 45 } }]);
+  assert.equal(timelineAuthorStudioTemporalDeclarations.some(item => item.match.surface === "window"), false);
 });

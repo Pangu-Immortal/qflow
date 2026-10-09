@@ -1,12 +1,12 @@
-import { timelineTypes } from "@qflow/qflow/timeline";
+import { timelineTypes } from "@qflow/timeline";
 
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/qflow/author";
 import type { FragmentOperation, GraphFragment } from "@qflow/qflow/author";
-import { mediaTypes } from "@qflow/qflow/media";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { mediaTypes } from "@qflow/media";
+import { spatialTypes } from "@qflow/spatial";
 import { textTypes } from "@qflow/qflow/text";
-import { temporalTypes } from "@qflow/qflow/temporal";
+import { temporalTypes } from "@qflow/temporal";
 
 import { rankingProducers, rankingTypes } from "./manifest.js";
 import type { RankingVariant } from "./types.js";

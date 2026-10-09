@@ -28,6 +28,7 @@ const labelFont = '500 11px -apple-system, BlinkMacSystemFont, "SF Pro Text", "H
 const textMeasure = document.createElement("canvas").getContext("2d");
 const textWidths = new Map<string, number>();
 const wordLabelPaddingPx = 5;
+const wordLabelEnterBufferPx = 1;
 
 function measuredText(value: string, font = labelFont): number {
   const key = `${font}\u0000${value}`;
@@ -168,6 +169,7 @@ export function createTimeline(store: Store): Timeline {
     readonly kind: "span" | "point";
     readonly appearance: "block" | "compact" | "marker";
   }[] = [];
+  const readableWordLabels = new Set<string>();
 
   const playheadFraction = (): number => {
     if (state === undefined) return 0.5;
@@ -283,7 +285,7 @@ export function createTimeline(store: Store): Timeline {
   };
   lanes.addEventListener("pointerdown", (event) => {
     pointerDownOnItem = (event.target as HTMLElement).closest(
-      ".studio-item, .temporal-domain-block, .temporal-domain-compact, .temporal-domain-span, .temporal-domain-point",
+      ".studio-item, .temporal-domain-block, .temporal-domain-compact, .temporal-domain-point",
     ) !== null;
     pointerDownX = event.clientX;
     pointerArmed = true;
@@ -495,21 +497,17 @@ export function createTimeline(store: Store): Timeline {
   const buildTemporalDomainLane = (
     snapshot: StudioSnapshot,
     domain: StudioSnapshot["temporalDomains"][number],
+    group: HTMLElement,
+    insetTop: number,
+    insetBottom: number,
   ): void => {
     if (domain.lanes.length === 0) return;
-    const laneHeight = domain.lanes.reduce((height, lane) => height + lane.heightPx, itemMetrics.insetYPx * 2);
-    const label = createTrackLabel(domain.presentation.label ?? domain.id, domain.presentation.tone,
-      domain.presentation.icon, "", laneHeight);
-    label.title = `${domain.items.length} temporal items`;
-    label.classList.add("track-label-temporal-domain");
-    label.style.height = `${laneHeight}px`;
-    labels.append(label);
-
+    const laneHeight = domain.lanes.reduce((height, lane) => height + lane.heightPx, insetTop + insetBottom);
     const lane = document.createElement("div");
     lane.className = `lane temporal-domain-lane track-tone-${domain.presentation.tone}`;
     lane.style.height = `${laneHeight}px`;
     const bands = new Map<string, HTMLElement>();
-    let bandTop = itemMetrics.insetYPx;
+    let bandTop = insetTop;
     for (const description of domain.lanes) {
       const band = document.createElement("div");
       band.className = "temporal-domain-band";
@@ -533,7 +531,7 @@ export function createTimeline(store: Store): Timeline {
       if (node instanceof HTMLButtonElement) node.type = "button";
       node.className = item.kind === "point" ? "temporal-domain-point"
         : item.appearance === "compact" ? "temporal-domain-cell temporal-domain-compact"
-        : "temporal-domain-cell temporal-domain-span";
+        : "temporal-domain-cell temporal-domain-block";
       node.style.left = `${from * 100}%`;
       if (item.kind === "span") node.style.width = `max(${item.appearance === "compact" ? 1 : 2}px, ${Math.max(0, to - from) * 100}%)`;
       node.title = item.label;
@@ -542,13 +540,21 @@ export function createTimeline(store: Store): Timeline {
         const content = document.createElement("span");
         content.className = "temporal-domain-cell-content";
         const text = document.createElement("span");
-        text.className = item.appearance === "compact" ? "temporal-domain-compact-label" : "temporal-domain-span-label";
+        text.className = item.appearance === "compact" ? "temporal-domain-compact-label" : "temporal-domain-block-label";
         text.textContent = item.label;
         content.append(text);
         node.append(content);
         if (item.appearance === "compact") {
           const widthPx = Math.max(1, (to - from) * lanes.clientWidth);
-          node.classList.toggle("word-label-visible", widthPx - wordLabelPaddingPx * 2 >= measuredText(item.label));
+          const textWidthPx = measuredText(item.label);
+          const identity = `${domain.companion}:${domain.id}:${item.id}`;
+          const fitsCell = widthPx - wordLabelPaddingPx * 2 >= textWidthPx
+            + (readableWordLabels.has(identity) ? 0 : wordLabelEnterBufferPx);
+          if (fitsCell) readableWordLabels.add(identity);
+          else readableWordLabels.delete(identity);
+          const fitsViewport = from >= 0
+            && from * lanes.clientWidth + wordLabelPaddingPx * 2 + textWidthPx <= lanes.clientWidth;
+          node.classList.toggle("word-label-visible", fitsCell && fitsViewport);
         }
       }
       node.addEventListener("click", (event) => {
@@ -597,7 +603,7 @@ export function createTimeline(store: Store): Timeline {
       overlapMenu = menu;
       menu.querySelector("button")?.focus();
     });
-    rows.append(lane);
+    group.append(lane);
     domainNodes = [...domainNodes, ...nextNodes];
   };
 
@@ -718,11 +724,34 @@ export function createTimeline(store: Store): Timeline {
     labels.replaceChildren();
     rows.replaceChildren();
     domainNodes = [];
-    const corner = document.createElement("div");
-    corner.className = "label-corner";
-    userText(corner, "");
-    labels.append(corner);
-    for (const domain of snapshot.temporalDomains) buildTemporalDomainLane(snapshot, domain);
+    const temporalDomains = snapshot.temporalDomains.filter((domain) => domain.lanes.length > 0);
+    if (temporalDomains.length > 0) {
+      const temporalHeight = temporalDomains.reduce((height, domain) => height
+        + domain.lanes.reduce((domainHeight, lane) => domainHeight + lane.heightPx, 0), itemMetrics.insetYPx * 2);
+      const temporalLabel = createTrackLabel("", "teal", "brand", "", temporalHeight);
+      userText(temporalLabel.querySelector("strong")!, "Timeline");
+      temporalLabel.title = `${temporalDomains.reduce((count, domain) => count + domain.items.length, 0)} temporal items`;
+      temporalLabel.classList.add("track-label-temporal-domain");
+      temporalLabel.style.height = `calc(var(--timeline-ruler-height) + ${temporalHeight}px)`;
+      labels.append(temporalLabel);
+    } else {
+      const corner = document.createElement("div");
+      corner.className = "label-corner";
+      userText(corner, "");
+      labels.append(corner);
+    }
+    if (temporalDomains.length > 0) {
+      const group = document.createElement("div");
+      group.className = "temporal-domain-group";
+      temporalDomains.forEach((domain, index) => buildTemporalDomainLane(
+        snapshot,
+        domain,
+        group,
+        index === 0 ? itemMetrics.insetYPx : 0,
+        index === temporalDomains.length - 1 ? itemMetrics.insetYPx : 0,
+      ));
+      rows.append(group);
+    }
     const nextItemNodes: { node: HTMLElement; start: number; end: number; id: string; selectionGroup?: string }[] = [];
     for (const track of snapshot.tracks) {
       const attachedTo = track.binding.lane.attachedTo;

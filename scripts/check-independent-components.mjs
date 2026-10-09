@@ -12,6 +12,8 @@ import {
 import { compositionTypes } from "../packages/composition/src/index.ts";
 import { studioContributionFromPackage } from "../packages/studio-companion/src/index.ts";
 
+import { packConsumerDependencies, consumerHostManifest } from "./independent-consumer.mjs";
+
 import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -30,6 +32,7 @@ try {
   const visualTrack = await packIndependentPackage("packages/visual-track", output, { buildPublicTypes: false });
   const depth = await packIndependentPackage("packages/depth-stack", output, { buildPublicTypes: false });
   const emoji = await packIndependentPackage("packages/interview-emoji-reveal", output, { buildPublicTypes: false });
+  const dependencies = await packConsumerDependencies(["comment-sticker", "visual-track", "depth-stack", "interview-emoji-reveal"], output);
   await mkdir(consumer);
   await writeFile(join(consumer, "package.json"), `${JSON.stringify({
     name: "independent-component-consumer",
@@ -43,6 +46,7 @@ try {
     "--no-audit",
     "--no-fund",
     "--legacy-peer-deps",
+    ...dependencies,
     comment,
     visualTrack,
     depth,
@@ -98,7 +102,7 @@ try {
   await assert.rejects(access(join(installedEmoji.root, "src", "activation.ts")));
 
   await mkdir(join(distribution, "packages"), { recursive: true });
-  await writeFile(join(distribution, "package.json"), await readFile(join(repositoryRoot, "package.json"), "utf8"));
+  await writeFile(join(distribution, "package.json"), JSON.stringify(await consumerHostManifest()));
   const excluded = new Set(["comment-sticker", "comment-sticker-studio", "depth-stack", "interview-emoji-reveal", "visual-track"]);
   for (const entry of await readdir(join(repositoryRoot, "packages"), { withFileTypes: true })) {
     if (!entry.isDirectory() || excluded.has(entry.name)) continue;

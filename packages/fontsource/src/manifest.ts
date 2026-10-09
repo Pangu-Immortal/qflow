@@ -1,4 +1,4 @@
-import { mediaDependency, mediaTypes } from "@qflow/qflow/media";
+import { mediaDependency, mediaTypes } from "@qflow/media";
 import type { ModuleManifest } from "@qflow/qflow/protocol";
 
 export const fontsourceModuleRef = { name: "@qflow/fontsource", version: "1" } as const;

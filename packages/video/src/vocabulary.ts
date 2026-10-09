@@ -5,7 +5,7 @@ import type { CliIo } from "@qflow/qflow/cli";
 import {
   animatableLocalStyles,
   visualCompositionVocabulary,
-} from "@qflow/qflow/composition";
+} from "@qflow/composition";
 import { markupSurfaceFacetAbi } from "@qflow/qflow/markup";
 import type {
   RegisteredSurface,
@@ -13,12 +13,12 @@ import type {
   SurfacePortVocabulary,
   SurfaceVocabulary,
 } from "@qflow/qflow/markup";
-import { exactModelFacetAbi } from "@qflow/qflow/generation/model";
-import { loadNodePackageSelection, locateNodePackage } from "@qflow/qflow/loader/node";
+import { exactModelFacetAbi } from "@qflow/generation/model";
+import { loadNodePackageSelection, locateNodePackage, distributionPackageRoots } from "@qflow/qflow/loader/node";
 import type { NodePackageLoadOptions } from "@qflow/qflow/loader/node";
 import type { ValueSchema } from "@qflow/qflow/protocol";
 import { findProjectRoot } from "@qflow/qflow/project";
-import { VISUAL_STYLE_ENUM_VALUES_V1, VISUAL_STYLE_NAMES_V1 } from "@qflow/qflow/composition";
+import { VISUAL_STYLE_ENUM_VALUES_V1, VISUAL_STYLE_NAMES_V1 } from "@qflow/composition";
 
 /**
  * What a Source may write: the installed packages, and the Surfaces each one declares.
@@ -55,7 +55,7 @@ export async function listPackages(projectRoot: string, distributionRoot?: strin
   // Discover installed scopes and unlinked packages in both the project and the Distribution.
   const roots = [...new Set([
     projectRoot,
-    ...(distributionRoot === undefined ? [] : [distributionRoot]),
+    ...(distributionRoot === undefined ? [] : distributionPackageRoots(distributionRoot)),
   ])];
   const candidates: { readonly name: string; readonly directory: string }[] = [];
   for (const root of roots) {

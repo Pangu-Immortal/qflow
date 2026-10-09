@@ -1,9 +1,9 @@
-import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal/markup";
+import { temporalContextAttributeVocabulary } from "@qflow/temporal/markup";
 import { blobDependency, blobTypes } from "@qflow/qflow/blob";
-import { mediaDependency, mediaTypes } from "@qflow/qflow/media";
-import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
-import { timelineDependency } from "@qflow/qflow/timeline";
-import { htmlProgramModuleRef } from "@qflow/qflow/html-program";
+import { mediaDependency, mediaTypes } from "@qflow/media";
+import { compositionDependency, compositionTypes } from "@qflow/composition";
+import { timelineDependency } from "@qflow/timeline";
+import { htmlProgramModuleRef } from "@qflow/html-program";
 import type { ModuleManifest } from "@qflow/qflow/protocol";
 import {
   mediaOperationsModuleRef,

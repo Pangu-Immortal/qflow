@@ -1,6 +1,6 @@
 {
   "name": "@qflow/narrative-speech-alignment",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -15,12 +15,18 @@
     "README.md"
   ],
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1"
   },
   "devDependencies": {
     "@qflow/qflow": "workspace:*",
     "@qflow/script": "workspace:*",
     "@qflow/narrative": "workspace:*",
     "@qflow/speech-evidence": "workspace:*"
+  },
+  "dependencies": {
+    "@qflow/narrative": "workspace:^0.1.0",
+    "@qflow/narrative-temporal": "workspace:^0.1.0",
+    "@qflow/speech-evidence": "workspace:^0.1.0",
+    "@qflow/temporal": "workspace:^0.1.0"
   }
 }

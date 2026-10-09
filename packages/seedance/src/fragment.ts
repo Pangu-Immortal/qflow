@@ -1,8 +1,8 @@
 import { blobTypes } from "@qflow/qflow/blob";
 import { sealGraphFragment } from "@qflow/qflow/author";
-import { generationProducers } from "@qflow/qflow/generation";
-import { createExactModelPrimaryGenerationFragment } from "@qflow/qflow/generation/model";
-import type { ExactModelEndpoint, ExactModelMediaInput, ExactModelTextInput } from "@qflow/qflow/generation/model";
+import { generationProducers } from "@qflow/generation";
+import { createExactModelPrimaryGenerationFragment } from "@qflow/generation/model";
+import type { ExactModelEndpoint, ExactModelMediaInput, ExactModelTextInput } from "@qflow/generation/model";
 
 const input = (name: string) => ({ kind: "fragment-input" as const, name });
 const operation = (id: string) => ({ kind: "fragment-operation" as const, operation: id });

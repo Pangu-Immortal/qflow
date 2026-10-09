@@ -4,7 +4,7 @@ import test from "node:test";
 import type { BuildState, ProducerStep, TypeRef, TypedRecord } from "@qflow/protocol";
 
 import { executedTemporalBindings } from "../src/temporal-graph.js";
-import { commonTemporalStudioRelations } from "../src/common-temporal-relations.js";
+import { commonTemporalStudioRelations } from "@qflow/temporal/studio";
 import { narrativeStudioTemporalRelations } from "../../narrative-temporal/src/studio.js";
 
 const module = (name: string) => ({ name, version: "1" });

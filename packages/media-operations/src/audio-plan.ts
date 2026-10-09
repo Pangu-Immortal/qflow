@@ -1,7 +1,7 @@
-import { clockFrameSampleBoundary, timelineFrameCount, timelineFrameSampleBoundary } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
-import { assertAudioLevelAutomation, assertCompositionIdentity } from "@qflow/qflow/composition";
-import type { Composition } from "@qflow/qflow/composition";
+import { clockFrameSampleBoundary, timelineFrameCount, timelineFrameSampleBoundary } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
+import { assertAudioLevelAutomation, assertCompositionIdentity } from "@qflow/composition";
+import type { Composition } from "@qflow/composition";
 import { canonicalize, isResourceId } from "@qflow/qflow/protocol";
 
 import type { AudioProgramPlan } from "./types.js";

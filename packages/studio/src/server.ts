@@ -1,8 +1,6 @@
-import { watch } from "node:fs";
-import type { FSWatcher } from "node:fs";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { isAbsolute, relative, resolve, sep } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
@@ -26,6 +24,7 @@ import { findSurfacePreview } from "./surface-preview.js";
 import { domainGestureSpan } from "./temporal-edit.js";
 import { planTemporalInverse, temporalAuthorBindings } from "./temporal-inverse.js";
 import { replaceSourceFiles } from "./source-transaction.js";
+import { createSourceWatch } from "./source-watch.js";
 
 export type StudioPluginOptions = {
   readonly source: string;
@@ -84,7 +83,7 @@ class StudioMutationRejected extends Error {}
 export function studioPlugin(options: StudioPluginOptions): Plugin {
   let snapshot: StudioSnapshot | undefined;
   let visualHtml: string | undefined;
-  let visualDocument: import("@qflow/qflow/html-program").HtmlProgram | undefined;
+  let visualDocument: import("@qflow/html-program").HtmlProgram | undefined;
   let failure: StudioFailure | undefined;
   let material: ReadonlyMap<string, ServedFile> = new Map();
   let temporalEdit: StudioSession["temporalEdit"] | undefined;
@@ -96,8 +95,10 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
   let requestedRevision = 0;
   let currentSource = options.source;
   let allowedSourceFiles = new Set<string>();
-  const watched = new Map<string, FSWatcher>();
-  const watchedFiles = new Set<string>();
+  const sourceWatch = createSourceWatch(
+    () => { if (!mutating) schedule(); },
+    message => server?.config.logger.warn(message),
+  );
   const storyboards = new Map<string, Promise<StudioStoryboard>>();
 
   const readLibrary = async (request: StudioLibraryRequest): Promise<StudioLibraryView> => {
@@ -107,27 +108,6 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       tasks: [],
       artifacts: [],
     };
-  };
-
-  const watchSource = (path: string): void => {
-    const absolute = resolve(path);
-    watchedFiles.add(absolute);
-    const directory = dirname(absolute);
-    if (watched.has(directory)) return;
-    try {
-      const watcher = watch(directory, (_event, filename) => {
-        const changed = filename === null ? undefined : resolve(directory, filename.toString());
-        if (!mutating && (changed === undefined || watchedFiles.has(changed))) schedule();
-      });
-      watcher.on("error", () => {
-        watcher.close();
-        if (watched.get(directory) === watcher) watched.delete(directory);
-      });
-      watched.set(directory, watcher);
-    } catch {
-      // Some Hosts may report virtual Source ids. They are still recompiled
-      // whenever a real Source revision is scheduled; they simply emit no file event.
-    }
   };
 
   const publish = async (attempt: number, notify = true): Promise<void> => {
@@ -142,9 +122,12 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
         registry: options.registry,
         ...(options.buildLibrary === undefined ? {} : { buildLibrary: options.buildLibrary }),
       });
+      if (attempt !== requestedRevision) return;
       currentSource = run.authorSource;
-      watchSource(options.runPath);
-      for (const unit of run.source.compiled.closure.units) watchSource(unit.id);
+      sourceWatch.replace([
+        resolve(options.runPath), resolve(run.authorSource),
+        ...run.source.compiled.closure.units.map(unit => unit.id),
+      ]);
       allowedSourceFiles = new Set([
         options.runPath,
         run.authorSource,
@@ -162,6 +145,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
         workspaceRoot: options.workspaceRoot,
       });
       if (attempt !== requestedRevision) return;
+      for (const issue of result.declarationIssues) server?.config.logger.warn(issue);
       revision = attempt;
       snapshot = result.snapshot;
       visualHtml = result.visualHtml;
@@ -474,8 +458,7 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
     name: "qflow-studio",
     configureServer(value) {
       server = value;
-      watchSource(options.runPath);
-      watchSource(currentSource);
+      sourceWatch.replace([resolve(options.runPath), resolve(currentSource)]);
       value.middlewares.use((request, response, next) => {
         const url = new URL(request.url ?? "/", "http://studio.qflow.local");
         if (request.method === "PUT" && url.pathname === "/__studio/source") {
@@ -809,8 +792,8 @@ export function studioPlugin(options: StudioPluginOptions): Plugin {
       });
     },
     async closeBundle() {
-      for (const watcher of watched.values()) watcher.close();
-      watched.clear();
+      if (timer !== undefined) clearTimeout(timer);
+      sourceWatch.close();
       await options.buildLibrary?.close();
     },
   };

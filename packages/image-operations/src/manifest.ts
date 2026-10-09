@@ -1,5 +1,5 @@
 import { blobDependency, blobTypes } from "@qflow/qflow/blob";
-import { spatialDependency, spatialTypes } from "@qflow/qflow/spatial";
+import { spatialDependency, spatialTypes } from "@qflow/spatial";
 import type { ModuleManifest, ValueSchema } from "@qflow/qflow/protocol";
 
 import { imageComposeMarkupSurface } from "./compose-declaration.js";

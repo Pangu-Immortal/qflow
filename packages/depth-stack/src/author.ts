@@ -9,7 +9,7 @@ import type {
   MediaPaintLayerSpec,
   MediaSampleLayerSpec,
 } from "@qflow/visual-track";
-import type { ContentFit } from "@qflow/qflow/spatial";
+import type { ContentFit } from "@qflow/spatial";
 import type { Recipe } from "@qflow/qflow/recipe";
 
 import {

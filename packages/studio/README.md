@@ -152,12 +152,25 @@ Track/Item edit remain hidden rather than becoming a third semantic-content row.
 no Narrative slot or Narrative-shaped fallback; a beat or shot package can contribute its own two
 or more lanes without changing Studio.
 
-All package-declared primary Window and Instant outputs share one read-only declaration row. Their
-owning Surface Companions select the exact output ports; common Studio only resolves the absolute
-temporal values. Automatically derived Window boundaries, the Timeline's root range and internal
-helpers are not repeated as Items. The resulting time header is one ruler row, the lanes contributed
-by each exact Projection, and one common declaration row. Only the ruler is pinned while all rows
-scroll together with component Tracks.
+Package-declared primary Instant outputs share one read-only locator row. Their owning Surface
+Companions select the exact output ports; common Studio resolves the absolute time values. Windows
+remain available for authoring, Inspector references and Track/Item time editing; their consumed
+intervals are displayed by the corresponding Track Items rather than repeated in the common row.
+Automatically derived Window boundaries and internal helpers are not added as locators.
+The resulting time header is one ruler row, the lanes contributed
+by each exact Projection, and one common declaration row. They share one Qflow-logo `Timeline`
+label and stay pinned as a group while component Tracks scroll. Script's two rows and the common
+declaration row are each 15px high; with one Projection they form a compact three-row strip beneath
+the 22px ruler. Additional Projections contribute rows, not separate left-hand headers.
+
+Each declaration Companion requests its exact logical outputs for the locator row, including
+Instants that no Track consumes. After the Film display execution resolves, Studio evaluates those
+additional outputs through the same Compiler and display Executor. Already resolved logical outputs
+are reused as in-memory Run Candidates from that exact compilation; the user's Run and its targets
+are unchanged. The Runtime's existing transient-execution permissions still apply: displaying a
+locator does not submit a Build or enable generation Endpoints. Unresolved or failed locator work
+is reported in the Studio terminal without invalidating the Film preview. Only resolved Instants
+on the displayed Timeline are shown.
 
 Domain items retain Companion projection order within each lane. Their fine borders distinguish
 adjacent and overlapping intervals without inventing time gaps. Selection raises an object above
@@ -171,6 +184,18 @@ recompiled together. Domain packages, Companion registry, Runtime and Result lib
 are opened at startup; restart this Studio process after changing those selections,
 package code or imports that introduce new packages. Browser refresh does not reload
 server-side package modules.
+
+Source watching uses the filesystem Workspace's absolute Source paths. Non-file identities are not
+resolved relative to Studio's working directory. Each successful Source compilation replaces the
+watched dependency set; removed imports stop triggering updates, and unused directory watchers close.
+A failed compilation retains the previous watch set so edits to its known files can still trigger a
+new compilation. Directory watching also handles editors that save by replacing the original file.
+
+If opening or maintaining a Source watcher fails, Studio reports the directory, cause and preview
+impact in the terminal. It does not poll or automatically retry the failed watcher. Restart Studio
+after correcting the underlying filesystem/resource problem; a browser refresh alone may still read
+the last compiled snapshot. Studio's own edit requests explicitly recompile and do not depend on
+filesystem notifications.
 
 The Source pane can edit the selected `.svml`, `.svs` or `.svrun` file. The Inspector
 shows project facts when no Item is selected and declared facts and author fields for

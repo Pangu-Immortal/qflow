@@ -17,11 +17,9 @@ const placement = (surface: string, port: string): StudioPlacement => ({
   children: [], attributes: {}, attributeValueRanges: {}, referenceAttributes: {}, referenceTypes: {}, references: [],
 });
 
-test("Narrative temporal companions expose semantic Window and Instant as the same declaration shape", () => {
-  const window = narrativeStudioTemporalDeclarations.find((item) => item.match.surface === "narrative-window")!;
+test("Narrative temporal companions contribute only primary Instants to the common row", () => {
   const instant = narrativeStudioTemporalDeclarations.find((item) => item.match.surface === "narrative-instant")!;
-  assert.deepEqual(window.project({ placement: placement("Window", "window") }),
-    [{ id: "claim", label: "claim", output: "claim", range: { start: 4, end: 24 } }]);
+  assert.equal(narrativeStudioTemporalDeclarations.some(item => item.match.surface === "narrative-window"), false);
   assert.deepEqual(instant.project({ placement: placement("Instant", "instant") }),
     [{ id: "claim", label: "claim", output: "claim", range: { start: 4, end: 24 } }]);
 });

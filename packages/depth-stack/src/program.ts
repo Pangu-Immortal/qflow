@@ -1,8 +1,8 @@
-import { assertTimelineIdentity, timelineFrameCount } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
+import { assertTimelineIdentity, timelineFrameCount } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import {
   assertFontArtifactRef,
-} from "@qflow/qflow/media";
+} from "@qflow/media";
 import {
   assertVisualFrameTreatment,
   assertMediaLayerSet,
@@ -10,10 +10,10 @@ import {
 import { canonicalize } from "@qflow/qflow/protocol";
 import { verifyText } from "@qflow/qflow/text";
 import type { Text } from "@qflow/qflow/text";
-import { assertSpatialFrame } from "@qflow/qflow/spatial";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
-import { assertTemporalInstantFor } from "@qflow/qflow/temporal";
-import type { TemporalInstant } from "@qflow/qflow/temporal";
+import { assertSpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
+import { assertTemporalInstantFor } from "@qflow/temporal";
+import type { TemporalInstant } from "@qflow/temporal";
 
 import type {
   DeckCardTone,

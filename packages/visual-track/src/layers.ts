@@ -1,16 +1,16 @@
 import {
   assertCompositableSurfaceRef,
   verifySynchronizedMedia,
-} from "@qflow/qflow/media";
-import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/qflow/media";
+} from "@qflow/media";
+import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
 import { canonicalize, isResourceId } from "@qflow/qflow/protocol";
 import type { BlobRef } from "@qflow/qflow/protocol";
 import {
   assertContentFit,
   assertIntrinsicExtent,
   assertSpatialMap2D,
-} from "@qflow/qflow/spatial";
-import type { ContentFit, IntrinsicExtent, SpatialMap2D } from "@qflow/qflow/spatial";
+} from "@qflow/spatial";
+import type { ContentFit, IntrinsicExtent, SpatialMap2D } from "@qflow/spatial";
 
 import type {
   MediaGradientStop,

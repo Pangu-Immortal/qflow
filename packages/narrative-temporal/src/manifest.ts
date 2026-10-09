@@ -1,5 +1,5 @@
 import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
-import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
+import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/protocol";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
 import { timelineDependency, timelineTypes } from "@qflow/timeline";
 

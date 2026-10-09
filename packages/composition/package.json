@@ -1,6 +1,6 @@
 {
   "name": "@qflow/composition",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -11,11 +11,8 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/admission": "workspace:*",
-    "@qflow/producer": "workspace:*",
-    "@qflow/media": "workspace:*",
-    "@qflow/protocol": "workspace:*",
-    "@qflow/timeline": "workspace:*"
+    "@qflow/media": "workspace:^0.1.0",
+    "@qflow/timeline": "workspace:^0.1.0"
   },
   "devDependencies": {
     "@qflow/blob": "workspace:*",
@@ -23,6 +20,17 @@
     "@qflow/narrative": "workspace:*",
     "@qflow/recipe": "workspace:*",
     "@qflow/spatial": "workspace:*",
-    "@qflow/speech-evidence": "workspace:*"
+    "@qflow/speech-evidence": "workspace:*",
+    "@qflow/admission": "workspace:*",
+    "@qflow/producer": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/qflow": "workspace:*"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^0.3.1"
   }
 }

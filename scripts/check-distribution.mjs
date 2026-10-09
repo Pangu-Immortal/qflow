@@ -93,7 +93,13 @@ try {
   await cp(join(example, "packages", "chat-scene"), component, { recursive: true });
   const installed = installedDistribution;
   const componentPackage = JSON.parse(await readFile(join(component, "package.json"), "utf8"));
-  componentPackage.devDependencies["@qflow/qflow"] = installed.version;
+  for (const field of ["dependencies", "peerDependencies", "devDependencies"]) {
+    for (const [name, range] of Object.entries(componentPackage[field] ?? {})) {
+      if (!range.startsWith("workspace:")) continue;
+      const selected = JSON.parse(await readFile(join(project, "node_modules", ...name.split("/"), "package.json"), "utf8"));
+      componentPackage[field][name] = selected.version;
+    }
+  }
   await writeFile(join(component, "package.json"), JSON.stringify(componentPackage, null, 2));
   const projectPackage = JSON.parse(await readFile(join(project, "package.json"), "utf8"));
   projectPackage.workspaces = ["packages/chat-scene"];

@@ -11,6 +11,8 @@ import {
   resolveNodePackageSource,
 } from "../packages/loader/src/node/index.ts";
 
+import { packConsumerDependencies, consumerHostManifest } from "./independent-consumer.mjs";
+
 import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -27,6 +29,7 @@ let passed = false;
 try {
   const seedance = await packIndependentPackage("packages/seedance", output);
   const kits = await packIndependentPackage("packages/seedance-kits", output, { buildPublicTypes: false });
+  const dependencies = await packConsumerDependencies(["seedance", "seedance-kits"], output);
   await mkdir(consumer);
   await writeFile(join(consumer, "package.json"), `${JSON.stringify({
     name: "seedance-independent-consumer",
@@ -40,6 +43,7 @@ try {
     "--no-audit",
     "--no-fund",
     "--legacy-peer-deps",
+    ...dependencies,
     seedance,
     kits,
   ], {
@@ -72,9 +76,7 @@ try {
   await access(join(installedKitsRoot, "LICENSE"));
 
   await mkdir(join(distribution, "packages"), { recursive: true });
-  await writeFile(join(distribution, "package.json"), await readFile(
-    join(repositoryRoot, "package.json"), "utf8",
-  ));
+  await writeFile(join(distribution, "package.json"), JSON.stringify(await consumerHostManifest()));
   for (const entry of await readdir(join(repositoryRoot, "packages"), { withFileTypes: true })) {
     if (!entry.isDirectory() || entry.name === "seedance" || entry.name === "seedance-kits") continue;
     await symlink(join(repositoryRoot, "packages", entry.name), join(distribution, "packages", entry.name),

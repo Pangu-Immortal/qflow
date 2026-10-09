@@ -1,7 +1,7 @@
-import type { Narrative, NarrativeSegmentRef } from "@qflow/qflow/narrative";
-import type { NarrativeAlignment } from "@qflow/qflow/narrative-temporal";
-import type { AlignedTranscriptEvidence } from "@qflow/qflow/speech-evidence";
-import type { LocalTemporalDomain } from "@qflow/qflow/temporal";
+import type { Narrative, NarrativeSegmentRef } from "@qflow/narrative";
+import type { NarrativeAlignment } from "@qflow/narrative-temporal";
+import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
+import type { LocalTemporalDomain } from "@qflow/temporal";
 
 import { locateAlignedSegmentTiming } from "./locate.js";
 import { materializeNarrativeAlignment } from "./materialize.js";

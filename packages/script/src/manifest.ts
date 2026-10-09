@@ -1,7 +1,7 @@
 import type { ModuleManifest, TypeRef } from "@qflow/qflow/protocol";
-import { captionDependency, captionTypes } from "@qflow/qflow/caption";
-import { narrativeDependency, narrativeSchema, narrativeTypes } from "@qflow/qflow/narrative";
-import { narrativeCaptionDependency, narrativeCaptionTypes } from "@qflow/qflow/narrative-caption";
+import { captionDependency, captionTypes } from "@qflow/caption";
+import { narrativeDependency, narrativeSchema, narrativeTypes } from "@qflow/narrative";
+import { narrativeCaptionDependency, narrativeCaptionTypes } from "@qflow/narrative-caption";
 import { textDependency, textTypes } from "@qflow/qflow/text";
 
 export const scriptModuleRef = { name: "@qflow/script", version: "1" } as const;

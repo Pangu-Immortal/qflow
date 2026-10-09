@@ -10,6 +10,8 @@ import {
   loadNodePackageSelection,
 } from "../packages/loader/src/node/index.ts";
 
+import { packConsumerDependencies, consumerHostManifest, defaultPackageNames } from "./independent-consumer.mjs";
+
 import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -52,12 +54,12 @@ const consumer = join(root, "consumer");
 const distribution = join(root, "distribution");
 let passed = false;
 try {
-  const distributionManifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8"));
+  const distributionManifest = await consumerHostManifest();
   for (const name of defaultPackages) {
-    assert.equal(distributionManifest.dependencies[name], "workspace:^", `${name} must be a default dependency`);
+    assert.equal((await defaultPackageNames()).has(name), true, `${name} must be a default dependency`);
   }
   for (const name of optionalPackages) {
-    assert.equal(distributionManifest.dependencies[name], undefined, `${name} must remain an optional install`);
+    assert.equal((await defaultPackageNames()).has(name), false, `${name} must remain an optional install`);
   }
 
   const tarballs = [];
@@ -79,6 +81,7 @@ try {
   }
   tarballs.push(await packIndependentPackage("packages/whisperx", output, { buildPublicTypes: false }));
 
+  const dependencies = await packConsumerDependencies([...packageDirectories, "image-operations", "media-operations", "narrative-speech-alignment", "whisperx"], output);
   await mkdir(consumer);
   await writeFile(join(consumer, "package.json"), `${JSON.stringify({
     name: "qflow-runtime-package-consumer",
@@ -92,6 +95,7 @@ try {
     "--no-audit",
     "--no-fund",
     "--legacy-peer-deps",
+    ...dependencies,
     imageOperationsTarball,
     mediaOperationsTarball,
     narrativeSpeechAlignmentTarball,

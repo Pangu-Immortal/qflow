@@ -14,6 +14,8 @@ import { admissionPackagesFromFacets } from "../packages/admission/src/index.ts"
 import { producerPackagesFromFacets } from "../packages/producer/src/index.ts";
 import { studioContributionFromPackage } from "../packages/studio-companion/src/index.ts";
 
+import { packConsumerDependencies, consumerHostManifest, defaultPackageNames } from "./independent-consumer.mjs";
+
 import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 import { distributionEmbeddedPackageDirectories } from "./distribution-ownership.mjs";
 
@@ -30,6 +32,7 @@ const distribution = join(root, "distribution");
 let passed = false;
 try {
   const tarball = await packIndependentPackage("packages/visual-track", output);
+  const dependencies = await packConsumerDependencies(["visual-track"], output);
   await mkdir(consumer);
   await writeFile(join(consumer, "package.json"), `${JSON.stringify({
     name: "visual-track-independent-consumer",
@@ -43,6 +46,7 @@ try {
     "--no-audit",
     "--no-fund",
     "--legacy-peer-deps",
+    ...dependencies,
     tarball,
   ], {
     cwd: consumer,
@@ -66,9 +70,9 @@ try {
   await assert.rejects(access(join(installedRoot, "src", "activation.ts")));
 
   await mkdir(join(distribution, "packages"), { recursive: true });
-  const rootManifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8"));
+  const rootManifest = await consumerHostManifest();
   assert.equal(rootManifest.exports["./visual-track"], undefined);
-  assert.equal(rootManifest.dependencies["@qflow/visual-track"], "workspace:^");
+  assert.ok((await defaultPackageNames()).has("@qflow/visual-track"));
   assert.equal((await distributionEmbeddedPackageDirectories(repositoryRoot)).has("visual-track"), false);
   await writeFile(join(distribution, "package.json"), `${JSON.stringify(rootManifest, null, 2)}\n`);
   for (const entry of await readdir(join(repositoryRoot, "packages"), { withFileTypes: true })) {

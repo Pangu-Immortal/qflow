@@ -4,7 +4,7 @@ import { EndpointRegistry, MemoryResourceStore } from "@qflow/executor";
 import { sealGptImage2Request } from "@qflow/gpt-image";
 import type { BlobRef, EndpointStartContext } from "@qflow/qflow/endpoint";
 import { canonicalize } from "@qflow/qflow/endpoint";
-import { generationTypes } from "@qflow/qflow/generation";
+import { generationTypes } from "@qflow/generation";
 import { capability, createImageProvider } from "../src/provider.js";
 
 test("project Provider maps a reference, retains its receipt and collects through the public resource port", async () => {

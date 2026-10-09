@@ -1,10 +1,10 @@
-import type { AdmissionPackage } from "@qflow/admission";
-import { plannedNeedInputs } from "@qflow/producer";
-import type { ProducerPackage } from "@qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import { plannedNeedInputs } from "@qflow/qflow/producer";
+import type { ProducerPackage } from "@qflow/qflow/producer";
 import type { Composition } from "@qflow/composition";
 import type { Timeline } from "@qflow/timeline";
-import type { CanonicalValue, StoredValue } from "@qflow/protocol";
-import { canonicalize } from "@qflow/protocol";
+import type { CanonicalValue, StoredValue } from "@qflow/qflow/protocol";
+import { canonicalize } from "@qflow/qflow/protocol";
 
 import { compileHtmlProgram } from "./document.js";
 import type { MediaFrameRange } from "@qflow/media";

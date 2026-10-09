@@ -1,5 +1,5 @@
-import type { MediaFrameRange } from "@qflow/qflow/media";
-import type { HtmlFrameSource } from "@qflow/qflow/html-program";
+import type { MediaFrameRange } from "@qflow/media";
+import type { HtmlFrameSource } from "@qflow/html-program";
 import { FrameSpanIndex } from "./frame-span-index.js";
 import { assert } from "./process.js";
 

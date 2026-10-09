@@ -1,7 +1,7 @@
 import type {
   VisualAnimation,
   VisualStyleDeclaration,
-} from "@qflow/qflow/composition";
+} from "@qflow/composition";
 import { canonicalize } from "@qflow/qflow/protocol";
 
 import type {

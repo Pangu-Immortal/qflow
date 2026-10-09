@@ -1,8 +1,8 @@
-import { assertTimelineIdentity, timelineFrameCount } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
-import { assertCaptionProgramForDocument } from "@qflow/qflow/caption";
-import type { CaptionProgram } from "@qflow/qflow/caption";
-import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/qflow/composition";
+import { assertTimelineIdentity, timelineFrameCount } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
+import { assertCaptionProgramForDocument } from "@qflow/caption";
+import type { CaptionProgram } from "@qflow/caption";
+import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/composition";
 import type {
   VisualAnimation,
   VisualBoxElement,
@@ -14,17 +14,17 @@ import type {
   VisualTextElement,
   VisualTextPaintLayer,
   VisualTrack,
-} from "@qflow/qflow/composition";
-import type { CaptionDocument, CaptionDisplayWord, CaptionUnit } from "@qflow/qflow/caption";
-import { assertRegionEvidence } from "@qflow/qflow/region-evidence";
-import type { RegionEvidence } from "@qflow/qflow/region-evidence";
-import { assertSpatialFrame } from "@qflow/qflow/spatial";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
+} from "@qflow/composition";
+import type { CaptionDocument, CaptionDisplayWord, CaptionUnit } from "@qflow/caption";
+import { assertRegionEvidence } from "@qflow/region-evidence";
+import type { RegionEvidence } from "@qflow/region-evidence";
+import { assertSpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 
 import { assertFineCaptionParameters, FINE_CAPTION_FAMILY } from "./style.js";
 import { assertFineCaptionSchedule } from "./schedule.js";
 import { uniformGap, wordGaps } from "./spacing.js";
-import { htmlVisual } from "@qflow/qflow/html-program";
+import { htmlVisual } from "@qflow/html-program";
 import { joinedBoxSetup } from "./joined-box.js";
 import type {
   FineCaptionActiveUnderline,

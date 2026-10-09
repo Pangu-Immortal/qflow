@@ -1,6 +1,6 @@
 import { compositionTypes } from "@qflow/composition";
 import type { Composition } from "@qflow/composition";
-import { sealGraphFragment } from "@qflow/author";
+import { sealGraphFragment } from "@qflow/qflow/author";
 import { timelineTypes } from "@qflow/timeline";
 
 import { htmlProgramProducers, htmlProgramTypes } from "./manifest.js";

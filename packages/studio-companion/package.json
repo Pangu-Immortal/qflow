@@ -1,6 +1,6 @@
 {
   "name": "@qflow/studio-companion",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "README.md"
   ],
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.0"
   },
   "devDependencies": {
     "@qflow/qflow": "workspace:*"

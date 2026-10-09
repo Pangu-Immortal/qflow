@@ -1,9 +1,9 @@
-import type { AdmissionPackage } from "@qflow/admission";
-import type { ProducerPackage } from "@qflow/producer";
-import { canonicalize } from "@qflow/protocol";
-import type { StoredValue } from "@qflow/protocol";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { ProducerPackage } from "@qflow/qflow/producer";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { StoredValue } from "@qflow/qflow/protocol";
 import type { SpatialFrame } from "@qflow/spatial";
-import type { Recipe } from "@qflow/recipe";
+import type { Recipe } from "@qflow/qflow/recipe";
 import type { Timeline } from "@qflow/timeline";
 
 import { regionEvidenceProducers, regionEvidenceTypes } from "./manifest.js";

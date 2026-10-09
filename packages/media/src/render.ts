@@ -1,5 +1,5 @@
-import { isResourceId } from "@qflow/protocol";
-import type { BlobRef } from "@qflow/protocol";
+import { isResourceId } from "@qflow/qflow/protocol";
+import type { BlobRef } from "@qflow/qflow/protocol";
 
 const FONT_MEDIA_TYPES = new Set([
   "font/otf",

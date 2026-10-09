@@ -1,8 +1,8 @@
-import type { AdmissionPackage } from "@qflow/admission";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
 import type { CaptionDocument, CaptionTiming } from "@qflow/caption";
-import type { ProducerPackage } from "@qflow/producer";
-import type { StoredValue } from "@qflow/protocol";
-import { canonicalize } from "@qflow/protocol";
+import type { ProducerPackage } from "@qflow/qflow/producer";
+import type { StoredValue } from "@qflow/qflow/protocol";
+import { canonicalize } from "@qflow/qflow/protocol";
 import type { NarrativeProjection } from "@qflow/narrative-temporal";
 
 import { assertNarrativeCaptionBindingIdentity } from "./identity.js";

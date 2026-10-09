@@ -1,6 +1,6 @@
 {
   "name": "@qflow/html-video",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -15,10 +15,15 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/media-operations": "workspace:^"
+    "@qflow/composition": "workspace:^0.1.0",
+    "@qflow/html-program": "workspace:^0.1.0",
+    "@qflow/media": "workspace:^0.1.0",
+    "@qflow/media-operations": "workspace:^0.2.0",
+    "@qflow/temporal": "workspace:^0.1.0",
+    "@qflow/timeline": "workspace:^0.1.0"
   },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1"
   },
   "devDependencies": {
     "@qflow/compiler": "workspace:*",

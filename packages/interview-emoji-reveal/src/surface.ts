@@ -1,11 +1,11 @@
-import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalContext } from "@qflow/temporal/markup";
 import { assertAttributes, assertEmptyElement, optionalTextAttribute, textAttribute, type MarkupAttributeValue, type StructuredSurfaceHandler, type SurfaceComponentDraft, type SurfaceRecordDraft, type SurfaceResolvedReference } from "@qflow/qflow/markup";
 import { blobTypes } from "@qflow/qflow/blob";
 import { sameType, type CanonicalValue, type TypeRef } from "@qflow/qflow/protocol";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { spatialTypes } from "@qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 import type { Recipe } from "@qflow/qflow/recipe";
-import { resolveTemporalInstantReference, resolveTemporalWindowReference, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalInstantReference, resolveTemporalWindowReference, temporalWindowAttributeNames } from "@qflow/temporal/markup";
 
 import { createEmojiRevealFragment } from "./fragment.js";
 import { emojiRevealTypes } from "./manifest.js";

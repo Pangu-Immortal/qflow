@@ -69,7 +69,7 @@
       "one": "{count} item",
       "other": "{count} items"
     },
-    "inspector.moment": "Moment",
+    "inspector.instant": "Instant",
     "inspector.move-down": "Move down",
     "inspector.move-up": "Move up",
     "inspector.project": "Project",

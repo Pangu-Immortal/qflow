@@ -1,9 +1,9 @@
 import { mkdir, open, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { materializeHtmlProgram, selectHtmlArtifacts } from "@qflow/qflow/html-program";
-import type { HtmlProgram, HtmlFrameSpan } from "@qflow/qflow/html-program";
-import type { CompositableSurfaceRef } from "@qflow/qflow/media";
+import { materializeHtmlProgram, selectHtmlArtifacts } from "@qflow/html-program";
+import type { HtmlProgram, HtmlFrameSpan } from "@qflow/html-program";
+import type { CompositableSurfaceRef } from "@qflow/media";
 import type { BlobRef } from "@qflow/qflow/protocol";
 
 /** Reads one execution resource. Whose store it comes from is the caller's business. */

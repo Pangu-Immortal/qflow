@@ -1,10 +1,10 @@
 import { assertEmptyElement as empty, localName, textAttribute as text, type StructuredElement, type StructuredSurfaceHandler, type SurfaceResolvedReference, type MarkupAttributeValue } from "@qflow/qflow/markup";
 import { sameType, type CanonicalValue } from "@qflow/qflow/protocol";
 import { blobTypes } from "@qflow/qflow/blob";
-import { mediaTypes } from "@qflow/qflow/media";
-import { temporalTypes } from "@qflow/qflow/temporal";
-import { parseTemporalDuration } from "@qflow/qflow/temporal/markup";
-import { timelineTypes, type Clock } from "@qflow/qflow/timeline";
+import { mediaTypes } from "@qflow/media";
+import { temporalTypes } from "@qflow/temporal";
+import { parseTemporalDuration } from "@qflow/temporal/markup";
+import { timelineTypes, type Clock } from "@qflow/timeline";
 import { recipeType, type Recipe } from "@qflow/qflow/recipe";
 
 import {

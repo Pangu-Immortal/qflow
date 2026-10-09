@@ -59,7 +59,7 @@ installed tarball contains a second editable source tree:
 
 A project component can use these relationships with its own behavior. External TypeScript uses
 `@qflow/qflow/author`, `@qflow/qflow/producer`, `@qflow/qflow/admission`,
-`@qflow/qflow/markup`, `@qflow/qflow/temporal/markup` and the appropriate domain APIs. Copy the relevant idea into
+`@qflow/qflow/markup`, `@qflow/temporal/markup` and the appropriate domain APIs. Copy the relevant idea into
 the project's own package, with its own Module identity, instead of editing the installed Ranking.
 
 The Companion uses published values and temporal lineage, so a visible row and its reveal handle can

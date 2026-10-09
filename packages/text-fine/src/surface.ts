@@ -1,7 +1,7 @@
-import { timelineTypes } from "@qflow/qflow/timeline";
-import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { timelineTypes } from "@qflow/timeline";
+import { resolveTemporalContext } from "@qflow/temporal/markup";
 
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import type {
   VisualColorPaint,
   VisualStyleDeclaration,
@@ -10,22 +10,22 @@ import type {
   VisualTextRunStyle,
   VisualTextSequenceAnimation,
   VisualTextTypography,
-} from "@qflow/qflow/composition";
+} from "@qflow/composition";
 import {
   assertFontArtifactRef,
   assertFontStackRef,
   mediaTypes,
-} from "@qflow/qflow/media";
-import type { FontArtifactRef, FontStackRef } from "@qflow/qflow/media";
-import { spatialTypes } from "@qflow/qflow/spatial";
+} from "@qflow/media";
+import type { FontArtifactRef, FontStackRef } from "@qflow/media";
+import { spatialTypes } from "@qflow/spatial";
 import { sealGraphFragment } from "@qflow/qflow/author";
 import type { FragmentOperation, GraphFragment } from "@qflow/qflow/author";
 import { recipeType } from "@qflow/qflow/recipe";
 import type { Recipe } from "@qflow/qflow/recipe";
 import { textTypes } from "@qflow/qflow/text";
 import type { StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/qflow/markup";
-import { temporalTypes } from "@qflow/qflow/temporal";
-import { resolveTemporalWindowReference } from "@qflow/qflow/temporal/markup";
+import { temporalTypes } from "@qflow/temporal";
+import { resolveTemporalWindowReference } from "@qflow/temporal/markup";
 
 import { fineTextWindowAttributeVocabulary, textFineProducers, textFineTypes } from "./manifest.js";
 import {

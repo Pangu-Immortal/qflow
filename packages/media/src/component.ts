@@ -1,9 +1,9 @@
-import type { AdmissionPackage } from "@qflow/admission";
-import type { ProducerPackage } from "@qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { ProducerPackage } from "@qflow/qflow/producer";
 import { verifyMediaInspection, verifyMediaStreamSelection, verifyMuxedMedia, verifyTimelineVisual, verifySynchronizedMedia, verifyTimelineAudio } from "./identity.js";
 import { mediaLocalTemporalDomain } from "./domain.js";
 import type { MediaDomainSpec, SynchronizedMedia } from "./types.js";
-import { canonicalize } from "@qflow/protocol";
+import { canonicalize } from "@qflow/qflow/protocol";
 import { mediaProducers } from "./manifest.js";
 import { mediaTypes } from "./manifest.js";
 import { verifyMediaFrameRange } from "./frame-range.js";

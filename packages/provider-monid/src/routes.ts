@@ -4,8 +4,8 @@ import {
   generationTypes,
   sealGeneratedImageSet,
   sealGeneratedVideoSet,
-} from "@qflow/qflow/generation";
-import type { GenerationArtifactUrlResolver, GenerationRequest } from "@qflow/qflow/generation";
+} from "@qflow/generation";
+import type { GenerationArtifactUrlResolver, GenerationRequest } from "@qflow/generation";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { BlobRef, CapabilityRef, CanonicalValue, StoredValue, TypeRef } from "@qflow/qflow/protocol";
 import type { EndpointRequest, EndpointSupport } from "@qflow/qflow/endpoint";

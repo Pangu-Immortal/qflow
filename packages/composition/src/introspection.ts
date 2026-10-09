@@ -1,4 +1,4 @@
-import type { ValueSchema } from "@qflow/protocol";
+import type { ValueSchema } from "@qflow/qflow/protocol";
 
 import {
   visualBoxSchema,

@@ -4,6 +4,7 @@ import { globSync } from "node:fs";
 import { join } from "node:path";
 
 const patterns = [
+  "scripts/test/*.test.mjs",
   "packages/*/test/**/*.test.ts",
   "services/*/test/**/*.test.ts",
   "test/**/*.test.ts",

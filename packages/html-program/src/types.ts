@@ -1,5 +1,5 @@
 
-import type { BlobRef, ResourceId } from "@qflow/protocol";
+import type { BlobRef, ResourceId } from "@qflow/qflow/protocol";
 import type { CompositableSurfaceRef } from "@qflow/media";
 import { VISUAL_IR_V1 } from "@qflow/composition";
 

@@ -1,4 +1,4 @@
-import type { SpeechEvidenceAudio } from "@qflow/qflow/speech-evidence";
+import type { SpeechEvidenceAudio } from "@qflow/speech-evidence";
 
 /** Explicit language code. Executable language support belongs to the selected service. */
 export type WhisperXLanguage = string;

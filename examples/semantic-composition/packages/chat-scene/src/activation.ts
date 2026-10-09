@@ -6,18 +6,18 @@ import type { AdmissionPackage } from "@qflow/qflow/admission";
 import type { FragmentOperation } from "@qflow/qflow/author";
 import type { ModuleManifest, TypeRef } from "@qflow/qflow/protocol";
 import type { StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";
-import { compositionTypes } from "@qflow/qflow/composition";
-import { mediaTypes } from "@qflow/qflow/media";
-import type { FontStackRef } from "@qflow/qflow/media";
-import type { Timeline } from "@qflow/qflow/timeline";
-import { timelineTypes } from "@qflow/qflow/timeline";
-import { spatialTypes } from "@qflow/qflow/spatial";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
-import { assertTemporalInstantFor, temporalTypes } from "@qflow/qflow/temporal";
-import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
+import { compositionTypes } from "@qflow/composition";
+import { mediaTypes } from "@qflow/media";
+import type { FontStackRef } from "@qflow/media";
+import type { Timeline } from "@qflow/timeline";
+import { timelineTypes } from "@qflow/timeline";
+import { spatialTypes } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
+import { assertTemporalInstantFor, temporalTypes } from "@qflow/temporal";
+import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 import { resolveTemporalInstantReference, resolveTemporalWindowReference, resolveTemporalContext,
   temporalContextAttributeVocabulary, temporalInstantAttributeNames, temporalInstantAttributeVocabulary,
-  temporalWindowAttributeNames, temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal/markup";
+  temporalWindowAttributeNames, temporalWindowAttributeVocabulary } from "@qflow/temporal/markup";
 import { renderChat } from "./render.js";
 import type { ChatOptions, Message } from "./render.js";
 

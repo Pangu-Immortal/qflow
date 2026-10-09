@@ -1,5 +1,5 @@
-import { assertSpatialFrame, assertSpatialPath } from "@qflow/qflow/spatial";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
+import { assertSpatialFrame, assertSpatialPath } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 
 import type { VisualFrameTreatment } from "./types.js";
 

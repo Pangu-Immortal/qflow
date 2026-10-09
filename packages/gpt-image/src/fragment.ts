@@ -1,9 +1,9 @@
 import { blobTypes } from "@qflow/qflow/blob";
 import { sealGraphFragment } from "@qflow/qflow/author";
-import { generationProducers } from "@qflow/qflow/generation";
+import { generationProducers } from "@qflow/generation";
 import { imageTransformProducers, imageTransformTypes } from "@qflow/image-operations";
-import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/qflow/generation/model";
-import type { ExactModelMediaInput, ExactModelTextInput } from "@qflow/qflow/generation/model";
+import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/generation/model";
+import type { ExactModelMediaInput, ExactModelTextInput } from "@qflow/generation/model";
 import type { FragmentOperation } from "@qflow/qflow/author";
 import { textTypes } from "@qflow/qflow/text";
 

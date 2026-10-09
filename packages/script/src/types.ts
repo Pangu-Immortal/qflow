@@ -1,9 +1,9 @@
 import type { CanonicalValue, SourceRange, StoredValue, TypeRef } from "@qflow/qflow/protocol";
-import type { CaptionWordAttribute } from "@qflow/qflow/caption";
-import type { Narrative, NarrativeMoment, NarrativeSegment, NarrativeSelection, NarrativeToken, NarrativeTurn } from "@qflow/qflow/narrative";
+import type { CaptionWordAttribute } from "@qflow/caption";
+import type { Narrative, NarrativeMoment, NarrativeSegment, NarrativeSelection, NarrativeToken, NarrativeTurn } from "@qflow/narrative";
 
-export type { CaptionWordAttribute } from "@qflow/qflow/caption";
-export type { Narrative, SemanticAnchor } from "@qflow/qflow/narrative";
+export type { CaptionWordAttribute } from "@qflow/caption";
+export type { Narrative, SemanticAnchor } from "@qflow/narrative";
 
 export type Affinity = "left" | "right";
 

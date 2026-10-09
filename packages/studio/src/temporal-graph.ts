@@ -1,6 +1,6 @@
 import { sameType } from "@qflow/qflow/protocol";
 import type { BuildState, ProducerRef, ProducerStep, StoredValue, TypeRef, TypedRecord } from "@qflow/qflow/protocol";
-import { temporalTypes } from "@qflow/qflow/temporal";
+import { temporalTypes } from "@qflow/temporal";
 import type {
   StudioTemporalBinding,
   StudioTemporalInstantProjection,

@@ -1,4 +1,4 @@
-import type { ObjectFieldSchema, ValueSchema } from "@qflow/protocol";
+import type { ObjectFieldSchema, ValueSchema } from "@qflow/qflow/protocol";
 
 export const generationResourceSchema = {
   kind: "string",

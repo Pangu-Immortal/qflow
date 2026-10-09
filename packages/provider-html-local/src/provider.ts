@@ -1,6 +1,6 @@
 import { defineEndpoint } from "@qflow/qflow/endpoint";
-import { mediaTypes } from "@qflow/qflow/media";
-import { htmlProgramCapabilities, htmlProgramTypes, verifyHtmlFrameRequest, verifyHtmlRasterRequest } from "@qflow/qflow/html-program";
+import { mediaTypes } from "@qflow/media";
+import { htmlProgramCapabilities, htmlProgramTypes, verifyHtmlFrameRequest, verifyHtmlRasterRequest } from "@qflow/html-program";
 import { canonicalize } from "@qflow/qflow/protocol";
 import { rasterizeHtmlProgram, rasterizeHtmlFrames, resolveExecutionOptions } from "./render.js";
 import { renderWorkerLimit } from "./concurrency.js";

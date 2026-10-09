@@ -1,6 +1,6 @@
-import { narrativeTypes } from "@qflow/qflow/narrative";
-import { narrativeTemporalTypes } from "@qflow/qflow/narrative-temporal";
-import type { NarrativeProjection } from "@qflow/qflow/narrative-temporal";
+import { narrativeTypes } from "@qflow/narrative";
+import { narrativeTemporalTypes } from "@qflow/narrative-temporal";
+import type { NarrativeProjection } from "@qflow/narrative-temporal";
 import { sameType } from "@qflow/qflow/protocol";
 import type {
   Range,
@@ -12,6 +12,8 @@ import type {
 import { adjustScriptMoment, adjustScriptSelection } from "./edit.js";
 import { scriptModuleRef } from "./manifest.js";
 import { parseScript } from "./parser.js";
+
+const timelineBandHeightPx = 15;
 
 type NarrativeValue = {
   readonly id?: string;
@@ -96,8 +98,8 @@ export function projectScriptTemporalDomain(input: StudioTemporalDomainProjectio
         anchorId: moment.anchorId, frame: at, ...(momentRanges.has(moment.id) ? { range: momentRanges.get(moment.id)! } : {}) }];
     });
     return { id: projection.id, timelineId: input.timeline.id,
-      lanes: [{ id: "maps", label: "Map", heightPx: 26 },
-        { id: "evidence", label: "Evidence", heightPx: 26 }],
+      lanes: [{ id: "maps", label: "Map", heightPx: timelineBandHeightPx },
+        { id: "evidence", label: "Evidence", heightPx: timelineBandHeightPx }],
       anchors, items: [...segments, ...tokens], editItems: [...selections, ...moments] };
   });
 }

@@ -1,11 +1,11 @@
-import { sealVisualTrack } from "@qflow/qflow/composition";
-import type { VisualElement } from "@qflow/qflow/composition";
-import { htmlVisual } from "@qflow/qflow/html-program";
-import type { FontArtifactRef } from "@qflow/qflow/media";
-import type { SynchronizedMedia } from "@qflow/qflow/media";
-import type { Timeline } from "@qflow/qflow/timeline";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
-import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
+import { sealVisualTrack } from "@qflow/composition";
+import type { VisualElement } from "@qflow/composition";
+import { htmlVisual } from "@qflow/html-program";
+import type { FontArtifactRef } from "@qflow/media";
+import type { SynchronizedMedia } from "@qflow/media";
+import type { Timeline } from "@qflow/timeline";
+import type { SpatialFrame } from "@qflow/spatial";
+import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
 export type ExplainerOptions = { id: string; title: string; transitionFrames: number; stackingOrder: number };
 

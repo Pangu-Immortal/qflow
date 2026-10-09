@@ -1,16 +1,23 @@
 {
   "name": "@qflow/provider-qflowhub",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "files": ["dist", "README.md"],
-  "qflow": { "activation": "./src/activation.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "qflow": {
+    "activation": "./src/activation.ts"
+  },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^",
-    "@qflow/runtime-local": "workspace:^",
-    "@qflow/whisperx": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1",
+    "@qflow/runtime-local": "workspace:^0.1.1",
+    "@qflow/whisperx": "workspace:^0.2.0"
   },
   "devDependencies": {
     "@qflow/endpoint": "workspace:*",
@@ -30,5 +37,9 @@
     "@qflow/volcengine-matting": "workspace:*",
     "@qflow/gpt-image": "workspace:*",
     "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@qflow/generation": "workspace:^0.1.0",
+    "@qflow/speech-evidence": "workspace:^0.1.0"
   }
 }

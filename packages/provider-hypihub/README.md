@@ -4,8 +4,8 @@ Thin Qflow Runtime Provider for a QflowHub deployment. It is an optional default
 paid generation and WhisperX alignment requests. Select it for a chosen QflowHub account, with OAuth
 or an API key in the configured Credential Store; other Providers remain ordinary Profile choices.
 
-The implementation uses only the public `@qflow/qflow/*` Provider APIs. Its one cross-package
-contract is an explicit peer on `@qflow/whisperx`, whose capability identity, request validation and
+The implementation uses public Qflow Provider APIs and the Generation and Speech Evidence packages.
+It also declares an explicit peer on `@qflow/whisperx`, whose capability identity, request validation and
 wire-response interpretation it implements remotely. Compatible published releases use an ordinary
 SemVer range; the consuming project's npm/pnpm lockfile fixes the installed pair. Qflow performs no
 Provider download, version resolution or Build-time upgrade. The Provider reads its own package

@@ -1,15 +1,15 @@
-import type { Timeline } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import {
   assertVisualTrackIdentity,
   sealVisualTrack,
-} from "@qflow/qflow/composition";
+} from "@qflow/composition";
 import type {
   VisualAnimation,
   VisualElement,
   VisualSourceTimeMap,
   VisualStyleDeclaration,
   VisualTrack,
-} from "@qflow/qflow/composition";
+} from "@qflow/composition";
 import {
   lowerVisualClipElements,
   resolveMediaLayerPrograms,
@@ -19,7 +19,7 @@ import type {
   VisualClipProgram,
   MediaSampleLayer,
 } from "@qflow/visual-track";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 
 import {
   assertDepthStackProgramIdentity,

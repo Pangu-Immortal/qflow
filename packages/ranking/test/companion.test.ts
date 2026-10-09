@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import type { StudioTrackCompanionContext } from "@qflow/studio-companion";
 import { rankingStudioTrackCompanions } from "../src/studio.js";
 

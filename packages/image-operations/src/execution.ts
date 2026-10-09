@@ -1,5 +1,5 @@
 import { canonicalize, isResourceId } from "@qflow/qflow/protocol";
-import { assertCanvas, assertSpatialFrame } from "@qflow/qflow/spatial";
+import { assertCanvas, assertSpatialFrame } from "@qflow/spatial";
 
 import type {
   ImageComposeExecutionLayer, ImageComposeRequest, ImageEncodeOperation,

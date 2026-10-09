@@ -5,6 +5,7 @@ import { temporalTypes } from "@qflow/temporal";
 import type { StudioPlacement, StudioTemporalDeclarationCompanion } from "@qflow/studio-companion";
 import { snapshot } from "../src/snapshot.js";
 import type { StudioProjection } from "../src/projection.js";
+import { observedTemporalValues } from "../src/temporal-declarations.js";
 import { StudioCompanionRegistry } from "../src/studio-registry.js";
 import { fallbackStudioTrackCompanions } from "../src/fallback-companions.js";
 
@@ -29,7 +30,7 @@ test("a pure-MG work keeps its declared extent even when a Studio Item extends b
   assert.equal("timing" in result.provenance, false);
 });
 
-test("direct and projected author time share one read-only declaration row", () => {
+test("the common declaration row displays Instants without duplicating Window intervals", () => {
   const directModule = { name: "example/direct", version: "1" };
   const projectedModule = { name: "example/projected", version: "1" };
   const placement = (module: typeof directModule, surface: string, id: string, output: string) => ({
@@ -41,17 +42,24 @@ test("direct and projected author time share one read-only declaration row", () 
     placement(projectedModule, "instant", "projected", "projected.value")];
   const built = { source: { observations: { placements, temporalDomains: [] } }, tracks: [],
     timeline: { id: "work", frameCount: 90, frameRate: { numerator: 30, denominator: 1 } },
-    values: new Map(), temporalDomainValues: [], temporalBindings: new Map(), temporalValues: [
-      { id: "direct.value", type: temporalTypes.window, value: {
-        id: "direct", subjectId: "direct",
-        start: { id: "direct.start", subjectId: "direct", timelineId: "work", frame: 3 },
-        end: { id: "direct.end", subjectId: "direct", timelineId: "work", frame: 30 },
-        span: { startFrame: 3, endFrameExclusive: 30 },
-      } },
-      { id: "projected.value", type: temporalTypes.instant, value: {
-        id: "projected", subjectId: "projected", timelineId: "work", frame: 18,
-      } },
-    ],
+    values: new Map(), temporalDomainValues: [], temporalBindings: new Map(), temporalValues: observedTemporalValues({
+      program: { records: [] },
+      plan: { outputBindings: [
+        { output: "direct.value", record: "run-window" },
+        { output: "projected.value", record: "computed-instant" },
+      ] },
+      records: [
+        { id: "run-window", type: temporalTypes.window, value: { kind: "inline", value: {
+          id: "direct", subjectId: "direct",
+          start: { id: "direct.start", subjectId: "direct", timelineId: "work", frame: 3 },
+          end: { id: "direct.end", subjectId: "direct", timelineId: "work", frame: 30 },
+          span: { startFrame: 3, endFrameExclusive: 30 },
+        } } },
+        { id: "computed-instant", type: temporalTypes.instant, value: { kind: "inline", value: {
+          id: "projected", subjectId: "projected", timelineId: "work", frame: 18,
+        } } },
+      ],
+    } as unknown as Parameters<typeof observedTemporalValues>[0]),
   } as unknown as StudioProjection;
   const declaration = (id: string, module: typeof directModule, surface: string): StudioTemporalDeclarationCompanion => ({
     id, match: { module, surface }, project: ({ placement: found }: { placement: StudioPlacement }) => found.id === undefined
@@ -67,7 +75,12 @@ test("direct and projected author time share one read-only declaration row", () 
   });
   assert.equal(result.temporalDomains.length, 1);
   assert.deepEqual(result.temporalDomains[0]!.items.map((item) => [item.label, item.kind, item.laneId]), [
-    ["direct", "span", "declarations"], ["projected", "point", "declarations"],
+    ["projected", "point", "declarations"],
   ]);
   assert.deepEqual(result.temporalDomains[0]!.editItems, []);
+  assert.equal(result.temporalDomains[0]!.lanes[0]!.heightPx, 15);
+  assert.equal(result.temporalDomains[0]!.lanes[0]!.label, "Instants");
+  assert.equal(result.temporalDomains[0]!.items[0]!.appearance, "marker");
+  assert.deepEqual(result.temporalDomains[0]!.anchors.map(anchor => anchor.kind), ["instant"]);
+  assert.ok(built.temporalValues.some(value => value.id === "direct.value"));
 });

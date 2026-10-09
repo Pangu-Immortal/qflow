@@ -1,9 +1,9 @@
-import type { Timeline } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import type { ProducerPackage } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
 import type { StoredValue } from "@qflow/qflow/protocol";
-import type { CompositableSurfaceRef } from "@qflow/qflow/media";
-import type { SpatialFrame, SpatialPath, SpatialPoint } from "@qflow/qflow/spatial";
+import type { CompositableSurfaceRef } from "@qflow/media";
+import type { SpatialFrame, SpatialPath, SpatialPoint } from "@qflow/spatial";
 import type { Text } from "@qflow/qflow/text";
 import { canonicalize } from "@qflow/qflow/protocol";
 
@@ -22,7 +22,7 @@ import type {
   TextMaskSpec,
   TextStyle,
 } from "./types.js";
-import type { TemporalWindow } from "@qflow/qflow/temporal";
+import type { TemporalWindow } from "@qflow/temporal";
 
 function inline<T>(value: StoredValue | undefined, subject: string): T {
   if (value?.kind !== "inline") throw new Error(`${subject} must be inline.`);

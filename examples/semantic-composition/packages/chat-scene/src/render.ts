@@ -1,11 +1,11 @@
-import { sealVisualTrack } from "@qflow/qflow/composition";
-import type { VisualElement } from "@qflow/qflow/composition";
-import { htmlVisual } from "@qflow/qflow/html-program";
-import type { FontStackRef } from "@qflow/qflow/media";
-import type { Timeline } from "@qflow/qflow/timeline";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
-import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
-import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
+import { sealVisualTrack } from "@qflow/composition";
+import type { VisualElement } from "@qflow/composition";
+import { htmlVisual } from "@qflow/html-program";
+import type { FontStackRef } from "@qflow/media";
+import type { Timeline } from "@qflow/timeline";
+import type { SpatialFrame } from "@qflow/spatial";
+import { assertTemporalWindowFor } from "@qflow/temporal";
+import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
 export type Message = { id: string; sender: string; text: string; side: "left" | "right"; at: TemporalInstant };
 export type ChatOptions = { id: string; title: string; entranceFrames: number };

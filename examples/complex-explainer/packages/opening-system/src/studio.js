@@ -1,4 +1,4 @@
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import {
   createStudioCompanionFacet,
   textLayer,
@@ -177,7 +177,7 @@ const tracks = Object.entries(layouts).map(([kind, inspector]) => ({
               stackOrder: 0,
               renderIds: [],
               ...(temporal ? { temporal } : {}),
-              presentation: { entity: "material-stage", chrome: "standard" },
+              presentation: { kind: "material-stage", chrome: "standard" },
             },
             ...children,
           ];

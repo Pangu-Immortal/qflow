@@ -2,9 +2,9 @@ import type {
   VisualSourceTimeMap,
   VisualSourceTimePiece,
   VisualSourceTimeRational,
-} from "@qflow/qflow/composition";
-import { assertTimelineIdentity } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
+} from "@qflow/composition";
+import { assertTimelineIdentity } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 
 import type {
   VisualSourceTimeBounds,

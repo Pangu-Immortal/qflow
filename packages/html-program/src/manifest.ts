@@ -1,6 +1,6 @@
 import { compositionDependency, compositionTypes, VISUAL_IR_V1 } from "@qflow/composition";
 import { compositableSurfaceSchema, mediaDependency, mediaTypes } from "@qflow/media";
-import type { CapabilityRef, ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
+import type { CapabilityRef, ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
 import { timelineDependency, timelineTypes } from "@qflow/timeline";
 
 export const htmlProgramModuleRef = { name: "@qflow/html-program", version: "1" } as const;

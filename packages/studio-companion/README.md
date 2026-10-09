@@ -16,7 +16,7 @@ accepts a literal string `label` attribute. The Companion can reuse generic term
 adding package-specific presentation and one Inspector field:
 
 ```ts
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import type { StudioTrackCompanion } from "@qflow/studio-companion";
 
 export const companions: readonly StudioTrackCompanion[] = [{
@@ -163,14 +163,19 @@ temporal-domain Companion owns source observation, requests the domain values it
 one view for every exact Projection instance. Each view projects package-owned lanes, anchors and
 visible point/span Items onto the absolute Timeline. Domain objects needed only to invert a Track/Item
 edit belong in `editItems`; Studio does not draw them as another lane.
+Span appearance is a display choice: `block` for ordinary domain blocks and `compact` for dense
+evidence; points use `marker`. It does not change an item's time boundaries.
 Script Studio uses this protocol for Narrative, but common Studio neither imports Narrative nor
 reserves segment, word, Selection or Moment slots. Another package can contribute beat, shot or
 motion-event domains through the same protocol.
 
 A temporal-declaration Companion instead matches one author Surface and names only the output ports
-whose primary values are author-visible absolute Windows or Instants. It does not choose their color,
-row or editing behavior. Studio resolves those exact outputs and puts every package's declarations in
-one read-only `Windows & Instants` row. This keeps Surface port knowledge in the owning package while
+whose primary values are author-visible absolute Instants. It does not choose their color,
+row or editing behavior. These exact outputs are display requests even when no Track consumes them.
+Studio evaluates them under the existing display-execution permissions and displays resolved primary
+Instants in one read-only `Instants` row. Unresolved requests are reported without blocking Film
+preview. Windows remain author values used by Track Items and their editing
+lineage, without an additional common-row block. This keeps Surface port knowledge in the owning package while
 letting common Studio understand only the shared absolute temporal types. Do not export a Timeline's
 root range, automatically derived Window boundaries or internal helper values as separate declarations.
 

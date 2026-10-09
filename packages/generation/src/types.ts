@@ -1,4 +1,4 @@
-import type { BlobRef } from "@qflow/protocol";
+import type { BlobRef } from "@qflow/qflow/protocol";
 
 export type GeneratedImageSet = {
   readonly images: readonly BlobRef[];

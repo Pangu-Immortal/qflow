@@ -1,9 +1,9 @@
 import { sealGraphFragment } from "@qflow/qflow/author";
 import type { FragmentOperation } from "@qflow/qflow/author";
-import { compositionTypes } from "@qflow/qflow/composition";
-import type { Track } from "@qflow/qflow/composition";
-import { spatialTypes } from "@qflow/qflow/spatial";
-import { timelineTypes } from "@qflow/qflow/timeline";
+import { compositionTypes } from "@qflow/composition";
+import type { Track } from "@qflow/composition";
+import { spatialTypes } from "@qflow/spatial";
+import { timelineTypes } from "@qflow/timeline";
 
 import { filmProducers, filmTypes } from "./manifest.js";
 import type { FilmAssemblyFragmentOptions, FilmTrackInput } from "./types.js";

@@ -137,14 +137,3 @@ export function chooseDomainGesture(input: {
   }
   return undefined;
 }
-
-
-/** Keep the reference and write its local frame offset; a bare reference starts at zero. */
-export function formatTemporalPointEdit(
-  reference: StudioTemporalInstantProjection["reference"], desired: number, base?: number,
-): string {
-  if (reference === "absolute") return `${desired}f`;
-  if (base === undefined) throw new Error(`The ${reference} projection base is unavailable.`);
-  const offset = desired - base;
-  return `${reference}${offset >= 0 ? "+" : ""}${offset}f`;
-}

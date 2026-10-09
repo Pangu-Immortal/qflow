@@ -1,8 +1,8 @@
 import { terminalSetup } from "./terminal.js";
 import { scene_styles } from "./scene-styles.js";
-import { sealVisualTrack } from "@qflow/qflow/composition";
-import { htmlVisual } from "@qflow/qflow/html-program";
-import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
+import { sealVisualTrack } from "@qflow/composition";
+import { htmlVisual } from "@qflow/html-program";
+import { assertTemporalWindowFor } from "@qflow/temporal";
 const styles = (o) => Object.entries(o).map(([name, value]) => ({ name, value }));
 export function scene(t, within, w, font, o, html, css, setup, events, entries, extra = {}) {
   assertTemporalWindowFor(w, { subjectId: o.id, timeline: t });
@@ -40,7 +40,7 @@ export function scene(t, within, w, font, o, html, css, setup, events, entries, 
     };
     if (v.image) return { ...shared, kind: "image", artifact: v.image };
     const m = v.media,
-      src = m.timeline.frameRate,
+      src = m.frameDomain.frameRate,
       start = Math.max(0, v.start ?? 0),
       end = Math.min(count, v.end ?? count);
     if (!m.visual) throw Error(id + " requires prepared picture");
@@ -51,7 +51,7 @@ export function scene(t, within, w, font, o, html, css, setup, events, entries, 
     if (
       !v.loop &&
       !v.holdLast &&
-      ((end - start - 1) * rate.numerator) / rate.denominator >= m.timeline.frameCount
+      ((end - start - 1) * rate.numerator) / rate.denominator >= m.frameDomain.frameCount
     )
       throw Error(id + " source is too short");
     return {
@@ -61,12 +61,12 @@ export function scene(t, within, w, font, o, html, css, setup, events, entries, 
       muted: true,
       sourceTime: {
         sourceFrameRate: src,
-        sourceFrameCount: m.timeline.frameCount,
+        sourceFrameCount: m.frameDomain.frameCount,
         pieces: v.holdLast
           ? (() => {
               const played = Math.min(
                   end - start,
-                  Math.ceil((m.timeline.frameCount * rate.denominator) / rate.numerator),
+                  Math.ceil((m.frameDomain.frameCount * rate.denominator) / rate.numerator),
                 ),
                 segments = [
                   {
@@ -78,7 +78,7 @@ export function scene(t, within, w, font, o, html, css, setup, events, entries, 
               if (start + played < end)
                 segments.push({
                   target: { startFrame: start + played, endFrameExclusive: end },
-                  sourceAtStart: { numerator: m.timeline.frameCount - 1, denominator: 1 },
+                  sourceAtStart: { numerator: m.frameDomain.frameCount - 1, denominator: 1 },
                   rate: { numerator: 0, denominator: 1 },
                 });
               return segments;
@@ -88,11 +88,11 @@ export function scene(t, within, w, font, o, html, css, setup, events, entries, 
                 {
                   length: Math.ceil(
                     (end - start) /
-                      Math.floor((m.timeline.frameCount * rate.denominator) / rate.numerator),
+                      Math.floor((m.frameDomain.frameCount * rate.denominator) / rate.numerator),
                   ),
                 },
                 (_, i) => {
-                  const n = Math.floor((m.timeline.frameCount * rate.denominator) / rate.numerator),
+                  const n = Math.floor((m.frameDomain.frameCount * rate.denominator) / rate.numerator),
                     a = start + i * n;
                   return {
                     target: { startFrame: a, endFrameExclusive: Math.min(end, a + n) },

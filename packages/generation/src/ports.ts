@@ -1,4 +1,4 @@
-import type { BlobRef } from "@qflow/protocol";
+import type { BlobRef } from "@qflow/qflow/protocol";
 
 /**
  * The closed vocabulary describing what one exact generation model accepts.

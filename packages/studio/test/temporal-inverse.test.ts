@@ -5,7 +5,7 @@ import type { BuildState, ProducerStep, TypeRef, TypedRecord } from "@qflow/prot
 
 import { planTemporalInverse, temporalAuthorBindings } from "../src/temporal-inverse.js";
 import { StudioCompanionRegistry } from "../src/studio-registry.js";
-import { commonTemporalStudioRelations } from "../src/common-temporal-relations.js";
+import { commonTemporalStudioRelations } from "@qflow/temporal/studio";
 import { timelineAuthorProducers } from "../../timeline-author/src/manifest.js";
 import { timelineAuthorStudioTemporalRelations } from "../../timeline-author/src/studio.js";
 

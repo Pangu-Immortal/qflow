@@ -1,8 +1,8 @@
 import { palette } from "@explainer/visual-language";
 import { flagSetup } from "./flag-cloth.js";
-import { sealVisualTrack } from "@qflow/qflow/composition";
-import { htmlVisual } from "@qflow/qflow/html-program";
-import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
+import { sealVisualTrack } from "@qflow/composition";
+import { htmlVisual } from "@qflow/html-program";
+import { assertTemporalWindowFor } from "@qflow/temporal";
 
 const digits = {
   0: ["11111", "10001", "10001", "10001", "10001", "10001", "11111"],

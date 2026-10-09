@@ -1,6 +1,6 @@
-import type { CaptionDocument, CaptionProgram, CaptionTiming } from "@qflow/qflow/caption";
-import { captionTypes } from "@qflow/qflow/caption";
-import { compositionTypes } from "@qflow/qflow/composition";
+import type { CaptionDocument, CaptionProgram, CaptionTiming } from "@qflow/caption";
+import { captionTypes } from "@qflow/caption";
+import { compositionTypes } from "@qflow/composition";
 import { fineCaptionEditableDefaults } from "./recipe.js";
 import { captionFineMarkupSurfaces, captionFineModuleRef } from "./manifest.js";
 import type { FineCaptionSchedule } from "./types.js";

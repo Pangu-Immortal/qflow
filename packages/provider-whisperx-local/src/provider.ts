@@ -1,8 +1,8 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@qflow/qflow/speech-evidence";
-import type { AlignedTranscriptEvidence } from "@qflow/qflow/speech-evidence";
+import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@qflow/speech-evidence";
+import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
 import type { EndpointInvocationContext, EndpointFulfillment } from "@qflow/qflow/endpoint";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { CanonicalValue } from "@qflow/qflow/protocol";

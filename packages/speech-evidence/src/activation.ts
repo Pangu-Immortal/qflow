@@ -1,5 +1,5 @@
-import { createAdmissionPackageFacet } from "@qflow/admission";
-import { createProducerPackageFacet } from "@qflow/producer";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
 import { speechEvidenceComponent } from "./component.js";
 import { speechEvidenceManifest } from "./index.js";
 export const qflowPackage = {

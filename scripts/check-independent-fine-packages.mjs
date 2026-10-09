@@ -14,6 +14,8 @@ import { admissionPackagesFromFacets } from "../packages/admission/src/index.ts"
 import { producerPackagesFromFacets } from "../packages/producer/src/index.ts";
 import { studioContributionFromPackage } from "../packages/studio-companion/src/index.ts";
 
+import { packConsumerDependencies, consumerHostManifest, defaultPackageNames } from "./independent-consumer.mjs";
+
 import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 import { distributionEmbeddedPackageDirectories } from "./distribution-ownership.mjs";
 
@@ -31,6 +33,7 @@ let passed = false;
 try {
   const caption = await packIndependentPackage("packages/caption-fine", output);
   const text = await packIndependentPackage("packages/text-fine", output, { buildPublicTypes: false });
+  const dependencies = await packConsumerDependencies(["caption-fine", "text-fine"], output);
   await mkdir(consumer);
   await writeFile(join(consumer, "package.json"), `${JSON.stringify({
     name: "fine-independent-consumer",
@@ -44,6 +47,7 @@ try {
     "--no-audit",
     "--no-fund",
     "--legacy-peer-deps",
+    ...dependencies,
     caption,
     text,
   ], {
@@ -81,11 +85,11 @@ try {
   await access(join(installedText.root, "preview", "Mask.png"));
 
   await mkdir(join(distribution, "packages"), { recursive: true });
-  const rootManifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8"));
+  const rootManifest = await consumerHostManifest();
   const embedded = await distributionEmbeddedPackageDirectories(repositoryRoot);
   for (const name of ["caption-fine", "text-fine"]) {
     assert.equal(rootManifest.exports[`./${name}`], undefined);
-    assert.equal(rootManifest.dependencies[`@qflow/${name}`], "workspace:^");
+    assert.ok((await defaultPackageNames()).has(`@qflow/${name}`));
     assert.equal(embedded.has(name), false);
   }
   await writeFile(join(distribution, "package.json"), `${JSON.stringify(rootManifest, null, 2)}\n`);

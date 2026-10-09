@@ -1,5 +1,5 @@
-import type { StructuredSurfaceHandler } from "@qflow/markup";
-import { assertAttributes, assertEmptyElement, textAttribute } from "@qflow/markup";
+import type { StructuredSurfaceHandler } from "@qflow/qflow/markup";
+import { assertAttributes, assertEmptyElement, textAttribute } from "@qflow/qflow/markup";
 import { captionTypes } from "./manifest.js";
 import { sealCaptionStyle } from "./style.js";
 

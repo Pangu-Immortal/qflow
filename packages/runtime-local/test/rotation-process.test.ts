@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn, type ChildProcess } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -42,6 +42,8 @@ test("a draining carrier finishes its existing Build while a new carrier shares 
   const endpoint=`http://127.0.0.1:${address.port}`;
   try {
     const pkg=join(root,'node_modules','fixture-rotation'); await mkdir(pkg,{recursive:true});
+    await mkdir(join(root, "node_modules", "@qflow"), { recursive: true });
+    await symlink(join(distribution, "packages", "runtime-local"), join(root, "node_modules", "@qflow", "runtime-local"), process.platform === "win32" ? "junction" : "dir");
     await writeFile(join(root,'package.json'),'{"private":true,"qflow":{"project":true}}');
     await writeFile(join(pkg,'package.json'),JSON.stringify({name:'fixture-rotation',version:'1.0.0',type:'module',qflow:{activation:'./activation.mjs'}}));
     await writeFile(join(pkg,'activation.mjs'),`

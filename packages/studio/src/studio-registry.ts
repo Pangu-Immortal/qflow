@@ -21,7 +21,7 @@ import type {
 } from "@qflow/studio-companion";
 import { studioParameterControls } from "@qflow/studio-companion";
 import { parameterOption } from "./parameter-values.js";
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import { sameModule, sameType } from "@qflow/qflow/protocol";
 import type { ModuleRef, ProducerRef, TypeRef } from "@qflow/qflow/protocol";
 

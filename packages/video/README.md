@@ -5,6 +5,12 @@ the filesystem Workspace, Source-package discovery and the starter Runtime Profi
 `qflow vocabulary` view because that view describes the author packages selected by this video
 Distribution.
 
+Its ordinary npm dependencies select the default author capabilities, Models, Providers and Kits.
+Each dependency owns its implementation and version; Video does not bundle or re-export their SDKs.
+The root product names Video in `qflow.packageSources` so Source and Profile selections can resolve
+these installed defaults from their owner without relying on node_modules hoisting. Project installs
+remain higher priority. The root explicitly declares the command packages it invokes.
+
 It is deliberately **not** a general video utility package. Browser capture, local media inspection,
 speech measurement, WhisperX transcription and Studio snapshots are owned by their respective
 packages and contribute their own CLI roots:

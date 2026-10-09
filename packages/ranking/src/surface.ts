@@ -1,13 +1,13 @@
-import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalContext } from "@qflow/temporal/markup";
 import { assertEmptyElement as empty, assertAttributes as allowed, localName, textAttribute as text, optionalTextAttribute as optionalText, type StructuredElement, type StructuredSurfaceHandler, type SurfaceRecordDraft, type SurfaceResolvedReference, type MarkupAttributeValue } from "@qflow/qflow/markup";
 import { sameType, type CanonicalValue, type TypeRef } from "@qflow/qflow/protocol";
-import { mediaTypes } from "@qflow/qflow/media";
-import type { FontArtifactRef, FontStackRef } from "@qflow/qflow/media";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { mediaTypes } from "@qflow/media";
+import type { FontArtifactRef, FontStackRef } from "@qflow/media";
+import { spatialTypes } from "@qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 import type { Recipe } from "@qflow/qflow/recipe";
 import { textTypes } from "@qflow/qflow/text";
-import { resolveTemporalInstantReference, resolveTemporalWindowReference, temporalInstantAttributeNames } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalInstantReference, resolveTemporalWindowReference, temporalInstantAttributeNames } from "@qflow/temporal/markup";
 
 import { createRankingFragment } from "./fragment.js";
 import type { RankingFragmentItem, RankingFragmentSound } from "./fragment.js";

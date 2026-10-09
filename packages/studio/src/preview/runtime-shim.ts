@@ -1,4 +1,4 @@
-import { audioEnvelopeGainAt } from "@qflow/qflow/composition";
+import { audioEnvelopeGainAt } from "@qflow/composition";
 
 /**
  * Studio's frame driver for a compiled HTML renderer document.

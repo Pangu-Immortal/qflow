@@ -1,9 +1,9 @@
 import { blobTypes } from "@qflow/qflow/blob";
-import { sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/qflow/generation";
-import type { GenerationMediaPort } from "@qflow/qflow/generation";
+import { sealGenerationMediaBinding, sealGenerationRequestDraft } from "@qflow/generation";
+import type { GenerationMediaPort } from "@qflow/generation";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { StructuredSurfaceHandler } from "@qflow/qflow/markup";
-import { createExactModelPrimaryGenerationFragment, exactModelMediaInputNames } from "@qflow/qflow/generation/model";
+import { createExactModelPrimaryGenerationFragment, exactModelMediaInputNames } from "@qflow/generation/model";
 import { portraitMattingEndpoint as endpoint } from "./index.js";
 
 function assert(condition: unknown, message: string): asserts condition {

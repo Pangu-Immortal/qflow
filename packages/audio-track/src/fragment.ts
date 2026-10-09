@@ -1,10 +1,10 @@
-import { timelineTypes } from "@qflow/qflow/timeline";
+import { timelineTypes } from "@qflow/timeline";
 
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/qflow/author";
 import type { FragmentOperation } from "@qflow/qflow/author";
-import { mediaTypes } from "@qflow/qflow/media";
-import { temporalTypes } from "@qflow/qflow/temporal";
+import { mediaTypes } from "@qflow/media";
+import { temporalTypes } from "@qflow/temporal";
 
 import { audioTrackProducers, audioTrackTypes } from "./manifest.js";
 

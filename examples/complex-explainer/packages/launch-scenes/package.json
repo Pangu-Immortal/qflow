@@ -15,6 +15,12 @@
   ],
   "dependencies": {
     "@qflow/qflow": "workspace:*",
-    "@qflow/studio-companion": "workspace:*"
+    "@qflow/studio-companion": "workspace:*",
+    "@qflow/composition": "workspace:^0.1.0",
+    "@qflow/media": "workspace:^0.1.0",
+    "@qflow/timeline": "workspace:^0.1.0",
+    "@qflow/spatial": "workspace:^0.1.0",
+    "@qflow/temporal": "workspace:^0.1.0",
+    "@qflow/html-program": "workspace:^0.1.0"
   }
 }

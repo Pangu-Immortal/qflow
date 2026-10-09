@@ -1,10 +1,10 @@
-import { timelineTypes } from "@qflow/qflow/timeline";
+import { timelineTypes } from "@qflow/timeline";
 
 import { blobTypes } from "@qflow/qflow/blob";
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/qflow/author";
-import { spatialTypes } from "@qflow/qflow/spatial";
-import { temporalTypes } from "@qflow/qflow/temporal";
+import { spatialTypes } from "@qflow/spatial";
+import { temporalTypes } from "@qflow/temporal";
 
 import { visualTrackProducers, visualTrackTypes } from "./manifest.js";
 

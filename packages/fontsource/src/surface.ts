@@ -2,8 +2,8 @@ import { readFile } from "node:fs/promises";
 
 import type { StructuredElement, StructuredSurfaceHandler } from "@qflow/qflow/markup";
 import { assertAttributes, assertEmptyElement } from "@qflow/qflow/markup";
-import { assertFontArtifactRef, mediaTypes } from "@qflow/qflow/media";
-import type { FontArtifactRef } from "@qflow/qflow/media";
+import { assertFontArtifactRef, mediaTypes } from "@qflow/media";
+import type { FontArtifactRef } from "@qflow/media";
 import {
   NodePackageNotFoundError,
   resolveNodePackageResource,

@@ -1,6 +1,6 @@
 # `@qflow/narrative`
 
-External components use `@qflow/qflow/narrative` from their `@qflow/qflow` development dependency. The package
+External components declare `@qflow/narrative` as an ordinary npm dependency. The package
 owns the types and helpers below; Source imports retain the `@qflow/narrative@1` Module identity.
 
 

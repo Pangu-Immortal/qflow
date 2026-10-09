@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { sealGenerationRequestDraft } from "@qflow/qflow/generation";
-import type { GenerationRequest } from "@qflow/qflow/generation";
-import { plannedExactModelRequest } from "@qflow/qflow/generation/model";
-import type { ExactModelEndpoint } from "@qflow/qflow/generation/model";
+import { sealGenerationRequestDraft } from "@qflow/generation";
+import type { GenerationRequest } from "@qflow/generation";
+import { plannedExactModelRequest } from "@qflow/generation/model";
+import type { ExactModelEndpoint } from "@qflow/generation/model";
 import { canonicalize } from "@qflow/protocol";
 import type { BlobRef, BuildState, ProducerRef, StoredValue } from "@qflow/protocol";
 import { fixtureResource } from "../../../test/fixture-resource.js";

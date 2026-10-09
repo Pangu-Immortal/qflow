@@ -6,6 +6,7 @@ import test from "node:test";
 
 import { FileBuildResultRepository } from "@qflow/result/node";
 import { createRunFrontendFacet } from "@qflow/run";
+import { createProducerPackageFacet } from "@qflow/producer";
 
 import { runCli as runCliEngine } from "../src/main.js";
 import { commandHint } from "../src/command-hint.js";
@@ -28,6 +29,7 @@ function distribution(
   diagnostics: readonly RuntimeDoctorDiagnostic[],
   authorSource = "./main.svml",
   execution?: object,
+  producerError?: string,
 ): CliDistribution {
   return {
     bootstrapPackages: [{
@@ -45,7 +47,12 @@ function distribution(
           candidates: [],
           satisfactions: [],
         } }),
-        })],
+        }), ...(producerError === undefined ? [] : [createProducerPackageFacet({
+          producers: [{
+            producer: { module: { name: "example.value", version: "1" }, name: "produce" },
+            handler() { throw new Error(producerError); },
+          }],
+        })])],
       },
     }],
     createCompiler: () => ({
@@ -72,7 +79,10 @@ function distribution(
           dependencies: [],
           types: [{ name: "Value" }],
           capabilities: [],
-          producers: [],
+          producers: producerError === undefined ? [] : [{
+            name: "produce", inputs: [], needs: [],
+            outputs: [{ name: "result", type: { module: { name: "example.value", version: "1" }, name: "Value" } }],
+          }],
         } }] }, records: [] },
         graph: {
           format: "qflow.graph@1",
@@ -84,12 +94,16 @@ function distribution(
           candidates: [{
             id: "provided-result",
             type: { module: { name: "example.value", version: "1" }, name: "Value" },
-            root: { kind: "value", value: {
+            root: producerError === undefined ? { kind: "value", value: {
               id: "record-result",
               value: { kind: "inline", value: "ready" },
-            } },
+            } } : { kind: "operation", result: { kind: "operation-result", operation: "produce-result" } },
           }],
-          operations: [],
+          operations: producerError === undefined ? [] : [{
+            id: "produce-result",
+            producer: { module: { name: "example.value", version: "1" }, name: "produce" },
+            inputs: {}, result: { kind: "output", name: "result", record: "record-result" },
+          }],
         },
         exports: [{
           name: "result",
@@ -135,6 +149,7 @@ function distribution(
       preflight: async () => ({ dataRoot: "/tmp", diagnostics }),
       doctor: async () => ({ dataRoot: "/tmp", diagnostics: [] }),
       providers: async () => [],
+      pricing: async () => [],
       invoke: async () => { throw new Error("creation-time invocation is not part of this test"); },
       createRuntime: async () => {
         if (execution !== undefined) return execution;
@@ -280,4 +295,30 @@ test("plan preserves the selected work summary but exits non-zero when cheap pre
   assert.equal(value.preflight.ok, false);
   assert.equal("steps" in value, false);
   assert.equal(exitCode, 1);
+});
+
+test("pricing reports a Producer failure with no external Need and exits non-zero in human and JSON modes", async () => {
+  const source = await runSource();
+  for (const json of [false, true]) {
+    for (const producerError of [undefined, "Timeline end must be after its start"]) {
+      let output = "";
+      let exitCode = 0;
+      await runCli([
+        "pricing", source, "--runtime", "/p/qflow.runtime.json", "--limit", "1",
+        ...(json ? ["--json"] : []),
+      ], {
+        write(text) { output += text; },
+        setExitCode(code) { exitCode = code; },
+      }, distribution([], [], "./main.svml", undefined, producerError));
+      assert.equal(exitCode, producerError === undefined ? 0 : 1);
+      if (producerError !== undefined) assert.ok(output.includes(producerError));
+      if (json) {
+        const value = JSON.parse(output);
+        assert.equal(value.requestCount, 0);
+        assert.deepEqual(value.groups, []);
+        assert.equal(value.producerFailureCount, producerError === undefined ? 0 : 1);
+        assert.equal(value.producerFailures.length, value.producerFailureCount);
+      }
+    }
+  }
 });

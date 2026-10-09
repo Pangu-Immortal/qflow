@@ -1,6 +1,6 @@
 # `@qflow/caption`
 
-External components import `@qflow/qflow/caption`. Source uses the `@qflow/caption@1` Module
+External components import `@qflow/caption`. Source uses the `@qflow/caption@1` Module
 identity for shared declarations such as `Hidden`.
 
 Caption has independent content, timing and presentation structures: CaptionDocument owns display

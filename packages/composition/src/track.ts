@@ -1,7 +1,7 @@
 import { assertAudioLevelAutomation } from "./audio-level-automation.js";
 import type { AudioLevelAutomation, AudioSampleSpan } from "./audio-level-automation.js";
-import { canonicalStringify, isResourceId } from "@qflow/protocol";
-import type { BlobRef, CanonicalValue } from "@qflow/protocol";
+import { canonicalStringify, isResourceId } from "@qflow/qflow/protocol";
+import type { BlobRef, CanonicalValue } from "@qflow/qflow/protocol";
 
 import {
   assertVisualStyleV1,

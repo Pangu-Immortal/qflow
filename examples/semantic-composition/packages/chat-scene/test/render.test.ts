@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { HtmlVisual } from "@qflow/qflow/html-program";
+import type { HtmlVisual } from "@qflow/html-program";
 import type { FontStackRef } from "@qflow/media";
 import type { Timeline } from "@qflow/timeline";
 import { composeTemporalWindow, projectProgramInstant } from "@qflow/temporal";

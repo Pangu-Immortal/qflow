@@ -1,7 +1,7 @@
 import { spatialTypes } from "@qflow/spatial";
-import { recipeType } from "@qflow/recipe";
+import { recipeType } from "@qflow/qflow/recipe";
 import { timelineTypes } from "@qflow/timeline";
-import type { StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/markup";
+import type { StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";
 
 import { regionEvidenceFragment } from "./fragment.js";
 

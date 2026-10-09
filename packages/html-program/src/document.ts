@@ -15,8 +15,8 @@ import type {
   VisualStyleDeclaration,
   VisualTrack,
 } from "@qflow/composition";
-import { canonicalStringify, isResourceId } from "@qflow/protocol";
-import type { BlobRef, ResourceId } from "@qflow/protocol";
+import { canonicalStringify, isResourceId } from "@qflow/qflow/protocol";
+import type { BlobRef, ResourceId } from "@qflow/qflow/protocol";
 import { VISUAL_IR_V1 } from "@qflow/composition";
 import { readHtmlVisual, htmlVisualHtml, htmlVisualScript } from "./html-visual.js";
 import { presentationCaptureScopeRuntime } from "./capture-scope.js";

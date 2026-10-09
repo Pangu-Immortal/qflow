@@ -10,7 +10,7 @@ import type {
   VisualTextTypography,
   VisualVectorPathCommand,
 } from "@qflow/composition";
-import { canonicalStringify } from "@qflow/protocol";
+import { canonicalStringify } from "@qflow/qflow/protocol";
 
 type TerminalTextElement = VisualTextFlowElement | VisualPathTextElement;
 

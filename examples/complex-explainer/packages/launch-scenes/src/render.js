@@ -1,6 +1,6 @@
-import { sealVisualTrack } from "@qflow/qflow/composition";
-import { htmlVisual } from "@qflow/qflow/html-program";
-import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
+import { sealVisualTrack } from "@qflow/composition";
+import { htmlVisual } from "@qflow/html-program";
+import { assertTemporalWindowFor } from "@qflow/temporal";
 const sty = (o) => Object.entries(o).map(([name, value]) => ({ name, value }));
 const esc = (s) =>
   String(s).replace(

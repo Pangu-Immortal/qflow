@@ -1,4 +1,4 @@
-import type { FontStackRef } from "@qflow/qflow/media";
+import type { FontStackRef } from "@qflow/media";
 import type { Recipe } from "@qflow/qflow/recipe";
 
 /** The two values a Style decoder receives after author references are resolved. */

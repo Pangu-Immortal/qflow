@@ -1,8 +1,8 @@
 import { blobTypes } from "@qflow/qflow/blob";
-import { sealGenerationPortRequest, sealGenerationRequestDraft, sealGenerationPortTable } from "@qflow/qflow/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/qflow/generation";
+import { sealGenerationPortRequest, sealGenerationRequestDraft, sealGenerationPortTable } from "@qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
 import type { SurfaceAttributeVocabulary, SurfacePortVocabulary } from "@qflow/qflow/markup";
-import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { defineExactModelModule } from "@qflow/generation/model";
 import { textTypes } from "@qflow/qflow/text";
 
 export const mimoSpeechModuleRef = { name: "@qflow/mimo-speech", version: "1" } as const;

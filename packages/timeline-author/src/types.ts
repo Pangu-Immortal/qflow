@@ -1,4 +1,4 @@
-import type { TemporalDuration } from "@qflow/qflow/temporal";
+import type { TemporalDuration } from "@qflow/temporal";
 
 export type TimelineAuthorHeader = { readonly id: string };
 export type ConstructionPoint = { readonly frame: number };

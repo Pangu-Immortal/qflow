@@ -1,6 +1,6 @@
 import { depthStackMarkupSurfaces, depthStackModuleRef } from "./index.js";
 import type { DepthStackProgram } from "./index.js";
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioItemDraft, StudioInspectorFieldDeclaration } from "@qflow/studio-companion";
 import { requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-companion";
 

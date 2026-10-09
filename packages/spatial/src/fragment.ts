@@ -1,4 +1,4 @@
-import { sealGraphFragment } from "@qflow/author";
+import { sealGraphFragment } from "@qflow/qflow/author";
 import { spatialProducers, spatialTypes } from "./manifest.js";
 
 const input = (name: string) => ({ kind: "fragment-input" as const, name });

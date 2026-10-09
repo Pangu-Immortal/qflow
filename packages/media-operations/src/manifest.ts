@@ -1,9 +1,9 @@
 import { blobDependency } from "@qflow/qflow/blob";
-import { mediaDependency, mediaTypes } from "@qflow/qflow/media";
-import { timelineDependency, timelineTypes } from "@qflow/qflow/timeline";
+import { mediaDependency, mediaTypes } from "@qflow/media";
+import { timelineDependency, timelineTypes } from "@qflow/timeline";
 import { recipeModuleRef, recipeType } from "@qflow/qflow/recipe";
-import { compositionDependency, compositionTypes, audioSampleSpanSchema, audioGainEnvelopeSchema } from "@qflow/qflow/composition";
-import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
+import { compositionDependency, compositionTypes, audioSampleSpanSchema, audioGainEnvelopeSchema } from "@qflow/composition";
+import { temporalDependency, temporalTypes } from "@qflow/temporal";
 import { blobTypes } from "@qflow/qflow/blob";
 import type { CapabilityRef, ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
 

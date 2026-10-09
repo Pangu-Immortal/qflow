@@ -3,7 +3,7 @@ import type { BlobRef, CanonicalValue, StoredValue } from "@qflow/qflow/protocol
 import type { ProducerPackage, ProducerHandlerContext } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
 import { canonicalize } from "@qflow/qflow/protocol";
-import type { Canvas, SpatialFrame } from "@qflow/qflow/spatial";
+import type { Canvas, SpatialFrame } from "@qflow/spatial";
 
 import { imageComposeRequest } from "./execution.js";
 import { imageComposeProducers, imageComposeTypes, imageOperationsCapabilities } from "./refs.js";

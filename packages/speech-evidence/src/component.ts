@@ -1,10 +1,10 @@
-import type { AdmissionPackage } from "@qflow/admission";
-import { plannedNeedInputs } from "@qflow/producer";
-import type { ProducerPackage } from "@qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import { plannedNeedInputs } from "@qflow/qflow/producer";
+import type { ProducerPackage } from "@qflow/qflow/producer";
 import { synchronizedMediaSampleFrames, verifySynchronizedMedia } from "@qflow/media";
 import type { SynchronizedMedia } from "@qflow/media";
-import { canonicalize } from "@qflow/protocol";
-import type { StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { StoredValue } from "@qflow/qflow/protocol";
 import { assertLocalTemporalDomain } from "@qflow/temporal";
 import type { LocalTemporalDomain } from "@qflow/temporal";
 

@@ -13,6 +13,8 @@ import { admissionPackagesFromFacets } from "../packages/admission/src/index.ts"
 import { producerPackagesFromFacets } from "../packages/producer/src/index.ts";
 import { studioContributionFromPackage } from "../packages/studio-companion/src/index.ts";
 
+import { packConsumerDependencies, consumerHostManifest, defaultPackageNames } from "./independent-consumer.mjs";
+
 import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 import { distributionEmbeddedPackageDirectories } from "./distribution-ownership.mjs";
 
@@ -33,6 +35,7 @@ try {
   for (const [index, name] of names.entries()) {
     tarballs.push(await packIndependentPackage(`packages/${name}`, output, { buildPublicTypes: index === 0 }));
   }
+  const dependencies = await packConsumerDependencies(names, output);
   await mkdir(consumer);
   await writeFile(join(consumer, "package.json"), `${JSON.stringify({
     name: "author-packages-independent-consumer",
@@ -46,6 +49,7 @@ try {
     "--no-audit",
     "--no-fund",
     "--legacy-peer-deps",
+    ...dependencies,
     ...tarballs,
   ], {
     cwd: consumer,
@@ -75,11 +79,11 @@ try {
   }
 
   await mkdir(join(distribution, "packages"), { recursive: true });
-  const rootManifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8"));
+  const rootManifest = await consumerHostManifest();
   const embedded = await distributionEmbeddedPackageDirectories(repositoryRoot);
   for (const name of names) {
     assert.equal(rootManifest.exports[`./${name}`], undefined);
-    assert.equal(rootManifest.dependencies[`@qflow/${name}`], "workspace:^");
+    assert.ok((await defaultPackageNames()).has(`@qflow/${name}`));
     assert.equal(embedded.has(name), false);
   }
   await writeFile(join(distribution, "package.json"), `${JSON.stringify(rootManifest, null, 2)}\n`);

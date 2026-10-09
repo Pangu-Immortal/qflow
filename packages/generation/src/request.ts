@@ -1,7 +1,7 @@
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, ObjectFieldSchema, ValueSchema } from "@qflow/protocol";
-import { verifyText } from "@qflow/text";
-import type { Text } from "@qflow/text";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, ObjectFieldSchema, ValueSchema } from "@qflow/qflow/protocol";
+import { verifyText } from "@qflow/qflow/text";
+import type { Text } from "@qflow/qflow/text";
 
 import { assertGenerationBlobRef, sealGenerationRequest } from "./identity.js";
 import { generationBlobRefSchema, generationObjectSchema } from "./schema.js";

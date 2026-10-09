@@ -1,7 +1,7 @@
-import type { FrameSpan } from "@qflow/qflow/composition";
-import type { FontArtifactRef } from "@qflow/qflow/media";
+import type { FrameSpan } from "@qflow/composition";
+import type { FontArtifactRef } from "@qflow/media";
 import type { BlobRef } from "@qflow/qflow/protocol";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 
 export type CommentStickerTextStyle = {
   readonly fonts: readonly FontArtifactRef[];

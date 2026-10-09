@@ -3,14 +3,14 @@ import {
   generationPort,
   sealGenerationMediaBinding,
   sealGenerationRequestDraft,
-} from "@qflow/qflow/generation";
+} from "@qflow/generation";
 import type {
   GenerationMediaPort,
   GenerationMediaRole,
   GenerationPortTable,
-} from "@qflow/qflow/generation";
-import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/qflow/generation/model";
-import type { ExactModelEndpoint, ExactModelMediaInput } from "@qflow/qflow/generation/model";
+} from "@qflow/generation";
+import { exactModelMediaInputNames, exactModelTextInputName } from "@qflow/generation/model";
+import type { ExactModelEndpoint, ExactModelMediaInput } from "@qflow/generation/model";
 import { textTypes, verifyText } from "@qflow/qflow/text";
 import type { CanonicalValue } from "@qflow/qflow/protocol";
 import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";

@@ -1,7 +1,7 @@
-import { mediaProducers, mediaTypes } from "@qflow/qflow/media";
-import { temporalProducers, temporalTypes } from "@qflow/qflow/temporal";
+import { mediaProducers, mediaTypes } from "@qflow/media";
+import { temporalProducers, temporalTypes } from "@qflow/temporal";
 import { blobTypes } from "@qflow/qflow/blob";
-import { timelineTypes } from "@qflow/qflow/timeline";
+import { timelineTypes } from "@qflow/timeline";
 import { sealGraphFragment } from "@qflow/qflow/author";
 
 import {

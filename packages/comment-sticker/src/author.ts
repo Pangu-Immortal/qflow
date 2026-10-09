@@ -1,5 +1,5 @@
-import { assertFontStackRef } from "@qflow/qflow/media";
-import type { FontStackRef } from "@qflow/qflow/media";
+import { assertFontStackRef } from "@qflow/media";
+import type { FontStackRef } from "@qflow/media";
 import type { Recipe } from "@qflow/qflow/recipe";
 
 import { sealCommentStickerStyle } from "./program.js";

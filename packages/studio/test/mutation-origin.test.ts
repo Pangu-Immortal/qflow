@@ -8,6 +8,7 @@ import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { EventEmitter } from "node:events";
 import type { ViteDevServer } from "vite";
 import { studioFeedbackPlugin } from "../src/feedback-server.js";
 import { allowsStudioMutation } from "../src/mutation-origin.js";
@@ -25,7 +26,7 @@ test("Studio mutations reject other pages even when they use a loopback hostname
 });
 
 test("the feedback write endpoint rejects a foreign page before reading its mutation", async (t) => {
-  t.mock.method(fs, "watch", () => ({ close() {} }) as FSWatcher);
+  t.mock.method(fs, "watch", () => Object.assign(new EventEmitter(), { close() {} }) as FSWatcher);
   syncBuiltinESMExports();
   t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports(); });
   const root = await mkdtemp(join(tmpdir(), "qflow-studio-origin-"));
@@ -55,3 +56,30 @@ test("the feedback write endpoint rejects a foreign page before reading its muta
     await rm(root, { recursive: true, force: true });
   }
 });
+
+for (const failure of ["opening", "watching"] as const) {
+  test(`feedback watch failure while ${failure} warns without disabling the endpoint`, (t) => {
+    let closed = false;
+    const watcher = Object.assign(new EventEmitter(), { close() { closed = true; } });
+    const error = new Error("watch capacity exhausted");
+    t.mock.method(fs, "watch", () => {
+      if (failure === "opening") throw error;
+      return watcher as FSWatcher;
+    });
+    syncBuiltinESMExports();
+    t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports(); });
+    const warnings: string[] = [];
+    let installed = false;
+    const plugin = studioFeedbackPlugin("/project", "/project/main.svrun");
+    (plugin.configureServer as (server: ViteDevServer) => void)({
+      config: { logger: { warn(message: string) { warnings.push(message); } } },
+      ws: { send() {} },
+      middlewares: { use() { installed = true; } },
+    } as unknown as ViteDevServer);
+    if (failure === "watching") watcher.emit("error", error);
+    assert.equal(installed, true);
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0]!, /watch capacity exhausted/);
+    assert.equal(closed, failure === "watching");
+  });
+}

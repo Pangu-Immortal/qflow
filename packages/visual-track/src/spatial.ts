@@ -2,8 +2,8 @@ import {
   assertSpatialFrame,
   assertSpatialMap2D,
   resolveContentFit,
-} from "@qflow/qflow/spatial";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
+} from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 
 import { assertVisualFrameTreatment, visualContentFrame } from "./frame-treatment.js";
 import {

@@ -44,11 +44,15 @@ test("Studio observes and edits the compiler's Script body without changing its 
   });
   assert.ok(projection);
   assert.deepEqual(projection.lanes.map((lane) => lane.id), ["maps", "evidence"]);
+  assert.deepEqual(projection.lanes.map((lane) => lane.heightPx), [15, 15]);
   assert.equal(projection.items.some((item) => item.laneId === "intent"), false);
   assert.equal(projection.editItems.some((item) => item.id === "beat"), true);
   const tokens = projection.items.filter((item) => item.kind === "span" && item.appearance === "compact");
   assert.deepEqual(tokens.map(token => token.label), parsed.tokens.map(token => token.text));
   assert.deepEqual(tokens.map(token => token.range), observation.tokens.map(token => token.range));
+  const frames = new Map(parsed.anchors.map((anchor, index) => [anchor.id, index * 3]));
+  assert.deepEqual(tokens.map(token => token.kind === "span" ? [token.startFrame, token.endFrameExclusive] : []),
+    parsed.tokens.map(token => [frames.get(token.startAnchorId), frames.get(token.endAnchorId)]));
 });
 
 test("Studio projects every exact Narrative Projection instead of choosing one per Script and Timeline", () => {

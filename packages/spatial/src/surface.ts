@@ -1,11 +1,11 @@
-import type { CanonicalValue } from "@qflow/protocol";
-import type { AuthorValueRef } from "@qflow/author";
+import type { CanonicalValue } from "@qflow/qflow/protocol";
+import type { AuthorValueRef } from "@qflow/qflow/author";
 import type {
   StructuredElement,
   StructuredSurfaceHandler,
   SurfaceResolvedReference,
   MarkupAttributeValue,
-} from "@qflow/markup";
+} from "@qflow/qflow/markup";
 
 import {
   anchoredFrameFragment,

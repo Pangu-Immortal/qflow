@@ -1,5 +1,5 @@
 import type { BlobRef } from "@qflow/qflow/protocol";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 
 export type ImageComposeOptions = {
   readonly background: string;

@@ -4,12 +4,12 @@ import type {
   VisualTextFlow,
   VisualTextPaintLayer,
   VisualTextTypography,
-} from "@qflow/qflow/composition";
+} from "@qflow/composition";
 import type {
   VisualFrameTreatment,
   MediaLayerSet,
 } from "@qflow/visual-track";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 
 export type DepthStackVisibility = {
   readonly previous: number;

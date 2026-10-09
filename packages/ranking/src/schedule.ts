@@ -1,21 +1,21 @@
-import { assertTimelineIdentity, timelineFrameCount } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
+import { assertTimelineIdentity, timelineFrameCount } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import {
   assertFontArtifactRef,
   verifySynchronizedMedia,
-} from "@qflow/qflow/media";
-import type { SynchronizedMedia } from "@qflow/qflow/media";
+} from "@qflow/media";
+import type { SynchronizedMedia } from "@qflow/media";
 import { canonicalize, isResourceId } from "@qflow/qflow/protocol";
 import { verifyText } from "@qflow/qflow/text";
 import type { Text } from "@qflow/qflow/text";
-import { assertSpatialFrame } from "@qflow/qflow/spatial";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
+import { assertSpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 import {
   assertTemporalInstantFor,
   assertTemporalWindowFor,
   resolveTriggeredSchedule,
-} from "@qflow/qflow/temporal";
-import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
+} from "@qflow/temporal";
+import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
 import type {
   ColumnItem,
@@ -769,7 +769,7 @@ export function buildColumnProgram(header: RankingHeader, withinValue: SpatialFr
   return canonicalize(result) as unknown as ColumnProgram;
 }
 
-export function buildTopThreeProgram(header: RankingHeader, frameValue: import("@qflow/qflow/spatial").SpatialFrame, schedule: RankingSchedule, style: TopThreeStyle, set: TopThreeItemSet): TopThreeProgram {
+export function buildTopThreeProgram(header: RankingHeader, frameValue: import("@qflow/spatial").SpatialFrame, schedule: RankingSchedule, style: TopThreeStyle, set: TopThreeItemSet): TopThreeProgram {
   assert(header.variant === "top-three" && schedule.variant === "top-three", "TopThree variant is inconsistent.");
   assertSpatialFrame(frameValue);
   assertTopThreeStyle(style);

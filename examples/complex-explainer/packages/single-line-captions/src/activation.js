@@ -34,8 +34,8 @@ const manifest = {
   ],
 };
 const inline = (r) => r.value.value;
-export function singleLineSchedule(caption, program, document) {
-  const schedule = scheduleFineCaption(caption, program, document);
+export function singleLineSchedule(timing, program, document) {
+  const schedule = scheduleFineCaption(timing, program, document);
   const cues = [...schedule.cues].sort(
     (a, b) => a.visibleStartFrame - b.visibleStartFrame,
   );
@@ -105,7 +105,7 @@ const producers = {
                 kind: "inline",
                 value: canonicalize(
                   singleLineSchedule(
-                    inline(i.caption),
+                    inline(i.timing),
                     inline(i.program),
                     inline(i.document),
                   ),

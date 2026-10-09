@@ -909,7 +909,7 @@ function renderTemporalDomainInspector(snapshot: StudioSnapshot, companion: stri
     return;
   }
   const endpoints: readonly (readonly [Message, string])[] = item.kind === "point"
-    ? [["inspector.moment", item.anchorId]]
+    ? [["inspector.instant", item.anchorId]]
     : [["inspector.start", item.startAnchorId], ["inspector.end", item.endAnchorId]];
   const rows = endpoints.map(([label, anchorId]) => {
     const anchor = domain.anchors.find((candidate) => candidate.id === anchorId)!;

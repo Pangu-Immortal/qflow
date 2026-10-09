@@ -1,18 +1,18 @@
 import { assertAttributes, assertEmptyElement, createMarkupSurfaceFacet, optionalTextAttribute, textAttribute } from "@qflow/qflow/markup";
 import { canonicalize, sameType } from "@qflow/qflow/protocol";
 import { sealGraphFragment } from "@qflow/qflow/author";
-import { compositionTypes, sealVisualTrack } from "@qflow/qflow/composition";
-import { mediaTypes, verifySynchronizedMedia } from "@qflow/qflow/media";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { compositionTypes, sealVisualTrack } from "@qflow/composition";
+import { mediaTypes, verifySynchronizedMedia } from "@qflow/media";
+import { spatialTypes } from "@qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
-import { temporalTypes, assertTemporalWindowFor } from "@qflow/qflow/temporal";
+import { temporalTypes, assertTemporalWindowFor } from "@qflow/temporal";
 import {
   resolveTemporalWindowReference,
   resolveTemporalContext,
   temporalWindowAttributeNames,
   temporalWindowAttributeVocabulary,
-} from "@qflow/qflow/temporal/markup";
-import { timelineTypes } from "@qflow/qflow/timeline";
+} from "@qflow/temporal/markup";
+import { timelineTypes } from "@qflow/timeline";
 import {
   appendVisualClip,
   appendTimedMediaLayer,

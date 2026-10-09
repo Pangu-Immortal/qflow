@@ -1,7 +1,7 @@
 import type { AsyncEndpoint, EndpointCredential, EndpointInvocationContext, EndpointOutcome } from "@qflow/qflow/endpoint";
 import { EndpointServiceError, defineEndpoint, wakeAfter } from "@qflow/qflow/endpoint";
 import { EndpointHttpError, EndpointResponseError, EndpointTransportError, withRequestDeadline } from "@qflow/qflow/endpoint/http";
-import type { GenerationArtifactUrlResolver } from "@qflow/qflow/generation";
+import type { GenerationArtifactUrlResolver } from "@qflow/generation";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { BlobRef, CanonicalValue, CapabilityRef } from "@qflow/qflow/protocol";
 import { credentialRef } from "@qflow/qflow/endpoint";

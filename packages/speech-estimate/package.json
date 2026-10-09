@@ -12,7 +12,7 @@
     "cmu-pronouncing-dictionary": "3.0.0"
   },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.0"
   },
   "devDependencies": {
     "@qflow/qflow": "workspace:*",

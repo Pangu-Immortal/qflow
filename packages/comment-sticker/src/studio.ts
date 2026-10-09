@@ -1,6 +1,6 @@
 import { commentStickerMarkupSurfaces, commentStickerModuleRef, commentStickerTypes } from "./index.js";
 import type { CommentStickerProgram } from "./index.js";
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioItemDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
 import { artifactPreview, childItems, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource, textLayer } from "@qflow/studio-companion";
 

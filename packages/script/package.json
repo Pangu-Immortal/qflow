@@ -1,6 +1,6 @@
 {
   "name": "@qflow/script",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -16,8 +16,8 @@
     "activation": "./src/activation.ts"
   },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^",
-    "@qflow/studio-companion": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1",
+    "@qflow/studio-companion": "workspace:^0.1.1"
   },
   "devDependencies": {
     "@qflow/qflow": "workspace:*",
@@ -31,5 +31,11 @@
     "@qflow/narrative-temporal": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/text": "workspace:*"
+  },
+  "dependencies": {
+    "@qflow/caption": "workspace:^0.1.0",
+    "@qflow/narrative": "workspace:^0.1.0",
+    "@qflow/narrative-caption": "workspace:^0.1.0",
+    "@qflow/narrative-temporal": "workspace:^0.1.0"
   }
 }

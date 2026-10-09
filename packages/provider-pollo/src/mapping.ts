@@ -1,5 +1,5 @@
 import type { ModuleRef } from "@qflow/qflow/protocol";
-import type { GenerationWireMapping } from "@qflow/qflow/generation";
+import type { GenerationWireMapping } from "@qflow/generation";
 
 const MINIMAX: ModuleRef = { name: "@qflow/minimax-h3", version: "1" };
 const GROK: ModuleRef = { name: "@qflow/grok-imagine", version: "1" };

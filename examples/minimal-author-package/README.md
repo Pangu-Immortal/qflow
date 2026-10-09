@@ -11,9 +11,10 @@ only after checking `record.value.kind === "inline"`. Image slots remain graph i
 package files. Its visual Surfaces also receive an explicit `within` Frame; the example never relies
 on a renderer root implicitly meaning the whole Canvas.
 
-The package builds against one public Qflow framework dependency, `qflow`, and emits JavaScript.
-`pnpm --dir packages/example-component pack` produces a tarball with no Runtime dependencies of its
-own. Installing that tarball in another project and importing `@example/example-component@1` loads
+The package builds against the public Qflow language SDK and declares its video-domain libraries as
+ordinary dependencies. `pnpm --dir packages/example-component pack` produces a JavaScript tarball;
+its dependencies are installed by the package manager, not bundled. Installing it in another project
+and importing `@example/example-component@1` loads
 the same Module and Surface through the consumer's active Qflow Distribution. The packaged
 `@example/example-component/preview` Source exists so this boundary can be checked without copying a
 Source out of the package.

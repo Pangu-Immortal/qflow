@@ -1,4 +1,4 @@
-import type { BlobRef } from "@qflow/protocol";
+import type { BlobRef } from "@qflow/qflow/protocol";
 
 export type MediaRational = {
   readonly numerator: number;

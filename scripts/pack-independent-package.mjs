@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { releaseDependencyVersion } from "./release-dependencies.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
@@ -172,33 +173,10 @@ async function rewritePublishedDeclarationSpecifiers(stage) {
   }
 }
 
-async function releasedDependencyVersion(owner, name, declared) {
-  if (!declared.startsWith("workspace:")) return declared;
-  if (declared !== "workspace:^") {
-    throw new Error(`${owner} still has private workspace dependency ${name}@${declared}`);
-  }
-  const manifests = [
-    "package.json",
-    ...globSync("packages/*/package.json", { cwd: repositoryRoot }),
-    ...globSync("services/*/package.json", { cwd: repositoryRoot }),
-  ];
-  for (const candidate of manifests) {
-    const dependency = JSON.parse(await readFile(resolve(repositoryRoot, candidate), "utf8"));
-    if (dependency.name !== name) continue;
-    if (typeof dependency.version !== "string" || dependency.version.length === 0) {
-      throw new Error(`${name} has no release version`);
-    }
-    // Development prereleases are local tarball evidence, not a Registry compatibility promise.
-    // A real published version keeps the workspace:^ declaration as an ordinary caret range.
-    return dependency.version.includes("-") ? dependency.version : `^${dependency.version}`;
-  }
-  throw new Error(`${owner} release dependency ${name} is not a workspace package`);
-}
-
 async function releasedDependencyMap(manifest, values) {
   return Object.fromEntries(await Promise.all(Object.entries(values ?? {}).map(async ([name, version]) => {
     if (typeof version !== "string") throw new Error(`${manifest.name} dependency ${name} has no version`);
-    return [name, await releasedDependencyVersion(manifest.name, name, version)];
+    return [name, releaseDependencyVersion(manifest.name, name, version)];
   })));
 }
 

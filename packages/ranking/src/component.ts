@@ -1,11 +1,11 @@
-import type { Timeline } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import type { ProducerPackage, ProducerHandlerContext } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
-import type { SynchronizedMedia } from "@qflow/qflow/media";
+import type { SynchronizedMedia } from "@qflow/media";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { BlobRef, StoredValue } from "@qflow/qflow/protocol";
-import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
+import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
+import type { SpatialFrame } from "@qflow/spatial";
 import type { Text } from "@qflow/qflow/text";
 
 import { rankingProducers, rankingTypes } from "./manifest.js";

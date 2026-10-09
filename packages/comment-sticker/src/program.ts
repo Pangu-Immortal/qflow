@@ -1,9 +1,9 @@
-import { assertTimelineIdentity } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
+import { assertTimelineIdentity } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import {
   assertVisualTrackIdentity,
   sealVisualTrack,
-} from "@qflow/qflow/composition";
+} from "@qflow/composition";
 import type {
   VisualAnimation,
   VisualElement,
@@ -11,14 +11,14 @@ import type {
   VisualTextFlow,
   VisualTextTypography,
   VisualTrack,
-} from "@qflow/qflow/composition";
-import { assertFontArtifactRef } from "@qflow/qflow/media";
+} from "@qflow/composition";
+import { assertFontArtifactRef } from "@qflow/media";
 import { canonicalize, isResourceId } from "@qflow/qflow/protocol";
 import type { BlobRef } from "@qflow/qflow/protocol";
-import { assertSpatialFrame } from "@qflow/qflow/spatial";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
-import { assertTemporalWindowFor } from "@qflow/qflow/temporal";
-import type { TemporalWindow } from "@qflow/qflow/temporal";
+import { assertSpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
+import { assertTemporalWindowFor } from "@qflow/temporal";
+import type { TemporalWindow } from "@qflow/temporal";
 import { verifyText } from "@qflow/qflow/text";
 import type { Text } from "@qflow/qflow/text";
 

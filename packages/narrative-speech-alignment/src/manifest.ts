@@ -1,7 +1,7 @@
-import { narrativeDependency, narrativeTypes } from "@qflow/qflow/narrative";
-import { narrativeTemporalDependency, narrativeTemporalTypes } from "@qflow/qflow/narrative-temporal";
-import { speechEvidenceDependency, speechEvidenceTypes } from "@qflow/qflow/speech-evidence";
-import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
+import { narrativeDependency, narrativeTypes } from "@qflow/narrative";
+import { narrativeTemporalDependency, narrativeTemporalTypes } from "@qflow/narrative-temporal";
+import { speechEvidenceDependency, speechEvidenceTypes } from "@qflow/speech-evidence";
+import { temporalDependency, temporalTypes } from "@qflow/temporal";
 import type { ModuleManifest, ProducerRef } from "@qflow/qflow/protocol";
 
 export const speechAlignmentModuleRef = { name: "@qflow/narrative-speech-alignment", version: "1" } as const;

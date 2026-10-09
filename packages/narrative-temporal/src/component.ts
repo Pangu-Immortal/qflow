@@ -1,8 +1,8 @@
-import type { AdmissionPackage } from "@qflow/admission";
-import type { ProducerPackage } from "@qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { ProducerPackage } from "@qflow/qflow/producer";
 import type { Narrative, NarrativeSegmentRef, NarrativeMomentRef, NarrativeSelectionRef } from "@qflow/narrative";
-import { canonicalize } from "@qflow/protocol";
-import type { ProducerRef, StoredValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { ProducerRef, StoredValue } from "@qflow/qflow/protocol";
 import type { LocalTemporalDomain, TemporalWindow } from "@qflow/temporal";
 import type { Timeline } from "@qflow/timeline";
 

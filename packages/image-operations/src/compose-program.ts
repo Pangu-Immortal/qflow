@@ -1,4 +1,4 @@
-import { assertSpatialFrame } from "@qflow/qflow/spatial";
+import { assertSpatialFrame } from "@qflow/spatial";
 import { canonicalize, isResourceId } from "@qflow/qflow/protocol";
 
 import type {

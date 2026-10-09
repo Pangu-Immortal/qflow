@@ -4,7 +4,7 @@ export type {
   SpeechCharacterEvidence,
   SpeechTranscriptPassage,
   SpeechWordEvidence,
-} from "@qflow/qflow/speech-evidence";
+} from "@qflow/speech-evidence";
 /** Private vocabulary of the alignment implementation, not part of the public alignment value. */
 export type AlignmentRelation =
   | "exact"

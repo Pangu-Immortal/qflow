@@ -7,7 +7,10 @@
   "exports": {
     "./phone-ugc-v1": "./kits/phone-ugc-v1.svs"
   },
-  "files": ["kits", "README.md"],
+  "files": [
+    "kits",
+    "README.md"
+  ],
   "devDependencies": {
     "@qflow/recipe": "workspace:*",
     "@qflow/text": "workspace:*"

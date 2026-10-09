@@ -3,7 +3,7 @@
 Exact Seedance author model module. It owns the request schema and exactly three invocation Surfaces;
 it does not contain service credentials, HTTP code, queues, runtime routing or usage-specific Prompt assembly.
 
-Its implementation imports only the public `@qflow/qflow/*` author and model APIs. The repository keeps
+Its implementation uses the public Qflow author APIs and the `@qflow/generation` model APIs. The repository keeps
 TypeScript source entry points for joint development; `npm run pack:independent -- packages/seedance`
 builds the owner package into a temporary release directory whose exports and activation point at compiled
 JavaScript. The resulting tarball contains no private Qflow workspace dependency or second copy of the Host.

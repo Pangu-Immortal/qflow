@@ -7,11 +7,6 @@ const productRoots = [
   "@qflow/markup",
 ];
 
-// These packages remain physically available while their independent ownership and installation
-// path are migrated. Keeping this list here makes that debt explicit; merely adding a workspace no
-// longer adds it to the Distribution. Remove an entry when its ordinary package becomes installable.
-const migrationRoots = [];
-
 async function manifest(root, path) {
   return JSON.parse(await readFile(resolve(root, path), "utf8"));
 }
@@ -47,9 +42,17 @@ export async function distributionEmbeddedPackageDirectories(repositoryRoot) {
     manifest: await manifest(repositoryRoot, path),
   })));
   const byName = new Map(packages.map((item) => [item.manifest.name, item]));
-  const independentNames = new Set(workspaceDependencies(rootManifest));
+  const independentNames = new Set();
+  const independent = (name) => {
+    if (name === rootManifest.name || independentNames.has(name)) return;
+    const item = byName.get(name);
+    if (item === undefined) throw new Error(`Unknown independent workspace package ${name}`);
+    independentNames.add(name);
+    for (const dependency of workspaceDependencies(item.manifest)) independent(dependency);
+  };
+  for (const name of workspaceDependencies(rootManifest)) independent(name);
 
-  const roots = new Set([...productRoots, ...migrationRoots]);
+  const roots = new Set(productRoots);
   for (const use of rootManifest.qflow?.cli?.use ?? []) {
     const name = packageName(use);
     if (name !== undefined) roots.add(name);

@@ -1,6 +1,6 @@
 {
   "name": "@qflow/whisperx",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -16,11 +16,16 @@
     "activation": "./src/activation.ts"
   },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1"
   },
   "dependencies": {
-    "@qflow/media-local": "workspace:^",
-    "@qflow/narrative-speech-alignment": "workspace:^"
+    "@qflow/media": "workspace:^0.1.0",
+    "@qflow/media-local": "workspace:^0.2.0",
+    "@qflow/narrative": "workspace:^0.1.0",
+    "@qflow/narrative-speech-alignment": "workspace:^0.2.0",
+    "@qflow/narrative-temporal": "workspace:^0.1.0",
+    "@qflow/speech-evidence": "workspace:^0.1.0",
+    "@qflow/temporal": "workspace:^0.1.0"
   },
   "devDependencies": {
     "@qflow/qflow": "workspace:*",

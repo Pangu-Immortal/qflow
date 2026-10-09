@@ -4,11 +4,11 @@ import { assertAttributes, assertEmptyElement, textAttribute, createMarkupSurfac
 import { canonicalize, sameType } from "@qflow/qflow/protocol";
 import { sealGraphFragment } from "@qflow/qflow/author";
 import { presenterStyle, presenterTypes } from "./presenter.js";
-import { sealVisualTrack, compositionTypes } from "@qflow/qflow/composition";
-import { timelineTypes } from "@qflow/qflow/timeline";
-import { spatialTypes } from "@qflow/qflow/spatial";
-import { temporalTypes } from "@qflow/qflow/temporal";
-import { htmlVisual } from "@qflow/qflow/html-program";
+import { sealVisualTrack, compositionTypes } from "@qflow/composition";
+import { timelineTypes } from "@qflow/timeline";
+import { spatialTypes } from "@qflow/spatial";
+import { temporalTypes } from "@qflow/temporal";
+import { htmlVisual } from "@qflow/html-program";
 const styles = (o) =>
   Object.entries(o).map(([name, value]) => ({ name, value }));
 export function installPortraitTransition(module, manifest, component) {

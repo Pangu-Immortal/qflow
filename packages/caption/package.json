@@ -1,6 +1,6 @@
 {
   "name": "@qflow/caption",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -11,11 +11,20 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
+    "@qflow/temporal": "workspace:^0.1.0"
+  },
+  "devDependencies": {
     "@qflow/producer": "workspace:*",
     "@qflow/protocol": "workspace:*",
     "@qflow/markup": "workspace:*",
-    "@qflow/temporal": "workspace:*",
-    "@qflow/admission": "workspace:*"
+    "@qflow/admission": "workspace:*",
+    "@qflow/qflow": "workspace:*"
   },
-  "devDependencies": {}
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^0.3.1"
+  }
 }

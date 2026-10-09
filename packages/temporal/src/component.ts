@@ -1,7 +1,7 @@
-import type { AdmissionPackage } from "@qflow/admission";
-import type { ProducerPackage, ProducerHandlerContext } from "@qflow/producer";
-import { canonicalize } from "@qflow/protocol";
-import type { StoredValue } from "@qflow/protocol";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { ProducerPackage, ProducerHandlerContext } from "@qflow/qflow/producer";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { StoredValue } from "@qflow/qflow/protocol";
 import type { Timeline } from "@qflow/timeline";
 
 import {

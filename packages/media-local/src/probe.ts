@@ -1,5 +1,5 @@
-import { sealMediaInspection } from "@qflow/qflow/media";
-import type { MediaAudioStream, MediaInspection, MediaOtherStream, MediaRational, MediaStream, MediaTimestamp, MediaVideoStream } from "@qflow/qflow/media";
+import { sealMediaInspection } from "@qflow/media";
+import type { MediaAudioStream, MediaInspection, MediaOtherStream, MediaRational, MediaStream, MediaTimestamp, MediaVideoStream } from "@qflow/media";
 import type { BlobRef } from "@qflow/qflow/protocol";
 
 type JsonObject = Record<string, unknown>;

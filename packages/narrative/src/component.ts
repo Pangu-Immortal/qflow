@@ -1,6 +1,6 @@
-import type { AdmissionPackage } from "@qflow/admission";
-import type { ProducerPackage } from "@qflow/producer";
-import type { StoredValue } from "@qflow/protocol";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { ProducerPackage } from "@qflow/qflow/producer";
+import type { StoredValue } from "@qflow/qflow/protocol";
 
 import {
   assertNarrativeSegmentRefIdentity,

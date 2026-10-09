@@ -1,7 +1,7 @@
 import { blobTypes } from "@qflow/qflow/blob";
 import { sealGraphFragment } from "@qflow/qflow/author";
 import type { FragmentOperation } from "@qflow/qflow/author";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { spatialTypes } from "@qflow/spatial";
 
 import { imageComposeProducers, imageComposeTypes } from "./refs.js";
 

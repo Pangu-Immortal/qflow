@@ -3,9 +3,26 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "qflow": { "activation": "./dist/activation.js" },
-  "exports": { ".": "./dist/provider.js" },
-  "files": ["dist"],
-  "scripts": { "build": "tsc -p tsconfig.json" },
-  "devDependencies": { "@qflow/qflow": "workspace:*", "@qflow/runtime-local": "workspace:*", "typescript": "5.9.3", "@qflow/executor": "workspace:*", "@qflow/gpt-image": "workspace:*" }
+  "qflow": {
+    "activation": "./dist/activation.js"
+  },
+  "exports": {
+    ".": "./dist/provider.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@qflow/qflow": "workspace:*",
+    "@qflow/runtime-local": "workspace:*",
+    "typescript": "5.9.3",
+    "@qflow/executor": "workspace:*",
+    "@qflow/gpt-image": "workspace:*"
+  },
+  "dependencies": {
+    "@qflow/generation": "workspace:^0.1.0"
+  }
 }

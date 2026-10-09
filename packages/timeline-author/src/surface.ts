@@ -1,13 +1,13 @@
 import { assertAttributes, assertEmptyElement, localName, textAttribute, type StructuredElement, type StructuredSurfaceHandler, type SurfaceResolvedReference } from "@qflow/qflow/markup";
 import { canonicalize, sameType } from "@qflow/qflow/protocol";
-import { temporalTypes } from "@qflow/qflow/temporal";
+import { temporalTypes } from "@qflow/temporal";
 import {
   createTemporalInstantConstruction,
   createTemporalWindowConstruction,
   resolveTemporalContext,
-} from "@qflow/qflow/temporal/markup";
-import { timelineTypes } from "@qflow/qflow/timeline";
-import type { Clock } from "@qflow/qflow/timeline";
+} from "@qflow/temporal/markup";
+import { timelineTypes } from "@qflow/timeline";
+import type { Clock } from "@qflow/timeline";
 
 import { compileTimelineAuthorFragment } from "./fragment.js";
 import { timelineAuthorTypes } from "./manifest.js";

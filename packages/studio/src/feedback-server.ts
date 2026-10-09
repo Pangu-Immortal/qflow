@@ -1,4 +1,5 @@
 import { watch } from "node:fs";
+import type { FSWatcher } from "node:fs";
 import { relative } from "node:path";
 import type { Plugin } from "vite";
 import { createFeedbackStore, FeedbackConflict } from "./feedback-store.js";
@@ -16,12 +17,23 @@ export function studioFeedbackPlugin(workspaceRoot: string, runPath: string): Pl
   return {
     name: "qflow-studio-feedback",
     configureServer(server) {
-      const watcher = watch(workspaceRoot, (_event, filename) => {
-        if (filename === null || filename.toString() === "FEEDBACK.json") {
-          server.ws.send({ type: "custom", event: "studio:feedback-changed", data: {} });
-        }
-      });
-      server.httpServer?.once("close", () => watcher.close());
+      let watcher: FSWatcher | undefined;
+      const watchFailed = (error: unknown): void => {
+        watcher?.close();
+        watcher = undefined;
+        server.config.logger.warn(`Studio cannot watch ${workspaceRoot}/FEEDBACK.json: ${error instanceof Error ? error.message : String(error)}. External comment edits require a browser refresh; restart Studio to restore watching.`);
+      };
+      try {
+        watcher = watch(workspaceRoot, (_event, filename) => {
+          if (filename === null || filename.toString() === "FEEDBACK.json") {
+            server.ws.send({ type: "custom", event: "studio:feedback-changed", data: {} });
+          }
+        });
+        watcher.on("error", watchFailed);
+      } catch (error) {
+        watchFailed(error);
+      }
+      server.httpServer?.once("close", () => watcher?.close());
       server.middlewares.use((request, response, next) => {
         if (new URL(request.url ?? "/", "http://studio.qflow.local").pathname !== "/__studio/feedback") return next();
         if (request.method === "POST" && !allowsStudioMutation(request.headers)) {

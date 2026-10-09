@@ -1,5 +1,5 @@
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, CanonicalValue, CapabilityRef } from "@qflow/protocol";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, CanonicalValue, CapabilityRef } from "@qflow/qflow/protocol";
 
 import { isMediaPort } from "./ports.js";
 import type { GenerationMediaValue, GenerationPortTable } from "./ports.js";

@@ -191,6 +191,8 @@ export type PricingOutput = {
   readonly run: string;
   readonly requestCount: number;
   readonly noChargeRequestCount: number;
+  readonly producerFailureCount: number;
+  readonly producerFailures: PlanOutput["producerFailures"];
   readonly groups: readonly (Omit<PricingEntry, "request"> & {
     readonly requests: readonly PlanNeed[];
   })[];
@@ -694,6 +696,7 @@ export function createPricingOutput(
   entries: readonly PricingEntry[],
   needs: readonly PlanNeed[],
   includeNoCharge = false,
+  producerFailures: PricingOutput["producerFailures"] = [],
 ): PricingOutput {
   const needsByRequest = new Map(needs.map((need) => [need.request, need]));
   const groups = new Map<string, Omit<PricingEntry, "request"> & { requests: PlanNeed[] }>();
@@ -715,6 +718,7 @@ export function createPricingOutput(
   return {
     format: "qflow.cli-pricing@1", run, requestCount: entries.length,
     noChargeRequestCount, groups: [...groups.values()],
+    producerFailureCount: producerFailures.length, producerFailures,
   };
 }
 
@@ -730,7 +734,14 @@ function renderPricing(
     ["Run", shortPath(machine.run)],
     ["Requests", String(machine.requestCount)],
     ["No Provider charge", `${machine.noChargeRequestCount} requests`],
+    ...(machine.producerFailureCount === 0 ? [] : [["Producer failures", String(machine.producerFailureCount)] as const]),
   ], colors));
+  if (machine.producerFailures.length > 0) {
+    lines.push("", colors.strong("Producer failures"));
+    for (const failure of machine.producerFailures) {
+      lines.push(`  ${colors.error(glyph(io, "×", "x"))} ${colors.accent(stepLabel(failure.step))}: ${failure.message}`);
+    }
+  }
   if (machine.noChargeRequestCount > 0 && !verbose) {
     lines.push(`  ${colors.dim("No-charge request details: --verbose")}`);
   }

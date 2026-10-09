@@ -14,6 +14,10 @@ on:
         description: "Publish to npm (unchecked: checks and downloadable package only)"
         type: boolean
         default: false
+      packages:
+        description: "Optional space-separated package names to publish; empty publishes the complete candidate"
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -29,12 +33,12 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
       - name: Confirm version and main ancestry
@@ -79,22 +83,32 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
       - name: Use npm with trusted publishing support
         run: npm install --global npm@11
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: npm-package
           path: release
-      - name: Preflight every package, then publish dependencies first and the Distribution last
-        run: node scripts/publish-release-candidate.mjs release/release-plan.json
+      - name: Publish the explicitly selected packages in dependency order
+        env:
+          RELEASE_PACKAGES: ${{ inputs.packages }}
+        run: |
+          node --input-type=module <<'JS'
+          import { execFileSync } from 'node:child_process';
+          const names = (process.env.RELEASE_PACKAGES ?? '').trim().split(/\s+/).filter(Boolean);
+          execFileSync(process.execPath, [
+            'scripts/publish-release-candidate.mjs', 'release/release-plan.json',
+            ...names.map(name => `--package=${name}`),
+          ], { stdio: 'inherit' });
+          JS
 
   release-assets:
     if: github.event_name == 'release'
@@ -103,7 +117,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: npm-package
           path: release

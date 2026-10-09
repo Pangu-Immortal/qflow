@@ -1,5 +1,5 @@
-import { verifyMediaInspection } from "@qflow/qflow/media";
-import type { MediaAudioStream, MediaInspection, MediaVideoStream } from "@qflow/qflow/media";
+import { verifyMediaInspection } from "@qflow/media";
+import type { MediaAudioStream, MediaInspection, MediaVideoStream } from "@qflow/media";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { BlobRef } from "@qflow/qflow/protocol";
 

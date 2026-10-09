@@ -43,6 +43,12 @@ async function projectPackage(
   await writeFile(join(directory, "activation.mjs"), `export default ${contribution};\n`, "utf8");
 }
 
+async function exposeEmbeddedPackage(root: string, name: string): Promise<void> {
+  await writeFile(join(root, "package.json"), JSON.stringify({
+    name: "test-distribution", exports: { "./embedded": `./packages/${name.split("/").at(-1)}/activation.mjs` },
+  }));
+}
+
 test("loads an explicitly selected installed package", async () => {
   const root = await mkdtemp(join(tmpdir(), "qflow-package-loader-"));
   try {
@@ -168,6 +174,7 @@ test("an exact package embedded by the active Distribution cannot be shadowed", 
       format: "qflow.package@1",
       facets: [{ abi: "example.cards@1", offers: ["embedded-host"] }]
     }`);
+    await exposeEmbeddedPackage(distribution, "@qflow/cards");
     const loaded = await loadNodePackageSelection(["@qflow/cards"], project, {
       fallbackRoots: [distribution],
     });
@@ -184,6 +191,7 @@ test("official extensions use the Build module scope while embedded host package
   try {
     await installedPackage(distribution, "@qflow/cards", `{ format: "qflow.package@1" }`);
     await projectPackage(distribution, "@qflow/facet-cards", `{ format: "qflow.package@1" }`);
+    await exposeEmbeddedPackage(distribution, "@qflow/facet-cards");
     const scoped: string[] = [];
     const importModule = async (url: string): Promise<unknown> => {
       scoped.push(url);
@@ -197,6 +205,31 @@ test("official extensions use the Build module scope while embedded host package
       fallbackRoots: [distribution], importModule,
     });
     assert.equal(scoped.length, 1);
+  } finally {
+    await rm(project, { recursive: true, force: true });
+    await rm(distribution, { recursive: true, force: true });
+  }
+});
+
+test("explicit default owners resolve nested capabilities without node_modules hoisting", async () => {
+  const project = await mkdtemp(join(tmpdir(), "qflow-default-project-"));
+  const distribution = await mkdtemp(join(tmpdir(), "qflow-default-distribution-"));
+  try {
+    await writeFile(join(distribution, "package.json"), JSON.stringify({
+      name: "test-distribution", dependencies: { "video-defaults": "1.0.0" },
+      qflow: { packageSources: ["video-defaults"] },
+    }));
+    await installedPackage(distribution, "video-defaults", `{ format: "qflow.package@1" }`, { "example-cards": "1.0.0" });
+    const owner = join(distribution, "node_modules", "video-defaults");
+    await installedPackage(owner, "example-cards", `{
+      format: "qflow.package@1", facets: [{ abi: "cards@1", offers: ["default"] }]
+    }`);
+    const options = { fallbackRoots: [distribution] };
+    assert.deepEqual((await loadNodePackageSelection(["example-cards"], project, options))[0]!.contribution.facets?.[0]?.offers, ["default"]);
+    await installedPackage(project, "example-cards", `{
+      format: "qflow.package@1", facets: [{ abi: "cards@1", offers: ["project"] }]
+    }`);
+    assert.deepEqual((await loadNodePackageSelection(["example-cards"], project, options))[0]!.contribution.facets?.[0]?.offers, ["project"]);
   } finally {
     await rm(project, { recursive: true, force: true });
     await rm(distribution, { recursive: true, force: true });

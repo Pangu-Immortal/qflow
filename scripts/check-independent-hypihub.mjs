@@ -10,6 +10,8 @@ import {
   loadNodePackageSelection,
 } from "../packages/loader/src/node/index.ts";
 
+import { packConsumerDependencies, consumerHostManifest } from "./independent-consumer.mjs";
+
 import { packIndependentPackage, releasedPackageDependencyMap } from "./pack-independent-package.mjs";
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -31,6 +33,7 @@ try {
   );
   const whisperx = await packIndependentPackage("packages/whisperx", output, { buildPublicTypes: false });
   const provider = await packIndependentPackage("packages/provider-qflowhub", output, { buildPublicTypes: false });
+  const dependencies = await packConsumerDependencies(["media-operations", "media-local", "narrative-speech-alignment", "whisperx", "provider-qflowhub"], output);
   await mkdir(consumer);
   await writeFile(join(consumer, "package.json"), `${JSON.stringify({
     name: "qflowhub-independent-consumer",
@@ -44,6 +47,7 @@ try {
     "--no-audit",
     "--no-fund",
     "--legacy-peer-deps",
+    ...dependencies,
     mediaOperations,
     mediaLocal,
     narrativeSpeechAlignment,
@@ -83,7 +87,7 @@ try {
   await access(join(whisperXRoot, "dist", "activation.js"));
 
   await mkdir(join(distribution, "packages"), { recursive: true });
-  await writeFile(join(distribution, "package.json"), await readFile(join(repositoryRoot, "package.json"), "utf8"));
+  await writeFile(join(distribution, "package.json"), JSON.stringify(await consumerHostManifest()));
   for (const entry of await readdir(join(repositoryRoot, "packages"), { withFileTypes: true })) {
     if (!entry.isDirectory() || [
       "media-local",

@@ -52,5 +52,5 @@ generic image-operations package owns the Program shape and operation semantics;
 the selected cleanup recipe.
 
 The Surface implementation belongs to this package. The public
-`@qflow/qflow/generation/model` helpers remain responsible only for the exact request and Fragment
+`@qflow/generation/model` helpers remain responsible only for the exact request and Fragment
 shell; they own no author-Surface registry or model syntax.

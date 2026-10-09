@@ -1,6 +1,6 @@
 {
   "name": "@qflow/media-operations",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -15,7 +15,7 @@
     "activation": "./src/activation.ts"
   },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1"
   },
   "devDependencies": {
     "@qflow/blob": "workspace:*",
@@ -30,5 +30,11 @@
     "@qflow/timeline": "workspace:*",
     "@qflow/temporal": "workspace:*",
     "@qflow/qflow": "workspace:*"
+  },
+  "dependencies": {
+    "@qflow/composition": "workspace:^0.1.0",
+    "@qflow/media": "workspace:^0.1.0",
+    "@qflow/temporal": "workspace:^0.1.0",
+    "@qflow/timeline": "workspace:^0.1.0"
   }
 }

@@ -1,16 +1,16 @@
-import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalContext } from "@qflow/temporal/markup";
 import { assertEmptyElement as empty, assertAttributes as allowed, textAttribute as text, optionalTextAttribute as optionalText, type StructuredElement, type StructuredSurfaceHandler, type SurfaceComponentDraft, type SurfaceRecordDraft, type SurfaceResolvedReference, type MarkupAttributeValue } from "@qflow/qflow/markup";
 import { sameType, type CanonicalValue, type TypeRef } from "@qflow/qflow/protocol";
 import { blobTypes } from "@qflow/qflow/blob";
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/qflow/author";
 import type { FragmentOperation } from "@qflow/qflow/author";
-import { mediaTypes } from "@qflow/qflow/media";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { mediaTypes } from "@qflow/media";
+import { spatialTypes } from "@qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 import type { Recipe } from "@qflow/qflow/recipe";
-import { temporalTypes } from "@qflow/qflow/temporal";
-import { resolveTemporalWindowReference, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
+import { temporalTypes } from "@qflow/temporal";
+import { resolveTemporalWindowReference, temporalWindowAttributeNames } from "@qflow/temporal/markup";
 
 import {
   decodeMediaFit,

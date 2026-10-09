@@ -1,6 +1,6 @@
 import { textFineMarkupSurfaces, textFineModuleRef, textFineTypes } from "./manifest.js";
 import type { FineTextOccurrence, TextItem } from "./types.js";
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioItemDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
 import { childItems, requiredSurfaceValue, temporalLineageFor, textLayer } from "@qflow/studio-companion";
 

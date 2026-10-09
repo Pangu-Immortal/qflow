@@ -32,8 +32,8 @@ Author Kit; import only the owner of each responsibility:
 | `@qflow/qflow/admission` | package-owned Type validators and Admission package facets |
 | `@qflow/qflow/author` | sealed Author Graph Fragments |
 | `@qflow/qflow/markup` | Markup Surface declarations and handlers |
-| `@qflow/qflow/temporal/markup` | author-time semantic Window/Instant projection helpers |
-| `@qflow/qflow/composition` | peer Track values and renderer-independent visual representation |
+| `@qflow/temporal/markup` | author-time semantic Window/Instant projection helpers |
+| `@qflow/composition` | peer Track values and renderer-independent visual representation |
 | `@qflow/studio-companion` (optional, in Companion code) | editor Item projection, Inspector bindings and executed temporal lineage |
 
 The Author Package keeps `@qflow/qflow` as its framework development dependency. A package that

@@ -1,4 +1,4 @@
-import type { HtmlProgram } from "@qflow/qflow/html-program";
+import type { HtmlProgram } from "@qflow/html-program";
 import { assert, runProcess } from "./process.js";
 
 type ProbeStream = {

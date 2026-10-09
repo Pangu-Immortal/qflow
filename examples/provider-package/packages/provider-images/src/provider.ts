@@ -1,7 +1,7 @@
 import { canonicalize, defineEndpoint, wakeAfter } from "@qflow/qflow/endpoint";
 import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow/endpoint";
-import { compileWireRequest, generationTypes, sealGeneratedImageSet, selectWireModelForRequest } from "@qflow/qflow/generation";
-import type { GenerationRequest, GenerationWireMapping } from "@qflow/qflow/generation";
+import { compileWireRequest, generationTypes, sealGeneratedImageSet, selectWireModelForRequest } from "@qflow/generation";
+import type { GenerationRequest, GenerationWireMapping } from "@qflow/generation";
 
 export const providerModule = { name: "@example/provider-images", version: "1" } as const;
 export const capability = { module: { name: "@qflow/gpt-image", version: "1" }, name: "gpt-image-2" } as const;

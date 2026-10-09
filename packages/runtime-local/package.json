@@ -21,7 +21,7 @@
     "koffi": "3.2.1"
   },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.0"
   },
   "devDependencies": {
     "@qflow/admission": "workspace:*",

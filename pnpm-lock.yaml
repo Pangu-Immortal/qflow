@@ -8,125 +8,29 @@ importers:
 
   .:
     dependencies:
-      '@qflow/audio-track':
-        specifier: workspace:^
-        version: link:packages/audio-track
       '@qflow/browser-capture':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:packages/browser-capture
-      '@qflow/caption-fine':
-        specifier: workspace:^
-        version: link:packages/caption-fine
-      '@qflow/credential-store-env':
-        specifier: workspace:^
-        version: link:packages/credential-store-env
-      '@qflow/credential-store-local':
-        specifier: workspace:^
-        version: link:packages/credential-store-local
-      '@qflow/elevenlabs-speech':
-        specifier: workspace:^
-        version: link:packages/elevenlabs-speech
-      '@qflow/film':
-        specifier: workspace:^
-        version: link:packages/film
-      '@qflow/fishaudio-speech':
-        specifier: workspace:^
-        version: link:packages/fishaudio-speech
-      '@qflow/fontsource':
-        specifier: workspace:^
-        version: link:packages/fontsource
-      '@qflow/gpt-image':
-        specifier: workspace:^
-        version: link:packages/gpt-image
-      '@qflow/gpt-image-kits':
-        specifier: workspace:^
-        version: link:packages/gpt-image-kits
-      '@qflow/grok-imagine':
-        specifier: workspace:^
-        version: link:packages/grok-imagine
-      '@qflow/html-video':
-        specifier: workspace:^
-        version: link:packages/html-video
-      '@qflow/image-operations':
-        specifier: workspace:^
-        version: link:packages/image-operations
       '@qflow/media-local':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:packages/media-local
-      '@qflow/media-operations':
-        specifier: workspace:^
-        version: link:packages/media-operations
-      '@qflow/mimo-speech':
-        specifier: workspace:^
-        version: link:packages/mimo-speech
-      '@qflow/minimax-h3':
-        specifier: workspace:^
-        version: link:packages/minimax-h3
-      '@qflow/nano-banana':
-        specifier: workspace:^
-        version: link:packages/nano-banana
-      '@qflow/pixverse':
-        specifier: workspace:^
-        version: link:packages/pixverse
-      '@qflow/provider-html-local':
-        specifier: workspace:^
-        version: link:packages/provider-html-local
-      '@qflow/provider-qflowhub':
-        specifier: workspace:^
-        version: link:packages/provider-qflowhub
-      '@qflow/provider-image-opencv-local':
-        specifier: workspace:^
-        version: link:packages/provider-image-opencv-local
-      '@qflow/provider-whisperx-local':
-        specifier: workspace:^
-        version: link:packages/provider-whisperx-local
       '@qflow/runtime-local':
-        specifier: workspace:^
+        specifier: workspace:^0.1.1
         version: link:packages/runtime-local
-      '@qflow/script':
-        specifier: workspace:^
-        version: link:packages/script
-      '@qflow/seedance':
-        specifier: workspace:^
-        version: link:packages/seedance
-      '@qflow/seedance-kits':
-        specifier: workspace:^
-        version: link:packages/seedance-kits
-      '@qflow/seedream':
-        specifier: workspace:^
-        version: link:packages/seedream
       '@qflow/speech-estimate':
-        specifier: workspace:^
+        specifier: workspace:^0.1.1
         version: link:packages/speech-estimate
       '@qflow/studio':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:packages/studio
-      '@qflow/studio-companion':
-        specifier: workspace:^
-        version: link:packages/studio-companion
-      '@qflow/text-fine':
-        specifier: workspace:^
-        version: link:packages/text-fine
-      '@qflow/timeline-author':
-        specifier: workspace:^
-        version: link:packages/timeline-author
       '@qflow/video':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:packages/video
-      '@qflow/visual-track':
-        specifier: workspace:^
-        version: link:packages/visual-track
-      '@qflow/volcengine-matting':
-        specifier: workspace:^
-        version: link:packages/volcengine-matting
-      '@qflow/wan':
-        specifier: workspace:^
-        version: link:packages/wan
       '@qflow/whisperx':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:packages/whisperx
       '@qflow/yt-dlp':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:packages/yt-dlp
       '@types/node':
         specifier: 24.10.1
@@ -162,6 +66,9 @@ importers:
       '@qflow/admission':
         specifier: workspace:*
         version: link:packages/admission
+      '@qflow/audio-track':
+        specifier: workspace:*
+        version: link:packages/audio-track
       '@qflow/author':
         specifier: workspace:*
         version: link:packages/author
@@ -171,21 +78,57 @@ importers:
       '@qflow/caption':
         specifier: workspace:*
         version: link:packages/caption
+      '@qflow/caption-fine':
+        specifier: workspace:*
+        version: link:packages/caption-fine
       '@qflow/comment-sticker':
         specifier: workspace:*
         version: link:packages/comment-sticker
       '@qflow/composition':
         specifier: workspace:*
         version: link:packages/composition
+      '@qflow/credential-store-env':
+        specifier: workspace:*
+        version: link:packages/credential-store-env
+      '@qflow/credential-store-local':
+        specifier: workspace:*
+        version: link:packages/credential-store-local
       '@qflow/depth-stack':
         specifier: workspace:*
         version: link:packages/depth-stack
+      '@qflow/elevenlabs-speech':
+        specifier: workspace:*
+        version: link:packages/elevenlabs-speech
+      '@qflow/film':
+        specifier: workspace:*
+        version: link:packages/film
+      '@qflow/fishaudio-speech':
+        specifier: workspace:*
+        version: link:packages/fishaudio-speech
+      '@qflow/fontsource':
+        specifier: workspace:*
+        version: link:packages/fontsource
       '@qflow/generation':
         specifier: workspace:*
         version: link:packages/generation
+      '@qflow/gpt-image':
+        specifier: workspace:*
+        version: link:packages/gpt-image
+      '@qflow/gpt-image-kits':
+        specifier: workspace:*
+        version: link:packages/gpt-image-kits
+      '@qflow/grok-imagine':
+        specifier: workspace:*
+        version: link:packages/grok-imagine
       '@qflow/html-program':
         specifier: workspace:*
         version: link:packages/html-program
+      '@qflow/html-video':
+        specifier: workspace:*
+        version: link:packages/html-video
+      '@qflow/image-operations':
+        specifier: workspace:*
+        version: link:packages/image-operations
       '@qflow/interview-emoji-reveal':
         specifier: workspace:*
         version: link:packages/interview-emoji-reveal
@@ -195,6 +138,18 @@ importers:
       '@qflow/media':
         specifier: workspace:*
         version: link:packages/media
+      '@qflow/media-operations':
+        specifier: workspace:*
+        version: link:packages/media-operations
+      '@qflow/mimo-speech':
+        specifier: workspace:*
+        version: link:packages/mimo-speech
+      '@qflow/minimax-h3':
+        specifier: workspace:*
+        version: link:packages/minimax-h3
+      '@qflow/nano-banana':
+        specifier: workspace:*
+        version: link:packages/nano-banana
       '@qflow/narrative':
         specifier: workspace:*
         version: link:packages/narrative
@@ -207,6 +162,9 @@ importers:
       '@qflow/narrative-temporal':
         specifier: workspace:*
         version: link:packages/narrative-temporal
+      '@qflow/pixverse':
+        specifier: workspace:*
+        version: link:packages/pixverse
       '@qflow/producer':
         specifier: workspace:*
         version: link:packages/producer
@@ -222,6 +180,15 @@ importers:
       '@qflow/provider-hiapi':
         specifier: workspace:*
         version: link:packages/provider-hiapi
+      '@qflow/provider-html-local':
+        specifier: workspace:*
+        version: link:packages/provider-html-local
+      '@qflow/provider-qflowhub':
+        specifier: workspace:*
+        version: link:packages/provider-qflowhub
+      '@qflow/provider-image-opencv-local':
+        specifier: workspace:*
+        version: link:packages/provider-image-opencv-local
       '@qflow/provider-monid':
         specifier: workspace:*
         version: link:packages/provider-monid
@@ -231,6 +198,9 @@ importers:
       '@qflow/provider-tokendance':
         specifier: workspace:*
         version: link:packages/provider-tokendance
+      '@qflow/provider-whisperx-local':
+        specifier: workspace:*
+        version: link:packages/provider-whisperx-local
       '@qflow/ranking':
         specifier: workspace:*
         version: link:packages/ranking
@@ -246,21 +216,51 @@ importers:
       '@qflow/run':
         specifier: workspace:*
         version: link:packages/run
+      '@qflow/script':
+        specifier: workspace:*
+        version: link:packages/script
+      '@qflow/seedance':
+        specifier: workspace:*
+        version: link:packages/seedance
+      '@qflow/seedance-kits':
+        specifier: workspace:*
+        version: link:packages/seedance-kits
+      '@qflow/seedream':
+        specifier: workspace:*
+        version: link:packages/seedream
       '@qflow/spatial':
         specifier: workspace:*
         version: link:packages/spatial
       '@qflow/speech-evidence':
         specifier: workspace:*
         version: link:packages/speech-evidence
+      '@qflow/studio-companion':
+        specifier: workspace:*
+        version: link:packages/studio-companion
       '@qflow/temporal':
         specifier: workspace:*
         version: link:packages/temporal
       '@qflow/text':
         specifier: workspace:*
         version: link:packages/text
+      '@qflow/text-fine':
+        specifier: workspace:*
+        version: link:packages/text-fine
       '@qflow/timeline':
         specifier: workspace:*
         version: link:packages/timeline
+      '@qflow/timeline-author':
+        specifier: workspace:*
+        version: link:packages/timeline-author
+      '@qflow/visual-track':
+        specifier: workspace:*
+        version: link:packages/visual-track
+      '@qflow/volcengine-matting':
+        specifier: workspace:*
+        version: link:packages/volcengine-matting
+      '@qflow/wan':
+        specifier: workspace:*
+        version: link:packages/wan
       linkedom:
         specifier: 0.18.13
         version: 0.18.13
@@ -276,24 +276,60 @@ importers:
 
   examples/complex-explainer/packages/launch-scenes:
     dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/composition
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/html-program
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../../../..
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/spatial
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../../../../packages/studio-companion
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/timeline
 
   examples/complex-explainer/packages/opening-system:
     dependencies:
       '@explainer/visual-language':
         specifier: file:../visual-language
         version: link:../visual-language
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/composition
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/html-program
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../../../..
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/spatial
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../../../../packages/studio-companion
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/timeline
       '@qflow/visual-track':
         specifier: workspace:*
         version: link:../../../../packages/visual-track
@@ -317,20 +353,67 @@ importers:
       '@explainer/visual-language':
         specifier: file:../visual-language
         version: link:../visual-language
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/composition
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/html-program
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../../../..
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/spatial
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../../../../packages/studio-companion
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/timeline
 
   examples/interview/packages/flash:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/composition
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/timeline
     devDependencies:
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../../../..
 
   examples/minimal-author-package/packages/example-component:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/composition
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/timeline
     devDependencies:
       '@qflow/qflow':
         specifier: workspace:*
@@ -343,6 +426,10 @@ importers:
         version: 5.9.3
 
   examples/provider-package/packages/provider-images:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/generation
     devDependencies:
       '@qflow/executor':
         specifier: workspace:*
@@ -361,6 +448,10 @@ importers:
         version: 5.9.3
 
   examples/provider-package/packages/provider-videos:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/generation
     devDependencies:
       '@qflow/executor':
         specifier: workspace:*
@@ -379,6 +470,25 @@ importers:
         version: 5.9.3
 
   examples/semantic-composition/packages/chat-scene:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/composition
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/html-program
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/timeline
     devDependencies:
       '@qflow/qflow':
         specifier: workspace:*
@@ -391,6 +501,25 @@ importers:
         version: 5.9.3
 
   examples/semantic-composition/packages/responsive-explainer:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/composition
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/html-program
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../../../../packages/timeline
     devDependencies:
       '@qflow/qflow':
         specifier: workspace:*
@@ -421,6 +550,19 @@ importers:
         version: 3.2.1
 
   packages/audio-track:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/admission':
         specifier: workspace:*
@@ -434,9 +576,6 @@ importers:
       '@qflow/compiler':
         specifier: workspace:*
         version: link:../compiler
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -446,9 +585,6 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/media-operations':
         specifier: workspace:*
         version: link:../media-operations
@@ -479,12 +615,6 @@ importers:
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../studio-companion
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -523,7 +653,7 @@ importers:
   packages/browser-capture:
     dependencies:
       '@qflow/media-local':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:../media-local
       '@puppeteer/browsers':
         specifier: 3.2.2
@@ -541,9 +671,16 @@ importers:
 
   packages/caption:
     dependencies:
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
@@ -553,11 +690,33 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
 
   packages/caption-fine:
+    dependencies:
+      '@qflow/caption':
+        specifier: workspace:^0.1.0
+        version: link:../caption
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../html-program
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/region-evidence':
+        specifier: workspace:^0.1.0
+        version: link:../region-evidence
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/author':
         specifier: workspace:*
@@ -565,24 +724,12 @@ importers:
       '@qflow/browser-capture':
         specifier: workspace:*
         version: link:../browser-capture
-      '@qflow/caption':
-        specifier: workspace:*
-        version: link:../caption
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
-      '@qflow/html-program':
-        specifier: workspace:*
-        version: link:../html-program
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/producer':
         specifier: workspace:*
         version: link:../producer
@@ -592,24 +739,12 @@ importers:
       '@qflow/recipe':
         specifier: workspace:*
         version: link:../recipe
-      '@qflow/region-evidence':
-        specifier: workspace:*
-        version: link:../region-evidence
       '@qflow/script':
         specifier: workspace:*
         version: link:../script
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../studio-companion
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
       sharp:
         specifier: 0.35.4
         version: 0.35.4(@types/node@24.10.1)
@@ -670,6 +805,22 @@ importers:
         version: link:../runtime-local
 
   packages/comment-sticker:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
@@ -683,27 +834,15 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/recipe':
         specifier: workspace:*
         version: link:../recipe
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../studio-companion
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -738,31 +877,34 @@ importers:
 
   packages/composition:
     dependencies:
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
-      '@qflow/producer':
-        specifier: workspace:*
-        version: link:../producer
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
-    devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
       '@qflow/kernel':
         specifier: workspace:*
         version: link:../kernel
       '@qflow/narrative':
         specifier: workspace:*
         version: link:../narrative
+      '@qflow/producer':
+        specifier: workspace:*
+        version: link:../producer
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
       '@qflow/recipe':
         specifier: workspace:*
         version: link:../recipe
@@ -802,8 +944,23 @@ importers:
 
   packages/depth-stack:
     dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
       '@qflow/visual-track':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:../visual-track
     devDependencies:
       '@qflow/author':
@@ -812,9 +969,6 @@ importers:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -824,9 +978,6 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/media-operations':
         specifier: workspace:*
         version: link:../media-operations
@@ -839,33 +990,25 @@ importers:
       '@qflow/recipe':
         specifier: workspace:*
         version: link:../recipe
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../studio-companion
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
       typescript:
         specifier: 5.9.3
         version: 5.9.3
 
   packages/elevenlabs-speech:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -912,6 +1055,19 @@ importers:
   packages/facet: {}
 
   packages/film:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/admission':
         specifier: workspace:*
@@ -922,9 +1078,6 @@ importers:
       '@qflow/compiler':
         specifier: workspace:*
         version: link:../compiler
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
       '@qflow/executor':
         specifier: workspace:*
         version: link:../executor
@@ -955,9 +1108,6 @@ importers:
       '@qflow/source':
         specifier: workspace:*
         version: link:../source
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../studio-companion
@@ -967,18 +1117,16 @@ importers:
       '@qflow/text-fine':
         specifier: workspace:*
         version: link:../text-fine
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
 
   packages/fishaudio-speech:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -993,16 +1141,20 @@ importers:
         version: link:../text
 
   packages/fontsource:
+    dependencies:
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
     devDependencies:
       '@qflow/qflow':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../..
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../studio-companion
 
   packages/generation:
-    dependencies:
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
@@ -1012,9 +1164,15 @@ importers:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
+      '@qflow/executor':
+        specifier: workspace:*
+        version: link:../executor
       '@qflow/facet':
         specifier: workspace:*
         version: link:../facet
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
       '@qflow/producer':
         specifier: workspace:*
         version: link:../producer
@@ -1024,15 +1182,14 @@ importers:
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
-    devDependencies:
-      '@qflow/executor':
-        specifier: workspace:*
-        version: link:../executor
 
   packages/gpt-image:
     dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
       '@qflow/image-operations':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:../image-operations
     devDependencies:
       '@qflow/author':
@@ -1041,9 +1198,6 @@ importers:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -1094,13 +1248,14 @@ importers:
         version: link:../text
 
   packages/grok-imagine:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -1116,28 +1271,22 @@ importers:
 
   packages/html-program:
     dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
       '@qflow/author':
         specifier: workspace:*
         version: link:../author
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
-      '@qflow/producer':
-        specifier: workspace:*
-        version: link:../producer
-      '@qflow/protocol':
-        specifier: workspace:*
-        version: link:../protocol
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
-    devDependencies:
       '@qflow/caption':
         specifier: workspace:*
         version: link:../caption
@@ -1147,6 +1296,15 @@ importers:
       '@qflow/fontsource':
         specifier: workspace:*
         version: link:../fontsource
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
+      '@qflow/producer':
+        specifier: workspace:*
+        version: link:../producer
+      '@qflow/protocol':
+        specifier: workspace:*
+        version: link:../protocol
       '@qflow/ranking':
         specifier: workspace:*
         version: link:../ranking
@@ -1171,9 +1329,24 @@ importers:
 
   packages/html-video:
     dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../html-program
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
       '@qflow/media-operations':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:../media-operations
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/admission':
         specifier: workspace:*
@@ -1187,15 +1360,9 @@ importers:
       '@qflow/compiler':
         specifier: workspace:*
         version: link:../compiler
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
       '@qflow/executor':
         specifier: workspace:*
         version: link:../executor
-      '@qflow/html-program':
-        specifier: workspace:*
-        version: link:../html-program
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -1205,9 +1372,6 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/producer':
         specifier: workspace:*
         version: link:../producer
@@ -1220,14 +1384,12 @@ importers:
       '@qflow/source':
         specifier: workspace:*
         version: link:../source
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
 
   packages/image-operations:
+    dependencies:
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
     devDependencies:
       '@qflow/author':
         specifier: workspace:*
@@ -1247,11 +1409,21 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
 
   packages/interview-emoji-reveal:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/qflow':
         specifier: workspace:*
@@ -1305,12 +1477,19 @@ importers:
 
   packages/media:
     dependencies:
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
@@ -1320,15 +1499,21 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
 
   packages/media-local:
     dependencies:
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
       '@qflow/media-operations':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:../media-operations
+      '@qflow/speech-evidence':
+        specifier: workspace:^0.1.0
+        version: link:../speech-evidence
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
       sharp:
         specifier: 0.35.4
         version: 0.35.4(@types/node@24.10.1)
@@ -1345,9 +1530,6 @@ importers:
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -1357,11 +1539,21 @@ importers:
       '@qflow/runtime-local':
         specifier: workspace:*
         version: link:../runtime-local
-      '@qflow/speech-evidence':
-        specifier: workspace:*
-        version: link:../speech-evidence
 
   packages/media-operations:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/author':
         specifier: workspace:*
@@ -1369,18 +1561,12 @@ importers:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/producer':
         specifier: workspace:*
         version: link:../producer
@@ -1393,21 +1579,16 @@ importers:
       '@qflow/run':
         specifier: workspace:*
         version: link:../run
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
 
   packages/mimo-speech:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -1422,13 +1603,14 @@ importers:
         version: link:../text
 
   packages/minimax-h3:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -1443,13 +1625,14 @@ importers:
         version: link:../text
 
   packages/nano-banana:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -1464,10 +1647,13 @@ importers:
         version: link:../text
 
   packages/narrative:
-    dependencies:
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
       '@qflow/producer':
         specifier: workspace:*
         version: link:../producer
@@ -1477,24 +1663,28 @@ importers:
 
   packages/narrative-caption:
     dependencies:
+      '@qflow/caption':
+        specifier: workspace:^0.1.0
+        version: link:../caption
+      '@qflow/narrative':
+        specifier: workspace:^0.1.0
+        version: link:../narrative
+      '@qflow/narrative-temporal':
+        specifier: workspace:^0.1.0
+        version: link:../narrative-temporal
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
       '@qflow/author':
         specifier: workspace:*
         version: link:../author
-      '@qflow/caption':
+      '@qflow/qflow':
         specifier: workspace:*
-        version: link:../caption
+        version: link:../..
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/narrative':
-        specifier: workspace:*
-        version: link:../narrative
-      '@qflow/narrative-temporal':
-        specifier: workspace:*
-        version: link:../narrative-temporal
       '@qflow/producer':
         specifier: workspace:*
         version: link:../producer
@@ -1503,58 +1693,70 @@ importers:
         version: link:../protocol
 
   packages/narrative-speech-alignment:
+    dependencies:
+      '@qflow/narrative':
+        specifier: workspace:^0.1.0
+        version: link:../narrative
+      '@qflow/narrative-temporal':
+        specifier: workspace:^0.1.0
+        version: link:../narrative-temporal
+      '@qflow/speech-evidence':
+        specifier: workspace:^0.1.0
+        version: link:../speech-evidence
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
     devDependencies:
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
-      '@qflow/narrative':
-        specifier: workspace:*
-        version: link:../narrative
       '@qflow/script':
         specifier: workspace:*
         version: link:../script
-      '@qflow/speech-evidence':
-        specifier: workspace:*
-        version: link:../speech-evidence
 
   packages/narrative-temporal:
     dependencies:
+      '@qflow/narrative':
+        specifier: workspace:^0.1.0
+        version: link:../narrative
+      '@qflow/studio-companion':
+        specifier: workspace:^0.1.1
+        version: link:../studio-companion
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
       '@qflow/author':
         specifier: workspace:*
         version: link:../author
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/narrative':
-        specifier: workspace:*
-        version: link:../narrative
       '@qflow/producer':
         specifier: workspace:*
         version: link:../producer
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/studio-companion':
-        specifier: workspace:*
-        version: link:../studio-companion
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
 
   packages/pixverse:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -1582,13 +1784,14 @@ importers:
   packages/protocol: {}
 
   packages/provider-beatapi:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/endpoint':
         specifier: workspace:*
         version: link:../endpoint
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/gpt-image':
         specifier: workspace:*
         version: link:../gpt-image
@@ -1618,13 +1821,14 @@ importers:
         version: link:../seedance
 
   packages/provider-hiapi:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/endpoint':
         specifier: workspace:*
         version: link:../endpoint
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/gpt-image':
         specifier: workspace:*
         version: link:../gpt-image
@@ -1658,6 +1862,12 @@ importers:
 
   packages/provider-html-local:
     dependencies:
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../html-program
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
       '@puppeteer/browsers':
         specifier: 3.2.2
         version: 3.2.2
@@ -1683,15 +1893,9 @@ importers:
       '@qflow/executor':
         specifier: workspace:*
         version: link:../executor
-      '@qflow/html-program':
-        specifier: workspace:*
-        version: link:../html-program
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -1715,6 +1919,13 @@ importers:
         version: 0.35.4(@types/node@24.10.1)
 
   packages/provider-qflowhub:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
+      '@qflow/speech-evidence':
+        specifier: workspace:^0.1.0
+        version: link:../speech-evidence
     devDependencies:
       '@qflow/elevenlabs-speech':
         specifier: workspace:*
@@ -1728,9 +1939,6 @@ importers:
       '@qflow/fishaudio-speech':
         specifier: workspace:*
         version: link:../fishaudio-speech
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/gpt-image':
         specifier: workspace:*
         version: link:../gpt-image
@@ -1752,9 +1960,6 @@ importers:
       '@qflow/seedance':
         specifier: workspace:*
         version: link:../seedance
-      '@qflow/speech-evidence':
-        specifier: workspace:*
-        version: link:../speech-evidence
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
@@ -1790,13 +1995,14 @@ importers:
         version: link:../runtime-local
 
   packages/provider-monid:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/endpoint':
         specifier: workspace:*
         version: link:../endpoint
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -1820,13 +2026,14 @@ importers:
         version: link:../wan
 
   packages/provider-pollo:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/endpoint':
         specifier: workspace:*
         version: link:../endpoint
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/gpt-image':
         specifier: workspace:*
         version: link:../gpt-image
@@ -1853,13 +2060,14 @@ importers:
         version: link:../runtime-local
 
   packages/provider-tokendance:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/endpoint':
         specifier: workspace:*
         version: link:../endpoint
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -1883,6 +2091,10 @@ importers:
         version: link:../seedream
 
   packages/provider-whisperx-local:
+    dependencies:
+      '@qflow/speech-evidence':
+        specifier: workspace:^0.1.0
+        version: link:../speech-evidence
     devDependencies:
       '@qflow/endpoint':
         specifier: workspace:*
@@ -1899,14 +2111,27 @@ importers:
       '@qflow/runtime-local':
         specifier: workspace:*
         version: link:../runtime-local
-      '@qflow/speech-evidence':
-        specifier: workspace:*
-        version: link:../speech-evidence
       '@qflow/whisperx':
         specifier: workspace:*
         version: link:../whisperx
 
   packages/ranking:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/qflow':
         specifier: workspace:*
@@ -1917,30 +2142,18 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/narrative':
         specifier: workspace:*
         version: link:../narrative
       '@qflow/recipe':
         specifier: workspace:*
         version: link:../recipe
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../studio-companion
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -1969,12 +2182,22 @@ importers:
 
   packages/region-evidence:
     dependencies:
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
       '@qflow/author':
         specifier: workspace:*
         version: link:../author
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
@@ -1987,12 +2210,6 @@ importers:
       '@qflow/recipe':
         specifier: workspace:*
         version: link:../recipe
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
 
   packages/result:
     dependencies:
@@ -2074,10 +2291,20 @@ importers:
         version: link:../workspace
 
   packages/script:
-    devDependencies:
+    dependencies:
       '@qflow/caption':
-        specifier: workspace:*
+        specifier: workspace:^0.1.0
         version: link:../caption
+      '@qflow/narrative':
+        specifier: workspace:^0.1.0
+        version: link:../narrative
+      '@qflow/narrative-caption':
+        specifier: workspace:^0.1.0
+        version: link:../narrative-caption
+      '@qflow/narrative-temporal':
+        specifier: workspace:^0.1.0
+        version: link:../narrative-temporal
+    devDependencies:
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -2087,15 +2314,6 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/narrative':
-        specifier: workspace:*
-        version: link:../narrative
-      '@qflow/narrative-caption':
-        specifier: workspace:*
-        version: link:../narrative-caption
-      '@qflow/narrative-temporal':
-        specifier: workspace:*
-        version: link:../narrative-temporal
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -2110,6 +2328,10 @@ importers:
         version: link:../text
 
   packages/seedance:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/qflow':
         specifier: workspace:*
@@ -2134,13 +2356,14 @@ importers:
         version: link:../text
 
   packages/seedream:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -2161,13 +2384,22 @@ importers:
         version: link:../protocol
 
   packages/spatial:
-    dependencies:
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
       '@qflow/author':
         specifier: workspace:*
         version: link:../author
+      '@qflow/compiler':
+        specifier: workspace:*
+        version: link:../compiler
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
+      '@qflow/kernel':
+        specifier: workspace:*
+        version: link:../kernel
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
@@ -2177,13 +2409,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-    devDependencies:
-      '@qflow/compiler':
-        specifier: workspace:*
-        version: link:../compiler
-      '@qflow/kernel':
-        specifier: workspace:*
-        version: link:../kernel
       '@qflow/source':
         specifier: workspace:*
         version: link:../source
@@ -2206,37 +2431,52 @@ importers:
 
   packages/speech-evidence:
     dependencies:
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
-      '@qflow/media':
+      '@qflow/qflow':
         specifier: workspace:*
-        version: link:../media
+        version: link:../..
       '@qflow/producer':
         specifier: workspace:*
         version: link:../producer
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
-    devDependencies:
       '@qflow/timeline':
         specifier: workspace:*
         version: link:../timeline
 
   packages/studio:
     dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../html-program
       '@qflow/media-local':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:../media-local
       '@qflow/media-operations':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:../media-operations
       '@qflow/studio-companion':
-        specifier: workspace:^
+        specifier: workspace:^0.1.1
         version: link:../studio-companion
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
       vite:
         specifier: 8.2.2
         version: 8.2.2(@types/node@24.10.1)(esbuild@0.27.7)(tsx@4.21.0)
@@ -2253,12 +2493,6 @@ importers:
       '@qflow/compiler':
         specifier: workspace:*
         version: link:../compiler
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
-      '@qflow/html-program':
-        specifier: workspace:*
-        version: link:../html-program
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -2274,12 +2508,6 @@ importers:
       '@qflow/script':
         specifier: workspace:*
         version: link:../script
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
       '@qflow/video':
         specifier: workspace:*
         version: link:../video
@@ -2298,12 +2526,22 @@ importers:
 
   packages/temporal:
     dependencies:
+      '@qflow/studio-companion':
+        specifier: workspace:^0.1.1
+        version: link:../studio-companion
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
       '@qflow/author':
         specifier: workspace:*
         version: link:../author
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
@@ -2313,9 +2551,6 @@ importers:
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
 
   packages/text:
     dependencies:
@@ -2345,6 +2580,22 @@ importers:
         version: link:../source
 
   packages/text-fine:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/admission':
         specifier: workspace:*
@@ -2355,9 +2606,6 @@ importers:
       '@qflow/compiler':
         specifier: workspace:*
         version: link:../compiler
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
       '@qflow/html-program':
         specifier: workspace:*
         version: link:../html-program
@@ -2370,9 +2618,6 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/narrative':
         specifier: workspace:*
         version: link:../narrative
@@ -2388,27 +2633,21 @@ importers:
       '@qflow/source':
         specifier: workspace:*
         version: link:../source
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../studio-companion
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
 
   packages/timeline:
-    dependencies:
+    devDependencies:
       '@qflow/admission':
         specifier: workspace:*
         version: link:../admission
+      '@qflow/qflow':
+        specifier: workspace:*
+        version: link:../..
       '@qflow/producer':
         specifier: workspace:*
         version: link:../producer
@@ -2417,6 +2656,13 @@ importers:
         version: link:../protocol
 
   packages/timeline-author:
+    dependencies:
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/admission':
         specifier: workspace:*
@@ -2439,21 +2685,147 @@ importers:
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../studio-companion
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
 
   packages/video:
     dependencies:
+      '@qflow/audio-track':
+        specifier: workspace:^0.2.0
+        version: link:../audio-track
+      '@qflow/caption':
+        specifier: workspace:^0.1.0
+        version: link:../caption
+      '@qflow/caption-fine':
+        specifier: workspace:^0.2.0
+        version: link:../caption-fine
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/credential-store-env':
+        specifier: workspace:^0.1.1
+        version: link:../credential-store-env
+      '@qflow/credential-store-local':
+        specifier: workspace:^0.1.1
+        version: link:../credential-store-local
+      '@qflow/elevenlabs-speech':
+        specifier: workspace:^0.2.0
+        version: link:../elevenlabs-speech
+      '@qflow/film':
+        specifier: workspace:^0.2.0
+        version: link:../film
+      '@qflow/fishaudio-speech':
+        specifier: workspace:^0.2.0
+        version: link:../fishaudio-speech
+      '@qflow/fontsource':
+        specifier: workspace:^0.2.0
+        version: link:../fontsource
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
+      '@qflow/gpt-image':
+        specifier: workspace:^0.2.0
+        version: link:../gpt-image
+      '@qflow/gpt-image-kits':
+        specifier: workspace:^0.1.1
+        version: link:../gpt-image-kits
+      '@qflow/grok-imagine':
+        specifier: workspace:^0.2.0
+        version: link:../grok-imagine
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../html-program
+      '@qflow/html-video':
+        specifier: workspace:^0.2.0
+        version: link:../html-video
+      '@qflow/image-operations':
+        specifier: workspace:^0.2.0
+        version: link:../image-operations
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/media-operations':
+        specifier: workspace:^0.2.0
+        version: link:../media-operations
+      '@qflow/mimo-speech':
+        specifier: workspace:^0.2.0
+        version: link:../mimo-speech
+      '@qflow/minimax-h3':
+        specifier: workspace:^0.2.0
+        version: link:../minimax-h3
+      '@qflow/nano-banana':
+        specifier: workspace:^0.2.0
+        version: link:../nano-banana
+      '@qflow/narrative':
+        specifier: workspace:^0.1.0
+        version: link:../narrative
+      '@qflow/narrative-caption':
+        specifier: workspace:^0.1.0
+        version: link:../narrative-caption
+      '@qflow/narrative-temporal':
+        specifier: workspace:^0.1.0
+        version: link:../narrative-temporal
+      '@qflow/pixverse':
+        specifier: workspace:^0.2.0
+        version: link:../pixverse
+      '@qflow/provider-html-local':
+        specifier: workspace:^0.2.0
+        version: link:../provider-html-local
+      '@qflow/provider-qflowhub':
+        specifier: workspace:^0.2.0
+        version: link:../provider-qflowhub
+      '@qflow/provider-image-opencv-local':
+        specifier: workspace:^0.2.0
+        version: link:../provider-image-opencv-local
+      '@qflow/provider-whisperx-local':
+        specifier: workspace:^0.2.0
+        version: link:../provider-whisperx-local
+      '@qflow/region-evidence':
+        specifier: workspace:^0.1.0
+        version: link:../region-evidence
       '@qflow/runtime-local':
-        specifier: workspace:^
+        specifier: workspace:^0.1.1
         version: link:../runtime-local
+      '@qflow/script':
+        specifier: workspace:^0.2.0
+        version: link:../script
+      '@qflow/seedance':
+        specifier: workspace:^0.2.0
+        version: link:../seedance
+      '@qflow/seedance-kits':
+        specifier: workspace:^0.1.1
+        version: link:../seedance-kits
+      '@qflow/seedream':
+        specifier: workspace:^0.2.0
+        version: link:../seedream
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
+      '@qflow/speech-evidence':
+        specifier: workspace:^0.1.0
+        version: link:../speech-evidence
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/text-fine':
+        specifier: workspace:^0.2.0
+        version: link:../text-fine
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
+      '@qflow/timeline-author':
+        specifier: workspace:^0.2.0
+        version: link:../timeline-author
+      '@qflow/visual-track':
+        specifier: workspace:^0.2.0
+        version: link:../visual-track
+      '@qflow/volcengine-matting':
+        specifier: workspace:^0.2.0
+        version: link:../volcengine-matting
+      '@qflow/wan':
+        specifier: workspace:^0.2.0
+        version: link:../wan
     devDependencies:
       '@qflow/cli':
         specifier: workspace:*
@@ -2469,13 +2841,26 @@ importers:
         version: link:../markup
 
   packages/visual-track:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
+      '@qflow/spatial':
+        specifier: workspace:^0.1.0
+        version: link:../spatial
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/composition':
-        specifier: workspace:*
-        version: link:../composition
       '@qflow/html-program':
         specifier: workspace:*
         version: link:../html-program
@@ -2485,9 +2870,6 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
       '@qflow/narrative':
         specifier: workspace:*
         version: link:../narrative
@@ -2497,30 +2879,22 @@ importers:
       '@qflow/recipe':
         specifier: workspace:*
         version: link:../recipe
-      '@qflow/spatial':
-        specifier: workspace:*
-        version: link:../spatial
       '@qflow/studio-companion':
         specifier: workspace:*
         version: link:../studio-companion
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
-      '@qflow/timeline':
-        specifier: workspace:*
-        version: link:../timeline
       typescript:
         specifier: 5.9.3
         version: 5.9.3
 
   packages/volcengine-matting:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -2532,13 +2906,14 @@ importers:
         version: link:../protocol
 
   packages/wan:
+    dependencies:
+      '@qflow/generation':
+        specifier: workspace:^0.1.0
+        version: link:../generation
     devDependencies:
       '@qflow/blob':
         specifier: workspace:*
         version: link:../blob
-      '@qflow/generation':
-        specifier: workspace:*
-        version: link:../generation
       '@qflow/qflow':
         specifier: workspace:*
         version: link:../..
@@ -2554,12 +2929,27 @@ importers:
 
   packages/whisperx:
     dependencies:
+      '@qflow/media':
+        specifier: workspace:^0.1.0
+        version: link:../media
       '@qflow/media-local':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:../media-local
+      '@qflow/narrative':
+        specifier: workspace:^0.1.0
+        version: link:../narrative
       '@qflow/narrative-speech-alignment':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:../narrative-speech-alignment
+      '@qflow/narrative-temporal':
+        specifier: workspace:^0.1.0
+        version: link:../narrative-temporal
+      '@qflow/speech-evidence':
+        specifier: workspace:^0.1.0
+        version: link:../speech-evidence
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
     devDependencies:
       '@qflow/author':
         specifier: workspace:*
@@ -2570,27 +2960,12 @@ importers:
       '@qflow/markup':
         specifier: workspace:*
         version: link:../markup
-      '@qflow/media':
-        specifier: workspace:*
-        version: link:../media
-      '@qflow/narrative':
-        specifier: workspace:*
-        version: link:../narrative
-      '@qflow/narrative-temporal':
-        specifier: workspace:*
-        version: link:../narrative-temporal
       '@qflow/producer':
         specifier: workspace:*
         version: link:../producer
       '@qflow/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@qflow/speech-evidence':
-        specifier: workspace:*
-        version: link:../speech-evidence
-      '@qflow/temporal':
-        specifier: workspace:*
-        version: link:../temporal
       '@qflow/timeline':
         specifier: workspace:*
         version: link:../timeline
@@ -2610,7 +2985,7 @@ importers:
   packages/yt-dlp:
     dependencies:
       '@qflow/media-local':
-        specifier: workspace:^
+        specifier: workspace:^0.2.0
         version: link:../media-local
     devDependencies:
       '@qflow/qflow':

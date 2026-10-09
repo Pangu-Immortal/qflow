@@ -3,6 +3,8 @@ import test from "node:test";
 
 import { compositionTypes } from "@qflow/composition";
 import { createStudioTrackCompanionFacet } from "@qflow/studio-companion";
+import { loadNodePackageSelection } from "@qflow/qflow/loader/node";
+import { temporalProducers } from "@qflow/temporal";
 
 import { loadStudioCompanionRegistry } from "../src/companion-assembly.js";
 
@@ -27,4 +29,13 @@ test("a Source-selected package contributes its Companion without a second Studi
     registry.trackCompanionFor(compositionTypes.visualTrack, { surface: "track", module }, [])?.id,
     "@project/cards#cards",
   );
+});
+
+test("Temporal supplies its inverse relations only when the Source selects the package", async () => {
+  const distributionPackageRoot = process.cwd();
+  const empty = await loadStudioCompanionRegistry({ distributionPackageRoot, sourcePackages: [] });
+  assert.equal(empty.temporalRelationFor(temporalProducers.composeWindow, "window"), undefined);
+  const sourcePackages = await loadNodePackageSelection(["@qflow/temporal"], distributionPackageRoot);
+  const registry = await loadStudioCompanionRegistry({ distributionPackageRoot, sourcePackages });
+  assert.ok(registry.temporalRelationFor(temporalProducers.composeWindow, "window"));
 });

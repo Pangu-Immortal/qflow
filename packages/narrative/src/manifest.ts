@@ -1,4 +1,4 @@
-import type { ModuleManifest, TypeRef } from "@qflow/protocol";
+import type { ModuleManifest, TypeRef } from "@qflow/qflow/protocol";
 import {
   narrativeSegmentRefSchema,
   narrativeSchema,

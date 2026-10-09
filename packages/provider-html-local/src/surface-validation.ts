@@ -1,7 +1,7 @@
 import { stat } from "node:fs/promises";
 
-import { assertCompositableSurfaceRef } from "@qflow/qflow/media";
-import type { CompositableSurfaceRef } from "@qflow/qflow/media";
+import { assertCompositableSurfaceRef } from "@qflow/media";
+import type { CompositableSurfaceRef } from "@qflow/media";
 import { runProcess } from "./process.js";
 
 type JsonObject = Record<string, unknown>;

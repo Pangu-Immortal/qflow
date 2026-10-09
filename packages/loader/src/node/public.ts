@@ -17,6 +17,7 @@ export {
 } from "./distribution-resolution.js";
 export {
   locateNodePackage,
+  distributionPackageRoots,
   NodePackageNotFoundError,
   resolveNodePackageResource,
   resolveNodePackageResourceSpecifier,

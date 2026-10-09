@@ -1,5 +1,5 @@
 import type { Recipe } from "@qflow/qflow/recipe";
-import type { Timeline } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 
 /**
  * The Film Recipe owns Film appearance only. Canvas geometry and Timeline

@@ -1,5 +1,5 @@
 import type { BlobRef } from "@qflow/qflow/protocol";
-import type { Canvas, SpatialFrame } from "@qflow/qflow/spatial";
+import type { Canvas, SpatialFrame } from "@qflow/spatial";
 
 export type ImageInterpolation = "nearest" | "linear" | "cubic" | "area" | "lanczos";
 export type ImageFit = "contain" | "cover" | "stretch";

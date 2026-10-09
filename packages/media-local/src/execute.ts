@@ -4,11 +4,11 @@ import { createReadStream } from "node:fs";
 import { mkdtemp, open, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { verifyMediaFrameRange, mediaFrameRangeSamples, mediaTypes, sealMediaInspection, sealMuxedMedia, sealSynchronizedMedia, sealTimelineAudio, verifyMediaInspection, verifyMediaStreamSelection, verifyTimelineVisual, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/qflow/media";
-import type { MediaAudioStream, MediaInspection, MediaRational, MediaStream, MediaStreamSelection, MediaTimestamp, MediaVideoStream, MuxedMedia, TimelineVisual, SynchronizedMedia, TimelineAudio } from "@qflow/qflow/media";
-import type { Timeline } from "@qflow/qflow/timeline";
-import { assertSpeechEvidenceAudioIdentity, sealSpeechEvidenceAudio, speechEvidenceSampleBoundary } from "@qflow/qflow/speech-evidence";
-import type { ProjectSpeechEvidenceAudioNeed, SpeechEvidenceAudio } from "@qflow/qflow/speech-evidence";
+import { verifyMediaFrameRange, mediaFrameRangeSamples, mediaTypes, sealMediaInspection, sealMuxedMedia, sealSynchronizedMedia, sealTimelineAudio, verifyMediaInspection, verifyMediaStreamSelection, verifyTimelineVisual, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/media";
+import type { MediaAudioStream, MediaInspection, MediaRational, MediaStream, MediaStreamSelection, MediaTimestamp, MediaVideoStream, MuxedMedia, TimelineVisual, SynchronizedMedia, TimelineAudio } from "@qflow/media";
+import type { Timeline } from "@qflow/timeline";
+import { assertSpeechEvidenceAudioIdentity, sealSpeechEvidenceAudio, speechEvidenceSampleBoundary } from "@qflow/speech-evidence";
+import type { ProjectSpeechEvidenceAudioNeed, SpeechEvidenceAudio } from "@qflow/speech-evidence";
 import {
   verifyAudioExtractionRequest,
   verifyAudioProgramPlan,

@@ -6,7 +6,7 @@ import test from "node:test";
 
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { Need } from "@qflow/qflow/protocol";
-import { sealAlignedTranscriptEvidence } from "@qflow/qflow/speech-evidence";
+import { sealAlignedTranscriptEvidence } from "@qflow/speech-evidence";
 import { interpretWhisperXTranscript } from "@qflow/whisperx";
 import type { WhisperXAlignmentRequest } from "@qflow/whisperx";
 

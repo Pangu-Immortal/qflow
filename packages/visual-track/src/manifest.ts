@@ -1,16 +1,17 @@
-import { timelineDependency, timelineTypes } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
-import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal/markup";
-import { visualSourceTimeMapSchema } from "@qflow/qflow/composition";
+import { timelineDependency, timelineTypes } from "@qflow/timeline";
+import type { StructuredSurfaceDeclaration, SurfaceVocabulary } from "@qflow/qflow/markup";
+import type { Timeline } from "@qflow/timeline";
+import { temporalContextAttributeVocabulary } from "@qflow/temporal/markup";
+import { visualSourceTimeMapSchema } from "@qflow/composition";
 import { readFile } from "node:fs/promises";
 
 import { blobDependency, blobTypes } from "@qflow/qflow/blob";
-import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
+import { compositionDependency, compositionTypes } from "@qflow/composition";
 import {
   compositableSurfaceSchema,
   mediaDependency,
   mediaTypes,
-} from "@qflow/qflow/media";
+} from "@qflow/media";
 
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
 import {
@@ -20,10 +21,10 @@ import {
   spatialFrameSchema,
   spatialMap2DSchema,
   spatialTypes,
-} from "@qflow/qflow/spatial";
+} from "@qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
-import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
-import { temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal/markup";
+import { temporalDependency, temporalTypes } from "@qflow/temporal";
+import { temporalWindowAttributeVocabulary } from "@qflow/temporal/markup";
 
 const previewImage = (file: string) => ({
   mediaType: "image/png",
@@ -249,7 +250,7 @@ const treatmentRecipeProperties = [
     summary: "Fills the whole Frame behind every layer with a color, `linear(angle;stops)` or `radial(x,y;stops)`." },
 ] as const;
 
-export const visualTrackMarkupSurfaces = [{
+export const visualTrackMarkupSurfaces: readonly (StructuredSurfaceDeclaration & { readonly vocabulary: SurfaceVocabulary })[] = [{
     name: "track", tag: "Track", mode: "structured",
     outputs: [spatialTypes.fit, visualTrackTypes.header, visualTrackTypes.paintLayerSpec, visualTrackTypes.sampleLayerSpec,
       visualTrackTypes.layerSet, visualTrackTypes.clipSpec, visualTrackTypes.set,

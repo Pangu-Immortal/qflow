@@ -1,5 +1,5 @@
 import { temporalDependency, temporalTypes, temporalWindowSchema } from "@qflow/temporal";
-import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/protocol";
+import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
 
 export const captionModuleRef = { name: "@qflow/caption", version: "1" } as const;
 export const captionProducers = {

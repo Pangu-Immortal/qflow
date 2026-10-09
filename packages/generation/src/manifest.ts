@@ -1,8 +1,8 @@
 import {
   blobDependency,
   blobTypes,
-} from "@qflow/blob";
-import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
+} from "@qflow/qflow/blob";
+import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/protocol";
 
 import { generatedAudioSetSchema, generatedImageSetSchema, generatedVideoSetSchema } from "./schema.js";
 

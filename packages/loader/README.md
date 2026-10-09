@@ -1,5 +1,16 @@
 # `@qflow/loader`
 
+## Installed ownership
+
+The Distribution's public exports into its internal `packages/` identify embedded host modules.
+An unrelated directory in a development checkout is not embedded ownership. Independent packages
+remain ordinary project-overridable dependencies in both development and installed releases.
+
+A product may explicitly name dependency owners with `qflow.packageSources` in its package.json.
+Each name must be a declared dependency. Lookup uses those installed package locations after project
+selection; it does not scan for plugins, install anything or activate an owner merely to locate bytes.
+Logical Module dependencies are resolved from the package that declares them.
+
 Defines the package contribution value consumed by Qflow Hosts. It contains logical Modules and
 opaque Facets, but no package-manager policy or platform I/O. `verifyPackageContributions()` checks
 the selected declarations without interpreting executable Facets.

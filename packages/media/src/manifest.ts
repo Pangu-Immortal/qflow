@@ -1,5 +1,5 @@
-import { blobDependency, blobTypes } from "@qflow/blob";
-import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
+import { blobDependency, blobTypes } from "@qflow/qflow/blob";
+import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/protocol";
 import { compositableSurfaceSchema, fontArtifactSchema, fontStackSchema, mediaInspectionSchema, mediaStreamSelectionSchema, muxedMediaSchema, timelineVisualSchema, synchronizedMediaSchema, timelineAudioSchema } from "./schema.js";
 import { temporalDependency, temporalTypes } from "@qflow/temporal";
 export const mediaModuleRef = { name: "@qflow/media", version: "1" } as const;

@@ -1,6 +1,6 @@
 import type { Recipe } from "@qflow/qflow/recipe";
-import { decodeContentFitProperties } from "@qflow/qflow/spatial";
-import type { ContentFit } from "@qflow/qflow/spatial";
+import { decodeContentFitProperties } from "@qflow/spatial";
+import type { ContentFit } from "@qflow/spatial";
 
 import {
   sealMediaPaintLayerSpec,

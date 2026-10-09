@@ -17,11 +17,16 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/visual-track": "workspace:^"
+    "@qflow/composition": "workspace:^0.1.0",
+    "@qflow/media": "workspace:^0.1.0",
+    "@qflow/spatial": "workspace:^0.1.0",
+    "@qflow/temporal": "workspace:^0.1.0",
+    "@qflow/timeline": "workspace:^0.1.0",
+    "@qflow/visual-track": "workspace:^0.2.0"
   },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^",
-    "@qflow/studio-companion": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1",
+    "@qflow/studio-companion": "workspace:^0.1.1"
   },
   "devDependencies": {
     "@qflow/blob": "workspace:*",

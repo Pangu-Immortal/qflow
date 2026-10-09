@@ -1,11 +1,11 @@
-import { sealGraphFragment } from "@qflow/author";
-import type { FragmentOperation, GraphFragment } from "@qflow/author";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import type { FragmentOperation, GraphFragment } from "@qflow/qflow/author";
 import {
   assertAttributes, assertEmptyElement, localName, textAttribute,
   type StructuredElement, type StructuredSurfaceHandler, type SurfaceResolvedReference,
-} from "@qflow/markup";
+} from "@qflow/qflow/markup";
 import { narrativeTypes } from "@qflow/narrative";
-import { canonicalize, sameType, type TypeRef } from "@qflow/protocol";
+import { canonicalize, sameType, type TypeRef } from "@qflow/qflow/protocol";
 import { temporalProducers, temporalTypes } from "@qflow/temporal";
 import { timelineTypes } from "@qflow/timeline";
 

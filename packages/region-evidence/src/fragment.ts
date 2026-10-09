@@ -1,6 +1,6 @@
-import { sealGraphFragment } from "@qflow/author";
+import { sealGraphFragment } from "@qflow/qflow/author";
 import { spatialTypes } from "@qflow/spatial";
-import { recipeType } from "@qflow/recipe";
+import { recipeType } from "@qflow/qflow/recipe";
 import { timelineTypes } from "@qflow/timeline";
 
 import { regionEvidenceProducers, regionEvidenceTypes } from "./manifest.js";

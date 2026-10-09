@@ -2,13 +2,15 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { basename, dirname, resolve, sep } from "node:path";
+import { selectReleasePackages } from "./release-candidate.mjs";
 
 const arguments_ = process.argv.slice(2);
 const knownOptions = new Set(["--preflight-only", "--independent-only"]);
-const unknownOption = arguments_.find((value) => value.startsWith("--") && !knownOptions.has(value));
+const unknownOption = arguments_.find((value) => value.startsWith("--") && !knownOptions.has(value) && !value.startsWith("--package="));
 if (unknownOption !== undefined) throw new Error(`Unknown option: ${unknownOption}`);
 const preflightOnly = arguments_.includes("--preflight-only");
 const independentOnly = arguments_.includes("--independent-only");
+const packageNames = arguments_.filter((value) => value.startsWith("--package=")).map((value) => value.slice("--package=".length));
 const planPath = resolve(arguments_.find((value) => !value.startsWith("--")) ?? "dist/release/release-plan.json");
 const releaseDirectory = dirname(planPath);
 const plan = JSON.parse(await readFile(planPath, "utf8"));
@@ -70,7 +72,7 @@ async function inspect(item) {
   return { item, path, exists: false };
 }
 
-const ordered = independentOnly ? [...plan.independent] : [...plan.independent, plan.distribution];
+const ordered = selectReleasePackages(plan, packageNames, independentOnly);
 const identities = new Set();
 for (const item of ordered) {
   const identity = `${item.name}@${item.version}`;
@@ -78,7 +80,7 @@ for (const item of ordered) {
   identities.add(identity);
 }
 
-// Inspect the complete immutable candidate before the first external write. A conflict or registry
+// Inspect every selected immutable package before the first external write. A conflict or registry
 // outage late in the dependency order must not leave an avoidable partial publication behind.
 const inspected = [];
 for (const item of ordered) inspected.push(await inspect(item));

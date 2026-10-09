@@ -1,5 +1,5 @@
-import type { StructuredElement, SurfaceAttributeVocabulary, SurfaceResolvedReference } from "@qflow/markup";
-import { sameType } from "@qflow/protocol";
+import type { StructuredElement, SurfaceAttributeVocabulary, SurfaceResolvedReference } from "@qflow/qflow/markup";
+import { sameType } from "@qflow/qflow/protocol";
 import { timelineTypes } from "@qflow/timeline";
 
 export type TemporalContext = { readonly timeline: SurfaceResolvedReference };

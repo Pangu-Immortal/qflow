@@ -1,11 +1,10 @@
 import type { BlobAttachment } from "@qflow/qflow/workspace";
 import type { BlobRef, ResourceId, StoredValue } from "@qflow/qflow/protocol";
 import { sameType } from "@qflow/qflow/protocol";
-import type { Composition } from "@qflow/qflow/composition";
-import { compositionTypes } from "@qflow/qflow/composition";
-import { timelineTypes, assertTimelineIdentity } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
-import { temporalTypes } from "@qflow/qflow/temporal";
+import type { Composition } from "@qflow/composition";
+import { compositionTypes } from "@qflow/composition";
+import { timelineTypes, assertTimelineIdentity } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import type { StudioObservedValue, StudioResolvedTrack, StudioTemporalBinding } from "@qflow/studio-companion";
 import type { CliTransientExecution as RuntimeHostTransientExecution } from "@qflow/qflow/cli";
 
@@ -17,6 +16,7 @@ import type { StudioViewRequirement } from "./studio-preflight.js";
 import { studioSurfacePreview } from "./surface-preview.js";
 import { executedTemporalBindings } from "./temporal-graph.js";
 import type { StudioCompanionRegistry } from "./studio-registry.js";
+import { resolveStudioDeclarations } from "./temporal-declarations.js";
 
 function playable(type: import("@qflow/qflow/protocol").TypeRef): boolean {
   return sameType(type, compositionTypes.visualTrack) || sameType(type, compositionTypes.audioTrack);
@@ -33,6 +33,7 @@ export type StudioProjection = {
   readonly values: ReadonlyMap<string, unknown>;
   readonly temporalDomainValues: readonly StudioObservedValue[];
   readonly temporalValues: readonly StudioObservedValue[];
+  readonly declarationIssues: readonly string[];
   readonly temporalBindings: ReadonlyMap<string, readonly StudioTemporalBinding[]>;
   readonly composition: Composition;
   readonly timingOutput?: { readonly name: string; readonly ref: string };
@@ -221,27 +222,24 @@ export async function resolveStudioProjection(input: {
     const stored = selectedValue(executed.state, target.ref);
     if (stored?.kind === "inline") values.set(target.ref, stored.value);
   }
-  // Author records from this compilation already carry exact qualified references.
-  // Expose referenced inline values to Companions without guessing their owner by suffix.
-  for (const record of input.source.compiled.program.records) {
-    if (record.value.kind !== "inline") continue;
-    if (input.projections.some((projection) => projection.trace.references
-      .some((reference) => reference.ref === record.id))) {
-      values.set(record.id, record.value.value);
+  // Companion traces carry exact qualified references. Resolve those references from
+  // the executed projection so deterministic upstream Producers are visible too.
+  for (const projection of input.projections) {
+    for (const reference of projection.trace.references) {
+      const stored = selectedValue(executed.state, reference.ref);
+      if (stored?.kind === "inline") values.set(reference.ref, stored.value);
     }
   }
   const temporalValueTypes = input.registry.temporalDomainValueTypes();
   const temporalDomainValues: StudioObservedValue[] = [];
-  const temporalValues: StudioObservedValue[] = [];
+  const declarations = await resolveStudioDeclarations({
+    run: input.run, registry: input.registry, domain: input.domain,
+    resolved: executed.state, resources,
+    ...(input.transientExecution === undefined ? {} : { transientExecution: input.transientExecution }),
+  });
   const temporalDomainValueIds = new Set<string>();
-  const temporalValueIds = new Set<string>();
   for (const record of [...executed.state.program.records, ...executed.state.records]) {
     if (record.value.kind !== "inline") continue;
-    if ((sameType(record.type, temporalTypes.instant) || sameType(record.type, temporalTypes.window))
-      && !temporalValueIds.has(record.id)) {
-      temporalValues.push({ id: record.id, type: record.type, value: record.value.value });
-      temporalValueIds.add(record.id);
-    }
     if (!temporalValueTypes.some((type) => sameType(type, record.type))) continue;
     values.set(record.id, record.value.value);
     if (!temporalDomainValueIds.has(record.id)) {
@@ -256,7 +254,8 @@ export async function resolveStudioProjection(input: {
     tracks,
     values,
     temporalDomainValues,
-    temporalValues,
+    temporalValues: declarations.values,
+    declarationIssues: declarations.issues,
     temporalBindings,
     composition,
     timingOutput: { name: timingOutput?.name ?? timeline.id, ref: input.timeRef },

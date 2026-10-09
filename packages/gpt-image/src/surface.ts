@@ -2,14 +2,14 @@ import { blobTypes } from "@qflow/qflow/blob";
 import {
   generationPort,
   sealGenerationMediaBinding,
-} from "@qflow/qflow/generation";
-import type { GenerationMediaPort } from "@qflow/qflow/generation";
+} from "@qflow/generation";
+import type { GenerationMediaPort } from "@qflow/generation";
 import { imageTransformTypes } from "@qflow/image-operations";
 import {
   exactModelMediaInputNames,
   exactModelTextInputName,
   createExactModelPrimaryGenerationFragment,
-} from "@qflow/qflow/generation/model";
+} from "@qflow/generation/model";
 import type { MarkupAttributeValue, StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference } from "@qflow/qflow/markup";
 import type { CanonicalValue, TypeRef } from "@qflow/qflow/protocol";
 import { textTypes, verifyText } from "@qflow/qflow/text";

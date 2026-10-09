@@ -1,4 +1,4 @@
-import type { ValueSchema } from "@qflow/protocol";
+import type { ValueSchema } from "@qflow/qflow/protocol";
 import { spatialFrameSchema } from "@qflow/spatial";
 
 const object = (fields: Readonly<Record<string, { readonly schema: ValueSchema; readonly optional?: boolean }>>): ValueSchema => ({ kind: "object", fields });

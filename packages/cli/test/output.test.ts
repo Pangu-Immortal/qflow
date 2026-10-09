@@ -208,6 +208,33 @@ test("pricing presents Provider-owned material beside the corresponding Needs", 
   assert.match(verbose, /"per_second_usd": 0\.1045/u);
 });
 
+test("pricing preserves every Producer failure alongside rates regardless of the group limit", () => {
+  const failures = [
+    { step: "timeline", message: "Timeline end must be after its start" },
+    { step: "layout", message: "Frame width must be positive" },
+  ];
+  const machine = createPricingOutput("build.svrun", [{
+    request: "video", capability: "example.video@1#create", status: "resolved",
+    endpoint: "vendor", pricing: { kind: "page", url: "https://vendor.example/pricing" },
+  }, {
+    request: "image", capability: "example.image@1#create", status: "unresolved",
+  }], [], false, failures);
+  const presentation = { kind: "pricing", machine, limit: 1 } as const;
+  const output = capture(human, presentation);
+  assert.match(output, /Producer failures\s+2/u);
+  for (const failure of failures) assert.ok(output.includes(failure.message));
+  assert.match(output, /1 more groups/u);
+  const json = JSON.parse(capture({ ...human, json: true }, presentation));
+  assert.equal(json.producerFailureCount, 2);
+  assert.deepEqual(json.producerFailures, failures);
+  assert.equal(json.groups.length, 2);
+
+  const clean = createPricingOutput("build.svrun", [], []);
+  assert.equal(clean.producerFailureCount, 0);
+  assert.deepEqual(clean.producerFailures, []);
+  assert.doesNotMatch(capture(human, { kind: "pricing", machine: clean }), /Producer failures/u);
+});
+
 test("pricing summarizes 24 no-charge requests and retains all 15 priced requests with shared rate documents", () => {
   const entries: PricingEntry[] = [];
   const needs: PlanNeed[] = [];

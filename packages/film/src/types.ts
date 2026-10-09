@@ -1,4 +1,4 @@
-import type { Track } from "@qflow/qflow/composition";
+import type { Track } from "@qflow/composition";
 
 /** Package-owned authoring value. A future Film Surface may produce this record. */
 export type FilmProgram = {

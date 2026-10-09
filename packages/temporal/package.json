@@ -1,22 +1,34 @@
 {
   "name": "@qflow/temporal",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./markup": "./src/markup/index.ts"
+    "./markup": "./src/markup/index.ts",
+    "./studio": "./src/studio.ts"
   },
   "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
+    "@qflow/timeline": "workspace:^0.1.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^0.3.1",
+    "@qflow/studio-companion": "workspace:^0.1.1"
+  },
+  "devDependencies": {
     "@qflow/author": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/producer": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/timeline": "workspace:*",
-    "@qflow/admission": "workspace:*"
+    "@qflow/admission": "workspace:*",
+    "@qflow/qflow": "workspace:*"
   }
 }

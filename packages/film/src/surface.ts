@@ -1,9 +1,9 @@
-import { compositionTypes } from "@qflow/qflow/composition";
-import type { AudioTrack, Track, VisualTrack } from "@qflow/qflow/composition";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { compositionTypes } from "@qflow/composition";
+import type { AudioTrack, Track, VisualTrack } from "@qflow/composition";
+import { spatialTypes } from "@qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 import type { Recipe } from "@qflow/qflow/recipe";
-import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalContext } from "@qflow/temporal/markup";
 import type { StructuredElement, StructuredSurfaceHandler, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/qflow/markup";
 
 import { createFilmAssemblyFragment } from "./fragment.js";

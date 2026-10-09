@@ -1,5 +1,5 @@
 import type { ModuleRef } from "@qflow/qflow/protocol";
-import type { GenerationWireMapping } from "@qflow/qflow/generation";
+import type { GenerationWireMapping } from "@qflow/generation";
 
 const SEEDANCE: ModuleRef = { name: "@qflow/seedance", version: "1" };
 const MINIMAX_H3: ModuleRef = { name: "@qflow/minimax-h3", version: "1" };

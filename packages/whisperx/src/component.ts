@@ -3,7 +3,7 @@ import { plannedNeedInputs } from "@qflow/qflow/producer";
 import type { CanonicalValue, StoredValue } from "@qflow/qflow/protocol";
 import type { ProducerPackage } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
-import type { SpeechEvidenceAudio } from "@qflow/qflow/speech-evidence";
+import type { SpeechEvidenceAudio } from "@qflow/speech-evidence";
 
 import { whisperXRequestForEvidenceAudio } from "./evidence.js";
 import { whisperXCapabilities, whisperXProducers } from "./manifest.js";

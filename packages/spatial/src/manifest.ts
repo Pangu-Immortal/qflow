@@ -1,4 +1,4 @@
-import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/protocol";
+import type { ModuleManifest, ProducerRef, TypeRef } from "@qflow/qflow/protocol";
 import {
   anchoredFrameProgramSchema,
   aspectFrameProgramSchema,

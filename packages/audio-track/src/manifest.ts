@@ -1,13 +1,14 @@
-import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
-import { mediaDependency, mediaTypes } from "@qflow/qflow/media";
+import { compositionDependency, compositionTypes } from "@qflow/composition";
+import type { StructuredSurfaceDeclaration, SurfaceVocabulary } from "@qflow/qflow/markup";
+import { mediaDependency, mediaTypes } from "@qflow/media";
 import { blobRefObjectSchema } from "@qflow/qflow/protocol";
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
-import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
+import { temporalDependency, temporalTypes } from "@qflow/temporal";
 import {
   temporalContextAttributeVocabulary,
   temporalWindowAttributeVocabulary,
-} from "@qflow/qflow/temporal/markup";
-import { timelineDependency, timelineTypes } from "@qflow/qflow/timeline";
+} from "@qflow/temporal/markup";
+import { timelineDependency, timelineTypes } from "@qflow/timeline";
 
 export const audioTrackModuleRef = { name: "@qflow/audio-track", version: "1" } as const;
 export const audioTrackTypes = {
@@ -73,7 +74,7 @@ const clipInputs = [
   { name: "spec", type: audioTrackTypes.clipSpec }, { name: "window", type: temporalTypes.window },
 ] as const;
 
-export const audioTrackMarkupSurfaces = [{
+export const audioTrackMarkupSurfaces: readonly (StructuredSurfaceDeclaration & { readonly vocabulary: SurfaceVocabulary })[] = [{
   name: "track", tag: "Track", mode: "structured",
   outputs: [audioTrackTypes.header, audioTrackTypes.sourceTime, audioTrackTypes.clipSpec,
     audioTrackTypes.program, compositionTypes.audioTrack],

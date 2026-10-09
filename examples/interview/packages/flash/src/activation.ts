@@ -11,30 +11,30 @@ import {
   assertVisualTrackIdentity,
   compositionTypes,
   sealVisualTrack,
-} from "@qflow/qflow/composition";
+} from "@qflow/composition";
 import type {
   VisualElement,
   VisualStyleDeclaration,
-} from "@qflow/qflow/composition";
-import { assertSpatialFrame, spatialTypes } from "@qflow/qflow/spatial";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
+} from "@qflow/composition";
+import { assertSpatialFrame, spatialTypes } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
 import {
   assertTemporalWindowFor,
   temporalTypes,
-} from "@qflow/qflow/temporal";
-import type { TemporalWindow } from "@qflow/qflow/temporal";
+} from "@qflow/temporal";
+import type { TemporalWindow } from "@qflow/temporal";
 import {
   resolveTemporalWindowReference,
   resolveTemporalContext,
   temporalContextAttributeVocabulary,
   temporalWindowAttributeNames,
   temporalWindowAttributeVocabulary,
-} from "@qflow/qflow/temporal/markup";
+} from "@qflow/temporal/markup";
 import {
   assertTimelineIdentity,
   timelineTypes,
-} from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
+} from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 
 const moduleRef = { name: "@interview/flash", version: "1" } as const;
 const optionsType = { module: moduleRef, name: "FlashOptions" } as const;

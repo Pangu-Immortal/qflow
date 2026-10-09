@@ -35,18 +35,10 @@ export const timelineAuthorStudioTemporalDeclarations: readonly StudioTemporalDe
   match: { module: timelineAuthorModuleRef, surface: "timeline" },
   project({ placement }) {
     return placement.children.flatMap((child) => {
-      if (child.id === undefined || (localName(child.tag) !== "Window" && localName(child.tag) !== "Instant")) return [];
+      if (child.id === undefined || localName(child.tag) !== "Instant") return [];
       const found = output(placement, `anchor-${child.id}`, child.id, child.range);
       return found === undefined ? [] : [found];
     });
-  },
-}, {
-  id: "window-declaration",
-  match: { module: timelineAuthorModuleRef, surface: "window" },
-  project({ placement }) {
-    if (placement.id === undefined) return [];
-    const found = output(placement, "window", placement.id);
-    return found === undefined ? [] : [found];
   },
 }, {
   id: "instant-declaration",

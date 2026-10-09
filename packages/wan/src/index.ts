@@ -1,8 +1,8 @@
 import { blobTypes } from "@qflow/qflow/blob";
-import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/qflow/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/qflow/generation";
+import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
 import type { SurfaceAttributeVocabulary, SurfaceChildVocabulary } from "@qflow/qflow/markup";
-import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { defineExactModelModule } from "@qflow/generation/model";
 import { textTypes } from "@qflow/qflow/text";
 
 export const wanModuleRef = { name: "@qflow/wan", version: "1" } as const;

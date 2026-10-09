@@ -1,4 +1,4 @@
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import { textLayer, temporalLineageFor } from "@qflow/studio-companion";
 const scenes = {
   ComponentWorkshop: ["Components in use", "Motion → components → library → another video"],

@@ -1,5 +1,5 @@
-import type { AdmissionPackage } from "@qflow/admission";
-import type { ProducerPackage } from "@qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { ProducerPackage } from "@qflow/qflow/producer";
 
 import {
   verifyGeneratedAudioSet,
@@ -16,12 +16,12 @@ function inline(value: { readonly kind: string; readonly value?: unknown }, subj
 function primary(
   value: { readonly kind: string; readonly value?: unknown },
   kind: "audio" | "image" | "video",
-): import("@qflow/protocol").BlobRef {
+): import("@qflow/qflow/protocol").BlobRef {
   const label = kind === "audio" ? "Audio" : kind === "image" ? "Image" : "Video";
   const content = inline(value, `Generated${label}Set`) as {
-    readonly images?: readonly import("@qflow/protocol").BlobRef[];
-    readonly videos?: readonly import("@qflow/protocol").BlobRef[];
-    readonly audios?: readonly import("@qflow/protocol").BlobRef[];
+    readonly images?: readonly import("@qflow/qflow/protocol").BlobRef[];
+    readonly videos?: readonly import("@qflow/qflow/protocol").BlobRef[];
+    readonly audios?: readonly import("@qflow/qflow/protocol").BlobRef[];
   };
   const selected = kind === "audio"
     ? content.audios?.[0]

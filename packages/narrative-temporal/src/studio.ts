@@ -22,13 +22,6 @@ function output(
 }
 
 export const narrativeStudioTemporalDeclarations: readonly StudioTemporalDeclarationCompanion[] = [{
-  id: "window-declaration",
-  match: { module: narrativeTemporalModuleRef, surface: "narrative-window" },
-  project: ({ placement }) => {
-    const found = output(placement, "window");
-    return found === undefined ? [] : [found];
-  },
-}, {
   id: "instant-declaration",
   match: { module: narrativeTemporalModuleRef, surface: "narrative-instant" },
   project: ({ placement }) => {

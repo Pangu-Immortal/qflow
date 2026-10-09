@@ -1,6 +1,6 @@
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import type { StudioFilmCompanion } from "@qflow/studio-companion";
-import { timelineTypes } from "@qflow/qflow/timeline";
+import { timelineTypes } from "@qflow/timeline";
 
 import { filmModuleRef } from "./manifest.js";
 

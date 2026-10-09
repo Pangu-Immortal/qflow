@@ -4,8 +4,8 @@ import { EndpointRegistry, MemoryResourceStore } from "@qflow/executor";
 import { sealSeedanceRequest } from "@qflow/seedance";
 import type { BlobRef, EndpointStartContext } from "@qflow/qflow/endpoint";
 import { canonicalize } from "@qflow/qflow/endpoint";
-import { generationTypes } from "@qflow/qflow/generation";
-import { assertMappingCoversPorts } from "@qflow/qflow/generation";
+import { generationTypes } from "@qflow/generation";
+import { assertMappingCoversPorts } from "@qflow/generation";
 import { seedancePorts } from "@qflow/seedance";
 import { capability, createVideoProvider, mapping } from "../src/provider.js";
 

@@ -1,11 +1,11 @@
-import { timelineTypes } from "@qflow/qflow/timeline";
+import { timelineTypes } from "@qflow/timeline";
 
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import { blobTypes } from "@qflow/qflow/blob";
 import { sealGraphFragment } from "@qflow/qflow/author";
 import type { FragmentOperation } from "@qflow/qflow/author";
-import { spatialTypes } from "@qflow/qflow/spatial";
-import { temporalTypes } from "@qflow/qflow/temporal";
+import { spatialTypes } from "@qflow/spatial";
+import { temporalTypes } from "@qflow/temporal";
 
 import { emojiRevealProducers, emojiRevealTypes } from "./manifest.js";
 

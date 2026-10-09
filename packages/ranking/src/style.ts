@@ -1,11 +1,11 @@
 import {
   assertFontArtifactRef,
   assertFontStackRef,
-} from "@qflow/qflow/media";
+} from "@qflow/media";
 import type {
   FontArtifactRef,
   FontStackRef,
-} from "@qflow/qflow/media";
+} from "@qflow/media";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { Recipe } from "@qflow/qflow/recipe";
 

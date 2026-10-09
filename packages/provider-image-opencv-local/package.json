@@ -1,6 +1,6 @@
 {
   "name": "@qflow/provider-image-opencv-local",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -10,11 +10,15 @@
   "qflow": {
     "activation": "./src/activation.ts"
   },
-  "files": ["dist", "runtime", "README.md"],
+  "files": [
+    "dist",
+    "runtime",
+    "README.md"
+  ],
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^",
-    "@qflow/image-operations": "workspace:^",
-    "@qflow/runtime-local": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1",
+    "@qflow/image-operations": "workspace:^0.2.0",
+    "@qflow/runtime-local": "workspace:^0.1.1"
   },
   "devDependencies": {
     "@qflow/blob": "workspace:*",

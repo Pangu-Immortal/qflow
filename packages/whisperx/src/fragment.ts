@@ -1,10 +1,10 @@
-import { narrativeTypes } from "@qflow/qflow/narrative";
-import { narrativeTemporalProducers, narrativeTemporalTypes } from "@qflow/qflow/narrative-temporal";
-import { mediaTypes } from "@qflow/qflow/media";
+import { narrativeTypes } from "@qflow/narrative";
+import { narrativeTemporalProducers, narrativeTemporalTypes } from "@qflow/narrative-temporal";
+import { mediaTypes } from "@qflow/media";
 import { sealGraphFragment } from "@qflow/qflow/author";
-import { speechEvidenceProducers } from "@qflow/qflow/speech-evidence";
+import { speechEvidenceProducers } from "@qflow/speech-evidence";
 import { speechAlignmentProducers } from "@qflow/narrative-speech-alignment";
-import { temporalTypes } from "@qflow/qflow/temporal";
+import { temporalTypes } from "@qflow/temporal";
 
 import { whisperXProducers, whisperXTypes } from "./manifest.js";
 

@@ -7,8 +7,8 @@ import type {
   VisualTextPaintLayer,
   VisualTextSequenceAnimation,
   VisualTextTypography,
-} from "@qflow/qflow/composition";
-import type { SpatialFrame, SpatialPath, SpatialPoint } from "@qflow/qflow/spatial";
+} from "@qflow/composition";
+import type { SpatialFrame, SpatialPath, SpatialPoint } from "@qflow/spatial";
 
 export type TextDocument = VisualTextDocument;
 export type TextTypography = VisualTextTypography;

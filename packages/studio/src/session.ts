@@ -48,8 +48,9 @@ function sourceFiles(run: RunPlan): readonly StudioSourceFile[] {
 }
 
 export type StudioSession = {
+  readonly declarationIssues: readonly string[];
   readonly snapshot: StudioSnapshot;
-  readonly document: import("@qflow/qflow/html-program").HtmlProgram;
+  readonly document: import("@qflow/html-program").HtmlProgram;
   readonly visualHtml: string;
   readonly material: ReadonlyMap<string, ServedFile>;
   readonly observations: Observations;
@@ -95,6 +96,7 @@ export async function readStudioSession(input: {
   const text = readFileSync(input.run.authorSource, "utf8");
   const files = sourceFiles(input.run);
   return {
+    declarationIssues: built.declarationIssues,
     document: rendered.document,
     visualHtml: rendered.html,
     snapshot: snapshot(input.registry, built, {

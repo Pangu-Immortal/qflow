@@ -1,5 +1,5 @@
-import type { AdmissionPackage } from "@qflow/admission";
-import type { ProducerPackage } from "@qflow/producer";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { ProducerPackage } from "@qflow/qflow/producer";
 import { compositionTypes } from "./manifest.js";
 import { assertAudioTrackIdentity, assertCompositionIdentity, assertVisualTrackIdentity } from "./track.js";
 import type { AudioTrack, Composition, VisualTrack } from "./track.js";

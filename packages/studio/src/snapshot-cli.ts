@@ -8,9 +8,9 @@ import {
   selectCliProvider,
 } from "@qflow/qflow/cli";
 import type { CliApplicationContext, CliIo } from "@qflow/qflow/cli";
-import { assertHtmlProgram, selectHtmlArtifacts } from "@qflow/qflow/html-program";
-import type { HtmlProgram } from "@qflow/qflow/html-program";
-import { htmlFrameRequest, htmlProgramCapabilities, htmlProgramTypes, verifyHtmlFrameImages } from "@qflow/qflow/html-program";
+import { assertHtmlProgram, selectHtmlArtifacts } from "@qflow/html-program";
+import type { HtmlProgram } from "@qflow/html-program";
+import { htmlFrameRequest, htmlProgramCapabilities, htmlProgramTypes, verifyHtmlFrameImages } from "@qflow/html-program";
 import type { Need } from "@qflow/qflow/protocol";
 import { snapshotFrameLabel, writeFrameGrid } from "@qflow/media-local";
 

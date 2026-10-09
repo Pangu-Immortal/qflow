@@ -1,10 +1,10 @@
 import type { StructuredElement, StructuredSurfaceHandler, SurfaceComponentDraft, SurfaceRecordDraft, SurfaceResolvedReference } from "@qflow/qflow/markup";
 import { exampleBoxFragment, exampleImageFragment, exampleTextFragment } from "./fragment.js";
 import { exampleMarkupSurfaces, exampleTypes } from "./manifest.js";
-import { mediaTypes } from "@qflow/qflow/media";
+import { mediaTypes } from "@qflow/media";
 import { recipeType } from "@qflow/qflow/recipe";
 import { blobTypes } from "@qflow/qflow/blob";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { spatialTypes } from "@qflow/spatial";
 
 function text(element: StructuredElement, name: string): string {
   const value = element.attributes[name];

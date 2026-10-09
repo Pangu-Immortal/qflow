@@ -1,10 +1,10 @@
-import type { Timeline } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { ProducerPackage, ProducerHandlerContext } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
 import type { StoredValue } from "@qflow/qflow/protocol";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
-import type { TemporalInstant } from "@qflow/qflow/temporal";
+import type { SpatialFrame } from "@qflow/spatial";
+import type { TemporalInstant } from "@qflow/temporal";
 import type { MediaLayerSet } from "@qflow/visual-track";
 import type { Text } from "@qflow/qflow/text";
 

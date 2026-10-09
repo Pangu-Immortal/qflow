@@ -1,8 +1,8 @@
-import type { AudioSourceTimeMap, AudioSourceTimeRational, FrameSpan } from "@qflow/qflow/composition";
+import type { AudioSourceTimeMap, AudioSourceTimeRational, FrameSpan } from "@qflow/composition";
 import type { BlobRef } from "@qflow/qflow/protocol";
 import type {
   TemporalDuration,
-} from "@qflow/qflow/temporal";
+} from "@qflow/temporal";
 
 export type AudioSourceTimePoint = {
   readonly edge: "start" | "end";

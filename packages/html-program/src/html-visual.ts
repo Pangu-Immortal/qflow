@@ -1,5 +1,5 @@
-import { canonicalize } from "@qflow/protocol";
-import type { BlobRef, CanonicalValue } from "@qflow/protocol";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { BlobRef, CanonicalValue } from "@qflow/qflow/protocol";
 import type { VisualProgramElement } from "@qflow/composition";
 
 export const HTML_VISUAL_FORMAT = "qflow.html-visual@1" as const;

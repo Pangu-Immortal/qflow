@@ -1,6 +1,6 @@
 {
   "name": "@qflow/narrative-caption",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -11,13 +11,23 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/caption": "workspace:*",
+    "@qflow/caption": "workspace:^0.1.0",
+    "@qflow/narrative": "workspace:^0.1.0",
+    "@qflow/narrative-temporal": "workspace:^0.1.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^0.3.1"
+  },
+  "devDependencies": {
     "@qflow/producer": "workspace:*",
     "@qflow/author": "workspace:*",
     "@qflow/markup": "workspace:*",
-    "@qflow/narrative": "workspace:*",
     "@qflow/protocol": "workspace:*",
-    "@qflow/narrative-temporal": "workspace:*",
-    "@qflow/admission": "workspace:*"
+    "@qflow/admission": "workspace:*",
+    "@qflow/qflow": "workspace:*"
   }
 }

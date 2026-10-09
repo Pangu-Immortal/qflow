@@ -1,8 +1,8 @@
-import type { Narrative, NarrativeSegmentRef } from "@qflow/qflow/narrative";
-import { sealNarrativeAlignment } from "@qflow/qflow/narrative-temporal";
-import type { NarrativeAlignment } from "@qflow/qflow/narrative-temporal";
-import { assertLocalTemporalDomain } from "@qflow/qflow/temporal";
-import type { LocalTemporalDomain } from "@qflow/qflow/temporal";
+import type { Narrative, NarrativeSegmentRef } from "@qflow/narrative";
+import { sealNarrativeAlignment } from "@qflow/narrative-temporal";
+import type { NarrativeAlignment } from "@qflow/narrative-temporal";
+import { assertLocalTemporalDomain } from "@qflow/temporal";
+import type { LocalTemporalDomain } from "@qflow/temporal";
 
 import type { NarrativeAlignmentTiming } from "./types.js";
 

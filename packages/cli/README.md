@@ -161,6 +161,9 @@ adds no-charge request details, full request names and original documents. JSON 
 and `noChargeRequestCount` describe the whole Run, while `groups[]` holds Provider selection facts,
 `requests[]` with known parameters and pending inputs, and `pricingDocuments[]` with source and data.
 JSON includes every group regardless of `--limit`; no-charge requests are included with `--verbose`.
+Producer failures are reported independently of requests, including failures that produce no Need.
+They are never hidden by `--limit`; JSON includes `producerFailureCount` and `producerFailures`.
+If any Producer fails during planning, `pricing` still reports available rates and exits with code 1.
 
 The implementation follows those same boundaries: `command.ts` defines the generic semantic command
 union, while argument parsing and option ownership live in `arguments.ts`; project Result

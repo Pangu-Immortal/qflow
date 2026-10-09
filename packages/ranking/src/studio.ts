@@ -1,7 +1,7 @@
 import { rankingMarkupSurfaces, rankingModuleRef, rankingTypes } from "./index.js";
 import type { RankingProgram, RankingSchedule, RankingSoundEventPlan } from "./index.js";
-import { compositionTypes } from "@qflow/qflow/composition";
-import type { AudioTrack } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
+import type { AudioTrack } from "@qflow/composition";
 import type { StudioTrackCompanion, StudioTrackCompanionContext, StudioItemDraft, StudioInspectorFieldDeclaration, StudioSourceBindingDeclaration } from "@qflow/studio-companion";
 import { artifactPreview, authoredChildFor, previewLayer, requiredSurfaceValue, temporalLineageFor, temporalDomainSource } from "@qflow/studio-companion";
 

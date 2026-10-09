@@ -1,5 +1,5 @@
 import { blobTypes } from "@qflow/qflow/blob";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { spatialTypes } from "@qflow/spatial";
 
 import { imageComposeTypes } from "./refs.js";
 

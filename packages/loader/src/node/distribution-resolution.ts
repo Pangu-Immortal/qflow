@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 import {
-  distributionPackageDirectory,
+  embeddedPackageDirectory,
   setActiveDistributionPackageRoots,
 } from "./location.js";
 
@@ -22,7 +22,7 @@ function packageAddress(specifier: string): { readonly name: string; readonly su
 function distributionPackageEntry(root: string, specifier: string): string | undefined {
   const address = packageAddress(specifier);
   if (address === undefined) return undefined;
-  const packageRoot = distributionPackageDirectory(root, address.name);
+  const packageRoot = embeddedPackageDirectory(root, address.name);
   if (packageRoot === undefined) return undefined;
   const manifestPath = join(packageRoot, "package.json");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {

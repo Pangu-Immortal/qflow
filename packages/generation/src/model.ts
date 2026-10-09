@@ -1,4 +1,4 @@
-import type { AdmissionPackage, TypeValidatorFacet } from "@qflow/admission";
+import type { AdmissionPackage, TypeValidatorFacet } from "@qflow/qflow/admission";
 import type {
   ProducerPackage,
   PlannedNeedFacet,
@@ -6,10 +6,10 @@ import type {
   PlannedNeedSpecification,
   ProducerFacet,
   ProducerHandlerContext,
-} from "@qflow/producer";
-import { blobDependency, blobTypes } from "@qflow/blob";
-import { sealGraphFragment } from "@qflow/author";
-import type { Facet } from "@qflow/facet";
+} from "@qflow/qflow/producer";
+import { blobDependency, blobTypes } from "@qflow/qflow/blob";
+import { sealGraphFragment } from "@qflow/qflow/author";
+import type { Facet } from "@qflow/qflow/facet";
 import {
   bindGenerationMedia,
   bindGenerationText,
@@ -31,11 +31,11 @@ import type {
   GenerationRequest,
   GenerationRequestDraft,
 } from "@qflow/generation";
-import { textDependency, textTypes } from "@qflow/text";
-import type { Text } from "@qflow/text";
+import { textDependency, textTypes } from "@qflow/qflow/text";
+import type { Text } from "@qflow/qflow/text";
 import {
   canonicalize,
-} from "@qflow/protocol";
+} from "@qflow/qflow/protocol";
 import type {
   CanonicalValue,
   CapabilityRef,
@@ -44,7 +44,7 @@ import type {
   ModuleRef,
   ProducerRef,
   TypeRef,
-} from "@qflow/protocol";
+} from "@qflow/qflow/protocol";
 
 export type PlannedExactModelMediaReference = {
   readonly port: string;

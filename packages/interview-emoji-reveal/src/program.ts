@@ -1,13 +1,13 @@
-import { assertTimelineIdentity } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
-import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/qflow/composition";
-import type { VisualAnimation, VisualElement, VisualTrack } from "@qflow/qflow/composition";
+import { assertTimelineIdentity } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
+import { assertVisualTrackIdentity, sealVisualTrack } from "@qflow/composition";
+import type { VisualAnimation, VisualElement, VisualTrack } from "@qflow/composition";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { BlobRef } from "@qflow/qflow/protocol";
-import { assertSpatialFrame } from "@qflow/qflow/spatial";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
-import { assertTemporalInstantFor, assertTemporalWindowFor } from "@qflow/qflow/temporal";
-import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
+import { assertSpatialFrame } from "@qflow/spatial";
+import type { SpatialFrame } from "@qflow/spatial";
+import { assertTemporalInstantFor, assertTemporalWindowFor } from "@qflow/temporal";
+import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
 import type { EmojiRevealHeader, EmojiRevealItemSpec, EmojiRevealProgram, EmojiRevealSet, EmojiRevealStyle } from "./types.js";
 

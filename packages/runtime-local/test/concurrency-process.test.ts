@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createServer, type ServerResponse } from "node:http";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -62,6 +62,8 @@ for (const scenario of scenarios) {
     try {
       const pkg = join(root, "node_modules", "fixture-concurrency");
       await mkdir(pkg, { recursive: true });
+    await mkdir(join(root, "node_modules", "@qflow"), { recursive: true });
+    await symlink(join(distribution, "packages", "runtime-local"), join(root, "node_modules", "@qflow", "runtime-local"), process.platform === "win32" ? "junction" : "dir");
       await writeFile(join(pkg, "package.json"), JSON.stringify({ name: "fixture-concurrency", version: "1.0.0", type: "module", qflow: { activation: "./activation.mjs" } }));
       await writeFile(join(pkg, "activation.mjs"), `
         import {createRuntimeEndpointAdapterFacet} from '@qflow/runtime-local/extension';

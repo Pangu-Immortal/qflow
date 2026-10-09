@@ -1,13 +1,13 @@
-import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalContext } from "@qflow/temporal/markup";
 import { blobTypes } from "@qflow/qflow/blob";
-import { mediaTypes } from "@qflow/qflow/media";
-import type { FontStackRef } from "@qflow/qflow/media";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { mediaTypes } from "@qflow/media";
+import type { FontStackRef } from "@qflow/media";
+import { spatialTypes } from "@qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 import type { Recipe } from "@qflow/qflow/recipe";
 import { sealText, textTypes } from "@qflow/qflow/text";
 import type { StructuredElement, StructuredSurfaceHandler, SurfaceRecordDraft, SurfaceResolvedReference, MarkupAttributeValue } from "@qflow/qflow/markup";
-import { resolveTemporalWindowReference, temporalWindowAttributeNames } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalWindowReference, temporalWindowAttributeNames } from "@qflow/temporal/markup";
 
 import { decodeCommentStickerStyle } from "./author.js";
 import { createCommentStickerFragment } from "./fragment.js";

@@ -3,11 +3,11 @@ import type { RuntimeDoctorDiagnostic } from "@qflow/runtime-local/extension";
 import type { AsyncEndpoint, CredentialRef, EndpointCredential, EndpointFulfillment, EndpointInvocationContext, EndpointPollContext, EndpointPricingReader, EndpointStartContext, EndpointOutcome, ImmediateEndpointHandler, ResourceStore } from "@qflow/qflow/endpoint";
 import { credentialRef, EndpointServiceError, defineEndpoint, wakeAfter } from "@qflow/qflow/endpoint";
 import { EndpointHttpError, EndpointResponseError, EndpointTransportError, withRequestDeadline } from "@qflow/qflow/endpoint/http";
-import { selectWireModelForRequest } from "@qflow/qflow/generation";
-import type { GenerationRequest } from "@qflow/qflow/generation";
+import { selectWireModelForRequest } from "@qflow/generation";
+import type { GenerationRequest } from "@qflow/generation";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { BlobRef, CanonicalValue, CapabilityRef } from "@qflow/qflow/protocol";
-import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@qflow/qflow/speech-evidence";
+import { sealAlignedTranscriptEvidence, speechEvidenceTypes } from "@qflow/speech-evidence";
 import {
   assertWhisperXEvidenceWav,
   interpretWhisperXTranscript,

@@ -2,9 +2,9 @@ import type { ProducerPackage } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
 import type { StoredValue } from "@qflow/qflow/protocol";
 import { canonicalize } from "@qflow/qflow/protocol";
-import type { SynchronizedMedia } from "@qflow/qflow/media";
-import type { TemporalWindow } from "@qflow/qflow/temporal";
-import type { Timeline } from "@qflow/qflow/timeline";
+import type { SynchronizedMedia } from "@qflow/media";
+import type { TemporalWindow } from "@qflow/temporal";
+import type { Timeline } from "@qflow/timeline";
 
 import { audioTrackProducers, audioTrackTypes } from "./manifest.js";
 import {

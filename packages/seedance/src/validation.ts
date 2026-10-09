@@ -1,4 +1,4 @@
-import type { GenerationRequestDraft } from "@qflow/qflow/generation";
+import type { GenerationRequestDraft } from "@qflow/generation";
 import type { BlobRef } from "@qflow/qflow/protocol";
 
 /** Seedance's reference-audio rule, shared by known imports and request assembly. */

@@ -11,8 +11,8 @@ import {
 import type { CliApplicationContext, CliCommandModule, CliIo, CliRuntimeHost } from "@qflow/qflow/cli";
 import { speechEvidenceFile } from "@qflow/media-local";
 import type { Need } from "@qflow/qflow/protocol";
-import { sealSpeechEvidenceAudio, speechEvidenceTypes, transcriptDocumentFromEvidence } from "@qflow/qflow/speech-evidence";
-import type { AlignedTranscriptEvidence } from "@qflow/qflow/speech-evidence";
+import { sealSpeechEvidenceAudio, speechEvidenceTypes, transcriptDocumentFromEvidence } from "@qflow/speech-evidence";
+import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
 
 import { whisperXRequestForEvidenceAudio } from "./evidence.js";
 import { whisperXCapabilities } from "./manifest.js";

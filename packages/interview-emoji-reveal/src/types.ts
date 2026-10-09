@@ -1,5 +1,5 @@
 import type { BlobRef } from "@qflow/qflow/protocol";
-import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
+import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
 export type EmojiRevealHeader = { readonly id: string };
 

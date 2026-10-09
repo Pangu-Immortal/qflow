@@ -1,12 +1,12 @@
-import { resolveTemporalContext } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalContext } from "@qflow/temporal/markup";
 import { blobTypes } from "@qflow/qflow/blob";
-import { mediaTypes } from "@qflow/qflow/media";
-import type { FontStackRef } from "@qflow/qflow/media";
+import { mediaTypes } from "@qflow/media";
+import type { FontStackRef } from "@qflow/media";
 import { visualTrackTypes } from "@qflow/visual-track";
 import type { TypeRef } from "@qflow/qflow/protocol";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { spatialTypes } from "@qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
-import { resolveTemporalInstantReference, temporalInstantAttributeNames } from "@qflow/qflow/temporal/markup";
+import { resolveTemporalInstantReference, temporalInstantAttributeNames } from "@qflow/temporal/markup";
 import type { Recipe } from "@qflow/qflow/recipe";
 import { sealText, textTypes } from "@qflow/qflow/text";
 import { sealGraphFragment } from "@qflow/qflow/author";

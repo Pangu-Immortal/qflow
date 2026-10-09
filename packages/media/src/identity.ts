@@ -1,8 +1,8 @@
 import {
   canonicalize,
   isResourceId,
-} from "@qflow/protocol";
-import type { BlobRef } from "@qflow/protocol";
+} from "@qflow/qflow/protocol";
+import type { BlobRef } from "@qflow/qflow/protocol";
 
 import type {
   MediaInspection,

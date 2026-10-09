@@ -1,11 +1,11 @@
-import type { FrameSpan } from "@qflow/qflow/composition";
+import type { FrameSpan } from "@qflow/composition";
 import type {
   FontArtifactRef,
   SynchronizedMedia,
-} from "@qflow/qflow/media";
+} from "@qflow/media";
 import type { BlobRef } from "@qflow/qflow/protocol";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
-import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
+import type { SpatialFrame } from "@qflow/spatial";
+import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
 export type RankingVariant = "tier-board" | "column" | "top-three";
 

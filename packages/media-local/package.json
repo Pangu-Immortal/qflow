@@ -1,6 +1,6 @@
 {
   "name": "@qflow/media-local",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -9,17 +9,23 @@
     "./cli": "./src/cli.ts",
     "./files": "./src/files.ts"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "qflow": {
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/media-operations": "workspace:^",
+    "@qflow/media": "workspace:^0.1.0",
+    "@qflow/media-operations": "workspace:^0.2.0",
+    "@qflow/speech-evidence": "workspace:^0.1.0",
+    "@qflow/timeline": "workspace:^0.1.0",
     "sharp": "0.35.4"
   },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^",
-    "@qflow/runtime-local": "workspace:^"
+    "@qflow/qflow": "workspace:^0.3.1",
+    "@qflow/runtime-local": "workspace:^0.1.1"
   },
   "devDependencies": {
     "@qflow/blob": "workspace:*",

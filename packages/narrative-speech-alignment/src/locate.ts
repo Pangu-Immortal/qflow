@@ -1,4 +1,4 @@
-import type { Narrative, NarrativeToken } from "@qflow/qflow/narrative";
+import type { Narrative, NarrativeToken } from "@qflow/narrative";
 import type { NarrativeAlignmentTiming } from "./types.js";
 import type {
   AlignedTranscriptEvidence,
@@ -6,7 +6,7 @@ import type {
   SpeechCharacterEvidence,
   SpeechTranscriptPassage,
   SpeechWordEvidence,
-} from "@qflow/qflow/speech-evidence";
+} from "@qflow/speech-evidence";
 
 import { alignWordGroups } from "./align.js";
 import { SpeechAlignmentError } from "./error.js";

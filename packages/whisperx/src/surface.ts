@@ -1,9 +1,9 @@
 import { assertExactAttributes as exactAttributes, textAttribute as stringAttribute, type StructuredElement, type StructuredSurfaceHandler, type SurfaceResolvedReference, type SurfaceRecordDraft, type MarkupAttributeValue } from "@qflow/qflow/markup";
 import { sameType } from "@qflow/qflow/protocol";
-import { narrativeTypes } from "@qflow/qflow/narrative";
-import type { NarrativeSegmentRef } from "@qflow/qflow/narrative";
-import { mediaTypes } from "@qflow/qflow/media";
-import { temporalTypes } from "@qflow/qflow/temporal";
+import { narrativeTypes } from "@qflow/narrative";
+import type { NarrativeSegmentRef } from "@qflow/narrative";
+import { mediaTypes } from "@qflow/media";
+import { temporalTypes } from "@qflow/temporal";
 
 import { whisperXAlignmentFragment, whisperXBoundaryAlignmentFragment } from "./fragment.js";
 import { whisperXTypes } from "./manifest.js";

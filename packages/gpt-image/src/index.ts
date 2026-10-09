@@ -3,10 +3,10 @@ import {
   sealGenerationPortRequest,
   sealGenerationRequestDraft,
   sealGenerationPortTable,
-} from "@qflow/qflow/generation";
-import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/qflow/generation";
+} from "@qflow/generation";
+import type { GenerationPortTable, GenerationPortValue, GenerationRequest } from "@qflow/generation";
 import type { SurfaceAttributeVocabulary, SurfaceChildVocabulary } from "@qflow/qflow/markup";
-import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { defineExactModelModule } from "@qflow/generation/model";
 import { imageOperationsModuleRef, imageTransformTypes } from "@qflow/image-operations";
 import { textTypes } from "@qflow/qflow/text";
 

@@ -1,7 +1,7 @@
-import type { AdmissionPackage } from "@qflow/admission";
-import type { ProducerPackage } from "@qflow/producer";
-import { canonicalize } from "@qflow/protocol";
-import type { StoredValue } from "@qflow/protocol";
+import type { AdmissionPackage } from "@qflow/qflow/admission";
+import type { ProducerPackage } from "@qflow/qflow/producer";
+import { canonicalize } from "@qflow/qflow/protocol";
+import type { StoredValue } from "@qflow/qflow/protocol";
 import { anchoredFrame, aspectFrame, assertCanvas, assertContentFit, assertIntrinsicExtent, assertSpatialFrame, assertSpatialMap2D, assertSpatialPath, assertSpatialPoint, frameFromEdges, resolveContentFit } from "./geometry.js";
 import { spatialProducers, spatialTypes } from "./manifest.js";
 import type {

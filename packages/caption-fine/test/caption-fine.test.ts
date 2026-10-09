@@ -7,7 +7,7 @@ import test from "node:test";
 import type { CaptionProgram, CaptionTiming } from "@qflow/caption";
 import type { FontArtifactRef } from "@qflow/media";
 import { captionDocument, parseScript } from "@qflow/script";
-import type { RegionEvidence } from "@qflow/qflow/region-evidence";
+import type { RegionEvidence } from "@qflow/region-evidence";
 import type { Recipe } from "@qflow/recipe";
 
 import { fixtureResource } from "../../../test/fixture-resource.js";
@@ -444,7 +444,7 @@ test("Caption Surface wires one Timeline to both ordinary and tracked-region ren
   const { decodeFineCaptionTrackSurface } = await import("../src/surface.js");
   const { timelineTypes } = await import("@qflow/timeline");
   const { captionTypes } = await import("@qflow/caption");
-  const { regionEvidenceTypes } = await import("@qflow/qflow/region-evidence");
+  const { regionEvidenceTypes } = await import("@qflow/region-evidence");
   const { spatialTypes } = await import("@qflow/spatial");
   const types = { timeline: timelineTypes.timeline, document: captionTypes.document,
     timing: captionTypes.timing, within: spatialTypes.frame, program: captionTypes.program, regions: regionEvidenceTypes.evidence };

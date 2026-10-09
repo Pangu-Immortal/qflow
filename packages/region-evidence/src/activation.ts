@@ -1,6 +1,6 @@
-import { createAdmissionPackageFacet } from "@qflow/admission";
-import { createProducerPackageFacet } from "@qflow/producer";
-import { createMarkupSurfaceFacet } from "@qflow/markup";
+import { createAdmissionPackageFacet } from "@qflow/qflow/admission";
+import { createProducerPackageFacet } from "@qflow/qflow/producer";
+import { createMarkupSurfaceFacet } from "@qflow/qflow/markup";
 
 import {
   decodeRegionEvidenceSurface,

@@ -1,16 +1,16 @@
-import { timelineTypes, timelineDependency } from "@qflow/qflow/timeline";
-import { temporalContextAttributeVocabulary } from "@qflow/qflow/temporal/markup";
+import { timelineTypes, timelineDependency } from "@qflow/timeline";
+import { temporalContextAttributeVocabulary } from "@qflow/temporal/markup";
 import { readFile } from "node:fs/promises";
 
 import { blobDependency, blobTypes } from "@qflow/qflow/blob";
-import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
-import { fontArtifactSchema, mediaDependency, mediaTypes } from "@qflow/qflow/media";
+import { compositionDependency, compositionTypes } from "@qflow/composition";
+import { fontArtifactSchema, mediaDependency, mediaTypes } from "@qflow/media";
 
 import type { ModuleManifest, ProducerRef, TypeRef, ValueSchema } from "@qflow/qflow/protocol";
-import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/qflow/spatial";
+import { spatialDependency, spatialFrameSchema, spatialTypes } from "@qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
-import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
-import { temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal/markup";
+import { temporalDependency, temporalTypes } from "@qflow/temporal";
+import { temporalWindowAttributeVocabulary } from "@qflow/temporal/markup";
 import { textDependency, textTypes } from "@qflow/qflow/text";
 
 const previewImage = (file: string) => ({

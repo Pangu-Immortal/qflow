@@ -1,5 +1,5 @@
-import type { CanonicalValue, BlobRef } from "@qflow/protocol";
-import { isResourceId } from "@qflow/protocol";
+import type { CanonicalValue, BlobRef } from "@qflow/qflow/protocol";
+import { isResourceId } from "@qflow/qflow/protocol";
 import { verifyMediaFrameRange } from "@qflow/media";
 import type { MediaFrameRange } from "@qflow/media";
 import { assertHtmlProgram } from "./document.js";

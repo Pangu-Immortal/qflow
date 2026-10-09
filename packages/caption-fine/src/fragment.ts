@@ -1,9 +1,9 @@
-import { captionTypes } from "@qflow/qflow/caption";
-import { compositionTypes } from "@qflow/qflow/composition";
+import { captionTypes } from "@qflow/caption";
+import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/qflow/author";
-import { timelineTypes } from "@qflow/qflow/timeline";
-import { regionEvidenceTypes } from "@qflow/qflow/region-evidence";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { timelineTypes } from "@qflow/timeline";
+import { regionEvidenceTypes } from "@qflow/region-evidence";
+import { spatialTypes } from "@qflow/spatial";
 
 import { captionFineProducers, captionFineTypes } from "./manifest.js";
 

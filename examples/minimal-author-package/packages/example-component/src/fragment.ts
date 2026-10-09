@@ -1,8 +1,8 @@
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import { blobTypes } from "@qflow/qflow/blob";
 import { sealGraphFragment } from "@qflow/qflow/author";
-import { timelineTypes } from "@qflow/qflow/timeline";
-import { spatialTypes } from "@qflow/qflow/spatial";
+import { timelineTypes } from "@qflow/timeline";
+import { spatialTypes } from "@qflow/spatial";
 import { exampleProducers } from "./manifest.js";
 import { exampleTypes } from "./manifest.js";
 

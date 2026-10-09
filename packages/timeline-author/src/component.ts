@@ -2,8 +2,8 @@ import { canonicalize } from "@qflow/qflow/protocol";
 import type { ProducerPackage } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
 import type { StoredValue } from "@qflow/qflow/protocol";
-import type { LocalTemporalDomain, TemporalExtent, TemporalWindow } from "@qflow/qflow/temporal";
-import type { Clock, Timeline } from "@qflow/qflow/timeline";
+import type { LocalTemporalDomain, TemporalExtent, TemporalWindow } from "@qflow/temporal";
+import type { Clock, Timeline } from "@qflow/timeline";
 
 import { timelineAuthorProducers } from "./manifest.js";
 import {

@@ -1,15 +1,15 @@
-import { mediaFrameRangeSamples, verifyMediaFrameRange } from "@qflow/qflow/media";
-import { mediaComponent } from "@qflow/qflow/media";
+import { mediaFrameRangeSamples, verifyMediaFrameRange } from "@qflow/media";
+import { mediaComponent } from "@qflow/media";
 import { plannedNeedInputs } from "@qflow/qflow/producer";
 import type { ProducerPackage, PlannedNeedFacet } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
-import { verifyMediaInspection, verifyMediaStreamSelection, verifyMuxedMedia, verifyTimelineVisual, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/qflow/media";
-import type { MediaInspection, MediaStreamSelection, MuxedMedia, TimelineVisual, TimelineAudio } from "@qflow/qflow/media";
-import { assertClockIdentity } from "@qflow/qflow/timeline";
-import type { Clock, Timeline } from "@qflow/qflow/timeline";
-import { durationInFrames } from "@qflow/qflow/temporal";
-import type { TemporalDuration } from "@qflow/qflow/temporal";
-import type { Composition } from "@qflow/qflow/composition";
+import { verifyMediaInspection, verifyMediaStreamSelection, verifyMuxedMedia, verifyTimelineVisual, verifySynchronizedMedia, verifyTimelineAudio } from "@qflow/media";
+import type { MediaInspection, MediaStreamSelection, MuxedMedia, TimelineVisual, TimelineAudio } from "@qflow/media";
+import { assertClockIdentity } from "@qflow/timeline";
+import type { Clock, Timeline } from "@qflow/timeline";
+import { durationInFrames } from "@qflow/temporal";
+import type { TemporalDuration } from "@qflow/temporal";
+import type { Composition } from "@qflow/composition";
 import type { BlobRef, CanonicalValue, CapabilityRef, ProducerRef, StoredValue } from "@qflow/qflow/protocol";
 import { canonicalize } from "@qflow/qflow/protocol";
 

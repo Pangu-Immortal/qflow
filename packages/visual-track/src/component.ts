@@ -1,11 +1,11 @@
 import type { ProducerPackage, ProducerHandlerContext } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
-import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/qflow/media";
+import type { CompositableSurfaceRef, SynchronizedMedia } from "@qflow/media";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { BlobRef, StoredValue } from "@qflow/qflow/protocol";
-import type { ContentFit, IntrinsicExtent, SpatialFrame, SpatialMap2D, SpatialPath } from "@qflow/qflow/spatial";
-import type { TemporalWindow } from "@qflow/qflow/temporal";
-import type { Timeline } from "@qflow/qflow/timeline";
+import type { ContentFit, IntrinsicExtent, SpatialFrame, SpatialMap2D, SpatialPath } from "@qflow/spatial";
+import type { TemporalWindow } from "@qflow/temporal";
+import type { Timeline } from "@qflow/timeline";
 
 import {
   appendMediaPaintLayer,

@@ -1,5 +1,5 @@
-import { sealMediaStreamSelection, verifyMediaInspection } from "@qflow/qflow/media";
-import type { MediaAudioStream, MediaInspection, MediaStreamSelection, MediaVideoStream } from "@qflow/qflow/media";
+import { sealMediaStreamSelection, verifyMediaInspection } from "@qflow/media";
+import type { MediaAudioStream, MediaInspection, MediaStreamSelection, MediaVideoStream } from "@qflow/media";
 import { canonicalize } from "@qflow/qflow/protocol";
 
 import type { MediaSelectionRequest } from "./types.js";

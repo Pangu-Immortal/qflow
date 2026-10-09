@@ -1,13 +1,13 @@
 import { captionTypes } from "@qflow/caption";
-import { sealGraphFragment } from "@qflow/author";
+import { sealGraphFragment } from "@qflow/qflow/author";
 import {
   assertAttributes,
   assertEmptyElement,
   textAttribute,
   type StructuredSurfaceHandler,
   type SurfaceResolvedReference,
-} from "@qflow/markup";
-import { sameType, type TypeRef } from "@qflow/protocol";
+} from "@qflow/qflow/markup";
+import { sameType, type TypeRef } from "@qflow/qflow/protocol";
 import { narrativeTemporalTypes } from "@qflow/narrative-temporal";
 
 import { narrativeCaptionProducers, narrativeCaptionTypes } from "./manifest.js";

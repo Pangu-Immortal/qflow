@@ -10,7 +10,7 @@ No Qflow checkout is needed to develop or install the extension.
 ```ts
 import { defineEndpoint } from "@qflow/qflow/endpoint";
 import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow/endpoint";
-import { generationTypes, compileWireRequest, sealGeneratedImageSet } from "@qflow/qflow/generation";
+import { generationTypes, compileWireRequest, sealGeneratedImageSet } from "@qflow/generation";
 ```
 
 The shipped [project Provider example](../../examples/provider-package/README.md) follows an image
@@ -21,7 +21,7 @@ This SDK also exports `canonicalize`, `BlobRef`, `ResourceId`, `credentialRef` a
 
 For an existing model, name its exact versioned Capability and expected result Type. Map its request
 ports into the service's wire format; the Provider need not import the model's implementation.
-`@qflow/qflow/generation` supplies the common generated-media values and optional wire-mapping helpers.
+`@qflow/generation` supplies the common generated-media values and optional wire-mapping helpers.
 One Provider can implement multiple capabilities, and another Provider can implement those same
 capabilities. The Profile selects the implementation used by a project.
 

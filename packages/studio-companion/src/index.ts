@@ -727,11 +727,11 @@ export type StudioTemporalDomainCompanion = {
   }) => string;
 };
 
-/** One package-owned author declaration whose primary result is an absolute Window or Instant. */
+/** One package-owned author declaration whose primary result is an absolute Instant. */
 export type StudioTemporalDeclarationDraft = {
   readonly id: string;
   readonly label?: string;
-  /** Exact qualified output record selected by the owning Surface Companion. */
+  /** Exact qualified logical output selected by the owning Surface Companion. */
   readonly output: string;
   readonly range?: Range;
 };

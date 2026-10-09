@@ -1,5 +1,5 @@
-import { blobTypes } from "@qflow/blob";
-import type { StructuredElement, StructuredSurfaceHandler } from "@qflow/markup";
+import { blobTypes } from "@qflow/qflow/blob";
+import type { StructuredElement, StructuredSurfaceHandler } from "@qflow/qflow/markup";
 import type { FontArtifactRef } from "./render.js";
 import { assertFontArtifactRef, assertFontStackRef } from "./render.js";
 import { mediaTypes } from "./manifest.js";

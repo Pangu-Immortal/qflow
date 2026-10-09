@@ -1,10 +1,10 @@
 import type { AdmissionPackage } from "@qflow/qflow/admission";
 import type { ProducerPackage } from "@qflow/qflow/producer";
-import type { Narrative, NarrativeSegmentRef } from "@qflow/qflow/narrative";
+import type { Narrative, NarrativeSegmentRef } from "@qflow/narrative";
 import type { StoredValue } from "@qflow/qflow/protocol";
 import { canonicalize } from "@qflow/qflow/protocol";
-import type { AlignedTranscriptEvidence } from "@qflow/qflow/speech-evidence";
-import type { LocalTemporalDomain } from "@qflow/qflow/temporal";
+import type { AlignedTranscriptEvidence } from "@qflow/speech-evidence";
+import type { LocalTemporalDomain } from "@qflow/temporal";
 
 import { alignNarrative } from "./local.js";
 import { speechAlignmentProducers } from "./manifest.js";

@@ -1,10 +1,10 @@
-import type { Timeline } from "@qflow/qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import type { ProducerPackage } from "@qflow/qflow/producer";
 import type { AdmissionPackage } from "@qflow/qflow/admission";
 import { canonicalize } from "@qflow/qflow/protocol";
 import type { BlobRef, StoredValue } from "@qflow/qflow/protocol";
-import type { SpatialFrame } from "@qflow/qflow/spatial";
-import type { TemporalInstant, TemporalWindow } from "@qflow/qflow/temporal";
+import type { SpatialFrame } from "@qflow/spatial";
+import type { TemporalInstant, TemporalWindow } from "@qflow/temporal";
 
 import { emojiRevealProducers, emojiRevealTypes } from "./manifest.js";
 import { appendEmojiRevealItem, appendPresetEmojiRevealItem, assertEmojiRevealProgram, createEmojiRevealSet, finalizeEmojiReveal, renderEmojiReveal } from "./program.js";

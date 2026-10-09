@@ -1,6 +1,6 @@
 {
   "name": "@qflow/html-program",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
@@ -11,13 +11,9 @@
     "activation": "./src/activation.ts"
   },
   "dependencies": {
-    "@qflow/producer": "workspace:*",
-    "@qflow/composition": "workspace:*",
-    "@qflow/author": "workspace:*",
-    "@qflow/media": "workspace:*",
-    "@qflow/protocol": "workspace:*",
-    "@qflow/timeline": "workspace:*",
-    "@qflow/admission": "workspace:*"
+    "@qflow/composition": "workspace:^0.1.0",
+    "@qflow/media": "workspace:^0.1.0",
+    "@qflow/timeline": "workspace:^0.1.0"
   },
   "devDependencies": {
     "@qflow/caption": "workspace:*",
@@ -29,6 +25,18 @@
     "@qflow/spatial": "workspace:*",
     "@qflow/recipe": "workspace:*",
     "@qflow/text-fine": "workspace:*",
-    "linkedom": "0.18.13"
+    "linkedom": "0.18.13",
+    "@qflow/producer": "workspace:*",
+    "@qflow/author": "workspace:*",
+    "@qflow/protocol": "workspace:*",
+    "@qflow/admission": "workspace:*",
+    "@qflow/qflow": "workspace:*"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@qflow/qflow": "workspace:^0.3.1"
   }
 }

@@ -11,11 +11,11 @@ import { renderRoad } from "./scenes/editor-route/index.js";
 import { assertAttributes, assertEmptyElement, textAttribute, createMarkupSurfaceFacet } from "@qflow/qflow/markup";
 import { canonicalize, sameType } from "@qflow/qflow/protocol";
 import { sealGraphFragment } from "@qflow/qflow/author";
-import { compositionTypes } from "@qflow/qflow/composition";
-import { mediaTypes } from "@qflow/qflow/media";
-import { timelineTypes } from "@qflow/qflow/timeline";
-import { spatialTypes } from "@qflow/qflow/spatial";
-import { temporalTypes, assertTemporalInstantFor } from "@qflow/qflow/temporal";
+import { compositionTypes } from "@qflow/composition";
+import { mediaTypes } from "@qflow/media";
+import { timelineTypes } from "@qflow/timeline";
+import { spatialTypes } from "@qflow/spatial";
+import { temporalTypes, assertTemporalInstantFor } from "@qflow/temporal";
 import {
   resolveTemporalContext,
   resolveTemporalWindowReference,
@@ -25,7 +25,7 @@ import {
   temporalContextAttributeVocabulary,
   temporalInstantAttributeNames,
   temporalInstantAttributeVocabulary,
-} from "@qflow/qflow/temporal/markup";
+} from "@qflow/temporal/markup";
 import { renderIntro, renderComparison } from "./render.js";
 const module = { name: "@explainer/web-scenes", version: "1" },
   type = (name) => ({ module, name }),

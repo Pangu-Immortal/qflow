@@ -1,11 +1,17 @@
-import { temporalProducers, temporalTypes } from "@qflow/qflow/temporal";
+import { temporalProducers, temporalTypes } from "./index.js";
 import type {
   StudioTemporalAuthority,
   StudioTemporalRelationCompanion,
   StudioTemporalRelationValue,
 } from "@qflow/studio-companion";
 
-import { formatTemporalPointEdit } from "./temporal-edit.js";
+/** Preserve the declared base while writing an exact frame offset. */
+export function formatTemporalPointEdit(reference: string, desired: number, base?: number): string {
+  if (reference === "absolute") return `${desired}f`;
+  if (base === undefined) throw new Error(`The ${reference} projection base is unavailable.`);
+  const offset = desired - base;
+  return `${reference}${offset >= 0 ? "+" : ""}${offset}f`;
+}
 
 type Instant = { readonly id: string; readonly timelineId: string; readonly frame: number };
 type Timeline = { readonly id: string; readonly frameCount: number };

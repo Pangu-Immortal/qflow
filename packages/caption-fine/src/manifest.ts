@@ -1,16 +1,17 @@
-import { temporalDependency, temporalTypes } from "@qflow/qflow/temporal";
-import { temporalContextAttributeVocabulary, temporalWindowAttributeVocabulary } from "@qflow/qflow/temporal/markup";
-import { timelineDependency, timelineTypes } from "@qflow/qflow/timeline";
-import type { Timeline } from "@qflow/qflow/timeline";
+import { temporalDependency, temporalTypes } from "@qflow/temporal";
+import type { StructuredSurfaceDeclaration, SurfaceVocabulary } from "@qflow/qflow/markup";
+import { temporalContextAttributeVocabulary, temporalWindowAttributeVocabulary } from "@qflow/temporal/markup";
+import { timelineDependency, timelineTypes } from "@qflow/timeline";
+import type { Timeline } from "@qflow/timeline";
 import { readFile } from "node:fs/promises";
 
-import { captionModuleRef, captionTypes } from "@qflow/qflow/caption";
-import { compositionDependency, compositionTypes } from "@qflow/qflow/composition";
-import { mediaDependency, mediaTypes } from "@qflow/qflow/media";
+import { captionModuleRef, captionTypes } from "@qflow/caption";
+import { compositionDependency, compositionTypes } from "@qflow/composition";
+import { mediaDependency, mediaTypes } from "@qflow/media";
 
 import type { ModuleManifest, ProducerRef } from "@qflow/qflow/protocol";
-import { regionEvidenceDependency, regionEvidenceTypes } from "@qflow/qflow/region-evidence";
-import { spatialDependency, spatialTypes } from "@qflow/qflow/spatial";
+import { regionEvidenceDependency, regionEvidenceTypes } from "@qflow/region-evidence";
+import { spatialDependency, spatialTypes } from "@qflow/spatial";
 import { recipeType } from "@qflow/qflow/recipe";
 
 import { fineCaptionOneShotMotions } from "./recipe.js";
@@ -31,7 +32,7 @@ export const captionFineProducers = {
   renderWithRegions: { module: captionFineModuleRef, name: "render-fine-caption-with-regions" },
 } satisfies Record<string, ProducerRef>;
 
-export const captionFineMarkupSurfaces = [
+export const captionFineMarkupSurfaces: readonly (StructuredSurfaceDeclaration & { readonly vocabulary: SurfaceVocabulary })[] = [
     {
       name: "style", tag: "Style", mode: "structured", outputs: [captionTypes.style],
       vocabulary: {

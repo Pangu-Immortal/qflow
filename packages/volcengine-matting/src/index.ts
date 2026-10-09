@@ -1,7 +1,7 @@
 import { blobTypes } from "@qflow/qflow/blob";
-import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/qflow/generation";
-import type { GenerationPortValue } from "@qflow/qflow/generation";
-import { defineExactModelModule } from "@qflow/qflow/generation/model";
+import { sealGenerationPortRequest, sealGenerationPortTable } from "@qflow/generation";
+import type { GenerationPortValue } from "@qflow/generation";
+import { defineExactModelModule } from "@qflow/generation/model";
 
 export const volcengineMattingModuleRef = { name: "@qflow/volcengine-matting", version: "1" } as const;
 

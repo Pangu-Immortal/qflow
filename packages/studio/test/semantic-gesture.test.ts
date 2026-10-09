@@ -4,7 +4,8 @@ import type { StudioEditHandle, StudioTemporalDomainAnchor, StudioTemporalInstan
 import { adjustScriptSelection, parseScript } from "@qflow/script";
 import { projectProgramInstant } from "@qflow/temporal";
 import { parseTemporalInstant } from "@qflow/temporal/markup";
-import { chooseDomainGesture, formatTemporalPointEdit, domainGestureSpan } from "../src/temporal-edit.js";
+import { chooseDomainGesture, domainGestureSpan } from "../src/temporal-edit.js";
+import { formatTemporalPointEdit } from "@qflow/temporal/studio";
 
 const source = '<one><HOST>@{proof} One two @{/proof} three.</one>';
 const narrative = parseScript("gesture", source);

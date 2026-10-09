@@ -1,10 +1,10 @@
-import { timelineTypes } from "@qflow/qflow/timeline";
-import { mediaTypes } from "@qflow/qflow/media";
+import { timelineTypes } from "@qflow/timeline";
+import { mediaTypes } from "@qflow/media";
 import { blobTypes } from "@qflow/qflow/blob";
 
-import { compositionTypes } from "@qflow/qflow/composition";
+import { compositionTypes } from "@qflow/composition";
 import { sealGraphFragment } from "@qflow/qflow/author";
-import { htmlProgramProducers } from "@qflow/qflow/html-program";
+import { htmlProgramProducers } from "@qflow/html-program";
 import { mediaOperationsProducers } from "@qflow/media-operations";
 
 const input = (name: string) => ({ kind: "fragment-input" as const, name });
