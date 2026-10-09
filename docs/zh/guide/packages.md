@@ -35,8 +35,8 @@ Skill、可执行 Distribution 和视频项目分别安装与更新。`@qflow/qf
 Source 使用 `@your-studio/scoreboard@1` 这样的逻辑 Module 地址。npm 安装的包版本决定实际实现，逻辑 `@1` 标识作者接口。视频 Build 使用这些已安装的版本；缺包时会报告安装所需的信息。
 
 升级已有作品前，先阅读目标发行版的迁移说明，再调整可执行程序和组件依赖。
-[0.3.1 项目迁移指南](https://github.com/qflow-ai/qflow/blob/main/migrations/0.3.1.md)
-说明 SDK 导入调整与验证方法，保留已有素材和 Results。
+[0.3 项目迁移指南](https://github.com/qflow-ai/qflow/blob/main/migrations/0.3.md)
+说明旧项目语法与用法的迁移，并链接到 0.3.1 的 SDK 导入调整。迁移与验证时保留已有素材和 Results。
 
 ## 编写与分享扩展
 

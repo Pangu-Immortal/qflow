@@ -56,7 +56,8 @@ pnpm test          # 包与服务适配器测试
 ### 0.3.1 的 SDK 导入迁移
 
 已有视频项目的准确导入映射、依赖调整与验证方法见
-[Agent 迁移指南](migrations/0.3.1.md)。
+[Agent 迁移指南](migrations/0.3.1.md)。从 0.2.x 或更早开发版本迁移的项目，先阅读
+[0.3 项目迁移指南](migrations/0.3.md)。
 
 视频领域 SDK 改为独立安装的包。组件代码使用 `@qflow/qflow/composition` 等旧根子路径时，
 需要改为从 `@qflow/composition` 导入，并在组件自己的 `dependencies` 中声明该包。

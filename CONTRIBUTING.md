@@ -62,7 +62,8 @@ pnpm test          # package and service-adapter tests
 ### SDK imports in 0.3.1
 
 For an existing video project, follow the [Agent migration guide](migrations/0.3.1.md)
-for the exact import mapping, dependency update and verification steps.
+for the exact import mapping, dependency update and verification steps. Projects from 0.2.x or an
+older checkout should first use the [0.3 project migration](migrations/0.3.md).
 
 Video-domain SDKs are independently installed packages. Component code using a former root subpath,
 such as `@qflow/qflow/composition`, must import from `@qflow/composition` and declare that package
