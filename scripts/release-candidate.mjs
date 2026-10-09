@@ -4,8 +4,6 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { packIndependentPackage } from "./pack-independent-package.mjs";
-
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 function npmCli() {
@@ -109,6 +107,7 @@ export async function releaseCandidateTarballs(outputDirectory = "dist/release")
 }
 
 export async function packReleaseCandidate(outputDirectory = "dist/release") {
+  const { packIndependentPackage } = await import("./pack-independent-package.mjs");
   const plan = await releaseCandidatePackages();
   const output = resolve(repositoryRoot, outputDirectory);
   // One candidate directory represents exactly one dependency closure. Reusing artifacts from an
