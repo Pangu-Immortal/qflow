@@ -41,7 +41,9 @@ those capabilities. Its current catalogue, account access and rates still determ
 
 A user's existing service or deployment remains a normal choice. When a suitable maintained Provider
 package is available, use its published version and package instructions; otherwise a project Provider
-can connect the service through the same interfaces. The
+can connect the service through the same interfaces. TokenDance, HiAPI, Pollo, BeatAPI and Monid
+Providers are optional: install the selected npm package in the video project before configuring its
+Endpoint; QflowHub and local Providers are defaults. The
 [model and deployment service page](https://github.com/qflow-ai/qflow/blob/main/docs/guide/service-partners.md)
 introduces partners and links their own documentation. A partnership alone does not establish that a
 particular capability, account or implementation is available. Carry an already suitable, chosen

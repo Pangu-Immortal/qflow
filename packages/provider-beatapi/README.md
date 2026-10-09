@@ -1,6 +1,6 @@
 # `@qflow/provider-beatapi`
 
-Install in the video project alongside Qflow:
+Optional Provider, not installed with Qflow. Install in the video project:
 
 ```bash
 npm install @qflow/provider-beatapi
