@@ -44,7 +44,7 @@ pnpm install --frozen-lockfile
 
 ## 自查
 
-每个 Pull Request 的 CI 都会运行下面这些命令，提交前先在本地跑一遍：
+包含代码改动的 Pull Request 会通过 CI 运行下面这些命令，提交前先在本地跑一遍：
 
 ```bash
 pnpm check         # TypeScript 类型检查
@@ -82,39 +82,47 @@ SVML 的逻辑 Module 引用仍保持 `@1`，这里改变的是 npm 归属和 Ty
 编译包内的聊天示例组件，准备字体和本地渲染器，渲染、导出并解码视频。检查使用独立的
 Qflow 状态目录，关闭 Puppeteer 隐式下载，先验证缺少浏览器的诊断，再在独立缓存中
 显式准备浏览器。结束时停止自己的 Runtime Worker，失败时保留临时项目。
-`npm package execution` 工作流在 PR 上执行这项检查，发布流程复用它；发布的就是已经
-安装并执行过的同一份 tarball。
+可通过 `npm_config_cache` 复用已下载的包；验证项目、node_modules、Runtime 状态和浏览器安装
+仍保持独立。CI 在源码检查之外并行调用 `npm package execution`，保留测试过的候选制品。
 
-正式发布请走现有的 GitHub 工作流。把下一个稳定 npm 版本写入 `package.json` 并提交到
-`main`，然后先在 `main` 上运行 **Actions → Publish npm → Run workflow**，填写该版本且不要勾选
-**Publish to npm**。这会在不改动 npm 的情况下，对完整且不可变的候选版本运行 Linux/Windows
-检查，并将其保留为可下载构件。这个准确提交通过后，再打开 **Releases → Draft a new release**，
-选择该提交，打上标签 `v<version>`（例如 `v0.1.8`），写好发布说明后发布 Release。带标签的提交
-必须包含此工作流。`Publish npm` 会核对标签与版本一致、且该提交属于 main 的历史，运行
-Linux/Windows 检查，构建并检查打包后的 CLI，预检发布计划中的每个包在 npm 上的状态，
-按依赖优先、根 Distribution 最后的顺序以 `latest` 发布，并把 tarball 附加到这次 Release。
-只有全部检查、包安装与 Registry 预检成功后，才会发生任何 npm 写入。检查与打包使用触发时的
-提交，即使随后 main 继续前进。此路径只支持稳定版，不支持预发布。
+正式发布时，将预定版本提交到 `main`，等待 **CI** 成功。它并行进行源码检查与候选打包，再在
+Linux 和 Windows 上安装、执行同一份候选。PR 使用相同检查，但其制品不能用于正式发布。
+纯文档改动不自动触发 CI；如果要发布这种提交，在 `main` 上手动运行 **Actions → CI → Run workflow**。
+一次成功的 CI 提供后续发布使用的 `npm-package` 制品。
 
-**Actions → Publish npm → Run workflow** 在 `main` 上仍然可用：填写已提交的版本，不勾选
-**Publish to npm** 时只运行检查并提供可下载构件；勾选后则手动发布 npm。补完一次失败的 Release
-发布时，先修好外部问题再重跑该 Release 的工作流。检查或包预检失败不会消耗 npm 版本。如果候选
-版本没有任何包进入 npm，可以撤回 Release 与标签，修复代码但保留原定版本，再重新验证完整候选。
-如果独立包已经发布了一部分，重跑同一个不可变候选即可：匹配的版本会被跳过，发布按依赖顺序继续。
-只有根 Distribution 版本已经存在于 npm 后，根包代码变更才必须使用新的 patch 版本；资源上传失败等
-外部步骤仍可在原版本上重跑。已经附在 Release 上的文件会保留。
-push main、只 push 标签、或保存草稿 Release 都不会发布 npm。工作流不修改版本，也不创建标签。
-可见的 Release 可以早于 npm 发布成功；对外宣布该 npm 版本可用前，先看这次 Actions 的结果。
+在这个准确提交上创建标签 `v<version>` 并发布 GitHub Release。**Publish npm** 查找该提交成功的
+main CI，下载其制品，核对版本和 npm 状态，按依赖优先、根包最后的顺序发布，再附上根包 tarball。
+发布不重新编译、安装或渲染。标签提交必须包含这套工作流；此路径只支持稳定版。
 
-独立包更新可在工作流的 **packages** 输入中填写空格分隔的准确包名，例如 `@qflow/studio`。
-完整候选仍需安装检查，但只预检和发布所选包；现有根依赖范围仍适用时，不需要为此发布根包。
+手动发布或更新独立包时，在 `main` 上打开 **Actions → Publish npm → Run workflow**，填写成功的
+**CI run ID**。不勾选 **Publish** 时只下载、检查候选，不写 npm；勾选后才发布。即使 main 后来
+继续前进，run ID 仍选择原来测试过的文件。**packages** 输入填写空格分隔的准确包名，例如
+`@qflow/studio`；留空表示完整候选。现有根依赖范围仍适用时，独立包更新不需要发布根包。
 本地对应命令是 `node scripts/publish-release-candidate.mjs dist/release/release-plan.json --package=@qflow/studio`。
+
+发布或附件上传失败时，用同一个候选重跑发布，不重跑 CI。已存在且内容一致的 npm 版本会跳过，
+已有 Release 附件保留。发布工具修复可以提交到 main，再选择原来的 CI run ID。制品过期或丢失时，
+才显式重跑 CI。检查或 npm 预检失败不消耗版本；一个包的版本进入 npm 后，更改该包内容才需要新版本，
+重试原内容的发布不需要。push main、只 push 标签或保存草稿 Release 都不会发布 npm。
+对外宣布版本可用前，先核对发布结果。
+
 发行依赖使用明确的兼容范围，例如 `workspace:^0.3.0`；打包只去掉 workspace 前缀，
 不会自动把兼容下限抬高到当前源码版本。
 
 npm 包的 Trusted Publisher 应配置 GitHub Actions：组织 `qflow-ai`、仓库 `qflow`、工作流
 `publish-npm.yml`，允许直接 `npm publish`，环境名称留空。发布 job 使用 OIDC，不需要保存 npm Token。
 已发布的版本不能覆盖；`0.1.2` 等 npm 版本与逻辑接口 `@1` 分开管理。
+
+新独立包首次进入发行时，下载成功 CI 的候选，执行 `npm login`，再创建该包并绑定可信发布：
+
+```sh
+gh run download <ci-run-id> --name npm-package --dir <candidate-directory>
+node scripts/publish-release-candidate.mjs <candidate-directory>/release-plan.json --package=@qflow/new-package
+npm exec --yes --package=npm@^11.15.0 -- node scripts/configure-release-publishers.mjs <candidate-directory>/release-plan.json --package=@qflow/new-package
+```
+
+首次发包只选择新包，不选择根包。可信发布配置由 npm 11.15 或更新版本完成，可能需要浏览器授权。
+绑定完成后，普通发布仍由 GitHub OIDC 执行，无需保存长期 npm Token。
 
 发布说明应写明变化的用户行为，以及受影响的安装。npm Distribution 与已安装的 Skill 分开更新：
 一次发布若两者都变，请同时链到相关 Skill 变更并说明两条更新路径。已保存的视频项目及其现有素材

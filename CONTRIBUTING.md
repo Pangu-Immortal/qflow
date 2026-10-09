@@ -50,7 +50,7 @@ page belongs with the change to its counterpart.
 
 ## Check your work
 
-CI runs these commands on every pull request. Run them locally first:
+CI runs these commands on code pull requests. Run them locally first:
 
 ```bash
 pnpm check         # TypeScript type-check
@@ -90,43 +90,37 @@ With FFmpeg and FFprobe available, run
 the checkout, build its chat example component, prepare its font and local renderer, render and export
 the video, and decode the result. It disables implicit Puppeteer downloads, checks missing-browser
 diagnostics, and prepares the browser in an isolated cache. It uses a separate Qflow state directory, stops its Runtime Worker,
-and retains the temporary project on failure. The `npm package execution` workflow runs this on PRs
-and is reused by publication; publication uploads the same tarball that was installed and executed.
+and retains the temporary project on failure. Set `npm_config_cache` to reuse downloaded package
+bytes; the consumer project, node_modules, Runtime state and browser installation remain isolated.
+CI runs `npm package execution` alongside the repository checks and uploads the tested candidate.
 
-For a formal release, use the existing GitHub workflows. Commit the next stable npm version in
-`package.json` to `main`, then run **Actions → Publish npm → Run workflow** with **Publish to npm**
-unchecked to validate that exact commit on Linux and Windows. After it passes, open
-**Releases → Draft a new release**, choose that commit with tag `v<version>` (for example `v0.1.8`),
-write the release notes, and publish the Release. The tagged commit must contain this workflow.
-`Publish npm` verifies the tag/version match and that the commit belongs to main's history, runs
-repository checks and release-candidate construction in parallel, then installs and executes that
-one candidate on Linux and Windows. It preflights every package in the release plan against npm,
-publishes dependencies first and the Distribution last as `latest`, and attaches the Distribution
-tarball to the Release. No npm write occurs unless every check, package installation and registry
-preflight succeeds. Checks and packaging use the triggering commit, even if main advances meanwhile.
-This path supports stable releases, not prereleases.
+For a formal release, commit the intended versions to `main` and wait for **CI** to succeed. It runs
+repository checks and candidate packing in parallel, then installs and executes that same candidate
+on Linux and Windows. PRs use the same checks but their artifacts are not publication candidates.
+Documentation-only changes skip automatic CI; run **Actions → CI → Run workflow** on `main` when
+such a commit is intended for release. One successful CI run supplies the `npm-package` artifact.
 
-**Actions → Publish npm → Run workflow** on `main` remains available: enter the committed version
-and leave **Publish to npm** unchecked for an optional package-only rehearsal and downloadable
-candidate; check it for a manual npm publication. Both paths build the candidate once and make both
-operating systems consume the same uploaded files. To finish a failed Release publication, fix the
-external problem and rerun that Release's workflow. A failed check or package preflight does not
-consume the npm version. If no
-package from the candidate reached npm, the Release and tag may be withdrawn, the code fixed while
-retaining the intended version, and the complete candidate validated again. If publication stops
-after some independent packages, rerun the same immutable candidate: matching versions are skipped
-and publication resumes in dependency order. Only after the root Distribution version exists on npm
-does a root code change require a new patch version; a failed asset upload or other external step can
-still be rerun without one. An existing Release attachment is retained.
-Pushing main, pushing a tag alone, or saving a draft Release does not publish npm. The workflow
-does not edit versions or create tags. A visible Release can precede successful npm publication;
-check its Actions result before announcing that the npm version is available.
+Then publish a GitHub Release tagged `v<version>` at that exact tested commit. **Publish npm** finds
+the successful main CI run for the tag, downloads its artifact, checks the version and npm state,
+publishes dependencies before the root, and attaches the tested root tarball to the Release. It does
+not compile, reinstall or render again. The tag must contain this workflow. Stable releases only.
 
-For an independent-package update, use the workflow's **packages** input with the exact space-separated
-names to publish, such as `@qflow/studio`. The full candidate is still installed and checked, but only
-the selected packages are preflighted and published; this does not require a new root version when
+For manual publication or an independent-package update, open **Actions → Publish npm → Run workflow**
+on `main` and enter the successful **CI run ID**. Leave **Publish** unchecked to download and inspect
+the candidate without npm writes; check it to publish. The run ID selects the tested files even if
+main has since advanced. The **packages** input selects exact space-separated names, such as
+`@qflow/studio`; empty selects the complete candidate. This does not require a new root version when
 the existing root dependency ranges remain valid. Locally the equivalent selection is
 `node scripts/publish-release-candidate.mjs dist/release/release-plan.json --package=@qflow/studio`.
+
+If publication or attachment fails, rerun publication with the same candidate, not CI. Matching
+immutable npm versions are skipped; existing Release attachments are retained. A publishing-tool
+fix can be committed to main and used with the original CI run ID. If the artifact has expired or
+is missing, run CI again explicitly. A failed check or npm preflight consumes no version. Once a
+package version is on npm, changing that package's bytes requires a new version; retrying its
+unchanged publication does not. Pushing main, pushing a tag alone, or saving a draft Release does
+not publish npm. Check the publication result before announcing availability.
+
 Workspace release dependencies use explicit compatibility ranges, such as `workspace:^0.3.0`;
 packing removes the workspace prefix without raising the minimum to the current checkout version.
 
@@ -136,16 +130,17 @@ name. The publishing job uses OIDC; no npm token secret is needed. An already pu
 cannot be overwritten. npm versions such as `0.1.2` are separate from the logical `@1` interfaces.
 
 Trusted Publisher authority belongs to each npm package rather than to the `@qflow` scope. When a
-new independently published package first enters the Distribution, prepare and check the exact
-candidate locally, sign in with `npm login`, then run:
+new independently published package first enters the Distribution, download the successful CI
+candidate, sign in with `npm login`, then publish and bind that new package:
 
 ```sh
-npm run publish:release-dependencies
-npm run trust:release-dependencies -- --package=@qflow/new-package
+gh run download <ci-run-id> --name npm-package --dir <candidate-directory>
+node scripts/publish-release-candidate.mjs <candidate-directory>/release-plan.json --package=@qflow/new-package
+npm exec --yes --package=npm@^11.15.0 -- node scripts/configure-release-publishers.mjs <candidate-directory>/release-plan.json --package=@qflow/new-package
 ```
 
-The first command publishes only missing independent packages and never the root Distribution;
-existing versions are skipped only when their registry integrity matches the candidate. The second
+The publication command selects only the named new package, not the root Distribution; existing
+versions are skipped only when their registry integrity matches the candidate. The trust command
 uses npm 11.15 or newer to bind the named package to this repository and workflow. Omit `--package`
 only when bootstrapping every independent package in a new release plan. npm's first authorization
 page can grant a five-minute window for the remaining package bindings; the command spaces requests

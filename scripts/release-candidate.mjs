@@ -119,7 +119,7 @@ export async function packReleaseCandidate(outputDirectory = "dist/release") {
     const tarball = await packIndependentPackage(item.directory, outputDirectory, { buildPublicTypes: false });
     console.log(`Prepared ${item.name}@${item.version}: ${tarball}`);
   }
-  runNpm(["run", "pack:distribution"]);
+  runNpm(["run", "pack:distribution", "--", "--types-built"]);
   const candidate = await releaseCandidateTarballs(outputDirectory);
   await writeFile(candidate.plan, `${JSON.stringify({
     format: "qflow.release-plan@1",

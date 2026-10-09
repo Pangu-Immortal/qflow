@@ -27,7 +27,9 @@ function npm(args, cwd, capture = false) {
   });
 }
 
-npm(["run", "build:public-types"], root);
+const arguments_ = process.argv.slice(2);
+if (arguments_.some((argument) => argument !== "--types-built")) throw new Error("Unknown distribution pack option.");
+if (!arguments_.includes("--types-built")) npm(["run", "build:public-types"], root);
 const [inventory] = JSON.parse(npm(["pack", "--dry-run", "--ignore-scripts", "--json"], root, true));
 const embeddedPackageDirectories = await distributionEmbeddedPackageDirectories(root);
 let readme = await readFile(resolve(root, "README.md"), "utf8");

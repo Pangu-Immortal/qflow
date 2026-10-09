@@ -1,11 +1,6 @@
 name: npm package execution
 
 on:
-  pull_request:
-    paths-ignore:
-      - "docs/**"
-      - "skills/**"
-      - "design/**"
   workflow_dispatch:
   workflow_call:
     outputs:
@@ -80,5 +75,13 @@ jobs:
         with:
           name: npm-package
           path: dist/release
+      - name: Reuse npm downloads for the clean consumer installation
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/qflow-npm-downloads
+          key: npm-consumer-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: npm-consumer-${{ runner.os }}-
       - name: Install the complete candidate, render and export outside the checkout
+        env:
+          npm_config_cache: ${{ runner.temp }}/qflow-npm-downloads
         run: npm run check:release-candidate

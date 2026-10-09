@@ -17,7 +17,8 @@ await mkdir(project);
 const env = {
   ...process.env,
   QFLOW_STATE_HOME: join(root, "state"),
-  npm_config_cache: join(root, "npm-cache"),
+  // Downloaded package bytes may be reused; project, node_modules and Runtime state stay fresh.
+  npm_config_cache: process.env.npm_config_cache || join(root, "npm-cache"),
 };
 // Old shell hints must not redirect the installed launcher, Worker or capture child.
 env.QFLOW_DISTRIBUTION_ROOT = join(root, "stale-distribution");

@@ -3,21 +3,30 @@ name: CI
 on:
   push:
     branches: [main]
-    # Nothing under docs/ is in tsconfig's include or reachable from the test suite, so
-    # documentation-only changes are intentionally excluded from this package CI.
     paths-ignore:
       - "docs/**"
+      - "skills/**"
+      - "design/**"
+      - "**/*.md"
   pull_request:
     paths-ignore:
       - "docs/**"
+      - "skills/**"
+      - "design/**"
+      - "**/*.md"
   workflow_dispatch:
-  workflow_call:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  package:
+    uses: ./.github/workflows/npm-package.yml
+
   check:
     # Windows-only breakage used to reach authors instead of this file — a render whose temporary
     # paths ran past the length a Windows path may be, a transcriber that opened a console window

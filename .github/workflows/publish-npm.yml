@@ -1,37 +1,40 @@
 name: Publish npm
-run-name: "npm ${{ github.event.release.tag_name || inputs.version }} — ${{ (github.event_name == 'release' || inputs.publish) && 'publish' || 'package only' }}"
+run-name: "npm ${{ github.event.release.tag_name || inputs.candidate_run }} — ${{ (github.event_name == 'release' || inputs.publish) && 'publish' || 'inspect candidate' }}"
 
 on:
   release:
     types: [published]
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version already committed in main's package.json"
+      candidate_run:
+        description: "Successful main CI run ID containing the tested npm-package artifact"
         type: string
         required: true
       publish:
-        description: "Publish to npm (unchecked: checks and downloadable package only)"
+        description: "Publish the verified artifact to npm (unchecked: inspect only)"
         type: boolean
         default: false
       packages:
-        description: "Optional space-separated package names to publish; empty publishes the complete candidate"
+        description: "Optional space-separated package names; empty publishes the complete candidate"
         type: string
         required: false
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: publish-npm
   cancel-in-progress: false
 
 jobs:
-  version:
+  publish:
     if: github.event_name == 'release' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
+    permissions:
+      contents: write
+      actions: read
+      id-token: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -41,65 +44,48 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
-      - name: Confirm version and main ancestry
-        id: version
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-          PRERELEASE: ${{ github.event.release.prerelease }}
-          EXPECTED_VERSION: ${{ inputs.version }}
-        run: |
-          git merge-base --is-ancestor HEAD origin/main
-          node --input-type=module <<'JS'
-          import { readFileSync, appendFileSync } from 'node:fs';
-          const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
-          if (!/^\d+\.\d+\.\d+$/.test(version)) {
-            throw new Error('package.json must declare a stable npm version.');
-          }
-          if (process.env.EVENT_NAME === 'release') {
-            if (process.env.PRERELEASE === 'true' || process.env.RELEASE_TAG !== `v${version}`
-              || process.env.GITHUB_REF !== `refs/tags/v${version}`) {
-              throw new Error('Publish a stable Release tagged v<package.json version>.');
-            }
-          } else if (version !== process.env.EXPECTED_VERSION) {
-            throw new Error('Enter the stable version already committed in main/package.json.');
-          }
-          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);
-          JS
-
-  checks:
-    needs: version
-    uses: ./.github/workflows/ci.yml
-
-  package:
-    needs: version
-    uses: ./.github/workflows/npm-package.yml
-
-  publish:
-    if: github.event_name == 'release' || inputs.publish
-    needs: [checks, package]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: 24
           registry-url: https://registry.npmjs.org
-      - name: Use npm with trusted publishing support
-        run: npm install --global npm@11
+      - name: Select a successful main CI candidate
+        id: candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_RUN: ${{ inputs.candidate_run }}
+          RELEASE_PRERELEASE: ${{ github.event.release.prerelease }}
+        run: node scripts/select-release-run.mjs
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: npm-package
           path: release
-      - name: Publish the explicitly selected packages in dependency order
+          run-id: ${{ steps.candidate.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Confirm candidate version and package selection
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_PACKAGES: ${{ inputs.packages }}
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync, appendFileSync } from 'node:fs';
+          import { selectReleasePackages } from './scripts/release-candidate.mjs';
+          const plan = JSON.parse(readFileSync('release/release-plan.json', 'utf8'));
+          const version = plan.distribution?.version;
+          if (plan.format !== 'qflow.release-plan@1' || !/^\d+\.\d+\.\d+$/.test(version ?? '')) {
+            throw new Error('Candidate must declare a stable npm version.');
+          }
+          if (process.env.RELEASE_TAG && process.env.RELEASE_TAG !== `v${version}`) {
+            throw new Error('Release tag does not match the tested candidate version.');
+          }
+          const names = (process.env.RELEASE_PACKAGES ?? '').trim().split(/\s+/).filter(Boolean);
+          selectReleasePackages(plan, names);
+          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);
+          JS
+      - name: Use npm with trusted publishing support
+        if: github.event_name == 'release' || inputs.publish
+        run: npm install --global npm@11
+      - name: Inspect or publish the selected immutable packages
         env:
           RELEASE_PACKAGES: ${{ inputs.packages }}
+          PUBLISH: ${{ github.event_name == 'release' || inputs.publish }}
         run: |
           node --input-type=module <<'JS'
           import { execFileSync } from 'node:child_process';
@@ -107,26 +93,16 @@ jobs:
           execFileSync(process.execPath, [
             'scripts/publish-release-candidate.mjs', 'release/release-plan.json',
             ...names.map(name => `--package=${name}`),
+            ...(process.env.PUBLISH === 'true' ? [] : ['--preflight-only']),
           ], { stdio: 'inherit' });
           JS
-
-  release-assets:
-    if: github.event_name == 'release'
-    needs: [package, publish]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: npm-package
-          path: release
-      - name: Attach the package to the GitHub Release
+      - name: Attach the tested root package to the GitHub Release
+        if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-          VERSION: ${{ needs.package.outputs.version }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           filename="qflow-qflow-$VERSION.tgz"
           assets="$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')"
