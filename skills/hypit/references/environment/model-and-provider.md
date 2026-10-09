@@ -250,8 +250,8 @@ silently changing an author's request.
 
 | Public import | Accurate interface owner |
 | --- | --- |
-| `@qflow/qflow/generation/model` | Model ports and Producer/Need construction |
-| `@qflow/qflow/generation` | Generated-media values and request/mapping helpers |
+| `@qflow/generation/model` | Model ports and Producer/Need construction |
+| `@qflow/generation` | Generated-media values and request/mapping helpers |
 | `@qflow/qflow/endpoint` | Execution, resources, credentials, support, receipts and capacity |
 | `@qflow/runtime-local/extension` | Profile activation, diagnostics and Managed Programs for the official local Runtime |
 | `@qflow/qflow/author`, `producer`, `admission`, `markup` | Author graphs, deterministic Producers, Type admission and Markup Surfaces respectively |

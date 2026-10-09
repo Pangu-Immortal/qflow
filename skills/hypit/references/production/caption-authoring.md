@@ -62,7 +62,7 @@ speech Tokens with spaces or guessing from a writing system. Suppress a separato
 a displayed Cue/line. Use the same authored boundaries in base glyphs, active layers and backgrounds.
 Separators are display content, not timed Tokens.
 
-Use `@qflow/qflow/caption` for content timing and Use coverage, and `@qflow/qflow/narrative` for
+Use `@qflow/caption` for content timing and Use coverage, and `@qflow/narrative` for
 Script document types. A family Track accepts `document`, resolved `timing`, `timeline` and ordered
 `Use` children:
 

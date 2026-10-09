@@ -58,7 +58,7 @@ This separation lets one projected Instant drive an answer reveal, a short sound
 Consumers can share that one value. Changed speech moves the upstream event without asking each
 component to search for a word, carry a projector or inspect the Script parser.
 
-Use `resolveTemporalContext` from `@qflow/qflow/temporal/markup` to resolve the component's
+Use `resolveTemporalContext` from `@qflow/temporal/markup` to resolve the component's
 `timeline` input. Pass that same Timeline to its Fragment and Producers, alongside projected
 Instants/Windows. A component can combine directly authored and domain-produced named values without switching
 time models. The installed `examples/semantic-composition/packages/chat-scene` demonstrates repeated
@@ -172,7 +172,7 @@ Keep each child's `subjectId` meaningful for inspection while qualifying graph i
 Track, so multiple instances can coexist. Do not use it to reject a deliberately shared Window. A
 finite create/append/finalize graph supports any authored number of messages or cards with ordinary
 fixed Producer ports. The exact helpers and vocabulary
-live in `@qflow/qflow/temporal/markup`; the `@example/chat-scene` package demonstrates authored and semantic events on one Timeline.
+live in `@qflow/temporal/markup`; the `@example/chat-scene` package demonstrates authored and semantic events on one Timeline.
 
 A scene may publish computed event times when another component needs them, just as it publishes a
 Track. This shares pre-render data. When the author already specifies a common trigger, consumers
@@ -183,7 +183,7 @@ draw nothing; inside it, each slot shows its preset/activated answer or its plac
 entrance motion relative to that slot's activation frame. Deriving state directly from declared inputs
 and the requested frame keeps Studio scrubbing and partial or concurrent rendering deterministic.
 
-Emit the public VisualTrack representation through `@qflow/qflow/composition`.
+Emit the public VisualTrack representation through `@qflow/composition`.
 [Component visuals](component-visuals.md) explains Presents, element trees, local animation,
 prepared surfaces and a complete drawing function. [Spatial layout](spatial.md) explains incoming
 Frames, and [Fonts and text](fonts-and-text.md) explains font resources.

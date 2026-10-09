@@ -45,7 +45,7 @@ qflow studio --run build.svrun
 
 中央 Preview 求值编排生成的 `HtmlProgram`；组件布局、素材采样和动作与编码成片来自同一份编排。调整字幕位置、图形重点或覆盖画面时，可以对照真实素材查看。
 
-Timeline 把组件的出现放在同一时钟上。领域投影还可以贡献映射行与证据行，作者声明的 Instant 和 Window 则共享一条时间行。选择 Item 即可定位；播放、逐帧、缩放和滚动便于查看具体转场或版面。
+Timeline 把组件的出现放在同一时钟上。领域投影还可以贡献映射行与证据行，已解析的具名 Instant 共享一条定位行，Window 区间由消费它的 Track Item 展示。选择 Item 即可定位；播放、逐帧、缩放和滚动便于查看具体转场或版面。
 
 Inspector 显示所选 Item 的属性。可编辑字段与时间线手柄由组件的 **Studio Companion** 提供，它负责向 Studio 描述组件。项目组件可以随绘制代码一起提供自己的 Companion。组件能够渲染，与它开放了哪些编辑控件，是两件事：字段或手势需要明确可修改的 Source 值。
 

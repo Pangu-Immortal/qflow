@@ -84,11 +84,12 @@ for an implementation example. Give the new package its own Module identity and 
 owner's scope; `@qflow/*` is the Qflow project's publishing namespace, not a scope for project packages.
 
 TypeScript imports use public SDK paths such as `@qflow/qflow/author`, `@qflow/qflow/producer`,
-`@qflow/qflow/admission`, `@qflow/qflow/markup`, `@qflow/qflow/composition`,
-`@qflow/qflow/text` or `@qflow/qflow/caption`; Studio Companions use the independent
+`@qflow/qflow/admission`, `@qflow/qflow/markup`, `@qflow/composition`,
+`@qflow/qflow/text` or `@qflow/caption`; Studio Companions use the independent
 `@qflow/studio-companion` package. Source imports instead name logical Modules,
-such as `@qflow/caption@1`. When learning from installed official source, translate its internal
-workspace imports to the corresponding public SDK paths in the project package.
+such as `@qflow/caption@1`. Declare the domain packages you import as ordinary dependencies;
+declare compatibility with the Qflow and Companion host APIs through peer dependencies. When learning
+from language-internal source, translate its private workspace imports to public Qflow SDK paths.
 
 Describe the Surface's role, attributes and outputs with a small valid example so a future author
 can select it. A visual preview makes its appearance recognizable; Studio shows the actual

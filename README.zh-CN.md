@@ -65,6 +65,9 @@ npx skills add qflow-ai/qflow -g
 这条命令安装 Skill。首次使用时，Agent 会检查 Qflow 可执行程序，并按需协助安装。
 视频项目可以放在任意位置。
 
+已有项目要升级到 0.3.1？先把[迁移指南](./migrations/0.3.1.md)
+交给 Agent，再一起调整安装版本和组件依赖。
+
 Qflow 本身免费使用；Coding Agent 和模型服务各有自己的账号与费用。
 QflowHub 是我们推荐的托管模型服务，也可以使用你自己的 API 或本地模型。
 把服务名称和 API 文档告诉 Agent，它会据此配置合适的连接。

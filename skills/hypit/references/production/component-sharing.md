@@ -122,9 +122,12 @@ JavaScript entry. Declare third-party runtime dependencies in `dependencies`. In
 an actual Source example, the public outputs, any companion or asset requirements, and the Qflow
 release used to check it. Inspect the tarball contents with `npm pack --dry-run`.
 
-An executable Author Package develops against the narrow `@qflow/qflow/author`, `producer`, `admission`
-and `markup` owners it actually needs, plus relevant domain subpaths, with `@qflow/qflow` as a development dependency. Its release contains its own code and assets;
-the active Qflow Distribution supplies the framework APIs when loading it. Check the package from a
+An executable Author Package uses the public APIs it needs, such as `@qflow/qflow/author`,
+`@qflow/qflow/producer`, `@qflow/qflow/admission` and `@qflow/qflow/markup`.
+Declare `@qflow/qflow` as a compatible peer and development dependency, and domain packages such as
+`@qflow/composition` or `@qflow/caption` as ordinary dependencies. A Studio Companion also declares
+compatibility with `@qflow/studio-companion` through a peer dependency. Its release contains its own
+code and assets; the selected host supplies the framework APIs. Check the package from a
 separate consumer project so local source links do not conceal omitted files or dependencies.
 
 Package code runs as trusted JavaScript in the host process. The recipient chooses which package and
@@ -141,10 +144,3 @@ A Prompt Kit can export an `.svs` Source through ordinary package `exports` with
 That reads the selected package data. The same packing, installation, versioning, and file-completeness
 rules apply. [Project handoff](../creation/project-files.md#hand-over-an-editable-production) explains
 sharing the Sources, Runs, assets and Results needed to continue a video on another machine.
-
-## Official Distribution ownership is a separate decision
-
-A package maintained in the official Qflow Distribution becomes part of Qflow's product and release
-surface. A proposal for that ownership begins with an issue that explains the shared production need
-and maintenance boundary. Community reuse remains under the package owner's own releases, independent
-of that product decision.

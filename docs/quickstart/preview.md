@@ -66,7 +66,8 @@ media sampling and motion as an encoded render. Check the actual picture when ad
 placement, graphic emphasis or coverage.
 
 The Timeline shows component appearances on a shared clock. Domain projections can also contribute
-mapping and evidence rows, while authored Instants and Windows share a temporal row. Select an Item to seek to it; playback, frame stepping,
+mapping and evidence rows, while resolved named Instants share a locator row. Window intervals are
+shown by the Track Items that use them. Select an Item to seek to it; playback, frame stepping,
 zoom and scrolling help examine a particular transition or layout.
 
 The Inspector shows the selected Item's properties. Editable fields and timeline handles depend

@@ -53,6 +53,25 @@ pnpm test          # 包与服务适配器测试
 
 ## 打包 Distribution
 
+### 0.3.1 的 SDK 导入迁移
+
+已有视频项目的准确导入映射、依赖调整与验证方法见
+[Agent 迁移指南](migrations/0.3.1.md)。
+
+视频领域 SDK 改为独立安装的包。组件代码使用 `@qflow/qflow/composition` 等旧根子路径时，
+需要改为从 `@qflow/composition` 导入，并在组件自己的 `dependencies` 中声明该包。
+Timeline、Temporal、Spatial、Media、Narrative、Caption、Generation、HTML Program、证据与
+投影包同理。使用子路径 API 时，以所属包实际导出为准，例如 `@qflow/temporal/markup`、
+`@qflow/temporal/studio`。通用宿主 API 继续由 `@qflow/qflow/*` 提供。
+SVML 的逻辑 Module 引用仍保持 `@1`，这里改变的是 npm 归属和 TypeScript 导入路径。
+
+根发行号定为 `0.3.1`，但上述 SDK 导入迁移与 `0.3.0` 并非源码兼容。
+需要一起更新根和受影响的组件依赖，然后由项目的普通包管理器更新 lockfile。
+已有领域包的新架构版本使用 `0.2.x`，避免旧 `^0.1.1` 依赖静默选择它们；
+原先内嵌的领域包从 `0.1.0` 开始，未变化的包保留原版本。
+
+### 构建与发布
+
 运行 `npm run pack:distribution`，构建公共类型并将发布 tarball 写入 `dist/release/`。
 脚本在临时目录中使用 npm 选定的文件，从英文 README 生成 npm 页面版本：使用公开图片地址，
 保留两个 GIF，并将完整视频示例改为链接。仓库的两份 README 保持原样。
@@ -86,6 +105,12 @@ Linux/Windows 检查，构建并检查打包后的 CLI，预检发布计划中�
 外部步骤仍可在原版本上重跑。已经附在 Release 上的文件会保留。
 push main、只 push 标签、或保存草稿 Release 都不会发布 npm。工作流不修改版本，也不创建标签。
 可见的 Release 可以早于 npm 发布成功；对外宣布该 npm 版本可用前，先看这次 Actions 的结果。
+
+独立包更新可在工作流的 **packages** 输入中填写空格分隔的准确包名，例如 `@qflow/studio`。
+完整候选仍需安装检查，但只预检和发布所选包；现有根依赖范围仍适用时，不需要为此发布根包。
+本地对应命令是 `node scripts/publish-release-candidate.mjs dist/release/release-plan.json --package=@qflow/studio`。
+发行依赖使用明确的兼容范围，例如 `workspace:^0.3.0`；打包只去掉 workspace 前缀，
+不会自动把兼容下限抬高到当前源码版本。
 
 npm 包的 Trusted Publisher 应配置 GitHub Actions：组织 `qflow-ai`、仓库 `qflow`、工作流
 `publish-npm.yml`，允许直接 `npm publish`，环境名称留空。发布 job 使用 OIDC，不需要保存 npm Token。

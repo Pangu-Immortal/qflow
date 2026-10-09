@@ -38,7 +38,7 @@ visual relationships rather than the nesting of tags in Source.
 ## A working drawing function
 
 [visuals.ts](examples/visuals.ts) contains `renderCard`, a complete pure drawing function using
-`sealVisualTrack` from `@qflow/qflow/composition`. It receives a projected span and a resolved Frame,
+`sealVisualTrack` from `@qflow/composition`. It receives a projected span and a resolved Frame,
 draws a colored box with exact-font text, and optionally fades in relative to the Present's start.
 Its colors, size, padding, layer and entrance duration are supplied by the caller. These drawing-function
 arguments need not all become Surface parameters: the owning component can supply its fixed design
@@ -55,7 +55,7 @@ then publish the Track through the Fragment and Surface as described in
 [Track authoring](track-authoring.md#connect-the-implementation-at-its-real-boundaries). Surface outputs
 map the Fragment's export name to a public Source name such as `answers.track`.
 
-Use `timelineFrameCount` from `@qflow/qflow/timeline` for the full Timeline's frame count and
+Use `timelineFrameCount` from `@qflow/timeline` for the full Timeline's frame count and
 `assertVisualTrackIdentity(track, timeline)` to check a produced Track against it. Direct seeking
 and range rendering evaluate the same declared keyframes at the requested frame.
 
@@ -94,7 +94,7 @@ make the required materials available both in Studio and in a render of any sele
 ## Compose video and graphics in one HTML visual
 
 When a scene's video viewport and graphics share motion or layout, one component can draw them
-together. `htmlVisual` from `@qflow/qflow/html-program` creates a `program` element's payload. Its HTML
+together. `htmlVisual` from `@qflow/html-program` creates a `program` element's payload. Its HTML
 owns the local structure; CSS supplies layout, stacking, masks, filters and blending; optional
 `setup(root, data)` code returns `render(localFrame)`. This function sets the complete state at that
 frame synchronously. A range render may start in the middle, so compute state from the frame and authored inputs.

@@ -60,7 +60,7 @@ deployment and executing a video Build have separate lifetimes.
 
 ## Add a Model
 
-Develop a project package against `@qflow/qflow/generation/model`, `@qflow/qflow/generation`,
+Develop a project package against `@qflow/generation/model`, `@qflow/generation`,
 `@qflow/qflow/author`, `@qflow/qflow/producer`, `@qflow/qflow/admission` and `@qflow/qflow/markup`.
 Declare the exact request ports, parameter values, result type and capability. Its author Surface
 connects prompt Text and reference media to the request, then publishes the resulting media as a

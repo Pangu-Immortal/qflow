@@ -15,8 +15,8 @@ qflow studio --run build.svrun
 
 Supply `--runtime <profile>` when intentionally using a different Profile from the project's
 `qflow runtime use` selection. Studio needs a Run whose selected targets reach one Film with resolved
-composition and time. The Timeline supplies the clock and any placed Script anchors for component
-lanes, including a pure animation with no performance clips. An image-generation-only Run is not a Film view; several distinct
+composition and time. The Timeline supplies the work's clock and extent; optional projections
+provide domain evidence such as Script anchors. Pure animation uses the same editor. An image-generation-only Run is not a Film view; several distinct
 Films need separate Runs or sessions.
 
 Open the URL actually printed by the process and retain it with the Run it serves. For review, open
@@ -52,7 +52,7 @@ qflow studio --check-locale ./studio-ja.json
 qflow studio --run build.svrun --locale-pack ./studio-ja.json
 ```
 
-For a new translation, copy `packages/studio/locales/en.json` from the installed Distribution.
+For a new translation, copy `locales/en.json` from the installed `@qflow/studio` package.
 Set `locale`, the native language `name`, and `direction` (`ltr` or `rtl`); translate `messages`
 while keeping their IDs and named variables such as `{count}`. Missing entries use English.
 The check command reports missing entries, unknown IDs and invalid variables without opening a Run.
@@ -60,7 +60,7 @@ Relative file paths start at the command's working directory. Repeat `--locale-p
 languages, or pass an installed package's JSON export instead, such as
 `--locale-pack @your-scope/studio-ja/locale.json`. A local file is enough; sharing it as a package
 is optional. Restart Studio to load changed language files. The installed
-`packages/studio/LOCALIZATION.md` covers plural forms and JSON package exports.
+`@qflow/studio` package's `LOCALIZATION.md` covers plural forms and JSON package exports.
 
 ## Discuss the work while composing
 
@@ -160,7 +160,7 @@ include when the user wants to continue editing on another machine.
 | --- | --- |
 | Source | The exact Run, Author and imported Source/Recipe files. Select a file and use Edit source; changes save automatically, and Cmd/Ctrl+S saves immediately. Check save/error state. This is not a project filesystem browser. |
 | Preview | The selected Film composition evaluated from its compiled `HtmlProgram` in the browser. Play or seek with the transport or timeline. Selecting a component-declared visual part selects its corresponding timeline Item; adjust its exposed position in the Inspector. |
-| Timeline | Projected domain evidence, authored Instants and Windows, plus component-projected Track Items and their visible intervals, materials or event lanes. A rectangle may describe occupancy, activation or persistent visibility; read the component's meaning. |
+| Timeline | Projected domain evidence, resolved named Instants, plus component-projected Track Items and their visible intervals, materials or event lanes. A rectangle may describe occupancy, activation or persistent visibility; read the component's meaning. |
 | Inspector | With nothing selected, project, Canvas, time and Run facts. For a selected Item, its declared read-only facts and adjustable fields, organized under Where, When and How where applicable. |
 | Tasks | One card per Build, grouped into ongoing and finished. Active status and progress come from the selected Runtime; completed, failed and cancelled Builds come from project Results. Cards retain the source Run, times and any failure or attention reason. |
 | Artifacts | Image, video and audio file Outputs from project Results, including those already published by ongoing Builds. Use the sidebar to choose all media, videos, images or audio. View media on a Build opens its Outputs; opening the Artifacts tab returns to project media. Structured Outputs such as normalized media and NarrativeAlignment stay intact and do not add their internal files to this gallery. Click a card to view it in the central preview; video and audio have playback and a time slider. Back to composition returns to the existing composition position. Previewing a file does not select it as a Candidate in the Run. |
@@ -168,9 +168,10 @@ include when the user wants to continue editing on another machine.
 A declared lane stays one row even when items overlap. Later items cover earlier ones at equal
 stacking order; selecting an item brings its full rectangle forward within that lane. This changes
 editor selection, not the Film's paint order. The same behavior applies to attached child lanes.
-The time ruler, each projection's mapping and evidence rows, and the shared authored temporal row
-form one pinned Timeline area. Empty information rows are omitted; a work without a domain
-projection keeps the ordinary time ruler and its authored temporal declarations.
+The time ruler, each projection's mapping and evidence rows, and the shared Instant row
+form one pinned Timeline area. A work without a domain projection keeps the ruler and Instant row.
+Window intervals appear through the Track Items that consume them; their references remain available
+in the owning Source and declared Inspector fields.
 Select an overlapping object to bring it forward, or right-click the overlap to choose one covered
 by its peers. This changes editor selection, not the composition.
 
@@ -219,11 +220,11 @@ through the selected Style. It edits the shared font declaration; its weight and
 available in the chosen family. A local font continues to use its exact file. A project component
 can offer its own font or preset choices through Companion fields.
 
-Timeline's declared Instants, Windows and complete extent provide reference information. Edit their
+Named Instants provide timeline locators. Windows remain reusable interval values. Edit their
 `at`, `from`, `until`, `for` and `end` declarations in Source when temporal construction should change.
 Edit the Timeline declaration or domain projection declaration that owns a temporal relationship.
 Clip editing handles its source occurrence; a component Companion handles its own Sources, Uses or
-events. Neither rewrites semantic projection or adjusts Canvas dimensions implicitly.
+events. Time handles follow the consumed value's declared inverse relationship to its owning Source.
 
 Timing edits follow the authored relationship. A direct Selection or Moment edits that identity
 in Script; a quoted expression edits its local clock value or offset; a duration changes independently.

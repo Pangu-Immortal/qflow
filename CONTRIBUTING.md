@@ -59,6 +59,27 @@ pnpm test          # package and service-adapter tests
 
 ## Package the Distribution
 
+### SDK imports in 0.3.1
+
+For an existing video project, follow the [Agent migration guide](migrations/0.3.1.md)
+for the exact import mapping, dependency update and verification steps.
+
+Video-domain SDKs are independently installed packages. Component code using a former root subpath,
+such as `@qflow/qflow/composition`, must import from `@qflow/composition` and declare that package
+in its own `dependencies`. The same applies to Timeline, Temporal, Spatial, Media, Narrative,
+Caption, Generation, HTML Program, evidence and projection packages. Import the subpath exported by
+the owning package when using an API such as `@qflow/temporal/markup` or `@qflow/temporal/studio`.
+Generic host APIs remain under `@qflow/qflow/*`. Logical SVML module references retain their `@1`
+identities; this change concerns npm ownership and TypeScript imports.
+
+The root release is `0.3.1`, but this SDK import migration is not source-compatible with `0.3.0`.
+Update the root and affected component dependencies together, then regenerate the project's ordinary
+package-manager lockfile. New-architecture versions of existing domain packages use the `0.2.x`
+line so that old `^0.1.1` dependencies do not silently select them. Previously embedded domain
+packages start at `0.1.0`; packages that did not change keep their existing versions.
+
+### Build and publish
+
 Run `npm run pack:distribution` to build public types and write the release tarball to
 `dist/release/`. This stages npm's selected files in a temporary directory and adapts the English
 README for the npm page: public image URLs, both GIFs, and a link to the full video examples.
@@ -73,7 +94,8 @@ and retains the temporary project on failure. The `npm package execution` workfl
 and is reused by publication; publication uploads the same tarball that was installed and executed.
 
 For a formal release, use the existing GitHub workflows. Commit the next stable npm version in
-`package.json` to `main`, then open
+`package.json` to `main`, then run **Actions → Publish npm → Run workflow** with **Publish to npm**
+unchecked to validate that exact commit on Linux and Windows. After it passes, open
 **Releases → Draft a new release**, choose that commit with tag `v<version>` (for example `v0.1.8`),
 write the release notes, and publish the Release. The tagged commit must contain this workflow.
 `Publish npm` verifies the tag/version match and that the commit belongs to main's history, runs
@@ -99,6 +121,14 @@ still be rerun without one. An existing Release attachment is retained.
 Pushing main, pushing a tag alone, or saving a draft Release does not publish npm. The workflow
 does not edit versions or create tags. A visible Release can precede successful npm publication;
 check its Actions result before announcing that the npm version is available.
+
+For an independent-package update, use the workflow's **packages** input with the exact space-separated
+names to publish, such as `@qflow/studio`. The full candidate is still installed and checked, but only
+the selected packages are preflighted and published; this does not require a new root version when
+the existing root dependency ranges remain valid. Locally the equivalent selection is
+`node scripts/publish-release-candidate.mjs dist/release/release-plan.json --package=@qflow/studio`.
+Workspace release dependencies use explicit compatibility ranges, such as `workspace:^0.3.0`;
+packing removes the workspace prefix without raising the minimum to the current checkout version.
 
 The npm package's Trusted Publisher settings must allow GitHub Actions from organization `qflow-ai`,
 repository `qflow`, workflow `publish-npm.yml`, with direct `npm publish` enabled and no environment

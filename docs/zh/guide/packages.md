@@ -34,9 +34,13 @@ Skill、可执行 Distribution 和视频项目分别安装与更新。`@qflow/qf
 
 Source 使用 `@your-studio/scoreboard@1` 这样的逻辑 Module 地址。npm 安装的包版本决定实际实现，逻辑 `@1` 标识作者接口。视频 Build 使用这些已安装的版本；缺包时会报告安装所需的信息。
 
+升级已有作品前，先阅读目标发行版的迁移说明，再调整可执行程序和组件依赖。
+[0.3.1 项目迁移指南](https://github.com/qflow-ai/qflow/blob/main/migrations/0.3.1.md)
+说明 SDK 导入调整与验证方法，保留已有素材和 Results。
+
 ## 编写与分享扩展
 
-外部包只使用自己实际需要的窄公共所有者，例如 `@qflow/qflow/author`、`@qflow/qflow/producer`、`@qflow/qflow/admission`、`@qflow/qflow/markup`、`@qflow/qflow/composition`、`@qflow/qflow/generation/model` 或 `@qflow/qflow/endpoint`。将选定的 `@qflow/qflow` 版本作为开发依赖，把扩展编译为 JavaScript，分发它自己的代码与素材。`package.json` 中的 activation 入口描述它提供的能力；加载选中的扩展时，当前 Distribution 提供公开 Qflow API。
+外部包只使用自己实际需要的窄公共所有者，例如 `@qflow/qflow/author`、`@qflow/qflow/producer`、`@qflow/qflow/admission`、`@qflow/qflow/markup`、`@qflow/composition`、`@qflow/generation/model` 或 `@qflow/qflow/endpoint`。将选定的 `@qflow/qflow` 版本作为开发依赖，把扩展编译为 JavaScript，分发它自己的代码与素材。`package.json` 中的 activation 入口描述它提供的能力；加载选中的扩展时，当前 Distribution 提供公开 Qflow API。
 
 - [添加作者包](./author-packages.md)：从随发行包提供的可构建组件开始。
 - [组件结构](./component-anatomy.md)：组件内部各部分的职责。
