@@ -10,7 +10,8 @@ The Runtime Profile binds the requested capability to an Endpoint.
 
 Qflow's official Distribution selects local Providers and the QflowHub Provider as defaults.
 TokenDance, HiAPI, Pollo, BeatAPI and Monid Providers are independently versioned optional npm packages, not default dependencies.
-Install the chosen Provider in the video project. Other services connect through packages owned by the
+Install the chosen Provider in the video project, e.g. `npm install @qflow/provider-hiapi`.
+Other services connect through packages owned by the
 production or their authors. The Agent can implement a new service through the public SDK, just as
 it can create a visual component for a video.
 [Model and deployment services](./service-partners.md) introduces independent partners through that

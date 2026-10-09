@@ -18,8 +18,14 @@ does not activate the service. Each Provider maps the installed models that serv
 that service's input limits, and its README lists both. A model the service offers beyond that set connects through the ordinary
 [Model and Provider](./providers.md) extension path.
 
+In the video project, run only the command for the selected service:
+
 ```bash
 npm install @qflow/provider-tokendance
+npm install @qflow/provider-hiapi
+npm install @qflow/provider-pollo
+npm install @qflow/provider-beatapi
+npm install @qflow/provider-monid
 ```
 
 ## Model and tool API partners
