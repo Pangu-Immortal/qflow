@@ -208,7 +208,7 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
 
 扫码添加 Qflow 小助手加入微信群：
 
-<img alt="扫码添加 Qflow 小助手加入微信群" src="./docs/public/wechat-group.jpg?v=12" width="320">
+<img alt="扫码添加 Qflow 小助手加入微信群" src="./docs/public/wechat-assistant.jpg" width="320">
 
 ## Launch 伙伴
 
