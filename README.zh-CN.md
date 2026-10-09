@@ -206,7 +206,7 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
   </tr>
   <tr>
     <td>旧项目升级</td>
-    <td><a href="./migrations/0.3.md">迁移指南</a></td>
+    <td><a href="./migrations/0.3.zh-CN.md">0.3 迁移指南</a> · <a href="./migrations/0.3.1.zh-CN.md">0.3.1 SDK 迁移指南</a></td>
   </tr>
 </table>
 

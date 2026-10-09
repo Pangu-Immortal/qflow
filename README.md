@@ -214,7 +214,7 @@ commands and the repository layout.
   </tr>
   <tr>
     <td>Upgrading existing projects</td>
-    <td><a href="./migrations/0.3.md">Migration guide</a></td>
+    <td><a href="./migrations/0.3.md">0.3 migration guide</a> · <a href="./migrations/0.3.1.md">0.3.1 SDK migration guide</a></td>
   </tr>
 </table>
 
