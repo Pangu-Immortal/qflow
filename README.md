@@ -65,10 +65,6 @@ npx skills add qflow-ai/qflow -g
 This installs the Skill. On first use, your agent checks for the Qflow executable and helps prepare
 it if needed. Your video project can live anywhere.
 
-Upgrading an existing project to 0.3? Give your agent the
-[migration guide](./migrations/0.3.md) before updating its installation and project files.
-It also links to the specific 0.3.0 → 0.3.1 dependency changes.
-
 Qflow is free to use; your Coding Agent and model services have their own accounts and charges.
 QflowHub is our recommended hosted model service. You can also use your own API or local models;
 tell your agent the service name and API documentation so it can set up the appropriate connection.
@@ -215,6 +211,10 @@ commands and the repository layout.
   <tr>
     <td>Questions</td>
     <td><a href="https://discord.gg/85hnyQnxpn">Discord</a> or <a href="https://t.me/qflowai">Telegram</a></td>
+  </tr>
+  <tr>
+    <td>Upgrading existing projects</td>
+    <td><a href="./migrations/0.3.md">Migration guide</a></td>
   </tr>
 </table>
 
