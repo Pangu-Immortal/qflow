@@ -16,8 +16,9 @@ A tier board preserves its state while the argument, Caption and overlapping ima
   during their spoken Segments. These real identifiers are intentionally not generated lookalikes.
 - `shared-soundtrack.m4a`, `ranking-appear.wav` and `ranking-move.wav` are supplied audio assets.
 
-The image prompts, reference bindings and Action are in the Source. The copied image/speaker Kits
-are in `kits/`; [recipes.svs](recipes.svs) owns appearance and the speaker's pause-trim direction.
+The image prompts, reference bindings and Action are in the Source. The image and speaker Kits are
+imported from `@qflow/gpt-image-kits/phone-ugc-v1` and `@qflow/seedance-kits/speaker`;
+[recipes.svs](recipes.svs) owns appearance and the speaker's pause-trim direction.
 The speaker Kit requests natural edited delivery; it does not perform a postprocessing trim.
 The B-roll uses its own visual language: theatrical tragedy, product comedy, sports photography or
 parody UI. It does not automatically inherit the host's iPhone capture paragraph.
@@ -28,18 +29,22 @@ The example Profiles use local media/rendering and QflowHub for hosted capabilit
 execution choices; connect the intended account or select project Providers before paid work.
 Existing production projects can retain their own Providers independently of these example defaults.
 
-With a configured Runtime and installed Distribution, run from this directory:
+Run `npm ci` in this directory to install the locked Qflow, fonts and
+[`@qflow/ranking`](https://www.npmjs.com/package/@qflow/ranking) dependencies from npm.
+The nested banana projects have their own dependency manifests and can be installed independently.
+With a configured Runtime, run from the chosen project directory:
 
 ```bash
-qflow check reference.svrun
-qflow estimate reference.svml --segment ronaldo --language en --pace fast --rounding ceil
-qflow estimate reference.svml --segment messi --language en --pace fast --rounding ceil
-qflow plan reference.svrun --runtime ./qflow.runtime.json
+npm ci
+npx qflow check reference.svrun
+npx qflow estimate reference.svml --segment ronaldo --language en --pace fast --rounding ceil
+npx qflow estimate reference.svml --segment messi --language en --pace fast --rounding ceil
+npx qflow plan reference.svrun --runtime ./qflow.runtime.json
 ```
 
 Both passages estimate to nine seconds at that delivery policy; the authored ten-second requests
 allow room for expression. Read the plan and its Endpoint/pricing information before authorizing paid
-work. Under that authorization, `qflow build reference.svrun --runtime ./qflow.runtime.json --follow`
+work. Under that authorization, `npx qflow build reference.svrun --runtime ./qflow.runtime.json --follow`
 produces the final video. Watch the actual result and reuse its media outputs when refining graphics.
 
 When changing the ranked subjects, use supplied photographs or search for recognizable real

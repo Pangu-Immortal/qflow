@@ -19,10 +19,19 @@ accepted performance clips, recorded demonstrations, pixel graphics and sound; i
 the supplied material.
 
 Self-contained here means a project directory: SVML, its imported SVS/Kits and the selected local
-assets. The installed Qflow Distribution supplies the imported packages. A Runtime Profile and
-credentials supply execution; the Sources contain neither. Real identifiers, prepared reveal art,
+assets. Qflow supplies the base video capabilities; each project's `package.json` declares any
+additional components and fonts. A Runtime Profile and credentials supply execution; the Sources
+contain neither. Real identifiers, prepared reveal art,
 music and sound effects may remain explicit local assets. Copy the whole example directory when
 using it outside this repository.
+
+Football ranking and Street interview include npm lockfiles. In the selected project directory,
+run `npm ci`, then `npx qflow check reference.svrun`. Their dependencies install
+[`@qflow/ranking`](https://www.npmjs.com/package/@qflow/ranking) and
+[`@qflow/interview-emoji-reveal`](https://www.npmjs.com/package/@qflow/interview-emoji-reveal),
+respectively. Interview's Flash component stays in its own `packages/flash` directory.
+The nested ranking variants each have their own manifest, lockfile and Run; follow their README
+from that directory. Installation and Source checks do not submit generation requests.
 
 The other `swap-*` and nested projects preserve separate variations and reuse studies. They have not
 all been rebuilt to the same generation standard as these three reference entries. A linked showcase

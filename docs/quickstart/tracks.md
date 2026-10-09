@@ -360,6 +360,10 @@ part of the default Qflow installation. Add the selected published version to th
 | `ranking:Column` | `ranking:ColumnItem` | `ranking:ColumnStyle` |
 | `ranking:TopThree` | `ranking:TopThreeItem` | `ranking:TopThreeStyle` |
 
+```bash
+npm install @qflow/ranking
+```
+
 ```svml
 <import as="ranking" from="@qflow/ranking@1"/>
 ```
@@ -420,6 +424,10 @@ A deck holds cards in depth: one is in front, the others recede behind it, and e
 on an Instant. Where a Visual Clip places one shot in one Frame, a deck keeps a stack of them in the
 same Frame and moves the whole stack.
 
+```bash
+npm install @qflow/depth-stack
+```
+
 ```svml
 <import as="deck" from="@qflow/depth-stack@1"/>
 ```
@@ -461,6 +469,10 @@ give both and it is refused. `size`, `color`, `align`, `block` and `padding` are
 
 Social-style comment cards placed in a Frame: an avatar, an author, the comment itself, and an
 optional metadata line.
+
+```bash
+npm install @qflow/comment-sticker
+```
 
 ```svml
 <import as="comment" from="@qflow/comment-sticker@1"/>

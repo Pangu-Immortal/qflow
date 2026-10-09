@@ -28,7 +28,7 @@ holding views each use that host's own image plus the same generated tub. The th
 branch directly from the main host. None depends on another lifestyle scene or a previous video tail.
 The historical `*-qflowhub` image files are not inputs to this entry.
 
-The image prompts use the copied phone-image Kit. A product-only prompt directly describes the
+The image prompts import `@qflow/gpt-image-kits/phone-ugc-v1`. A product-only prompt directly describes the
 creatine packaging. [reference.svs](reference.svs) owns this entry's appearance and video-Kit choices;
 `recipes.svs` remains available to the independent variants.
 

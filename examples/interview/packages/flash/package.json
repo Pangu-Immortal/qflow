@@ -10,15 +10,15 @@
     "activation": "./src/activation.ts"
   },
   "peerDependencies": {
-    "@qflow/qflow": "workspace:^0.3.1"
+    "@qflow/qflow": "^0.3.1"
   },
   "devDependencies": {
-    "@qflow/qflow": "workspace:*"
+    "@qflow/qflow": "^0.3.1"
   },
   "dependencies": {
-    "@qflow/composition": "workspace:^0.1.0",
-    "@qflow/spatial": "workspace:^0.1.0",
-    "@qflow/temporal": "workspace:^0.1.0",
-    "@qflow/timeline": "workspace:^0.1.0"
+    "@qflow/composition": "^0.1.0",
+    "@qflow/spatial": "^0.1.0",
+    "@qflow/temporal": "^0.1.0",
+    "@qflow/timeline": "^0.1.0"
   }
 }

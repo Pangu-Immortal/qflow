@@ -298,6 +298,10 @@ Qflow 安装。使用前先把所选发布版本写入视频项目的普通 `pac
 | `ranking:Column` | `ranking:ColumnItem` | `ranking:ColumnStyle` |
 | `ranking:TopThree` | `ranking:TopThreeItem` | `ranking:TopThreeStyle` |
 
+```bash
+npm install @qflow/ranking
+```
+
 ```svml
 <import as="ranking" from="@qflow/ranking@1"/>
 ```
@@ -347,6 +351,10 @@ Qflow 安装。使用前先把所选发布版本写入视频项目的普通 `pac
 
 卡片堆按深度排布卡片：一张在最前，其余向后退去，每张新卡在一个 Instant 上发出。Visual Clip 是把一个镜头放进一个 Frame，而卡片堆是在同一个 Frame 里维持一叠并整体移动它们。
 
+```bash
+npm install @qflow/depth-stack
+```
+
 ```svml
 <import as="deck" from="@qflow/depth-stack@1"/>
 ```
@@ -386,6 +394,10 @@ DepthStack 的直接子元素，自闭合，至少一张，按书写顺序发出
 ## 评论贴纸
 
 放置在 Frame 中的社交风格评论卡：头像、作者、评论正文，以及可选的一行附注。
+
+```bash
+npm install @qflow/comment-sticker
+```
 
 ```svml
 <import as="comment" from="@qflow/comment-sticker@1"/>

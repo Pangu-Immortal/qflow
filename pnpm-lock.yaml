@@ -381,20 +381,20 @@ importers:
   examples/interview/packages/flash:
     dependencies:
       '@qflow/composition':
-        specifier: workspace:^0.1.0
+        specifier: ^0.1.0
         version: link:../../../../packages/composition
       '@qflow/spatial':
-        specifier: workspace:^0.1.0
+        specifier: ^0.1.0
         version: link:../../../../packages/spatial
       '@qflow/temporal':
-        specifier: workspace:^0.1.0
+        specifier: ^0.1.0
         version: link:../../../../packages/temporal
       '@qflow/timeline':
-        specifier: workspace:^0.1.0
+        specifier: ^0.1.0
         version: link:../../../../packages/timeline
     devDependencies:
       '@qflow/qflow':
-        specifier: workspace:*
+        specifier: ^0.3.1
         version: link:../../../..
 
   examples/minimal-author-package/packages/example-component:
