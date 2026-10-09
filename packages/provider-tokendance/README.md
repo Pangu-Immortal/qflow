@@ -1,5 +1,11 @@
 # `@qflow/provider-tokendance`
 
+Install in the video project alongside Qflow:
+
+```bash
+npm install @qflow/provider-tokendance
+```
+
 Qflow Runtime Provider for a [TokenDance](https://tokendance.space) account. It submits generation
 requests with a TokenDance API key through the gateway protocols TokenDance documents for each model
 and stores the returned files in the current Build.

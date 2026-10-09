@@ -1,5 +1,11 @@
 # `@qflow/provider-pollo`
 
+Install in the video project alongside Qflow:
+
+```bash
+npm install @qflow/provider-pollo
+```
+
 Qflow Runtime Provider for a [Pollo AI](https://docs.pollo.ai) API platform account. Each capability
 posts `{ "input": … }` to the model's generation path with the `x-api-key` header, polls
 `GET /v1/generation/{taskId}/status` until every generation reaches `succeed`, downloads each

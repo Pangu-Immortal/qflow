@@ -1,5 +1,11 @@
 # `@qflow/comment-sticker`
 
+Install in the video project alongside Qflow:
+
+```bash
+npm install @qflow/comment-sticker
+```
+
 The Track Surface accepts `timeline={program.timeline}`. Each Sticker consumes an already declared
 absolute Window; semantic or other domain coordinates are projected upstream.
 

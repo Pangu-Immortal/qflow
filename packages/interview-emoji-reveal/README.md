@@ -1,5 +1,11 @@
 # Emoji Reveal
 
+Install in the video project alongside Qflow:
+
+```bash
+npm install @qflow/interview-emoji-reveal
+```
+
 The EmojiReveal Surface accepts one completed Timeline, an absolute outer Window and absolute reveal
 Instants. A Narrative or other domain projector may publish those values upstream.
 
@@ -28,7 +34,6 @@ answers remain and later slots remain unanswered.
 </emoji:EmojiReveal>
 ```
 
-`Selection`, `Segment` and a `boundary` fallback are deliberately not part of an Item's vocabulary.
 The component consumes the shared `Timeline`, the outer Window and resolved Instants; it does not
 interpret Script semantics itself and has no Studio dependency.
 

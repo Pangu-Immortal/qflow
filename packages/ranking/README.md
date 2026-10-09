@@ -1,5 +1,11 @@
 # `@qflow/ranking`
 
+Install in the video project alongside Qflow:
+
+```bash
+npm install @qflow/ranking
+```
+
 The Track Surface accepts one completed Timeline plus absolute Windows and Instants. Those values
 may be authored directly or published by a domain projector upstream.
 
@@ -64,5 +70,5 @@ the project's own package, with its own Module identity, instead of editing the 
 
 The Companion uses published values and temporal lineage, so a visible row and its reveal handle can
 represent different spans. Moving the authored semantic boundary changes the shared event and its
-consumers; editing a Style changes its appearance. [Studio Companion](../studio-companion/README.md)
+consumers; editing a Style changes its appearance. [Studio Companion](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md)
 contains a minimal project Companion and the exact presentation/editing interface.

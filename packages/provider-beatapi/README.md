@@ -1,5 +1,11 @@
 # `@qflow/provider-beatapi`
 
+Install in the video project alongside Qflow:
+
+```bash
+npm install @qflow/provider-beatapi
+```
+
 Qflow Runtime Provider for a [BeatAPI](https://docs.beatapi.io/quick-guide) account. Each capability
 posts one task to `https://api.beatapi.io` with a `Bearer` API key, polls `GET /v1/tasks/{task_id}`
 until it reaches `succeeded`, downloads every entry of `output.media` and stores the files in the
