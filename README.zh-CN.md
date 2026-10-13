@@ -241,6 +241,17 @@ Agent 会检查环境，索要这条视频需要的凭据，生成素材并构�
   </tr>
   <tr>
     <td width="220" align="center">
+      <a href="https://agentsky.dev/">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./docs/public/agentsky-dark.png">
+          <img alt="AgentSky" src="./docs/public/agentsky-light.png" width="165">
+        </picture>
+      </a>
+    </td>
+    <td><a href="https://agentsky.dev/">AgentSky</a> 是一个用于运行 Claude Code、Codex、OpenClaw 和 Hermes 等 AI 智能体的云平台。每个智能体都在独立的云端计算机上运行，帮助用户完成编程、研究和日常任务。通过 CLI 和 MCP 集成，用户可以直接在现有工作流程中发现智能体、委派任务并获取结果。</td>
+  </tr>
+  <tr>
+    <td width="220" align="center">
       <a href="https://autoclaw.zhipuai.cn/"><img alt="AutoClaw" src="./docs/public/autoclaw.png" width="180"></a>
     </td>
     <td><a href="https://autoclaw.zhipuai.cn/">AutoClaw</a> 是智谱推出的桌面端 AI 工作助手，深度适配 GLM 模型，融合法律、金融、设计等领域的专属知识库与工作流。</td>

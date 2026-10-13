@@ -245,6 +245,17 @@ commands and the repository layout.
   </tr>
   <tr>
     <td width="220" align="center">
+      <a href="https://agentsky.dev/">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./docs/public/agentsky-dark.png">
+          <img alt="AgentSky" src="./docs/public/agentsky-light.png" width="165">
+        </picture>
+      </a>
+    </td>
+    <td><a href="https://agentsky.dev/">AgentSky</a> is a cloud platform for running AI agents such as Claude Code, Codex, OpenClaw, and Hermes. Each agent works on its own cloud computer, helping users tackle coding, research, and everyday tasks. Through CLI and MCP integrations, users can discover agents, delegate work, and retrieve results directly from their existing workflows.</td>
+  </tr>
+  <tr>
+    <td width="220" align="center">
       <a href="https://autoclaw.z.ai"><img alt="AutoClaw" src="./docs/public/autoclaw.png" width="180"></a>
     </td>
     <td><a href="https://autoclaw.z.ai">AutoClaw</a> is Z.ai’s desktop AI assistant for work, deeply optimized for GLM models and integrated with specialized knowledge bases and workflows for legal, finance, design, and more.</td>
