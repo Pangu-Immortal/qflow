@@ -27,6 +27,7 @@
     "@qflow/gpt-image": "workspace:^0.2.0",
     "@qflow/gpt-image-kits": "workspace:^0.1.1",
     "@qflow/grok-imagine": "workspace:^0.2.0",
+    "@qflow/html-document": "workspace:^0.1.0",
     "@qflow/html-program": "workspace:^0.1.0",
     "@qflow/html-video": "workspace:^0.2.0",
     "@qflow/image-operations": "workspace:^0.2.0",

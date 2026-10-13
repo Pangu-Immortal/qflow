@@ -1,0 +1,21 @@
+{
+  "name": "@qflow/html-document",
+  "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["dist", "src", "README.md"],
+  "qflow": { "activation": "./src/activation.ts" },
+  "dependencies": {
+    "@qflow/composition": "workspace:^0.1.0",
+    "@qflow/html-program": "workspace:^0.1.0",
+    "@qflow/media-operations": "workspace:^0.2.0",
+    "@qflow/temporal": "workspace:^0.1.0",
+    "@qflow/timeline": "workspace:^0.1.0",
+    "linkedom": "0.18.13"
+  },
+  "peerDependencies": { "@qflow/qflow": "workspace:^0.3.1" }
+}

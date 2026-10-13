@@ -120,6 +120,9 @@ importers:
       '@qflow/grok-imagine':
         specifier: workspace:*
         version: link:packages/grok-imagine
+      '@qflow/html-document':
+        specifier: workspace:*
+        version: link:packages/html-document
       '@qflow/html-program':
         specifier: workspace:*
         version: link:packages/html-program
@@ -1268,6 +1271,30 @@ importers:
       '@qflow/text':
         specifier: workspace:*
         version: link:../text
+
+  packages/html-document:
+    dependencies:
+      '@qflow/composition':
+        specifier: workspace:^0.1.0
+        version: link:../composition
+      '@qflow/html-program':
+        specifier: workspace:^0.1.0
+        version: link:../html-program
+      '@qflow/qflow':
+        specifier: workspace:^0.3.1
+        version: link:../..
+      '@qflow/media-operations':
+        specifier: workspace:^0.2.0
+        version: link:../media-operations
+      '@qflow/temporal':
+        specifier: workspace:^0.1.0
+        version: link:../temporal
+      '@qflow/timeline':
+        specifier: workspace:^0.1.0
+        version: link:../timeline
+      linkedom:
+        specifier: 0.18.13
+        version: 0.18.13
 
   packages/html-program:
     dependencies:
@@ -2733,6 +2760,9 @@ importers:
       '@qflow/grok-imagine':
         specifier: workspace:^0.2.0
         version: link:../grok-imagine
+      '@qflow/html-document':
+        specifier: workspace:^0.1.0
+        version: link:../html-document
       '@qflow/html-program':
         specifier: workspace:^0.1.0
         version: link:../html-program

@@ -68,3 +68,10 @@ fonts, images and frame listeners before pixels are accepted.
 There is no raw-HTML reverse compiler. A snapshot or Provider receives the typed
 `HtmlProgram` produced by compilation; generated HTML is not treated as a second
 source language.
+
+## Browser playback
+
+Hosts import `injectRuntimeShim` from `@qflow/html-program/playback` to add
+frame playback to materialized HTML. The script provides `__qflowSeekFrame`,
+`__qflowPlayFrame` and `__qflowSetMuted`; the host supplies playback controls
+and serves the referenced materials.

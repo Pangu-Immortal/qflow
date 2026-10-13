@@ -258,6 +258,7 @@
     "@qflow/gpt-image": "workspace:*",
     "@qflow/gpt-image-kits": "workspace:*",
     "@qflow/grok-imagine": "workspace:*",
+    "@qflow/html-document": "workspace:*",
     "@qflow/html-program": "workspace:*",
     "@qflow/image-operations": "workspace:*",
     "@qflow/interview-emoji-reveal": "workspace:*",
