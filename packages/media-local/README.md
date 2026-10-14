@@ -70,6 +70,12 @@ The Endpoint:
 
 Normalize preserves alpha: transparent input becomes VP9 / `yuva420p` WebM, while opaque input
 uses H.264 / `yuv420p` MP4. The input pixel format and WebM alpha metadata determine the choice.
+Opaque H.264 / `yuv420p` video in Baseline, Main or High profiles up to level 4.1 can reuse its encoded
+frames when every decoded frame has the exact
+target timestamp and duration, the planned frame count, even dimensions, square pixels and zero
+display rotation. A single-video-stream MP4 is reused directly; other matching inputs are remuxed
+into a silent MP4 and checked before use. Reused video retains the source's decoded pixels.
+Selected audio follows the same sample-alignment processing described above.
 Animated WebP is also normalized through an alpha-capable output. Transparent VP8/VP9 input uses libvpx
 decoders so FFmpeg retains the alpha sidecar, including during PNG frame extraction.
 Transparent normalization requires an FFmpeg build with the `libvpx-vp9` encoder; the normal

@@ -32,6 +32,7 @@ import type { BlobRef, CanonicalValue, StoredValue } from "@qflow/qflow/protocol
 
 import { runBoundedMediaProcess } from "./process.js";
 import { parseMediaInspection } from "./probe.js";
+import { normalizedVideoFrames, normalizedVideoSpan } from "./normalize-copy.js";
 import {
   compositeAnimatedWebpFrame,
   createAnimatedWebpCanvas,
@@ -572,13 +573,14 @@ export async function executeInspectMedia(
 async function sourceVideoEncoding(env: MediaExecutionEnvironment, path: string, streamIndex: number) {
   const bytes = await runProcess({
     executable: env.ffprobePath,
-    argv: ["-v", "error", "-print_format", "json", "-show_streams", "-show_pixel_formats", path],
+    argv: ["-v", "error", "-print_format", "json", "-show_streams", "-show_pixel_formats", "-show_format", path],
     timeoutMs: env.processTimeoutMs, maxStdoutBytes: env.maxProbeOutputBytes,
     ...(env.sharedLibraryPath === undefined ? {} : { sharedLibraryPath: env.sharedLibraryPath }),
   });
   const probe = JSON.parse(Buffer.from(bytes).toString("utf8")) as {
-    streams: { index: number; codec_name?: string; pix_fmt?: string; tags?: Record<string, string> }[];
+    streams: { index: number; codec_name?: string; profile?: string; level?: number; pix_fmt?: string; time_base?: string; sample_aspect_ratio?: string; width?: number; height?: number; tags?: Record<string, string>; side_data_list?: { rotation?: number }[] }[];
     pixel_formats: { name: string; flags: { alpha: number } }[];
+    format?: { nb_streams?: number; format_name?: string };
   };
   const stream = probe.streams.find((item) => item.index === streamIndex);
   assert(stream !== undefined, `Media source has no video stream ${streamIndex}`);
@@ -591,8 +593,72 @@ async function sourceVideoEncoding(env: MediaExecutionEnvironment, path: string,
     : stream.codec_name === "vp9" ? "libvpx-vp9" : stream.codec_name === "vp8" ? "libvpx" : undefined;
   return {
     alpha,
+    pixelFormat: stream.pix_fmt,
+    stream,
+    formatNames: probe.format?.format_name?.split(",") ?? [],
+    streamCount: probe.format?.nb_streams,
     inputArgs: decoder === undefined ? [] : [`-c:${streamIndex}`, decoder],
   };
+}
+
+async function copyNormalizedVisual(args: {
+  env: MediaExecutionEnvironment;
+  source: BlobRef;
+  video: MediaVideoStream;
+  frameRate: MediaRational;
+  frameCount: number;
+  encoding: Awaited<ReturnType<typeof sourceVideoEncoding>>;
+  input: string;
+  output: string;
+}): Promise<BlobRef | undefined> {
+  const { env, source, video, frameRate, frameCount, encoding, input, output } = args;
+  const stream = encoding.stream;
+  if (encoding.alpha || encoding.pixelFormat !== "yuv420p" || stream.codec_name !== "h264"
+    || !["Constrained Baseline", "Baseline", "Main", "High"].includes(stream.profile ?? "")
+    || stream.level === undefined || stream.level < 10 || stream.level > 41
+    || video.codecName !== "h264" || video.width % 2 !== 0 || video.height % 2 !== 0
+    || stream.width !== video.width || stream.height !== video.height
+    || stream.time_base !== `${video.timeBase?.numerator}/${video.timeBase?.denominator}`
+    || (stream.sample_aspect_ratio !== undefined && stream.sample_aspect_ratio !== "1:1")
+    || Object.entries(stream.tags ?? {}).some(([name, value]) => name.toLowerCase() === "rotate" && Number(value) !== 0)
+    || stream.side_data_list?.some((side) => side.rotation !== undefined && side.rotation !== 0)
+    || video.rotationDegrees !== 0 || video.sampleAspectRatio.numerator !== video.sampleAspectRatio.denominator
+    || !normalizedVideoSpan(video, frameRate, frameCount)) return undefined;
+  let inspected: MediaInspection;
+  try {
+    const raw = await runProcess({
+      executable: env.ffprobePath,
+      argv: ["-v", "error", "-print_format", "json", "-select_streams", String(video.index),
+        "-show_frames", "-show_entries", "frame=pts,duration,pkt_duration,width,height,pix_fmt,sample_aspect_ratio,interlaced_frame:frame_side_data=rotation", input],
+      timeoutMs: env.processTimeoutMs, maxStdoutBytes: env.maxProbeOutputBytes,
+      ...(env.sharedLibraryPath === undefined ? {} : { sharedLibraryPath: env.sharedLibraryPath }),
+    });
+    const probe = JSON.parse(Buffer.from(raw).toString("utf8")) as {
+      frames?: Parameters<typeof normalizedVideoFrames>[3];
+    };
+    if (!normalizedVideoFrames(video, frameRate, frameCount, probe.frames ?? [])) return undefined;
+    if (source.mediaType === "video/mp4" && encoding.formatNames.includes("mp4") && encoding.streamCount === 1)
+      return source;
+    await runProcess({
+      executable: env.ffmpegPath,
+      argv: ["-y", "-copyts", "-i", input, "-map", `0:${video.index}`, "-an", "-sn", "-dn",
+        "-map_metadata", "-1", "-c:v", "copy", "-avoid_negative_ts", "disabled", "-movflags", "+faststart", output],
+      timeoutMs: env.processTimeoutMs, maxStdoutBytes: 64 * 1024,
+      ...(env.sharedLibraryPath === undefined ? {} : { sharedLibraryPath: env.sharedLibraryPath }),
+    });
+    inspected = await outputInspection({
+      path: output, mediaType: "video/mp4", ffprobePath: env.ffprobePath,
+      timeoutMs: env.processTimeoutMs, maxProbeOutputBytes: env.maxProbeOutputBytes,
+      ...(env.sharedLibraryPath === undefined ? {} : { sharedLibraryPath: env.sharedLibraryPath }),
+    });
+  } catch {
+    return undefined;
+  }
+  const visual = inspected.streams.find((item): item is MediaVideoStream => item.kind === "video");
+  if (!visual || !normalizedVideoSpan(visual, frameRate, frameCount) || inspected.streams.length !== 1
+    || visual.width !== video.width || visual.height !== video.height || visual.rotationDegrees !== 0
+    || visual.sampleAspectRatio.numerator !== 1 || visual.sampleAspectRatio.denominator !== 1) return undefined;
+  return await env.artifacts.putFile(output, "video/mp4");
 }
 
 export async function executeNormalizeMedia(
@@ -614,7 +680,7 @@ export async function executeNormalizeMedia(
     if (plan.video !== undefined) {
       const encoding = animation === undefined
         ? await sourceVideoEncoding(env, input, plan.video.index)
-        : { alpha: true, inputArgs: [] };
+        : { alpha: true, pixelFormat: undefined, stream: { index: plan.video.index }, formatNames: [], streamCount: undefined, inputArgs: [] };
       const outputType = encoding.alpha ? "video/webm" : "video/mp4";
       const output = join(work, encoding.alpha ? "visual.webm" : "visual.mp4");
       const fps = `${need.frameRate.numerator}/${need.frameRate.denominator}`;
@@ -642,31 +708,40 @@ export async function executeNormalizeMedia(
           "-row-mt", "1", "-deadline", "realtime", "-cpu-used", "8",
         ]
         : ["-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-movflags", "+faststart"];
-      await runProcess({
-        executable: env.ffmpegPath,
-        argv: ["-y", ...visualInput, "-an", "-vf", filter,
-          "-frames:v", String(plan.frameCount), "-r", fps, "-fps_mode", "cfr", ...encoderArgs, output],
-        timeoutMs: env.processTimeoutMs,
-        maxStdoutBytes: 64 * 1024,
-        ...(env.sharedLibraryPath === undefined ? {} : { sharedLibraryPath: env.sharedLibraryPath }),
-      });
-      const inspected = await outputInspection({
-        path: output,
-        mediaType: outputType,
-        ffprobePath: env.ffprobePath,
-        timeoutMs: env.processTimeoutMs,
-        maxProbeOutputBytes: env.maxProbeOutputBytes,
-        ...(env.sharedLibraryPath === undefined ? {} : { sharedLibraryPath: env.sharedLibraryPath }),
-      });
-      const visual = inspected.streams.find((item): item is MediaVideoStream => item.kind === "video");
-      assert(visual?.decodedUnitCount === plan.frameCount && visual.role === "moving",
-        "Normalized visual frame shape differs from its plan");
-      assert(visual.sampleAspectRatio.numerator === 1 && visual.sampleAspectRatio.denominator === 1
-        && visual.rotationDegrees === 0,
-      "Normalized visual retains non-square samples or display rotation");
-      visualArtifact = await env.artifacts.putFile(output, outputType);
-      visualWidth = visual.width;
-      visualHeight = visual.height;
+      visualArtifact = animation === undefined
+        ? await copyNormalizedVisual({ env, source: need.source, video: plan.video, frameRate: need.frameRate,
+          frameCount: plan.frameCount, encoding, input, output })
+        : undefined;
+      if (visualArtifact) {
+        visualWidth = plan.video.width;
+        visualHeight = plan.video.height;
+      } else {
+        await runProcess({
+          executable: env.ffmpegPath,
+          argv: ["-y", ...visualInput, "-an", "-vf", filter,
+            "-frames:v", String(plan.frameCount), "-r", fps, "-fps_mode", "cfr", ...encoderArgs, output],
+          timeoutMs: env.processTimeoutMs,
+          maxStdoutBytes: 64 * 1024,
+          ...(env.sharedLibraryPath === undefined ? {} : { sharedLibraryPath: env.sharedLibraryPath }),
+        });
+        const inspected = await outputInspection({
+          path: output,
+          mediaType: outputType,
+          ffprobePath: env.ffprobePath,
+          timeoutMs: env.processTimeoutMs,
+          maxProbeOutputBytes: env.maxProbeOutputBytes,
+          ...(env.sharedLibraryPath === undefined ? {} : { sharedLibraryPath: env.sharedLibraryPath }),
+        });
+        const visual = inspected.streams.find((item): item is MediaVideoStream => item.kind === "video");
+        assert(visual?.decodedUnitCount === plan.frameCount && visual.role === "moving",
+          "Normalized visual frame shape differs from its plan");
+        assert(visual.sampleAspectRatio.numerator === 1 && visual.sampleAspectRatio.denominator === 1
+          && visual.rotationDegrees === 0,
+        "Normalized visual retains non-square samples or display rotation");
+        visualArtifact = await env.artifacts.putFile(output, outputType);
+        visualWidth = visual.width;
+        visualHeight = visual.height;
+      }
     }
     let audioArtifact: BlobRef | undefined;
     if (plan.audio !== undefined) {
