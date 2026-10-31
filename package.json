@@ -276,6 +276,7 @@
     "@qflow/protocol": "workspace:*",
     "@qflow/markup": "workspace:*",
     "@qflow/run": "workspace:*",
+    "@qflow/provider-dashscope": "workspace:*",
     "@qflow/provider-beatapi": "workspace:*",
     "@qflow/provider-hiapi": "workspace:*",
     "@qflow/provider-html-local": "workspace:*",

@@ -6,7 +6,7 @@ import { defineExactModelModule } from "@qflow/generation/model";
 import { textTypes } from "@qflow/qflow/text";
 
 export const wanModuleRef = { name: "@qflow/wan", version: "1" } as const;
-export const wanModels = ["wan-2.7-image", "wan-2.7-image-pro"] as const;
+export const wanModels = ["wan-2.7-image", "wan-2.7-image-pro", "wan-3.0-video"] as const;
 export type WanModel = typeof wanModels[number];
 
 /**
@@ -15,6 +15,32 @@ export type WanModel = typeof wanModels[number];
  */
 const WAN_RESOLUTIONS = ["1K", "2K"] as const;
 const WAN_PRO_RESOLUTIONS = ["1K", "2K", "4K"] as const;
+
+/** Wan video renders at these bands; 480P is retired on the live service. */
+const WAN_VIDEO_RESOLUTIONS = ["720P", "1080P"] as const;
+const WAN_VIDEO_RATIOS = ["9:16", "16:9", "1:1", "3:4", "4:3", "21:9", "adaptive"] as const;
+
+function wanVideoPortTable(): GenerationPortTable {
+  return sealGenerationPortTable({
+    model: "wan-3.0-video",
+    result: "video",
+    ports: [
+      { name: "prompt", value: { kind: "text", maxChars: 5_000 }, minItems: 1, maxItems: 1 },
+      // Full-reference mode: reference images steer subject and scene; the service accepts up to ten.
+      { name: "images", value: { kind: "media", accepts: ["image"] }, minItems: 0, maxItems: 10 },
+      // Voice and cadence references; the service accepts at most five clips totalling 15 seconds.
+      { name: "audios", value: { kind: "media", accepts: ["audio"] }, minItems: 0, maxItems: 5 },
+      { name: "resolution", value: { kind: "enum", values: [...WAN_VIDEO_RESOLUTIONS] }, minItems: 0, maxItems: 1 },
+      { name: "ratio", value: { kind: "enum", values: [...WAN_VIDEO_RATIOS] }, minItems: 0, maxItems: 1 },
+      { name: "duration", value: { kind: "number", integer: true, minimum: 2, maximum: 15 }, minItems: 0, maxItems: 1 },
+      { name: "audio", value: { kind: "boolean" }, minItems: 0, maxItems: 1 },
+      { name: "watermark", value: { kind: "boolean" }, minItems: 0, maxItems: 1 },
+      { name: "seed", value: { kind: "number", integer: true, minimum: 0, maximum: 2_147_483_647 }, minItems: 0, maxItems: 1 },
+    ],
+    // Voice references need the model's own synchronized track; a silent render cannot carry them.
+    requires: [{ kind: "requiresPresent", port: "audios", needs: ["audio"] }],
+  });
+}
 
 function wanPortTable(model: WanModel): GenerationPortTable {
   const pro = model === "wan-2.7-image-pro";
@@ -47,6 +73,7 @@ function wanPortTable(model: WanModel): GenerationPortTable {
 export const wanPorts: Readonly<Record<WanModel, GenerationPortTable>> = {
   "wan-2.7-image": wanPortTable("wan-2.7-image"),
   "wan-2.7-image-pro": wanPortTable("wan-2.7-image-pro"),
+  "wan-3.0-video": wanVideoPortTable(),
 };
 
 export function sealWanRequest(
@@ -59,8 +86,9 @@ export function sealWanRequest(
 const wanBaseDefinition = defineExactModelModule({
   module: wanModuleRef,
   endpoints: wanModels.map((model) => ({
-    key: model === "wan-2.7-image" ? "image" : "pro",
-    requestTypeName: model === "wan-2.7-image" ? "WanImageRequest" : "WanProImageRequest",
+    key: model === "wan-2.7-image" ? "image" : model === "wan-2.7-image-pro" ? "pro" : "video",
+    requestTypeName: model === "wan-2.7-image" ? "WanImageRequest"
+      : model === "wan-2.7-image-pro" ? "WanProImageRequest" : "WanVideoRequest",
     producerName: `request-${model}`,
     ports: wanPorts[model],
   })),
@@ -99,6 +127,38 @@ const wanChildren: readonly SurfaceChildVocabulary[] = [
         summary: "Selects the image Artifact this reference contributes." },
     ] },
 ];
+
+const wanVideoChildren: readonly SurfaceChildVocabulary[] = [
+  { tag: "Reference", cardinality: "many",
+    summary: "Attaches one image or audio Artifact the video is steered by.",
+    attributes: [
+      { name: "image", kind: "reference", required: false, accepts: [blobTypes.blob],
+        summary: "A full-reference image shaping subject and scene; at most ten per element." },
+      { name: "audio", kind: "reference", required: false, accepts: [blobTypes.blob],
+        summary: "A voice or cadence clip; at most five per element, totalling fifteen seconds." },
+    ] },
+];
+
+function wanVideoAttributes(): readonly SurfaceAttributeVocabulary[] {
+  return [
+    { name: "id", kind: "identifier", required: true,
+      summary: "Names this generation and prefixes the bindings it publishes." },
+    { name: "prompt", kind: "reference", required: true, accepts: [textTypes.text],
+      summary: "The Text edge describing the shot, its subject and its motion." },
+    { name: "resolution", kind: "literal", required: false, values: [...WAN_VIDEO_RESOLUTIONS],
+      summary: "The render band; 480P is retired on the live service." },
+    { name: "ratio", kind: "literal", required: false, values: [...WAN_VIDEO_RATIOS],
+      summary: "The framing the video renders at." },
+    { name: "duration", kind: "literal", required: false,
+      summary: "Whole seconds of video, from two to fifteen." },
+    { name: "audio", kind: "literal", required: false, values: ["true", "false"],
+      summary: "Renders the model's own synchronized voice and effects track." },
+    { name: "watermark", kind: "literal", required: false, values: ["true", "false"],
+      summary: "Marks the returned video as AI generated." },
+    { name: "seed", kind: "literal", required: false,
+      summary: "Seeds the model's sampling so a rerun stays close to this one." },
+  ];
+}
 
 const surface = (
   name: "image" | "pro-image",
@@ -149,6 +209,41 @@ export const wanMarkupSurfaces = [
   prompt={heroPrompt}
   resolution="4K"
 />`),
+  {
+    name: "video",
+    tag: "Video",
+    mode: "structured" as const,
+    outputs: [wanEndpoints.video!.draftType, wanEndpoints.video!.mediaBindings.images!.type,
+      wanEndpoints.video!.mediaBindings.audios!.type],
+    vocabulary: {
+      summary: "Generates one synchronized video with the exact Wan 3.0 Video model from a Text prompt, full-reference images and voice clips.",
+      attributes: wanVideoAttributes(),
+      children: wanVideoChildren,
+      ports: [{
+        name: "video",
+        type: blobTypes.blob,
+        summary: "The primary generated video, addressed as `<id>.video`.",
+      }],
+      example: `<wan:Video
+  id="opening"
+  prompt={direction.opening-prompt}
+  duration="5"
+  resolution="1080P"
+  ratio="9:16"
+  audio="true"
+>
+  <wan:Reference image={assets.presenter-reference}/>
+  <wan:Reference audio={assets.voice-reference}/>
+</wan:Video>`,
+      notes: [
+        "The element accepts at most ten image and five audio `Reference` children and no text content.",
+        "Voice references require `audio=\"true\"`: the model renders its own synchronized track, and lip motion follows it.",
+        "Audio references total at most fifteen seconds across the element; their order is the prompt's voice numbering.",
+        "Every `Reference` is an ordinary media Artifact edge; the Surface copies no runtime media into request metadata.",
+        "The Surface lowers the element into the package's exact model request and selects no Provider.",
+      ],
+    },
+  },
 ] as const;
 
 export const wanManifest = {

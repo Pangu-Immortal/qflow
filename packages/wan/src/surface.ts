@@ -140,3 +140,96 @@ function decoder(endpoint: ExactModelEndpoint): StructuredSurfaceHandler {
 
 export const decodeWanImageSurface = decoder(wanEndpoints.image!);
 export const decodeWanProImageSurface = decoder(wanEndpoints.pro!);
+
+const videoAttributes = ["id", "prompt", "resolution", "ratio", "duration", "audio", "watermark", "seed"] as const;
+
+/**
+ * One video element steers the model with full-reference images and voice clips. The service
+ * renders its own synchronized track, so voice references require `audio="true"`.
+ */
+function videoDecoder(endpoint: ExactModelEndpoint): StructuredSurfaceHandler {
+  return ({ element, resolveReference }) => {
+    exact(element, [...videoAttributes], ["id", "prompt"]);
+    const id = text(element, "id");
+    const prompt = ref(element, "prompt", textTypes.text, resolveReference);
+    if (prompt.record !== undefined) {
+      assert(prompt.record.value.kind === "inline", `${element.name}.prompt must reference Text`);
+      verifyText(prompt.record.value.value);
+    }
+    const imagePort = generationPort(endpoint.ports, "images");
+    const audioPort = generationPort(endpoint.ports, "audios");
+    assert(imagePort.value.kind === "media" && audioPort.value.kind === "media", "Wan video media ports are not media");
+    const images: SurfaceResolvedReference[] = [];
+    const audios: SurfaceResolvedReference[] = [];
+    for (const child of element.children) {
+      if (child.kind === "text") {
+        assert(child.value.trim().length === 0, `${element.name} accepts only Reference children`);
+        continue;
+      }
+      assert(localName(child.name) === "Reference", `${element.name} accepts only Reference children`);
+      exact(child, ["image", "audio"], []);
+      const hasImage = child.attributes.image !== undefined;
+      const hasAudio = child.attributes.audio !== undefined;
+      assert(hasImage !== hasAudio, `${child.name} takes exactly one of image or audio`);
+      assert(!child.children.some((item) => item.kind === "element" || item.value.trim()), `${child.name} must be empty`);
+      if (hasImage) {
+        const image = ref(child, "image", blobTypes.blob, resolveReference);
+        if (image.record !== undefined) {
+          assert(image.record.value.kind === "blob" && image.record.value.mediaType.startsWith("image/"),
+            `${child.name}.image must reference image media`);
+        }
+        images.push(image);
+      } else {
+        const audio = ref(child, "audio", blobTypes.blob, resolveReference);
+        if (audio.record !== undefined) {
+          assert(audio.record.value.kind === "blob" && audio.record.value.mediaType.startsWith("audio/"),
+            `${child.name}.audio must reference audio media`);
+        }
+        audios.push(audio);
+      }
+    }
+    assert(images.length <= imagePort.maxItems, `${element.name} accepts at most ${imagePort.maxItems} image references`);
+    assert(audios.length <= audioPort.maxItems, `${element.name} accepts at most ${audioPort.maxItems} audio references`);
+    const stated: Record<string, readonly GenerationPortValue[] | undefined> = {
+      resolution: optionalText(element, "resolution"),
+      ratio: optionalText(element, "ratio"),
+      duration: optionalInteger(element, "duration"),
+      audio: optionalFlag(element, "audio"),
+      watermark: optionalFlag(element, "watermark"),
+      seed: optionalInteger(element, "seed"),
+    };
+    const draft = sealGenerationRequestDraft(endpoint.ports, Object.fromEntries(
+      Object.entries(stated).filter((entry): entry is [string, readonly GenerationPortValue[]] => entry[1] !== undefined),
+    ));
+    const records: Array<{ id: string; type: TypeRef; value: { kind: "inline"; value: CanonicalValue }; range: StructuredElement["range"] }> = [{
+      id: `${id}.draft`, type: endpoint.draftType,
+      value: { kind: "inline", value: draft as unknown as CanonicalValue }, range: element.range,
+    }];
+    const inputs: Record<string, SurfaceResolvedReference["ref"] | { kind: "record"; id: string }> = {
+      draft: { kind: "record", id: `${id}.draft` }, [exactModelTextInputName("prompt")]: prompt.ref,
+    };
+    const media = [
+      ...images.map((image, index) => ({ source: image, port: "images" as const, binding: imagePort,
+        bindingType: endpoint.mediaBindings.images!.type, name: `image-${String(index + 1).padStart(4, "0")}`, role: "image" as const })),
+      ...audios.map((audio, index) => ({ source: audio, port: "audios" as const, binding: audioPort,
+        bindingType: endpoint.mediaBindings.audios!.type, name: `audio-${String(index + 1).padStart(4, "0")}`, role: "audio" as const })),
+    ].map((item) => {
+      const bindingId = `${id}.${item.name}.binding`;
+      records.push({
+        id: bindingId, type: item.bindingType,
+        value: { kind: "inline", value: sealGenerationMediaBinding(item.binding as GenerationMediaPort, { role: item.role }) as unknown as CanonicalValue },
+        range: element.range,
+      });
+      const names = exactModelMediaInputNames(item.name);
+      inputs[names.binding] = { kind: "record", id: bindingId };
+      inputs[names.artifact] = item.source.ref;
+      return { name: item.name, port: item.port };
+    });
+    const fragment = createExactModelPrimaryGenerationFragment(endpoint, media, [{ name: "prompt", port: "prompt" }]);
+    return { records, fragments: [fragment], components: [{
+      id, fragment: fragment.id, inputs, outputs: { video: `${id}.video` }, range: element.range,
+    }] };
+  };
+}
+
+export const decodeWanVideoSurface = videoDecoder(wanEndpoints.video!);
