@@ -44,7 +44,7 @@ package is available, use its published version and package instructions; otherw
 can connect the service through the same interfaces. TokenDance, HiAPI, Pollo, BeatAPI and Monid
 Providers are optional: install the selected npm package in the video project before configuring its
 Endpoint; QflowHub and local Providers are defaults. The
-[model and deployment service page](https://github.com/qflow-ai/qflow/blob/main/docs/guide/service-partners.md)
+[model and deployment service page](https://github.com/Pangu-Immortal/qflow/blob/main/docs/guide/service-partners.md)
 introduces partners and links their own documentation. A partnership alone does not establish that a
 particular capability, account or implementation is available. Carry an already suitable, chosen
 service forward.
@@ -102,7 +102,7 @@ retain the chosen settings or merge this fragment if QflowHub is the newly selec
     "qflowhub.default": {
       "use": "@qflow/provider-qflowhub",
       "config": {
-        "baseUrl": "https://qflow.ai",
+        "baseUrl": "https://github.com/Pangu-Immortal/qflow",
         "apiKey": { "store": "local", "key": "qflowhub.oauth" }
       }
     }

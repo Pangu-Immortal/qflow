@@ -8,7 +8,7 @@
 
 ## 开始之前
 
-可以认领一个[已有的 issue](https://github.com/qflow-ai/qflow/issues)，也可以新开一个说明你想做的事。凡是会改动协议类型、包边界或 Provider 契约的改动，请先在 issue 里说明思路。
+可以认领一个[已有的 issue](https://github.com/Pangu-Immortal/qflow/issues)，也可以新开一个说明你想做的事。凡是会改动协议类型、包边界或 Provider 契约的改动，请先在 issue 里说明思路。
 
 ## 环境准备
 
@@ -19,7 +19,7 @@ corepack enable
 pnpm install --frozen-lockfile
 ```
 
-运行真实 Build 还需要 Python 3.10–3.13、uv、ffmpeg 和 Chromium，各自的用途见[开发指南](https://qflow.ai/zh/guide/develop/)。
+运行真实 Build 还需要 Python 3.10–3.13、uv、ffmpeg 和 Chromium，各自的用途见[开发指南](https://github.com/Pangu-Immortal/qflow/blob/main/docs/zh/guide/develop.md)。
 
 使用本地渲染的 Profile，首次渲染前执行
 `qflow programs up --runtime <profile> --endpoint <render-instance>`；也可以执行
@@ -32,13 +32,13 @@ pnpm install --frozen-lockfile
 
 | 改动范围 | 文档 |
 | --- | --- |
-| 新增 Author 包 | [添加 Author 包](https://qflow.ai/zh/guide/author-packages/) |
-| 新增 Provider | [添加 Provider](https://qflow.ai/zh/guide/providers/) |
-| 组件内部 | [组件解剖](https://qflow.ai/zh/guide/component-anatomy/) |
+| 新增 Author 包 | [添加 Author 包](https://github.com/Pangu-Immortal/qflow/blob/main/docs/zh/guide/author-packages.md) |
+| 新增 Provider | [添加 Provider](https://github.com/Pangu-Immortal/qflow/blob/main/docs/zh/guide/providers.md) |
+| 组件内部 | [组件解剖](https://github.com/Pangu-Immortal/qflow/blob/main/docs/zh/guide/component-anatomy.md) |
 | Studio 界面翻译 | [Studio 本地化](packages/studio/LOCALIZATION.md) |
-| 编译、Run 与 Build | [Runtime](https://qflow.ai/zh/guide/runtime/) |
-| 命名、模块边界、wire 数据 | [代码规范](https://qflow.ai/zh/guide/conventions/) |
-| 测试与依赖环境的测试套件 | [测试](https://qflow.ai/zh/guide/testing/) |
+| 编译、Run 与 Build | [Runtime](https://github.com/Pangu-Immortal/qflow/blob/main/docs/zh/guide/runtime.md) |
+| 命名、模块边界、wire 数据 | [代码规范](https://github.com/Pangu-Immortal/qflow/blob/main/docs/zh/guide/conventions.md) |
+| 测试与依赖环境的测试套件 | [测试](https://github.com/Pangu-Immortal/qflow/blob/main/docs/zh/guide/testing.md) |
 
 中英文档分别位于 `docs/` 和 `docs/zh/`，改动一侧的页面时，请一并改动对应的另一侧。
 
@@ -110,7 +110,7 @@ main CI，下载其制品，核对版本和 npm 状态，按依赖优先、根�
 发行依赖使用明确的兼容范围，例如 `workspace:^0.3.0`；打包只去掉 workspace 前缀，
 不会自动把兼容下限抬高到当前源码版本。
 
-npm 包的 Trusted Publisher 应配置 GitHub Actions：组织 `qflow-ai`、仓库 `qflow`、工作流
+npm 包的 Trusted Publisher 应配置 GitHub Actions：组织 `Pangu-Immortal`、仓库 `qflow`、工作流
 `publish-npm.yml`，允许直接 `npm publish`，环境名称留空。发布 job 使用 OIDC，不需要保存 npm Token。
 已发布的版本不能覆盖；`0.1.2` 等 npm 版本与逻辑接口 `@1` 分开管理。
 
@@ -141,4 +141,4 @@ npm exec --yes --package=npm@^11.15.0 -- node scripts/configure-release-publishe
 
 ## 获取帮助
 
-在 [Discord](https://discord.gg/85hnyQnxpn) 或 [Telegram](https://t.me/qflowai) 提问。
+在 [Discord](https://github.com/Pangu-Immortal/qflow/issues) 或 [Telegram](https://https://github.com/Pangu-Immortal/qflow) 提问。

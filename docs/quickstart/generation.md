@@ -196,8 +196,8 @@ import. A production can instead author and import its own project Kit when the 
 not fit the work.
 
 Read the
-[`@qflow/seedance-kits` guide](https://github.com/qflow-ai/qflow/blob/main/packages/seedance-kits/README.md)
-and the [selected Kit source](https://github.com/qflow-ai/qflow/tree/main/packages/seedance-kits/kits)
+[`@qflow/seedance-kits` guide](https://github.com/Pangu-Immortal/qflow/blob/main/packages/seedance-kits/README.md)
+and the [selected Kit source](https://github.com/Pangu-Immortal/qflow/tree/main/packages/seedance-kits/kits)
 before choosing one. A Kit is useful when its shot assumptions and wording serve the intended
 performance. You can also write prompt Text directly or author a project Kit. Choose the prompt
 language for the selected model, keeping dialogue in the language it should be spoken.

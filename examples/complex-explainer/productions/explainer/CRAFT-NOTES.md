@@ -130,6 +130,6 @@ Copy a component when its relationship fits; adapt or author one when the new wo
 relationship. The example is useful even when none of its finished scenes should be reused verbatim.
 
 General production guidance lives in the
-[presenter-led visual explainer playbook](https://github.com/qflow-ai/qflow/blob/main/skills/qflow/references/playbooks/formats/presenter-led-explainer.md)
+[presenter-led visual explainer playbook](https://github.com/Pangu-Immortal/qflow/blob/main/skills/qflow/references/playbooks/formats/presenter-led-explainer.md)
 and its linked crafts. These notes preserve the concrete reasoning behind this work rather than
 making its production history a required workflow.

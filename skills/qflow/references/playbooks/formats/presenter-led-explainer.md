@@ -144,20 +144,20 @@ review the changed action and its handoffs; export the encoded film when that de
 
 ## Study one complete production
 
-The [complex spoken explainer](https://github.com/qflow-ai/qflow/tree/main/examples/complex-explainer)
+The [complex spoken explainer](https://github.com/Pangu-Immortal/qflow/tree/main/examples/complex-explainer)
 is a finished 137-second example with 17 accepted performance clips. Its guide links the film, editable sources,
 media archive and project packages. Reading its code and notes needs no media download; opening the
 full picture uses the supplied media/Result archive. The default Run reuses that accepted material.
 
 | Question to trace | Concrete source |
 | --- | --- |
-| How did the design change, and what made the revisions useful? | [Treatment and craft notes](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/productions/explainer/CRAFT-NOTES.md) |
-| How does a spoken phrase become a scene event? | [Script](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/productions/explainer/authors/script.svml) and [Main Source](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/productions/explainer/authors/main.svml) |
-| How do existing footage, a moving viewport and independent graphics coexist? | [Opening system and visual presentation](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/packages/opening-system/README.md) |
-| What belongs inside a coordinated demonstration? | [Scene map, inputs and internal modules](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/packages/web-scenes/README.md) |
-| How can Caption stay independently editable? | [Project Caption package](https://github.com/qflow-ai/qflow/blob/main/examples/complex-explainer/packages/single-line-captions/README.md) |
+| How did the design change, and what made the revisions useful? | [Treatment and craft notes](https://github.com/Pangu-Immortal/qflow/blob/main/examples/complex-explainer/productions/explainer/CRAFT-NOTES.md) |
+| How does a spoken phrase become a scene event? | [Script](https://github.com/Pangu-Immortal/qflow/blob/main/examples/complex-explainer/productions/explainer/authors/script.svml) and [Main Source](https://github.com/Pangu-Immortal/qflow/blob/main/examples/complex-explainer/productions/explainer/authors/main.svml) |
+| How do existing footage, a moving viewport and independent graphics coexist? | [Opening system and visual presentation](https://github.com/Pangu-Immortal/qflow/blob/main/examples/complex-explainer/packages/opening-system/README.md) |
+| What belongs inside a coordinated demonstration? | [Scene map, inputs and internal modules](https://github.com/Pangu-Immortal/qflow/blob/main/examples/complex-explainer/packages/web-scenes/README.md) |
+| How can Caption stay independently editable? | [Project Caption package](https://github.com/Pangu-Immortal/qflow/blob/main/examples/complex-explainer/packages/single-line-captions/README.md) |
 
 Carry the reasoning into the new commission: identify which objects, relationships and events it
 needs, then author that model. This example's scene inventory, pixel treatment and export settings
-belong to its production; the other [video examples](https://github.com/qflow-ai/qflow/tree/main/examples)
+belong to its production; the other [video examples](https://github.com/Pangu-Immortal/qflow/tree/main/examples)
 show different useful organizations.

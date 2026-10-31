@@ -124,7 +124,7 @@ a short child interval. Expose that distinction rather than making a long rectan
 entrance animation. Qualify child ids across Track instances; never use an array index as authored
 identity merely because it currently lines up.
 
-Read [Ranking's Companion](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/studio.ts) for board/reveal lanes,
+Read [Ranking's Companion](https://github.com/Pangu-Immortal/qflow/blob/main/packages/ranking/src/studio.ts) for board/reveal lanes,
 Caption Fine's `@qflow/caption-fine/studio` facet for Cue text and Style selection, and
 [Visual Track's](../visual-track/src/studio.ts) for material and occupancy.
 

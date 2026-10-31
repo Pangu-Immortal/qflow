@@ -118,7 +118,7 @@ do not contact a registry. With an older executable lacking the command, use
 `npm view @qflow/qflow@latest version` through the project's configured registry.
 
 A failed query leaves the remote release unknown. A different version can mean a newer checkout or
-a stale mirror. Read the relevant [release notes](https://github.com/qflow-ai/qflow/releases) and
+a stale mirror. Read the relevant [release notes](https://github.com/Pangu-Immortal/qflow/releases) and
 explain which installation and behavior would change.
 
 ## Check and update the relevant installation

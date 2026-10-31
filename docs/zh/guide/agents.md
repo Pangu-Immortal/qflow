@@ -12,7 +12,7 @@ Claude Code 和 Codex 是常用入口。在 Agent 中打开视频项目，通过
 使用 skills CLI 时，命令为：
 
 ```bash
-npx skills add qflow-ai/qflow -g
+npx skills add Pangu-Immortal/qflow -g
 ```
 
 随后 Agent 可以找到或安装 `@qflow/qflow` 可执行程序。把参考视频或创作要求交给它，说明想要的结果。
@@ -32,7 +32,7 @@ npx skills add qflow-ai/qflow -g
 介绍了如何管理 Coding Agent，并将其连接到共享工作区。
 
 在你通过它运行的 Agent 工作环境中使用 Qflow。Qflow Skill 的维护源是仓库的
-[`skills/qflow/`](https://github.com/qflow-ai/qflow/tree/main/skills/qflow) 目录；安装时包含引用页与支持文件。
+[`skills/qflow/`](https://github.com/Pangu-Immortal/qflow/tree/main/skills/qflow) 目录；安装时包含引用页与支持文件。
 具体入口和安装选项遵循 OpenAgents 当前提供的方法，制作仍使用同一套 Qflow 工具与项目文件。
 Skill 由所选安装渠道更新，可执行程序通过自己的包安装更新；模型服务账户另外选择。
 

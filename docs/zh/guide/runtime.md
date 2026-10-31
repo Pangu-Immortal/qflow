@@ -143,5 +143,5 @@ Result 在公开 Output 完成时发布它们，最后保留终态。新 Output 
 
 `builds`、`history`、`inspect`、`get` 读取项目 Result，不依赖原 Runtime。
 精确存储和执行接口见
-[Result 包](https://github.com/qflow-ai/qflow/blob/main/packages/result/README.md) 与
-[本地 Runtime 包](https://github.com/qflow-ai/qflow/blob/main/packages/runtime-local/README.md)。
+[Result 包](https://github.com/Pangu-Immortal/qflow/blob/main/packages/result/README.md) 与
+[本地 Runtime 包](https://github.com/Pangu-Immortal/qflow/blob/main/packages/runtime-local/README.md)。

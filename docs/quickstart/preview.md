@@ -96,9 +96,9 @@ ready for delivery, run its export Build to create the encoded video. Studio and
 available to explore the editable work and discuss further changes.
 
 For component authors, [Timing edits in Studio](../guide/studio-temporal-windows.md) explains semantic
-editing, and the [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md)
+editing, and the [Companion SDK](https://github.com/Pangu-Immortal/qflow/blob/main/packages/studio-companion/README.md)
 explains how to expose component Items and controls.
 
 To add another interface language, load a local JSON translation with `--locale-pack ./language.json`.
-The [localization guide](https://github.com/qflow-ai/qflow/blob/main/packages/studio/LOCALIZATION.md)
+The [localization guide](https://github.com/Pangu-Immortal/qflow/blob/main/packages/studio/LOCALIZATION.md)
 explains translation files, checking missing entries and sharing a language pack.

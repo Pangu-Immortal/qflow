@@ -1,0 +1,4 @@
+[console_scripts]
+qflow-whisperx-check = qflow_whisperx_service.check:main
+qflow-whisperx-prepare = qflow_whisperx_service.prepare:main
+qflow-whisperx-service = qflow_whisperx_service.__main__:main

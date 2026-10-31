@@ -50,4 +50,4 @@ jobs:
             --header "Authorization: Bearer $GH_TOKEN" \
             --header "X-GitHub-Api-Version: 2022-11-28" \
             --data "$payload" \
-            "https://api.github.com/repos/qflow-ai/qflowhub/dispatches"
+            "https://api.github.com/repos/Pangu-Immortal/qflowhub/dispatches"

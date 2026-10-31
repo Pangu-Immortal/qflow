@@ -9,11 +9,11 @@
 <p align="center">1 command, 100 variants, 100M views.</p>
 
 <p align="center">
-  <a href="https://qflow.ai"><strong>Demo</strong></a>
+  <a href="https://github.com/Pangu-Immortal/qflow"><strong>Demo</strong></a>
   &nbsp;&bull;&nbsp;
-  <a href="https://qflow.ai/quickstart/"><strong>Quickstart</strong></a>
+  <a href="https://github.com/Pangu-Immortal/qflow/blob/main/docs/quickstart.md"><strong>Quickstart</strong></a>
   &nbsp;&bull;&nbsp;
-  <a href="https://qflow.ai/guide/develop/"><strong>Develop</strong></a>
+  <a href="https://github.com/Pangu-Immortal/qflow/blob/main/docs/guide/develop.md"><strong>Develop</strong></a>
   &nbsp;&bull;&nbsp;
   <a href="./README.zh-CN.md"><strong>简体中文</strong></a>
 </p>
@@ -24,11 +24,11 @@
 
 <p align="center">
   <a href="https://trendshift.io/repositories/229030"><img alt="Trendshift #1 TypeScript Repository of the Day" src="https://trendshift.io/api/badge/trendshift/repositories/229030/daily?language=TypeScript"></a>
-  <a href="https://trendshift.io/repositories/229030?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-229030" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/229030/weekly?language=TypeScript" alt="qflow-ai/qflow | Trendshift TypeScript Weekly" width="250" height="55"></a>
+  <a href="https://trendshift.io/repositories/229030?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-229030" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/229030/weekly?language=TypeScript" alt="Pangu-Immortal/qflow | Trendshift TypeScript Weekly" width="250" height="55"></a>
 </p>
 
 <p align="center">
-  <img alt="Stars" src="https://img.shields.io/github/stars/qflow-ai/qflow?style=flat-square&color=FFD700&logo=github&logoColor=white&label=Stars">
+  <img alt="Stars" src="https://img.shields.io/github/stars/Pangu-Immortal/qflow?style=flat-square&color=FFD700&logo=github&logoColor=white&label=Stars">
   <a href="./package.json"><img alt="Node 22.15+" src="https://img.shields.io/badge/Node.js-22.15%2B-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white"></a>
   <a href="./package.json"><img alt="pnpm 10.33" src="https://img.shields.io/badge/pnpm-10.33-F69220?style=flat-square&logo=pnpm&logoColor=white"></a>
   <a href="./package.json"><img alt="TypeScript 5.9" src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white"></a>
@@ -36,10 +36,10 @@
 </p>
 
 <p align="center">
-  <a href="https://qflow.ai"><img alt="Visit our website" src="https://img.shields.io/badge/Visit%20our%20website-DF3C68?style=for-the-badge&logo=qflow&logoColor=white"></a>
-  <a href="https://discord.gg/85hnyQnxpn"><img alt="Join our Discord" src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white"></a>
-  <a href="https://t.me/qflowai"><img alt="Join our Telegram" src="https://img.shields.io/badge/Join%20our%20Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white"></a>
-  <a href="https://x.com/qflowai"><img alt="Follow @qflowai on X" src="https://img.shields.io/badge/Follow%20%40qflowai-000000?style=for-the-badge&logo=x&logoColor=white"></a>
+  <a href="https://github.com/Pangu-Immortal/qflow"><img alt="Visit our website" src="https://img.shields.io/badge/Visit%20our%20website-DF3C68?style=for-the-badge&logo=qflow&logoColor=white"></a>
+  <a href="https://github.com/Pangu-Immortal/qflow/issues"><img alt="Join our Discord" src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white"></a>
+  <a href="https://https://github.com/Pangu-Immortal/qflow"><img alt="Join our Telegram" src="https://img.shields.io/badge/Join%20our%20Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white"></a>
+  <a href="https://x.com/Pangu-Immortal"><img alt="Follow @qflowai on X" src="https://img.shields.io/badge/Follow%20%40qflowai-000000?style=for-the-badge&logo=x&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -59,7 +59,7 @@ Qflow gives AI agents (Claude Code, Codex...) a language and system to create vi
 ## Install once
 
 ```bash
-npx skills add qflow-ai/qflow -g
+npx skills add Pangu-Immortal/qflow -g
 ```
 
 This installs the Skill. On first use, your agent checks for the Qflow executable and helps prepare
@@ -146,7 +146,7 @@ The `/qflow` skill is available to coding agents. Start a session in any empty o
 directory and ask it to create videos for you:
 
 ```text
-/qflow Clone this video: /path/to/video.mp4, and replace the ranking content with a comparison of Qflow (official website: qflow.ai) with other AI video products.
+/qflow Clone this video: /path/to/video.mp4, and replace the ranking content with a comparison of Qflow (official website: github.com/Pangu-Immortal/qflow) with other AI video products.
 ```
 
 Or start without a reference video:
@@ -196,21 +196,21 @@ a versioned tarball or published under the owner's npm scope or private registry
 component maintained in Qflow's official Distribution begin with an issue describing the shared
 product need; official inclusion is separate from normal community sharing.
 
-The [Development Guide](https://qflow.ai/guide/develop/) covers the prerequisites, the daily
+The [Development Guide](https://github.com/Pangu-Immortal/qflow/blob/main/docs/guide/develop.md) covers the prerequisites, the daily
 commands and the repository layout.
 
 <table>
   <tr>
     <td>Bug reports</td>
-    <td><a href="https://github.com/qflow-ai/qflow/issues/new?template=bug_report.yml">Open an issue</a></td>
+    <td><a href="https://github.com/Pangu-Immortal/qflow/issues/new?template=bug_report.yml">Open an issue</a></td>
   </tr>
   <tr>
     <td>Feature requests</td>
-    <td><a href="https://github.com/qflow-ai/qflow/issues/new?template=feature_request.yml">Open an issue</a></td>
+    <td><a href="https://github.com/Pangu-Immortal/qflow/issues/new?template=feature_request.yml">Open an issue</a></td>
   </tr>
   <tr>
     <td>Questions</td>
-    <td><a href="https://discord.gg/85hnyQnxpn">Discord</a> or <a href="https://t.me/qflowai">Telegram</a></td>
+    <td><a href="https://github.com/Pangu-Immortal/qflow/issues">Discord</a> or <a href="https://https://github.com/Pangu-Immortal/qflow">Telegram</a></td>
   </tr>
   <tr>
     <td>Upgrading existing projects</td>
@@ -299,18 +299,18 @@ commands and the repository layout.
 
 ## ⭐ Star History
 
-<a href="https://www.star-history.com/?repos=qflow-ai%2Fqflow&type=date&logscale=&legend=bottom-right">
+<a href="https://www.star-history.com/?repos=Pangu-Immortal%2Fqflow&type=date&logscale=&legend=bottom-right">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=qflow-ai/qflow&type=date&theme=dark&legend=bottom-right" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=qflow-ai/qflow&type=date&legend=bottom-right" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=qflow-ai/qflow&type=date&legend=bottom-right" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Pangu-Immortal/qflow&type=date&theme=dark&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Pangu-Immortal/qflow&type=date&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Pangu-Immortal/qflow&type=date&legend=bottom-right" />
  </picture>
 </a>
 
 ## Contributors
 
-<a href="https://github.com/qflow-ai/qflow/graphs/contributors">
-  <img alt="Contributors" src="https://contrib.rocks/image?repo=qflow-ai/qflow">
+<a href="https://github.com/Pangu-Immortal/qflow/graphs/contributors">
+  <img alt="Contributors" src="https://contrib.rocks/image?repo=Pangu-Immortal/qflow">
 </a>
 
 ## License

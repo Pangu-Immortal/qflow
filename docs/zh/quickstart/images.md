@@ -74,7 +74,7 @@ Transform 与 Compose 索取两项不同的图像能力；默认的 `@qflow/prov
 
 ## 移动人物抠像
 
-人物需要出现在其他画面之上时，可以将生成或已有视频交给 [`@qflow/volcengine-matting`](https://github.com/qflow-ai/qflow/blob/main/packages/volcengine-matting/README.md)，由支持该能力的 QflowHub Endpoint 执行：
+人物需要出现在其他画面之上时，可以将生成或已有视频交给 [`@qflow/volcengine-matting`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/volcengine-matting/README.md)，由支持该能力的 QflowHub Endpoint 执行：
 
 ```svml
 <import as="matte" from="@qflow/volcengine-matting@1"/>

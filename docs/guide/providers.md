@@ -67,7 +67,7 @@ Declare the exact request ports, parameter values, result type and capability. I
 connects prompt Text and reference media to the request, then publishes the resulting media as a
 normal graph Output.
 
-The [Generation Model authoring API](https://github.com/qflow-ai/qflow/blob/main/packages/generation/README.md#exact-model-authoring) includes a
+The [Generation Model authoring API](https://github.com/Pangu-Immortal/qflow/blob/main/packages/generation/README.md#exact-model-authoring) includes a
 request definition and explains activation. The package owns the model interface; credentials and
 HTTP mapping belong to the Provider.
 
@@ -88,12 +88,12 @@ Concurrency and action limits belong to the Endpoint's resource declarations.
 A genuine failure ends that execution attempt. Build Results preserve completed Outputs and public
 task receipts. Further work uses a new Run and Build with suitable existing Outputs selected for reuse.
 
-The [Endpoint SDK](https://github.com/qflow-ai/qflow/blob/main/packages/endpoint/README.md)
+The [Endpoint SDK](https://github.com/Pangu-Immortal/qflow/blob/main/packages/endpoint/README.md)
 owns the handler interfaces, activation, resource declarations and pricing API. Compile the package
 to JavaScript and install it in the project through its package manager. Configure its Endpoint
 under `endpoints` and select it in `bindings` in the [Runtime Profile](./runtime.md).
 
-The [complete project Provider example](https://github.com/qflow-ai/qflow/tree/main/examples/provider-package)
+The [complete project Provider example](https://github.com/Pangu-Immortal/qflow/tree/main/examples/provider-package)
 demonstrates reference uploads, task receipts, collection and pricing using an illustrative API.
 It also ships with the executable, so the Agent can adapt it without a repository checkout. It holds
 two packages: `provider-images` for a generated image, and `provider-videos` for a generated video

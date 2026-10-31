@@ -35,7 +35,7 @@ export function renderOutro(t, c, w, font, o, events, m) {
 <div class="copy-panel"
   ><div class="outro-bar"><i></i><i></i><i></i><span>INSTALL SKILL</span><b>×</b></div
   ><div class="copy-body"
-    ><span class="prompt-sign">$</span><code>npx skills add qflow-ai/qflow -g</code
+    ><span class="prompt-sign">$</span><code>npx skills add Pangu-Immortal/qflow -g</code
     ><div class="copy-button">${copy}<span>Copy</span></div></div
   ><div class="copy-highlight"></div
 ></div>
@@ -56,13 +56,13 @@ export function renderOutro(t, c, w, font, o, events, m) {
   ></div
 ><div class="star-card"
   ><div class="star-top"
-    ><span class="github-icon">${github}</span><span>qflow-ai/qflow</span></div
+    ><span class="github-icon">${github}</span><span>Pangu-Immortal/qflow</span></div
   ><div class="star-bottom"
     ><span class="star left">★</span><span>Star us on GitHub!</span
     ><span class="star right">★</span></div
   ></div
 >`;
   return scene(t, c, w, font, o, html, css, animation, events, entries, {
-    command: "npx skills add qflow-ai/qflow -g",
+    command: "npx skills add Pangu-Immortal/qflow -g",
   });
 }

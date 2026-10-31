@@ -2,7 +2,7 @@ import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const REPOSITORY = 'qflow-ai/qflow';
+const REPOSITORY = 'Pangu-Immortal/qflow';
 
 // This client has no mutation method. Its GitHub token is read-only as well.
 export function githubRead(token = process.env.GH_TOKEN, request = fetch) {

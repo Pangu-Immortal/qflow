@@ -30,28 +30,28 @@ npm install @qflow/provider-monid
 ### TokenDance
 
 [TokenDance](https://tokendance.space) 是多模型网关。
-[`@qflow/provider-tokendance`](https://github.com/qflow-ai/qflow/blob/main/packages/provider-tokendance/README.md)
+[`@qflow/provider-tokendance`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/provider-tokendance/README.md)
 按 TokenDance 文档中的方舟与 MiniMax 协议提供 Seedance 2.0、2.5 系列、Seedream 5.0 lite 和 MiniMax H3。
 其他模型见它的[文档索引](https://tokendance.space/llms.txt)和实时模型目录。
 
 ### HiAPI
 
 [HiAPI](https://www.hiapi.ai) 通过一个异步任务接口提供图片、视频和音频模型。
-[`@qflow/provider-hiapi`](https://github.com/qflow-ai/qflow/blob/main/packages/provider-hiapi/README.md)
+[`@qflow/provider-hiapi`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/provider-hiapi/README.md)
 提供发行包已描述的 Seedance、Seedream 5.0 lite、MiniMax H3、GPT Image 2、Nano Banana 和 Grok Imagine 模型。
 其余模型见它的[模型索引](https://www.hiapi.ai/docs/models.json)。
 
 ### Pollo
 
 [Pollo AI](https://docs.pollo.ai) 按模型路径提供视频和图片生成。
-[`@qflow/provider-pollo`](https://github.com/qflow-ai/qflow/blob/main/packages/provider-pollo/README.md)
+[`@qflow/provider-pollo`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/provider-pollo/README.md)
 提供 MiniMax H3、Grok Imagine 1.5、GPT Image 2 和 Nano Banana。
 Pollo 只接受公网 URL 形式的参考素材，带参考素材的请求需要由嵌入方提供 URL。
 
 ### BeatAPI
 
 [BeatAPI](https://docs.beatapi.io/quick-guide) 通过一个异步任务接口提供视频和图片模型。
-[`@qflow/provider-beatapi`](https://github.com/qflow-ai/qflow/blob/main/packages/provider-beatapi/README.md)
+[`@qflow/provider-beatapi`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/provider-beatapi/README.md)
 提供 Seedance 2.0、2.5 系列、MiniMax H3、Grok Imagine 1.5、GPT Image 2 和 Nano Banana，
 并通过 BeatAPI 的文件接口上传参考素材。
 其余模型见它的[视频](https://docs.beatapi.io/video-api)与[图片](https://docs.beatapi.io/image-api)模型索引。
@@ -60,7 +60,7 @@ Pollo 只接受公网 URL 形式的参考素材，带参考素材的请求需要
 
 [Monid](https://monid.ai) 是 Qflow 的服务合作方。
 [它的文档](https://monid.ai/docs)介绍了工具发现、输入与价格查询，以及调用方式。
-[`@qflow/provider-monid`](https://github.com/qflow-ai/qflow/blob/main/packages/provider-monid/README.md)
+[`@qflow/provider-monid`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/provider-monid/README.md)
 提供 Seedance 2.0、2.5 系列端点、MiniMax H3 与 Wan 2.7 图像模型，并通过 Monid 的工作区文件系统上传参考素材。
 使用 Monid 的其他工具时，[HTTP API 文档](https://monid.ai/docs/api/overview)提供接入依据，
 Agent 可以在项目包中实现这次所需的请求与结果映射。

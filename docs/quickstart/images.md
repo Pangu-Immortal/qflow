@@ -84,7 +84,7 @@ naming it in a `Transform` is what runs it.
 ## Matting a moving person
 
 For a presenter over another picture, process the generated or supplied video with
-[`@qflow/volcengine-matting`](https://github.com/qflow-ai/qflow/blob/main/packages/volcengine-matting/README.md),
+[`@qflow/volcengine-matting`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/volcengine-matting/README.md),
 served by a supporting QflowHub Endpoint:
 
 ```svml

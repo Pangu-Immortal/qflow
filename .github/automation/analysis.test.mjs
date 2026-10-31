@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { analyze, githubRead, prepare, writeReport } from './analysis.mjs';
 
-const repo = '/repos/qflow-ai/qflow';
+const repo = '/repos/Pangu-Immortal/qflow';
 const issue = { title: 'Question', body: 'Observed behavior', state: 'closed' };
 const comment = { body: 'Additional evidence', user: { login: 'author', type: 'User' } };
 

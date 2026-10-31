@@ -1,0 +1,2 @@
+numpy<3,>=2.1
+whisperx==3.8.6

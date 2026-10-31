@@ -10,7 +10,7 @@ description: 把参考视频或创作 Brief 交给 Agent，得到可继续编辑
 [在你的 Agent 中使用 Qflow](./agents.md)介绍工作环境与 Agent 入口合作方。
 
 ```bash
-npx skills add qflow-ai/qflow -g
+npx skills add Pangu-Immortal/qflow -g
 ```
 
 Skill 提供制作知识，可执行的 `qflow` 包提供命令、组件、Runtime 和 Studio。Agent 可以找到已有的可执行安装，或准备选定的发行版本。Skill、可执行程序和视频项目各有自己的位置，也通过各自的安装渠道更新。

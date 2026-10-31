@@ -14,7 +14,7 @@ facet in the same physical package. The official Distribution supplies its Compa
 independent packages. In both cases, Studio loads the Companions for the packages selected by the
 current Source and Distribution.
 
-The [Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md)
+The [Companion SDK](https://github.com/Pangu-Immortal/qflow/blob/main/packages/studio-companion/README.md)
 provides the activation and interface examples. External packages declare and import
 `@qflow/studio-companion`, compile the Companion to JavaScript, and ship it with the component.
 Restart Studio after changing the installed code so the new contribution is loaded.

@@ -11,7 +11,7 @@ that explains the shared production need.
 
 ## Before you start
 
-Pick up an [open issue](https://github.com/qflow-ai/qflow/issues) or open one describing what you
+Pick up an [open issue](https://github.com/Pangu-Immortal/qflow/issues) or open one describing what you
 want to work on. For anything that changes a protocol type, a package boundary or a Provider
 contract, describe the approach in the issue first.
 
@@ -25,7 +25,7 @@ pnpm install --frozen-lockfile
 ```
 
 Live Builds additionally need Python 3.10–3.13, uv, ffmpeg and Chromium. The
-[Development Guide](https://qflow.ai/guide/develop/) lists what each one is for.
+[Development Guide](https://github.com/Pangu-Immortal/qflow/blob/main/docs/guide/develop.md) lists what each one is for.
 
 For a Profile selecting local rendering, run `qflow programs up --runtime <profile> --endpoint
 <render-instance>` before the first render (or `qflow runtime up --runtime <profile>` to prepare
@@ -37,13 +37,13 @@ See the [local renderer README](packages/provider-html-local/README.md) for brow
 
 | Where you are working | Guide |
 | --- | --- |
-| A new Author Package | [Adding an Author Package](https://qflow.ai/guide/author-packages/) |
-| A new Provider | [Adding a Provider](https://qflow.ai/guide/providers/) |
-| Component internals | [Component Anatomy](https://qflow.ai/guide/component-anatomy/) |
+| A new Author Package | [Adding an Author Package](https://github.com/Pangu-Immortal/qflow/blob/main/docs/guide/author-packages.md) |
+| A new Provider | [Adding a Provider](https://github.com/Pangu-Immortal/qflow/blob/main/docs/guide/providers.md) |
+| Component internals | [Component Anatomy](https://github.com/Pangu-Immortal/qflow/blob/main/docs/guide/component-anatomy.md) |
 | Studio interface translations | [Localizing Studio](packages/studio/LOCALIZATION.md) |
-| Compilation, Runs and Builds | [Runtime](https://qflow.ai/guide/runtime/) |
-| Naming, module boundaries, wire data | [Conventions](https://qflow.ai/guide/conventions/) |
-| Tests and environment-gated suites | [Testing](https://qflow.ai/guide/testing/) |
+| Compilation, Runs and Builds | [Runtime](https://github.com/Pangu-Immortal/qflow/blob/main/docs/guide/runtime.md) |
+| Naming, module boundaries, wire data | [Conventions](https://github.com/Pangu-Immortal/qflow/blob/main/docs/guide/conventions.md) |
+| Tests and environment-gated suites | [Testing](https://github.com/Pangu-Immortal/qflow/blob/main/docs/guide/testing.md) |
 
 English and Chinese documentation live side by side under `docs/` and `docs/zh/`. A change to one
 page belongs with the change to its counterpart.
@@ -125,7 +125,7 @@ not publish npm. Check the publication result before announcing availability.
 Workspace release dependencies use explicit compatibility ranges, such as `workspace:^0.3.0`;
 packing removes the workspace prefix without raising the minimum to the current checkout version.
 
-The npm package's Trusted Publisher settings must allow GitHub Actions from organization `qflow-ai`,
+The npm package's Trusted Publisher settings must allow GitHub Actions from organization `Pangu-Immortal`,
 repository `qflow`, workflow `publish-npm.yml`, with direct `npm publish` enabled and no environment
 name. The publishing job uses OIDC; no npm token secret is needed. An already published version
 cannot be overwritten. npm versions such as `0.1.2` are separate from the logical `@1` interfaces.
@@ -169,4 +169,4 @@ maintainers. See the [operator guide](.github/ISSUE_AUTOMATION_DESIGN.md) for in
 
 ## Getting help
 
-Ask in [Discord](https://discord.gg/85hnyQnxpn) or [Telegram](https://t.me/qflowai).
+Ask in [Discord](https://github.com/Pangu-Immortal/qflow/issues) or [Telegram](https://https://github.com/Pangu-Immortal/qflow).

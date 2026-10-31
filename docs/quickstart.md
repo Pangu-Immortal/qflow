@@ -17,7 +17,7 @@ See [Use Qflow in your Agent](./guide/agents.md) for Agent environments and entr
 ## 1. Install the Qflow skill
 
 ```bash
-npx skills add qflow-ai/qflow -g
+npx skills add Pangu-Immortal/qflow -g
 ```
 
 Open your video project in the Agent. The Skill supplies production knowledge; the `qflow` package
@@ -29,7 +29,7 @@ and pricing. Installing the Skill or executable does not include generation cred
 an API key, tell the Agent which service issued it and share its API documentation.
 
 For an existing installation, ask the Agent to check `qflow version --check` and the
-[release notes](https://github.com/qflow-ai/qflow/releases). Older versions can use
+[release notes](https://github.com/Pangu-Immortal/qflow/releases). Older versions can use
 `qflow --version` and `npm view @qflow/qflow@latest version`. The executable and Skill have separate
 update channels; the Agent can update the relevant installation while preserving your project.
 
@@ -41,7 +41,7 @@ Give the Agent a file or a supported platform link, together with any face, prod
 
 ```text
 /qflow Use this video as a reference: /path/to/video.mp4.
-Replace the product with Qflow (qflow.ai), keeping the energetic opening and ranking format.
+Replace the product with Qflow (github.com/Pangu-Immortal/qflow), keeping the energetic opening and ranking format.
 ```
 
 You can change the presenter, product, language, aspect ratio or call to action. The Agent studies
@@ -60,7 +60,7 @@ provides the words and their timing so the Agent can relate the picture to what 
 If it needs preparation, the Agent explains the local effort and hosted option before you choose.
 Cached weights can reduce setup time; they do not choose a service for you.
 
-[QflowHub](https://qflow.ai) offers hosted WhisperX and image, video and voice models through one
+[QflowHub](https://github.com/Pangu-Immortal/qflow) offers hosted WhisperX and image, video and voice models through one
 account. You can also use your own keys through existing or project-written Providers, and combine
 local and hosted capabilities. The Agent connects what the next part of the work needs, explains
 progress and shows its reference understanding before developing the material plan. Generation

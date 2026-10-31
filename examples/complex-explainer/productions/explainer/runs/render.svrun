@@ -68,4 +68,138 @@
   <satisfy output="sfx-spark-media.media" candidate="pixel-sfx-spark"/>
   <build-record id="pixel-sfx-finish" build="bld_20260914T043459227Z_E0B178D4A9" output="sfx-finish-media.media"/>
   <satisfy output="sfx-finish-media.media" candidate="pixel-sfx-finish"/>
+  <build-record id="kept-opening-media" build="bld_20260914T043459227Z_E0B178D4A9" output="opening-media.media"/>
+  <satisfy output="opening-media.media" candidate="kept-opening-media"/>
+  <build-record id="kept-opening-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="opening.alignment"/>
+  <satisfy output="opening.alignment" candidate="kept-opening-alignment"/>
+  <build-record id="kept-closing-media" build="bld_20260914T043459227Z_E0B178D4A9" output="closing-media.media"/>
+  <satisfy output="closing-media.media" candidate="kept-closing-media"/>
+  <build-record id="kept-closing-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="closing.alignment"/>
+  <satisfy output="closing.alignment" candidate="kept-closing-alignment"/>
+  <build-record id="kept-code-road-media" build="bld_20260914T043459227Z_E0B178D4A9" output="code-road-media.media"/>
+  <satisfy output="code-road-media.media" candidate="kept-code-road-media"/>
+  <build-record id="kept-code-road-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="code-road.alignment"/>
+  <satisfy output="code-road.alignment" candidate="kept-code-road-alignment"/>
+  <build-record id="kept-competitors-media" build="bld_20260914T043459227Z_E0B178D4A9" output="competitors-media.media"/>
+  <satisfy output="competitors-media.media" candidate="kept-competitors-media"/>
+  <build-record id="kept-competitors-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="competitors.alignment"/>
+  <satisfy output="competitors.alignment" candidate="kept-competitors-alignment"/>
+  <build-record id="kept-components-media" build="bld_20260914T043459227Z_E0B178D4A9" output="components-media.media"/>
+  <satisfy output="components-media.media" candidate="kept-components-media"/>
+  <build-record id="kept-components-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="components.alignment"/>
+  <satisfy output="components.alignment" candidate="kept-components-alignment"/>
+  <build-record id="kept-editor-road-media" build="bld_20260914T043459227Z_E0B178D4A9" output="editor-road-media.media"/>
+  <satisfy output="editor-road-media.media" candidate="kept-editor-road-media"/>
+  <build-record id="kept-editor-road-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="editor-road.alignment"/>
+  <satisfy output="editor-road.alignment" candidate="kept-editor-road-alignment"/>
+  <build-record id="kept-introduction-media" build="bld_20260914T043459227Z_E0B178D4A9" output="introduction-media.media"/>
+  <satisfy output="introduction-media.media" candidate="kept-introduction-media"/>
+  <build-record id="kept-introduction-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="introduction.alignment"/>
+  <satisfy output="introduction.alignment" candidate="kept-introduction-alignment"/>
+  <build-record id="kept-keyframe-cost-media" build="bld_20260914T043459227Z_E0B178D4A9" output="keyframe-cost-media.media"/>
+  <satisfy output="keyframe-cost-media.media" candidate="kept-keyframe-cost-media"/>
+  <build-record id="kept-keyframe-cost-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="keyframe-cost.alignment"/>
+  <satisfy output="keyframe-cost.alignment" candidate="kept-keyframe-cost-alignment"/>
+  <build-record id="kept-reference-reveal-media" build="bld_20260914T043459227Z_E0B178D4A9" output="reference-reveal-media.media"/>
+  <satisfy output="reference-reveal-media.media" candidate="kept-reference-reveal-media"/>
+  <build-record id="kept-reference-reveal-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="reference-reveal.alignment"/>
+  <satisfy output="reference-reveal.alignment" candidate="kept-reference-reveal-alignment"/>
+  <build-record id="kept-result-media" build="bld_20260914T043459227Z_E0B178D4A9" output="result-media.media"/>
+  <satisfy output="result-media.media" candidate="kept-result-media"/>
+  <build-record id="kept-result-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="result.alignment"/>
+  <satisfy output="result.alignment" candidate="kept-result-alignment"/>
+  <build-record id="kept-reuse-cost-media" build="bld_20260914T043459227Z_E0B178D4A9" output="reuse-cost-media.media"/>
+  <satisfy output="reuse-cost-media.media" candidate="kept-reuse-cost-media"/>
+  <build-record id="kept-reuse-cost-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="reuse-cost.alignment"/>
+  <satisfy output="reuse-cost.alignment" candidate="kept-reuse-cost-alignment"/>
+  <build-record id="kept-semantic-demo-media" build="bld_20260914T043459227Z_E0B178D4A9" output="semantic-demo-media.media"/>
+  <satisfy output="semantic-demo-media.media" candidate="kept-semantic-demo-media"/>
+  <build-record id="kept-semantic-demo-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="semantic-demo.alignment"/>
+  <satisfy output="semantic-demo.alignment" candidate="kept-semantic-demo-alignment"/>
+  <build-record id="kept-semantic-time-media" build="bld_20260914T043459227Z_E0B178D4A9" output="semantic-time-media.media"/>
+  <satisfy output="semantic-time-media.media" candidate="kept-semantic-time-media"/>
+  <build-record id="kept-semantic-time-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="semantic-time.alignment"/>
+  <satisfy output="semantic-time.alignment" candidate="kept-semantic-time-alignment"/>
+  <build-record id="kept-synthesis-media" build="bld_20260914T043459227Z_E0B178D4A9" output="synthesis-media.media"/>
+  <satisfy output="synthesis-media.media" candidate="kept-synthesis-media"/>
+  <build-record id="kept-synthesis-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="synthesis.alignment"/>
+  <satisfy output="synthesis.alignment" candidate="kept-synthesis-alignment"/>
+  <build-record id="kept-timing-cost-media" build="bld_20260914T043459227Z_E0B178D4A9" output="timing-cost-media.media"/>
+  <satisfy output="timing-cost-media.media" candidate="kept-timing-cost-media"/>
+  <build-record id="kept-timing-cost-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="timing-cost.alignment"/>
+  <satisfy output="timing-cost.alignment" candidate="kept-timing-cost-alignment"/>
+  <build-record id="kept-two-roads-media" build="bld_20260914T043459227Z_E0B178D4A9" output="two-roads-media.media"/>
+  <satisfy output="two-roads-media.media" candidate="kept-two-roads-media"/>
+  <build-record id="kept-two-roads-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="two-roads.alignment"/>
+  <satisfy output="two-roads.alignment" candidate="kept-two-roads-alignment"/>
+  <build-record id="kept-water-break-alignment" build="bld_20260914T043459227Z_E0B178D4A9" output="water-break.alignment"/>
+  <satisfy output="water-break.alignment" candidate="kept-water-break-alignment"/>
+  <build-record id="kept-opening-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="opening-media.domain"/>
+  <satisfy output="opening-media.domain" candidate="kept-opening-domain"/>
+  <build-record id="kept-opening-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="opening-media.extent"/>
+  <satisfy output="opening-media.extent" candidate="kept-opening-extent"/>
+  <build-record id="kept-closing-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="closing-media.domain"/>
+  <satisfy output="closing-media.domain" candidate="kept-closing-domain"/>
+  <build-record id="kept-closing-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="closing-media.extent"/>
+  <satisfy output="closing-media.extent" candidate="kept-closing-extent"/>
+  <build-record id="kept-code-road-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="code-road-media.domain"/>
+  <satisfy output="code-road-media.domain" candidate="kept-code-road-domain"/>
+  <build-record id="kept-code-road-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="code-road-media.extent"/>
+  <satisfy output="code-road-media.extent" candidate="kept-code-road-extent"/>
+  <build-record id="kept-competitors-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="competitors-media.domain"/>
+  <satisfy output="competitors-media.domain" candidate="kept-competitors-domain"/>
+  <build-record id="kept-competitors-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="competitors-media.extent"/>
+  <satisfy output="competitors-media.extent" candidate="kept-competitors-extent"/>
+  <build-record id="kept-components-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="components-media.domain"/>
+  <satisfy output="components-media.domain" candidate="kept-components-domain"/>
+  <build-record id="kept-components-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="components-media.extent"/>
+  <satisfy output="components-media.extent" candidate="kept-components-extent"/>
+  <build-record id="kept-editor-road-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="editor-road-media.domain"/>
+  <satisfy output="editor-road-media.domain" candidate="kept-editor-road-domain"/>
+  <build-record id="kept-editor-road-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="editor-road-media.extent"/>
+  <satisfy output="editor-road-media.extent" candidate="kept-editor-road-extent"/>
+  <build-record id="kept-introduction-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="introduction-media.domain"/>
+  <satisfy output="introduction-media.domain" candidate="kept-introduction-domain"/>
+  <build-record id="kept-introduction-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="introduction-media.extent"/>
+  <satisfy output="introduction-media.extent" candidate="kept-introduction-extent"/>
+  <build-record id="kept-keyframe-cost-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="keyframe-cost-media.domain"/>
+  <satisfy output="keyframe-cost-media.domain" candidate="kept-keyframe-cost-domain"/>
+  <build-record id="kept-keyframe-cost-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="keyframe-cost-media.extent"/>
+  <satisfy output="keyframe-cost-media.extent" candidate="kept-keyframe-cost-extent"/>
+  <build-record id="kept-reference-reveal-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="reference-reveal-media.domain"/>
+  <satisfy output="reference-reveal-media.domain" candidate="kept-reference-reveal-domain"/>
+  <build-record id="kept-reference-reveal-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="reference-reveal-media.extent"/>
+  <satisfy output="reference-reveal-media.extent" candidate="kept-reference-reveal-extent"/>
+  <build-record id="kept-result-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="result-media.domain"/>
+  <satisfy output="result-media.domain" candidate="kept-result-domain"/>
+  <build-record id="kept-result-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="result-media.extent"/>
+  <satisfy output="result-media.extent" candidate="kept-result-extent"/>
+  <build-record id="kept-reuse-cost-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="reuse-cost-media.domain"/>
+  <satisfy output="reuse-cost-media.domain" candidate="kept-reuse-cost-domain"/>
+  <build-record id="kept-reuse-cost-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="reuse-cost-media.extent"/>
+  <satisfy output="reuse-cost-media.extent" candidate="kept-reuse-cost-extent"/>
+  <build-record id="kept-semantic-demo-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="semantic-demo-media.domain"/>
+  <satisfy output="semantic-demo-media.domain" candidate="kept-semantic-demo-domain"/>
+  <build-record id="kept-semantic-demo-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="semantic-demo-media.extent"/>
+  <satisfy output="semantic-demo-media.extent" candidate="kept-semantic-demo-extent"/>
+  <build-record id="kept-semantic-time-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="semantic-time-media.domain"/>
+  <satisfy output="semantic-time-media.domain" candidate="kept-semantic-time-domain"/>
+  <build-record id="kept-semantic-time-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="semantic-time-media.extent"/>
+  <satisfy output="semantic-time-media.extent" candidate="kept-semantic-time-extent"/>
+  <build-record id="kept-synthesis-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="synthesis-media.domain"/>
+  <satisfy output="synthesis-media.domain" candidate="kept-synthesis-domain"/>
+  <build-record id="kept-synthesis-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="synthesis-media.extent"/>
+  <satisfy output="synthesis-media.extent" candidate="kept-synthesis-extent"/>
+  <build-record id="kept-timing-cost-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="timing-cost-media.domain"/>
+  <satisfy output="timing-cost-media.domain" candidate="kept-timing-cost-domain"/>
+  <build-record id="kept-timing-cost-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="timing-cost-media.extent"/>
+  <satisfy output="timing-cost-media.extent" candidate="kept-timing-cost-extent"/>
+  <build-record id="kept-two-roads-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="two-roads-media.domain"/>
+  <satisfy output="two-roads-media.domain" candidate="kept-two-roads-domain"/>
+  <build-record id="kept-two-roads-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="two-roads-media.extent"/>
+  <satisfy output="two-roads-media.extent" candidate="kept-two-roads-extent"/>
+  <build-record id="kept-water-break-domain" build="bld_20260914T043459227Z_E0B178D4A9" output="water-break-media.domain"/>
+  <satisfy output="water-break-media.domain" candidate="kept-water-break-domain"/>
+  <build-record id="kept-water-break-extent" build="bld_20260914T043459227Z_E0B178D4A9" output="water-break-media.extent"/>
+  <satisfy output="water-break-media.extent" candidate="kept-water-break-extent"/>
 </svrun>

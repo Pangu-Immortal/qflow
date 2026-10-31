@@ -13,7 +13,7 @@ Claude Code and Codex are common starting points. Open your video project in the
 the Qflow Skill through its supported skill installer. For the skills CLI:
 
 ```bash
-npx skills add qflow-ai/qflow -g
+npx skills add Pangu-Immortal/qflow -g
 ```
 
 The Agent can then locate or install the `@qflow/qflow` executable. Give it a reference video or a
@@ -38,7 +38,7 @@ separate actions.
 describes managing coding agents and connecting them to a shared workspace.
 
 Use Qflow in the working environment of the Agent you run there. The Qflow Skill's maintained
-source is the repository's [`skills/qflow/`](https://github.com/qflow-ai/qflow/tree/main/skills/qflow)
+source is the repository's [`skills/qflow/`](https://github.com/Pangu-Immortal/qflow/tree/main/skills/qflow)
 directory; a Skill installer should include its references and supporting files. Follow the
 current entry and installation options provided by OpenAgents, then use the same Qflow production
 tools and project files. The chosen installer owns Skill updates; the executable has its own

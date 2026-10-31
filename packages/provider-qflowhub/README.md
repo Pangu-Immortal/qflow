@@ -113,7 +113,7 @@ Runtime Profile example:
       "use": "@qflow/provider-qflowhub",
       "pool": "qflowhub.default",
       "config": {
-        "baseUrl": "https://qflow.ai",
+        "baseUrl": "https://github.com/Pangu-Immortal/qflow",
         "apiKey": { "store": "platform", "key": "qflowhub.oauth" },
         "defaultConcurrency": 3,
         "pollIntervalMs": 10000
@@ -130,7 +130,7 @@ WhisperX Provider. The Runtime Profile selects which Endpoint serves it. Run
 choosing QflowHub. A Profile may set `baseUrl`
 to the selected deployment's origin or an existing `/v1`/`/v1beta` base. The Runtime Provider
 normalizes it to `/v1`; missing or insufficient user
-credentials should be resolved at [qflow.ai](https://qflow.ai). Referenced image, audio and video
+credentials should be resolved at [github.com/Pangu-Immortal/qflow](https://github.com/Pangu-Immortal/qflow). Referenced image, audio and video
 Resources are uploaded through a session from `POST /v1/files/uploads`, followed by the private
 regional multipart instructions or `api_multipart` file POST selected by QflowHub. The latter sends
 one multipart/form-data file to the selected service's `/v1/files`, preserving reference purpose

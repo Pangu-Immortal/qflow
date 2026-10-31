@@ -157,5 +157,5 @@ future reuse. `get` creates a separate export when a person or another tool need
 
 `builds`, `history`, `inspect` and `get` read project Results without requiring the original Runtime.
 For exact storage and execution interfaces, see the
-[Result package](https://github.com/qflow-ai/qflow/blob/main/packages/result/README.md) and
-[local Runtime package](https://github.com/qflow-ai/qflow/blob/main/packages/runtime-local/README.md).
+[Result package](https://github.com/Pangu-Immortal/qflow/blob/main/packages/result/README.md) and
+[local Runtime package](https://github.com/Pangu-Immortal/qflow/blob/main/packages/runtime-local/README.md).

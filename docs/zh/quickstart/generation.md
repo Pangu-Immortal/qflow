@@ -169,8 +169,8 @@ Seedance 2.5 复用同样的 Surface，而不是由 Runtime 把别的模型偷�
 Source Closure 沿着这个显式包导入读取内容。如果共享措辞不适合当前作品，也可以在项目里创作并导入自己的 Kit。
 
 创作前阅读
-[`@qflow/seedance-kits` 指南](https://github.com/qflow-ai/qflow/blob/main/packages/seedance-kits/README.md)
-和 [所选 Kit 源文件](https://github.com/qflow-ai/qflow/tree/main/packages/seedance-kits/kits)，判断它的镜头假设和措辞是否适合当前表演。也可以直接编写 prompt Text，或创作项目自己的 Kit。提示词语言按所选模型决定，对白使用实际需要说出的语言。
+[`@qflow/seedance-kits` 指南](https://github.com/Pangu-Immortal/qflow/blob/main/packages/seedance-kits/README.md)
+和 [所选 Kit 源文件](https://github.com/Pangu-Immortal/qflow/tree/main/packages/seedance-kits/kits)，判断它的镜头假设和措辞是否适合当前表演。也可以直接编写 prompt Text，或创作项目自己的 Kit。提示词语言按所选模型决定，对白使用实际需要说出的语言。
 
 ```svml
 <import as="text" from="@qflow/text@1"/>

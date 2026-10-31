@@ -44,7 +44,7 @@ for (const [index, item] of selected.entries()) {
     "--file",
     "publish-npm.yml",
     "--repository",
-    "qflow-ai/qflow",
+    "Pangu-Immortal/qflow",
     "--allow-publish",
     "--yes",
   ];

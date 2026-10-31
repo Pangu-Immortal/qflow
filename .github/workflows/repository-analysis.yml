@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   analyze:
-    if: github.repository == 'qflow-ai/qflow'
+    if: github.repository == 'Pangu-Immortal/qflow'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

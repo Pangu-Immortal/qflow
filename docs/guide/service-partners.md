@@ -33,7 +33,7 @@ npm install @qflow/provider-monid
 ### TokenDance
 
 [TokenDance](https://tokendance.space) is a multi-model gateway.
-[`@qflow/provider-tokendance`](https://github.com/qflow-ai/qflow/blob/main/packages/provider-tokendance/README.md)
+[`@qflow/provider-tokendance`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/provider-tokendance/README.md)
 serves the Seedance 2.0 and 2.5 models, Seedream 5.0 lite and MiniMax H3 through the Ark and
 MiniMax protocols TokenDance documents. Its
 [documentation index](https://tokendance.space/llms.txt) and live model catalogue supply the
@@ -42,7 +42,7 @@ details of other models.
 ### HiAPI
 
 [HiAPI](https://www.hiapi.ai) offers image, video and audio models through one asynchronous task
-API. [`@qflow/provider-hiapi`](https://github.com/qflow-ai/qflow/blob/main/packages/provider-hiapi/README.md)
+API. [`@qflow/provider-hiapi`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/provider-hiapi/README.md)
 serves the Seedance, Seedream 5.0 lite, MiniMax H3, GPT Image 2, Nano Banana and Grok Imagine
 models the Distribution describes. Its [model index](https://www.hiapi.ai/docs/models.json) lists
 the rest.
@@ -50,7 +50,7 @@ the rest.
 ### Pollo
 
 [Pollo AI](https://docs.pollo.ai) offers video and image models through per-model generation
-paths. [`@qflow/provider-pollo`](https://github.com/qflow-ai/qflow/blob/main/packages/provider-pollo/README.md)
+paths. [`@qflow/provider-pollo`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/provider-pollo/README.md)
 serves MiniMax H3, Grok Imagine 1.5, GPT Image 2 and Nano Banana. Pollo takes reference media by
 public URL only, so a request with reference media needs a URL the embedding caller supplies.
 
@@ -58,7 +58,7 @@ public URL only, so a request with reference media needs a URL the embedding cal
 
 [BeatAPI](https://docs.beatapi.io/quick-guide) offers video and image models through one
 asynchronous task API.
-[`@qflow/provider-beatapi`](https://github.com/qflow-ai/qflow/blob/main/packages/provider-beatapi/README.md)
+[`@qflow/provider-beatapi`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/provider-beatapi/README.md)
 serves the Seedance 2.0 and 2.5 models, MiniMax H3, Grok Imagine 1.5, GPT Image 2 and Nano Banana,
 and uploads reference media through BeatAPI's file endpoint. Its
 [video](https://docs.beatapi.io/video-api) and [image](https://docs.beatapi.io/image-api) model
@@ -69,7 +69,7 @@ indexes list the rest.
 [Monid](https://monid.ai) is a Qflow service partner.
 [Its documentation](https://monid.ai/docs) describes discovering tools, inspecting their inputs and
 prices, and calling them through its interfaces.
-[`@qflow/provider-monid`](https://github.com/qflow-ai/qflow/blob/main/packages/provider-monid/README.md)
+[`@qflow/provider-monid`](https://github.com/Pangu-Immortal/qflow/blob/main/packages/provider-monid/README.md)
 serves the Seedance 2.0 and 2.5 endpoints, MiniMax H3 and the Wan 2.7 image models, and uploads
 reference media through Monid's workspace file system. For another Monid tool, its
 [HTTP API documentation](https://monid.ai/docs/api/overview) supplies the connection details, and

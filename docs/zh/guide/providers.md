@@ -40,7 +40,7 @@ Model 定义生成请求，Provider 实现推理服务的 API，Endpoint 选择�
 
 项目包使用 `@qflow/generation/model`、`@qflow/generation`、`@qflow/qflow/author`、`@qflow/qflow/producer`、`@qflow/qflow/admission` 与 `@qflow/qflow/markup` 等公共 API。声明准确的请求端口、参数取值、输出类型和能力。作者 Surface 把 Prompt Text 与参考素材连接到请求，再将生成素材作为普通图输出公开。
 
-[Generation Model 作者 API](https://github.com/qflow-ai/qflow/blob/main/packages/generation/README.md#exact-model-authoring) 提供请求定义与 activation 示例。包拥有模型接口；凭据与 HTTP 映射由 Provider 负责。
+[Generation Model 作者 API](https://github.com/Pangu-Immortal/qflow/blob/main/packages/generation/README.md#exact-model-authoring) 提供请求定义与 activation 示例。包拥有模型接口；凭据与 HTTP 映射由 Provider 负责。
 
 ## 添加 Provider
 
@@ -55,9 +55,9 @@ import type { AsyncEndpoint, CredentialRef, EndpointRequest } from "@qflow/qflow
 
 真正的失败会结束本次执行尝试。Build Result 保留已完成的 Output 与公开任务回执。后续工作通过新的 Run 与 Build，选择仍适用的已有 Output 复用。
 
-[Endpoint SDK](https://github.com/qflow-ai/qflow/blob/main/packages/endpoint/README.md) 维护处理接口、activation、资源声明和价格 API。将包编译为 JavaScript，由项目包管理器安装。在 [Runtime Profile](./runtime.md) 的 `endpoints` 中配置实例，并通过 `bindings` 选择它。
+[Endpoint SDK](https://github.com/Pangu-Immortal/qflow/blob/main/packages/endpoint/README.md) 维护处理接口、activation、资源声明和价格 API。将包编译为 JavaScript，由项目包管理器安装。在 [Runtime Profile](./runtime.md) 的 `endpoints` 中配置实例，并通过 `bindings` 选择它。
 
-[完整项目 Provider 示例](https://github.com/qflow-ai/qflow/tree/main/examples/provider-package) 使用示意 API 展示参考上传、任务回执、结果收集与价格读取。示例随执行包分发，Agent 无需仓库 checkout 就能读取和改写。它包含两个包：`provider-images` 对应生成图像，`provider-videos` 对应生成视频——后者的服务接收更宽的参考词汇（图像、视频、音频以及首尾帧），并通过独立的结果收集步骤返回产物。
+[完整项目 Provider 示例](https://github.com/Pangu-Immortal/qflow/tree/main/examples/provider-package) 使用示意 API 展示参考上传、任务回执、结果收集与价格读取。示例随执行包分发，Agent 无需仓库 checkout 就能读取和改写。它包含两个包：`provider-images` 对应生成图像，`provider-videos` 对应生成视频——后者的服务接收更宽的参考词汇（图像、视频、音频以及首尾帧），并通过独立的结果收集步骤返回产物。
 
 实现与服务请求形态相匹配的那个 Capability；同时生成图像和视频的服务可以在同一个包里声明两个 Capability。服务实际支持的范围常常比 Model 词汇表更窄，例如分辨率更少或最长时长更低。这个差异属于 Provider：在 Capability 的 `supports` 中报告它，让 `plan` 带原因拒绝请求，而不是修改共享 Model 或悄悄收窄作者的请求。
 

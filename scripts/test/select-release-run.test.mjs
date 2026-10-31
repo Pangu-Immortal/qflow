@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { selectReleaseRun } from "../select-release-run.mjs";
 
-const repository = "qflow-ai/qflow";
+const repository = "Pangu-Immortal/qflow";
 const passed = {
   id: 42,
   repository: { full_name: repository },

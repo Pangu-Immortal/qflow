@@ -11,7 +11,7 @@ with independent captions remaining separate.
 ## Start from a complete package
 
 The installed `@qflow/qflow` Distribution includes
-[`examples/minimal-author-package/packages/example-component`](https://github.com/qflow-ai/qflow/tree/main/examples/minimal-author-package/packages/example-component).
+[`examples/minimal-author-package/packages/example-component`](https://github.com/Pangu-Immortal/qflow/tree/main/examples/minimal-author-package/packages/example-component).
 Copy that directory into your video's `packages/` directory. Give its package and Module your own
 scope and name, and replace the fixture's `workspace:*` Qflow development dependency with the
 Distribution release used by the project.
@@ -24,7 +24,7 @@ npm run build
 ```
 
 The example includes TypeScript build configuration, Manifest, Surface, Fragment, Producers,
-activation and a small preview Source. Its [README](https://github.com/qflow-ai/qflow/blob/main/examples/minimal-author-package/packages/example-component/README.md)
+activation and a small preview Source. Its [README](https://github.com/Pangu-Immortal/qflow/blob/main/examples/minimal-author-package/packages/example-component/README.md)
 explains the exact files and package setup. The project can use its package manager's workspace or
 local package dependency to install the component.
 
@@ -38,9 +38,9 @@ Timeline declarations; the component uses the same interface in either case.
 For an existing spoken performance, consume the normalized media, its absolute occurrence Window and
 any source-time relation the presentation needs as separate inputs. Other video inputs use the same
 media path; Timeline contains neither clips nor source positions.
-The [responsive explainer example](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/responsive-explainer)
+The [responsive explainer example](https://github.com/Pangu-Immortal/qflow/tree/main/examples/semantic-composition/packages/responsive-explainer)
 shows a continuously playing video moving from full screen to a side portrait inside an HTML scene.
-The [chat example](https://github.com/qflow-ai/qflow/tree/main/examples/semantic-composition/packages/chat-scene)
+The [chat example](https://github.com/Pangu-Immortal/qflow/tree/main/examples/semantic-composition/packages/chat-scene)
 shows the same event interface consuming Instants produced from either direct or semantic declarations.
 
 A Style-like Surface publishes its value under the bare authored id, such as `style={board-style}`.
@@ -59,7 +59,7 @@ explain the behavior: entry, meaningful changes, held layout and exit. Check the
 actual composition too, where its content, space and timing have a purpose.
 
 For richer interactive editing, add a Studio Companion. The
-[Companion SDK](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md)
+[Companion SDK](https://github.com/Pangu-Immortal/qflow/blob/main/packages/studio-companion/README.md)
 shows how to expose timeline Items, properties and source bindings. The rendering code and
 Companion are separate contributions in the same package.
 
@@ -83,7 +83,7 @@ A Qflow repository checkout or upstream pull request is not needed to use the co
 
 ## See a complete production
 
-The [complex spoken explainer](https://github.com/qflow-ai/qflow/tree/main/examples/complex-explainer)
+The [complex spoken explainer](https://github.com/Pangu-Immortal/qflow/tree/main/examples/complex-explainer)
 combines presenter framing, independent captions, website demonstrations and coordinated animated
 scenes in one finished work. Its project guide follows each decision to the Source, Recipe or package
 that owns it. The example distinguishes a useful component boundary from the separate choices to

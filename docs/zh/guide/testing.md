@@ -53,7 +53,7 @@ test("compiles the expected exports", async () => {
 ### Provider 测试
 
 在可控的服务 fixture 上验证请求映射、媒体传输与任务推进，包括失败行为。
-[项目 Provider 示例](https://github.com/qflow-ai/qflow/tree/main/examples/provider-package)
+[项目 Provider 示例](https://github.com/Pangu-Immortal/qflow/tree/main/examples/provider-package)
 包含一个生命周期测试，会收集返回的图片且不产生生成费用。真实调用使用选定服务和明确的花费范围；仅有可用密钥并不构成授权。
 
 ### 架构边界

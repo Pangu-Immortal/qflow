@@ -8,7 +8,7 @@ might be “introduce each contender on its line, then move its icon into the ra
 inputs express those relationships; its code supplies the drawing and motion.
 
 Start with [Adding an Author Package](./author-packages.md) for a complete buildable example.
-[Ranking](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/README.md) is a richer example
+[Ranking](https://github.com/Pangu-Immortal/qflow/blob/main/packages/ranking/README.md) is a richer example
 of semantic events, persistent state and a Studio Companion.
 
 ## The implementation roles

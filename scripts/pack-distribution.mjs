@@ -10,7 +10,7 @@ import { releaseDependencyVersion } from "./release-dependencies.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const output = resolve(root, "dist/release");
 const npmCache = resolve(tmpdir(), "qflow-npm-cache");
-const github = "https://github.com/qflow-ai/qflow/blob/main/";
+const github = "https://github.com/Pangu-Immortal/qflow/blob/main/";
 const assets = "https://storage.googleapis.com/qflow-public-assets/showcase/npm/2026-09-10/";
 
 // Run through npm so its CLI entry is portable, including on Windows.
@@ -37,7 +37,7 @@ const examples = readme.indexOf("## Examples\n");
 const next = readme.indexOf("## Use the Qflow skill\n", examples);
 if (examples < 0 || next < 0) throw new Error("README Examples section could not be located.");
 readme = readme.slice(0, examples)
-  + "[Watch the complete video examples on GitHub](https://github.com/qflow-ai/qflow#examples).\n\n"
+  + "[Watch the complete video examples on GitHub](https://github.com/Pangu-Immortal/qflow#examples).\n\n"
   + readme.slice(next);
 readme = readme
   .replace(/<picture>[\s\S]*?<\/picture>/u,

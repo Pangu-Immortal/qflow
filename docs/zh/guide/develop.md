@@ -60,6 +60,6 @@ qflow/
 | [添加 Author 包](./author-packages.md) | 分步说明：新增组件、Surface、词表与预览图、activation |
 | [模型与 Provider](./providers.md) | 选择账户与 API，开发 Model 或 Provider 包 |
 | [Runtime](./runtime.md) | Profile、Workspace、执行与生命周期边界 |
-| [Studio 本地化](https://github.com/qflow-ai/qflow/blob/main/packages/studio/LOCALIZATION.md) | 翻译界面文案，加载本地 JSON 或已安装的语言包 |
+| [Studio 本地化](https://github.com/Pangu-Immortal/qflow/blob/main/packages/studio/LOCALIZATION.md) | 翻译界面文案，加载本地 JSON 或已安装的语言包 |
 | [测试](./testing.md) | 测试运行器、写法、示例、boundary tests |
 | [代码规范](./conventions.md) | 命名、模块边界、wire 数据、TypeScript 配置 |

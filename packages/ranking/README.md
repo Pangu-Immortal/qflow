@@ -56,12 +56,12 @@ installed tarball contains a second editable source tree:
 
 | File | What to learn from it |
 | --- | --- |
-| [surface.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/surface.ts) | `rankingSurface` resolves the board's already declared Window and item Window or Instant references, together with its content, layout and Style inputs. |
-| [fragment.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/fragment.ts) | `createRankingFragment` receives Timeline and wires typed content, time, layout and Style inputs into finite operations. |
-| [schedule.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/schedule.ts) | Compute reveal, activation and settled spans from the projected times. |
-| [component.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/component.ts) and [render.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/render.ts) | Build the ranking program and produce picture and optional sound from that schedule. |
-| [manifest.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/manifest.ts) and [activation.ts](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/activation.ts) | Publish Types, Producers, Surface vocabulary and package contributions. |
-| [Ranking Companion](https://github.com/qflow-ai/qflow/blob/main/packages/ranking/src/studio.ts) | Read the same program, present persistent rows and activation lanes, and connect edits to actual Source inputs. |
+| [surface.ts](https://github.com/Pangu-Immortal/qflow/blob/main/packages/ranking/src/surface.ts) | `rankingSurface` resolves the board's already declared Window and item Window or Instant references, together with its content, layout and Style inputs. |
+| [fragment.ts](https://github.com/Pangu-Immortal/qflow/blob/main/packages/ranking/src/fragment.ts) | `createRankingFragment` receives Timeline and wires typed content, time, layout and Style inputs into finite operations. |
+| [schedule.ts](https://github.com/Pangu-Immortal/qflow/blob/main/packages/ranking/src/schedule.ts) | Compute reveal, activation and settled spans from the projected times. |
+| [component.ts](https://github.com/Pangu-Immortal/qflow/blob/main/packages/ranking/src/component.ts) and [render.ts](https://github.com/Pangu-Immortal/qflow/blob/main/packages/ranking/src/render.ts) | Build the ranking program and produce picture and optional sound from that schedule. |
+| [manifest.ts](https://github.com/Pangu-Immortal/qflow/blob/main/packages/ranking/src/manifest.ts) and [activation.ts](https://github.com/Pangu-Immortal/qflow/blob/main/packages/ranking/src/activation.ts) | Publish Types, Producers, Surface vocabulary and package contributions. |
+| [Ranking Companion](https://github.com/Pangu-Immortal/qflow/blob/main/packages/ranking/src/studio.ts) | Read the same program, present persistent rows and activation lanes, and connect edits to actual Source inputs. |
 
 A project component can use these relationships with its own behavior. External TypeScript uses
 `@qflow/qflow/author`, `@qflow/qflow/producer`, `@qflow/qflow/admission`,
@@ -70,5 +70,5 @@ the project's own package, with its own Module identity, instead of editing the 
 
 The Companion uses published values and temporal lineage, so a visible row and its reveal handle can
 represent different spans. Moving the authored semantic boundary changes the shared event and its
-consumers; editing a Style changes its appearance. [Studio Companion](https://github.com/qflow-ai/qflow/blob/main/packages/studio-companion/README.md)
+consumers; editing a Style changes its appearance. [Studio Companion](https://github.com/Pangu-Immortal/qflow/blob/main/packages/studio-companion/README.md)
 contains a minimal project Companion and the exact presentation/editing interface.

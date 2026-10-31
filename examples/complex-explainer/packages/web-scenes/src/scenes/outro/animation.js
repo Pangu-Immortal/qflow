@@ -72,7 +72,7 @@ return (frame) => {
   $(".installed-command").textContent = iq > 0.12 ? data.command : "";
   $(".caret").style.opacity = iq < 0.2 ? "1" : "0";
   const lines = [
-    "◇ Fetching qflow-ai/qflow",
+    "◇ Fetching Pangu-Immortal/qflow",
     "◇ Found skill: qflow",
     "◇ Installing to coding agents",
     "◆ Installation complete",

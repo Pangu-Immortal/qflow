@@ -61,7 +61,7 @@ test("compiles the expected exports", async () => {
 ### Provider tests
 
 Exercise request mapping, media transport and task progression, including failures, against a controlled service fixture.
-The [project Provider example](https://github.com/qflow-ai/qflow/tree/main/examples/provider-package)
+The [project Provider example](https://github.com/Pangu-Immortal/qflow/tree/main/examples/provider-package)
 includes a lifecycle test that collects a returned image without spending on generation. Live calls
 use the selected service and explicit spending scope; an available key alone does not authorize them.
 

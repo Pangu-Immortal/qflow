@@ -93,7 +93,7 @@ possible. Script Moments locate spoken changes; authored durations shape how tho
 Read the [Treatment](productions/explainer/TREATMENT.md) and
 [craft notes](productions/explainer/CRAFT-NOTES.md) for the practical reasoning: recovering behavior
 beyond a list of objects, the style change, scene boundaries, semantic events, framing and review.
-The [presenter-led visual explainer playbook](https://github.com/qflow-ai/qflow/blob/main/skills/qflow/references/playbooks/formats/presenter-led-explainer.md)
+The [presenter-led visual explainer playbook](https://github.com/Pangu-Immortal/qflow/blob/main/skills/qflow/references/playbooks/formats/presenter-led-explainer.md)
 draws out the whole-work relationship for other productions. Components use public
 Author Package and Companion interfaces; Studio and Core contain no dispatch for this example.
 
