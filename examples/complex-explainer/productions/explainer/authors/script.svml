@@ -4,7 +4,7 @@
 
   <script id="story">
     <opening>
-      <HOST> 一分钟带你了解最近超火的 || 开源视频复刻项目 @{opening-brand!} high pit。 || @{begin!} 开始咯！
+      <HOST> 一分钟带你了解最近超火的 || 开源视频复刻项目 @{opening-brand!} <Qflow|Q flow>。 || @{begin!} 开始咯！
     </opening>
     <introduction>
       <HOST> Qflow是一个开源视频复刻框架， || @{intro-language!} 自创了一套视频领域语言。 || @{intro-install!} 把qflow skill装进你的 || @{intro-codex!} codex或者@{intro-claude!} <claude|cloud>， || @{intro-thirty!} 只要半小时就能拿到 || @{intro-examples!} 你想复刻的任何爆款视频， || 并且还换@{intro-face!} 上了你自己的脸 || 和@{intro-product!} 产品。

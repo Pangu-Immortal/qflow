@@ -5,7 +5,7 @@
   <import as="speaker-kit" source="@qflow/seedance-kits/speaker"/>
   <import as="settings" source="../recipes/performance.svs"/>
 
-  <text:Value id="opening-action">HOST is the woman in @image1, with the Mandarin voice identity of @audio1. Keep the handheld microphone in the same hand and use the free hand for gestures. She excitedly shares a discovery with bright, quick confidence. On “一分钟”, she lifts her free index finger beside her face with raised eyebrows and a buoyant vocal accent, then lowers it into lively hand beats during the introduction. As she says the complete project name “high pit”, her smile widens. On “开始咯！”, she keeps looking into the lens, leans slightly forward and opens her free palm toward the camera in one inviting forward push, stopping short of covering the lens. The camera stays fixed.</text:Value>
+  <text:Value id="opening-action">HOST is the woman in @image1, with the Mandarin voice identity of @audio1. Keep the handheld microphone in the same hand and use the free hand for gestures. She excitedly shares a discovery with bright, quick confidence. On “一分钟”, she lifts her free index finger beside her face with raised eyebrows and a buoyant vocal accent, then lowers it into lively hand beats during the introduction. As she says the complete project name “Qflow”, her smile widens. On “开始咯！”, she keeps looking into the lens, leans slightly forward and opens her free palm toward the camera in one inviting forward push, stopping short of covering the lens. The camera stays fixed.</text:Value>
 
 <text:Render id="opening-prompt" template={speaker-kit.speaker-v1} recipe={settings.speaker.host}>
     <text:Param name="composition-stability" value="soft-locked"/>
