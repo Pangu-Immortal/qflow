@@ -70,7 +70,7 @@ export async function openLocalRuntimeHost(
                 "--package-root", packageRoot,
               ],
             },
-            workerOptions?.maxWaitMs ?? 10_000,
+            workerOptions?.maxWaitMs ?? 90_000,
           );
         },
         status: async () => await runtimeProcessStatus(profile, selection.dataRoot),

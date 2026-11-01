@@ -174,7 +174,7 @@ export async function ensureRuntimeProcess(
   profile: string,
   dataRoot: string,
   launch: RuntimeWorkerLaunch,
-  timeoutMs = 10_000,
+  timeoutMs = 90_000,
 ): Promise<RuntimeProcessState> {
   const absolute = resolve(profile);
   const location = paths(dataRoot);

@@ -2,6 +2,18 @@
   "format": "qflow.runtime-local@1",
   "dataRoot": ".qflow/execution",
   "endpoints": {
+    "dashscope.default": {
+      "use": "@qflow/provider-dashscope",
+      "config": {
+        "apiKey": {
+          "store": "env",
+          "key": "DASHSCOPE_VIDEO_API_KEY"
+        },
+        "defaultConcurrency": 2,
+        "pollIntervalMs": 10000,
+        "operationTimeoutMs": 1800000
+      }
+    },
     "media.local": {
       "use": "@qflow/media-local",
       "config": {
@@ -14,11 +26,22 @@
         "workers": 8,
         "defaultConcurrency": 1
       }
+    },
+    "whisperx.local": {
+      "use": "@qflow/provider-whisperx-local",
+      "config": {}
     }
   },
   "bindings": {
     "@qflow/html-program@1#rasterize-visual": "html.local",
     "@qflow/media-operations@1#render-timeline-audio": "media.local",
-    "@qflow/media-operations@1#mux-program-media": "media.local"
+    "@qflow/media-operations@1#mux-program-media": "media.local",
+    "@qflow/wan@1#wan-3.0-video": "dashscope.default",
+    "@qflow/whisperx@1#whisperx-alignment": "whisperx.local"
+  },
+  "credentials": {
+    "env": {
+      "use": "@qflow/credential-store-env"
+    }
   }
 }
