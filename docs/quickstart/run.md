@@ -19,7 +19,7 @@ Ordinary work then follows the short path:
 ```bash
 qflow plan build.svrun
 qflow build build.svrun --follow
-qflow get <build-id> --output final.video --to output/final.mp4
+qflow get <build-id> --output final.video --to output/final.mp4   # output/ = project root
 ```
 
 The Quickstart installs the Distribution once. Every command on this page then works as `qflow`
@@ -46,7 +46,7 @@ my-video/
   assets/                   project-owned input media
   kits/                     optional project-authored Recipe Kits
   packages/                 project-local Author packages when the work introduces them
-  output/                   explicit exports for people and other tools
+  output/                   the single delivery output dir at the project root
   qflow.runtime.json        execution environment
   .qflow/                   generated local Runtime and Result data
 ```

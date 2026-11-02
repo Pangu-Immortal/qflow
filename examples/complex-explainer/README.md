@@ -59,7 +59,7 @@ its semantic timing; opening this example does not generate or transcribe it aga
 Submit `runs/render.svrun` to render the complete film. `runs/export-parts.svrun` instead renders five
 consecutive ranges for limited temporary disk space. Its local Profile requests eight rendering
 workers and one render request at a time. The [production guide](productions/explainer/README.md)
-explains joining exported parts. The archive also includes `productions/explainer/output/final.mp4`.
+explains joining exported parts. The archive also includes the rendered film; export it to the project-root `output/` directory (the single delivery location for this repo).
 
 ## Read the work by responsibility
 

@@ -17,7 +17,7 @@ qflow runtime use qflow.runtime.json
 ```bash
 qflow plan build.svrun
 qflow build build.svrun --follow
-qflow get <build-id> --output final.video --to output/final.mp4
+qflow get <build-id> --output final.video --to output/final.mp4   # output/ 指项目根目录
 ```
 
 快速开始只需全局安装一次 Distribution。此后本页所有命令都直接写作 `qflow`，在任何独立视频项目中都一样。
@@ -42,7 +42,7 @@ my-video/
   assets/                   项目自己的输入素材
   kits/                     可选的项目内 Recipe Kit
   packages/                 作品需要时创建的项目本地 Author 包
-  output/                   显式导出给人或其他工具的副本
+  output/                   项目根目录的唯一交付输出目录（显式导出给人或其他工具）
   qflow.runtime.json        执行环境
   .qflow/                   自动产生的本地 Runtime 与 Result 数据
 ```

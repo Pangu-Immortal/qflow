@@ -76,3 +76,6 @@ examples/**/.svml/
 *.bak
 *.bak-*
 *.bak-hypit
+
+# Delivery exports live at the project root output/ but are not versioned
+output/

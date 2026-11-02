@@ -48,6 +48,19 @@ qflow build <run.svrun> --runtime <profile.json>  # execute it end to end
 qflow studio --run <run.svrun>                    # live preview while you edit
 ```
 
+### Output location
+
+Finished deliverables are exported to the project root `output/` directory — the single
+delivery location for people and downstream tools. `qflow get` writes exactly where `--to`
+points, so run it from the project root:
+
+```bash
+qflow get <build-id> --output final.video --to output/final.mp4
+```
+
+Intermediate Build data lives in `.qflow/results/` and is never a delivery artifact.
+Archived or superseded exports go under `output/archive/`.
+
 Credentials stay out of the repository: runtime profiles reference credential stores
 (such as the environment-variable store) and never embed secrets.
 

@@ -47,6 +47,17 @@ qflow build <run.svrun> --runtime <profile.json>  # 端到端执行
 qflow studio --run <run.svrun>                    # 边改边实时预览
 ```
 
+### 产出位置
+
+成片等交付物统一导出到**项目根目录的 `output/`**——这是给人和下游工具的唯一交付位置。
+`qflow get` 会精确写到 `--to` 指向的路径，所以请在项目根目录执行：
+
+```bash
+qflow get <build-id> --output final.video --to output/final.mp4
+```
+
+中间 Build 数据在 `.qflow/results/`，不作为交付物。被取代的旧导出放入 `output/archive/`。
+
 凭据不进仓库：runtime profile 只引用凭据存储（如环境变量存储），
 从不内嵌密钥。
 
